@@ -20,7 +20,12 @@ extra-source-files:
 description:         Please see the README on GitHub at <https://github.com/githubuser/syntax-tree#readme>
 
 dependencies:
-- base >= 4.7 && < 5
+- base
+- base-compat
+- binary
+- lens
+- pretty
+- QuickCheck
 
 library:
   source-dirs: src
@@ -45,4 +50,5 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - lens
     - syntax-tree
