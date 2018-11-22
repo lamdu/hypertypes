@@ -24,6 +24,7 @@ dependencies:
 - base-compat
 - binary
 - lens
+- mtl
 - pretty
 - QuickCheck
 
@@ -50,5 +51,6 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - containers
     - lens
     - syntax-tree
