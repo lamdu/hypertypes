@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, DeriveTraversable, TemplateHaskell, MultiParamTypeClasses, FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE NoImplicitPrelude, DeriveTraversable, TemplateHaskell, MultiParamTypeClasses, FlexibleContexts, RankNTypes, TypeFamilies, FlexibleInstances #-}
 
 module Data.Tree.Diverse.Unification
     where
@@ -7,7 +7,10 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad
 import           Control.Monad.Except (MonadError(..))
+import           Control.Monad.Trans.State
 import           Data.Functor.Identity (Identity(..))
+import           Data.IntMap (IntMap)
+import           Data.Maybe (fromMaybe)
 import           Data.Proxy
 import           Data.Tree.Diverse
 
@@ -35,12 +38,16 @@ class Eq v => Variable v where
 instance Variable Int where
     getVarId = id
 
-class (Variable v, MonadError () m) => UnifyMonad v t m where
-    bindVar :: v -> t (UTerm v) -> m ()
-    lookupVar :: v -> m (t (UTerm v))
-    unifyBody :: t (UTerm v) -> t (UTerm v) -> m ()
+class Variable (Var t m) => BindingMonad t m where
+    type Var t m
+    lookupVar :: Var t m -> m (t (UTerm (Var t m)))
+    newVar :: m (Node (UTerm (Var t m)) t)
+    bindVar :: Var t m -> t (UTerm (Var t m)) -> m ()
 
-unify :: UnifyMonad v t m => Node (UTerm v) t -> Node (UTerm v) t -> m ()
+class (BindingMonad t m, MonadError () m) => UnifyMonad t m where
+    unifyBody :: t (UTerm (Var t m)) -> t (UTerm (Var t m)) -> m ()
+
+unify :: UnifyMonad t m => Node (UTerm (Var t m)) t -> Node (UTerm (Var t m)) t -> m ()
 unify x0 x1 =
     case (x0, x1, Proxy) of
     (UVar v, UTerm t, _) -> bindVar v t
@@ -53,3 +60,15 @@ unify x0 x1 =
             <$> (lookupVar v0 <&> (`asProxyTypeOf` p))
             <*> lookupVar v1
             & join
+
+data IntBindingState t = IntBindingState
+    { _nextFreeVar :: {-# UNPACK #-} !Int
+    , _varBindings :: IntMap (t (UTerm Int))
+    }
+Lens.makeLenses ''IntBindingState
+
+instance Monad m => BindingMonad t (StateT (IntBindingState t) m) where
+    type Var t (StateT (IntBindingState t) m) = Int
+    lookupVar k = Lens.use (varBindings . Lens.at k) <&> fromMaybe (error "var not found")
+    newVar = Lens.zoom nextFreeVar (state (\x -> (UVar x, x+1)))
+    bindVar k v = varBindings . Lens.at k ?= v

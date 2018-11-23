@@ -1,4 +1,4 @@
-{-# LANGUAGE StandaloneDeriving, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, TemplateHaskell #-}
+{-# LANGUAGE StandaloneDeriving, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, TemplateHaskell, TypeFamilies, LambdaCase, TypeSynonymInstances, FlexibleInstances #-}
 
 import Control.Lens
 import Control.Monad.State
@@ -6,6 +6,7 @@ import Control.Monad.Error.Class
 import Data.IntMap
 import Data.Maybe
 import Data.Tree.Diverse
+import Data.Tree.Diverse.Inference
 import Data.Tree.Diverse.Unification
 
 data Typ f
@@ -17,17 +18,24 @@ data Row f
     = REmpty
     | RExtend String (Node f Typ) (Node f Row)
 
+data Term f
+    = ELam String (Node f Term)
+    | EVar String
+    | EApp (Node f Term) (Node f Term)
+    | ELit Int
+    | EPlus
+
 deriving instance (Show (f (Typ f)), Show (Row f)) => Show (Typ f)
 deriving instance (Show (f (Typ f)), Show (f (Row f))) => Show (Row f)
+deriving instance Show (Node f Term) => Show (Term f)
 
 data InferState = InferState
-    { _typBindings :: IntMap (Typ (UTerm Int))
-    , _rowBindings :: IntMap (Row (UTerm Int))
+    { _typBindings :: IntBindingState Typ
+    , _rowBindings :: IntBindingState Row
     }
 makeLenses ''InferState
 
-newtype InferM a = InferM (StateT InferState Maybe a)
-    deriving (Functor, Applicative, Monad, MonadError (), MonadState InferState)
+type InferM = StateT InferState Maybe
 
 typ :: Node Identity Typ
 typ =
@@ -35,21 +43,47 @@ typ =
     & RExtend "hello" (Identity TInt) & TRow & Identity
     & TFun (Identity TInt) & Identity
 
-instance UnifyMonad Int Typ InferM where
-    bindVar k v = typBindings . at k ?= v
-    lookupVar k = use (typBindings . at k) <&> fromMaybe (error "var not found")
+instance BindingMonad Typ InferM where
+    type Var Typ InferM = Int
+    lookupVar = zoom typBindings . lookupVar
+    newVar = zoom typBindings newVar
+    bindVar k = zoom typBindings . bindVar k
+
+instance BindingMonad Row InferM where
+    type Var Row InferM = Int
+    lookupVar = zoom rowBindings . lookupVar
+    newVar = zoom rowBindings newVar
+    bindVar k = zoom rowBindings . bindVar k
+
+instance UnifyMonad Typ InferM where
     unifyBody TInt TInt = pure ()
     unifyBody (TFun a0 r0) (TFun a1 r1) = unify a0 a1 *> unify r0 r1
     unifyBody (TRow r0) (TRow r1) = unifyBody r0 r1
     unifyBody _ _ = throwError ()
 
-instance UnifyMonad Int Row InferM where
-    bindVar k v = rowBindings . at k ?= v
-    lookupVar k = use (rowBindings . at k) <&> fromMaybe (error "var not found")
+instance UnifyMonad Row InferM where
     unifyBody REmpty REmpty = pure ()
     unifyBody (RExtend k0 v0 r0) (RExtend k1 v1 r1)
         | k0 == k1 = unify v0 v1 *> unify r0 r1
     unifyBody _ _ = throwError ()
+
+type instance TypeOf Term = Typ
+
+instance InferMonad Term InferM where
+    inferBody ELit{} = UTerm TInt & pure
+    inferBody (EApp func arg) =
+        do
+            argType <- inferBody (arg ^. val)
+            inferBody (func ^. val)
+                >>=
+                \case
+                UTerm (TFun funcArg funcRes) ->
+                    funcRes <$ unify funcArg argType
+                x ->
+                    do
+                        funcRes <- newVar
+                        unify x (UTerm (TFun argType funcRes))
+                        pure funcRes
 
 main :: IO ()
 main =

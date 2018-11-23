@@ -23,10 +23,12 @@ dependencies:
 - base
 - base-compat
 - binary
+- containers
 - lens
 - mtl
 - pretty
 - QuickCheck
+- transformers
 
 library:
   source-dirs: src
