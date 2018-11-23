@@ -78,6 +78,8 @@ instance InferMonad Term InferM where
                 >>=
                 \case
                 UTerm (TFun funcArg funcRes) ->
+                    -- Func already inferred to be function,
+                    -- skip creating new variable for result for faster inference.
                     funcRes <$ unify funcArg argType
                 x ->
                     do
