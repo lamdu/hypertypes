@@ -4,9 +4,11 @@ import AST
 import AST.Ann
 import AST.Unify
 import AST.Unify.IntBindingState
-import Control.Lens
+import qualified Control.Lens as Lens
+import Control.Lens.Operators
 import Control.Monad.RWS
 import Control.Monad.Error.Class
+import Data.Functor.Identity
 import Data.IntMap
 import Data.Map
 import Data.Maybe
@@ -34,7 +36,7 @@ data InferState = InferState
     { _typBindings :: IntBindingState Typ
     , _rowBindings :: IntBindingState Row
     }
-makeLenses ''InferState
+Lens.makeLenses ''InferState
 
 emptyInferState :: InferState
 emptyInferState = InferState emptyIntBindingState emptyIntBindingState
@@ -61,15 +63,15 @@ instance UnifyMonad Int Row InferM where
     unifyBody _ _ = throwError ()
 
 runInfer :: InferM a -> Maybe a
-runInfer act = runRWST act mempty emptyInferState <&> (^. _1)
+runInfer act = runRWST act mempty emptyInferState <&> (^. Lens._1)
 
 infer :: Term Identity -> InferM (Node (UTerm Int) Typ)
 infer ELit{} = UTerm TInt & pure
-infer (EVar var) = view (at var) <&> fromMaybe (error "name error")
+infer (EVar var) = Lens.view (Lens.at var) <&> fromMaybe (error "name error")
 infer (ELam var (Identity body)) =
     do
         varType <- newVar binding
-        local (at var ?~ varType) (infer body) <&> TFun varType <&> UTerm
+        local (Lens.at var ?~ varType) (infer body) <&> TFun varType <&> UTerm
 infer (EApp (Identity func) (Identity arg)) =
     do
         argType <- infer arg
@@ -93,7 +95,7 @@ expr =
     & ELam "x" & Identity
 
 typ :: Node (UTerm Int) Typ
-typ = runInfer (infer (expr ^. _Wrapped) >>= applyBindings) & fromMaybe (error "infer failed!")
+typ = runInfer (infer (expr ^. Lens._Wrapped) >>= applyBindings) & fromMaybe (error "infer failed!")
 
 main :: IO ()
 main =
