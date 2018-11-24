@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, DeriveTraversable, TemplateHaskell, MultiParamTypeClasses, FlexibleContexts, RankNTypes, TypeFamilies, FlexibleInstances #-}
+{-# LANGUAGE NoImplicitPrelude, DeriveTraversable, TemplateHaskell, MultiParamTypeClasses, FlexibleContexts, TypeFamilies #-}
 
 module AST.Unify
     ( UTerm(..), _UVar, _UTerm
@@ -7,7 +7,6 @@ module AST.Unify
     , BindingMonad(..)
     , UnifyMonad(..)
     , unify
-    , IntBindingState(..), nextFreeVar, varBindings
     ) where
 
 import           AST
@@ -67,15 +66,3 @@ unify x0 x1 =
             <$> (lookupVar v0 <&> (`asProxyTypeOf` p))
             <*> lookupVar v1
             & join
-
-data IntBindingState t = IntBindingState
-    { _nextFreeVar :: {-# UNPACK #-} !Int
-    , _varBindings :: IntMap (t (UTerm Int))
-    }
-Lens.makeLenses ''IntBindingState
-
-instance Monad m => BindingMonad t (StateT (IntBindingState t) m) where
-    type Var t (StateT (IntBindingState t) m) = Int
-    lookupVar k = Lens.use (varBindings . Lens.at k) <&> fromMaybe (error "var not found")
-    newVar = Lens.zoom nextFreeVar (state (\x -> (UVar x, x+1)))
-    bindVar k v = varBindings . Lens.at k ?= v

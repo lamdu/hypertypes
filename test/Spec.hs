@@ -4,6 +4,7 @@ import AST
 import AST.Ann
 import AST.Infer
 import AST.Unify
+import AST.Unify.IntBindingState
 import Control.Lens
 import Control.Monad.State
 import Control.Monad.Error.Class
