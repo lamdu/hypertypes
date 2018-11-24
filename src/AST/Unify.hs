@@ -7,7 +7,7 @@ module AST.Unify
     , Binding(..)
     , Unify -- not exporting constructor!
     , UnifyMonad(..)
-    , unify
+    , applyBindings, unify
     ) where
 
 import           AST
@@ -55,7 +55,18 @@ data Unify a = Unify
 
 class (Eq v, MonadError () m) => UnifyMonad v t m where
     binding :: Binding v t m
+    applyBindingsBody :: t (UTerm v) -> m (t (UTerm v))
     unifyBody :: t (UTerm v) -> t (UTerm v) -> m (t Unify)
+
+applyBindings :: UnifyMonad v t m => Node (UTerm v) t -> m (Node (UTerm v) t)
+applyBindings (UTerm t) = applyBindingsBody t <&> UTerm
+applyBindings (UVar v) =
+    lookupVar binding v
+    >>=
+    \case
+    Nothing -> pure (UVar v)
+    Just v1@UVar{} -> pure v1
+    Just (UTerm t) -> applyBindingsBody t <&> UTerm
 
 unify :: UnifyMonad v t m => Node (UTerm v) t -> Node (UTerm v) t -> m (Node Unify t)
 unify x0 x1 =

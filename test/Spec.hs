@@ -43,6 +43,9 @@ type InferM = RWST (Map String (Node (UTerm Int) Typ)) () InferState Maybe
 
 instance UnifyMonad Int Typ InferM where
     binding = intBindingState typBindings
+    applyBindingsBody TInt = pure TInt
+    applyBindingsBody (TFun a r) = TFun <$> applyBindings a <*> applyBindings r
+    applyBindingsBody (TRow r) = TRow <$> applyBindingsBody r
     unifyBody TInt TInt = pure TInt
     unifyBody (TFun a0 r0) (TFun a1 r1) = TFun <$> unify a0 a1 <*> unify r0 r1
     unifyBody (TRow r0) (TRow r1) = TRow <$> unifyBody r0 r1
@@ -50,6 +53,8 @@ instance UnifyMonad Int Typ InferM where
 
 instance UnifyMonad Int Row InferM where
     binding = intBindingState rowBindings
+    applyBindingsBody REmpty = pure REmpty
+    applyBindingsBody (RExtend k v r) = RExtend k <$> applyBindings v <*> applyBindings r
     unifyBody REmpty REmpty = pure REmpty
     unifyBody (RExtend k0 v0 r0) (RExtend k1 v1 r1)
         | k0 == k1 = RExtend k0 <$> unify v0 v1 <*> unify r0 r1
@@ -88,7 +93,7 @@ expr =
     & ELam "x" & Identity
 
 typ :: Node (UTerm Int) Typ
-typ = runInfer (infer (expr ^. _Wrapped)) & fromMaybe (error "infer failed!")
+typ = runInfer (infer (expr ^. _Wrapped) >>= applyBindings) & fromMaybe (error "infer failed!")
 
 main :: IO ()
 main =
