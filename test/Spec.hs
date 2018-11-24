@@ -2,7 +2,6 @@
 
 import AST
 import AST.Ann
-import AST.Infer
 import AST.Unify
 import AST.Unify.IntBindingState
 import Control.Lens
@@ -37,13 +36,10 @@ data InferState = InferState
     }
 makeLenses ''InferState
 
-type InferM = RWST (Map String (Node (UTerm Int) Typ)) () InferState Maybe
+emptyInferState :: InferState
+emptyInferState = InferState emptyIntBindingState emptyIntBindingState
 
-typ :: Node Identity Typ
-typ =
-    Identity REmpty
-    & RExtend "hello" (Identity TInt) & TRow & Identity
-    & TFun (Identity TInt) & Identity
+type InferM = RWST (Map String (Node (UTerm Int) Typ)) () InferState Maybe
 
 instance UnifyMonad Int Typ InferM where
     binding = intBindingState typBindings
@@ -59,27 +55,40 @@ instance UnifyMonad Int Row InferM where
         | k0 == k1 = RExtend k0 <$> unify v0 v1 <*> unify r0 r1
     unifyBody _ _ = throwError ()
 
-instance InferMonad Term Int Typ InferM where
-    inferBody ELit{} = UTerm TInt & pure
-    inferBody (EVar var) = view (at var) <&> fromMaybe (error "name error")
-    inferBody (ELam var body) =
-        do
-            varType <- newVar binding
-            local (at var ?~ varType) (inferBody (body ^. val)) <&> TFun varType <&> UTerm
-    inferBody (EApp func arg) =
-        do
-            argType <- inferBody (arg ^. val)
-            inferBody (func ^. val)
-                >>=
-                \case
-                UTerm (TFun funcArg funcRes) ->
-                    -- Func already inferred to be function,
-                    -- skip creating new variable for result for faster inference.
-                    funcRes <$ unify funcArg argType
-                x ->
-                    do
-                        funcRes <- newVar binding
-                        funcRes <$ unify x (UTerm (TFun argType funcRes))
+runInfer :: InferM a -> Maybe a
+runInfer act = runRWST act mempty emptyInferState <&> (^. _1)
+
+infer :: Term Identity -> InferM (Node (UTerm Int) Typ)
+infer ELit{} = UTerm TInt & pure
+infer (EVar var) = view (at var) <&> fromMaybe (error "name error")
+infer (ELam var (Identity body)) =
+    do
+        varType <- newVar binding
+        local (at var ?~ varType) (infer body) <&> TFun varType <&> UTerm
+infer (EApp (Identity func) (Identity arg)) =
+    do
+        argType <- infer arg
+        infer func
+            >>=
+            \case
+            UTerm (TFun funcArg funcRes) ->
+                -- Func already inferred to be function,
+                -- skip creating new variable for result for faster inference.
+                funcRes <$ unify funcArg argType
+            x ->
+                do
+                    funcRes <- newVar binding
+                    funcRes <$ unify x (UTerm (TFun argType funcRes))
+
+expr :: Node Identity Term
+expr =
+    -- \x -> x 5
+    ELit 5 & Identity
+    & EApp (EVar "x" & Identity) & Identity
+    & ELam "x" & Identity
+
+typ :: Node (UTerm Int) Typ
+typ = runInfer (infer (expr ^. _Wrapped)) & fromMaybe (error "infer failed!")
 
 main :: IO ()
 main =

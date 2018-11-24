@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, DeriveTraversable, TemplateHaskell, MultiParamTypeClasses, FlexibleContexts #-}
+{-# LANGUAGE NoImplicitPrelude, DeriveTraversable, TemplateHaskell, MultiParamTypeClasses, FlexibleContexts, LambdaCase #-}
 
 module AST.Unify
     ( UTerm(..), _UVar, _UTerm
@@ -46,9 +46,9 @@ instance Variable Int where
     getVarId = id
 
 data Binding v t m = Binding
-    { lookupVar :: v -> m (t (UTerm v))
+    { lookupVar :: v -> m (Maybe (Node (UTerm v) t))
     , newVar :: m (Node (UTerm v) t)
-    , bindVar :: v -> t (UTerm v) -> m ()
+    , bindVar :: v -> Node (UTerm v) t -> m ()
     }
 
 data Unify a = Unify
@@ -61,13 +61,19 @@ unify :: UnifyMonad v t m => Node (UTerm v) t -> Node (UTerm v) t -> m (Node Uni
 unify x0 x1 =
     Unify <$
     case (x0, x1, Proxy) of
-    (UVar v, UTerm t, _) -> bindVar binding v t
-    (UTerm t, UVar v, _) -> bindVar binding v t
-    (UTerm t0, UTerm t1, p) -> unifyBody (t0 `asProxyTypeOf` p) t1 & void
+    (UVar v, t@UTerm{}, p) -> bindVar binding v (t `asProxyTypeOf` p)
+    (t@UTerm{}, UVar v, _) -> bindVar binding v t
+    (UTerm t0, UTerm t1, _) -> unifyBody t0 t1 & void
     (UVar v0, UVar v1, p)
         | v0 == v1 -> pure ()
         | otherwise ->
-            unifyBody
-            <$> (lookupVar binding v0 <&> (`asProxyTypeOf` p))
-            <*> lookupVar binding v1
-            & join & void
+            lookupVar binding v0
+            >>=
+            \case
+            Nothing -> bindVar binding v0 (UVar v1 `asProxyTypeOf` p)
+            Just t0 ->
+                lookupVar binding v1
+                >>=
+                \case
+                Nothing -> bindVar binding v1 (UVar v0 `asProxyTypeOf` p)
+                Just t1 -> unify (t0 `asProxyTypeOf` p) t1 & void

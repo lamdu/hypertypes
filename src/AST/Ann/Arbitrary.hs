@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TypeFamilies, ConstraintKinds #-}
 {-# OPTIONS -fno-warn-orphans #-} -- Arbitrary instances
-module AST.Arbitrary
+module AST.Ann.Arbitrary
     ( ArbitraryWithContext(..)
     , ArbitraryWithContextOf
     ) where
