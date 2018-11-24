@@ -1,8 +1,9 @@
 {-# LANGUAGE NoImplicitPrelude, DeriveTraversable, TemplateHaskell, MultiParamTypeClasses, FlexibleContexts, RankNTypes, TypeFamilies, FlexibleInstances #-}
 
-module Data.Tree.Diverse.Unification
+module AST.Unify
     where
 
+import           AST
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad
@@ -12,7 +13,6 @@ import           Data.Functor.Identity (Identity(..))
 import           Data.IntMap (IntMap)
 import           Data.Maybe (fromMaybe)
 import           Data.Proxy
-import           Data.Tree.Diverse
 
 import           Prelude.Compat
 

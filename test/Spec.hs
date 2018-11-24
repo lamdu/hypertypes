@@ -1,13 +1,13 @@
 {-# LANGUAGE StandaloneDeriving, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, TemplateHaskell, TypeFamilies, LambdaCase, TypeSynonymInstances, FlexibleInstances #-}
 
+import AST
+import AST.Infer
+import AST.Unify
 import Control.Lens
 import Control.Monad.State
 import Control.Monad.Error.Class
 import Data.IntMap
 import Data.Maybe
-import Data.Tree.Diverse
-import Data.Tree.Diverse.Inference
-import Data.Tree.Diverse.Unification
 
 data Typ f
     = TInt

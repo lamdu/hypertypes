@@ -1,11 +1,11 @@
 {-# LANGUAGE NoImplicitPrelude, TypeFamilies, MultiParamTypeClasses, FlexibleContexts #-}
 
-module Data.Tree.Diverse.Inference
+module AST.Infer
     where
 
+import           AST
+import           AST.Unify
 import           Data.Functor.Identity (Identity(..))
-import           Data.Tree.Diverse
-import           Data.Tree.Diverse.Unification
 
 import           Prelude.Compat
 

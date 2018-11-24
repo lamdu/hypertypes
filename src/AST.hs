@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, DeriveGeneric, DeriveTraversable, RankNTypes, TemplateHaskell #-}
 
-module Data.Tree.Diverse
+module AST
     ( Node, Children(..), overChildren
     , leaf, hoist
     , Ann(..), ann, val

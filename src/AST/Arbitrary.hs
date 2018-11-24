@@ -1,11 +1,11 @@
 {-# LANGUAGE NoImplicitPrelude, TypeFamilies, ConstraintKinds #-}
 {-# OPTIONS -fno-warn-orphans #-} -- Arbitrary instances
-module Data.Tree.Diverse.Arbitrary
+module AST.Arbitrary
     ( ArbitraryWithContext(..)
     , ArbitraryWithContextOf
     ) where
 
-import           Data.Tree.Diverse
+import           AST
 import           Test.QuickCheck (Arbitrary(..), Gen)
 
 import           Prelude.Compat hiding (any)
