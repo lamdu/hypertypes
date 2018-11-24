@@ -53,7 +53,7 @@ data Binding v t m = Binding
 
 data Unify a = Unify
 
-class (Eq v, MonadError () m) => UnifyMonad v t m where
+class (Eq v, Children t, MonadError () m) => UnifyMonad v t m where
     binding :: Binding v t m
     applyBindingsBody :: t (UTerm v) -> m (t (UTerm v))
     unifyBody :: t (UTerm v) -> t (UTerm v) -> m (t Unify)

@@ -32,6 +32,15 @@ deriving instance (Show (f (Typ f)), Show (Row f)) => Show (Typ f)
 deriving instance (Show (f (Typ f)), Show (f (Row f))) => Show (Row f)
 deriving instance Show (Node f Term) => Show (Term f)
 
+instance Children Typ where
+    children _ TInt = pure TInt
+    children f (TFun x y) = TFun <$> f x <*> f y
+    children f (TRow x) = TRow <$> children f x
+
+instance Children Row where
+    children _ REmpty = pure REmpty
+    children f (RExtend k x y) = RExtend k <$> f x <*> f y
+
 data InferState = InferState
     { _typBindings :: IntBindingState Typ
     , _rowBindings :: IntBindingState Row
