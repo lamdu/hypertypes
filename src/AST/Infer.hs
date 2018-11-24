@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TypeFamilies, MultiParamTypeClasses, FlexibleContexts #-}
+{-# LANGUAGE NoImplicitPrelude, MultiParamTypeClasses, FlexibleContexts #-}
 
 module AST.Infer
     where
@@ -10,7 +10,5 @@ import           Data.Functor.Identity (Identity(..))
 
 import           Prelude.Compat
 
-type family TypeOf (t :: (* -> *) -> *) :: (* -> *) -> *
-
-class UnifyMonad (TypeOf t) m => InferMonad t m where
-    inferBody :: t (Ann a) -> m (Node (UTerm (Var (TypeOf t) m)) (TypeOf t))
+class UnifyMonad v t m => InferMonad e v t m where
+    inferBody :: e (Ann a) -> m (Node (UTerm v) t)

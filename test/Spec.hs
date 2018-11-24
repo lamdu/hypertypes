@@ -1,4 +1,4 @@
-{-# LANGUAGE StandaloneDeriving, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, TemplateHaskell, TypeFamilies, LambdaCase, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE StandaloneDeriving, UndecidableInstances, MultiParamTypeClasses, TemplateHaskell, LambdaCase, TypeSynonymInstances, FlexibleInstances #-}
 
 import AST
 import AST.Ann
@@ -25,7 +25,6 @@ data Term f
     | EVar String
     | EApp (Node f Term) (Node f Term)
     | ELit Int
-    | EPlus
 
 deriving instance (Show (f (Typ f)), Show (Row f)) => Show (Typ f)
 deriving instance (Show (f (Typ f)), Show (f (Row f))) => Show (Row f)
@@ -45,33 +44,21 @@ typ =
     & RExtend "hello" (Identity TInt) & TRow & Identity
     & TFun (Identity TInt) & Identity
 
-instance BindingMonad Typ InferM where
-    type Var Typ InferM = Int
-    lookupVar = zoom typBindings . lookupVar
-    newVar = zoom typBindings newVar
-    bindVar k = zoom typBindings . bindVar k
-
-instance BindingMonad Row InferM where
-    type Var Row InferM = Int
-    lookupVar = zoom rowBindings . lookupVar
-    newVar = zoom rowBindings newVar
-    bindVar k = zoom rowBindings . bindVar k
-
-instance UnifyMonad Typ InferM where
+instance UnifyMonad Int Typ InferM where
+    binding = intBindingState typBindings
     unifyBody TInt TInt = pure TInt
     unifyBody (TFun a0 r0) (TFun a1 r1) = TFun <$> unify a0 a1 <*> unify r0 r1
     unifyBody (TRow r0) (TRow r1) = TRow <$> unifyBody r0 r1
     unifyBody _ _ = throwError ()
 
-instance UnifyMonad Row InferM where
+instance UnifyMonad Int Row InferM where
+    binding = intBindingState rowBindings
     unifyBody REmpty REmpty = pure REmpty
     unifyBody (RExtend k0 v0 r0) (RExtend k1 v1 r1)
         | k0 == k1 = RExtend k0 <$> unify v0 v1 <*> unify r0 r1
     unifyBody _ _ = throwError ()
 
-type instance TypeOf Term = Typ
-
-instance InferMonad Term InferM where
+instance InferMonad Term Int Typ InferM where
     inferBody ELit{} = UTerm TInt & pure
     inferBody (EApp func arg) =
         do
@@ -85,7 +72,7 @@ instance InferMonad Term InferM where
                     funcRes <$ unify funcArg argType
                 x ->
                     do
-                        funcRes <- newVar
+                        funcRes <- newVar binding
                         unify x (UTerm (TFun argType funcRes))
                         pure funcRes
 

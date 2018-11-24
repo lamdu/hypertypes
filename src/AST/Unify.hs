@@ -1,10 +1,10 @@
-{-# LANGUAGE NoImplicitPrelude, DeriveTraversable, TemplateHaskell, MultiParamTypeClasses, FlexibleContexts, TypeFamilies #-}
+{-# LANGUAGE NoImplicitPrelude, DeriveTraversable, TemplateHaskell, MultiParamTypeClasses, FlexibleContexts #-}
 
 module AST.Unify
     ( UTerm(..), _UVar, _UTerm
     , unfreeze, freeze
     , Variable(..)
-    , BindingMonad(..)
+    , Binding(..)
     , Unify -- not exporting constructor!
     , UnifyMonad(..)
     , unify
@@ -45,28 +45,29 @@ class Eq v => Variable v where
 instance Variable Int where
     getVarId = id
 
-class Variable (Var t m) => BindingMonad t m where
-    type Var t m
-    lookupVar :: Var t m -> m (t (UTerm (Var t m)))
-    newVar :: m (Node (UTerm (Var t m)) t)
-    bindVar :: Var t m -> t (UTerm (Var t m)) -> m ()
+data Binding v t m = Binding
+    { lookupVar :: v -> m (t (UTerm v))
+    , newVar :: m (Node (UTerm v) t)
+    , bindVar :: v -> t (UTerm v) -> m ()
+    }
 
 data Unify a = Unify
 
-class (BindingMonad t m, MonadError () m) => UnifyMonad t m where
-    unifyBody :: t (UTerm (Var t m)) -> t (UTerm (Var t m)) -> m (t Unify)
+class (Eq v, MonadError () m) => UnifyMonad v t m where
+    binding :: Binding v t m
+    unifyBody :: t (UTerm v) -> t (UTerm v) -> m (t Unify)
 
-unify :: UnifyMonad t m => Node (UTerm (Var t m)) t -> Node (UTerm (Var t m)) t -> m (Node Unify t)
+unify :: UnifyMonad v t m => Node (UTerm v) t -> Node (UTerm v) t -> m (Node Unify t)
 unify x0 x1 =
     Unify <$
     case (x0, x1, Proxy) of
-    (UVar v, UTerm t, _) -> bindVar v t
-    (UTerm t, UVar v, _) -> bindVar v t
+    (UVar v, UTerm t, _) -> bindVar binding v t
+    (UTerm t, UVar v, _) -> bindVar binding v t
     (UTerm t0, UTerm t1, p) -> unifyBody (t0 `asProxyTypeOf` p) t1 & void
     (UVar v0, UVar v1, p)
         | v0 == v1 -> pure ()
         | otherwise ->
             unifyBody
-            <$> (lookupVar v0 <&> (`asProxyTypeOf` p))
-            <*> lookupVar v1
+            <$> (lookupVar binding v0 <&> (`asProxyTypeOf` p))
+            <*> lookupVar binding v1
             & join & void
