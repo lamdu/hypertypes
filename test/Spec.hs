@@ -6,9 +6,10 @@ import AST.Infer
 import AST.Unify
 import AST.Unify.IntBindingState
 import Control.Lens
-import Control.Monad.State
+import Control.Monad.RWS
 import Control.Monad.Error.Class
 import Data.IntMap
+import Data.Map
 import Data.Maybe
 
 data Typ f
@@ -36,7 +37,7 @@ data InferState = InferState
     }
 makeLenses ''InferState
 
-type InferM = StateT InferState Maybe
+type InferM = RWST (Map String (Node (UTerm Int) Typ)) () InferState Maybe
 
 typ :: Node Identity Typ
 typ =
@@ -60,6 +61,11 @@ instance UnifyMonad Int Row InferM where
 
 instance InferMonad Term Int Typ InferM where
     inferBody ELit{} = UTerm TInt & pure
+    inferBody (EVar var) = view (at var) <&> fromMaybe (error "name error")
+    inferBody (ELam var body) =
+        do
+            varType <- newVar binding
+            local (at var ?~ varType) (inferBody (body ^. val)) <&> TFun varType <&> UTerm
     inferBody (EApp func arg) =
         do
             argType <- inferBody (arg ^. val)
@@ -73,8 +79,7 @@ instance InferMonad Term Int Typ InferM where
                 x ->
                     do
                         funcRes <- newVar binding
-                        unify x (UTerm (TFun argType funcRes))
-                        pure funcRes
+                        funcRes <$ unify x (UTerm (TFun argType funcRes))
 
 main :: IO ()
 main =
