@@ -58,15 +58,15 @@ instance BindingMonad Row InferM where
     bindVar k = zoom rowBindings . bindVar k
 
 instance UnifyMonad Typ InferM where
-    unifyBody TInt TInt = pure ()
-    unifyBody (TFun a0 r0) (TFun a1 r1) = unify a0 a1 *> unify r0 r1
-    unifyBody (TRow r0) (TRow r1) = unifyBody r0 r1
+    unifyBody TInt TInt = pure TInt
+    unifyBody (TFun a0 r0) (TFun a1 r1) = TFun <$> unify a0 a1 <*> unify r0 r1
+    unifyBody (TRow r0) (TRow r1) = TRow <$> unifyBody r0 r1
     unifyBody _ _ = throwError ()
 
 instance UnifyMonad Row InferM where
-    unifyBody REmpty REmpty = pure ()
+    unifyBody REmpty REmpty = pure REmpty
     unifyBody (RExtend k0 v0 r0) (RExtend k1 v1 r1)
-        | k0 == k1 = unify v0 v1 *> unify r0 r1
+        | k0 == k1 = RExtend k0 <$> unify v0 v1 <*> unify r0 r1
     unifyBody _ _ = throwError ()
 
 type instance TypeOf Term = Typ

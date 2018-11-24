@@ -5,6 +5,7 @@ module AST.Unify
     , unfreeze, freeze
     , Variable(..)
     , BindingMonad(..)
+    , Unify -- not exporting constructor!
     , UnifyMonad(..)
     , unify
     ) where
@@ -50,19 +51,22 @@ class Variable (Var t m) => BindingMonad t m where
     newVar :: m (Node (UTerm (Var t m)) t)
     bindVar :: Var t m -> t (UTerm (Var t m)) -> m ()
 
-class (BindingMonad t m, MonadError () m) => UnifyMonad t m where
-    unifyBody :: t (UTerm (Var t m)) -> t (UTerm (Var t m)) -> m ()
+data Unify a = Unify
 
-unify :: UnifyMonad t m => Node (UTerm (Var t m)) t -> Node (UTerm (Var t m)) t -> m ()
+class (BindingMonad t m, MonadError () m) => UnifyMonad t m where
+    unifyBody :: t (UTerm (Var t m)) -> t (UTerm (Var t m)) -> m (t Unify)
+
+unify :: UnifyMonad t m => Node (UTerm (Var t m)) t -> Node (UTerm (Var t m)) t -> m (Node Unify t)
 unify x0 x1 =
+    Unify <$
     case (x0, x1, Proxy) of
     (UVar v, UTerm t, _) -> bindVar v t
     (UTerm t, UVar v, _) -> bindVar v t
-    (UTerm t0, UTerm t1, p) -> unifyBody (t0 `asProxyTypeOf` p) t1
+    (UTerm t0, UTerm t1, p) -> unifyBody (t0 `asProxyTypeOf` p) t1 & void
     (UVar v0, UVar v1, p)
         | v0 == v1 -> pure ()
         | otherwise ->
             unifyBody
             <$> (lookupVar v0 <&> (`asProxyTypeOf` p))
             <*> lookupVar v1
-            & join
+            & join & void
