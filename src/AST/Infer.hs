@@ -4,6 +4,7 @@ module AST.Infer
     where
 
 import           AST
+import           AST.Ann
 import           AST.Unify
 import           Data.Functor.Identity (Identity(..))
 

@@ -1,10 +1,8 @@
-{-# LANGUAGE NoImplicitPrelude, DeriveGeneric, DeriveTraversable, RankNTypes, TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude, RankNTypes #-}
 
 module AST
     ( Node, Children(..), overChildren
     , leaf, hoist
-    , Ann(..), ann, val
-    , annotations
     ) where
 
 import           Control.Lens (Lens)
@@ -50,28 +48,3 @@ hoist ::
     (forall a. f a -> g a) ->
     expr f -> expr g
 hoist f = overChildren (f . fmap (hoist f))
-
--- Annotate tree nodes
-data Ann a v = Ann
-    { _ann :: a
-    , _val :: v
-    } deriving (Eq, Ord, Show, Functor, Foldable, Traversable, Generic)
-instance (Binary a, Binary v) => Binary (Ann a v)
-Lens.makeLenses ''Ann
-
-instance (Pretty a, Pretty v) => Pretty (Ann a v) where
-    pPrintPrec lvl prec (Ann pl b)
-        | PP.isEmpty plDoc || plDoc == PP.text "()" = pPrintPrec lvl prec b
-        | otherwise =
-            maybeParens (13 < prec) $ mconcat
-            [ pPrintPrec lvl 14 b, PP.text "{", plDoc, PP.text "}" ]
-        where
-            plDoc = pPrintPrec lvl 0 pl
-
-annotations ::
-    Children e =>
-    Lens.Traversal
-    (Node (Ann a) e)
-    (Node (Ann b) e)
-    a b
-annotations f (Ann pl x) = Ann <$> f pl <*> children (annotations f) x

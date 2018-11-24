@@ -1,6 +1,7 @@
 {-# LANGUAGE StandaloneDeriving, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, TemplateHaskell, TypeFamilies, LambdaCase, TypeSynonymInstances, FlexibleInstances #-}
 
 import AST
+import AST.Ann
 import AST.Infer
 import AST.Unify
 import Control.Lens

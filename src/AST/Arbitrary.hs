@@ -5,7 +5,7 @@ module AST.Arbitrary
     , ArbitraryWithContextOf
     ) where
 
-import           AST
+import           AST.Ann
 import           Test.QuickCheck (Arbitrary(..), Gen)
 
 import           Prelude.Compat hiding (any)
