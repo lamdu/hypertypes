@@ -1,7 +1,14 @@
 {-# LANGUAGE NoImplicitPrelude, DeriveTraversable, TemplateHaskell, MultiParamTypeClasses, FlexibleContexts, RankNTypes, TypeFamilies, FlexibleInstances #-}
 
 module AST.Unify
-    where
+    ( UTerm(..), _UVar, _UTerm
+    , unfreeze, freeze
+    , Variable(..)
+    , BindingMonad(..)
+    , UnifyMonad(..)
+    , unify
+    , IntBindingState(..), nextFreeVar, varBindings
+    ) where
 
 import           AST
 import qualified Control.Lens as Lens
