@@ -1,7 +1,6 @@
 {-# LANGUAGE StandaloneDeriving, UndecidableInstances, MultiParamTypeClasses, TemplateHaskell, LambdaCase, TypeSynonymInstances, FlexibleInstances, TypeFamilies #-}
 
 import AST
-import AST.Ann
 import AST.Unify
 import AST.Unify.IntBindingState
 import qualified Control.Lens as Lens
@@ -9,10 +8,8 @@ import Control.Lens.Operators
 import Control.Monad.RWS
 import Control.Monad.Error.Class
 import Data.Functor.Identity
-import Data.IntMap
 import Data.Map
 import Data.Maybe
-import Data.Proxy
 
 data Typ f
     = TInt

@@ -30,7 +30,7 @@ overChildren ::
     Proxy constraint ->
     (forall child. constraint child => Node n child -> Node m child) ->
     expr n -> expr m
-overChildren pc f = runIdentity . children pc (Identity . f)
+overChildren p f = runIdentity . children p (Identity . f)
 
 instance Children (Const val) where
     type ChildrenConstraint (Const val) constraint = ()
