@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TypeFamilies, RankNTypes, ConstraintKinds, FlexibleInstances, UndecidableInstances, UndecidableSuperClasses #-}
+{-# LANGUAGE NoImplicitPrelude, TypeFamilies, RankNTypes, ConstraintKinds, UndecidableInstances, UndecidableSuperClasses #-}
 
 module AST
     ( Node, Children(..), traverseChildren, overChildren
