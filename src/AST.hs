@@ -1,8 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, TypeFamilies, RankNTypes, ConstraintKinds, UndecidableInstances, UndecidableSuperClasses #-}
 
 module AST
-    ( Node, Children(..), traverseChildren, overChildren
-    , ConstrainedNodeTraversal(..)
+    ( Node, Children(..), overChildren
     , leaf, hoist
     ) where
 
@@ -22,53 +21,25 @@ import           Prelude.Compat
 
 type Node f expr = f (expr f)
 
-newtype ConstrainedNodeTraversal constraint f n m =
-    CNTraversal (forall expr. constraint expr => Node n expr -> f (Node m expr))
-
 class ChildrenConstraint expr Children => Children expr where
-    type ChildrenTraversal expr (f :: * -> *) (n :: * -> *) (m :: * -> *)
     type ChildrenConstraint expr (constraint :: ((* -> *) -> *) -> Constraint) :: Constraint
     children ::
-        (Applicative f, Functor n, Functor m) =>
-        ChildrenTraversal expr f n m ->
-        expr n -> f (expr m)
-    liftChildrenTraversal ::
-        ChildrenConstraint expr constraint =>
+        (Applicative f, Functor n, Functor m, ChildrenConstraint expr constraint) =>
         Proxy constraint ->
-        Proxy (expr n) ->
-        Proxy (f (expr m)) ->
-        ConstrainedNodeTraversal constraint f n m ->
-        ChildrenTraversal expr f n m
-
-traverseChildren ::
-    (ChildrenConstraint expr constraint, Children expr, Applicative f, Functor n, Functor m) =>
-    Proxy constraint ->
-    (forall child. constraint child => Node n child -> f (Node m child)) ->
-    expr n -> f (expr m)
-traverseChildren pc f =
-    case (Proxy, Proxy) of
-    (pi, po) ->
-        (`asProxyTypeOf` po) .
-        children (liftChildrenTraversal pc pi po (CNTraversal f)) . (`asProxyTypeOf` pi)
+        (forall child. constraint child => Node n child -> f (Node m child)) ->
+        -- ConstrainedNodeTraversal constraint f n m ->
+        expr n -> f (expr m)
 
 overChildren ::
     (ChildrenConstraint expr constraint, Children expr, Functor n, Functor m) =>
     Proxy constraint ->
     (forall child. constraint child => Node n child -> Node m child) ->
     expr n -> expr m
-overChildren pc f =
-    case (Proxy, Proxy) of
-    (pi, po) ->
-        runIdentity .
-        (`asProxyTypeOf` po) .
-        children (liftChildrenTraversal pc pi po (CNTraversal (Identity . f))) .
-        (`asProxyTypeOf` pi)
+overChildren pc f = runIdentity . children pc (Identity . f)
 
 instance Children (Const val) where
-    type ChildrenTraversal (Const val) f n m = ()
     type ChildrenConstraint (Const val) constraint = ()
-    children _ (Const x) = pure (Const x)
-    liftChildrenTraversal _ _ _ _ = ()
+    children _ _ (Const x) = pure (Const x)
 
 leaf ::
     (Functor n, Functor m) =>

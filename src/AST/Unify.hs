@@ -37,7 +37,7 @@ unfreeze (Identity t) = overChildren (Proxy :: Proxy Children) unfreeze t & UTer
 
 freeze :: Children t => Node (UTerm v) t -> Maybe (Node Identity t)
 freeze UVar{} = Nothing
-freeze (UTerm t) = traverseChildren (Proxy :: Proxy Children) freeze t <&> Identity
+freeze (UTerm t) = children (Proxy :: Proxy Children) freeze t <&> Identity
 
 class Eq v => Variable v where
     getVarId :: v -> Int
@@ -68,7 +68,7 @@ applyBindings (UVar v) =
     Just (UTerm t) -> applyBindingsBody t <&> UTerm
 
 applyBindingsBody :: forall m v t. UnifyMonad m v t => t (UTerm v) -> m (t (UTerm v))
-applyBindingsBody = traverseChildren (Proxy :: Proxy (UnifyMonad m v)) applyBindings
+applyBindingsBody = children (Proxy :: Proxy (UnifyMonad m v)) applyBindings
 
 unify :: UnifyMonad m v t => Node (UTerm v) t -> Node (UTerm v) t -> m (Node Unify t)
 unify x0 x1 =

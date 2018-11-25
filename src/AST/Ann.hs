@@ -42,4 +42,4 @@ annotations ::
     (Node (Ann a) e)
     (Node (Ann b) e)
     a b
-annotations f (Ann pl x) = Ann <$> f pl <*> traverseChildren (Proxy :: Proxy Children) (annotations f) x
+annotations f (Ann pl x) = Ann <$> f pl <*> children (Proxy :: Proxy Children) (annotations f) x

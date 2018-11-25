@@ -34,21 +34,15 @@ deriving instance (Show (f (Typ f)), Show (f (Row f))) => Show (Row f)
 deriving instance Show (Node f Term) => Show (Term f)
 
 instance Children Typ where
-    type ChildrenTraversal Typ f n m =
-        (Node n Typ -> f (Node m Typ), Node n Row -> f (Node m Row))
     type ChildrenConstraint Typ constraint = (constraint Typ, constraint Row)
-    children _ TInt = pure TInt
-    children (t, _) (TFun x y) = TFun <$> t x <*> t y
-    children t (TRow x) = TRow <$> children t x
-    liftChildrenTraversal _ _ _ (CNTraversal f) = (f, f)
+    children _ _ TInt = pure TInt
+    children _ f (TFun x y) = TFun <$> f x <*> f y
+    children p f (TRow x) = TRow <$> children p f x
 
 instance Children Row where
-    type ChildrenTraversal Row f n m =
-        (Node n Typ -> f (Node m Typ), Node n Row -> f (Node m Row))
     type ChildrenConstraint Row constraint = (constraint Typ, constraint Row)
-    children _ REmpty = pure REmpty
-    children (t, r) (RExtend k x y) = RExtend k <$> t x <*> r y
-    liftChildrenTraversal _ _ _ (CNTraversal f) = (f, f)
+    children _ _ REmpty = pure REmpty
+    children _ f (RExtend k x y) = RExtend k <$> f x <*> f y
 
 data InferState = InferState
     { _typBindings :: IntBindingState Typ
