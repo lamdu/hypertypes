@@ -12,6 +12,7 @@ import Data.Functor.Identity
 import Data.IntMap
 import Data.Map
 import Data.Maybe
+import Data.Proxy
 
 data Typ f
     = TInt
@@ -35,17 +36,19 @@ deriving instance Show (Node f Term) => Show (Term f)
 instance Children Typ where
     type ChildrenTraversal Typ f n m =
         (Node n Typ -> f (Node m Typ), Node n Row -> f (Node m Row))
+    type ChildrenConstraint Typ constraint = (constraint Typ, constraint Row)
     children _ TInt = pure TInt
     children (t, _) (TFun x y) = TFun <$> t x <*> t y
     children t (TRow x) = TRow <$> children t x
-    liftChildrenTraversal _ f = (f, f)
+    liftChildrenTraversal _ _ _ (CNTraversal f) = (f, f)
 
 instance Children Row where
     type ChildrenTraversal Row f n m =
         (Node n Typ -> f (Node m Typ), Node n Row -> f (Node m Row))
+    type ChildrenConstraint Row constraint = (constraint Typ, constraint Row)
     children _ REmpty = pure REmpty
     children (t, r) (RExtend k x y) = RExtend k <$> t x <*> r y
-    liftChildrenTraversal _ f = (f, f)
+    liftChildrenTraversal _ _ _ (CNTraversal f) = (f, f)
 
 data InferState = InferState
     { _typBindings :: IntBindingState Typ
@@ -58,17 +61,15 @@ emptyInferState = InferState emptyIntBindingState emptyIntBindingState
 
 type InferM = RWST (Map String (Node (UTerm Int) Typ)) () InferState Maybe
 
-instance UnifyMonad Int Typ InferM where
+instance UnifyMonad InferM Int Typ where
     binding = intBindingState typBindings
-    applyBindingsBody = children (applyBindings, applyBindings)
     unifyBody TInt TInt = pure TInt
     unifyBody (TFun a0 r0) (TFun a1 r1) = TFun <$> unify a0 a1 <*> unify r0 r1
     unifyBody (TRow r0) (TRow r1) = TRow <$> unifyBody r0 r1
     unifyBody _ _ = throwError ()
 
-instance UnifyMonad Int Row InferM where
+instance UnifyMonad InferM Int Row where
     binding = intBindingState rowBindings
-    applyBindingsBody = children (applyBindings, applyBindings)
     unifyBody REmpty REmpty = pure REmpty
     unifyBody (RExtend k0 v0 r0) (RExtend k1 v1 r1)
         | k0 == k1 = RExtend k0 <$> unify v0 v1 <*> unify r0 r1

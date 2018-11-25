@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, DeriveTraversable, TemplateHaskell, MultiParamTypeClasses, FlexibleContexts, LambdaCase #-}
+{-# LANGUAGE NoImplicitPrelude, DeriveTraversable, TemplateHaskell, MultiParamTypeClasses, FlexibleContexts, LambdaCase, ScopedTypeVariables, UndecidableInstances, UndecidableSuperClasses #-}
 
 module AST.Unify
     ( UTerm(..), _UVar, _UTerm
@@ -33,11 +33,11 @@ Lens.makePrisms ''UTerm
 
 -- | Embed a pure term as a mutable term.
 unfreeze :: Children t => Node Identity t -> Node (UTerm v) t
-unfreeze (Identity t) = overChildren unfreeze t & UTerm
+unfreeze (Identity t) = overChildren (Proxy :: Proxy Children) unfreeze t & UTerm
 
 freeze :: Children t => Node (UTerm v) t -> Maybe (Node Identity t)
 freeze UVar{} = Nothing
-freeze (UTerm t) = traverseChildren freeze t <&> Identity
+freeze (UTerm t) = traverseChildren (Proxy :: Proxy Children) freeze t <&> Identity
 
 class Eq v => Variable v where
     getVarId :: v -> Int
@@ -53,12 +53,11 @@ data Binding v t m = Binding
 
 data Unify a = Unify
 
-class (Eq v, Children t, MonadError () m) => UnifyMonad v t m where
+class (Eq v, Children t, MonadError () m, ChildrenConstraint t (UnifyMonad m v)) => UnifyMonad m v t where
     binding :: Binding v t m
-    applyBindingsBody :: t (UTerm v) -> m (t (UTerm v))
     unifyBody :: t (UTerm v) -> t (UTerm v) -> m (t Unify)
 
-applyBindings :: UnifyMonad v t m => Node (UTerm v) t -> m (Node (UTerm v) t)
+applyBindings :: UnifyMonad m v t => Node (UTerm v) t -> m (Node (UTerm v) t)
 applyBindings (UTerm t) = applyBindingsBody t <&> UTerm
 applyBindings (UVar v) =
     lookupVar binding v
@@ -68,7 +67,10 @@ applyBindings (UVar v) =
     Just v1@UVar{} -> pure v1
     Just (UTerm t) -> applyBindingsBody t <&> UTerm
 
-unify :: UnifyMonad v t m => Node (UTerm v) t -> Node (UTerm v) t -> m (Node Unify t)
+applyBindingsBody :: forall m v t. UnifyMonad m v t => t (UTerm v) -> m (t (UTerm v))
+applyBindingsBody = traverseChildren (Proxy :: Proxy (UnifyMonad m v)) applyBindings
+
+unify :: UnifyMonad m v t => Node (UTerm v) t -> Node (UTerm v) t -> m (Node Unify t)
 unify x0 x1 =
     Unify <$
     case (x0, x1, Proxy) of

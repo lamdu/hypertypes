@@ -12,6 +12,7 @@ import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           Data.Functor.Const (Const(..))
 import           Data.Functor.Identity (Identity(..))
+import           Data.Proxy
 import           GHC.Generics (Generic)
 import qualified Text.PrettyPrint as PP
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
@@ -41,4 +42,4 @@ annotations ::
     (Node (Ann a) e)
     (Node (Ann b) e)
     a b
-annotations f (Ann pl x) = Ann <$> f pl <*> traverseChildren (annotations f) x
+annotations f (Ann pl x) = Ann <$> f pl <*> traverseChildren (Proxy :: Proxy Children) (annotations f) x
