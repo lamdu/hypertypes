@@ -27,7 +27,6 @@ class ChildrenConstraint expr Children => Children expr where
         (Applicative f, Functor n, Functor m, ChildrenConstraint expr constraint) =>
         Proxy constraint ->
         (forall child. constraint child => Node n child -> f (Node m child)) ->
-        -- ConstrainedNodeTraversal constraint f n m ->
         expr n -> f (expr m)
 
 overChildren ::
