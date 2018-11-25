@@ -15,10 +15,7 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad
 import           Control.Monad.Except (MonadError(..))
-import           Control.Monad.Trans.State
 import           Data.Functor.Identity (Identity(..))
-import           Data.IntMap (IntMap)
-import           Data.Maybe (fromMaybe)
 import           Data.Proxy
 
 import           Prelude.Compat

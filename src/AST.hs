@@ -8,14 +8,10 @@ module AST
 import           Control.Lens (Lens)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Data.Binary (Binary)
 import           Data.Functor.Const (Const(..))
 import           Data.Functor.Identity (Identity(..))
 import           Data.Proxy
 import           GHC.Exts (Constraint)
-import           GHC.Generics (Generic)
-import qualified Text.PrettyPrint as PP
-import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 import           Prelude.Compat
 

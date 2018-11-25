@@ -11,13 +11,8 @@ import           AST.Unify
 import qualified Control.Lens as Lens
 import           Control.Lens (ALens')
 import           Control.Lens.Operators
-import           Control.Monad
-import           Control.Monad.Except (MonadError(..))
 import           Control.Monad.State
-import           Data.Functor.Identity (Identity(..))
 import           Data.IntMap (IntMap)
-import           Data.Maybe (fromMaybe)
-import           Data.Proxy
 
 import           Prelude.Compat
 

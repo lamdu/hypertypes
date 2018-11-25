@@ -6,12 +6,8 @@ module AST.Ann
     ) where
 
 import           AST
-import           Control.Lens (Lens)
 import qualified Control.Lens as Lens
-import           Control.Lens.Operators
 import           Data.Binary (Binary)
-import           Data.Functor.Const (Const(..))
-import           Data.Functor.Identity (Identity(..))
 import           Data.Proxy
 import           GHC.Generics (Generic)
 import qualified Text.PrettyPrint as PP
