@@ -1,4 +1,4 @@
-{-# LANGUAGE StandaloneDeriving, UndecidableInstances, MultiParamTypeClasses, TemplateHaskell, LambdaCase, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE StandaloneDeriving, UndecidableInstances, MultiParamTypeClasses, TemplateHaskell, LambdaCase, TypeSynonymInstances, FlexibleInstances, TypeFamilies #-}
 
 import AST
 import AST.Ann
@@ -33,13 +33,19 @@ deriving instance (Show (f (Typ f)), Show (f (Row f))) => Show (Row f)
 deriving instance Show (Node f Term) => Show (Term f)
 
 instance Children Typ where
+    type ChildrenTraversal Typ f n m =
+        (Node n Typ -> f (Node m Typ), Node n Row -> f (Node m Row))
     children _ TInt = pure TInt
-    children f (TFun x y) = TFun <$> f x <*> f y
-    children f (TRow x) = TRow <$> children f x
+    children (t, _) (TFun x y) = TFun <$> t x <*> t y
+    children t (TRow x) = TRow <$> children t x
+    liftChildrenTraversal _ f = (f, f)
 
 instance Children Row where
+    type ChildrenTraversal Row f n m =
+        (Node n Typ -> f (Node m Typ), Node n Row -> f (Node m Row))
     children _ REmpty = pure REmpty
-    children f (RExtend k x y) = RExtend k <$> f x <*> f y
+    children (t, r) (RExtend k x y) = RExtend k <$> t x <*> r y
+    liftChildrenTraversal _ f = (f, f)
 
 data InferState = InferState
     { _typBindings :: IntBindingState Typ
@@ -54,9 +60,7 @@ type InferM = RWST (Map String (Node (UTerm Int) Typ)) () InferState Maybe
 
 instance UnifyMonad Int Typ InferM where
     binding = intBindingState typBindings
-    applyBindingsBody TInt = pure TInt
-    applyBindingsBody (TFun a r) = TFun <$> applyBindings a <*> applyBindings r
-    applyBindingsBody (TRow r) = TRow <$> applyBindingsBody r
+    applyBindingsBody = children (applyBindings, applyBindings)
     unifyBody TInt TInt = pure TInt
     unifyBody (TFun a0 r0) (TFun a1 r1) = TFun <$> unify a0 a1 <*> unify r0 r1
     unifyBody (TRow r0) (TRow r1) = TRow <$> unifyBody r0 r1
@@ -64,8 +68,7 @@ instance UnifyMonad Int Typ InferM where
 
 instance UnifyMonad Int Row InferM where
     binding = intBindingState rowBindings
-    applyBindingsBody REmpty = pure REmpty
-    applyBindingsBody (RExtend k v r) = RExtend k <$> applyBindings v <*> applyBindings r
+    applyBindingsBody = children (applyBindings, applyBindings)
     unifyBody REmpty REmpty = pure REmpty
     unifyBody (RExtend k0 v0 r0) (RExtend k1 v1 r1)
         | k0 == k1 = RExtend k0 <$> unify v0 v1 <*> unify r0 r1

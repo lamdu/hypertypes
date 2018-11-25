@@ -37,7 +37,7 @@ unfreeze (Identity t) = overChildren unfreeze t & UTerm
 
 freeze :: Children t => Node (UTerm v) t -> Maybe (Node Identity t)
 freeze UVar{} = Nothing
-freeze (UTerm t) = children freeze t <&> Identity
+freeze (UTerm t) = traverseChildren freeze t <&> Identity
 
 class Eq v => Variable v where
     getVarId :: v -> Int
