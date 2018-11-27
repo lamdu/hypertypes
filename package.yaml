@@ -35,19 +35,6 @@ dependencies:
 library:
   source-dirs: src
 
-executables:
-  syntax-tree-exe:
-    main:                Main.hs
-    source-dirs:         app
-    ghc-options:
-    - -Wall
-    - -Wcompat
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - syntax-tree
-
 tests:
   syntax-tree-test:
     main:                Spec.hs
