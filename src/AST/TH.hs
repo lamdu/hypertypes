@@ -76,6 +76,9 @@ makeChildrenCtr var info =
         field name (ConT _ `AppT` VarT functor)
             | functor == var =
                 VarE 'children `AppE` VarE proxy `AppE` VarE func `AppE` VarE name
+        field name (AppT _ (ConT node `AppT` VarT functor `AppT` ConT _))
+            | node == ''Node && functor == var =
+                VarE 'traverse `AppE` VarE func `AppE` VarE name
         field name _ = AppE (VarE 'pure) (VarE name)
 
 applicativeStyle :: Exp -> [Exp] -> Exp
