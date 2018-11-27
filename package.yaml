@@ -34,6 +34,14 @@ dependencies:
 
 library:
   source-dirs: src
+  ghc-options:
+  - -O2
+  - -Wall
+  - -Wnoncanonical-monad-instances
+  - -Wcompat
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Wredundant-constraints
 
 tests:
   syntax-tree-test:
