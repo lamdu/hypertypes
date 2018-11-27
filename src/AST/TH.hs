@@ -11,6 +11,9 @@ import           Control.Lens.Operators
 import           Control.Monad.Error.Class (MonadError(..))
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.State
+import           Data.Map (Map)
+import qualified Data.Map as Map
+import           Data.Maybe (fromMaybe)
 import           Data.Set (Set)
 import qualified Data.Set as Set
 import           Language.Haskell.TH
@@ -23,7 +26,8 @@ makeChildren typeName =
     do
         info <- D.reifyDatatype typeName
         (dst, var) <- parts info
-        childrenT <- evalStateT (childrenTypesFromTypeName typeName) mempty
+        childrenT <-
+            evalStateT (childrenTypes var (AppT dst (VarT var))) mempty
         let childrenConstraint =
                 Set.toList childrenT
                 <&> AppT (VarT constraint)
@@ -55,35 +59,56 @@ parts info =
             pure (foldl AppT (ConT (D.datatypeName info)) (init xs), var)
         _ -> fail "expected last argument to be variable"
 
-childrenTypesFromTypeName ::
-    Name -> StateT (Set Name) Q (Set Type)
-childrenTypesFromTypeName name =
+childrenTypes ::
+    Name -> Type -> StateT (Set Type) Q (Set Type)
+childrenTypes var typ =
     do
-        did <- gets (^. Lens.contains name)
+        did <- gets (^. Lens.contains typ)
         if did
             then
                 pure mempty
             else
-                do
-                    modify (Lens.contains name .~ True)
-                    D.reifyDatatype name & lift >>= childrenTypesFromTypeInfo
+                case typ of
+                ConT node `AppT` VarT functor `AppT` ast
+                    | node == ''Node && functor == var ->
+                        Set.singleton ast & pure
+                ast `AppT` VarT functor
+                    | functor == var ->
+                        go [] ast
+                        where
+                            go as (ConT name) = childrenTypesFromTypeName name as
+                            go as (AppT x a) = go (a:as) x
+                            go _ _ = pure mempty
+                _ -> pure mempty
 
-childrenTypesFromTypeInfo ::
-    D.DatatypeInfo -> StateT (Set Name) Q (Set Type)
-childrenTypesFromTypeInfo info =
+childrenTypesFromTypeName ::
+    Name -> [Type] -> StateT (Set Type) Q (Set Type)
+childrenTypesFromTypeName name args =
     do
+        info <- D.reifyDatatype name & lift
+        let substs =
+                zip (D.datatypeVars info) args
+                >>= filterVar
+                & Map.fromList
         (_, var) <- parts info & lift
         D.datatypeCons info >>= D.constructorFields
+            <&> substitute substs
             & traverse (childrenTypes var)
             <&> mconcat
+    where
+        filterVar (VarT n, x) = [(n, x)]
+        filterVar (SigT t _, x) = filterVar (t, x)
+        filterVar _ = []
 
-childrenTypes ::
-    Name -> Type -> StateT (Set Name) Q (Set Type)
-childrenTypes var (ConT node `AppT` VarT functor `AppT` ast)
-    | node == ''Node && functor == var = Set.singleton ast & pure
-childrenTypes var (ConT ast `AppT` VarT functor)
-    | functor == var = childrenTypesFromTypeName ast
-childrenTypes _ _ = pure mempty
+substitute :: Map Name Type -> Type -> Type
+substitute s (ForallT b c t) = substitute s t & ForallT b c
+substitute s (AppT f a) = AppT (substitute s f) (substitute s a)
+substitute s (SigT t k) = SigT (substitute s t) k
+substitute s (VarT n) = s ^. Lens.at n & fromMaybe (VarT n)
+substitute s (InfixT l n r) = InfixT (substitute s l) n (substitute s r)
+substitute s (UInfixT l n r) = UInfixT (substitute s l) n (substitute s r)
+substitute s (ParensT t) = substitute s t & ParensT
+substitute _ x = x
 
 makeChildrenCtr :: Name -> D.ConstructorInfo -> Clause
 makeChildrenCtr var info =
