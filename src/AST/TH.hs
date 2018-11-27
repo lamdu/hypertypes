@@ -1,11 +1,13 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell #-}
 
 module AST.TH
-    ( makeChildren
+    ( makeChildren, makeZipMatch
     ) where
 
 import           AST
+import           AST.ZipMatch
 import           Control.Lens.Operators
+import           Control.Monad.Error.Class
 import           Data.Set (Set)
 import qualified Data.Set as Set
 import           Language.Haskell.TH
@@ -27,7 +29,7 @@ makeChildren typeName =
         instanceD (pure []) (appT (conT ''Children) (conT typeName))
             [ tySynInstD ''ChildrenConstraint
                 (pure (TySynEqn [ConT typeName, VarT constraint] childrenConstraint))
-            , funD 'children (D.datatypeCons info <&> makeChildrenCtr var)
+            , funD 'children (D.datatypeCons info <&> pure . makeChildrenCtr var)
             ]
             <&> (:[])
     where
@@ -48,27 +50,79 @@ childrenTypes var (ConT ast `AppT` VarT functor)
     | functor == var = D.reifyDatatype ast >>= childrenTypesFromTypeInfo
 childrenTypes _ _ = pure mempty
 
-makeChildrenCtr :: Name -> D.ConstructorInfo -> ClauseQ
+makeChildrenCtr :: Name -> D.ConstructorInfo -> Clause
 makeChildrenCtr var info =
     Clause
     [VarP proxy, VarP func, ConP (D.constructorName info) (cVars <&> VarP)]
     (NormalB body) []
-    & pure
     where
         proxy = mkName "_p"
         func = mkName "_f"
-        cVars = take (length (D.constructorFields info)) xVars
+        cVars =
+            [0::Int ..] <&> show <&> ('x':) <&> mkName
+            & take (length (D.constructorFields info))
         body =
-            zipWith varClause cVars (D.constructorFields info)
-            & foldl ap (AppE (VarE 'pure) (ConE (D.constructorName info)))
-        ap x y = InfixE (Just x) (VarE '(<*>)) (Just y)
-        varClause name (ConT node `AppT` VarT functor `AppT` ConT _)
+            zipWith field cVars (D.constructorFields info)
+            & applicativeStyle (ConE (D.constructorName info))
+        field name (ConT node `AppT` VarT functor `AppT` ConT _)
             | node == ''Node && functor == var =
                 AppE (VarE func) (VarE name)
-        varClause name (ConT _ `AppT` VarT functor)
+        field name (ConT _ `AppT` VarT functor)
             | functor == var =
                 VarE 'children `AppE` VarE proxy `AppE` VarE func `AppE` VarE name
-        varClause name _ = AppE (VarE 'pure) (VarE name)
+        field name _ = AppE (VarE 'pure) (VarE name)
 
-xVars :: [Name]
-xVars = [0::Int ..] <&> show <&> ('x':) <&> mkName
+applicativeStyle :: Exp -> [Exp] -> Exp
+applicativeStyle f =
+    foldl ap (AppE (VarE 'pure) f)
+    where
+        ap x y = InfixE (Just x) (VarE '(<*>)) (Just y)
+
+makeZipMatch :: Name -> DecsQ
+makeZipMatch typeName =
+    do
+        info <- D.reifyDatatype typeName
+        let [SigT (VarT var) _] = D.datatypeVars info
+        instanceD (pure []) (appT (conT ''ZipMatch) (conT typeName))
+            [ funD 'zipMatch
+                ( (D.datatypeCons info <&> pure . makeZipMatchCtr var)
+                    ++ [pure tailClause]
+                )
+            ]
+            <&> (:[])
+    where
+        tailClause =
+            Clause [WildP, WildP, WildP, WildP]
+            (NormalB (AppE (VarE 'throwError) (TupE [])))
+            []
+
+
+makeZipMatchCtr :: Name -> D.ConstructorInfo -> Clause
+makeZipMatchCtr var info =
+    Clause [VarP proxy, VarP func, con fst, con snd] body []
+    where
+        proxy = mkName "_p"
+        func = mkName "_f"
+        con f = ConP (D.constructorName info) (cVars <&> f <&> VarP)
+        cVars =
+            [0::Int ..] <&> show <&> (\n -> (mkName ('x':n), mkName ('y':n)))
+            & take (length (D.constructorFields info))
+        body
+            | null checks = NormalB bodyExp
+            | otherwise = GuardedB [(NormalG (foldl1 mkAnd checks), bodyExp)]
+        checks = fieldParts >>= snd
+        mkAnd x y = InfixE (Just x) (VarE '(&&)) (Just y)
+        fieldParts = zipWith field cVars (D.constructorFields info)
+        bodyExp =
+            fieldParts <&> fst
+            & applicativeStyle (ConE (D.constructorName info))
+        field (x, y) (ConT node `AppT` VarT functor `AppT` ConT _)
+            | node == ''Node && functor == var =
+                (VarE func `AppE` VarE x `AppE` VarE y, [])
+        field (x, y) (ConT _ `AppT` VarT functor)
+            | functor == var =
+                (VarE 'zipMatch `AppE` VarE proxy `AppE` VarE func `AppE` VarE x `AppE` VarE y, [])
+        field (x, y) _ =
+            ( AppE (VarE 'pure) (VarE x)
+            , [InfixE (Just (VarE x)) (VarE '(==)) (Just (VarE y))]
+            )

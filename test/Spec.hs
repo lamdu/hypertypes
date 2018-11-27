@@ -4,11 +4,9 @@ import AST
 import AST.TH
 import AST.Unify
 import AST.Unify.IntBindingState
-import AST.ZipMatch
 import qualified Control.Lens as Lens
 import Control.Lens.Operators
 import Control.Monad.RWS
-import Control.Monad.Error.Class
 import Data.Functor.Identity
 import Data.Map
 import Data.Maybe
@@ -32,20 +30,7 @@ deriving instance (Show (f (Typ f)), Show (Row f)) => Show (Typ f)
 deriving instance (Show (f (Typ f)), Show (f (Row f))) => Show (Row f)
 deriving instance Show (Node f Term) => Show (Term f)
 
-makeChildren ''Typ
-makeChildren ''Row
-
-instance ZipMatch Typ where
-    zipMatch _ _ TInt TInt = pure TInt
-    zipMatch _ f (TFun a0 r0) (TFun a1 r1) = TFun <$> f a0 a1 <*> f r0 r1
-    zipMatch p f (TRow r0) (TRow r1) = zipMatch p f r0 r1 <&> TRow
-    zipMatch _ _ _ _ = throwError ()
-
-instance ZipMatch Row where
-    zipMatch _ _ REmpty REmpty = pure REmpty
-    zipMatch _ f (RExtend k0 v0 r0) (RExtend k1 v1 r1)
-        | k0 == k1 = RExtend k0 <$> f v0 v1 <*> f r0 r1
-    zipMatch _ _ _ _ = throwError ()
+[makeChildren, makeZipMatch] <*> [''Typ, ''Row] & sequenceA <&> concat
 
 data InferState = InferState
     { _typBindings :: IntBindingState Typ
