@@ -20,17 +20,18 @@ data Row f
     = REmpty
     | RExtend String (Node f Typ) (Node f Row)
 
-data Term f
-    = ELam String (Node f Term)
-    | EVar String
-    | EApp (Node f Term) (Node f Term)
+data Term v f
+    = ELam v (Node f (Term v))
+    | EVar v
+    | EApp (Node f (Term v)) (Node f (Term v))
     | ELit Int
 
 deriving instance (Show (f (Typ f)), Show (Row f)) => Show (Typ f)
 deriving instance (Show (f (Typ f)), Show (f (Row f))) => Show (Row f)
-deriving instance Show (Node f Term) => Show (Term f)
+deriving instance (Show v, Show (Node f (Term v))) => Show (Term v f)
 
-[makeChildren, makeZipMatch] <*> [''Typ, ''Row, ''Term] & sequenceA <&> concat
+[makeChildren, makeZipMatch] <*> [''Typ, ''Row] & sequenceA <&> concat
+makeChildren ''Term -- TODO: makeZipMatch should work too
 
 data InferState = InferState
     { _typBindings :: IntBindingState Typ
@@ -52,7 +53,7 @@ instance UnifyMonad InferM Int Row where
 runInfer :: InferM a -> Maybe a
 runInfer act = runRWST act mempty emptyInferState <&> (^. Lens._1)
 
-infer :: Term Identity -> InferM (Node (UTerm Int) Typ)
+infer :: Term String Identity -> InferM (Node (UTerm Int) Typ)
 infer ELit{} = UTerm TInt & pure
 infer (EVar var) = Lens.view (Lens.at var) <&> fromMaybe (error "name error")
 infer (ELam var (Identity body)) =
@@ -74,7 +75,7 @@ infer (EApp (Identity func) (Identity arg)) =
                     funcRes <- newVar binding
                     funcRes <$ unify x (UTerm (TFun argType funcRes))
 
-expr :: Node Identity Term
+expr :: Node Identity (Term String)
 expr =
     -- \x -> x 5
     ELit 5 & Identity

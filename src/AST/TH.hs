@@ -19,46 +19,49 @@ makeChildren :: Name -> DecsQ
 makeChildren typeName =
     do
         info <- D.reifyDatatype typeName
-        var <- getVar info
+        (dst, var) <- parts info
         childrenT <- childrenTypesFromTypeInfo info
         let childrenConstraint =
                 Set.toList childrenT
-                <&> ConT
                 <&> AppT (VarT constraint)
                 & foldl AppT (TupleT (Set.size childrenT))
         inst <-
-            instanceD (pure []) (appT (conT ''Children) (conT typeName))
+            instanceD (pure []) (appT (conT ''Children) (pure dst))
             [ tySynInstD ''ChildrenConstraint
-                (pure (TySynEqn [ConT typeName, VarT constraint] childrenConstraint))
+                (pure (TySynEqn [dst, VarT constraint] childrenConstraint))
             , funD 'children (D.datatypeCons info <&> pure . makeChildrenCtr var)
             ]
         mono <-
             case Set.toList childrenT of
             [x] ->
                 tySynInstD ''ChildOf
-                (pure (TySynEqn [ConT typeName] (ConT x)))
+                (pure (TySynEqn [dst] x))
                 <&> (:[])
             _ -> pure []
         pure (inst : mono)
     where
         constraint = mkName "constraint"
 
-getVar :: D.DatatypeInfo -> Q Name
-getVar info =
+parts :: D.DatatypeInfo -> Q (Type, Name)
+parts info =
     case D.datatypeVars info of
-    [SigT (VarT var) _] -> pure var
-    _ -> fail "unexpected number of type variables"
+    [] -> fail "expected type constructor which requires arguments"
+    xs ->
+        case last xs of
+        SigT (VarT var) _ ->
+            pure (foldl AppT (ConT (D.datatypeName info)) (init xs), var)
+        _ -> fail "expected last argument to be variable"
 
-childrenTypesFromTypeInfo :: D.DatatypeInfo -> Q (Set Name)
+childrenTypesFromTypeInfo :: D.DatatypeInfo -> Q (Set Type)
 childrenTypesFromTypeInfo info =
     do
-        var <- getVar info
+        (_, var) <- parts info
         D.datatypeCons info >>= D.constructorFields
             & traverse (childrenTypes var)
             <&> mconcat
 
-childrenTypes :: Name -> Type -> Q (Set Name)
-childrenTypes var (ConT node `AppT` VarT functor `AppT` ConT ast)
+childrenTypes :: Name -> Type -> Q (Set Type)
+childrenTypes var (ConT node `AppT` VarT functor `AppT` ast)
     | node == ''Node && functor == var = Set.singleton ast & pure
 childrenTypes var (ConT ast `AppT` VarT functor)
     | functor == var = D.reifyDatatype ast >>= childrenTypesFromTypeInfo
@@ -78,10 +81,10 @@ makeChildrenCtr var info =
         body =
             zipWith field cVars (D.constructorFields info)
             & applicativeStyle (ConE (D.constructorName info))
-        field name (ConT node `AppT` VarT functor `AppT` ConT _)
+        field name (ConT node `AppT` VarT functor `AppT` _)
             | node == ''Node && functor == var =
                 AppE (VarE func) (VarE name)
-        field name (ConT _ `AppT` VarT functor)
+        field name (_ `AppT` VarT functor)
             | functor == var =
                 VarE 'children `AppE` VarE proxy `AppE` VarE func `AppE` VarE name
         field name (AppT _ (ConT node `AppT` VarT functor `AppT` ConT _))
@@ -99,8 +102,8 @@ makeZipMatch :: Name -> DecsQ
 makeZipMatch typeName =
     do
         info <- D.reifyDatatype typeName
-        var <- getVar info
-        instanceD (pure []) (appT (conT ''ZipMatch) (conT typeName))
+        (dst, var) <- parts info
+        instanceD (pure []) (appT (conT ''ZipMatch) (pure dst))
             [ funD 'zipMatch
                 ( (D.datatypeCons info <&> pure . makeZipMatchCtr var)
                     ++ [pure tailClause]
@@ -133,10 +136,10 @@ makeZipMatchCtr var info =
         bodyExp =
             fieldParts <&> fst
             & applicativeStyle (ConE (D.constructorName info))
-        field (x, y) (ConT node `AppT` VarT functor `AppT` ConT _)
+        field (x, y) (ConT node `AppT` VarT functor `AppT` _)
             | node == ''Node && functor == var =
                 (VarE func `AppE` VarE x `AppE` VarE y, [])
-        field (x, y) (ConT _ `AppT` VarT functor)
+        field (x, y) (_ `AppT` VarT functor)
             | functor == var =
                 (VarE 'zipMatch `AppE` VarE proxy `AppE` VarE func `AppE` VarE x `AppE` VarE y, [])
         field (x, y) _ =
