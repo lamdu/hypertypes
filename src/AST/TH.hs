@@ -19,7 +19,7 @@ makeChildren :: Name -> DecsQ
 makeChildren typeName =
     do
         info <- D.reifyDatatype typeName
-        let [SigT (VarT var) _] = D.datatypeVars info
+        var <- getVar info
         childrenT <- childrenTypesFromTypeInfo info
         let childrenConstraint =
                 Set.toList childrenT
@@ -35,13 +35,19 @@ makeChildren typeName =
     where
         constraint = mkName "constraint"
 
+getVar :: D.DatatypeInfo -> Q Name
+getVar info =
+    case D.datatypeVars info of
+    [SigT (VarT var) _] -> pure var
+    _ -> fail "unexpected number of type variables"
+
 childrenTypesFromTypeInfo :: D.DatatypeInfo -> Q (Set Name)
 childrenTypesFromTypeInfo info =
-    D.datatypeCons info >>= D.constructorFields
-    & traverse (childrenTypes var)
-    <&> mconcat
-    where
-        [SigT (VarT var) _] = D.datatypeVars info
+    do
+        var <- getVar info
+        D.datatypeCons info >>= D.constructorFields
+            & traverse (childrenTypes var)
+            <&> mconcat
 
 childrenTypes :: Name -> Type -> Q (Set Name)
 childrenTypes var (ConT node `AppT` VarT functor `AppT` ConT ast)
@@ -82,7 +88,7 @@ makeZipMatch :: Name -> DecsQ
 makeZipMatch typeName =
     do
         info <- D.reifyDatatype typeName
-        let [SigT (VarT var) _] = D.datatypeVars info
+        var <- getVar info
         instanceD (pure []) (appT (conT ''ZipMatch) (conT typeName))
             [ funD 'zipMatch
                 ( (D.datatypeCons info <&> pure . makeZipMatchCtr var)
