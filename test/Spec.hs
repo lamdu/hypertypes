@@ -30,7 +30,7 @@ deriving instance (Show (f (Typ f)), Show (Row f)) => Show (Typ f)
 deriving instance (Show (f (Typ f)), Show (f (Row f))) => Show (Row f)
 deriving instance Show (Node f Term) => Show (Term f)
 
-[makeChildren, makeZipMatch] <*> [''Typ, ''Row] & sequenceA <&> concat
+[makeChildren, makeZipMatch] <*> [''Typ, ''Row, ''Term] & sequenceA <&> concat
 
 data InferState = InferState
     { _typBindings :: IntBindingState Typ

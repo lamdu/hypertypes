@@ -4,7 +4,7 @@ module AST.TH
     ( makeChildren, makeZipMatch
     ) where
 
-import           AST (Node, Children(..))
+import           AST (Node, Children(..), ChildOf)
 import           AST.ZipMatch (ZipMatch(..))
 import           Control.Lens.Operators
 import           Control.Monad.Error.Class (MonadError(..))
@@ -26,12 +26,20 @@ makeChildren typeName =
                 <&> ConT
                 <&> AppT (VarT constraint)
                 & foldl AppT (TupleT (Set.size childrenT))
-        instanceD (pure []) (appT (conT ''Children) (conT typeName))
+        inst <-
+            instanceD (pure []) (appT (conT ''Children) (conT typeName))
             [ tySynInstD ''ChildrenConstraint
                 (pure (TySynEqn [ConT typeName, VarT constraint] childrenConstraint))
             , funD 'children (D.datatypeCons info <&> pure . makeChildrenCtr var)
             ]
-            <&> (:[])
+        mono <-
+            case Set.toList childrenT of
+            [x] ->
+                tySynInstD ''ChildOf
+                (pure (TySynEqn [ConT typeName] (ConT x)))
+                <&> (:[])
+            _ -> pure []
+        pure (inst : mono)
     where
         constraint = mkName "constraint"
 
