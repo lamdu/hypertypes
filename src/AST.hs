@@ -1,11 +1,12 @@
-{-# LANGUAGE NoImplicitPrelude, TypeFamilies, RankNTypes, ConstraintKinds, UndecidableInstances, UndecidableSuperClasses #-}
+{-# LANGUAGE NoImplicitPrelude, TypeFamilies, RankNTypes, ConstraintKinds, UndecidableInstances, UndecidableSuperClasses, ScopedTypeVariables #-}
 
 module AST
-    ( Node, Children(..), overChildren
+    ( Node, Children(..)
+    , overChildren, monoChildren
     , leaf, hoist
     ) where
 
-import           Control.Lens (Lens)
+import           Control.Lens (Lens, Traversal)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Functor.Const (Const(..))
@@ -24,6 +25,14 @@ class ChildrenConstraint expr Children => Children expr where
         Proxy constraint ->
         (forall child. constraint child => Node n child -> f (Node m child)) ->
         expr n -> f (expr m)
+
+monoChildren ::
+    forall expr child n m.
+    ( Children expr, ChildrenConstraint expr ((~) child)
+    , Functor n, Functor m
+    ) =>
+    Traversal (expr n) (expr m) (Node n child) (Node m child)
+monoChildren = children (Proxy :: Proxy ((~) child))
 
 overChildren ::
     (ChildrenConstraint expr constraint, Children expr, Functor n, Functor m) =>
