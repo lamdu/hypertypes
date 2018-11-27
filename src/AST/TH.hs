@@ -6,8 +6,11 @@ module AST.TH
 
 import           AST (Node, Children(..), ChildOf)
 import           AST.ZipMatch (ZipMatch(..))
+import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Error.Class (MonadError(..))
+import           Control.Monad.Trans.Class (MonadTrans(..))
+import           Control.Monad.Trans.State
 import           Data.Set (Set)
 import qualified Data.Set as Set
 import           Language.Haskell.TH
@@ -20,7 +23,7 @@ makeChildren typeName =
     do
         info <- D.reifyDatatype typeName
         (dst, var) <- parts info
-        childrenT <- childrenTypesFromTypeInfo info
+        childrenT <- evalStateT (childrenTypesFromTypeName typeName) mempty
         let childrenConstraint =
                 Set.toList childrenT
                 <&> AppT (VarT constraint)
@@ -52,19 +55,34 @@ parts info =
             pure (foldl AppT (ConT (D.datatypeName info)) (init xs), var)
         _ -> fail "expected last argument to be variable"
 
-childrenTypesFromTypeInfo :: D.DatatypeInfo -> Q (Set Type)
+childrenTypesFromTypeName ::
+    Name -> StateT (Set Name) Q (Set Type)
+childrenTypesFromTypeName name =
+    do
+        did <- gets (^. Lens.contains name)
+        if did
+            then
+                pure mempty
+            else
+                do
+                    modify (Lens.contains name .~ True)
+                    D.reifyDatatype name & lift >>= childrenTypesFromTypeInfo
+
+childrenTypesFromTypeInfo ::
+    D.DatatypeInfo -> StateT (Set Name) Q (Set Type)
 childrenTypesFromTypeInfo info =
     do
-        (_, var) <- parts info
+        (_, var) <- parts info & lift
         D.datatypeCons info >>= D.constructorFields
             & traverse (childrenTypes var)
             <&> mconcat
 
-childrenTypes :: Name -> Type -> Q (Set Type)
+childrenTypes ::
+    Name -> Type -> StateT (Set Name) Q (Set Type)
 childrenTypes var (ConT node `AppT` VarT functor `AppT` ast)
     | node == ''Node && functor == var = Set.singleton ast & pure
 childrenTypes var (ConT ast `AppT` VarT functor)
-    | functor == var = D.reifyDatatype ast >>= childrenTypesFromTypeInfo
+    | functor == var = childrenTypesFromTypeName ast
 childrenTypes _ _ = pure mempty
 
 makeChildrenCtr :: Name -> D.ConstructorInfo -> Clause
