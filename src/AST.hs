@@ -22,7 +22,7 @@ type Node f expr = f (expr f)
 class ChildrenConstraint expr Children => Children expr where
     type ChildrenConstraint expr (constraint :: ((* -> *) -> *) -> Constraint) :: Constraint
     children ::
-        (Applicative f, Functor n, Functor m, ChildrenConstraint expr constraint) =>
+        (Applicative f, ChildrenConstraint expr constraint) =>
         Proxy constraint ->
         (forall child. constraint child => Node n child -> f (Node m child)) ->
         expr n -> f (expr m)
@@ -31,14 +31,12 @@ type family ChildOf (expr :: (* -> *) -> *) :: (* -> *) -> *
 
 monoChildren ::
     forall expr n m.
-    ( Children expr, ChildrenConstraint expr ((~) (ChildOf expr))
-    , Functor n, Functor m
-    ) =>
+    (Children expr, ChildrenConstraint expr ((~) (ChildOf expr))) =>
     Traversal (expr n) (expr m) (Node n (ChildOf expr)) (Node m (ChildOf expr))
 monoChildren = children (Proxy :: Proxy ((~) (ChildOf expr)))
 
 overChildren ::
-    (ChildrenConstraint expr constraint, Children expr, Functor n, Functor m) =>
+    (ChildrenConstraint expr constraint, Children expr) =>
     Proxy constraint ->
     (forall child. constraint child => Node n child -> Node m child) ->
     expr n -> expr m
