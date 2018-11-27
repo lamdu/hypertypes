@@ -5,12 +5,12 @@ module AST.Unify
     , unfreeze, freeze
     , Variable(..)
     , Binding(..)
-    , Unify -- not exporting constructor!
     , UnifyMonad(..)
     , applyBindings, unify
     ) where
 
 import           AST
+import           AST.ZipMatch
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad
@@ -48,11 +48,12 @@ data Binding v t m = Binding
     , bindVar :: v -> Node (UTerm v) t -> m ()
     }
 
-data Unify a = Unify
-
-class (Eq v, Children t, MonadError () m, ChildrenConstraint t (UnifyMonad m v)) => UnifyMonad m v t where
+class
+    ( Eq v, ZipMatch t, MonadError () m
+    , ChildrenConstraint t (UnifyMonad m v)
+    ) =>
+    UnifyMonad m v t where
     binding :: Binding v t m
-    unifyBody :: t (UTerm v) -> t (UTerm v) -> m (t Unify)
 
 applyBindings :: UnifyMonad m v t => Node (UTerm v) t -> m (Node (UTerm v) t)
 applyBindings (UTerm t) = applyBindingsBody t <&> UTerm
@@ -67,9 +68,8 @@ applyBindings (UVar v) =
 applyBindingsBody :: forall m v t. UnifyMonad m v t => t (UTerm v) -> m (t (UTerm v))
 applyBindingsBody = children (Proxy :: Proxy (UnifyMonad m v)) applyBindings
 
-unify :: UnifyMonad m v t => Node (UTerm v) t -> Node (UTerm v) t -> m (Node Unify t)
+unify :: UnifyMonad m v t => Node (UTerm v) t -> Node (UTerm v) t -> m ()
 unify x0 x1 =
-    Unify <$
     case (x0, x1, Proxy) of
     (UVar v, t@UTerm{}, p) -> bindVar binding v (t `asProxyTypeOf` p)
     (t@UTerm{}, UVar v, _) -> bindVar binding v t
@@ -87,3 +87,6 @@ unify x0 x1 =
                 \case
                 Nothing -> bindVar binding v1 (UVar v0 `asProxyTypeOf` p)
                 Just t1 -> unify (t0 `asProxyTypeOf` p) t1 & void
+
+unifyBody :: forall m v t. UnifyMonad m v t => t (UTerm v) -> t (UTerm v) -> m ()
+unifyBody = zipMatch_ (Proxy :: Proxy (UnifyMonad m v)) unify

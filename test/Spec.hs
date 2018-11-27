@@ -3,6 +3,7 @@
 import AST
 import AST.Unify
 import AST.Unify.IntBindingState
+import AST.ZipMatch
 import qualified Control.Lens as Lens
 import Control.Lens.Operators
 import Control.Monad.RWS
@@ -41,6 +42,18 @@ instance Children Row where
     children _ _ REmpty = pure REmpty
     children _ f (RExtend k x y) = RExtend k <$> f x <*> f y
 
+instance ZipMatch Typ where
+    zipMatch _ _ TInt TInt = pure TInt
+    zipMatch _ f (TFun a0 r0) (TFun a1 r1) = TFun <$> f a0 a1 <*> f r0 r1
+    zipMatch p f (TRow r0) (TRow r1) = zipMatch p f r0 r1 <&> TRow
+    zipMatch _ _ _ _ = throwError ()
+
+instance ZipMatch Row where
+    zipMatch _ _ REmpty REmpty = pure REmpty
+    zipMatch _ f (RExtend k0 v0 r0) (RExtend k1 v1 r1)
+        | k0 == k1 = RExtend k0 <$> f v0 v1 <*> f r0 r1
+    zipMatch _ _ _ _ = throwError ()
+
 data InferState = InferState
     { _typBindings :: IntBindingState Typ
     , _rowBindings :: IntBindingState Row
@@ -54,17 +67,9 @@ type InferM = RWST (Map String (Node (UTerm Int) Typ)) () InferState Maybe
 
 instance UnifyMonad InferM Int Typ where
     binding = intBindingState typBindings
-    unifyBody TInt TInt = pure TInt
-    unifyBody (TFun a0 r0) (TFun a1 r1) = TFun <$> unify a0 a1 <*> unify r0 r1
-    unifyBody (TRow r0) (TRow r1) = TRow <$> unifyBody r0 r1
-    unifyBody _ _ = throwError ()
 
 instance UnifyMonad InferM Int Row where
     binding = intBindingState rowBindings
-    unifyBody REmpty REmpty = pure REmpty
-    unifyBody (RExtend k0 v0 r0) (RExtend k1 v1 r1)
-        | k0 == k1 = RExtend k0 <$> unify v0 v1 <*> unify r0 r1
-    unifyBody _ _ = throwError ()
 
 runInfer :: InferM a -> Maybe a
 runInfer act = runRWST act mempty emptyInferState <&> (^. Lens._1)
