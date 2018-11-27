@@ -4,10 +4,10 @@ module AST.TH
     ( makeChildren, makeZipMatch
     ) where
 
-import           AST
-import           AST.ZipMatch
+import           AST (Node, Children(..))
+import           AST.ZipMatch (ZipMatch(..))
 import           Control.Lens.Operators
-import           Control.Monad.Error.Class
+import           Control.Monad.Error.Class (MonadError(..))
 import           Data.Set (Set)
 import qualified Data.Set as Set
 import           Language.Haskell.TH

@@ -5,12 +5,12 @@ module AST.ZipMatch
     , zipMatch_
     ) where
 
-import           AST
+import           AST (Node, Children(..))
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Except (MonadError(..))
 import           Data.Functor.Const (Const(..))
-import           Data.Proxy
+import           Data.Proxy (Proxy)
 
 import           Prelude.Compat
 

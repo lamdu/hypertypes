@@ -6,12 +6,12 @@ module AST.Unify.IntBindingState
     , intBindingState
     ) where
 
-import           AST
-import           AST.Unify
+import           AST (Node)
+import           AST.Unify (Binding(..), UTerm(..))
 import qualified Control.Lens as Lens
 import           Control.Lens (ALens')
 import           Control.Lens.Operators
-import           Control.Monad.State
+import           Control.Monad.State (MonadState(..), modify)
 import           Data.IntMap (IntMap)
 
 import           Prelude.Compat

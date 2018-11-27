@@ -9,14 +9,14 @@ module AST.Unify
     , applyBindings, unify
     ) where
 
-import           AST
-import           AST.ZipMatch
+import           AST (Node, Children(..), overChildren)
+import           AST.ZipMatch (ZipMatch(..), zipMatch_)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Control.Monad
+import           Control.Monad (void)
 import           Control.Monad.Except (MonadError(..))
 import           Data.Functor.Identity (Identity(..))
-import           Data.Proxy
+import           Data.Proxy (Proxy(..), asProxyTypeOf)
 
 import           Prelude.Compat
 

@@ -10,7 +10,7 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Functor.Const (Const(..))
 import           Data.Functor.Identity (Identity(..))
-import           Data.Proxy
+import           Data.Proxy (Proxy(..))
 import           GHC.Exts (Constraint)
 
 import           Prelude.Compat
