@@ -28,6 +28,8 @@ dependencies:
 - mtl
 - pretty
 - QuickCheck
+- template-haskell
+- th-abstraction
 - transformers
 
 library:

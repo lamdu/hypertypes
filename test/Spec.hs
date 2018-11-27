@@ -1,6 +1,7 @@
 {-# LANGUAGE StandaloneDeriving, UndecidableInstances, MultiParamTypeClasses, TemplateHaskell, LambdaCase, TypeSynonymInstances, FlexibleInstances, TypeFamilies #-}
 
 import AST
+import AST.TH
 import AST.Unify
 import AST.Unify.IntBindingState
 import AST.ZipMatch
@@ -31,16 +32,8 @@ deriving instance (Show (f (Typ f)), Show (Row f)) => Show (Typ f)
 deriving instance (Show (f (Typ f)), Show (f (Row f))) => Show (Row f)
 deriving instance Show (Node f Term) => Show (Term f)
 
-instance Children Typ where
-    type ChildrenConstraint Typ constraint = (constraint Typ, constraint Row)
-    children _ _ TInt = pure TInt
-    children _ f (TFun x y) = TFun <$> f x <*> f y
-    children p f (TRow x) = TRow <$> children p f x
-
-instance Children Row where
-    type ChildrenConstraint Row constraint = (constraint Typ, constraint Row)
-    children _ _ REmpty = pure REmpty
-    children _ f (RExtend k x y) = RExtend k <$> f x <*> f y
+makeChildren ''Typ
+makeChildren ''Row
 
 instance ZipMatch Typ where
     zipMatch _ _ TInt TInt = pure TInt
