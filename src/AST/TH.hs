@@ -66,21 +66,37 @@ childrenTypes var typ =
         did <- gets (^. Lens.contains typ)
         if did
             then pure mempty
-            else modify (Lens.contains typ .~ True) *> add
+            else modify (Lens.contains typ .~ True) *> add (matchType var typ)
     where
-        add =
-            case typ of
-            ConT node `AppT` VarT functor `AppT` ast
-                | node == ''Node && functor == var ->
-                    Set.singleton ast & pure
-            ast `AppT` VarT functor
-                | functor == var ->
-                    go [] ast
-                    where
-                        go as (ConT name) = childrenTypesFromTypeName name as
-                        go as (AppT x a) = go (a:as) x
-                        go _ _ = pure mempty
-            _ -> pure mempty
+        add (NodeFofX ast) = Set.singleton ast & pure
+        add (XofF ast) =
+            go [] ast
+            where
+                go as (ConT name) = childrenTypesFromTypeName name as
+                go as (AppT x a) = go (a:as) x
+                go _ _ = pure mempty
+        add (Tof pat) = add pat
+        add Other = pure mempty
+
+matchType :: Name -> Type -> CtrTypePattern
+matchType var (ConT node `AppT` VarT functor `AppT` ast)
+    | node == ''Node && functor == var =
+        NodeFofX ast
+matchType var (ast `AppT` VarT functor)
+    | functor == var =
+        XofF ast
+matchType var (AppT _ typ) =
+    -- TODO: check if applied over a functor-kinded type.
+    case matchType var typ of
+    Other -> Other
+    pat -> Tof pat
+matchType _ _ = Other
+
+data CtrTypePattern
+    = NodeFofX Type
+    | XofF Type
+    | Tof CtrTypePattern
+    | Other
 
 childrenTypesFromTypeName ::
     Name -> [Type] -> StateT (Set Type) Q (Set Type)
@@ -123,18 +139,14 @@ makeChildrenCtr var info =
             [0::Int ..] <&> show <&> ('x':) <&> mkName
             & take (length (D.constructorFields info))
         body =
-            zipWith field cVars (D.constructorFields info)
+            zipWith AppE
+            (D.constructorFields info <&> matchType var <&> forPat)
+            (cVars <&> VarE)
             & applicativeStyle (ConE (D.constructorName info))
-        field name (ConT node `AppT` VarT functor `AppT` _)
-            | node == ''Node && functor == var =
-                AppE (VarE func) (VarE name)
-        field name (_ `AppT` VarT functor)
-            | functor == var =
-                VarE 'children `AppE` VarE proxy `AppE` VarE func `AppE` VarE name
-        field name (AppT _ (ConT node `AppT` VarT functor `AppT` ConT _))
-            | node == ''Node && functor == var =
-                VarE 'traverse `AppE` VarE func `AppE` VarE name
-        field name _ = AppE (VarE 'pure) (VarE name)
+        forPat NodeFofX{} = VarE func
+        forPat XofF{} = VarE 'children `AppE` VarE proxy `AppE` VarE func
+        forPat (Tof pat) = VarE 'traverse `AppE` forPat pat
+        forPat Other = VarE 'pure
 
 applicativeStyle :: Exp -> [Exp] -> Exp
 applicativeStyle f =
@@ -176,17 +188,15 @@ makeZipMatchCtr var info =
             | otherwise = GuardedB [(NormalG (foldl1 mkAnd checks), bodyExp)]
         checks = fieldParts >>= snd
         mkAnd x y = InfixE (Just x) (VarE '(&&)) (Just y)
-        fieldParts = zipWith field cVars (D.constructorFields info)
+        fieldParts = zipWith field cVars (D.constructorFields info <&> matchType var)
         bodyExp =
             fieldParts <&> fst
             & applicativeStyle (ConE (D.constructorName info))
-        field (x, y) (ConT node `AppT` VarT functor `AppT` _)
-            | node == ''Node && functor == var =
-                (VarE func `AppE` VarE x `AppE` VarE y, [])
-        field (x, y) (_ `AppT` VarT functor)
-            | functor == var =
-                (VarE 'zipMatch `AppE` VarE proxy `AppE` VarE func `AppE` VarE x `AppE` VarE y, [])
-        field (x, y) _ =
+        field (x, y) NodeFofX{} = (VarE func `AppE` VarE x `AppE` VarE y, [])
+        field (x, y) XofF{} =
+            (VarE 'zipMatch `AppE` VarE proxy `AppE` VarE func `AppE` VarE x `AppE` VarE y, [])
+        field _ Tof{} = error "TODO"
+        field (x, y) Other =
             ( AppE (VarE 'pure) (VarE x)
             , [InfixE (Just (VarE x)) (VarE '(==)) (Just (VarE y))]
             )
