@@ -12,12 +12,11 @@ import           Control.Monad.Error.Class (MonadError(..))
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.State
 import           Data.Functor.Const (Const)
-import           Data.Map (Map)
 import qualified Data.Map as Map
-import           Data.Maybe (fromMaybe)
 import           Data.Set (Set)
 import qualified Data.Set as Set
 import           Language.Haskell.TH
+import           Language.Haskell.TH.Subst (substitute)
 import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
@@ -120,16 +119,6 @@ childrenTypesFromTypeName name args =
         filterVar (VarT n, x) = [(n, x)]
         filterVar (SigT t _, x) = filterVar (t, x)
         filterVar _ = []
-
-substitute :: Map Name Type -> Type -> Type
-substitute s (ForallT b c t) = substitute s t & ForallT b c
-substitute s (AppT f a) = AppT (substitute s f) (substitute s a)
-substitute s (SigT t k) = SigT (substitute s t) k
-substitute s (VarT n) = s ^. Lens.at n & fromMaybe (VarT n)
-substitute s (InfixT l n r) = InfixT (substitute s l) n (substitute s r)
-substitute s (UInfixT l n r) = UInfixT (substitute s l) n (substitute s r)
-substitute s (ParensT t) = substitute s t & ParensT
-substitute _ x = x
 
 makeChildrenCtr :: Name -> D.ConstructorInfo -> Clause
 makeChildrenCtr var info =
