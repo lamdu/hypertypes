@@ -65,21 +65,22 @@ childrenTypes var typ =
     do
         did <- gets (^. Lens.contains typ)
         if did
-            then
-                pure mempty
-            else
-                case typ of
-                ConT node `AppT` VarT functor `AppT` ast
-                    | node == ''Node && functor == var ->
-                        Set.singleton ast & pure
-                ast `AppT` VarT functor
-                    | functor == var ->
-                        go [] ast
-                        where
-                            go as (ConT name) = childrenTypesFromTypeName name as
-                            go as (AppT x a) = go (a:as) x
-                            go _ _ = pure mempty
-                _ -> pure mempty
+            then pure mempty
+            else modify (Lens.contains typ .~ True) *> add
+    where
+        add =
+            case typ of
+            ConT node `AppT` VarT functor `AppT` ast
+                | node == ''Node && functor == var ->
+                    Set.singleton ast & pure
+            ast `AppT` VarT functor
+                | functor == var ->
+                    go [] ast
+                    where
+                        go as (ConT name) = childrenTypesFromTypeName name as
+                        go as (AppT x a) = go (a:as) x
+                        go _ _ = pure mempty
+            _ -> pure mempty
 
 childrenTypesFromTypeName ::
     Name -> [Type] -> StateT (Set Type) Q (Set Type)
