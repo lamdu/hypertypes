@@ -48,18 +48,30 @@ class
     UnifyMonad m v t where
     binding :: Binding v t m
 
-applyBindings :: UnifyMonad m v t => Node (UTerm v) t -> m (Node (UTerm v) t)
-applyBindings (UTerm t) = applyBindingsBody t <&> UTerm
-applyBindings (UVar v) =
+fullPrune :: UnifyMonad m v t => Node (UTerm v) t -> m (Node (UTerm v) t)
+fullPrune (UTerm t) = UTerm t & pure
+fullPrune (UVar v) =
     lookupVar binding v
+    >>= Lens._Just fullPrune
     >>=
     \case
-    Nothing -> pure (UVar v)
-    Just v1@UVar{} -> pure v1
-    Just (UTerm t) -> applyBindingsBody t <&> UTerm
+    Nothing -> UVar v & pure
+    Just r -> r <$ bindVar binding v r
 
-applyBindingsBody :: forall m v t. UnifyMonad m v t => t (UTerm v) -> m (t (UTerm v))
-applyBindingsBody = children (Proxy :: Proxy (UnifyMonad m v)) applyBindings
+-- TODO: implement when better understand motivations for -
+-- semiprune, occursIn, seenAs, getFreeVars
+
+applyBindings :: UnifyMonad m v t => Node (UTerm v) t -> m (Node (UTerm v) t)
+applyBindings x =
+    fullPrune x -- TODO: unification-fd uses semiprune
+    >>=
+    \case
+    UVar v -> UVar v & pure
+    UTerm t -> applyBindingsBody t <&> UTerm
+    where
+        -- TODO: occurs check
+        applyBindingsBody :: forall m v t. UnifyMonad m v t => t (UTerm v) -> m (t (UTerm v))
+        applyBindingsBody = children (Proxy :: Proxy (UnifyMonad m v)) applyBindings
 
 unify :: UnifyMonad m v t => Node (UTerm v) t -> Node (UTerm v) t -> m ()
 unify x0 x1 =
