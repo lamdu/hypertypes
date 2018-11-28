@@ -3,7 +3,6 @@
 module AST.Unify
     ( UTerm(..), _UVar, _UTerm
     , unfreeze, freeze
-    , Variable(..)
     , Binding(..)
     , UnifyMonad(..)
     , applyBindings, unify
@@ -35,12 +34,6 @@ unfreeze (Identity t) = overChildren (Proxy :: Proxy Children) unfreeze t & UTer
 freeze :: Children t => Node (UTerm v) t -> Maybe (Node Identity t)
 freeze UVar{} = Nothing
 freeze (UTerm t) = children (Proxy :: Proxy Children) freeze t <&> Identity
-
-class Eq v => Variable v where
-    getVarId :: v -> Int
-
-instance Variable Int where
-    getVarId = id
 
 data Binding v t m = Binding
     { lookupVar :: v -> m (Maybe (Node (UTerm v) t))
