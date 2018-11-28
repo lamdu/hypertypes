@@ -4,6 +4,7 @@ module AST.Unify.IntBindingState
     ( IntBindingState(..), nextFreeVar, varBindings
     , emptyIntBindingState
     , intBindingState
+    , visitSet
     ) where
 
 import           AST (Node)
@@ -11,8 +12,10 @@ import           AST.Unify (Binding(..), UTerm(..))
 import qualified Control.Lens as Lens
 import           Control.Lens (ALens')
 import           Control.Lens.Operators
+import           Control.Monad.Except (MonadError(..))
 import           Control.Monad.State (MonadState(..), modify)
 import           Data.IntMap (IntMap)
+import           Data.IntSet (IntSet)
 
 import           Prelude.Compat
 
@@ -35,3 +38,10 @@ intBindingState l =
             UVar r <$ modify (Lens.cloneLens l . nextFreeVar +~ 1)
     , bindVar = \k v -> Lens.cloneLens l . varBindings . Lens.at k ?= v
     }
+
+visitSet :: MonadError () m => Int -> IntSet -> m IntSet
+visitSet var =
+    Lens.contains var x
+    where
+        x True = throwError ()
+        x False = pure True

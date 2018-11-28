@@ -8,8 +8,10 @@ import qualified Control.Lens as Lens
 import Control.Lens.Operators
 import Control.Monad.RWS
 import Data.Functor.Identity
+import Data.Functor.Const
 import Data.Map
 import Data.Maybe
+import Data.IntSet
 
 data Typ f
     = TInt
@@ -33,22 +35,28 @@ deriving instance (Show v, Show (Node f (Term v))) => Show (Term v f)
 [makeChildren, makeZipMatch] <*> [''Typ, ''Row] & sequenceA <&> concat
 makeChildren ''Term -- TODO: makeZipMatch should work too
 
-data InferState = InferState
-    { _typBindings :: IntBindingState Typ
-    , _rowBindings :: IntBindingState Row
+data Infer f = Infer
+    { _iTyp :: f Typ
+    , _iRow :: f Row
     }
-Lens.makeLenses ''InferState
+Lens.makeLenses ''Infer
 
-emptyInferState :: InferState
-emptyInferState = InferState emptyIntBindingState emptyIntBindingState
+emptyInferState :: Infer IntBindingState
+emptyInferState = Infer emptyIntBindingState emptyIntBindingState
 
-type InferM = RWST (Map String (Node (UTerm Int) Typ)) () InferState Maybe
+type InferM = RWST (Map String (Node (UTerm Int) Typ)) () (Infer IntBindingState) Maybe
+
+instance OccursMonad InferM where
+    type Visited InferM = Infer (Const IntSet)
+    emptyVisited _ = Infer (Const mempty) (Const mempty)
 
 instance UnifyMonad InferM Int Typ where
-    binding = intBindingState typBindings
+    binding = intBindingState iTyp
+    visit _ var = (iTyp . Lens._Wrapped) (visitSet var)
 
 instance UnifyMonad InferM Int Row where
-    binding = intBindingState rowBindings
+    binding = intBindingState iRow
+    visit _ var = (iRow . Lens._Wrapped) (visitSet var)
 
 runInfer :: InferM a -> Maybe a
 runInfer act = runRWST act mempty emptyInferState <&> (^. Lens._1)
@@ -82,11 +90,20 @@ expr =
     & EApp (EVar "x" & Identity) & Identity
     & ELam "x" & Identity
 
-typ :: Node (UTerm Int) Typ
-typ = runInfer (infer (expr ^. Lens._Wrapped) >>= applyBindings) & fromMaybe (error "infer failed!")
+occurs :: Node Identity (Term String)
+occurs =
+    -- \x -> x x
+    EApp x x & Identity
+    & ELam "x" & Identity
+    where
+        x = EVar "x" & Identity
+
+inferExpr :: Node Identity (Term String) -> Maybe (Node (UTerm Int) Typ)
+inferExpr x = infer (x ^. Lens._Wrapped) >>= applyBindings & runInfer
 
 main :: IO ()
 main =
     do
         putStrLn ""
-        print typ
+        print (inferExpr expr)
+        print (inferExpr occurs)
