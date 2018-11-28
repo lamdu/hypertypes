@@ -1,15 +1,14 @@
 {-# LANGUAGE NoImplicitPrelude, TypeFamilies, RankNTypes, ConstraintKinds, UndecidableInstances, UndecidableSuperClasses, ScopedTypeVariables #-}
 
 module AST
-    ( Node, Children(..)
-    , overChildren
+    ( Node, LeafNode
+    , Children(..)
     , ChildOf, monoChildren
-    , leaf, hoist
+    , overChildren
+    , hoist
     ) where
 
-import           Control.Lens (Lens, Traversal)
-import qualified Control.Lens as Lens
-import           Control.Lens.Operators
+import           Control.Lens (Traversal)
 import           Data.Functor.Const (Const(..))
 import           Data.Functor.Identity (Identity(..))
 import           Data.Proxy (Proxy(..))
@@ -18,6 +17,7 @@ import           GHC.Exts (Constraint)
 import           Prelude.Compat
 
 type Node f expr = f (expr f)
+type LeafNode f expr = Node f (Const expr)
 
 class ChildrenConstraint expr Children => Children expr where
     type ChildrenConstraint expr (constraint :: ((* -> *) -> *) -> Constraint) :: Constraint
@@ -45,15 +45,6 @@ overChildren p f = runIdentity . children p (Identity . f)
 instance Children (Const val) where
     type ChildrenConstraint (Const val) constraint = ()
     children _ _ (Const x) = pure (Const x)
-
-leaf ::
-    (Functor n, Functor m) =>
-    Lens (n a) (m b) (Node n (Const a)) (Node m (Const b))
-leaf f x =
-    x
-    <&> Lens.Const
-    & f
-    <&> fmap Lens.getConst
 
 hoist ::
     (Children expr, Functor f, Functor g) =>

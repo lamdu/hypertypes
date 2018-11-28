@@ -4,13 +4,14 @@ module AST.TH
     ( makeChildren, makeZipMatch
     ) where
 
-import           AST (Node, Children(..), ChildOf)
+import           AST (Node, LeafNode, Children(..), ChildOf)
 import           AST.ZipMatch (ZipMatch(..))
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Error.Class (MonadError(..))
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.State
+import           Data.Functor.Const (Const)
 import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Data.Maybe (fromMaybe)
@@ -82,6 +83,9 @@ matchType :: Name -> Type -> CtrTypePattern
 matchType var (ConT node `AppT` VarT functor `AppT` ast)
     | node == ''Node && functor == var =
         NodeFofX ast
+matchType var (ConT node `AppT` VarT functor `AppT` leaf)
+    | node == ''LeafNode && functor == var =
+        NodeFofX (AppT (ConT ''Const) leaf)
 matchType var (ast `AppT` VarT functor)
     | functor == var =
         XofF ast
