@@ -5,9 +5,14 @@ module TypeLang where
 import AST
 import AST.Unify
 import AST.Unify.IntBindingState
+import AST.Unify.STBindingState
 import AST.TH
 import qualified Control.Lens as Lens
+import Control.Monad.Except
 import Control.Monad.RWS
+import Control.Monad.Reader
+import Control.Monad.ST
+import Control.Monad.ST.Class (MonadST(..))
 import Data.Functor.Const
 import Data.IntSet
 
@@ -31,19 +36,43 @@ data Infer f = Infer
     }
 Lens.makeLenses ''Infer
 
-emptyInferState :: Infer IntBindingState
-emptyInferState = Infer emptyIntBindingState emptyIntBindingState
+emptyIntInferState :: Infer IntBindingState
+emptyIntInferState = Infer emptyIntBindingState emptyIntBindingState
 
-type instance Var (RWST r w (Infer IntBindingState) Maybe) = Const Int
+newSTInferState :: MonadST m => m (Infer (STBindingState (World m)))
+newSTInferState = Infer <$> newSTBindingState <*> newSTBindingState
 
-instance Monoid w => OccursMonad (RWST r w (Infer IntBindingState) Maybe) where
-    type Visited (RWST r w (Infer IntBindingState) Maybe) = Infer (Const IntSet)
-    emptyVisited _ = Infer (Const mempty) (Const mempty)
+emptyInferVisited :: Infer (Const IntSet)
+emptyInferVisited = Infer (Const mempty) (Const mempty)
 
-instance Monoid w => UnifyMonad (RWST r w (Infer IntBindingState) Maybe) Typ where
+type IntInfer r w = RWST r w (Infer IntBindingState) Maybe
+
+type instance Var (IntInfer r w) = Const Int
+
+instance Monoid w => OccursMonad (IntInfer r w) where
+    type Visited (IntInfer r w) = Infer (Const IntSet)
+    emptyVisited _ = emptyInferVisited
+
+instance Monoid w => UnifyMonad (IntInfer r w) Typ where
     binding = intBindingState iTyp
-    visit (Const var) = (iTyp . Lens._Wrapped) (visitSet var)
+    visit = iTyp . Lens._Wrapped . intVisit
 
-instance Monoid w => UnifyMonad (RWST r w (Infer IntBindingState) Maybe) Row where
+instance Monoid w => UnifyMonad (IntInfer r w) Row where
     binding = intBindingState iRow
-    visit (Const var) = (iRow . Lens._Wrapped) (visitSet var)
+    visit = iRow . Lens._Wrapped . intVisit
+
+type STInfer r s = ReaderT (r, Infer (STBindingState s)) (ExceptT () (ST s))
+
+type instance Var (STInfer r s) = STVar s
+
+instance OccursMonad (STInfer r s) where
+    type Visited (STInfer r s) = Infer (Const IntSet)
+    emptyVisited _ = emptyInferVisited
+
+instance UnifyMonad (STInfer r s) Typ where
+    binding = stBindingState (Lens.view (Lens._2 . iTyp))
+    visit = iTyp . Lens._Wrapped . stVisit
+
+instance UnifyMonad (STInfer r s) Row where
+    binding = stBindingState (Lens.view (Lens._2 . iRow))
+    visit = iRow . Lens._Wrapped . stVisit

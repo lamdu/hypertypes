@@ -1,13 +1,17 @@
-{-# LANGUAGE NoImplicitPrelude, TypeFamilies #-}
+{-# LANGUAGE NoImplicitPrelude, TypeFamilies, FlexibleContexts #-}
 
 module AST.Unify.STBindingState
-    ( STVar, STBindingState
-    , stBindingState
+    ( STVar
+    , STBindingState, newSTBindingState
+    , stBindingState, stVisit
     ) where
 
 import           AST.Unify (Binding(..), UTerm(..), Var)
+import qualified Control.Lens as Lens
 import           Control.Lens.Operators
+import           Control.Monad.Error.Class
 import           Control.Monad.ST.Class (MonadST(..))
+import           Data.IntSet (IntSet)
 import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
 import           Prelude.Compat
@@ -20,7 +24,13 @@ data STVar s a =
     , varRef :: STRef s (Maybe (UTerm (STVar s) a))
     }
 
+instance Eq (STVar s a) where
+    STVar x _ == STVar y _ = x == y
+
 newtype STBindingState s (t :: (* -> *) -> *) = STBState (STRef s Int)
+
+newSTBindingState :: MonadST m => m (STBindingState (World m) t)
+newSTBindingState = newSTRef 0 & liftST <&> STBState
 
 stBindingState ::
     (MonadST m, Var m ~ STVar (World m)) =>
@@ -41,3 +51,10 @@ stBindingState getState =
     , bindVar =
         \v t -> writeSTRef (varRef v) (Just t) & liftST
     }
+
+stVisit :: MonadError () m => STVar s a -> IntSet -> m IntSet
+stVisit (STVar idx _) =
+    Lens.contains idx x
+    where
+        x True = throwError ()
+        x False = pure True

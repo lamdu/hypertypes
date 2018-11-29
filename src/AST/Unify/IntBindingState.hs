@@ -1,10 +1,8 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, FlexibleContexts, TypeFamilies #-}
 
 module AST.Unify.IntBindingState
-    ( IntBindingState(..), nextFreeVar, varBindings
-    , emptyIntBindingState
-    , intBindingState
-    , visitSet
+    ( IntBindingState, emptyIntBindingState
+    , intBindingState, intVisit
     ) where
 
 import           AST (Node)
@@ -43,8 +41,8 @@ intBindingState l =
     , bindVar = \k v -> Lens.cloneLens l . varBindings . Lens.at (k ^. Lens._Wrapped) ?= v
     }
 
-visitSet :: MonadError () m => Int -> IntSet -> m IntSet
-visitSet var =
+intVisit :: MonadError () m => Const Int f -> IntSet -> m IntSet
+intVisit (Const var) =
     Lens.contains var x
     where
         x True = throwError ()

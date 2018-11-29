@@ -1,14 +1,18 @@
-{-# LANGUAGE LambdaCase, FlexibleContexts #-}
+{-# LANGUAGE LambdaCase, FlexibleContexts, MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances #-}
 
 import TermLang
 import TypeLang
 
 import AST
 import AST.Unify
-import AST.Unify.IntBindingState
+import AST.Unify.STBindingState
+import Control.Lens (Lens')
 import qualified Control.Lens as Lens
 import Control.Lens.Operators
+import Control.Monad.Except
+import Control.Monad.Reader
 import Control.Monad.RWS
+import Control.Monad.ST
 import Data.Functor.Const
 import Data.Functor.Identity
 import Data.Map
@@ -16,20 +20,24 @@ import Data.Maybe
 
 type LamBindings v = Map String (Node (UTerm v) Typ)
 
-type InferM = RWST (LamBindings (Const Int)) () (Infer IntBindingState) Maybe
+class HasLamBindings v env where
+    lamBindings :: Lens' env (LamBindings v)
 
-runInfer :: InferM a -> Maybe a
-runInfer act = runRWST act mempty emptyInferState <&> (^. Lens._1)
+instance HasLamBindings v (LamBindings v) where
+    lamBindings = id
+
+instance HasLamBindings v a => HasLamBindings v (a, x) where
+    lamBindings = Lens._1 . lamBindings
 
 infer ::
-    (MonadReader (LamBindings (Var m)) m, UnifyMonad m Typ) =>
+    (MonadReader env m, HasLamBindings (Var m) env, UnifyMonad m Typ) =>
     Term String Identity -> m (UNode m Typ)
 infer ELit{} = UTerm TInt & pure
-infer (EVar var) = Lens.view (Lens.at var) <&> fromMaybe (error "name error")
+infer (EVar var) = Lens.view (Lens.cloneLens lamBindings . Lens.at var) <&> fromMaybe (error "name error")
 infer (ELam var (Identity body)) =
     do
         varType <- newVar binding
-        local (Lens.at var ?~ varType) (infer body) <&> TFun varType <&> UTerm
+        local (lamBindings . Lens.at var ?~ varType) (infer body) <&> TFun varType <&> UTerm
 infer (EApp (Identity func) (Identity arg)) =
     do
         argType <- infer arg
@@ -60,12 +68,25 @@ occurs =
     where
         x = EVar "x" & Identity
 
-inferExpr :: Node Identity (Term String) -> Maybe (Node (UTerm (Const Int)) Typ)
-inferExpr x = infer (x ^. Lens._Wrapped) >>= applyBindings & runInfer
+inferExpr ::
+    (MonadReader env m, HasLamBindings (Var m) env, UnifyMonad m Typ) =>
+    Node Identity (Term String) -> m (Node (UTerm (Var m)) Typ)
+inferExpr x = infer (x ^. Lens._Wrapped) >>= applyBindings
+
+runIntInfer :: IntInfer (LamBindings (Const Int)) () a -> Maybe a
+runIntInfer act = runRWST act mempty emptyIntInferState <&> (^. Lens._1)
+
+runSTInfer :: STInfer (LamBindings (STVar s)) s a -> ST s (Either () ())
+runSTInfer act =
+    newSTInferState <&> (,) mempty
+    >>= runExceptT . runReaderT act
+    <&> Lens._Right .~ ()
 
 main :: IO ()
 main =
     do
         putStrLn ""
-        print (inferExpr expr)
-        print (inferExpr occurs)
+        print (runIntInfer (inferExpr expr))
+        print (runST (runSTInfer (inferExpr expr)))
+        print (runIntInfer (inferExpr occurs))
+        print (runST (runSTInfer (inferExpr occurs)))
