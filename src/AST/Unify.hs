@@ -11,12 +11,12 @@ module AST.Unify
     ) where
 
 import           AST (Node, Children(..))
-import           AST.Recursive
+import           AST.Recursive (Recursive(..), hoistNode)
 import           AST.ZipMatch (ZipMatch(..), zipMatch_)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Except (MonadError(..))
-import           Data.Constraint
+import           Data.Constraint (Dict(..), withDict)
 import           Data.Functor.Identity (Identity(..))
 import           Data.Proxy (Proxy(..))
 

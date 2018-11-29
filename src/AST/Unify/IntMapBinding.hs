@@ -6,13 +6,13 @@ module AST.Unify.IntMapBinding
     ) where
 
 import           AST (Node)
-import           AST.Unify
+import           AST.Unify (UTerm(..), Var, Binding(..))
 import qualified Control.Lens as Lens
 import           Control.Lens (ALens')
 import           Control.Lens.Operators
 import           Control.Monad.Except (MonadError(..))
 import           Control.Monad.State (MonadState(..), modify)
-import           Data.Functor.Const
+import           Data.Functor.Const (Const(..))
 import           Data.IntMap (IntMap)
 import           Data.IntSet (IntSet)
 

@@ -10,7 +10,7 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Error.Class (MonadError(..))
 import           Control.Monad.Trans.Class (MonadTrans(..))
-import           Control.Monad.Trans.State
+import           Control.Monad.Trans.State (StateT(..), evalStateT, gets, modify)
 import           Data.Functor.Const (Const)
 import qualified Data.Map as Map
 import           Data.Set (Set)

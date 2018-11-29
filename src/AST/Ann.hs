@@ -5,12 +5,12 @@ module AST.Ann
     , annotations
     ) where
 
-import           AST
-import           AST.Recursive
+import           AST (Node, Children(..))
+import           AST.Recursive (Recursive(..))
 import qualified Control.Lens as Lens
 import           Data.Binary (Binary)
-import           Data.Constraint
-import           Data.Proxy
+import           Data.Constraint (withDict)
+import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import qualified Text.PrettyPrint as PP
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)

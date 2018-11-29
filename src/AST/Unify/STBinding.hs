@@ -7,17 +7,17 @@ module AST.Unify.STBinding
     , stBindingToInt
     ) where
 
-import           AST
-import           AST.Recursive
+import           AST (Node, overChildren)
+import           AST.Recursive (Recursive(..))
 import           AST.Unify (Binding(..), UTerm(..), Var)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Control.Monad.Error.Class
+import           Control.Monad.Error.Class (MonadError(..))
 import           Control.Monad.ST.Class (MonadST(..))
-import           Data.Constraint
-import           Data.Functor.Const
+import           Data.Constraint (withDict)
+import           Data.Functor.Const (Const(..))
 import           Data.IntSet (IntSet)
-import           Data.Proxy
+import           Data.Proxy (Proxy(..))
 import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
 import           Prelude.Compat

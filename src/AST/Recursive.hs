@@ -1,13 +1,15 @@
-{-# LANGUAGE RankNTypes, ScopedTypeVariables, DefaultSignatures #-}
+{-# LANGUAGE NoImplicitPrelude, RankNTypes, ScopedTypeVariables, DefaultSignatures #-}
 
 module AST.Recursive
     ( Recursive(..)
     , hoistNode, hoistBody
     ) where
 
-import AST (Node, Children(..), overChildren)
-import Data.Constraint
-import Data.Proxy
+import           AST (Node, Children(..), overChildren)
+import           Data.Constraint (Dict(..), withDict)
+import           Data.Proxy (Proxy(..))
+
+import           Prelude.Compat
 
 class Children expr => Recursive expr where
     recursive :: Proxy expr -> Dict (ChildrenConstraint expr Recursive)
