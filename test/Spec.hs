@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase, FlexibleContexts #-}
 
 import TermLang
 import TypeLang
@@ -21,7 +21,9 @@ type InferM = RWST (LamBindings (Const Int)) () (Infer IntBindingState) Maybe
 runInfer :: InferM a -> Maybe a
 runInfer act = runRWST act mempty emptyInferState <&> (^. Lens._1)
 
-infer :: Term String Identity -> InferM (Node (UTerm (Const Int)) Typ)
+infer ::
+    (MonadReader (LamBindings (Var m)) m, UnifyMonad m Typ) =>
+    Term String Identity -> m (UNode m Typ)
 infer ELit{} = UTerm TInt & pure
 infer (EVar var) = Lens.view (Lens.at var) <&> fromMaybe (error "name error")
 infer (ELam var (Identity body)) =
