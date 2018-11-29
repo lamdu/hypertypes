@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TypeFamilies, FlexibleContexts #-}
 
-module AST.Unify.STBindingState
+module AST.Unify.STBinding
     ( STVar
     , STBindingState, newSTBindingState
     , stBindingState, stVisit

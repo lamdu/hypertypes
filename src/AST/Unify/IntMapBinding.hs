@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, FlexibleContexts, TypeFamilies #-}
 
-module AST.Unify.IntBindingState
+module AST.Unify.IntMapBinding
     ( IntBindingState, emptyIntBindingState
     , intBindingState, intVisit
     ) where

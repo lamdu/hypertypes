@@ -4,8 +4,8 @@ module TypeLang where
 
 import AST
 import AST.Unify
-import AST.Unify.IntBindingState
-import AST.Unify.STBindingState
+import AST.Unify.IntMapBinding
+import AST.Unify.STBinding
 import AST.TH
 import qualified Control.Lens as Lens
 import Control.Monad.Except

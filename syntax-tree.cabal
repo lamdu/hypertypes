@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8ba55a8152a5cbb275ee823ffd6cdf62b2c4f52e80351b97cdab208c4e96e6bc
+-- hash: b6b455f7e1f72aefa01ac25445804f9597f4c8d622757506c0a5c37014f52858
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -33,8 +33,8 @@ library
       AST.Recursive
       AST.TH
       AST.Unify
-      AST.Unify.IntBindingState
-      AST.Unify.STBindingState
+      AST.Unify.IntMapBinding
+      AST.Unify.STBinding
       AST.ZipMatch
       Language.Haskell.TH.Subst
   other-modules:
