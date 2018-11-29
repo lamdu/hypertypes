@@ -2,7 +2,7 @@
 
 module AST
     ( Node, LeafNode
-    , Children(..)
+    , Children(..), ChildrenWithConstraint
     , ChildOf, monoChildren
     , overChildren
     , hoist
@@ -27,16 +27,18 @@ class ChildrenConstraint expr Children => Children expr where
         (forall child. constraint child => Node n child -> f (Node m child)) ->
         expr n -> f (expr m)
 
+type ChildrenWithConstraint expr constraint = (Children expr, ChildrenConstraint expr constraint)
+
 type family ChildOf (expr :: (* -> *) -> *) :: (* -> *) -> *
 
 monoChildren ::
     forall expr n m.
-    (Children expr, ChildrenConstraint expr ((~) (ChildOf expr))) =>
+    (ChildrenWithConstraint expr ((~) (ChildOf expr))) =>
     Traversal (expr n) (expr m) (Node n (ChildOf expr)) (Node m (ChildOf expr))
 monoChildren = children (Proxy :: Proxy ((~) (ChildOf expr)))
 
 overChildren ::
-    (ChildrenConstraint expr constraint, Children expr) =>
+    ChildrenWithConstraint expr constraint =>
     Proxy constraint ->
     (forall child. constraint child => Node n child -> Node m child) ->
     expr n -> expr m
