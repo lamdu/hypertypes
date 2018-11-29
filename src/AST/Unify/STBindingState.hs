@@ -1,13 +1,12 @@
 {-# LANGUAGE NoImplicitPrelude, TypeFamilies #-}
 
 module AST.Unify.STBindingState
-    ( STVar
+    ( STVar, STBindingState
     , stBindingState
     ) where
 
 import           AST.Unify (Binding(..), UTerm(..), Var)
 import           Control.Lens.Operators
-import           Control.Monad.ST (ST)
 import           Control.Monad.ST.Class (MonadST(..))
 import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
@@ -22,8 +21,6 @@ data STVar s a =
     }
 
 newtype STBindingState s (t :: (* -> *) -> *) = STBState (STRef s Int)
-
-type instance Var (ST s) = STVar s
 
 stBindingState ::
     (MonadST m, Var m ~ STVar (World m)) =>
