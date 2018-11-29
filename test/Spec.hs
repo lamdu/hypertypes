@@ -1,15 +1,13 @@
-{-# LANGUAGE TypeFamilies, UndecidableInstances, UndecidableSuperClasses, MultiParamTypeClasses, FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies, UndecidableInstances, UndecidableSuperClasses, FlexibleContexts #-}
 
 import GHC.Exts (Constraint)
 
-type family ChildrenConstraint expr (constraint :: * -> Constraint) :: Constraint
+data T = T
 
-class ChildrenConstraint t (UnifyMonad m) => UnifyMonad m t where
+type family F t (c :: * -> Constraint) :: Constraint
+type instance F T c = c T
 
-newtype Typ = Typ Int
+class F t C => C t where
 
-type instance ChildrenConstraint Typ constraint = constraint Typ
-
--- Replacing `Typ` with `t` doesn't cause GHC to be stuck
-t :: UnifyMonad m Typ => (m, t)
+t :: C T => t
 t = undefined
