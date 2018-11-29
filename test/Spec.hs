@@ -1,6 +1,7 @@
-{-# LANGUAGE StandaloneDeriving, MultiParamTypeClasses, TemplateHaskell, LambdaCase, FlexibleInstances, TypeFamilies #-}
+{-# LANGUAGE LambdaCase #-}
 
-import Lang
+import TermLang
+import TypeLang
 
 import AST
 import AST.Unify
@@ -9,35 +10,12 @@ import qualified Control.Lens as Lens
 import Control.Lens.Operators
 import Control.Monad.RWS
 import Data.Functor.Identity
-import Data.Functor.Const
 import Data.Map
 import Data.Maybe
-import Data.IntSet
-
-data Infer f = Infer
-    { _iTyp :: f Typ
-    , _iRow :: f Row
-    }
-Lens.makeLenses ''Infer
-
-emptyInferState :: Infer IntBindingState
-emptyInferState = Infer emptyIntBindingState emptyIntBindingState
 
 type LamBindings v = Map String (Node (UTerm v) Typ)
 
 type InferM = RWST (LamBindings Int) () (Infer IntBindingState) Maybe
-
-instance OccursMonad InferM where
-    type Visited InferM = Infer (Const IntSet)
-    emptyVisited _ = Infer (Const mempty) (Const mempty)
-
-instance UnifyMonad InferM Int Typ where
-    binding = intBindingState iTyp
-    visit _ var = (iTyp . Lens._Wrapped) (visitSet var)
-
-instance UnifyMonad InferM Int Row where
-    binding = intBindingState iRow
-    visit _ var = (iRow . Lens._Wrapped) (visitSet var)
 
 runInfer :: InferM a -> Maybe a
 runInfer act = runRWST act mempty emptyInferState <&> (^. Lens._1)
