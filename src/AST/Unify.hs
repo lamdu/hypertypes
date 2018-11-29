@@ -15,8 +15,6 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad (void)
 import           Control.Monad.Except (MonadError(..))
-import           Control.Monad.Trans.Class (MonadTrans(..))
-import           Control.Monad.Trans.Reader
 import           Data.Functor.Identity (Identity(..))
 import           Data.Proxy (Proxy(..), asProxyTypeOf)
 
@@ -85,27 +83,25 @@ semiPruneLookup v0 =
             pure (v, r)
 
 -- TODO: implement when better understand motivations for -
--- occursIn, seenAs, getFreeVars
+-- occursIn, seenAs, getFreeVars, freshen
 
 applyBindings :: forall m v t. UnifyMonad m v t => Node (UTerm v) t -> m (Node (UTerm v) t)
-applyBindings x =
-    runReaderT (applyBindingsH x) (emptyVisited (Proxy :: Proxy m))
+applyBindings = applyBindingsH (emptyVisited (Proxy :: Proxy m))
 
 applyBindingsH ::
     forall m v t.
     UnifyMonad m v t =>
-    Node (UTerm v) t -> ReaderT (Visited m) m (Node (UTerm v) t)
-applyBindingsH (UTerm t) =
-    children (Proxy :: Proxy (UnifyMonad m v)) applyBindingsH t <&> UTerm
-applyBindingsH (UVar v0) =
-    semiPruneLookup v0 & lift
+    Visited m -> Node (UTerm v) t -> m (Node (UTerm v) t)
+applyBindingsH visited (UTerm t) =
+    children (Proxy :: Proxy (UnifyMonad m v)) (applyBindingsH visited) t <&> UTerm
+applyBindingsH visited (UVar v0) =
+    semiPruneLookup v0
     >>=
     \case
     (v1, Nothing) -> UVar v1 & pure
     (v1, Just t) ->
-        do
-            newVisit <- ask >>= lift . visit (Proxy :: Proxy t) v1
-            local (const newVisit) (applyBindingsH (UTerm t))
+        visit (Proxy :: Proxy t) v1 visited
+        >>= (`applyBindingsH` UTerm t)
 
 unify :: UnifyMonad m v t => Node (UTerm v) t -> Node (UTerm v) t -> m ()
 unify x0 x1 =
