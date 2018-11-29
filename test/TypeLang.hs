@@ -26,8 +26,8 @@ data Row f
     = REmpty
     | RExtend String (Node f Typ) (Node f Row)
 
-deriving instance (Show (f (Typ f)), Show (Row f)) => Show (Typ f)
-deriving instance (Show (f (Typ f)), Show (f (Row f))) => Show (Row f)
+deriving instance (Show (Node f Typ), Show (Row f)) => Show (Typ f)
+deriving instance (Show (Node f Typ), Show (Node f Row)) => Show (Row f)
 
 concat <$> sequenceA ([makeChildren, makeZipMatch] <*> [''Typ, ''Row])
 instance Recursive Typ
