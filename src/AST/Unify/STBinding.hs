@@ -1,17 +1,23 @@
-{-# LANGUAGE NoImplicitPrelude, TypeFamilies, FlexibleContexts #-}
+{-# LANGUAGE NoImplicitPrelude, TypeFamilies, FlexibleContexts, ScopedTypeVariables #-}
 
 module AST.Unify.STBinding
     ( STVar
     , STBindingState, newSTBindingState
     , stBindingState, stVisit
+    , stBindingToInt
     ) where
 
+import           AST
+import           AST.Recursive
 import           AST.Unify (Binding(..), UTerm(..), Var)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Error.Class
 import           Control.Monad.ST.Class (MonadST(..))
+import           Data.Constraint
+import           Data.Functor.Const
 import           Data.IntSet (IntSet)
+import           Data.Proxy
 import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
 import           Prelude.Compat
@@ -20,7 +26,7 @@ data STVar s a =
     STVar
     { -- For occurs check.
       -- A (more efficient?) alternative would mark the state in the referenced value itself!
-      _varId :: Int
+      varId :: Int
     , varRef :: STRef s (Maybe (UTerm (STVar s) a))
     }
 
@@ -58,3 +64,13 @@ stVisit (STVar idx _) =
     where
         x True = throwError ()
         x False = pure True
+
+stBindingToInt ::
+    forall s t.
+    Recursive t =>
+    Node (UTerm (STVar s)) t -> Node (UTerm (Const Int)) t
+stBindingToInt (UVar v) = UVar (Const (varId v))
+stBindingToInt (UTerm t) =
+    withDict (recursive (Proxy :: Proxy t))
+    (overChildren (Proxy :: Proxy Recursive) stBindingToInt t)
+    & UTerm

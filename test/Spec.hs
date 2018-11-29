@@ -76,17 +76,17 @@ inferExpr x = infer (x ^. Lens._Wrapped) >>= applyBindings
 runIntInfer :: IntInfer (LamBindings (Const Int)) () a -> Maybe a
 runIntInfer act = runRWST act mempty emptyIntInferState <&> (^. Lens._1)
 
-runSTInfer :: STInfer (LamBindings (STVar s)) s a -> ST s (Either () ())
+runSTInfer :: STInfer (LamBindings (STVar s)) s a -> ST s (Maybe a)
 runSTInfer act =
     newSTInferState <&> (,) mempty
     >>= runExceptT . runReaderT act
-    <&> Lens._Right .~ ()
+    <&> (^? Lens._Right)
 
 main :: IO ()
 main =
     do
         putStrLn ""
         print (runIntInfer (inferExpr expr))
-        print (runST (runSTInfer (inferExpr expr)))
+        print (runST (runSTInfer (inferExpr expr <&> stBindingToInt)))
         print (runIntInfer (inferExpr occurs))
-        print (runST (runSTInfer (inferExpr occurs)))
+        print (runST (runSTInfer (inferExpr occurs <&> stBindingToInt)))

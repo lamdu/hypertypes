@@ -3,6 +3,7 @@
 module TypeLang where
 
 import AST
+import AST.Recursive
 import AST.Unify
 import AST.Unify.IntMapBinding
 import AST.Unify.STBinding
@@ -29,6 +30,8 @@ deriving instance (Show (f (Typ f)), Show (Row f)) => Show (Typ f)
 deriving instance (Show (f (Typ f)), Show (f (Row f))) => Show (Row f)
 
 concat <$> sequenceA ([makeChildren, makeZipMatch] <*> [''Typ, ''Row])
+instance Recursive Typ
+instance Recursive Row
 
 data Infer f = Infer
     { _iTyp :: f Typ
