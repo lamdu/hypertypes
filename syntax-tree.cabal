@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a1448b2ff2e525f1773960836b9a22311c516f61e8786edef3dd2221fed5c98e
+-- hash: 67c06ad675bd2f15b5e22c40eec7aac4e6e1507dd44fb6ef074e0c86f8be98bb
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -28,14 +28,7 @@ source-repository head
 library
   exposed-modules:
       AST
-      AST.Ann
-      AST.Ann.Arbitrary
-      AST.TH
       AST.Unify
-      AST.Unify.IntBindingState
-      AST.Unify.STBindingState
-      AST.ZipMatch
-      Language.Haskell.TH.Subst
   other-modules:
       Paths_syntax_tree
   hs-source-dirs:
@@ -60,8 +53,6 @@ test-suite syntax-tree-test
   main-is: Spec.hs
   other-modules:
       GhcStuck
-      TermLang
-      TypeLang
       Paths_syntax_tree
   hs-source-dirs:
       test
