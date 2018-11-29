@@ -55,17 +55,6 @@ class
     binding :: Binding v t m
     visit :: Proxy t -> v -> Visited m -> m (Visited m)
 
--- TODO: What is fullPrune used for in unification-fd?
-_fullPrune :: UnifyMonad m v t => Node (UTerm v) t -> m (Node (UTerm v) t)
-_fullPrune (UTerm t) = UTerm t & pure
-_fullPrune (UVar v) =
-    lookupVar binding v
-    >>= Lens._Just _fullPrune
-    >>=
-    \case
-    Nothing -> UVar v & pure
-    Just r -> r <$ bindVar binding v r
-
 -- look up a variable, and return last variable pointing to result.
 -- prune all variable on way to last variable
 semiPruneLookup :: UnifyMonad m v t => v -> m (v, Maybe (t (UTerm v)))
@@ -82,7 +71,7 @@ semiPruneLookup v0 =
             pure (v, r)
 
 -- TODO: implement when need / better understand motivations for -
--- occursIn, seenAs, getFreeVars, freshen, equals, equiv
+-- fullPrune, occursIn, seenAs, getFreeVars, freshen, equals, equiv
 
 applyBindings :: forall m v t. UnifyMonad m v t => Node (UTerm v) t -> m (Node (UTerm v) t)
 applyBindings = applyBindingsH (emptyVisited (Proxy :: Proxy m))
