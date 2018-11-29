@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, FlexibleContexts #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, FlexibleContexts, TypeFamilies #-}
 
 module AST.Unify.IntBindingState
     ( IntBindingState(..), nextFreeVar, varBindings
@@ -8,7 +8,7 @@ module AST.Unify.IntBindingState
     ) where
 
 import           AST (Node)
-import           AST.Unify (Binding(..), UTerm(..))
+import           AST.Unify
 import qualified Control.Lens as Lens
 import           Control.Lens (ALens')
 import           Control.Lens.Operators
@@ -19,16 +19,20 @@ import           Data.IntSet (IntSet)
 
 import           Prelude.Compat
 
-data IntBindingState t = IntBindingState
+data IntBindingState m t = IntBindingState
     { _nextFreeVar :: {-# UNPACK #-} !Int
-    , _varBindings :: IntMap (Node (UTerm Int) t)
+    , _varBindings :: IntMap (Node (UTerm (Var m)) t)
     }
 Lens.makeLenses ''IntBindingState
 
-emptyIntBindingState :: IntBindingState t
+emptyIntBindingState :: IntBindingState f t
 emptyIntBindingState = IntBindingState 0 mempty
 
-intBindingState :: MonadState s m => ALens' s (IntBindingState t) -> Binding Int t m
+intBindingState ::
+    ( Var m (Node (UTerm (Var m)) t) ~ Int
+    , MonadState s m
+    ) =>
+    ALens' s (IntBindingState m t) -> Binding m t
 intBindingState l =
     Binding
     { lookupVar = \k -> Lens.use (Lens.cloneLens l . varBindings . Lens.at k)
