@@ -5,7 +5,7 @@ module AST
     , Children(..), ChildrenWithConstraint
     , ChildOf, monoChildren
     , overChildren
-    , hoist
+    , hoistNode, hoistBody
     ) where
 
 import           Control.Lens (Traversal)
@@ -48,8 +48,14 @@ instance Children (Const val) where
     type ChildrenConstraint (Const val) constraint = ()
     children _ _ (Const x) = pure (Const x)
 
-hoist ::
-    (Children expr, Functor f, Functor g) =>
+hoistNode ::
+    (Children expr, Functor f) =>
+    (forall a. f a -> g a) ->
+    Node f expr -> Node g expr
+hoistNode f = f . fmap (hoistBody f)
+
+hoistBody ::
+    (Children expr, Functor f) =>
     (forall a. f a -> g a) ->
     expr f -> expr g
-hoist f = overChildren (Proxy :: Proxy Children) (f . fmap (hoist f))
+hoistBody f = overChildren (Proxy :: Proxy Children) (hoistNode f)
