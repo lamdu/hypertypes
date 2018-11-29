@@ -23,6 +23,7 @@ dependencies:
 - base
 - base-compat
 - binary
+- constraint
 - containers
 - lens
 - mtl

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: fed01d562509b1c87e7f218887ffa88ca6b395cf97194151f3a309b57c7b7d3a
+-- hash: 05f766c4b9f70b25c65f7ff7e2cd640f413e75122d0e2725dcee7ea9aec5d825
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -30,6 +30,7 @@ library
       AST
       AST.Ann
       AST.Ann.Arbitrary
+      AST.Recursive
       AST.TH
       AST.Unify
       AST.Unify.IntBindingState
@@ -46,6 +47,7 @@ library
     , base
     , base-compat
     , binary
+    , constraint
     , containers
     , lens
     , mtl
@@ -70,6 +72,7 @@ test-suite syntax-tree-test
     , base
     , base-compat
     , binary
+    , constraint
     , containers
     , lens
     , mtl

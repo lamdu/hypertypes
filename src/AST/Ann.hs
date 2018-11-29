@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, DeriveGeneric, DeriveTraversable, TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude, DeriveGeneric, DeriveTraversable, TemplateHaskell, ScopedTypeVariables #-}
 
 module AST.Ann
     ( Ann(..), ann, val
@@ -6,8 +6,10 @@ module AST.Ann
     ) where
 
 import           AST
+import           AST.Recursive
 import qualified Control.Lens as Lens
 import           Data.Binary (Binary)
+import           Data.Constraint
 import           Data.Proxy
 import           GHC.Generics (Generic)
 import qualified Text.PrettyPrint as PP
@@ -33,9 +35,12 @@ instance (Pretty a, Pretty v) => Pretty (Ann a v) where
             plDoc = pPrintPrec lvl 0 pl
 
 annotations ::
-    Children e =>
+    forall e a b.
+    Recursive e =>
     Lens.Traversal
     (Node (Ann a) e)
     (Node (Ann b) e)
     a b
-annotations f (Ann pl x) = Ann <$> f pl <*> children (Proxy :: Proxy Children) (annotations f) x
+annotations f (Ann pl x) =
+    withDict (recursive (Proxy :: Proxy e))
+    (Ann <$> f pl <*> children (Proxy :: Proxy Recursive) (annotations f) x)

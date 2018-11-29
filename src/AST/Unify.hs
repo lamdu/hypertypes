@@ -10,7 +10,8 @@ module AST.Unify
     , applyBindings, unify
     ) where
 
-import           AST (Node, Children(..), hoistNode)
+import           AST (Node, Children(..))
+import           AST.Recursive
 import           AST.ZipMatch (ZipMatch(..), zipMatch_)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -54,7 +55,7 @@ class
     visit :: UVar m t -> Visited m -> m (Visited m)
 
 -- | Embed a pure term as a mutable term.
-unfreeze :: Children t => Node Identity t -> Node (UTerm v) t
+unfreeze :: Recursive t => Node Identity t -> Node (UTerm v) t
 unfreeze = hoistNode (UTerm . runIdentity)
 
 -- look up a variable, and return last variable pointing to result.

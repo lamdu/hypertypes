@@ -1,11 +1,10 @@
-{-# LANGUAGE NoImplicitPrelude, TypeFamilies, RankNTypes, ConstraintKinds, UndecidableInstances, UndecidableSuperClasses, ScopedTypeVariables #-}
+{-# LANGUAGE NoImplicitPrelude, TypeFamilies, RankNTypes, ConstraintKinds, ScopedTypeVariables #-}
 
 module AST
     ( Node, LeafNode
     , Children(..), ChildrenWithConstraint
     , ChildOf, monoChildren
     , overChildren
-    , hoistNode, hoistBody
     ) where
 
 import           Control.Lens (Traversal)
@@ -19,7 +18,7 @@ import           Prelude.Compat
 type Node f expr = f (expr f)
 type LeafNode f expr = Node f (Const expr)
 
-class ChildrenConstraint expr Children => Children expr where
+class Children expr where
     type ChildrenConstraint expr (constraint :: ((* -> *) -> *) -> Constraint) :: Constraint
     children ::
         (Applicative f, ChildrenConstraint expr constraint) =>
@@ -47,15 +46,3 @@ overChildren p f = runIdentity . children p (Identity . f)
 instance Children (Const val) where
     type ChildrenConstraint (Const val) constraint = ()
     children _ _ (Const x) = pure (Const x)
-
-hoistNode ::
-    (Children expr, Functor f) =>
-    (forall a. f a -> g a) ->
-    Node f expr -> Node g expr
-hoistNode f = f . fmap (hoistBody f)
-
-hoistBody ::
-    (Children expr, Functor f) =>
-    (forall a. f a -> g a) ->
-    expr f -> expr g
-hoistBody f = overChildren (Proxy :: Proxy Children) (hoistNode f)
