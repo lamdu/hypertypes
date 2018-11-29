@@ -1,7 +1,8 @@
-{-# LANGUAGE StandaloneDeriving, UndecidableInstances, MultiParamTypeClasses, TemplateHaskell, LambdaCase, TypeSynonymInstances, FlexibleInstances, TypeFamilies #-}
+{-# LANGUAGE StandaloneDeriving, MultiParamTypeClasses, TemplateHaskell, LambdaCase, FlexibleInstances, TypeFamilies #-}
+
+import Lang
 
 import AST
-import AST.TH
 import AST.Unify
 import AST.Unify.IntBindingState
 import qualified Control.Lens as Lens
@@ -12,28 +13,6 @@ import Data.Functor.Const
 import Data.Map
 import Data.Maybe
 import Data.IntSet
-
-data Typ f
-    = TInt
-    | TFun (Node f Typ) (Node f Typ)
-    | TRow (Row f)
-
-data Row f
-    = REmpty
-    | RExtend String (Node f Typ) (Node f Row)
-
-data Term v f
-    = ELam v (Node f (Term v))
-    | EVar v
-    | EApp (Node f (Term v)) (Node f (Term v))
-    | ELit Int
-
-deriving instance (Show (f (Typ f)), Show (Row f)) => Show (Typ f)
-deriving instance (Show (f (Typ f)), Show (f (Row f))) => Show (Row f)
-deriving instance (Show v, Show (Node f (Term v))) => Show (Term v f)
-
-[makeChildren, makeZipMatch] <*> [''Typ, ''Row] & sequenceA <&> concat
-makeChildren ''Term -- TODO: makeZipMatch should work too
 
 data Infer f = Infer
     { _iTyp :: f Typ
