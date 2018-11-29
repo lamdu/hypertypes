@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, RankNTypes, FlexibleContexts, ConstraintKinds, UndecidableSuperClasses #-}
+{-# LANGUAGE NoImplicitPrelude, RankNTypes, FlexibleContexts, ConstraintKinds #-}
 
 module AST.ZipMatch
     ( ZipMatch(..)

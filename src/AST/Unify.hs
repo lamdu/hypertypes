@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, DeriveTraversable, TemplateHaskell, MultiParamTypeClasses, FlexibleContexts, LambdaCase, ScopedTypeVariables, UndecidableInstances, UndecidableSuperClasses, TypeFamilies, DefaultSignatures #-}
+{-# LANGUAGE NoImplicitPrelude, DeriveTraversable, TemplateHaskell, MultiParamTypeClasses, FlexibleContexts, LambdaCase, ScopedTypeVariables, TypeFamilies, DefaultSignatures #-}
 
 module AST.Unify
     ( Var, UNode
@@ -16,6 +16,7 @@ import           AST.ZipMatch (ZipMatch(..), zipMatch_)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Except (MonadError(..))
+import           Data.Constraint
 import           Data.Functor.Identity (Identity(..))
 import           Data.Proxy (Proxy(..))
 
@@ -47,12 +48,16 @@ class MonadError () m => OccursMonad m where
     default emptyVisited :: Monoid (Visited m) => Proxy m -> Visited m
     emptyVisited = mempty
 
-class
-    ( Eq (UVar m t), ZipMatch t, OccursMonad m
-    , ChildrenConstraint t (UnifyMonad m)
-    ) => UnifyMonad m t where
+class (Eq (UVar m t), ZipMatch t, OccursMonad m) => UnifyMonad m t where
     binding :: Binding m t
     visit :: UVar m t -> Visited m -> m (Visited m)
+
+    recursiveUnify :: Proxy (UnifyMonad m t) -> Dict (ChildrenConstraint t (UnifyMonad m))
+
+    default recursiveUnify ::
+        ChildrenConstraint t (UnifyMonad m) =>
+        Proxy (UnifyMonad m t) -> Dict (ChildrenConstraint t (UnifyMonad m))
+    recursiveUnify _ = Dict
 
 -- | Embed a pure term as a mutable term.
 unfreeze :: Recursive t => Node Identity t -> Node (UTerm v) t
@@ -84,7 +89,8 @@ applyBindingsH ::
     UnifyMonad m t =>
     Visited m -> UNode m t -> m (UNode m t)
 applyBindingsH visited (UTerm t) =
-    children (Proxy :: Proxy (UnifyMonad m)) (applyBindingsH visited) t <&> UTerm
+    withDict (recursiveUnify (Proxy :: Proxy (UnifyMonad m t)))
+    (children (Proxy :: Proxy (UnifyMonad m)) (applyBindingsH visited) t <&> UTerm)
 applyBindingsH visited (UVar v0) =
     semiPruneLookup v0
     >>=
@@ -129,4 +135,5 @@ unifyTerms ::
     forall m t. UnifyMonad m t =>
     t (UTerm (Var m)) -> t (UTerm (Var m)) -> m ()
 unifyTerms =
-    zipMatch_ (Proxy :: Proxy (UnifyMonad m)) unify
+    withDict (recursiveUnify (Proxy :: Proxy (UnifyMonad m t)))
+    (zipMatch_ (Proxy :: Proxy (UnifyMonad m)) unify)
