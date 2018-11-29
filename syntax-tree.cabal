@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 67c06ad675bd2f15b5e22c40eec7aac4e6e1507dd44fb6ef074e0c86f8be98bb
+-- hash: d38804e28234812beb47374bd98f68dea20d771f9531a01726ad0e805f8d0da0
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -26,48 +26,23 @@ source-repository head
   location: https://github.com/githubuser/syntax-tree
 
 library
-  exposed-modules:
-      AST
-      AST.Unify
   other-modules:
       Paths_syntax_tree
   hs-source-dirs:
       src
-  ghc-options: -O2 -Wall -Wnoncanonical-monad-instances -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
+  ghc-options: -Wall
   build-depends:
-      QuickCheck
-    , base
-    , base-compat
-    , binary
-    , containers
-    , lens
-    , mtl
-    , pretty
-    , template-haskell
-    , th-abstraction
-    , transformers
+      base
   default-language: Haskell2010
 
 test-suite syntax-tree-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      GhcStuck
       Paths_syntax_tree
   hs-source-dirs:
       test
-  ghc-options: -Wall -Wcompat -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      QuickCheck
-    , base
-    , base-compat
-    , binary
-    , containers
-    , lens
-    , mtl
-    , pretty
-    , syntax-tree
-    , template-haskell
-    , th-abstraction
-    , transformers
+      base
   default-language: Haskell2010

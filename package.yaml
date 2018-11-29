@@ -21,27 +21,11 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base
-- base-compat
-- binary
-- containers
-- lens
-- mtl
-- pretty
-- QuickCheck
-- template-haskell
-- th-abstraction
-- transformers
 
 library:
   source-dirs: src
   ghc-options:
-  - -O2
   - -Wall
-  - -Wnoncanonical-monad-instances
-  - -Wcompat
-  - -Wincomplete-record-updates
-  - -Wincomplete-uni-patterns
-  - -Wredundant-constraints
 
 tests:
   syntax-tree-test:
@@ -49,11 +33,6 @@ tests:
     source-dirs:         test
     ghc-options:
     - -Wall
-    - -Wcompat
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
-    dependencies:
-    - containers
-    - lens
-    - syntax-tree
