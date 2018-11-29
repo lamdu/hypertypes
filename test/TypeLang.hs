@@ -7,7 +7,6 @@ import AST.Unify
 import AST.Unify.IntBindingState
 import AST.TH
 import qualified Control.Lens as Lens
-import Control.Monad.Except
 import Control.Monad.RWS
 import Data.Functor.Const
 import Data.IntSet
@@ -35,20 +34,14 @@ Lens.makeLenses ''Infer
 emptyInferState :: Infer IntBindingState
 emptyInferState = Infer emptyIntBindingState emptyIntBindingState
 
-instance
-    (Monoid w, MonadError () m ) =>
-        OccursMonad (RWST r w (Infer IntBindingState) m) where
-    type Visited (RWST r w (Infer IntBindingState) m) = Infer (Const IntSet)
+instance Monoid w => OccursMonad (RWST r w (Infer IntBindingState) Maybe) where
+    type Visited (RWST r w (Infer IntBindingState) Maybe) = Infer (Const IntSet)
     emptyVisited _ = Infer (Const mempty) (Const mempty)
 
-instance
-    (Monoid w, MonadError () m) =>
-        UnifyMonad (RWST r w (Infer IntBindingState) m) Int Typ where
+instance Monoid w => UnifyMonad (RWST r w (Infer IntBindingState) Maybe) Int Typ where
     binding = intBindingState iTyp
     visit _ var = (iTyp . Lens._Wrapped) (visitSet var)
 
-instance
-    (Monoid w, MonadError () m) =>
-        UnifyMonad (RWST r w (Infer IntBindingState) m) Int Row where
+instance Monoid w => UnifyMonad (RWST r w (Infer IntBindingState) Maybe) Int Row where
     binding = intBindingState iRow
     visit _ var = (iRow . Lens._Wrapped) (visitSet var)
