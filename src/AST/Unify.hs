@@ -10,7 +10,7 @@ module AST.Unify
     , applyBindings, unify
     ) where
 
-import           AST (Node, Children(..), overChildren)
+import           AST (Node, Children(..), hoistNode)
 import           AST.ZipMatch (ZipMatch(..), zipMatch_)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -55,7 +55,7 @@ class
 
 -- | Embed a pure term as a mutable term.
 unfreeze :: Children t => Node Identity t -> Node (UTerm v) t
-unfreeze (Identity t) = overChildren (Proxy :: Proxy Children) unfreeze t & UTerm
+unfreeze = hoistNode (UTerm . runIdentity)
 
 -- look up a variable, and return last variable pointing to result.
 -- prune all variable on way to last variable
