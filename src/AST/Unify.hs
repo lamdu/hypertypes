@@ -13,10 +13,9 @@ import           AST (Node, Children(..), overChildren)
 import           AST.ZipMatch (ZipMatch(..), zipMatch_)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Control.Monad (void)
 import           Control.Monad.Except (MonadError(..))
 import           Data.Functor.Identity (Identity(..))
-import           Data.Proxy (Proxy(..), asProxyTypeOf)
+import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
 
@@ -103,23 +102,39 @@ applyBindingsH visited (UVar v0) =
         visit (Proxy :: Proxy t) v1 visited
         >>= (`applyBindingsH` UTerm t)
 
+-- Note on usage of `semiPruneLookup`:
+--   Variables are pruned to point to other variables rather than terms,
+--   yielding comparison of (sometimes equal) variables,
+--   rather than recursively unifying the terms they would prune to.
 unify :: forall m v t. UnifyMonad m v t => Node (UTerm v) t -> Node (UTerm v) t -> m ()
-unify x0 x1 =
-    case (x0, x1, Proxy) of
-    (UVar v, t@UTerm{}, p) -> bindVar binding v (t `asProxyTypeOf` p)
-    (t@UTerm{}, UVar v, _) -> bindVar binding v t
-    (UTerm t0, UTerm t1, _) ->
-        zipMatch_ (Proxy :: Proxy (UnifyMonad m v)) unify t0 t1 & void
-    (UVar v0, UVar v1, p)
-        | v0 == v1 -> pure ()
-        | otherwise ->
-            lookupVar binding v0
+unify (UVar v) (UTerm t) = unifyVarTerm v t
+unify (UTerm t) (UVar v) = unifyVarTerm v t
+unify (UTerm t0) (UTerm t1) = unifyTerms t0 t1
+unify (UVar x0) (UVar y0)
+    | x0 == y0 = pure ()
+    | otherwise =
+        semiPruneLookup x0
+        >>=
+        \case
+        (_, Just x1) -> unifyVarTerm y0 (x1 :: t (UTerm v))
+        (x1, Nothing) ->
+            semiPruneLookup y0
             >>=
             \case
-            Nothing -> bindVar binding v0 (UVar v1 `asProxyTypeOf` p)
-            Just t0 ->
-                lookupVar binding v1
-                >>=
-                \case
-                Nothing -> bindVar binding v1 (UVar v0 `asProxyTypeOf` p)
-                Just t1 -> unify (t0 `asProxyTypeOf` p) t1 & void
+            (_, Just y1) -> unifyVarTerm x1 (y1 :: t (UTerm v))
+            (y1, Nothing) ->
+                bindVar binding x1 (UVar y1 :: Node (UTerm v) t)
+
+unifyVarTerm :: UnifyMonad m v t => v -> t (UTerm v) -> m ()
+unifyVarTerm x0 y =
+    semiPruneLookup x0
+    >>=
+    \case
+    (x1, Nothing) -> bindVar binding x1 (UTerm y)
+    (_, Just x1) -> unifyTerms x1 y
+
+unifyTerms ::
+    forall m v t. UnifyMonad m v t =>
+    t (UTerm v) -> t (UTerm v) -> m ()
+unifyTerms =
+    zipMatch_ (Proxy :: Proxy (UnifyMonad m v)) unify
