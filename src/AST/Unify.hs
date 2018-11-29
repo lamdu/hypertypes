@@ -2,7 +2,7 @@
 
 module AST.Unify
     ( UTerm(..), _UVar, _UTerm
-    , unfreeze, freeze
+    , unfreeze
     , Binding(..)
     , OccursMonad(..)
     , UnifyMonad(..)
@@ -30,10 +30,6 @@ Lens.makePrisms ''UTerm
 -- | Embed a pure term as a mutable term.
 unfreeze :: Children t => Node Identity t -> Node (UTerm v) t
 unfreeze (Identity t) = overChildren (Proxy :: Proxy Children) unfreeze t & UTerm
-
-freeze :: Children t => Node (UTerm v) t -> Maybe (Node Identity t)
-freeze UVar{} = Nothing
-freeze (UTerm t) = children (Proxy :: Proxy Children) freeze t <&> Identity
 
 data Binding v t m = Binding
     { lookupVar :: v -> m (Maybe (Node (UTerm v) t))
@@ -71,7 +67,7 @@ semiPruneLookup v0 =
             pure (v, r)
 
 -- TODO: implement when need / better understand motivations for -
--- fullPrune, occursIn, seenAs, getFreeVars, freshen, equals, equiv
+-- freeze, fullPrune, occursIn, seenAs, getFreeVars, freshen, equals, equiv
 
 applyBindings :: forall m v t. UnifyMonad m v t => Node (UTerm v) t -> m (Node (UTerm v) t)
 applyBindings = applyBindingsH (emptyVisited (Proxy :: Proxy m))
