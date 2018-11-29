@@ -34,14 +34,16 @@ Lens.makeLenses ''Infer
 emptyInferState :: Infer IntBindingState
 emptyInferState = Infer emptyIntBindingState emptyIntBindingState
 
+type instance Var (RWST r w (Infer IntBindingState) Maybe) = Const Int
+
 instance Monoid w => OccursMonad (RWST r w (Infer IntBindingState) Maybe) where
     type Visited (RWST r w (Infer IntBindingState) Maybe) = Infer (Const IntSet)
     emptyVisited _ = Infer (Const mempty) (Const mempty)
 
-instance Monoid w => UnifyMonad (RWST r w (Infer IntBindingState) Maybe) Int Typ where
+instance Monoid w => UnifyMonad (RWST r w (Infer IntBindingState) Maybe) Typ where
     binding = intBindingState iTyp
-    visit _ var = (iTyp . Lens._Wrapped) (visitSet var)
+    visit (Const var) = (iTyp . Lens._Wrapped) (visitSet var)
 
-instance Monoid w => UnifyMonad (RWST r w (Infer IntBindingState) Maybe) Int Row where
+instance Monoid w => UnifyMonad (RWST r w (Infer IntBindingState) Maybe) Row where
     binding = intBindingState iRow
-    visit _ var = (iRow . Lens._Wrapped) (visitSet var)
+    visit (Const var) = (iRow . Lens._Wrapped) (visitSet var)

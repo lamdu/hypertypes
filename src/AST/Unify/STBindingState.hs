@@ -1,12 +1,11 @@
-{-# LANGUAGE NoImplicitPrelude, KindSignatures #-}
+{-# LANGUAGE NoImplicitPrelude, TypeFamilies #-}
 
 module AST.Unify.STBindingState
     ( STVar
     , stBindingState
     ) where
 
-import           AST (Node)
-import           AST.Unify (Binding(..), UTerm(..))
+import           AST.Unify (Binding(..), UTerm(..), Var)
 import           Control.Lens.Operators
 import           Control.Monad.ST (ST)
 import           Control.Monad.Trans.Class (MonadTrans(..))
@@ -15,19 +14,21 @@ import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
 import           Prelude.Compat
 
-data STVar s t =
+data STVar s a =
     STVar
     { -- For occurs check.
       -- A (more efficient?) alternative would mark the state in the referenced value itself!
       _varId :: Int
-    , varRef :: STRef s (Maybe (Node (UTerm (STVar s t)) t))
+    , varRef :: STRef s (Maybe (UTerm (STVar s) a))
     }
 
 newtype STBindingState s (t :: (* -> *) -> *) = STBState (STRef s Int)
 
+type instance Var (ReaderT env (ST s)) = STVar s
+
 stBindingState ::
     (env -> STBindingState s t) ->
-    Binding (STVar s t) t (ReaderT env (ST s))
+    Binding (ReaderT env (ST s)) t
 stBindingState l =
     Binding
     { lookupVar = lift . readSTRef . varRef
@@ -40,5 +41,6 @@ stBindingState l =
                 newSTRef Nothing <&> STVar nextFreeVar
                 & lift
         <&> UVar
-    , bindVar = \v t -> writeSTRef (varRef v) (Just t) & lift
+    , bindVar =
+        \v t -> writeSTRef (varRef v) (Just t) & lift
     }

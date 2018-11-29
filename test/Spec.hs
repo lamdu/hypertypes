@@ -9,18 +9,19 @@ import AST.Unify.IntBindingState
 import qualified Control.Lens as Lens
 import Control.Lens.Operators
 import Control.Monad.RWS
+import Data.Functor.Const
 import Data.Functor.Identity
 import Data.Map
 import Data.Maybe
 
 type LamBindings v = Map String (Node (UTerm v) Typ)
 
-type InferM = RWST (LamBindings Int) () (Infer IntBindingState) Maybe
+type InferM = RWST (LamBindings (Const Int)) () (Infer IntBindingState) Maybe
 
 runInfer :: InferM a -> Maybe a
 runInfer act = runRWST act mempty emptyInferState <&> (^. Lens._1)
 
-infer :: Term String Identity -> InferM (Node (UTerm Int) Typ)
+infer :: Term String Identity -> InferM (Node (UTerm (Const Int)) Typ)
 infer ELit{} = UTerm TInt & pure
 infer (EVar var) = Lens.view (Lens.at var) <&> fromMaybe (error "name error")
 infer (ELam var (Identity body)) =
@@ -57,7 +58,7 @@ occurs =
     where
         x = EVar "x" & Identity
 
-inferExpr :: Node Identity (Term String) -> Maybe (Node (UTerm Int) Typ)
+inferExpr :: Node Identity (Term String) -> Maybe (Node (UTerm (Const Int)) Typ)
 inferExpr x = infer (x ^. Lens._Wrapped) >>= applyBindings & runInfer
 
 main :: IO ()
