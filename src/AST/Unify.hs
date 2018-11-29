@@ -82,8 +82,8 @@ semiPruneLookup v0 =
             bindVar binding v0 (UVar v `asTypeOf` u)
             pure (v, r)
 
--- TODO: implement when better understand motivations for -
--- occursIn, seenAs, getFreeVars, freshen
+-- TODO: implement when need / better understand motivations for -
+-- occursIn, seenAs, getFreeVars, freshen, equals, equiv
 
 applyBindings :: forall m v t. UnifyMonad m v t => Node (UTerm v) t -> m (Node (UTerm v) t)
 applyBindings = applyBindingsH (emptyVisited (Proxy :: Proxy m))
@@ -103,12 +103,13 @@ applyBindingsH visited (UVar v0) =
         visit (Proxy :: Proxy t) v1 visited
         >>= (`applyBindingsH` UTerm t)
 
-unify :: UnifyMonad m v t => Node (UTerm v) t -> Node (UTerm v) t -> m ()
+unify :: forall m v t. UnifyMonad m v t => Node (UTerm v) t -> Node (UTerm v) t -> m ()
 unify x0 x1 =
     case (x0, x1, Proxy) of
     (UVar v, t@UTerm{}, p) -> bindVar binding v (t `asProxyTypeOf` p)
     (t@UTerm{}, UVar v, _) -> bindVar binding v t
-    (UTerm t0, UTerm t1, _) -> unifyBody t0 t1 & void
+    (UTerm t0, UTerm t1, _) ->
+        zipMatch_ (Proxy :: Proxy (UnifyMonad m v)) unify t0 t1 & void
     (UVar v0, UVar v1, p)
         | v0 == v1 -> pure ()
         | otherwise ->
@@ -122,6 +123,3 @@ unify x0 x1 =
                 \case
                 Nothing -> bindVar binding v1 (UVar v0 `asProxyTypeOf` p)
                 Just t1 -> unify (t0 `asProxyTypeOf` p) t1 & void
-
-unifyBody :: forall m v t. UnifyMonad m v t => t (UTerm v) -> t (UTerm v) -> m ()
-unifyBody = zipMatch_ (Proxy :: Proxy (UnifyMonad m v)) unify
