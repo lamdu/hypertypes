@@ -26,6 +26,7 @@ dependencies:
 - constraint
 - containers
 - lens
+- monad-st
 - mtl
 - pretty
 - QuickCheck

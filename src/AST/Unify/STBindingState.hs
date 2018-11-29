@@ -8,8 +8,7 @@ module AST.Unify.STBindingState
 import           AST.Unify (Binding(..), UTerm(..), Var)
 import           Control.Lens.Operators
 import           Control.Monad.ST (ST)
-import           Control.Monad.Trans.Class (MonadTrans(..))
-import           Control.Monad.Trans.Reader (ReaderT, asks)
+import           Control.Monad.ST.Class (MonadST(..))
 import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
 import           Prelude.Compat
@@ -24,23 +23,24 @@ data STVar s a =
 
 newtype STBindingState s (t :: (* -> *) -> *) = STBState (STRef s Int)
 
-type instance Var (ReaderT env (ST s)) = STVar s
+type instance Var (ST s) = STVar s
 
 stBindingState ::
-    (env -> STBindingState s t) ->
-    Binding (ReaderT env (ST s)) t
-stBindingState l =
+    (MonadST m, Var m ~ STVar (World m)) =>
+    m (STBindingState (World m) t) ->
+    Binding m t
+stBindingState getState =
     Binding
-    { lookupVar = lift . readSTRef . varRef
+    { lookupVar = liftST . readSTRef . varRef
     , newVar =
         do
-            STBState nextFreeVarRef <- asks l
+            STBState nextFreeVarRef <- getState
             do
                 nextFreeVar <- readSTRef nextFreeVarRef
                 writeSTRef nextFreeVarRef (nextFreeVar + 1)
                 newSTRef Nothing <&> STVar nextFreeVar
-                & lift
+                & liftST
         <&> UVar
     , bindVar =
-        \v t -> writeSTRef (varRef v) (Just t) & lift
+        \v t -> writeSTRef (varRef v) (Just t) & liftST
     }
