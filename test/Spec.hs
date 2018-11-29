@@ -44,7 +44,9 @@ Lens.makeLenses ''Infer
 emptyInferState :: Infer IntBindingState
 emptyInferState = Infer emptyIntBindingState emptyIntBindingState
 
-type InferM = RWST (Map String (Node (UTerm Int) Typ)) () (Infer IntBindingState) Maybe
+type LamBindings v = Map String (Node (UTerm v) Typ)
+
+type InferM = RWST (LamBindings Int) () (Infer IntBindingState) Maybe
 
 instance OccursMonad InferM where
     type Visited InferM = Infer (Const IntSet)
