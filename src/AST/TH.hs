@@ -6,9 +6,9 @@ module AST.TH
 
 import           AST (Node, LeafNode, Children(..), ChildOf)
 import           AST.ZipMatch (ZipMatch(..))
+import           Control.Applicative (liftA2)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Control.Monad.Error.Class (MonadError(..))
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.State (StateT(..), evalStateT, gets, modify)
 import           Data.Functor.Const (Const)
@@ -161,9 +161,7 @@ makeZipMatch typeName =
             <&> (:[])
     where
         tailClause =
-            Clause [WildP, WildP, WildP, WildP]
-            (NormalB (AppE (VarE 'throwError) (TupE [])))
-            []
+            Clause [WildP, WildP, WildP, WildP] (NormalB (ConE 'Nothing)) []
 
 
 makeZipMatchCtr :: Name -> D.ConstructorInfo -> Clause
@@ -183,13 +181,23 @@ makeZipMatchCtr var info =
         mkAnd x y = InfixE (Just x) (VarE '(&&)) (Just y)
         fieldParts = zipWith field cVars (D.constructorFields info <&> matchType var)
         bodyExp =
-            fieldParts <&> fst
-            & applicativeStyle (ConE (D.constructorName info))
-        field (x, y) NodeFofX{} = (VarE func `AppE` VarE x `AppE` VarE y, [])
+            applicativeStyle2
+            (ConE 'Just `AppE` (VarE 'pure `AppE` ConE (D.constructorName info)))
+            (fieldParts <&> fst)
+        field (x, y) NodeFofX{} =
+            ( ConE 'Just `AppE` (VarE func `AppE` VarE x `AppE` VarE y)
+            , []
+            )
         field (x, y) XofF{} =
             (VarE 'zipMatch `AppE` VarE proxy `AppE` VarE func `AppE` VarE x `AppE` VarE y, [])
         field _ Tof{} = error "TODO"
         field (x, y) Other =
-            ( AppE (VarE 'pure) (VarE x)
+            ( ConE 'Just `AppE` (VarE 'pure `AppE` VarE x)
             , [InfixE (Just (VarE x)) (VarE '(==)) (Just (VarE y))]
             )
+
+applicativeStyle2 :: Exp -> [Exp] -> Exp
+applicativeStyle2 =
+    foldl ap2
+    where
+        ap2 x y = VarE 'liftA2 `AppE` VarE '(<*>) `AppE` x `AppE` y

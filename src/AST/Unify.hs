@@ -18,6 +18,7 @@ import           Control.Lens.Operators
 import           Control.Monad.Except (MonadError(..))
 import           Data.Constraint (Dict(..), withDict)
 import           Data.Functor.Identity (Identity(..))
+import           Data.Maybe (fromMaybe)
 import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
@@ -134,6 +135,9 @@ unifyVarTerm x0 y =
 unifyTerms ::
     forall m t. UnifyMonad m t =>
     t (UTerm (Var m)) -> t (UTerm (Var m)) -> m ()
-unifyTerms =
-    withDict (recursiveUnify (Proxy :: Proxy (UnifyMonad m t)))
-    (zipMatch_ (Proxy :: Proxy (UnifyMonad m)) unify)
+unifyTerms x y =
+    (withDict (recursiveUnify (Proxy :: Proxy (UnifyMonad m t)))
+        (zipMatch_ (Proxy :: Proxy (UnifyMonad m)) unify x y)
+        :: Maybe (m ())
+    )
+    & fromMaybe (throwError ())

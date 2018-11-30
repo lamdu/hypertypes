@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, RankNTypes, FlexibleContexts, ConstraintKinds #-}
+{-# LANGUAGE NoImplicitPrelude, RankNTypes, ConstraintKinds, ScopedTypeVariables #-}
 
 module AST.ZipMatch
     ( ZipMatch(..)
@@ -8,7 +8,6 @@ module AST.ZipMatch
 import           AST (Node, Children(..))
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Control.Monad.Except (MonadError(..))
 import           Data.Functor.Const (Const(..))
 import           Data.Proxy (Proxy)
 
@@ -16,23 +15,18 @@ import           Prelude.Compat
 
 class Children expr => ZipMatch expr where
     zipMatch ::
-        (MonadError () m, ChildrenConstraint expr constraint) =>
+        (Applicative f, ChildrenConstraint expr constraint) =>
         Proxy constraint ->
-        (forall child. constraint child => Node a child -> Node b child -> m (Node c child)) ->
-        expr a -> expr b -> m (expr c)
+        (forall child. constraint child => Node a child -> Node b child -> f (Node c child)) ->
+        expr a -> expr b -> Maybe (f (expr c))
 
 zipMatch_ ::
-    (ZipMatch expr, MonadError () m, ChildrenConstraint expr constraint) =>
+    forall f expr constraint a b.
+    (Applicative f, ZipMatch expr, ChildrenConstraint expr constraint) =>
     Proxy constraint ->
-    (forall child. constraint child => Node a child -> Node b child -> m ()) ->
-    expr a -> expr b -> m ()
+    (forall child. constraint child => Node a child -> Node b child -> f ()) ->
+    expr a -> expr b -> Maybe (f ())
 zipMatch_ p f x y =
-    () <$ zipMatchH p f x y
-    where
-        zipMatchH ::
-            (ZipMatch expr, MonadError () m, ChildrenConstraint expr constraint) =>
-            Proxy constraint ->
-            (forall child. constraint child => Node a child -> Node b child -> m ()) ->
-            expr a -> expr b -> m (expr (Const ()))
-        zipMatchH p' f' =
-            zipMatch p' (f' <&> Lens.mapped . Lens.mapped .~ Const ())
+    ( zipMatch p (f <&> Lens.mapped . Lens.mapped .~ Const ()) x y
+        :: Maybe (f (expr (Const ())))
+    ) <&> Lens.mapped .~ ()
