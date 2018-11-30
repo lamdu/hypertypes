@@ -114,7 +114,7 @@ applyBindingsH visited (UVar v0) =
 -- Note on usage of `semiPruneLookup`:
 --   Variables are pruned to point to other variables rather than terms,
 --   yielding comparison of (sometimes equal) variables,
---   rather than recursively unifying the terms they would prune to.
+--   rather than recursively unifying the terms that they would prune to.
 unify :: forall m t. UnifyMonad m t => UNode m t -> UNode m t -> m ()
 unify (UVar v) (UTerm t) = unifyVarTerm v t
 unify (UTerm t) (UVar v) = unifyVarTerm v t
