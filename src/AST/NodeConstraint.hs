@@ -4,7 +4,7 @@ module AST.NodeConstraint
     ( NodeConstraint, IfChildNodes
     ) where
 
-import AST
+import AST (Node, ChildrenConstraint)
 
 class constraint (Node f expr) => NodeConstraint constraint f expr
 instance constraint (Node f expr) => NodeConstraint constraint f expr
