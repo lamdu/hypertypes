@@ -59,11 +59,11 @@ instance Monoid w => OccursMonad (IntInfer r w) where
 
 instance Monoid w => UnifyMonad (IntInfer r w) Typ where
     binding = intBindingState iTyp
-    visit = iTyp . Lens._Wrapped . intVisit
+    visit _ = iTyp . Lens._Wrapped . fmap (maybe (throwError ()) pure) . intVisit
 
 instance Monoid w => UnifyMonad (IntInfer r w) Row where
     binding = intBindingState iRow
-    visit = iRow . Lens._Wrapped . intVisit
+    visit _ = iRow . Lens._Wrapped . fmap (maybe (throwError ()) pure) . intVisit
 
 type STInfer r s = ReaderT (r, Infer (STBindingState s)) (ExceptT () (ST s))
 
@@ -75,8 +75,8 @@ instance OccursMonad (STInfer r s) where
 
 instance UnifyMonad (STInfer r s) Typ where
     binding = stBindingState (Lens.view (Lens._2 . iTyp))
-    visit = iTyp . Lens._Wrapped . stVisit
+    visit _ = iTyp . Lens._Wrapped . stVisit
 
 instance UnifyMonad (STInfer r s) Row where
     binding = stBindingState (Lens.view (Lens._2 . iRow))
-    visit = iRow . Lens._Wrapped . stVisit
+    visit _ = iRow . Lens._Wrapped . stVisit

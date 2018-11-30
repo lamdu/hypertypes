@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, FlexibleContexts, TypeFamilies #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies #-}
 
 module AST.Unify.IntMapBinding
     ( IntBindingState, emptyIntBindingState
@@ -10,7 +10,6 @@ import           AST.Unify (UTerm(..), Var, Binding(..))
 import qualified Control.Lens as Lens
 import           Control.Lens (ALens')
 import           Control.Lens.Operators
-import           Control.Monad.Except (MonadError(..))
 import           Control.Monad.State (MonadState(..), modify)
 import           Data.Functor.Const (Const(..))
 import           Data.IntMap (IntMap)
@@ -41,9 +40,9 @@ intBindingState l =
     , bindVar = \k v -> Lens.cloneLens l . varBindings . Lens.at (k ^. Lens._Wrapped) ?= v
     }
 
-intVisit :: MonadError () m => Const Int f -> IntSet -> m IntSet
+intVisit :: Const Int f -> IntSet -> Maybe IntSet
 intVisit (Const var) =
     Lens.contains var x
     where
-        x True = throwError ()
+        x True = Nothing
         x False = pure True

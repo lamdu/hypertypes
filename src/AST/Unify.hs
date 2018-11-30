@@ -42,7 +42,7 @@ data Binding m t = Binding
     , bindVar :: UVar m t -> UNode m t -> m ()
     }
 
-class MonadError () m => OccursMonad m where
+class Monad m => OccursMonad (m :: * -> *) where
     type Visited m
     emptyVisited :: Proxy m -> Visited m
 
@@ -51,7 +51,17 @@ class MonadError () m => OccursMonad m where
 
 class (Eq (UVar m t), ZipMatch t, OccursMonad m) => UnifyMonad m t where
     binding :: Binding m t
-    visit :: UVar m t -> Visited m -> m (Visited m)
+
+    -- | Add variable to visited set,
+    -- or break with an "occurs" failure due to variable resolving to term that contains itself.
+    -- For the error, the term is given for context.
+    visit :: t (UTerm (Var m)) -> UVar m t -> Visited m -> m (Visited m)
+
+    -- | Break due to unification mismatch on the top-levels of given terms.
+    mismatchFailure :: t (UTerm (Var m)) -> t (UTerm (Var m)) -> m ()
+
+    default mismatchFailure :: MonadError () m => t (UTerm (Var m)) -> t (UTerm (Var m)) -> m ()
+    mismatchFailure _ _ = throwError ()
 
     recursiveUnify :: Proxy (UnifyMonad m t) -> Dict (ChildrenConstraint t (UnifyMonad m))
 
@@ -98,7 +108,7 @@ applyBindingsH visited (UVar v0) =
     \case
     (v1, Nothing) -> UVar v1 & pure
     (v1, Just t) ->
-        visit v1 visited
+        visit t v1 visited
         >>= (`applyBindingsH` UTerm t)
 
 -- Note on usage of `semiPruneLookup`:
@@ -140,4 +150,4 @@ unifyTerms x y =
         (zipMatch_ (Proxy :: Proxy (UnifyMonad m)) unify x y)
         :: Maybe (m ())
     )
-    & fromMaybe (throwError ())
+    & fromMaybe (mismatchFailure x y)
