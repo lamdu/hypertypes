@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TypeFamilies, FlexibleContexts, ScopedTypeVariables #-}
+{-# LANGUAGE NoImplicitPrelude, TypeFamilies, FlexibleContexts #-}
 
 module AST.Unify.STBinding
     ( STVar
@@ -7,17 +7,15 @@ module AST.Unify.STBinding
     , stBindingToInt
     ) where
 
-import           AST (Node, overChildren)
-import           AST.Recursive (Recursive(..))
-import           AST.Unify (Binding(..), UTerm(..), Var)
+import           AST (Node)
+import           AST.Recursive (Recursive(..), hoistNodeR)
+import           AST.Unify (Binding(..), UTerm(..), Var, _UVar)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Error.Class (MonadError(..))
 import           Control.Monad.ST.Class (MonadST(..))
-import           Data.Constraint (withDict)
 import           Data.Functor.Const (Const(..))
 import           Data.IntSet (IntSet)
-import           Data.Proxy (Proxy(..))
 import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
 import           Prelude.Compat
@@ -66,11 +64,6 @@ stVisit (STVar idx _) =
         x False = pure True
 
 stBindingToInt ::
-    forall s t.
     Recursive t =>
     Node (UTerm (STVar s)) t -> Node (UTerm (Const Int)) t
-stBindingToInt (UVar v) = UVar (Const (varId v))
-stBindingToInt (UTerm t) =
-    withDict (recursive (Proxy :: Proxy t))
-    (overChildren (Proxy :: Proxy Recursive) stBindingToInt t)
-    & UTerm
+stBindingToInt = hoistNodeR (_UVar %~ Const . varId)
