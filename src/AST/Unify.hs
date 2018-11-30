@@ -13,9 +13,9 @@ module AST.Unify
 import           AST (Node, Children(..))
 import           AST.Recursive (Recursive(..), hoistNode)
 import           AST.ZipMatch (ZipMatch(..), zipMatch_)
+import           Control.Applicative (Alternative(..))
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Control.Monad.Except (MonadError(..))
 import           Data.Constraint (Dict(..), withDict)
 import           Data.Functor.Identity (Identity(..))
 import           Data.Maybe (fromMaybe)
@@ -60,8 +60,8 @@ class (Eq (UVar m t), ZipMatch t, OccursMonad m) => UnifyMonad m t where
     -- | Break due to unification mismatch on the top-levels of given terms.
     mismatchFailure :: t (UTerm (Var m)) -> t (UTerm (Var m)) -> m ()
 
-    default mismatchFailure :: MonadError () m => t (UTerm (Var m)) -> t (UTerm (Var m)) -> m ()
-    mismatchFailure _ _ = throwError ()
+    default mismatchFailure :: Alternative m => t (UTerm (Var m)) -> t (UTerm (Var m)) -> m ()
+    mismatchFailure _ _ = empty
 
     recursiveUnify :: Proxy (UnifyMonad m t) -> Dict (ChildrenConstraint t (UnifyMonad m))
 

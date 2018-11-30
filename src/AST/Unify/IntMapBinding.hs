@@ -7,6 +7,7 @@ module AST.Unify.IntMapBinding
 
 import           AST (Node)
 import           AST.Unify (UTerm(..), Var, Binding(..))
+import           Control.Applicative (Alternative(..))
 import qualified Control.Lens as Lens
 import           Control.Lens (ALens')
 import           Control.Lens.Operators
@@ -40,9 +41,9 @@ intBindingState l =
     , bindVar = \k v -> Lens.cloneLens l . varBindings . Lens.at (k ^. Lens._Wrapped) ?= v
     }
 
-intVisit :: Const Int f -> IntSet -> Maybe IntSet
+intVisit :: Alternative m => Const Int f -> IntSet -> m IntSet
 intVisit (Const var) =
     Lens.contains var x
     where
-        x True = Nothing
+        x True = empty
         x False = pure True

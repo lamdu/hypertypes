@@ -10,11 +10,11 @@ import AST.Unify.IntMapBinding
 import AST.Unify.STBinding
 import AST.TH
 import qualified Control.Lens as Lens
-import Control.Monad.Except
 import Control.Monad.RWS
 import Control.Monad.Reader
 import Control.Monad.ST
 import Control.Monad.ST.Class (MonadST(..))
+import Control.Monad.Trans.Maybe
 import Data.Functor.Const
 import Data.IntSet
 
@@ -59,13 +59,13 @@ instance Monoid w => OccursMonad (IntInfer r w) where
 
 instance Monoid w => UnifyMonad (IntInfer r w) Typ where
     binding = intBindingState iTyp
-    visit _ = iTyp . Lens._Wrapped . fmap (maybe (throwError ()) pure) . intVisit
+    visit _ = iTyp . Lens._Wrapped . intVisit
 
 instance Monoid w => UnifyMonad (IntInfer r w) Row where
     binding = intBindingState iRow
-    visit _ = iRow . Lens._Wrapped . fmap (maybe (throwError ()) pure) . intVisit
+    visit _ = iRow . Lens._Wrapped . intVisit
 
-type STInfer r s = ReaderT (r, Infer (STBindingState s)) (ExceptT () (ST s))
+type STInfer r s = ReaderT (r, Infer (STBindingState s)) (MaybeT (ST s))
 
 type instance Var (STInfer r s) = STVar s
 

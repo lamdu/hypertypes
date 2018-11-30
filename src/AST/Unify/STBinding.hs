@@ -10,9 +10,9 @@ module AST.Unify.STBinding
 import           AST (Node)
 import           AST.Recursive (Recursive(..), hoistNodeR)
 import           AST.Unify (Binding(..), UTerm(..), Var, _UVar)
+import           Control.Applicative (Alternative(..))
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Control.Monad.Error.Class (MonadError(..))
 import           Control.Monad.ST.Class (MonadST(..))
 import           Data.Functor.Const (Const(..))
 import           Data.IntSet (IntSet)
@@ -56,11 +56,11 @@ stBindingState getState =
         \v t -> writeSTRef (varRef v) (Just t) & liftST
     }
 
-stVisit :: MonadError () m => STVar s a -> IntSet -> m IntSet
+stVisit :: Alternative f => STVar s a -> IntSet -> f IntSet
 stVisit (STVar idx _) =
     Lens.contains idx x
     where
-        x True = throwError ()
+        x True = empty
         x False = pure True
 
 stBindingToInt ::

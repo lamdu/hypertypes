@@ -9,10 +9,10 @@ import AST.Unify.STBinding
 import Control.Lens (Lens')
 import qualified Control.Lens as Lens
 import Control.Lens.Operators
-import Control.Monad.Except
 import Control.Monad.Reader
 import Control.Monad.RWS
 import Control.Monad.ST
+import Control.Monad.Trans.Maybe
 import Data.Functor.Const
 import Data.Functor.Identity
 import Data.Map
@@ -79,8 +79,7 @@ runIntInfer act = runRWST act mempty emptyIntInferState <&> (^. Lens._1)
 runSTInfer :: STInfer (LamBindings (STVar s)) s a -> ST s (Maybe a)
 runSTInfer act =
     newSTInferState <&> (,) mempty
-    >>= runExceptT . runReaderT act
-    <&> (^? Lens._Right)
+    >>= runMaybeT . runReaderT act
 
 main :: IO ()
 main =
