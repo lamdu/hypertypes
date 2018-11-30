@@ -3,6 +3,7 @@
 module TypeLang where
 
 import AST
+import AST.NodeConstraint
 import AST.Recursive
 import AST.Unify
 import AST.Unify.IntMapBinding
@@ -26,8 +27,8 @@ data Row f
     = REmpty
     | RExtend String (Node f Typ) (Node f Row)
 
-deriving instance (Show (Node f Typ), Show (Row f)) => Show (Typ f)
-deriving instance (Show (Node f Typ), Show (Node f Row)) => Show (Row f)
+deriving instance IfChildNodes Typ f Show => Show (Typ f)
+deriving instance IfChildNodes Row f Show => Show (Row f)
 
 concat <$> sequenceA ([makeChildren, makeZipMatch] <*> [''Typ, ''Row])
 instance Recursive Typ
