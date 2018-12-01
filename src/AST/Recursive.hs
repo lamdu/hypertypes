@@ -7,6 +7,7 @@ module AST.Recursive
 
 import           AST (Node, Children(..), overChildren)
 import           Data.Constraint (Dict(..), withDict)
+import           Data.Functor.Const (Const(..))
 import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
@@ -49,3 +50,5 @@ hoistBodyR ::
 hoistBodyR f =
     withDict (recursive (Proxy :: Proxy expr))
     (overChildren (Proxy :: Proxy Recursive) (hoistNodeR f))
+
+instance Recursive (Const val)
