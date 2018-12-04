@@ -31,8 +31,8 @@ deriving instance IfChildNodes Typ f Show => Show (Typ f)
 deriving instance IfChildNodes Row f Show => Show (Row f)
 
 concat <$> sequenceA ([makeChildren, makeZipMatch] <*> [''Typ, ''Row])
-instance Recursive Typ
-instance Recursive Row
+instance ChildrenRecursive Typ
+instance ChildrenRecursive Row
 
 data Infer f = Infer
     { _iTyp :: f Typ

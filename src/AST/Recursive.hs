@@ -1,54 +1,82 @@
-{-# LANGUAGE NoImplicitPrelude, RankNTypes, ScopedTypeVariables, DefaultSignatures #-}
+{-# LANGUAGE NoImplicitPrelude, RankNTypes, ScopedTypeVariables, DefaultSignatures, KindSignatures, TypeOperators, ConstraintKinds #-}
 
 module AST.Recursive
     ( Recursive(..)
-    , hoistNode, hoistBody, hoistNodeR, hoistBodyR
+    , ChildrenRecursive(..), proxyChildrenRecursive
+    , fold
+    , hoistNode, hoistNodeR, hoistBody, hoistBodyR
     ) where
 
-import           AST (Node, Children(..), overChildren)
-import           Data.Constraint (Dict(..), withDict)
+import           AST (Node, Children(..), ChildrenWithConstraint, overChildren)
+import           Data.Constraint
 import           Data.Functor.Const (Const(..))
+import           Data.Functor.Identity
 import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
 
-class Children expr => Recursive expr where
-    recursive :: Proxy expr -> Dict (ChildrenConstraint expr Recursive)
+class Recursive (constraint :: ((* -> *) -> *) -> Constraint) where
+    recursive ::
+        Proxy constraint ->
+        Proxy expr ->
+        constraint expr :- ChildrenWithConstraint expr constraint
 
-    default recursive ::
-        ChildrenConstraint expr Recursive =>
-        Proxy expr -> Dict (ChildrenConstraint expr Recursive)
-    recursive _ = Dict
+class Children expr => ChildrenRecursive expr where
+    childrenRecursive ::
+        Proxy expr ->
+        Dict (ChildrenWithConstraint expr ChildrenRecursive)
+    default childrenRecursive ::
+        ChildrenWithConstraint expr ChildrenRecursive =>
+        Proxy expr ->
+        Dict (ChildrenWithConstraint expr ChildrenRecursive)
+    childrenRecursive _ = Dict
+
+instance Recursive ChildrenRecursive where
+    recursive _ p = Sub (childrenRecursive p)
+
+proxyChildrenRecursive :: Proxy ChildrenRecursive
+proxyChildrenRecursive = Proxy
+
+instance ChildrenRecursive (Const a)
+
+fold ::
+    forall constraint expr a.
+    (Recursive constraint, constraint expr) =>
+    Proxy constraint ->
+    (forall child. constraint child => child (Const a) -> a) ->
+    expr Identity ->
+    a
+fold p f x =
+    f (overChildren p (Const . fold p f . runIdentity) x)
+    \\ recursive p (Proxy :: Proxy expr)
 
 hoistNode ::
-    (Recursive expr, Functor f) =>
+    (ChildrenRecursive expr, Functor f) =>
     (forall a. f a -> g a) ->
     Node f expr -> Node g expr
 hoistNode f = f . fmap (hoistBody f)
 
 -- | Like `hoistNode` but requiring `Functor` for the second argument
 hoistNodeR ::
-    (Recursive expr, Functor g) =>
+    (ChildrenRecursive expr, Functor g) =>
     (forall a. f a -> g a) ->
     Node f expr -> Node g expr
 hoistNodeR f = fmap (hoistBodyR f) . f
 
 hoistBody ::
     forall expr f g.
-    (Recursive expr, Functor f) =>
+    (ChildrenRecursive expr, Functor f) =>
     (forall a. f a -> g a) ->
     expr f -> expr g
 hoistBody f =
-    withDict (recursive (Proxy :: Proxy expr))
-    (overChildren (Proxy :: Proxy Recursive) (hoistNode f))
+    overChildren proxyChildrenRecursive (hoistNode f)
+    \\ recursive proxyChildrenRecursive (Proxy :: Proxy expr)
 
 hoistBodyR ::
     forall expr f g.
-    (Recursive expr, Functor g) =>
+    (ChildrenRecursive expr, Functor g) =>
     (forall a. f a -> g a) ->
     expr f -> expr g
 hoistBodyR f =
-    withDict (recursive (Proxy :: Proxy expr))
-    (overChildren (Proxy :: Proxy Recursive) (hoistNodeR f))
-
-instance Recursive (Const val)
+    overChildren proxyChildrenRecursive (hoistNodeR f)
+    \\ recursive proxyChildrenRecursive (Proxy :: Proxy expr)

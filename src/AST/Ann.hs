@@ -6,10 +6,10 @@ module AST.Ann
     ) where
 
 import           AST (Node, Children(..))
-import           AST.Recursive (Recursive(..))
+import           AST.Recursive
 import qualified Control.Lens as Lens
 import           Data.Binary (Binary)
-import           Data.Constraint (withDict)
+import           Data.Constraint
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import qualified Text.PrettyPrint as PP
@@ -36,11 +36,11 @@ instance (Pretty a, Pretty v) => Pretty (Ann a v) where
 
 annotations ::
     forall e a b.
-    Recursive e =>
+    ChildrenRecursive e =>
     Lens.Traversal
     (Node (Ann a) e)
     (Node (Ann b) e)
     a b
 annotations f (Ann pl x) =
-    withDict (recursive (Proxy :: Proxy e))
-    (Ann <$> f pl <*> children (Proxy :: Proxy Recursive) (annotations f) x)
+    Ann <$> f pl <*> children proxyChildrenRecursive (annotations f) x
+    \\ recursive proxyChildrenRecursive (Proxy :: Proxy e)

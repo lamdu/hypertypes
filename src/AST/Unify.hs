@@ -9,13 +9,13 @@ module AST.Unify
     , applyBindings, unify
     ) where
 
-import           AST (Node, Children(..))
-import           AST.Recursive (Recursive(..), hoistNode)
+import           AST (Node, Children(..), ChildrenWithConstraint)
+import           AST.Recursive
 import           AST.UTerm
 import           AST.ZipMatch (ZipMatch(..), zipMatch_)
 import           Control.Applicative (Alternative(..))
 import           Control.Lens.Operators
-import           Data.Constraint (Dict(..), withDict)
+import           Data.Constraint
 import           Data.Functor.Identity (Identity(..))
 import           Data.Maybe (fromMaybe)
 import           Data.Proxy (Proxy(..))
@@ -56,15 +56,23 @@ class (Eq (UVar m t), ZipMatch t, OccursMonad m) => UnifyMonad m t where
     default mismatchFailure :: Alternative m => t (UTerm (Var m)) -> t (UTerm (Var m)) -> m ()
     mismatchFailure _ _ = empty
 
-    recursiveUnify :: Proxy (UnifyMonad m t) -> Dict (ChildrenConstraint t (UnifyMonad m))
+    recursiveUnify ::
+        Proxy m ->
+        Proxy t ->
+        Dict (ChildrenWithConstraint t (UnifyMonad m))
 
     default recursiveUnify ::
         ChildrenConstraint t (UnifyMonad m) =>
-        Proxy (UnifyMonad m t) -> Dict (ChildrenConstraint t (UnifyMonad m))
-    recursiveUnify _ = Dict
+        Proxy m ->
+        Proxy t ->
+        Dict (ChildrenWithConstraint t (UnifyMonad m))
+    recursiveUnify _ _ = Dict
+
+instance Recursive (UnifyMonad m) where
+    recursive _ p = Sub (recursiveUnify (Proxy :: Proxy m) p)
 
 -- | Embed a pure term as a mutable term.
-unfreeze :: Recursive t => Node Identity t -> Node (UTerm v) t
+unfreeze :: ChildrenRecursive t => Node Identity t -> Node (UTerm v) t
 unfreeze = hoistNode (UTerm . runIdentity)
 
 -- look up a variable, and return last variable pointing to result.
@@ -93,8 +101,11 @@ applyBindingsH ::
     UnifyMonad m t =>
     Visited m -> UNode m t -> m (UNode m t)
 applyBindingsH visited (UTerm t) =
-    withDict (recursiveUnify (Proxy :: Proxy (UnifyMonad m t)))
-    (children (Proxy :: Proxy (UnifyMonad m)) (applyBindingsH visited) t <&> UTerm)
+    children p (applyBindingsH visited) t <&> UTerm
+    \\ recursive p (Proxy :: Proxy t)
+    where
+        p :: Proxy (UnifyMonad m)
+        p = Proxy
 applyBindingsH visited (UVar v0) =
     semiPruneLookup v0
     >>=
@@ -139,8 +150,9 @@ unifyTerms ::
     forall m t. UnifyMonad m t =>
     t (UTerm (Var m)) -> t (UTerm (Var m)) -> m ()
 unifyTerms x y =
-    (withDict (recursiveUnify (Proxy :: Proxy (UnifyMonad m t)))
-        (zipMatch_ (Proxy :: Proxy (UnifyMonad m)) unify x y)
-        :: Maybe (m ())
-    )
-    & fromMaybe (mismatchFailure x y)
+    fromMaybe (mismatchFailure x y)
+    (zipMatch_ p unify x y)
+    \\ recursive p (Proxy :: Proxy t)
+    where
+        p :: Proxy (UnifyMonad m)
+        p = Proxy

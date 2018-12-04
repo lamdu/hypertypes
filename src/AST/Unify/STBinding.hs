@@ -8,7 +8,7 @@ module AST.Unify.STBinding
     ) where
 
 import           AST (Node)
-import           AST.Recursive (Recursive(..), hoistNodeR)
+import           AST.Recursive
 import           AST.Unify (Binding(..), Var)
 import           AST.UTerm (UTerm(..), _UVar)
 import           Control.Applicative (Alternative(..))
@@ -65,6 +65,6 @@ stVisit (STVar idx _) =
         x False = pure True
 
 stBindingToInt ::
-    Recursive t =>
+    ChildrenRecursive t =>
     Node (UTerm (STVar s)) t -> Node (UTerm (Const Int)) t
 stBindingToInt = hoistNodeR (_UVar %~ Const . varId)
