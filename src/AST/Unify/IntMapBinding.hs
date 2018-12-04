@@ -6,7 +6,8 @@ module AST.Unify.IntMapBinding
     ) where
 
 import           AST (Node)
-import           AST.Unify (UTerm(..), Var, Binding(..))
+import           AST.Unify (Var, Binding(..))
+import           AST.UTerm (UTerm(..))
 import           Control.Applicative (Alternative(..))
 import qualified Control.Lens as Lens
 import           Control.Lens (ALens')

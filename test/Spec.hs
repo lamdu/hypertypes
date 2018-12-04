@@ -6,6 +6,7 @@ import TypeLang
 import AST
 import AST.Unify
 import AST.Unify.STBinding
+import AST.UTerm
 import Control.Lens (Lens')
 import qualified Control.Lens as Lens
 import Control.Lens.Operators

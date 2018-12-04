@@ -9,7 +9,8 @@ module AST.Unify.STBinding
 
 import           AST (Node)
 import           AST.Recursive (Recursive(..), hoistNodeR)
-import           AST.Unify (Binding(..), UTerm(..), Var, _UVar)
+import           AST.Unify (Binding(..), Var)
+import           AST.UTerm (UTerm(..), _UVar)
 import           Control.Applicative (Alternative(..))
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators

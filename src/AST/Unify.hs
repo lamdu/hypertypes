@@ -1,8 +1,7 @@
-{-# LANGUAGE NoImplicitPrelude, DeriveTraversable, TemplateHaskell, MultiParamTypeClasses, FlexibleContexts, LambdaCase, ScopedTypeVariables, TypeFamilies, DefaultSignatures #-}
+{-# LANGUAGE NoImplicitPrelude, MultiParamTypeClasses, FlexibleContexts, LambdaCase, ScopedTypeVariables, TypeFamilies, DefaultSignatures #-}
 
 module AST.Unify
     ( Var, UNode
-    , UTerm(..), _UVar, _UTerm
     , unfreeze
     , Binding(..)
     , OccursMonad(..)
@@ -12,9 +11,9 @@ module AST.Unify
 
 import           AST (Node, Children(..))
 import           AST.Recursive (Recursive(..), hoistNode)
+import           AST.UTerm
 import           AST.ZipMatch (ZipMatch(..), zipMatch_)
 import           Control.Applicative (Alternative(..))
-import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Constraint (Dict(..), withDict)
 import           Data.Functor.Identity (Identity(..))
@@ -24,12 +23,6 @@ import           Data.Proxy (Proxy(..))
 import           Prelude.Compat
 
 -- Names modeled after unification-fd
-
-data UTerm f a
-    = UVar (f a)
-    | UTerm a
-    deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
-Lens.makePrisms ''UTerm
 
 type family Var (m :: * -> *) :: * -> *
 
