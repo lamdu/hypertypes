@@ -2,7 +2,7 @@
 
 module AST.Recursive
     ( Recursive(..)
-    , ChildrenRecursive(..), proxyChildrenRecursive
+    , ChildrenRecursive(..), proxyChildrenRecursive, overChildrenRecursive
     , fold, unfold
     , hoistNode, hoistNodeR, hoistBody, hoistBodyR
     ) where
@@ -66,6 +66,15 @@ unfold p f x =
     f x >>= children p (unfold p f) <&> Identity
     \\ recursive p (Proxy :: Proxy expr)
 
+overChildrenRecursive ::
+    forall expr f g.
+    ChildrenRecursive expr =>
+    (forall child. ChildrenRecursive child => Node f child -> Node g child) ->
+    expr f -> expr g
+overChildrenRecursive f =
+    overChildren proxyChildrenRecursive f
+    \\ recursive proxyChildrenRecursive (Proxy :: Proxy expr)
+
 hoistNode ::
     (ChildrenRecursive expr, Functor f) =>
     (forall a. f a -> g a) ->
@@ -84,15 +93,11 @@ hoistBody ::
     (ChildrenRecursive expr, Functor f) =>
     (forall a. f a -> g a) ->
     expr f -> expr g
-hoistBody f =
-    overChildren proxyChildrenRecursive (hoistNode f)
-    \\ recursive proxyChildrenRecursive (Proxy :: Proxy expr)
+hoistBody f = overChildrenRecursive (hoistNode f)
 
 hoistBodyR ::
     forall expr f g.
     (ChildrenRecursive expr, Functor g) =>
     (forall a. f a -> g a) ->
     expr f -> expr g
-hoistBodyR f =
-    overChildren proxyChildrenRecursive (hoistNodeR f)
-    \\ recursive proxyChildrenRecursive (Proxy :: Proxy expr)
+hoistBodyR f = overChildrenRecursive (hoistNodeR f)
