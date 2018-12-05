@@ -23,7 +23,7 @@ dependencies:
 - base
 - base-compat
 - binary
-- constraint
+- constraints
 - containers
 - lens
 - monad-st
