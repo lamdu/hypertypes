@@ -12,8 +12,6 @@ data EmptyScope
 
 newtype Scope expr a f = Scope (Node f (expr (Maybe a)))
 
-deriving instance Show (Node f (expr (Maybe a))) => Show (Scope expr a f)
-
 makeChildrenAndZipMatch [''Scope]
 
 class DeBruijnIndex a where

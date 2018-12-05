@@ -12,11 +12,4 @@ data Term v f
     | EApp (Node f (Term v)) (Node f (Term v))
     | ELit Int
 
-deriving instance
-    ( Show v
-    , Show (Node f (Term v))
-    , Show (Node f (Term (Maybe v)))
-    ) =>
-    Show (Term v f)
-
 makeChildren [''Term]
