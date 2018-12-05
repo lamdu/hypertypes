@@ -209,6 +209,10 @@ makeZipMatch typeName =
         tailClause =
             Clause [WildP, WildP, WildP, WildP] (NormalB (ConE 'Nothing)) []
 
+data ZipMatchField = ZipMatchField
+    { zmfResult :: Exp
+    , zmfConds :: [Exp]
+    }
 
 makeZipMatchCtr :: Name -> D.ConstructorInfo -> Clause
 makeZipMatchCtr var info =
@@ -223,24 +227,29 @@ makeZipMatchCtr var info =
         body
             | null checks = NormalB bodyExp
             | otherwise = GuardedB [(NormalG (foldl1 mkAnd checks), bodyExp)]
-        checks = fieldParts >>= snd
+        checks = fieldParts >>= zmfConds
         mkAnd x y = InfixE (Just x) (VarE '(&&)) (Just y)
         fieldParts = zipWith field cVars (D.constructorFields info <&> matchType var)
         bodyExp =
             applicativeStyle2
             (ConE 'Just `AppE` (VarE 'pure `AppE` ConE (D.constructorName info)))
-            (fieldParts <&> fst)
+            (fieldParts <&> zmfResult)
         field (x, y) NodeFofX{} =
-            ( ConE 'Just `AppE` (VarE func `AppE` VarE x `AppE` VarE y)
-            , []
-            )
+            ZipMatchField
+            { zmfResult = ConE 'Just `AppE` (VarE func `AppE` VarE x `AppE` VarE y)
+            , zmfConds = []
+            }
         field (x, y) XofF{} =
-            (VarE 'zipMatch `AppE` VarE proxy `AppE` VarE func `AppE` VarE x `AppE` VarE y, [])
+            ZipMatchField
+            { zmfResult = VarE 'zipMatch `AppE` VarE proxy `AppE` VarE func `AppE` VarE x `AppE` VarE y
+            , zmfConds = []
+            }
         field _ Tof{} = error "TODO"
         field (x, y) Other =
-            ( ConE 'Just `AppE` (VarE 'pure `AppE` VarE x)
-            , [InfixE (Just (VarE x)) (VarE '(==)) (Just (VarE y))]
-            )
+            ZipMatchField
+            { zmfResult = ConE 'Just `AppE` (VarE 'pure `AppE` VarE x)
+            , zmfConds = [InfixE (Just (VarE x)) (VarE '(==)) (Just (VarE y))]
+            }
 
 applicativeStyle2 :: Exp -> [Exp] -> Exp
 applicativeStyle2 =
