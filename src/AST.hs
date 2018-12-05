@@ -1,13 +1,11 @@
-{-# LANGUAGE NoImplicitPrelude, TypeFamilies, RankNTypes, ConstraintKinds, ScopedTypeVariables #-}
+{-# LANGUAGE NoImplicitPrelude, TypeFamilies, RankNTypes, ConstraintKinds #-}
 
 module AST
     ( Node, LeafNode
     , Children(..), ChildrenWithConstraint
-    , ChildOf, monoChildren
     , overChildren
     ) where
 
-import           Control.Lens (Traversal)
 import           Data.Functor.Const (Const(..))
 import           Data.Functor.Identity (Identity(..))
 import           Data.Proxy (Proxy(..))
@@ -28,13 +26,9 @@ class Children expr where
 
 type ChildrenWithConstraint expr constraint = (Children expr, ChildrenConstraint expr constraint)
 
-type family ChildOf (expr :: (* -> *) -> *) :: (* -> *) -> *
-
-monoChildren ::
-    forall expr n m.
-    (ChildrenWithConstraint expr ((~) (ChildOf expr))) =>
-    Traversal (expr n) (expr m) (Node n (ChildOf expr)) (Node m (ChildOf expr))
-monoChildren = children (Proxy :: Proxy ((~) (ChildOf expr)))
+instance Children (Const val) where
+    type ChildrenConstraint (Const val) constraint = ()
+    children _ _ (Const x) = pure (Const x)
 
 overChildren ::
     ChildrenWithConstraint expr constraint =>
@@ -42,7 +36,3 @@ overChildren ::
     (forall child. constraint child => Node n child -> Node m child) ->
     expr n -> expr m
 overChildren p f = runIdentity . children p (Identity . f)
-
-instance Children (Const val) where
-    type ChildrenConstraint (Const val) constraint = ()
-    children _ _ (Const x) = pure (Const x)

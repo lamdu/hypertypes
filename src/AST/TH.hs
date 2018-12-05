@@ -5,7 +5,8 @@ module AST.TH
     , makeChildren, makeZipMatch
     ) where
 
-import           AST (Node, LeafNode, Children(..), ChildOf)
+import           AST (Node, LeafNode, Children(..))
+import           AST.Mono (ChildOf)
 import           AST.ZipMatch (ZipMatch(..))
 import           Control.Applicative (liftA2)
 import qualified Control.Lens as Lens
