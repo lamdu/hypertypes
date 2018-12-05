@@ -24,16 +24,14 @@ class Recursive (constraint :: ((* -> *) -> *) -> Constraint) where
 
 class Children expr => ChildrenRecursive expr where
     childrenRecursive ::
-        Proxy expr ->
         Dict (ChildrenWithConstraint expr ChildrenRecursive)
     default childrenRecursive ::
         ChildrenWithConstraint expr ChildrenRecursive =>
-        Proxy expr ->
         Dict (ChildrenWithConstraint expr ChildrenRecursive)
-    childrenRecursive _ = Dict
+    childrenRecursive = Dict
 
 instance Recursive ChildrenRecursive where
-    recursive _ p = Sub (childrenRecursive p)
+    recursive _ _ = Sub childrenRecursive
 
 proxyChildrenRecursive :: Proxy ChildrenRecursive
 proxyChildrenRecursive = Proxy
