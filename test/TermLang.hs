@@ -13,4 +13,4 @@ data Term v f
 
 deriving instance (Show v, Show (Node f (Term v))) => Show (Term v f)
 
-makeChildren ''Term
+makeChildren [''Term]

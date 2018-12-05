@@ -1,7 +1,8 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell #-}
 
 module AST.TH
-    ( makeChildren, makeZipMatch
+    ( makeChildrenAndZipMatch
+    , makeChildren, makeZipMatch
     ) where
 
 import           AST (Node, LeafNode, Children(..), ChildOf)
@@ -21,10 +22,21 @@ import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
 
-makeChildren :: Name -> DecsQ
-makeChildren typeName =
+makeChildrenAndZipMatch :: [Name] -> DecsQ
+makeChildrenAndZipMatch typeNames =
+    (<>)
+    <$> makeChildren typeNames
+    <*> (traverse makeZipMatch typeNames <&> concat)
+
+makeChildren :: [Name] -> DecsQ
+makeChildren typeNames =
+    traverse D.reifyDatatype typeNames
+    >>= traverse makeChildrenForType
+    <&> concat
+
+makeChildrenForType :: D.DatatypeInfo -> DecsQ
+makeChildrenForType info =
     do
-        info <- D.reifyDatatype typeName
         (dst, var) <- parts info
         childrenT <-
             evalStateT (childrenTypes var (AppT dst (VarT var))) mempty

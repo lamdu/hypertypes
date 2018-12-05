@@ -30,7 +30,7 @@ data Row f
 deriving instance IfChildNodes Typ f Show => Show (Typ f)
 deriving instance IfChildNodes Row f Show => Show (Row f)
 
-concat <$> sequenceA ([makeChildren, makeZipMatch] <*> [''Typ, ''Row])
+makeChildrenAndZipMatch [''Typ, ''Row]
 instance ChildrenRecursive Typ
 instance ChildrenRecursive Row
 
