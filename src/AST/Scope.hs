@@ -12,8 +12,9 @@ import           Prelude.Compat
 data EmptyScope
 
 newtype Scope expr a f = Scope (Node f (expr (Maybe a)))
+newtype ScopeVar (expr :: * -> (* -> *) -> *) a (f :: * -> *) = ScopeVar a
 
-makeChildrenAndZipMatch [''Scope]
+makeChildrenAndZipMatch [''Scope, ''ScopeVar]
 instance ChildrenRecursive (expr (Maybe a)) => ChildrenRecursive (Scope expr a)
 
 class DeBruijnIndex a where

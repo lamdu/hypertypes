@@ -3,6 +3,7 @@
 module TypeLang where
 
 import AST
+import AST.Infer
 import AST.NodeConstraint
 import AST.Unify
 import AST.Unify.IntMapBinding
@@ -29,6 +30,8 @@ data Row f
 deriving instance IfChildNodes Typ f Show => Show (Typ f)
 deriving instance IfChildNodes Row f Show => Show (Row f)
 
+Lens.makePrisms ''Typ
+Lens.makePrisms ''Row
 makeChildrenAndZipMatch [''Typ, ''Row]
 
 data Infer f = Infer
@@ -77,3 +80,9 @@ instance UnifyMonad (STInfer r s) Typ where
 instance UnifyMonad (STInfer r s) Row where
     binding = stBindingState (Lens.view (Lens._2 . iRow))
     visit _ = iRow . Lens._Wrapped . stVisit
+
+instance FuncType Typ where
+    funcType = _TFun
+
+instance HasVarTypes v Typ a => HasVarTypes v Typ (a, x) where
+    varTypes = Lens._1 . varTypes

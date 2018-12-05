@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c03320993b039a344699e2243081fb2a629e347cedbe1f1557b19f7f2359a581
+-- hash: 8897ea0c724211a4b50678b34ec65d844c3e444925972856c4c120cb301469ea
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -30,6 +30,7 @@ library
       AST
       AST.Ann
       AST.Ann.Arbitrary
+      AST.Infer
       AST.Mono
       AST.NodeConstraint
       AST.Recursive
