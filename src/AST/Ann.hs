@@ -7,7 +7,7 @@ module AST.Ann
     ) where
 
 import           AST (Node, Children(..), overChildren)
-import           AST.Recursive
+import           AST.Recursive (Recursive(..), ChildrenRecursive, proxyChildrenRecursive)
 import qualified Control.Lens as Lens
 import           Data.Binary (Binary)
 import           Data.Constraint

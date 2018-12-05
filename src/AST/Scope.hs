@@ -2,10 +2,10 @@
 
 module AST.Scope where
 
-import           AST
-import           AST.Recursive
-import           AST.TH
-import           Data.Proxy
+import           AST (Node)
+import           AST.Recursive (ChildrenRecursive)
+import           AST.TH (makeChildrenAndZipMatch)
+import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
 
