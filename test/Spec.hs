@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase, FlexibleContexts, MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE LambdaCase, FlexibleContexts, MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances, TypeApplications #-}
 
 import TermLang
 import TypeLang
@@ -19,20 +19,20 @@ import Data.Functor.Identity
 import Data.Map
 import Data.Maybe
 
-type LamBindings v = Map String (Node (UTerm v) Typ)
+type LamBindings k v = Map k (Node (UTerm v) Typ)
 
-class HasLamBindings v env where
-    lamBindings :: Lens' env (LamBindings v)
+class Ord k => HasLamBindings k v env where
+    lamBindings :: Lens' env (LamBindings k v)
 
-instance HasLamBindings v (LamBindings v) where
+instance Ord k => HasLamBindings k v (LamBindings k v) where
     lamBindings = id
 
-instance HasLamBindings v a => HasLamBindings v (a, x) where
+instance HasLamBindings k v a => HasLamBindings k v (a, x) where
     lamBindings = Lens._1 . lamBindings
 
 infer ::
-    (MonadReader env m, HasLamBindings (Var m) env, UnifyMonad m Typ) =>
-    Term String Identity -> m (UNode m Typ)
+    (MonadReader env m, HasLamBindings k (Var m) env, UnifyMonad m Typ) =>
+    Term k Identity -> m (UNode m Typ)
 infer ELit{} = UTerm TInt & pure
 infer (EVar var) = Lens.view (Lens.cloneLens lamBindings . Lens.at var) <&> fromMaybe (error "name error")
 infer (ELam var (Identity body)) =
@@ -70,14 +70,14 @@ occurs =
         x = EVar "x" & Identity
 
 inferExpr ::
-    (MonadReader env m, HasLamBindings (Var m) env, UnifyMonad m Typ) =>
-    Node Identity (Term String) -> m (Node (UTerm (Var m)) Typ)
+    (MonadReader env m, HasLamBindings k (Var m) env, UnifyMonad m Typ) =>
+    Node Identity (Term k) -> m (Node (UTerm (Var m)) Typ)
 inferExpr x = infer (x ^. Lens._Wrapped) >>= applyBindings
 
-runIntInfer :: IntInfer (LamBindings (Const Int)) () a -> Maybe a
+runIntInfer :: Ord k => IntInfer (LamBindings k (Const Int)) () a -> Maybe a
 runIntInfer act = runRWST act mempty emptyIntInferState <&> (^. Lens._1)
 
-runSTInfer :: STInfer (LamBindings (STVar s)) s a -> ST s (Maybe a)
+runSTInfer :: Ord k => STInfer (LamBindings k (STVar s)) s a -> ST s (Maybe a)
 runSTInfer act =
     newSTInferState <&> (,) mempty
     >>= runMaybeT . runReaderT act
@@ -86,7 +86,7 @@ main :: IO ()
 main =
     do
         putStrLn ""
-        print (runIntInfer (inferExpr expr))
-        print (runST (runSTInfer (inferExpr expr <&> stBindingToInt)))
-        print (runIntInfer (inferExpr occurs))
-        print (runST (runSTInfer (inferExpr occurs <&> stBindingToInt)))
+        print (runIntInfer @String (inferExpr expr))
+        print (runST (runSTInfer @String (inferExpr expr <&> stBindingToInt)))
+        print (runIntInfer @String (inferExpr occurs))
+        print (runST (runSTInfer @String (inferExpr occurs <&> stBindingToInt)))
