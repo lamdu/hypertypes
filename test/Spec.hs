@@ -1,9 +1,10 @@
-{-# LANGUAGE LambdaCase, FlexibleContexts, MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances, TypeApplications #-}
+{-# LANGUAGE LambdaCase, FlexibleContexts, MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances, ScopedTypeVariables #-}
 
 import TermLang
 import TypeLang
 
 import AST
+import AST.Scope
 import AST.Unify
 import AST.Unify.STBinding
 import AST.UTerm
@@ -16,29 +17,32 @@ import Control.Monad.ST
 import Control.Monad.Trans.Maybe
 import Data.Functor.Const
 import Data.Functor.Identity
-import Data.Map
+import Data.IntMap
 import Data.Maybe
+import Data.Proxy
 
-type LamBindings k v = Map k (Node (UTerm v) Typ)
+type LamBindings v = IntMap (Node (UTerm v) Typ)
 
-class Ord k => HasLamBindings k v env where
-    lamBindings :: Lens' env (LamBindings k v)
+class HasLamBindings v env where
+    lamBindings :: Lens' env (LamBindings v)
 
-instance Ord k => HasLamBindings k v (LamBindings k v) where
+instance HasLamBindings v (LamBindings v) where
     lamBindings = id
 
-instance HasLamBindings k v a => HasLamBindings k v (a, x) where
+instance HasLamBindings v a => HasLamBindings v (a, x) where
     lamBindings = Lens._1 . lamBindings
 
 infer ::
-    (MonadReader env m, HasLamBindings k (Var m) env, UnifyMonad m Typ) =>
+    forall k env m.
+    (DeBruijnIndex k, MonadReader env m, HasLamBindings (Var m) env, UnifyMonad m Typ) =>
     Term k Identity -> m (UNode m Typ)
 infer ELit{} = UTerm TInt & pure
-infer (EVar var) = Lens.view (Lens.cloneLens lamBindings . Lens.at var) <&> fromMaybe (error "name error")
-infer (ELam var (Identity body)) =
+infer (EVar var) =
+    Lens.view (Lens.cloneLens lamBindings . Lens.at (inverseDeBruijnIndex var)) <&> fromMaybe (error "name error")
+infer (ELam (Scope (Identity body))) =
     do
         varType <- newVar binding
-        local (lamBindings . Lens.at var ?~ varType) (infer body) <&> TFun varType <&> UTerm
+        local (lamBindings . Lens.at (deBruijnIndexMax (Proxy :: Proxy (Maybe k))) ?~ varType) (infer body) <&> TFun varType <&> UTerm
 infer (EApp (Identity func) (Identity arg)) =
     do
         argType <- infer arg
@@ -54,30 +58,30 @@ infer (EApp (Identity func) (Identity arg)) =
                     funcRes <- newVar binding
                     funcRes <$ unify x (UTerm (TFun argType funcRes))
 
-expr :: Node Identity (Term String)
+expr :: Node Identity (Term EmptyScope)
 expr =
     -- \x -> x 5
     ELit 5 & Identity
-    & EApp (EVar "x" & Identity) & Identity
-    & ELam "x" & Identity
+    & EApp (EVar Nothing & Identity) & Identity
+    & Scope & ELam & Identity
 
-occurs :: Node Identity (Term String)
+occurs :: Node Identity (Term EmptyScope)
 occurs =
     -- \x -> x x
     EApp x x & Identity
-    & ELam "x" & Identity
+    & Scope & ELam & Identity
     where
-        x = EVar "x" & Identity
+        x = EVar Nothing & Identity
 
 inferExpr ::
-    (MonadReader env m, HasLamBindings k (Var m) env, UnifyMonad m Typ) =>
+    (DeBruijnIndex k, MonadReader env m, HasLamBindings (Var m) env, UnifyMonad m Typ) =>
     Node Identity (Term k) -> m (Node (UTerm (Var m)) Typ)
 inferExpr x = infer (x ^. Lens._Wrapped) >>= applyBindings
 
-runIntInfer :: Ord k => IntInfer (LamBindings k (Const Int)) () a -> Maybe a
+runIntInfer :: IntInfer (LamBindings (Const Int)) () a -> Maybe a
 runIntInfer act = runRWST act mempty emptyIntInferState <&> (^. Lens._1)
 
-runSTInfer :: Ord k => STInfer (LamBindings k (STVar s)) s a -> ST s (Maybe a)
+runSTInfer :: STInfer (LamBindings (STVar s)) s a -> ST s (Maybe a)
 runSTInfer act =
     newSTInferState <&> (,) mempty
     >>= runMaybeT . runReaderT act
@@ -86,7 +90,7 @@ main :: IO ()
 main =
     do
         putStrLn ""
-        print (runIntInfer @String (inferExpr expr))
-        print (runST (runSTInfer @String (inferExpr expr <&> stBindingToInt)))
-        print (runIntInfer @String (inferExpr occurs))
-        print (runST (runSTInfer @String (inferExpr occurs <&> stBindingToInt)))
+        print (runIntInfer (inferExpr expr))
+        print (runST (runSTInfer (inferExpr expr <&> stBindingToInt)))
+        print (runIntInfer (inferExpr occurs))
+        print (runST (runSTInfer (inferExpr occurs <&> stBindingToInt)))
