@@ -8,7 +8,7 @@ module AST.Unify.STBinding
     ) where
 
 import           AST (Node)
-import           AST.Recursive
+import           AST.Recursive (ChildrenRecursive, hoistNodeR)
 import           AST.Unify (Binding(..), Var)
 import           AST.UTerm (UTerm(..), _UVar)
 import           Control.Applicative (Alternative(..))

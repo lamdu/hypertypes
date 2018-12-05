@@ -1,15 +1,17 @@
-{-# LANGUAGE NoImplicitPrelude, DeriveGeneric, DeriveTraversable, TemplateHaskell, ScopedTypeVariables #-}
+{-# LANGUAGE NoImplicitPrelude, DeriveGeneric, DeriveTraversable, TemplateHaskell, ScopedTypeVariables, ConstraintKinds, RankNTypes #-}
 
 module AST.Ann
     ( Ann(..), ann, val
     , annotations
+    , para
     ) where
 
-import           AST (Node, Children(..))
+import           AST (Node, Children(..), overChildren)
 import           AST.Recursive
 import qualified Control.Lens as Lens
 import           Data.Binary (Binary)
 import           Data.Constraint
+import           Data.Functor.Identity (Identity(..))
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import qualified Text.PrettyPrint as PP
@@ -44,3 +46,21 @@ annotations ::
 annotations f (Ann pl x) =
     Ann <$> f pl <*> children proxyChildrenRecursive (annotations f) x
     \\ recursive proxyChildrenRecursive (Proxy :: Proxy e)
+
+-- Similar to `para` from `recursion-schemes`,
+-- except it's int term of full annotated trees rather than just the final result.
+-- TODO: What does the name `para` mean?
+para ::
+    forall constraint expr a.
+    (Recursive constraint, constraint expr) =>
+    Proxy constraint ->
+    (forall child. constraint child => child (Ann a) -> a) ->
+    Node Identity expr ->
+    Node (Ann a) expr
+para p f x =
+    Ann (f r) r
+    where
+        r :: expr (Ann a)
+        r =
+            overChildren p (para p f) (runIdentity x)
+            \\ recursive p (Proxy :: Proxy expr)

@@ -10,8 +10,8 @@ module AST.Unify
     ) where
 
 import           AST (Node, Children(..), ChildrenWithConstraint)
-import           AST.Recursive
-import           AST.UTerm
+import           AST.Recursive (Recursive(..), ChildrenRecursive, fold)
+import           AST.UTerm (UTerm(..))
 import           AST.ZipMatch (ZipMatch(..), zipMatch_)
 import           Control.Applicative (Alternative(..))
 import           Control.Lens.Operators

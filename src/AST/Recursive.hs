@@ -3,7 +3,7 @@
 module AST.Recursive
     ( Recursive(..)
     , ChildrenRecursive(..), proxyChildrenRecursive
-    , fold
+    , fold, unfold
     , hoistNode, hoistNodeR, hoistBody, hoistBodyR
     ) where
 
@@ -39,6 +39,8 @@ proxyChildrenRecursive = Proxy
 
 instance ChildrenRecursive (Const a)
 
+-- | Recursively fold up a tree to produce a result.
+-- TODO: Is this a "cata-morphism"?
 fold ::
     forall constraint expr f.
     (Recursive constraint, constraint expr) =>
@@ -48,6 +50,19 @@ fold ::
     Node f expr
 fold p f x =
     f (overChildren p (fold p f . runIdentity) x)
+    \\ recursive p (Proxy :: Proxy expr)
+
+-- | Build/load a tree from a seed value.
+-- TODO: Is this a "monadic ana-morphism"?
+unfold ::
+    forall constraint expr f m.
+    (Monad m, Recursive constraint, constraint expr) =>
+    Proxy constraint ->
+    (forall child. constraint child => Node f child -> m (child f)) ->
+    Node f expr ->
+    m (expr Identity)
+unfold p f x =
+    f x >>= children p (fmap Identity . unfold p f)
     \\ recursive p (Proxy :: Proxy expr)
 
 hoistNode ::
