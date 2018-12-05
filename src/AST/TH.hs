@@ -122,7 +122,7 @@ childrenTypes var typ =
                 go as (AppT x a) = go (a:as) x
                 go _ _ = pure mempty
         add (Tof pat) = add pat
-        add Other = pure mempty
+        add Other{} = pure mempty
 
 matchType :: Name -> Type -> CtrTypePattern
 matchType var (ConT node `AppT` VarT functor `AppT` ast)
@@ -134,18 +134,18 @@ matchType var (ConT node `AppT` VarT functor `AppT` leaf)
 matchType var (ast `AppT` VarT functor)
     | functor == var =
         XofF ast
-matchType var (AppT _ typ) =
+matchType var t@(AppT _ typ) =
     -- TODO: check if applied over a functor-kinded type.
     case matchType var typ of
-    Other -> Other
+    Other{} -> Other t
     pat -> Tof pat
-matchType _ _ = Other
+matchType _ t = Other t
 
 data CtrTypePattern
     = NodeFofX Type
     | XofF Type
     | Tof CtrTypePattern
-    | Other
+    | Other Type
 
 childrenTypesFromTypeName ::
     Name -> [Type] -> StateT (Set Type) Q (Set Type)
@@ -185,7 +185,7 @@ makeChildrenCtr var info =
         forPat NodeFofX{} = VarE func
         forPat XofF{} = VarE 'children `AppE` VarE proxy `AppE` VarE func
         forPat (Tof pat) = VarE 'traverse `AppE` forPat pat
-        forPat Other = VarE 'pure
+        forPat Other{} = VarE 'pure
 
 applicativeStyle :: Exp -> [Exp] -> Exp
 applicativeStyle f =
@@ -198,10 +198,10 @@ makeZipMatch typeName =
     do
         info <- D.reifyDatatype typeName
         (dst, var) <- parts info
-        instanceD (pure []) (appT (conT ''ZipMatch) (pure dst))
+        let ctrs = D.datatypeCons info <&> makeZipMatchCtr var
+        instanceD (pure (ctrs >>= zmcContext)) (appT (conT ''ZipMatch) (pure dst))
             [ funD 'zipMatch
-                ( (D.datatypeCons info <&> pure . makeZipMatchCtr var)
-                    ++ [pure tailClause]
+                ( (ctrs <&> pure . zmcClause) ++ [pure tailClause]
                 )
             ]
             <&> (:[])
@@ -209,14 +209,18 @@ makeZipMatch typeName =
         tailClause =
             Clause [WildP, WildP, WildP, WildP] (NormalB (ConE 'Nothing)) []
 
-data ZipMatchField = ZipMatchField
-    { zmfResult :: Exp
-    , zmfConds :: [Exp]
+data ZipMatchCtr =
+    ZipMatchCtr
+    { zmcClause :: Clause
+    , zmcContext :: [Pred]
     }
 
-makeZipMatchCtr :: Name -> D.ConstructorInfo -> Clause
+makeZipMatchCtr :: Name -> D.ConstructorInfo -> ZipMatchCtr
 makeZipMatchCtr var info =
-    Clause [VarP proxy, VarP func, con fst, con snd] body []
+    ZipMatchCtr
+    { zmcClause = Clause [VarP proxy, VarP func, con fst, con snd] body []
+    , zmcContext = fieldParts >>= zmfContext
+    }
     where
         proxy = mkName "_p"
         func = mkName "_f"
@@ -238,18 +242,27 @@ makeZipMatchCtr var info =
             ZipMatchField
             { zmfResult = ConE 'Just `AppE` (VarE func `AppE` VarE x `AppE` VarE y)
             , zmfConds = []
+            , zmfContext = []
             }
-        field (x, y) XofF{} =
+        field (x, y) (XofF t) =
             ZipMatchField
             { zmfResult = VarE 'zipMatch `AppE` VarE proxy `AppE` VarE func `AppE` VarE x `AppE` VarE y
             , zmfConds = []
+            , zmfContext = [ConT ''ZipMatch `AppT` t]
             }
         field _ Tof{} = error "TODO"
-        field (x, y) Other =
+        field (x, y) (Other t) =
             ZipMatchField
             { zmfResult = ConE 'Just `AppE` (VarE 'pure `AppE` VarE x)
             , zmfConds = [InfixE (Just (VarE x)) (VarE '(==)) (Just (VarE y))]
+            , zmfContext = [ConT ''Eq `AppT` t]
             }
+
+data ZipMatchField = ZipMatchField
+    { zmfResult :: Exp
+    , zmfConds :: [Exp]
+    , zmfContext :: [Pred]
+    }
 
 applicativeStyle2 :: Exp -> [Exp] -> Exp
 applicativeStyle2 =
