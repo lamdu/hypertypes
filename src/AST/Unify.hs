@@ -73,7 +73,7 @@ instance Recursive (UnifyMonad m) where
 
 -- | Embed a pure term as a mutable term.
 unfreeze :: ChildrenRecursive t => Node Identity t -> Node (UTerm v) t
-unfreeze = hoistNode (UTerm . runIdentity)
+unfreeze = fold (Proxy :: Proxy ChildrenRecursive) UTerm . runIdentity
 
 -- look up a variable, and return last variable pointing to result.
 -- prune all variable on way to last variable

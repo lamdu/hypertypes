@@ -10,7 +10,7 @@ module AST.Recursive
 import           AST (Node, Children(..), ChildrenWithConstraint, overChildren)
 import           Data.Constraint
 import           Data.Functor.Const (Const(..))
-import           Data.Functor.Identity
+import           Data.Functor.Identity (Identity(..))
 import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
@@ -40,14 +40,14 @@ proxyChildrenRecursive = Proxy
 instance ChildrenRecursive (Const a)
 
 fold ::
-    forall constraint expr a.
+    forall constraint expr f.
     (Recursive constraint, constraint expr) =>
     Proxy constraint ->
-    (forall child. constraint child => child (Const a) -> a) ->
+    (forall child. constraint child => child f -> Node f child) ->
     expr Identity ->
-    a
+    Node f expr
 fold p f x =
-    f (overChildren p (Const . fold p f . runIdentity) x)
+    f (overChildren p (fold p f . runIdentity) x)
     \\ recursive p (Proxy :: Proxy expr)
 
 hoistNode ::
