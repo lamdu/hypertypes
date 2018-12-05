@@ -31,36 +31,53 @@ makeChildrenAndZipMatch typeNames =
 
 makeChildren :: [Name] -> DecsQ
 makeChildren typeNames =
-    traverse D.reifyDatatype typeNames
-    >>= traverse makeChildrenForType
-    <&> concat
+    do
+        typeInfos <- traverse makeTypeInfo typeNames
+        traverse makeChildrenForType typeInfos <&> concat
 
-makeChildrenForType :: D.DatatypeInfo -> DecsQ
+data TypeInfo = TypeInfo
+    { tiInstance :: Type
+    , tiVar :: Name
+    , tiChildren :: Set Type
+    , tiCons :: [D.ConstructorInfo]
+    }
+
+makeTypeInfo :: Name -> Q TypeInfo
+makeTypeInfo name =
+    do
+        info <- D.reifyDatatype name
+        (dst, var) <- parts info
+        childs <- evalStateT (childrenTypes var (AppT dst (VarT var))) mempty
+        pure TypeInfo
+            { tiInstance = dst
+            , tiVar = var
+            , tiChildren = childs
+            , tiCons = D.datatypeCons info
+            }
+
+makeChildrenForType :: TypeInfo -> DecsQ
 makeChildrenForType info =
     do
-        (dst, var) <- parts info
-        childrenT <-
-            evalStateT (childrenTypes var (AppT dst (VarT var))) mempty
-        let childrenConstraint =
-                Set.toList childrenT
-                <&> AppT (VarT constraint)
-                & foldl AppT (TupleT (Set.size childrenT))
         inst <-
-            instanceD (pure []) (appT (conT ''Children) (pure dst))
+            instanceD (pure []) (appT (conT ''Children) (pure (tiInstance info)))
             [ tySynInstD ''ChildrenConstraint
-                (pure (TySynEqn [dst, VarT constraint] childrenConstraint))
-            , funD 'children (D.datatypeCons info <&> pure . makeChildrenCtr var)
+                (pure (TySynEqn [tiInstance info, VarT constraint] childrenConstraint))
+            , funD 'children (tiCons info <&> pure . makeChildrenCtr (tiVar info))
             ]
         mono <-
-            case Set.toList childrenT of
+            case Set.toList (tiChildren info) of
             [x] ->
                 tySynInstD ''ChildOf
-                (pure (TySynEqn [dst] x))
+                (pure (TySynEqn [tiInstance info] x))
                 <&> (:[])
             _ -> pure []
         pure (inst : mono)
     where
         constraint = mkName "constraint"
+        childrenConstraint =
+            Set.toList (tiChildren info)
+            <&> AppT (VarT constraint)
+            & foldl AppT (TupleT (Set.size (tiChildren info)))
 
 parts :: D.DatatypeInfo -> Q (Type, Name)
 parts info =
