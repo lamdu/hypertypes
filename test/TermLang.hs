@@ -3,6 +3,7 @@
 module TermLang where
 
 import AST
+import AST.Recursive
 import AST.Scope
 import AST.TH
 
@@ -13,3 +14,4 @@ data Term v f
     | ELit Int
 
 makeChildren [''Term]
+instance ChildrenRecursive (Term v)

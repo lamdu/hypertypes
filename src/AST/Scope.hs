@@ -3,6 +3,7 @@
 module AST.Scope where
 
 import           AST
+import           AST.Recursive
 import           AST.TH
 import           Data.Proxy
 
@@ -13,6 +14,7 @@ data EmptyScope
 newtype Scope expr a f = Scope (Node f (expr (Maybe a)))
 
 makeChildrenAndZipMatch [''Scope]
+instance ChildrenRecursive (expr (Maybe a)) => ChildrenRecursive (Scope expr a)
 
 class DeBruijnIndex a where
     deBruijnIndex :: a -> Int
