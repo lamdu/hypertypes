@@ -4,7 +4,7 @@ module TermLang where
 
 import TypeLang
 
-import AST
+import AST.Apply
 import AST.Infer
 import AST.Recursive
 import AST.Scope
@@ -19,7 +19,7 @@ import Data.Functor.Identity
 data Term v f
     = ELam (Scope Term v f)
     | EVar (ScopeVar Term v Identity)
-    | EApp (Node f (Term v)) (Node f (Term v))
+    | EApp (Apply (Term v) f)
     | ELit Int
 
 makeChildren [''Term]
@@ -41,19 +41,6 @@ instance
     InferMonad m (Term k) where
 
     infer ELit{} = UTerm TInt & pure
-    infer (EVar var) = infer var
+    infer (EVar x) = infer x
     infer (ELam x) = infer x
-    infer (EApp (Identity func) (Identity arg)) =
-        do
-            argType <- infer arg
-            infer func
-                >>=
-                \case
-                UTerm (TFun funcArg funcRes) ->
-                    -- Func already inferred to be function,
-                    -- skip creating new variable for result for faster inference.
-                    funcRes <$ unify funcArg argType
-                x ->
-                    do
-                        funcRes <- newVar binding
-                        funcRes <$ unify x (UTerm (TFun argType funcRes))
+    infer (EApp x) = infer x

@@ -4,6 +4,7 @@ import TermLang
 import TypeLang
 
 import AST
+import AST.Apply
 import AST.Infer
 import AST.Scope
 import AST.Unify
@@ -22,13 +23,13 @@ expr :: Node Identity (Term EmptyScope)
 expr =
     -- \x -> x 5
     ELit 5 & Identity
-    & EApp (EVar (ScopeVar Nothing) & Identity) & Identity
+    & Apply (EVar (ScopeVar Nothing) & Identity) & EApp & Identity
     & Scope & ELam & Identity
 
 occurs :: Node Identity (Term EmptyScope)
 occurs =
     -- \x -> x x
-    EApp x x & Identity
+    Apply x x & EApp & Identity
     & Scope & ELam & Identity
     where
         x = ScopeVar Nothing & EVar & Identity
