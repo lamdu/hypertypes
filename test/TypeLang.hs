@@ -4,7 +4,6 @@ module TypeLang where
 
 import AST
 import AST.NodeConstraint
-import AST.Recursive
 import AST.Unify
 import AST.Unify.IntMapBinding
 import AST.Unify.STBinding
@@ -31,8 +30,6 @@ deriving instance IfChildNodes Typ f Show => Show (Typ f)
 deriving instance IfChildNodes Row f Show => Show (Row f)
 
 makeChildrenAndZipMatch [''Typ, ''Row]
-instance ChildrenRecursive Typ
-instance ChildrenRecursive Row
 
 data Infer f = Infer
     { _iTyp :: f Typ

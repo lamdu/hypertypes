@@ -7,6 +7,7 @@ module AST.TH
 
 import           AST (Node, LeafNode, Children(..))
 import           AST.Mono (ChildOf)
+import           AST.Recursive (ChildrenRecursive)
 import           AST.ZipMatch (ZipMatch(..))
 import           Control.Applicative (liftA2)
 import qualified Control.Lens as Lens
@@ -33,7 +34,22 @@ makeChildren :: [Name] -> DecsQ
 makeChildren typeNames =
     do
         typeInfos <- traverse makeTypeInfo typeNames
-        traverse makeChildrenForType typeInfos <&> concat
+        (<>)
+            <$> (traverse makeChildrenForType typeInfos <&> concat)
+            <*> traverse makeChildrenRecursive (findRecursives typeInfos)
+
+findRecursives :: [TypeInfo] -> [TypeInfo]
+findRecursives infos
+    | (infos <&> tiInstance) == (next <&> tiInstance) = infos
+    | otherwise = findRecursives next
+    where
+        next = filter hasDeps infos
+        hasDeps = all (`Set.member` cur) . Set.toList . tiChildren
+        cur = Set.fromList (infos <&> tiInstance)
+
+makeChildrenRecursive :: TypeInfo -> DecQ
+makeChildrenRecursive info =
+    instanceD (pure []) (appT (conT ''ChildrenRecursive) (pure (tiInstance info))) []
 
 data TypeInfo = TypeInfo
     { tiInstance :: Type
