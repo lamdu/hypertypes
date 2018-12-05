@@ -8,6 +8,7 @@ module AST.Recursive
     ) where
 
 import           AST (Node, Children(..), ChildrenWithConstraint, overChildren)
+import           Control.Lens.Operators
 import           Data.Constraint
 import           Data.Functor.Const (Const(..))
 import           Data.Functor.Identity (Identity(..))
@@ -46,10 +47,10 @@ fold ::
     (Recursive constraint, constraint expr) =>
     Proxy constraint ->
     (forall child. constraint child => child f -> Node f child) ->
-    expr Identity ->
+    Node Identity expr ->
     Node f expr
-fold p f x =
-    f (overChildren p (fold p f . runIdentity) x)
+fold p f (Identity x) =
+    f (overChildren p (fold p f) x)
     \\ recursive p (Proxy :: Proxy expr)
 
 -- | Build/load a tree from a seed value.
@@ -60,9 +61,9 @@ unfold ::
     Proxy constraint ->
     (forall child. constraint child => Node f child -> m (child f)) ->
     Node f expr ->
-    m (expr Identity)
+    m (Node Identity expr)
 unfold p f x =
-    f x >>= children p (fmap Identity . unfold p f)
+    f x >>= children p (unfold p f) <&> Identity
     \\ recursive p (Proxy :: Proxy expr)
 
 hoistNode ::

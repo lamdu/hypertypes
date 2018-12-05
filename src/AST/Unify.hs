@@ -16,7 +16,7 @@ import           AST.ZipMatch (ZipMatch(..), zipMatch_)
 import           Control.Applicative (Alternative(..))
 import           Control.Lens.Operators
 import           Data.Constraint
-import           Data.Functor.Identity (Identity(..))
+import           Data.Functor.Identity (Identity)
 import           Data.Maybe (fromMaybe)
 import           Data.Proxy (Proxy(..))
 
@@ -73,7 +73,7 @@ instance Recursive (UnifyMonad m) where
 
 -- | Embed a pure term as a mutable term.
 unfreeze :: ChildrenRecursive t => Node Identity t -> Node (UTerm v) t
-unfreeze = fold (Proxy :: Proxy ChildrenRecursive) UTerm . runIdentity
+unfreeze = fold (Proxy :: Proxy ChildrenRecursive) UTerm
 
 -- look up a variable, and return last variable pointing to result.
 -- prune all variable on way to last variable
