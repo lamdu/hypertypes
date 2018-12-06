@@ -99,17 +99,16 @@ instance
     InferMonad m (Scope t k) where
 
     infer (Scope (Identity x)) =
+        withDict (typeAst (Proxy :: Proxy (t k))) $
+        withDict (typeAst (Proxy :: Proxy (t (Maybe k)))) $
         do
             varType <- newVar (binding :: Binding m (TypeAST (t k)))
-            withDict (typeAst (Proxy :: Proxy (t k)))
-                (local
-                    (scopeTypes . Lens.at (deBruijnIndexMax (Proxy :: Proxy (Maybe k))) ?~ varType)
-                    (withDict (typeAst (Proxy :: Proxy (t (Maybe k))))
-                        (infer x)
-                        \\ (inferMonad :: DeBruijnIndex (Maybe k) :- InferMonad m (t (Maybe k)))
-                    )
-                    <&> (funcType #) . (,) varType
-                ) <&> UTerm
+            local
+                (scopeTypes . Lens.at (deBruijnIndexMax (Proxy :: Proxy (Maybe k))) ?~ varType)
+                (infer x)
+                <&> (funcType #) . (,) varType
+        \\ (inferMonad :: DeBruijnIndex (Maybe k) :- InferMonad m (t (Maybe k)))
+        <&> UTerm
 
 instance
     ( UnifyMonad m (TypeAST (t k))
