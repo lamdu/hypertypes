@@ -9,10 +9,11 @@ module AST.Unify
     , applyBindings, unify
     ) where
 
-import           AST (Node, Children(..), ChildrenWithConstraint)
-import           AST.Recursive (Recursive(..), ChildrenRecursive, fold)
-import           AST.UTerm (UTerm(..))
-import           AST.ZipMatch (ZipMatch(..), zipMatch_)
+import           AST.Class.Children (Children(..), ChildrenWithConstraint)
+import           AST.Class.Recursive (Recursive(..), ChildrenRecursive, fold)
+import           AST.Class.ZipMatch (ZipMatch(..), zipMatch_)
+import           AST.Functor.UTerm (UTerm(..))
+import           AST.Node (Node)
 import           Control.Applicative (Alternative(..))
 import           Control.Lens.Operators
 import           Data.Constraint

@@ -7,10 +7,10 @@ module AST.Infer
     , FuncType(..)
     ) where
 
-import           AST (Node)
-import           AST.Ann (Ann(..), ann)
+import           AST.Functor.Ann (Ann(..), ann)
+import           AST.Functor.UTerm (UTerm)
+import           AST.Node (Node)
 import           AST.Unify (UnifyMonad(..), Var)
-import           AST.UTerm (UTerm)
 import           Control.Lens (Lens', Prism')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators

@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, DeriveTraversable, TemplateHaskell #-}
 
-module AST.UTerm
+module AST.Functor.UTerm
     ( UTerm(..), _UVar, _UTerm
     ) where
 

@@ -4,13 +4,13 @@ module TermLang where
 
 import TypeLang
 
-import AST.Apply
+import AST.Class.Recursive
+import AST.Class.TH
+import AST.Functor.UTerm
 import AST.Infer
-import AST.Recursive
-import AST.Scope
-import AST.TH
+import AST.Term.Apply
+import AST.Term.Scope
 import AST.Unify
-import AST.UTerm
 import Control.Lens.Operators
 import Control.Lens.Tuple
 import Control.Monad.Reader

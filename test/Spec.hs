@@ -3,15 +3,15 @@
 import TermLang
 import TypeLang
 
-import AST
-import AST.Ann
-import AST.Apply
+import AST.Class.Recursive
+import AST.Functor.Ann
+import AST.Functor.UTerm
 import AST.Infer
-import AST.Recursive
-import AST.Scope
+import AST.Node
+import AST.Term.Apply
+import AST.Term.Scope
 import AST.Unify
 import AST.Unify.STBinding
-import AST.UTerm
 import qualified Control.Lens as Lens
 import Control.Lens.Operators
 import Control.Monad.Reader

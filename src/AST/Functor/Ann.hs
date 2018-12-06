@@ -1,13 +1,14 @@
 {-# LANGUAGE NoImplicitPrelude, DeriveGeneric, DeriveTraversable, TemplateHaskell, ScopedTypeVariables, ConstraintKinds, RankNTypes #-}
 
-module AST.Ann
+module AST.Functor.Ann
     ( Ann(..), ann, val
     , annotations
     , para
     ) where
 
-import           AST (Node, Children(..), overChildren)
-import           AST.Recursive (Recursive(..), ChildrenRecursive, proxyChildrenRecursive)
+import           AST.Class.Children (Children(..), overChildren)
+import           AST.Class.Recursive (Recursive(..), ChildrenRecursive, proxyChildrenRecursive)
+import           AST.Node (Node)
 import qualified Control.Lens as Lens
 import           Data.Binary (Binary)
 import           Data.Constraint

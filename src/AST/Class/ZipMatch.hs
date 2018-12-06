@@ -1,11 +1,12 @@
 {-# LANGUAGE NoImplicitPrelude, RankNTypes, ConstraintKinds, ScopedTypeVariables #-}
 
-module AST.ZipMatch
+module AST.Class.ZipMatch
     ( ZipMatch(..)
     , zipMatch_
     ) where
 
-import           AST (Node, Children(..))
+import           AST.Class.Children (Children(..))
+import           AST.Node (Node)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Functor.Const (Const(..))

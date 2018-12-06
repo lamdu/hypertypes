@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 03bc5bb2b03282a1a24b3e08729ca0ecb1996de20766a33f12d6119b89aa3aef
+-- hash: 8d17abc2cba6a2ce059c82a1fb7bd2bedfeedf2efb0db14f6643b9b8b629bd6c
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -27,21 +27,21 @@ source-repository head
 
 library
   exposed-modules:
-      AST
-      AST.Ann
-      AST.Ann.Arbitrary
-      AST.Apply
+      AST.Class.Children
+      AST.Class.Children.Mono
+      AST.Class.Recursive
+      AST.Class.TH
+      AST.Class.ZipMatch
+      AST.Functor.Ann
+      AST.Functor.Ann.Arbitrary
+      AST.Functor.UTerm
       AST.Infer
-      AST.Mono
-      AST.NodeConstraint
-      AST.Recursive
-      AST.Scope
-      AST.TH
+      AST.Node
+      AST.Term.Apply
+      AST.Term.Scope
       AST.Unify
       AST.Unify.IntMapBinding
       AST.Unify.STBinding
-      AST.UTerm
-      AST.ZipMatch
       Language.Haskell.TH.Subst
   other-modules:
       Paths_syntax_tree

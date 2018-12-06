@@ -1,13 +1,14 @@
 {-# LANGUAGE NoImplicitPrelude, RankNTypes, ScopedTypeVariables, DefaultSignatures, KindSignatures, TypeOperators, ConstraintKinds #-}
 
-module AST.Recursive
+module AST.Class.Recursive
     ( Recursive(..)
     , ChildrenRecursive(..), proxyChildrenRecursive, overChildrenRecursive
     , fold, unfold
     , hoistNode, hoistNodeR, hoistBody, hoistBodyR
     ) where
 
-import           AST (Node, Children(..), ChildrenWithConstraint, overChildren)
+import           AST.Class.Children (Children(..), ChildrenWithConstraint, overChildren)
+import           AST.Node (Node)
 import           Control.Lens.Operators
 import           Data.Constraint
 import           Data.Functor.Const (Const(..))

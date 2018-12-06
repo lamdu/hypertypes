@@ -2,14 +2,14 @@
 
 module TypeLang where
 
-import AST
+import AST.Class.Children
+import AST.Class.TH
 import AST.Infer
-import AST.NodeConstraint
-import AST.Scope
+import AST.Node
 import AST.Unify
 import AST.Unify.IntMapBinding
 import AST.Unify.STBinding
-import AST.TH
+import AST.Term.Scope
 import qualified Control.Lens as Lens
 import Control.Monad.RWS
 import Control.Monad.Reader

@@ -1,20 +1,18 @@
 {-# LANGUAGE NoImplicitPrelude, TypeFamilies, RankNTypes, ConstraintKinds #-}
 
-module AST
-    ( Node, LeafNode
-    , Children(..), ChildrenWithConstraint
+module AST.Class.Children
+    ( Children(..), ChildrenWithConstraint
     , overChildren
+    , IfChildNodes
     ) where
 
+import           AST.Node
 import           Data.Functor.Const (Const(..))
 import           Data.Functor.Identity (Identity(..))
 import           Data.Proxy (Proxy(..))
 import           GHC.Exts (Constraint)
 
 import           Prelude.Compat
-
-type Node f expr = f (expr f)
-type LeafNode f expr = Node f (Const expr)
 
 class Children expr where
     type ChildrenConstraint expr (constraint :: ((* -> *) -> *) -> Constraint) :: Constraint
@@ -36,3 +34,7 @@ overChildren ::
     (forall child. constraint child => Node n child -> Node m child) ->
     expr n -> expr m
 overChildren p f = runIdentity . children p (Identity . f)
+
+-- | Used for standalone deriving clauses like
+-- `deriving instance IfChildNodes Typ f Eq => Eq (Typ f)`
+type IfChildNodes expr f constraint = ChildrenConstraint expr (NodeConstraint constraint f)

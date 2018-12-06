@@ -5,9 +5,9 @@ module AST.Unify.IntMapBinding
     , intBindingState, intVisit
     ) where
 
-import           AST (Node)
+import           AST.Functor.UTerm (UTerm(..))
+import           AST.Node (Node)
 import           AST.Unify (Var, Binding(..))
-import           AST.UTerm (UTerm(..))
 import           Control.Applicative (Alternative(..))
 import qualified Control.Lens as Lens
 import           Control.Lens (ALens')

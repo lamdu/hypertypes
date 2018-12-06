@@ -7,10 +7,10 @@ module AST.Unify.STBinding
     , stBindingToInt
     ) where
 
-import           AST (Node)
-import           AST.Recursive (ChildrenRecursive, hoistNodeR)
+import           AST.Class.Recursive (ChildrenRecursive, hoistNodeR)
+import           AST.Functor.UTerm (UTerm(..), _UVar)
+import           AST.Node (Node)
 import           AST.Unify (Binding(..), Var)
-import           AST.UTerm (UTerm(..), _UVar)
 import           Control.Applicative (Alternative(..))
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators

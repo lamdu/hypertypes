@@ -1,10 +1,11 @@
 {-# LANGUAGE NoImplicitPrelude, TypeFamilies, ScopedTypeVariables #-}
 
-module AST.Mono
+module AST.Class.Children.Mono
     ( ChildOf, monoChildren
     ) where
 
-import           AST (Node, Children(..), ChildrenWithConstraint)
+import           AST.Class.Children (Children(..), ChildrenWithConstraint)
+import           AST.Node (Node)
 import           Control.Lens (Traversal)
 import           Data.Proxy (Proxy(..))
 

@@ -1,18 +1,18 @@
 {-# LANGUAGE NoImplicitPrelude, StandaloneDeriving, UndecidableInstances, TemplateHaskell, KindSignatures, TypeFamilies, LambdaCase, EmptyCase, ScopedTypeVariables, TypeOperators, FlexibleInstances, MultiParamTypeClasses, TupleSections #-}
 
-module AST.Scope
+module AST.Term.Scope
     ( Scope(..), ScopeVar(..), EmptyScope
     , DeBruijnIndex(..)
     , scope, scopeVar
     , ScopeTypes, HasScopeTypes(..)
     ) where
 
-import           AST (Node)
+import           AST.Class.Recursive (ChildrenRecursive)
+import           AST.Class.TH (makeChildrenAndZipMatch)
+import           AST.Functor.UTerm (UTerm(..))
 import           AST.Infer (InferMonad(..), inferNode, nodeType, InferMonad1(..), TypeAST, HasTypeAST1(..), FuncType(..))
-import           AST.Recursive (ChildrenRecursive)
+import           AST.Node (Node)
 import           AST.Unify (UnifyMonad(..), Binding(..), Var)
-import           AST.UTerm (UTerm(..))
-import           AST.TH (makeChildrenAndZipMatch)
 import           Control.Lens (Lens', Prism')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators

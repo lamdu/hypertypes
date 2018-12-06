@@ -1,14 +1,15 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell #-}
 
-module AST.TH
+module AST.Class.TH
     ( makeChildrenAndZipMatch
     , makeChildren, makeZipMatch
     ) where
 
-import           AST (Node, LeafNode, Children(..))
-import           AST.Mono (ChildOf)
-import           AST.Recursive (ChildrenRecursive)
-import           AST.ZipMatch (ZipMatch(..))
+import           AST.Class.Children (Children(..))
+import           AST.Class.Children.Mono (ChildOf)
+import           AST.Class.Recursive (ChildrenRecursive)
+import           AST.Class.ZipMatch (ZipMatch(..))
+import           AST.Node (Node, LeafNode)
 import           Control.Applicative (liftA2)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators

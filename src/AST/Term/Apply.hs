@@ -1,14 +1,14 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, FlexibleInstances, MultiParamTypeClasses, UndecidableInstances, TupleSections #-}
 
-module AST.Apply
+module AST.Term.Apply
     ( Apply(..), applyFunc, applyArg
     ) where
 
-import           AST (Node)
+import           AST.Class.TH (makeChildrenAndZipMatch)
+import           AST.Functor.UTerm (UTerm(..), _UTerm)
 import           AST.Infer (InferMonad(..), inferNode, nodeType, TypeAST, FuncType(..))
+import           AST.Node (Node)
 import           AST.Unify (UnifyMonad(..), Binding(..), unify)
-import           AST.UTerm (UTerm(..), _UTerm)
-import           AST.TH (makeChildrenAndZipMatch)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 
