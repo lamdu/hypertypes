@@ -4,8 +4,7 @@ module TermLang where
 
 import TypeLang
 
-import AST.Class.Recursive
-import AST.Class.TH
+import AST
 import AST.Functor.UTerm
 import AST.Infer
 import AST.Term.Apply

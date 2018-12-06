@@ -3,11 +3,9 @@
 import TermLang
 import TypeLang
 
-import AST.Class.Recursive
-import AST.Functor.Ann
+import AST
 import AST.Functor.UTerm
 import AST.Infer
-import AST.Node
 import AST.Term.Apply
 import AST.Term.Scope
 import AST.Unify

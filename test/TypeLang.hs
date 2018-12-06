@@ -2,10 +2,8 @@
 
 module TypeLang where
 
-import AST.Class.Children
-import AST.Class.TH
+import AST
 import AST.Infer
-import AST.Node
 import AST.Unify
 import AST.Unify.IntMapBinding
 import AST.Unify.STBinding
