@@ -21,9 +21,10 @@ import Data.Functor.Identity
 
 expr :: Node Identity (Term EmptyScope)
 expr =
-    -- \x -> x 5
+    -- \x y -> x 5
     ELit 5 & Identity
-    & Apply (EVar (ScopeVar Nothing) & Identity) & EApp & Identity
+    & Apply (EVar (ScopeVar (Just Nothing)) & Identity) & EApp & Identity
+    & Scope & ELam & Identity
     & Scope & ELam & Identity
 
 occurs :: Node Identity (Term EmptyScope)
