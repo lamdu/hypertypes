@@ -19,21 +19,22 @@ import Control.Monad.Trans.Maybe
 import Data.Functor.Const
 import Data.Functor.Identity
 
+var :: DeBruijnIndex k => Int -> Identity (Term k f)
+var = Identity . EVar . scopeVar
+
 expr :: Node Identity (Term EmptyScope)
 expr =
     -- \x y -> x 5
     Identity . ELam . scope $ \x ->
     Identity . ELam . scope $ \_y ->
     ELit 5 & Identity
-    & Apply (EVar (scopeVar x) & Identity) & EApp & Identity
+    & Apply (var x) & EApp & Identity
 
 occurs :: Node Identity (Term EmptyScope)
 occurs =
     -- \x -> x x
-    Apply x x & EApp & Identity
-    & Scope & ELam & Identity
-    where
-        x = ScopeVar Nothing & EVar & Identity
+    Identity . ELam . scope $ \x ->
+    Apply (var x) (var x) & EApp & Identity
 
 inferExpr ::
     (DeBruijnIndex k, MonadReader env m, HasScopeTypes (Var m) Typ env, UnifyMonad m Typ) =>
@@ -54,5 +55,6 @@ main =
         putStrLn ""
         print (runIntInfer (inferExpr expr))
         print (runST (runSTInfer (inferExpr expr <&> stBindingToInt)))
+        putStrLn ""
         print (runIntInfer (inferExpr occurs))
         print (runST (runSTInfer (inferExpr occurs <&> stBindingToInt)))
