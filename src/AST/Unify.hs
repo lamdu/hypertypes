@@ -4,7 +4,7 @@ module AST.Unify
     ( Var, UNode
     , unfreeze
     , Binding(..)
-    , OccursMonad(..)
+    , MonadOccurs(..)
     , UnifyMonad(..)
     , applyBindings, unify
     ) where
@@ -35,14 +35,14 @@ data Binding m t = Binding
     , bindVar :: UVar m t -> UNode m t -> m ()
     }
 
-class Monad m => OccursMonad (m :: * -> *) where
+class Monad m => MonadOccurs (m :: * -> *) where
     type Visited m
     emptyVisited :: Proxy m -> Visited m
 
     default emptyVisited :: Monoid (Visited m) => Proxy m -> Visited m
     emptyVisited = mempty
 
-class (Eq (UVar m t), ZipMatch t, OccursMonad m) => UnifyMonad m t where
+class (Eq (UVar m t), ZipMatch t, MonadOccurs m) => UnifyMonad m t where
     binding :: Binding m t
 
     -- | Add variable to visited set,
