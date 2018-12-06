@@ -29,15 +29,16 @@ type instance TypeAST (Term k) = Typ
 
 instance HasTypeAST1 Term where
     type TypeAST1 Term = Typ
+    type TypeASTIndexConstraint Term = DeBruijnIndex
     typeAst _ _ = Dict
 
 instance
-    (MonadReader env m, HasVarTypes (Var m) Typ env, UnifyMonad m Typ) =>
+    (MonadReader env m, HasScopeTypes (Var m) Typ env, UnifyMonad m Typ) =>
     InferMonad1 m Term where
     inferMonad = Sub Dict
 
 instance
-    (DeBruijnIndex k, MonadReader env m, HasVarTypes (Var m) Typ env, UnifyMonad m Typ) =>
+    (DeBruijnIndex k, MonadReader env m, HasScopeTypes (Var m) Typ env, UnifyMonad m Typ) =>
     InferMonad m (Term k) where
 
     infer ELit{} = UTerm TInt & pure

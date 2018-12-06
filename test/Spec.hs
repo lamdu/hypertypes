@@ -35,14 +35,14 @@ occurs =
         x = ScopeVar Nothing & EVar & Identity
 
 inferExpr ::
-    (DeBruijnIndex k, MonadReader env m, HasVarTypes (Var m) Typ env, UnifyMonad m Typ) =>
+    (DeBruijnIndex k, MonadReader env m, HasScopeTypes (Var m) Typ env, UnifyMonad m Typ) =>
     Node Identity (Term k) -> m (Node (UTerm (Var m)) Typ)
 inferExpr x = infer (x ^. Lens._Wrapped) >>= applyBindings
 
-runIntInfer :: IntInfer (VarTypes (Const Int) Typ) () a -> Maybe a
+runIntInfer :: IntInfer (ScopeTypes (Const Int) Typ) () a -> Maybe a
 runIntInfer act = runRWST act mempty emptyIntInferState <&> (^. Lens._1)
 
-runSTInfer :: STInfer (VarTypes (STVar s) Typ) s a -> ST s (Maybe a)
+runSTInfer :: STInfer (ScopeTypes (STVar s) Typ) s a -> ST s (Maybe a)
 runSTInfer act =
     newSTInferState <&> (,) mempty
     >>= runMaybeT . runReaderT act

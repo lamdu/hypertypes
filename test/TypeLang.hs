@@ -5,6 +5,7 @@ module TypeLang where
 import AST
 import AST.Infer
 import AST.NodeConstraint
+import AST.Scope
 import AST.Unify
 import AST.Unify.IntMapBinding
 import AST.Unify.STBinding
@@ -84,5 +85,5 @@ instance UnifyMonad (STInfer r s) Row where
 instance FuncType Typ where
     funcType = _TFun
 
-instance HasVarTypes v Typ a => HasVarTypes v Typ (a, x) where
-    varTypes = Lens._1 . varTypes
+instance HasScopeTypes v Typ a => HasScopeTypes v Typ (a, x) where
+    scopeTypes = Lens._1 . scopeTypes
