@@ -3,6 +3,7 @@
 module AST.Scope
     ( Scope(..), ScopeVar(..), EmptyScope
     , DeBruijnIndex(..)
+    , scope, scopeVar
     , ScopeTypes, HasScopeTypes(..)
     ) where
 
@@ -12,7 +13,7 @@ import           AST.Recursive (ChildrenRecursive)
 import           AST.Unify (UnifyMonad(..), Binding(..), Var)
 import           AST.UTerm (UTerm(..))
 import           AST.TH (makeChildrenAndZipMatch)
-import           Control.Lens (Lens')
+import           Control.Lens (Lens', Prism')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Reader (MonadReader, local)
@@ -33,20 +34,38 @@ makeChildrenAndZipMatch [''Scope, ''ScopeVar]
 instance ChildrenRecursive (expr (Maybe a)) => ChildrenRecursive (Scope expr a)
 
 class DeBruijnIndex a where
-    deBruijnIndex :: a -> Int
+    deBruijnIndex :: Prism' Int a
     deBruijnIndexMax :: Proxy a -> Int
 
 instance DeBruijnIndex EmptyScope where
-    deBruijnIndex = \case
+    deBruijnIndex = Lens.prism (\case) Left
     deBruijnIndexMax _ = -1
 
 instance DeBruijnIndex a => DeBruijnIndex (Maybe a) where
-    deBruijnIndex Nothing = 0
-    deBruijnIndex (Just x) = 1 + deBruijnIndex x
+    deBruijnIndex =
+        Lens.prism' toInt fromInt
+        where
+            toInt Nothing = 0
+            toInt (Just x) = 1 + deBruijnIndex # x
+            fromInt x
+                | x == 0 = Just Nothing
+                | otherwise = (x - 1) ^? deBruijnIndex <&> Just
     deBruijnIndexMax _ = 1 + deBruijnIndexMax (Proxy :: Proxy a)
 
-inverseDeBruijnIndex :: forall a. DeBruijnIndex a => a -> Int
-inverseDeBruijnIndex x = deBruijnIndexMax (Proxy :: Proxy a) - deBruijnIndex x
+inverseDeBruijnIndex :: forall a. DeBruijnIndex a => Prism' Int a
+inverseDeBruijnIndex =
+    Lens.iso (l -) (l -) . deBruijnIndex
+    where
+        l = deBruijnIndexMax (Proxy :: Proxy a)
+
+scope ::
+    forall expr a f.
+    DeBruijnIndex a =>
+    (Int -> Node f (expr (Maybe a))) -> Scope expr a f
+scope f = Scope (f (inverseDeBruijnIndex # (Nothing :: Maybe a)))
+
+scopeVar :: DeBruijnIndex a => Int -> ScopeVar expr a f
+scopeVar x = ScopeVar (x ^?! inverseDeBruijnIndex)
 
 type ScopeTypes v t = IntMap (Node (UTerm v) t)
 
@@ -103,6 +122,6 @@ instance
     ) =>
     InferMonad m (ScopeVar t k) where
 
-    infer (ScopeVar var) =
-        Lens.view (scopeTypes . Lens.at (inverseDeBruijnIndex var))
+    infer (ScopeVar v) =
+        Lens.view (scopeTypes . Lens.at (inverseDeBruijnIndex # v))
         <&> fromMaybe (error "name error")

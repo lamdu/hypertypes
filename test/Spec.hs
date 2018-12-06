@@ -22,10 +22,10 @@ import Data.Functor.Identity
 expr :: Node Identity (Term EmptyScope)
 expr =
     -- \x y -> x 5
+    Identity . ELam . scope $ \x ->
+    Identity . ELam . scope $ \_y ->
     ELit 5 & Identity
-    & Apply (EVar (ScopeVar (Just Nothing)) & Identity) & EApp & Identity
-    & Scope & ELam & Identity
-    & Scope & ELam & Identity
+    & Apply (EVar (scopeVar x) & Identity) & EApp & Identity
 
 occurs :: Node Identity (Term EmptyScope)
 occurs =
