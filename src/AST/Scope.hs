@@ -8,7 +8,7 @@ module AST.Scope
     ) where
 
 import           AST (Node)
-import           AST.Infer (InferMonad(..), InferMonad1(..), TypeAST, HasTypeAST1(..), sameTypeAst, FuncType(..))
+import           AST.Infer (InferMonad(..), InferMonad1(..), TypeAST, HasTypeAST1(..), FuncType(..))
 import           AST.Recursive (ChildrenRecursive)
 import           AST.Unify (UnifyMonad(..), Binding(..), Var)
 import           AST.UTerm (UTerm(..))
@@ -101,10 +101,10 @@ instance
     infer (Scope (Identity x)) =
         do
             varType <- newVar (binding :: Binding m (TypeAST (t k)))
-            withDict (typeAst pt pk)
+            withDict (typeAst pt (Proxy :: Proxy k))
                 (local
                     (scopeTypes . Lens.at (deBruijnIndexMax (Proxy :: Proxy (Maybe k))) ?~ varType)
-                    (withDict (sameTypeAst pt pk (Proxy :: Proxy (Maybe k)))
+                    (withDict (typeAst pt (Proxy :: Proxy (Maybe k)))
                         (infer x)
                         \\ (inferMonad :: DeBruijnIndex (Maybe k) :- InferMonad m (t (Maybe k)))
                     )
@@ -112,7 +112,6 @@ instance
                 ) <&> UTerm
         where
             pt = Proxy :: Proxy t
-            pk = Proxy :: Proxy k
 
 instance
     ( UnifyMonad m (TypeAST (t k))
