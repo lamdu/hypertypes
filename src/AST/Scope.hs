@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, StandaloneDeriving, UndecidableInstances, TemplateHaskell, KindSignatures, TypeFamilies, LambdaCase, EmptyCase, ScopedTypeVariables, TypeOperators, FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE NoImplicitPrelude, StandaloneDeriving, UndecidableInstances, TemplateHaskell, KindSignatures, TypeFamilies, LambdaCase, EmptyCase, ScopedTypeVariables, TypeOperators, FlexibleInstances, MultiParamTypeClasses, TupleSections #-}
 
 module AST.Scope
     ( Scope(..), ScopeVar(..), EmptyScope
@@ -8,7 +8,7 @@ module AST.Scope
     ) where
 
 import           AST (Node)
-import           AST.Infer (InferMonad(..), InferMonad1(..), TypeAST, HasTypeAST1(..), FuncType(..))
+import           AST.Infer (InferMonad(..), inferNode, nodeType, InferMonad1(..), TypeAST, HasTypeAST1(..), FuncType(..))
 import           AST.Recursive (ChildrenRecursive)
 import           AST.Unify (UnifyMonad(..), Binding(..), Var)
 import           AST.UTerm (UTerm(..))
@@ -18,7 +18,6 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Reader (MonadReader, local)
 import           Data.Constraint
-import           Data.Functor.Identity (Identity(..))
 import           Data.IntMap (IntMap)
 import           Data.Maybe (fromMaybe)
 import           Data.Proxy (Proxy(..))
@@ -98,17 +97,20 @@ instance
     ) =>
     InferMonad m (Scope t k) where
 
-    infer (Scope (Identity x)) =
+    infer (Scope x) =
         withDict (typeAst (Proxy :: Proxy (t k))) $
         withDict (typeAst (Proxy :: Proxy (t (Maybe k)))) $
         do
-            varType <- newVar (binding :: Binding m (TypeAST (t k)))
-            local
+            varType <- newVar (binding :: Binding m (TypeAST1 t))
+            xI <-
+                local
                 (scopeTypes . Lens.at (deBruijnIndexMax (Proxy :: Proxy (Maybe k))) ?~ varType)
-                (infer x)
-                <&> (funcType #) . (,) varType
+                (inferNode x)
+            pure
+                ( funcType # (varType, xI ^. nodeType) & UTerm
+                , Scope xI
+                )
         \\ (inferMonad :: DeBruijnIndex (Maybe k) :- InferMonad m (t (Maybe k)))
-        <&> UTerm
 
 instance
     ( UnifyMonad m (TypeAST (t k))
@@ -121,3 +123,4 @@ instance
     infer (ScopeVar v) =
         Lens.view (scopeTypes . Lens.at (inverseDeBruijnIndex # v))
         <&> fromMaybe (error "name error")
+        <&> (, ScopeVar v)

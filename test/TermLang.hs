@@ -12,13 +12,13 @@ import AST.TH
 import AST.Unify
 import AST.UTerm
 import Control.Lens.Operators
+import Control.Lens.Tuple
 import Control.Monad.Reader
 import Data.Constraint
-import Data.Functor.Identity
 
 data Term v f
     = ELam (Scope Term v f)
-    | EVar (ScopeVar Term v Identity)
+    | EVar (ScopeVar Term v f)
     | EApp (Apply (Term v) f)
     | ELit Int
 
@@ -41,7 +41,7 @@ instance
     (DeBruijnIndex k, MonadReader env m, HasScopeTypes (Var m) Typ env, UnifyMonad m Typ) =>
     InferMonad m (Term k) where
 
-    infer ELit{} = UTerm TInt & pure
-    infer (EVar x) = infer x
-    infer (ELam x) = infer x
-    infer (EApp x) = infer x
+    infer (ELit x) = pure (UTerm TInt, ELit x)
+    infer (EVar x) = infer x <&> _2 %~ EVar
+    infer (ELam x) = infer x <&> _2 %~ ELam
+    infer (EApp x) = infer x <&> _2 %~ EApp

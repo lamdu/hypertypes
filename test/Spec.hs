@@ -4,8 +4,10 @@ import TermLang
 import TypeLang
 
 import AST
+import AST.Ann
 import AST.Apply
 import AST.Infer
+import AST.Recursive
 import AST.Scope
 import AST.Unify
 import AST.Unify.STBinding
@@ -38,8 +40,12 @@ occurs =
 
 inferExpr ::
     (DeBruijnIndex k, MonadReader env m, HasScopeTypes (Var m) Typ env, UnifyMonad m Typ) =>
-    Node Identity (Term k) -> m (Node (UTerm (Var m)) Typ)
-inferExpr x = infer (x ^. Lens._Wrapped) >>= applyBindings
+    Node Identity (Term k) ->
+    m (Node (UTerm (Var m)) Typ)
+inferExpr x =
+    inferNode (hoistNode (Ann () . runIdentity) x)
+    <&> (^. nodeType)
+    >>= applyBindings
 
 runIntInfer :: IntInfer (ScopeTypes (Const Int) Typ) () a -> Maybe a
 runIntInfer act = runRWST act mempty emptyIntInferState <&> (^. Lens._1)
