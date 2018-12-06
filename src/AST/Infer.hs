@@ -21,7 +21,7 @@ class UnifyMonad m (TypeAST t) => InferMonad m t where
 class HasTypeAST1 t where
     type family TypeAST1 t :: (* -> *) -> *
     type family TypeASTIndexConstraint t :: * -> Constraint
-    typeAst :: Proxy t -> Proxy k -> Dict (TypeAST (t k) ~ TypeAST1 t)
+    typeAst :: Proxy (t k) -> Dict (TypeAST (t k) ~ TypeAST1 t)
 
 class HasTypeAST1 t => InferMonad1 m t where
     inferMonad :: TypeASTIndexConstraint t i :- InferMonad m (t i)

@@ -80,11 +80,11 @@ type instance TypeAST (ScopeVar t k) = TypeAST (t k)
 instance HasTypeAST1 t => HasTypeAST1 (Scope t) where
     type TypeAST1 (Scope t) = TypeAST1 t
     type TypeASTIndexConstraint (Scope t) = DeBruijnIndex
-    typeAst _ p = withDict (typeAst (Proxy :: Proxy t) p) Dict
+    typeAst p = withDict (typeAst p) Dict
 instance HasTypeAST1 t => HasTypeAST1 (ScopeVar t) where
     type TypeAST1 (ScopeVar t) = TypeAST1 t
     type TypeASTIndexConstraint (ScopeVar t) = DeBruijnIndex
-    typeAst _ p = withDict (typeAst (Proxy :: Proxy t) p) Dict
+    typeAst p = withDict (typeAst p) Dict
 
 instance
     ( HasTypeAST1 t
@@ -101,17 +101,15 @@ instance
     infer (Scope (Identity x)) =
         do
             varType <- newVar (binding :: Binding m (TypeAST (t k)))
-            withDict (typeAst pt (Proxy :: Proxy k))
+            withDict (typeAst (Proxy :: Proxy (t k)))
                 (local
                     (scopeTypes . Lens.at (deBruijnIndexMax (Proxy :: Proxy (Maybe k))) ?~ varType)
-                    (withDict (typeAst pt (Proxy :: Proxy (Maybe k)))
+                    (withDict (typeAst (Proxy :: Proxy (t (Maybe k))))
                         (infer x)
                         \\ (inferMonad :: DeBruijnIndex (Maybe k) :- InferMonad m (t (Maybe k)))
                     )
                     <&> (funcType #) . (,) varType
                 ) <&> UTerm
-        where
-            pt = Proxy :: Proxy t
 
 instance
     ( UnifyMonad m (TypeAST (t k))
