@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, FlexibleInstances, MultiParamTypeClasses, UndecidableInstances, TupleSections, StandaloneDeriving #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, FlexibleInstances, MultiParamTypeClasses, UndecidableInstances, TupleSections, StandaloneDeriving, DeriveGeneric #-}
 
 module AST.Term.Apply
     ( Apply(..), applyFunc, applyArg
@@ -9,19 +9,24 @@ import           AST.Functor.UTerm (UTerm(..), _UTerm)
 import           AST.Infer (InferMonad(..), inferNode, nodeType, TypeAST, FuncType(..))
 import           AST.Node (Node)
 import           AST.Unify (UnifyMonad(..), Binding(..), unify)
+import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
+import           Data.Binary (Binary)
+import           GHC.Generics (Generic)
 
 import           Prelude.Compat
 
 data Apply expr f = Apply
     { _applyFunc :: Node f expr
     , _applyArg :: Node f expr
-    }
+    } deriving Generic
 
 deriving instance Eq   (Node f expr) => Eq   (Apply expr f)
 deriving instance Ord  (Node f expr) => Ord  (Apply expr f)
 deriving instance Show (Node f expr) => Show (Apply expr f)
+instance (Binary (Node f expr)) => Binary (Apply expr f)
+instance (NFData (Node f expr)) => NFData (Apply expr f)
 
 Lens.makeLenses ''Apply
 makeChildrenAndZipMatch [''Apply]

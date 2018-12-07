@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, KindSignatures, MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances, UndecidableInstances, TypeFamilies, TupleSections, StandaloneDeriving #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, KindSignatures, MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances, UndecidableInstances, TypeFamilies, TupleSections, StandaloneDeriving, DeriveGeneric, GeneralizedNewtypeDeriving #-}
 
 module AST.Term.Lam
     ( Lam(..), lamIn, lamOut
@@ -10,25 +10,30 @@ import           AST.Node (Node)
 import           AST.Functor.UTerm (UTerm(..))
 import           AST.Infer
 import           AST.Unify
+import           Control.DeepSeq (NFData)
 import           Control.Lens (Lens')
 import           Control.Lens.Operators
 import qualified Control.Lens as Lens
 import           Control.Monad.Reader (MonadReader, local)
+import           Data.Binary (Binary)
 import           Data.Map
 import           Data.Maybe (fromMaybe)
+import           GHC.Generics (Generic)
 
 import           Prelude.Compat
 
 data Lam v expr f = Lam
     { _lamIn :: v
     , _lamOut :: Node f expr
-    }
+    } deriving Generic
 Lens.makeLenses ''Lam
 
 deriving instance (Show v, Show (Node f expr)) => Show (Lam v expr f)
+instance (Binary v, Binary (Node f expr)) => Binary (Lam v expr f)
+instance (NFData v, NFData (Node f expr)) => NFData (Lam v expr f)
 
 newtype LamVar v (expr :: (* -> *) -> *) (f :: * -> *) = LamVar v
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord, Show, Generic, Binary, NFData)
 
 type ScopeTypes v u t = Map v (Node (UTerm u) t)
 
