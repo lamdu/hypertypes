@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a269126f59cbc45a05be10a023a16adc34b253104a54b6699d7b81670d817034
+-- hash: 864e8c2debc693dd3ca7ace9a9711db068dea4c45541b9956669f5790b7dc004
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -40,6 +40,7 @@ library
       AST.Node
       AST.Term.Apply
       AST.Term.Lam
+      AST.Term.Map
       AST.Term.Scope
       AST.Unify
       AST.Unify.IntMapBinding
