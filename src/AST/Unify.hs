@@ -51,11 +51,15 @@ class (Eq (UVar m t), ZipMatch t, MonadOccurs m) => UnifyMonad m t where
     -- For the error, the term is given for context.
     visit :: t (UTerm (Var m)) -> UVar m t -> Visited m -> m (Visited m)
 
-    -- | Break due to unification mismatch on the top-levels of given terms.
-    mismatchFailure :: t (UTerm (Var m)) -> t (UTerm (Var m)) -> m ()
+    -- | What to do when top-levels of terms being unified does not match.
+    -- Usually this will throw a failure,
+    -- but some AST terms could be equivalent despite not matching,
+    -- like record extends with fields ordered differently,
+    -- and these could still match.
+    structureMismatch :: t (UTerm (Var m)) -> t (UTerm (Var m)) -> m ()
 
-    default mismatchFailure :: Alternative m => t (UTerm (Var m)) -> t (UTerm (Var m)) -> m ()
-    mismatchFailure _ _ = empty
+    default structureMismatch :: Alternative m => t (UTerm (Var m)) -> t (UTerm (Var m)) -> m ()
+    structureMismatch _ _ = empty
 
     recursiveUnify ::
         Proxy m ->
@@ -151,7 +155,7 @@ unifyTerms ::
     forall m t. UnifyMonad m t =>
     t (UTerm (Var m)) -> t (UTerm (Var m)) -> m ()
 unifyTerms x y =
-    fromMaybe (mismatchFailure x y)
+    fromMaybe (structureMismatch x y)
     (zipMatch_ p unify x y)
     \\ recursive p (Proxy :: Proxy t)
     where
