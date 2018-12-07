@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 864e8c2debc693dd3ca7ace9a9711db068dea4c45541b9956669f5790b7dc004
+-- hash: 3db378752f9be5a58cdb0049ae4dd9dd8e98cfb456874ffa569619be7c17e0f4
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -58,6 +58,7 @@ library
     , binary
     , constraints
     , containers
+    , deepseq
     , lens
     , monad-st
     , mtl
@@ -84,6 +85,7 @@ test-suite syntax-tree-test
     , binary
     , constraints
     , containers
+    , deepseq
     , lens
     , monad-st
     , mtl

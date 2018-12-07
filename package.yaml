@@ -25,6 +25,7 @@ dependencies:
 - binary
 - constraints
 - containers
+- deepseq
 - lens
 - monad-st
 - mtl

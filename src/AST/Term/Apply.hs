@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, FlexibleInstances, MultiParamTypeClasses, UndecidableInstances, TupleSections #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, FlexibleInstances, MultiParamTypeClasses, UndecidableInstances, TupleSections, StandaloneDeriving #-}
 
 module AST.Term.Apply
     ( Apply(..), applyFunc, applyArg
@@ -18,6 +18,10 @@ data Apply expr f = Apply
     { _applyFunc :: Node f expr
     , _applyArg :: Node f expr
     }
+
+deriving instance Eq   (Node f expr) => Eq   (Apply expr f)
+deriving instance Ord  (Node f expr) => Ord  (Apply expr f)
+deriving instance Show (Node f expr) => Show (Apply expr f)
 
 Lens.makeLenses ''Apply
 makeChildrenAndZipMatch [''Apply]

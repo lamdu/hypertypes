@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, KindSignatures, MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances, UndecidableInstances, TypeFamilies, TupleSections #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, KindSignatures, MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances, UndecidableInstances, TypeFamilies, TupleSections, StandaloneDeriving #-}
 
 module AST.Term.Lam
     ( Lam(..), lamIn, lamOut
@@ -25,7 +25,10 @@ data Lam v expr f = Lam
     }
 Lens.makeLenses ''Lam
 
+deriving instance (Show v, Show (Node f expr)) => Show (Lam v expr f)
+
 newtype LamVar v (expr :: (* -> *) -> *) (f :: * -> *) = LamVar v
+    deriving (Eq, Ord, Show)
 
 type ScopeTypes v u t = Map v (Node (UTerm u) t)
 

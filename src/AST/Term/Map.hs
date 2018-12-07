@@ -1,21 +1,33 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, KindSignatures, TypeFamilies #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, KindSignatures, TypeFamilies, StandaloneDeriving, UndecidableInstances, DeriveGeneric #-}
 
 module AST.Term.Map
-    ( TermMap(..)
+    ( TermMap(..), _TermMap
     ) where
 
 import           AST
 import           AST.Class.ZipMatch
+import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
+import           Data.Binary (Binary)
 import           Data.Map (Map)
 import qualified Data.Map as Map
+import           GHC.Generics (Generic)
 
 import           Prelude.Compat
 
 newtype TermMap k expr f =
     -- TODO: Make th-abstraction support type synonyms and use ``Node
     TermMap (Map k (f (expr f)))
+    deriving Generic
+
+deriving instance (Eq   k, Eq   (Node f expr)) => Eq   (TermMap k expr f)
+deriving instance (Ord  k, Ord  (Node f expr)) => Ord  (TermMap k expr f)
+deriving instance (Show k, Show (Node f expr)) => Show (TermMap k expr f)
+instance (Binary k, Binary (Node f expr)) => Binary (TermMap k expr f)
+instance (NFData k, NFData (Node f expr)) => NFData (TermMap k expr f)
+
+Lens.makePrisms ''TermMap
 makeChildren [''TermMap]
 
 instance Eq k => ZipMatch (TermMap k expr) where
