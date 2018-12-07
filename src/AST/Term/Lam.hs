@@ -2,13 +2,15 @@
 
 module AST.Term.Lam
     ( Lam(..), lamIn, lamOut
-    , LamVar(..)
+    , LamVar(..), _LamVar
     , ScopeTypes, HasScopeTypes(..)
     ) where
 
-import           AST.Node (Node)
+import           AST.Class.Recursive (ChildrenRecursive)
+import           AST.Class.TH (makeChildren)
 import           AST.Functor.UTerm (UTerm(..))
 import           AST.Infer
+import           AST.Node (Node)
 import           AST.Unify
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Lens')
@@ -37,6 +39,10 @@ instance (NFData v, NFData (Node f expr)) => NFData (Lam v expr f)
 
 newtype LamVar v (expr :: (* -> *) -> *) (f :: * -> *) = LamVar v
     deriving (Eq, Ord, Show, Generic, Binary, NFData)
+Lens.makePrisms ''LamVar
+
+makeChildren [''Lam, ''LamVar]
+instance ChildrenRecursive expr => ChildrenRecursive (Lam v expr)
 
 type ScopeTypes v u t = Map v (Node (UTerm u) t)
 

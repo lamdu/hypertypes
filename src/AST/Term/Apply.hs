@@ -4,6 +4,7 @@ module AST.Term.Apply
     ( Apply(..), applyFunc, applyArg
     ) where
 
+import           AST.Class.Recursive (ChildrenRecursive)
 import           AST.Class.TH (makeChildrenAndZipMatch)
 import           AST.Functor.UTerm (UTerm(..), _UTerm)
 import           AST.Infer (InferMonad(..), inferNode, nodeType, TypeAST, FuncType(..))
@@ -30,6 +31,8 @@ instance (NFData (Node f expr)) => NFData (Apply expr f)
 
 Lens.makeLenses ''Apply
 makeChildrenAndZipMatch [''Apply]
+
+instance ChildrenRecursive expr => ChildrenRecursive (Apply expr)
 
 type instance TypeAST (Apply expr) = TypeAST expr
 
