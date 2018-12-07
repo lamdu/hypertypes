@@ -129,6 +129,10 @@ matchType :: Name -> Type -> CtrTypePattern
 matchType var (ConT node `AppT` VarT functor `AppT` ast)
     | node == ''Node && functor == var =
         NodeFofX ast
+matchType var (VarT f0 `AppT` (ast `AppT` VarT f1))
+    | f0 == var && f1 == var =
+        -- Node type synonym expanded
+        NodeFofX ast
 matchType var (ConT node `AppT` VarT functor `AppT` leaf)
     | node == ''LeafNode && functor == var =
         NodeFofX (AppT (ConT ''Const) leaf)
