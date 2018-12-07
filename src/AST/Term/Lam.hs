@@ -28,6 +28,9 @@ data Lam v expr f = Lam
     } deriving Generic
 Lens.makeLenses ''Lam
 
+-- Note that `Eq` is not alpha-equivalence!
+deriving instance (Eq   v, Eq   (Node f expr)) => Eq   (Lam v expr f)
+deriving instance (Ord  v, Ord  (Node f expr)) => Ord  (Lam v expr f)
 deriving instance (Show v, Show (Node f expr)) => Show (Lam v expr f)
 instance (Binary v, Binary (Node f expr)) => Binary (Lam v expr f)
 instance (NFData v, NFData (Node f expr)) => NFData (Lam v expr f)
