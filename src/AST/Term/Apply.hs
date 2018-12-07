@@ -2,6 +2,7 @@
 
 module AST.Term.Apply
     ( Apply(..), applyFunc, applyArg
+    , applyChildren
     ) where
 
 import           AST.Class.Recursive (ChildrenRecursive)
@@ -11,6 +12,7 @@ import           AST.Infer (InferMonad(..), inferNode, nodeType, TypeAST, FuncTy
 import           AST.Node (Node)
 import           AST.Unify (UnifyMonad(..), Binding(..), unify)
 import           Control.DeepSeq (NFData)
+import           Control.Lens (Traversal)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
@@ -33,6 +35,12 @@ Lens.makeLenses ''Apply
 makeChildrenAndZipMatch [''Apply]
 
 instance ChildrenRecursive expr => ChildrenRecursive (Apply expr)
+
+-- Type changing traversal.
+-- TODO: Could the normal `Children` class support this?
+applyChildren ::
+    Traversal (Apply t0 f0) (Apply t1 f1) (Node f0 t0) (Node f1 t1)
+applyChildren f (Apply x0 x1) = Apply <$> f x0 <*> f x1
 
 type instance TypeAST (Apply expr) = TypeAST expr
 
