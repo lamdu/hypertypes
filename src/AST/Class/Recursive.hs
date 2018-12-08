@@ -3,11 +3,11 @@
 module AST.Class.Recursive
     ( Recursive(..)
     , ChildrenRecursive(..), proxyChildrenRecursive, overChildrenRecursive
-    , fold, unfold
+    , fold, unfold, foldMapRecursive
     , hoistNode, hoistNodeR, hoistBody, hoistBodyR
     ) where
 
-import           AST.Class.Children (Children(..), ChildrenWithConstraint, overChildren)
+import           AST.Class.Children (Children(..), ChildrenWithConstraint, overChildren, foldMapChildren)
 import           AST.Node (Node)
 import           Control.Lens.Operators
 import           Data.Constraint
@@ -63,6 +63,17 @@ unfold ::
     m (Node Identity expr)
 unfold p f x =
     f x >>= children p (unfold p f) <&> Identity
+    \\ recursive p (Proxy :: Proxy expr)
+
+foldMapRecursive ::
+    forall constraint expr a.
+    (Recursive constraint, constraint expr, Monoid a) =>
+    Proxy constraint ->
+    (forall child. constraint child => child Identity -> a) ->
+    Node Identity expr ->
+    a
+foldMapRecursive p f (Identity x) =
+    f x <> foldMapChildren p (foldMapRecursive p f) x
     \\ recursive p (Proxy :: Proxy expr)
 
 overChildrenRecursive ::
