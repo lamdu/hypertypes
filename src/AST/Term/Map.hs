@@ -16,9 +16,7 @@ import           GHC.Generics (Generic)
 
 import           Prelude.Compat
 
-newtype TermMap k expr f =
-    -- TODO: Make th-abstraction support type synonyms and use ``Node
-    TermMap (Map k (f (expr f)))
+newtype TermMap k expr f = TermMap (Map k (Node f expr))
     deriving Generic
 
 deriving instance (Eq   k, Eq   (Node f expr)) => Eq   (TermMap k expr f)
