@@ -1,9 +1,8 @@
-{-# LANGUAGE NoImplicitPrelude, TypeFamilies, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, TypeOperators #-}
+{-# LANGUAGE NoImplicitPrelude, TypeFamilies, MultiParamTypeClasses, FlexibleContexts #-}
 
 module AST.Class.Infer
     ( TypeAST, Infer(..)
     , INode, inferNode, nodeType
-    , HasTypeAST1(..), Infer1(..)
     , FuncType(..)
     ) where
 
@@ -14,8 +13,6 @@ import           AST.Unify (Unify(..), Var)
 import           Control.Lens (Lens', Prism')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Data.Constraint
-import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
 
@@ -33,14 +30,6 @@ inferNode (Ann a x) =
 
 nodeType :: Lens' (INode v t a) (Node (UTerm v) (TypeAST t))
 nodeType = ann . Lens._1
-
-class HasTypeAST1 t where
-    type family TypeAST1 t :: (* -> *) -> *
-    type family TypeASTIndexConstraint t :: * -> Constraint
-    typeAst :: Proxy (t k) -> Dict (TypeAST (t k) ~ TypeAST1 t)
-
-class HasTypeAST1 t => Infer1 m t where
-    inferMonad :: TypeASTIndexConstraint t i :- Infer m (t i)
 
 class FuncType t where
     funcType :: Prism' (t f) (Node f t, Node f t)
