@@ -9,7 +9,6 @@ module AST.Class.Recursive
 
 import           AST.Class.Children (Children(..), ChildrenWithConstraint, overChildren, foldMapChildren)
 import           AST.Node (Node)
-import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Constraint
 import           Data.Functor.Const (Const(..))
@@ -69,14 +68,14 @@ unfold p f x =
 foldMapRecursive ::
     forall constraint expr a f.
     ( Recursive constraint, constraint expr
-    , Monoid a, Foldable f, Functor f
+    , Monoid a, Foldable f
     ) =>
     Proxy constraint ->
     (forall child. constraint child => child f -> a) ->
     expr f ->
     a
 foldMapRecursive p f x =
-    f x <> foldMapChildren p ((^. Lens.folded) . fmap (foldMapRecursive p f)) x
+    f x <> foldMapChildren p (foldMap (foldMapRecursive p f)) x
     \\ recursive p (Proxy :: Proxy expr)
 
 overChildrenRecursive ::
