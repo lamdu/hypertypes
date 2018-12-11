@@ -4,8 +4,8 @@ module AST.Term.Map
     ( TermMap(..), _TermMap
     ) where
 
-import           AST
-import           AST.Class.ZipMatch
+import           AST (Node, ChildrenRecursive, makeChildren)
+import           AST.Class.ZipMatch (ZipMatch(..))
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -27,6 +27,8 @@ instance (NFData k, NFData (Node f expr)) => NFData (TermMap k expr f)
 
 Lens.makePrisms ''TermMap
 makeChildren [''TermMap]
+
+instance ChildrenRecursive expr => ChildrenRecursive (TermMap k expr)
 
 instance Eq k => ZipMatch (TermMap k expr) where
     zipMatch _ f (TermMap x) (TermMap y)
