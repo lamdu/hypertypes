@@ -5,7 +5,7 @@ module AST.Unify
     , unfreeze
     , Binding(..)
     , MonadOccurs(..)
-    , UnifyMonad(..)
+    , Unify(..)
     , applyBindings, unify
     ) where
 
@@ -43,7 +43,7 @@ class Monad m => MonadOccurs (m :: * -> *) where
     default emptyVisited :: Monoid (Visited m) => Proxy m -> Visited m
     emptyVisited = mempty
 
-class (Eq (UVar m t), ZipMatch t, MonadOccurs m) => UnifyMonad m t where
+class (Eq (UVar m t), ZipMatch t, MonadOccurs m) => Unify m t where
     binding :: Binding m t
 
     -- | Add variable to visited set,
@@ -64,16 +64,16 @@ class (Eq (UVar m t), ZipMatch t, MonadOccurs m) => UnifyMonad m t where
     recursiveUnify ::
         Proxy m ->
         Proxy t ->
-        Dict (ChildrenWithConstraint t (UnifyMonad m))
+        Dict (ChildrenWithConstraint t (Unify m))
 
     default recursiveUnify ::
-        ChildrenConstraint t (UnifyMonad m) =>
+        ChildrenConstraint t (Unify m) =>
         Proxy m ->
         Proxy t ->
-        Dict (ChildrenWithConstraint t (UnifyMonad m))
+        Dict (ChildrenWithConstraint t (Unify m))
     recursiveUnify _ _ = Dict
 
-instance Recursive (UnifyMonad m) where
+instance Recursive (Unify m) where
     recursive _ p = Sub (recursiveUnify (Proxy :: Proxy m) p)
 
 -- | Embed a pure term as a mutable term.
@@ -82,7 +82,7 @@ unfreeze = fold (Proxy :: Proxy ChildrenRecursive) UTerm
 
 -- look up a variable, and return last variable pointing to result.
 -- prune all variable on way to last variable
-semiPruneLookup :: forall m t. UnifyMonad m t => UVar m t -> m (UVar m t, Maybe (t (UTerm (Var m))))
+semiPruneLookup :: forall m t. Unify m t => UVar m t -> m (UVar m t, Maybe (t (UTerm (Var m))))
 semiPruneLookup v0 =
     lookupVar binding v0
     >>=
@@ -98,18 +98,18 @@ semiPruneLookup v0 =
 -- TODO: implement when need / better understand motivations for -
 -- freeze, fullPrune, occursIn, seenAs, getFreeVars, freshen, equals, equiv
 
-applyBindings :: forall m t. UnifyMonad m t => UNode m t -> m (UNode m t)
+applyBindings :: forall m t. Unify m t => UNode m t -> m (UNode m t)
 applyBindings = applyBindingsH (emptyVisited (Proxy :: Proxy m))
 
 applyBindingsH ::
     forall m t.
-    UnifyMonad m t =>
+    Unify m t =>
     Visited m -> UNode m t -> m (UNode m t)
 applyBindingsH visited (UTerm t) =
     children p (applyBindingsH visited) t <&> UTerm
     \\ recursive p (Proxy :: Proxy t)
     where
-        p :: Proxy (UnifyMonad m)
+        p :: Proxy (Unify m)
         p = Proxy
 applyBindingsH visited (UVar v0) =
     semiPruneLookup v0
@@ -124,7 +124,7 @@ applyBindingsH visited (UVar v0) =
 --   Variables are pruned to point to other variables rather than terms,
 --   yielding comparison of (sometimes equal) variables,
 --   rather than recursively unifying the terms that they would prune to.
-unify :: forall m t. UnifyMonad m t => UNode m t -> UNode m t -> m ()
+unify :: forall m t. Unify m t => UNode m t -> UNode m t -> m ()
 unify (UVar v) (UTerm t) = unifyVarTerm v t
 unify (UTerm t) (UVar v) = unifyVarTerm v t
 unify (UTerm t0) (UTerm t1) = unifyTerms t0 t1
@@ -143,7 +143,7 @@ unify (UVar x0) (UVar y0)
             (y1, Nothing) ->
                 bindVar binding x1 (UVar y1)
 
-unifyVarTerm :: UnifyMonad m t => UVar m t -> t (UTerm (Var m)) -> m ()
+unifyVarTerm :: Unify m t => UVar m t -> t (UTerm (Var m)) -> m ()
 unifyVarTerm x0 y =
     semiPruneLookup x0
     >>=
@@ -152,12 +152,12 @@ unifyVarTerm x0 y =
     (_, Just x1) -> unifyTerms x1 y
 
 unifyTerms ::
-    forall m t. UnifyMonad m t =>
+    forall m t. Unify m t =>
     t (UTerm (Var m)) -> t (UTerm (Var m)) -> m ()
 unifyTerms x y =
     fromMaybe (structureMismatch x y)
     (zipMatch_ p unify x y)
     \\ recursive p (Proxy :: Proxy t)
     where
-        p :: Proxy (UnifyMonad m)
+        p :: Proxy (Unify m)
         p = Proxy

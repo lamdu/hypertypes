@@ -8,9 +8,9 @@ module AST.Term.Apply
 import           AST.Class.Recursive (ChildrenRecursive)
 import           AST.Class.TH (makeChildrenAndZipMatch)
 import           AST.Functor.UTerm (UTerm(..), _UTerm)
-import           AST.Infer (InferMonad(..), inferNode, nodeType, TypeAST, FuncType(..))
+import           AST.Infer (Infer(..), inferNode, nodeType, TypeAST, FuncType(..))
 import           AST.Node (Node)
-import           AST.Unify (UnifyMonad(..), Binding(..), unify)
+import           AST.Unify (Unify(..), Binding(..), unify)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Traversal)
 import qualified Control.Lens as Lens
@@ -44,7 +44,7 @@ applyChildren f (Apply x0 x1) = Apply <$> f x0 <*> f x1
 
 type instance TypeAST (Apply expr) = TypeAST expr
 
-instance (InferMonad m expr, FuncType (TypeAST expr)) => InferMonad m (Apply expr) where
+instance (Infer m expr, FuncType (TypeAST expr)) => Infer m (Apply expr) where
     infer (Apply func arg) =
         do
             argI <- inferNode arg

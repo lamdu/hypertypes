@@ -33,50 +33,50 @@ Lens.makePrisms ''Typ
 Lens.makePrisms ''Row
 makeChildrenAndZipMatch [''Typ, ''Row]
 
-data Infer f = Infer
+data InferState f = InferState
     { _iTyp :: f Typ
     , _iRow :: f Row
     }
-Lens.makeLenses ''Infer
+Lens.makeLenses ''InferState
 
-emptyIntInferState :: Infer IntBindingState
-emptyIntInferState = Infer emptyIntBindingState emptyIntBindingState
+emptyIntInferState :: InferState IntBindingState
+emptyIntInferState = InferState emptyIntBindingState emptyIntBindingState
 
-newSTInferState :: MonadST m => m (Infer (STBindingState (World m)))
-newSTInferState = Infer <$> newSTBindingState <*> newSTBindingState
+newSTInferState :: MonadST m => m (InferState (STBindingState (World m)))
+newSTInferState = InferState <$> newSTBindingState <*> newSTBindingState
 
-emptyInferVisited :: Infer (Const IntSet)
-emptyInferVisited = Infer (Const mempty) (Const mempty)
+emptyInferVisited :: InferState (Const IntSet)
+emptyInferVisited = InferState (Const mempty) (Const mempty)
 
-type IntInfer r w = RWST r w (Infer IntBindingState) Maybe
+type IntInfer r w = RWST r w (InferState IntBindingState) Maybe
 
 type instance Var (IntInfer r w) = Const Int
 
 instance Monoid w => MonadOccurs (IntInfer r w) where
-    type Visited (IntInfer r w) = Infer (Const IntSet)
+    type Visited (IntInfer r w) = InferState (Const IntSet)
     emptyVisited _ = emptyInferVisited
 
-instance Monoid w => UnifyMonad (IntInfer r w) Typ where
+instance Monoid w => Unify (IntInfer r w) Typ where
     binding = intBindingState iTyp
     visit _ = iTyp . Lens._Wrapped . intVisit
 
-instance Monoid w => UnifyMonad (IntInfer r w) Row where
+instance Monoid w => Unify (IntInfer r w) Row where
     binding = intBindingState iRow
     visit _ = iRow . Lens._Wrapped . intVisit
 
-type STInfer r s = ReaderT (r, Infer (STBindingState s)) (MaybeT (ST s))
+type STInfer r s = ReaderT (r, InferState (STBindingState s)) (MaybeT (ST s))
 
 type instance Var (STInfer r s) = STVar s
 
 instance MonadOccurs (STInfer r s) where
-    type Visited (STInfer r s) = Infer (Const IntSet)
+    type Visited (STInfer r s) = InferState (Const IntSet)
     emptyVisited _ = emptyInferVisited
 
-instance UnifyMonad (STInfer r s) Typ where
+instance Unify (STInfer r s) Typ where
     binding = stBindingState (Lens.view (Lens._2 . iTyp))
     visit _ = iTyp . Lens._Wrapped . stVisit
 
-instance UnifyMonad (STInfer r s) Row where
+instance Unify (STInfer r s) Row where
     binding = stBindingState (Lens.view (Lens._2 . iRow))
     visit _ = iRow . Lens._Wrapped . stVisit
 

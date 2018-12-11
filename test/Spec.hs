@@ -37,7 +37,7 @@ occurs =
     Apply (var x) (var x) & EApp & Identity
 
 inferExpr ::
-    (DeBruijnIndex k, MonadReader env m, HasScopeTypes (Var m) Typ env, UnifyMonad m Typ) =>
+    (DeBruijnIndex k, MonadReader env m, HasScopeTypes (Var m) Typ env, Unify m Typ) =>
     Node Identity (Term k) ->
     m (Node (UTerm (Var m)) Typ)
 inferExpr x =

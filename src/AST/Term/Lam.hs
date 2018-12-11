@@ -56,12 +56,12 @@ type instance TypeAST (Lam v t) = TypeAST t
 type instance TypeAST (LamVar v t) = TypeAST t
 
 instance
-    ( InferMonad m t
+    ( Infer m t
     , FuncType (TypeAST t)
     , MonadReader env m
     , HasScopeTypes v (Var m) (TypeAST t) env
     ) =>
-    InferMonad m (Lam v t) where
+    Infer m (Lam v t) where
 
     infer (Lam p r) =
         do
@@ -76,11 +76,11 @@ instance
                 )
 
 instance
-    ( InferMonad m t
+    ( Infer m t
     , MonadReader env m
     , HasScopeTypes v (Var m) (TypeAST t) env
     ) =>
-    InferMonad m (LamVar v t) where
+    Infer m (LamVar v t) where
 
     infer (LamVar x) =
         Lens.view (scopeTypes . Lens.at x)

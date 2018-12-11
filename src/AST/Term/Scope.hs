@@ -10,9 +10,9 @@ module AST.Term.Scope
 import           AST.Class.Recursive (ChildrenRecursive)
 import           AST.Class.TH (makeChildrenAndZipMatch)
 import           AST.Functor.UTerm (UTerm(..))
-import           AST.Infer (InferMonad(..), inferNode, nodeType, InferMonad1(..), TypeAST, HasTypeAST1(..), FuncType(..))
+import           AST.Infer (Infer(..), inferNode, nodeType, Infer1(..), TypeAST, HasTypeAST1(..), FuncType(..))
 import           AST.Node (Node)
-import           AST.Unify (UnifyMonad(..), Binding(..), Var)
+import           AST.Unify (Unify(..), Binding(..), Var)
 import           Control.Lens (Lens', Prism')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -88,14 +88,14 @@ instance HasTypeAST1 t => HasTypeAST1 (ScopeVar t) where
 instance
     ( HasTypeAST1 t
     , FuncType (TypeAST1 t)
-    , InferMonad1 m t
-    , UnifyMonad m (TypeAST (t k))
+    , Infer1 m t
+    , Unify m (TypeAST (t k))
     , TypeASTIndexConstraint t ~ DeBruijnIndex
     , DeBruijnIndex k
     , MonadReader env m
     , HasScopeTypes (Var m) (TypeAST1 t) env
     ) =>
-    InferMonad m (Scope t k) where
+    Infer m (Scope t k) where
 
     infer (Scope x) =
         withDict (typeAst (Proxy :: Proxy (t k))) $
@@ -110,15 +110,15 @@ instance
                 ( funcType # (varType, xI ^. nodeType) & UTerm
                 , Scope xI
                 )
-        \\ (inferMonad :: DeBruijnIndex (Maybe k) :- InferMonad m (t (Maybe k)))
+        \\ (inferMonad :: DeBruijnIndex (Maybe k) :- Infer m (t (Maybe k)))
 
 instance
-    ( UnifyMonad m (TypeAST (t k))
+    ( Unify m (TypeAST (t k))
     , MonadReader env m
     , HasScopeTypes (Var m) (TypeAST (t k)) env
     , DeBruijnIndex k
     ) =>
-    InferMonad m (ScopeVar t k) where
+    Infer m (ScopeVar t k) where
 
     infer (ScopeVar v) =
         Lens.view (scopeTypes . Lens.at (inverseDeBruijnIndex # v))
