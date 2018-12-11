@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TypeFamilies, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, TypeOperators #-}
 
-module AST.Infer
+module AST.Class.Infer
     ( TypeAST, Infer(..)
     , INode, inferNode, nodeType
     , HasTypeAST1(..), Infer1(..)

@@ -4,8 +4,8 @@ import TermLang
 import TypeLang
 
 import AST
+import AST.Class.Infer
 import AST.Functor.UTerm
-import AST.Infer
 import AST.Term.Apply
 import AST.Term.Scope
 import AST.Unify

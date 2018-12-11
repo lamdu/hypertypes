@@ -3,7 +3,7 @@
 module TypeLang where
 
 import AST
-import AST.Infer
+import AST.Class.Infer
 import AST.Unify
 import AST.Unify.IntMapBinding
 import AST.Unify.STBinding

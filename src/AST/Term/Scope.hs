@@ -7,10 +7,10 @@ module AST.Term.Scope
     , ScopeTypes, HasScopeTypes(..)
     ) where
 
+import           AST.Class.Infer (Infer(..), inferNode, nodeType, Infer1(..), TypeAST, HasTypeAST1(..), FuncType(..))
 import           AST.Class.Recursive (ChildrenRecursive)
 import           AST.Class.TH (makeChildrenAndZipMatch)
 import           AST.Functor.UTerm (UTerm(..))
-import           AST.Infer (Infer(..), inferNode, nodeType, Infer1(..), TypeAST, HasTypeAST1(..), FuncType(..))
 import           AST.Node (Node)
 import           AST.Unify (Unify(..), Binding(..), Var)
 import           Control.Lens (Lens', Prism')
