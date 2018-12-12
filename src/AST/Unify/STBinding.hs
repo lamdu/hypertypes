@@ -38,6 +38,13 @@ newtype STBindingState s (t :: (* -> *) -> *) = STBState (STRef s Int)
 newSTBindingState :: MonadST m => m (STBindingState (World m) t)
 newSTBindingState = newSTRef 0 & liftST <&> STBState
 
+increase :: MonadST m => STRef (World m) Int -> m Int
+increase v =
+    do
+        r <- readSTRef v
+        r <$ writeSTRef v (r + 1)
+    & liftST
+
 stBindingState ::
     (MonadST m, Var m ~ STVar (World m)) =>
     m (STBindingState (World m) t) ->
@@ -48,10 +55,7 @@ stBindingState getState =
     , newVar =
         do
             STBState nextFreeVarRef <- getState
-            do
-                nextFreeVar <- readSTRef nextFreeVarRef
-                writeSTRef nextFreeVarRef (nextFreeVar + 1)
-                newSTRef Nothing <&> STVar nextFreeVar
+            STVar <$> increase nextFreeVarRef <*> newSTRef Nothing
                 & liftST
         <&> UVar
     , bindVar =
