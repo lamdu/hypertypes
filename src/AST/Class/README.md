@@ -2,7 +2,7 @@
 
 Classes for AST types:
 
-* `Children` types have sub-nodes.
-* `Recursive` classes are those that apply recursively to sub-nodes, `ChildrenRecursive` means that `Children` is available for all sub-nodes.
+* `Children expr` => `expr` has immediate sub-nodes.
+* `Recursive cls expr` => All of `expr`s recursive sub-nodes support `cls`.
 * `ZipMatch` compares structures.
 * `TH` generates instances for the classes using Template Haskell.
