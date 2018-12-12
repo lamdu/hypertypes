@@ -34,7 +34,7 @@ wrap ::
     forall constraint expr f m.
     (Monad m, Recursive constraint expr) =>
     Proxy constraint ->
-    (forall child. Recursive constraint child => child f -> m (Node f child)) ->
+    (forall child. constraint child => child f -> m (Node f child)) ->
     Node Identity expr ->
     m (Node f expr)
 wrap p f (Identity x) =
@@ -45,7 +45,7 @@ unwrap ::
     forall constraint expr f m.
     (Monad m, Recursive constraint expr) =>
     Proxy constraint ->
-    (forall child. Recursive constraint child => Node f child -> m (child f)) ->
+    (forall child. constraint child => Node f child -> m (child f)) ->
     Node f expr ->
     m (Node Identity expr)
 unwrap p f x =
@@ -58,7 +58,7 @@ fold ::
     forall constraint expr a.
     Recursive constraint expr =>
     Proxy constraint ->
-    (forall child. Recursive constraint child => child (Const a) -> a) ->
+    (forall child. constraint child => child (Const a) -> a) ->
     Node Identity expr ->
     a
 fold p f = getConst . runIdentity . wrap p (Identity . Const . f)
@@ -69,7 +69,7 @@ unfold ::
     forall constraint expr a.
     Recursive constraint expr =>
     Proxy constraint ->
-    (forall child. Recursive constraint child => a -> child (Const a)) ->
+    (forall child. constraint child => a -> child (Const a)) ->
     a ->
     Node Identity expr
 unfold p f = runIdentity . unwrap p (Identity . f . getConst) . Const
