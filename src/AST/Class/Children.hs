@@ -1,27 +1,41 @@
-{-# LANGUAGE NoImplicitPrelude, TypeFamilies, RankNTypes, ConstraintKinds, ScopedTypeVariables #-}
+{-# LANGUAGE NoImplicitPrelude, DefaultSignatures, FlexibleInstances, TypeFamilies, RankNTypes, ConstraintKinds, ScopedTypeVariables #-}
 
 module AST.Class.Children
     ( Children(..), ChildrenWithConstraint
+    , EmptyConstraint
     , IfChildNodes
     , children_, overChildren, foldMapChildren
     ) where
 
-import           AST.Node
-import           Control.Lens.Operators
-import           Data.Functor.Const (Const(..))
-import           Data.Functor.Identity (Identity(..))
-import           Data.Proxy (Proxy(..))
-import           GHC.Exts (Constraint)
+import AST.Node
+import Control.Lens.Operators
+import Data.Constraint
+import Data.Functor.Const (Const(..))
+import Data.Functor.Identity (Identity(..))
+import Data.Proxy (Proxy(..))
+import GHC.Exts (Constraint)
 
-import           Prelude.Compat
+import Prelude.Compat
+
+class EmptyConstraint (expr :: (* -> *) -> *)
+instance EmptyConstraint expr
 
 class Children expr where
     type ChildrenConstraint expr (constraint :: ((* -> *) -> *) -> Constraint) :: Constraint
+
     children ::
         (Applicative f, ChildrenConstraint expr constraint) =>
         Proxy constraint ->
         (forall child. constraint child => Node n child -> f (Node m child)) ->
         expr n -> f (expr m)
+
+    childrenEmptyConstraints ::
+        Proxy expr -> Dict (ChildrenConstraint expr EmptyConstraint)
+    default childrenEmptyConstraints ::
+        ChildrenConstraint expr EmptyConstraint =>
+        Proxy expr ->
+        Dict (ChildrenConstraint expr EmptyConstraint)
+    childrenEmptyConstraints _ = Dict
 
 type ChildrenWithConstraint expr constraint = (Children expr, ChildrenConstraint expr constraint)
 

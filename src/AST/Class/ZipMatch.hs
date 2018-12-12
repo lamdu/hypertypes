@@ -1,18 +1,21 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE NoImplicitPrelude, RankNTypes, ConstraintKinds, ScopedTypeVariables #-}
 
 module AST.Class.ZipMatch
     ( ZipMatch(..)
     , zipMatch_
     , zipMatchPure
+    , doesMatch
     ) where
 
-import           AST.Class.Children (Children(..))
+import           AST.Class.Children (Children(..), EmptyConstraint)
 import           AST.Node (Node)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
+import           Data.Constraint
 import           Data.Functor.Const (Const(..))
 import           Data.Functor.Identity (Identity(..))
-import           Data.Proxy (Proxy)
+import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
 
@@ -41,3 +44,9 @@ zipMatch_ p f x y =
     ( zipMatch p (f <&> Lens.mapped . Lens.mapped .~ Const ()) x y
         :: Maybe (f (expr (Const ())))
     ) <&> Lens.mapped .~ ()
+
+doesMatch :: forall expr a b. ZipMatch expr => expr a -> expr b -> Bool
+doesMatch x y =
+    withDict (childrenEmptyConstraints (Proxy :: Proxy expr))
+    (Lens.has Lens._Just
+        (zipMatch_ (Proxy :: Proxy EmptyConstraint) (\_ _ -> Identity ()) x y))
