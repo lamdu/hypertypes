@@ -78,7 +78,7 @@ foldMapRecursive ::
     forall constraint expr a f.
     (Recursive constraint expr, Monoid a, Foldable f) =>
     Proxy constraint ->
-    (forall child. Recursive constraint child => child f -> a) ->
+    (forall child. constraint child => child f -> a) ->
     expr f ->
     a
 foldMapRecursive p f x =
