@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, FlexibleInstances, MultiParamTypeClasses, UndecidableInstances, TupleSections, StandaloneDeriving, DeriveGeneric #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, FlexibleInstances, MultiParamTypeClasses, UndecidableInstances, TupleSections, StandaloneDeriving, DeriveGeneric, ScopedTypeVariables #-}
 
 module AST.Term.Apply
     ( Apply(..), applyFunc, applyArg
@@ -6,7 +6,7 @@ module AST.Term.Apply
     ) where
 
 import           AST.Class.Infer (Infer(..), inferNode, nodeType, TypeAST, FuncType(..))
-import           AST.Class.Recursive (ChildrenRecursive)
+import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Class.TH (makeChildrenAndZipMatch)
 import           AST.Functor.UTerm (UTerm(..), _UTerm)
 import           AST.Node (Node)
@@ -16,6 +16,7 @@ import           Control.Lens (Traversal)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
+import           Data.Constraint
 import           GHC.Generics (Generic)
 
 import           Prelude.Compat
@@ -34,7 +35,7 @@ instance (NFData (Node f expr)) => NFData (Apply expr f)
 Lens.makeLenses ''Apply
 makeChildrenAndZipMatch [''Apply]
 
-instance ChildrenRecursive expr => ChildrenRecursive (Apply expr)
+instance RecursiveConstraint (Apply expr) constraint => Recursive constraint (Apply expr)
 
 -- Type changing traversal.
 -- TODO: Could the normal `Children` class support this?
@@ -46,6 +47,7 @@ type instance TypeAST (Apply expr) = TypeAST expr
 
 instance (Infer m expr, FuncType (TypeAST expr)) => Infer m (Apply expr) where
     infer (Apply func arg) =
+        withDict (recursive :: Dict (RecursiveConstraint (TypeAST expr) (Unify m))) $
         do
             argI <- inferNode arg
             let argT = argI ^. nodeType

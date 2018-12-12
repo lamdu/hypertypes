@@ -9,8 +9,8 @@ module AST.Unify
     , applyBindings, unify
     ) where
 
-import           AST.Class.Children (Children(..), ChildrenWithConstraint)
-import           AST.Class.Recursive (Recursive(..), ChildrenRecursive, wrap)
+import           AST.Class.Children (Children(..))
+import           AST.Class.Recursive (Recursive(..), RecursiveConstraint, wrap)
 import           AST.Class.ZipMatch (ZipMatch(..), zipMatch_)
 import           AST.Functor.UTerm (UTerm(..))
 import           AST.Node (Node)
@@ -61,24 +61,9 @@ class (Eq (UVar m t), ZipMatch t, MonadOccurs m) => Unify m t where
     default structureMismatch :: Alternative m => t (UTerm (Var m)) -> t (UTerm (Var m)) -> m ()
     structureMismatch _ _ = empty
 
-    recursiveUnify ::
-        Proxy m ->
-        Proxy t ->
-        Dict (ChildrenWithConstraint t (Unify m))
-
-    default recursiveUnify ::
-        ChildrenConstraint t (Unify m) =>
-        Proxy m ->
-        Proxy t ->
-        Dict (ChildrenWithConstraint t (Unify m))
-    recursiveUnify _ _ = Dict
-
-instance Recursive (Unify m) where
-    recursive _ p = Sub (recursiveUnify (Proxy :: Proxy m) p)
-
 -- | Embed a pure term as a mutable term.
-unfreeze :: ChildrenRecursive t => Node Identity t -> Node (UTerm v) t
-unfreeze = runIdentity . wrap (Proxy :: Proxy ChildrenRecursive) (Identity . UTerm)
+unfreeze :: Recursive Children t => Node Identity t -> Node (UTerm v) t
+unfreeze = runIdentity . wrap (Proxy :: Proxy Children) (Identity . UTerm)
 
 -- look up a variable, and return last variable pointing to result.
 -- prune all variable on way to last variable
@@ -98,20 +83,21 @@ semiPruneLookup v0 =
 -- TODO: implement when need / better understand motivations for -
 -- freeze, fullPrune, occursIn, seenAs, getFreeVars, freshen, equals, equiv
 
-applyBindings :: forall m t. Unify m t => UNode m t -> m (UNode m t)
-applyBindings = applyBindingsH (emptyVisited (Proxy :: Proxy m))
+applyBindings :: forall m t. Recursive (Unify m) t => UNode m t -> m (UNode m t)
+applyBindings =
+    withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
+    applyBindingsH (emptyVisited (Proxy :: Proxy m))
 
 applyBindingsH ::
     forall m t.
-    Unify m t =>
+    Recursive (Unify m) t =>
     Visited m -> UNode m t -> m (UNode m t)
 applyBindingsH visited (UTerm t) =
-    children p (applyBindingsH visited) t <&> UTerm
-    \\ recursive p (Proxy :: Proxy t)
-    where
-        p :: Proxy (Unify m)
-        p = Proxy
+    withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
+    children (Proxy :: Proxy (Recursive (Unify m))) (applyBindingsH visited) t
+    <&> UTerm
 applyBindingsH visited (UVar v0) =
+    withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
     semiPruneLookup v0
     >>=
     \case
@@ -124,11 +110,16 @@ applyBindingsH visited (UVar v0) =
 --   Variables are pruned to point to other variables rather than terms,
 --   yielding comparison of (sometimes equal) variables,
 --   rather than recursively unifying the terms that they would prune to.
-unify :: forall m t. Unify m t => UNode m t -> UNode m t -> m ()
+unify :: forall m t. Recursive (Unify m) t => UNode m t -> UNode m t -> m ()
 unify (UVar v) (UTerm t) = unifyVarTerm v t
 unify (UTerm t) (UVar v) = unifyVarTerm v t
 unify (UTerm t0) (UTerm t1) = unifyTerms t0 t1
-unify (UVar x0) (UVar y0)
+unify (UVar x) (UVar y) = withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) (unifyVars x y)
+
+unifyVars ::
+    (Recursive (Unify m) t, RecursiveConstraint t (Unify m)) =>
+    UVar m t -> UVar m t -> m ()
+unifyVars x0 y0
     | x0 == y0 = pure ()
     | otherwise =
         semiPruneLookup x0
@@ -145,8 +136,9 @@ unify (UVar x0) (UVar y0)
             (y1, Nothing) ->
                 bindVar binding x1 (UVar y1)
 
-unifyVarTerm :: Unify m t => UVar m t -> t (UTerm (Var m)) -> m ()
+unifyVarTerm :: forall m t. Recursive (Unify m) t => UVar m t -> t (UTerm (Var m)) -> m ()
 unifyVarTerm x0 y =
+    withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
     semiPruneLookup x0
     >>=
     \case
@@ -154,12 +146,10 @@ unifyVarTerm x0 y =
     (_, Just x1) -> unifyTerms x1 y
 
 unifyTerms ::
-    forall m t. Unify m t =>
+    forall m t.
+    Recursive (Unify m) t =>
     t (UTerm (Var m)) -> t (UTerm (Var m)) -> m ()
 unifyTerms x y =
+    withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
     fromMaybe (structureMismatch x y)
-    (zipMatch_ p unify x y)
-    \\ recursive p (Proxy :: Proxy t)
-    where
-        p :: Proxy (Unify m)
-        p = Proxy
+    (zipMatch_ (Proxy :: Proxy (Recursive (Unify m))) unify x y)

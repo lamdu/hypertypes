@@ -7,7 +7,7 @@ module AST.Class.TH
 
 import           AST.Class.Children (Children(..))
 import           AST.Class.Children.Mono (ChildOf)
-import           AST.Class.Recursive (ChildrenRecursive)
+import           AST.Class.Recursive (Recursive)
 import           AST.Class.ZipMatch (ZipMatch(..))
 import           AST.Node (Node, LeafNode)
 import           Control.Applicative (liftA2)
@@ -37,7 +37,7 @@ makeChildren typeNames =
         typeInfos <- traverse makeTypeInfo typeNames
         (<>)
             <$> (traverse makeChildrenForType typeInfos <&> concat)
-            <*> traverse makeChildrenRecursive (findRecursives typeInfos)
+            <*> traverse makeRecursiveChildren (findRecursives typeInfos)
 
 findRecursives :: [TypeInfo] -> [TypeInfo]
 findRecursives infos
@@ -48,9 +48,9 @@ findRecursives infos
         hasDeps = all (`Set.member` cur) . Set.toList . tiChildren
         cur = Set.fromList (infos <&> tiInstance)
 
-makeChildrenRecursive :: TypeInfo -> DecQ
-makeChildrenRecursive info =
-    instanceD (pure []) (appT (conT ''ChildrenRecursive) (pure (tiInstance info))) []
+makeRecursiveChildren :: TypeInfo -> DecQ
+makeRecursiveChildren info =
+    instanceD (pure []) (conT ''Recursive `appT` conT ''Children `appT` pure (tiInstance info)) []
 
 data TypeInfo = TypeInfo
     { tiInstance :: Type

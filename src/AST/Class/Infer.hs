@@ -6,10 +6,11 @@ module AST.Class.Infer
     , FuncType(..)
     ) where
 
+import           AST.Class.Recursive (Recursive)
 import           AST.Functor.Ann (Ann(..), ann)
 import           AST.Functor.UTerm (UTerm)
 import           AST.Node (Node)
-import           AST.Unify (Unify(..), Var)
+import           AST.Unify (Unify(..), MonadOccurs, Var)
 import           Control.Lens (Lens', Prism')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -21,7 +22,7 @@ type family TypeAST (t :: (* -> *) -> *) :: (* -> *) -> *
 type TypeOf m t = Node (UTerm (Var m)) (TypeAST t)
 type INode v t a = Node (Ann (Node (UTerm v) (TypeAST t), a)) t
 
-class Unify m (TypeAST t) => Infer m t where
+class (Recursive (Unify m) (TypeAST t), MonadOccurs m) => Infer m t where
     infer :: t (Ann a) -> m (TypeOf m t, t (Ann (TypeOf m t, a)))
 
 inferNode :: Infer m t => Node (Ann a) t -> m (INode (Var m) t a)

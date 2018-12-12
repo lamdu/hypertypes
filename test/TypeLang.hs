@@ -64,6 +64,9 @@ instance Monoid w => Unify (IntInfer r w) Row where
     binding = intBindingState iRow
     visit _ = iRow . Lens._Wrapped . intVisit
 
+instance Monoid w => Recursive (Unify (IntInfer r w)) Typ
+instance Monoid w => Recursive (Unify (IntInfer r w)) Row
+
 type STInfer r s = ReaderT (r, InferState (STBindingState s)) (MaybeT (ST s))
 
 type instance Var (STInfer r s) = STVar s
@@ -79,6 +82,9 @@ instance Unify (STInfer r s) Typ where
 instance Unify (STInfer r s) Row where
     binding = stBindingState (Lens.view (Lens._2 . iRow))
     visit _ = iRow . Lens._Wrapped . stVisit
+
+instance Recursive (Unify (STInfer r s)) Typ
+instance Recursive (Unify (STInfer r s)) Row
 
 instance FuncType Typ where
     funcType = _TFun

@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, KindSignatures, MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances, UndecidableInstances, TypeFamilies, TupleSections, StandaloneDeriving, DeriveGeneric, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric, StandaloneDeriving, UndecidableInstances, GeneralizedNewtypeDeriving, TupleSections, MultiParamTypeClasses, TypeFamilies, FlexibleInstances, ScopedTypeVariables #-}
 
 module AST.Term.Lam
     ( Lam(..), lamIn, lamOut
@@ -7,7 +7,7 @@ module AST.Term.Lam
     ) where
 
 import           AST.Class.Infer
-import           AST.Class.Recursive (ChildrenRecursive)
+import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Class.TH (makeChildren)
 import           AST.Functor.UTerm (UTerm(..))
 import           AST.Node (Node)
@@ -18,6 +18,7 @@ import           Control.Lens.Operators
 import qualified Control.Lens as Lens
 import           Control.Monad.Reader (MonadReader, local)
 import           Data.Binary (Binary)
+import           Data.Constraint
 import           Data.Map
 import           Data.Maybe (fromMaybe)
 import           GHC.Generics (Generic)
@@ -42,7 +43,7 @@ newtype LamVar v (expr :: (* -> *) -> *) (f :: * -> *) = LamVar v
 Lens.makePrisms ''LamVar
 
 makeChildren [''Lam, ''LamVar]
-instance ChildrenRecursive expr => ChildrenRecursive (Lam v expr)
+instance RecursiveConstraint (Lam v expr) constraint => Recursive constraint (Lam v expr)
 
 type ScopeTypes v u t = Map v (Node (UTerm u) t)
 
@@ -64,6 +65,7 @@ instance
     Infer m (Lam v t) where
 
     infer (Lam p r) =
+        withDict (recursive :: Dict (RecursiveConstraint (TypeAST t) (Unify m))) $
         do
             varType <- newVar binding
             rI <-

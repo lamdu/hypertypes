@@ -9,11 +9,12 @@ module AST.Term.Scope
 
 import           AST.Class.Infer (Infer(..), inferNode, nodeType, TypeAST, FuncType(..))
 import           AST.Class.Infer.Infer1 (Infer1(..), HasTypeAST1(..))
-import           AST.Class.Recursive (ChildrenRecursive)
+import           AST.Class.Children (Children)
+import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Class.TH (makeChildrenAndZipMatch)
 import           AST.Functor.UTerm (UTerm(..))
 import           AST.Node (Node)
-import           AST.Unify (Unify(..), Binding(..), Var)
+import           AST.Unify (Unify(..), Binding(..), MonadOccurs, Var)
 import           Control.Lens (Lens', Prism')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -31,7 +32,7 @@ newtype Scope expr a f = Scope (Node f (expr (Maybe a)))
 newtype ScopeVar (expr :: * -> (* -> *) -> *) a (f :: * -> *) = ScopeVar a
 
 makeChildrenAndZipMatch [''Scope, ''ScopeVar]
-instance ChildrenRecursive (expr (Maybe a)) => ChildrenRecursive (Scope expr a)
+instance Recursive Children (expr (Maybe a)) => Recursive Children (Scope expr a)
 
 class DeBruijnIndex a where
     deBruijnIndex :: Prism' Int a
@@ -89,8 +90,9 @@ instance HasTypeAST1 t => HasTypeAST1 (ScopeVar t) where
 instance
     ( HasTypeAST1 t
     , FuncType (TypeAST1 t)
+    , MonadOccurs m
     , Infer1 m t
-    , Unify m (TypeAST (t k))
+    , Recursive (Unify m) (TypeAST (t k))
     , TypeASTIndexConstraint t ~ DeBruijnIndex
     , DeBruijnIndex k
     , MonadReader env m
@@ -99,6 +101,7 @@ instance
     Infer m (Scope t k) where
 
     infer (Scope x) =
+        withDict (recursive :: Dict (RecursiveConstraint (TypeAST (t k)) (Unify m))) $
         withDict (typeAst (Proxy :: Proxy (t k))) $
         withDict (typeAst (Proxy :: Proxy (t (Maybe k)))) $
         do
@@ -114,7 +117,8 @@ instance
         \\ (inferMonad :: DeBruijnIndex (Maybe k) :- Infer m (t (Maybe k)))
 
 instance
-    ( Unify m (TypeAST (t k))
+    ( MonadOccurs m
+    , Recursive (Unify m) (TypeAST (t k))
     , MonadReader env m
     , HasScopeTypes (Var m) (TypeAST (t k)) env
     , DeBruijnIndex k

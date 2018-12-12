@@ -1,10 +1,10 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, KindSignatures, TypeFamilies, StandaloneDeriving, UndecidableInstances, DeriveGeneric #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, StandaloneDeriving, UndecidableInstances, DeriveGeneric, TypeFamilies, FlexibleInstances, MultiParamTypeClasses #-}
 
 module AST.Term.Map
     ( TermMap(..), _TermMap
     ) where
 
-import           AST (Node, ChildrenRecursive, makeChildren)
+import           AST (Node, Recursive(..), RecursiveConstraint, makeChildren)
 import           AST.Class.ZipMatch (ZipMatch(..))
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
@@ -28,7 +28,7 @@ instance (NFData k, NFData (Node f expr)) => NFData (TermMap k expr f)
 Lens.makePrisms ''TermMap
 makeChildren [''TermMap]
 
-instance ChildrenRecursive expr => ChildrenRecursive (TermMap k expr)
+instance RecursiveConstraint (TermMap k expr) constraint => Recursive constraint (TermMap k expr)
 
 instance Eq k => ZipMatch (TermMap k expr) where
     zipMatch _ f (TermMap x) (TermMap y)

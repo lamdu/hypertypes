@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, DeriveGeneric, DeriveTraversable, TemplateHaskell, ScopedTypeVariables, ConstraintKinds, RankNTypes #-}
+{-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables, TemplateHaskell, DeriveTraversable, DeriveGeneric, FlexibleContexts, RankNTypes #-}
 
 module AST.Functor.Ann
     ( Ann(..), ann, val
@@ -7,7 +7,7 @@ module AST.Functor.Ann
     ) where
 
 import           AST.Class.Children (Children(..), overChildren)
-import           AST.Class.Recursive (Recursive(..), ChildrenRecursive, proxyChildrenRecursive)
+import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Node (Node)
 import qualified Control.Lens as Lens
 import           Data.Binary (Binary)
@@ -39,23 +39,23 @@ instance (Pretty a, Pretty v) => Pretty (Ann a v) where
 
 annotations ::
     forall e a b.
-    ChildrenRecursive e =>
+    Recursive Children e =>
     Lens.Traversal
     (Node (Ann a) e)
     (Node (Ann b) e)
     a b
 annotations f (Ann pl x) =
-    Ann <$> f pl <*> children proxyChildrenRecursive (annotations f) x
-    \\ recursive proxyChildrenRecursive (Proxy :: Proxy e)
+    withDict (recursive :: Dict (RecursiveConstraint e Children)) $
+    Ann <$> f pl <*> children (Proxy :: Proxy (Recursive Children)) (annotations f) x
 
 -- Similar to `para` from `recursion-schemes`,
 -- except it's int term of full annotated trees rather than just the final result.
 -- TODO: What does the name `para` mean?
 para ::
     forall constraint expr a.
-    (Recursive constraint, constraint expr) =>
+    Recursive constraint expr =>
     Proxy constraint ->
-    (forall child. constraint child => child (Ann a) -> a) ->
+    (forall child. Recursive constraint child => child (Ann a) -> a) ->
     Node Identity expr ->
     Node (Ann a) expr
 para p f x =
@@ -63,5 +63,6 @@ para p f x =
     where
         r :: expr (Ann a)
         r =
-            overChildren p (para p f) (runIdentity x)
-            \\ recursive p (Proxy :: Proxy expr)
+            withDict (recursive :: Dict (RecursiveConstraint expr constraint)) $
+            overChildren (Proxy :: Proxy (Recursive constraint))
+            (para p f) (runIdentity x)

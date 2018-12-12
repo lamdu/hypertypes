@@ -23,7 +23,7 @@ data Term v f
     | ELit Int
 
 makeChildren [''Term]
-instance ChildrenRecursive (Term v)
+instance Recursive Children (Term v)
 
 type instance TypeAST (Term k) = Typ
 
@@ -33,12 +33,12 @@ instance HasTypeAST1 Term where
     typeAst _ = Dict
 
 instance
-    (MonadReader env m, HasScopeTypes (Var m) Typ env, Unify m Typ) =>
+    (MonadReader env m, HasScopeTypes (Var m) Typ env, Recursive (Unify m) Typ, MonadOccurs m) =>
     Infer1 m Term where
     inferMonad = Sub Dict
 
 instance
-    (DeBruijnIndex k, MonadReader env m, HasScopeTypes (Var m) Typ env, Unify m Typ) =>
+    (DeBruijnIndex k, MonadReader env m, HasScopeTypes (Var m) Typ env, Recursive (Unify m) Typ, MonadOccurs m) =>
     Infer m (Term k) where
 
     infer (ELit x) = pure (UTerm TInt, ELit x)
