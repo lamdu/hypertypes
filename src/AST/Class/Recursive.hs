@@ -17,11 +17,11 @@ import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
 
-class Recursive (constraint :: ((* -> *) -> *) -> Constraint) where
+class Recursive (cls :: ((* -> *) -> *) -> Constraint) where
     recursive ::
-        Proxy constraint ->
+        Proxy cls ->
         Proxy expr ->
-        constraint expr :- ChildrenWithConstraint expr constraint
+        cls expr :- ChildrenWithConstraint expr cls
 
 class Children expr => ChildrenRecursive expr where
     childrenRecursive ::

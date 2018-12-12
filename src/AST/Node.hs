@@ -10,7 +10,7 @@ import           Data.Functor.Const (Const)
 -- | Each AST element is a `Node`
 type Node f expr = f (expr f)
 
-type LeafNode f expr = Node f (Const expr)
+type LeafNode f leaf = Node f (Const leaf)
 
 class constraint (Node f expr) => NodeConstraint constraint f expr
 instance constraint (Node f expr) => NodeConstraint constraint f expr
