@@ -2,3 +2,7 @@
 *~
 /tags
 .vscode/
+/.ghci
+/dist/
+/ghci-out/
+/.dir-locals.el
