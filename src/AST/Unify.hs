@@ -10,14 +10,14 @@ module AST.Unify
     ) where
 
 import           AST.Class.Children (Children(..), ChildrenWithConstraint)
-import           AST.Class.Recursive (Recursive(..), ChildrenRecursive, fold)
+import           AST.Class.Recursive (Recursive(..), ChildrenRecursive, wrap)
 import           AST.Class.ZipMatch (ZipMatch(..), zipMatch_)
 import           AST.Functor.UTerm (UTerm(..))
 import           AST.Node (Node)
 import           Control.Applicative (Alternative(..))
 import           Control.Lens.Operators
 import           Data.Constraint
-import           Data.Functor.Identity (Identity)
+import           Data.Functor.Identity (Identity(..))
 import           Data.Maybe (fromMaybe)
 import           Data.Proxy (Proxy(..))
 
@@ -78,7 +78,7 @@ instance Recursive (Unify m) where
 
 -- | Embed a pure term as a mutable term.
 unfreeze :: ChildrenRecursive t => Node Identity t -> Node (UTerm v) t
-unfreeze = fold (Proxy :: Proxy ChildrenRecursive) UTerm
+unfreeze = runIdentity . wrap (Proxy :: Proxy ChildrenRecursive) (Identity . UTerm)
 
 -- look up a variable, and return last variable pointing to result.
 -- prune all variable on way to last variable
