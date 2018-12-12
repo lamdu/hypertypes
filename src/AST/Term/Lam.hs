@@ -72,10 +72,9 @@ instance
                 local
                 (scopeTypes . Lens.at p ?~ varType)
                 (inferNode r)
-            pure
-                ( funcType # (varType, rI ^. nodeType) & UTerm
-                , Lam p rI
-                )
+            funcType # (varType, rI ^. nodeType)
+                & newTerm binding
+                <&> (, Lam p rI)
 
 instance
     ( Infer m t

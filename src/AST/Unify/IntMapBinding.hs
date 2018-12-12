@@ -5,7 +5,7 @@ module AST.Unify.IntMapBinding
     , intBindingState, intVisit
     ) where
 
-import           AST.Functor.UTerm (UTerm(..))
+import           AST.Functor.UTerm
 import           AST.Node (Node)
 import           AST.Unify (Var, Binding(..))
 import           Control.Applicative (Alternative(..))
@@ -21,12 +21,13 @@ import           Prelude.Compat
 
 data IntBindingState t = IntBindingState
     { _nextFreeVar :: {-# UNPACK #-} !Int
+    , _nextTerm :: {-# UNPACK #-} !Int
     , _varBindings :: IntMap (Node (UTerm (Const Int)) t)
     }
 Lens.makeLenses ''IntBindingState
 
 emptyIntBindingState :: IntBindingState t
-emptyIntBindingState = IntBindingState 0 mempty
+emptyIntBindingState = IntBindingState 0 0 mempty
 
 increase ::
     MonadState s m =>
@@ -44,6 +45,8 @@ intBindingState l =
     Binding
     { lookupVar = \k -> Lens.use (Lens.cloneLens l . varBindings . Lens.at (k ^. Lens._Wrapped))
     , newVar = increase (Lens.cloneLens l . nextFreeVar) <&> UVar . Const
+    , newTerm =
+        \x -> increase (Lens.cloneLens l . nextTerm) <&> UTerm . (`UBody` x)
     , bindVar = \k v -> Lens.cloneLens l . varBindings . Lens.at (k ^. Lens._Wrapped) ?= v
     }
 

@@ -12,7 +12,7 @@ module AST.Unify
 import           AST.Class.Children (Children(..))
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint, wrap)
 import           AST.Class.ZipMatch (ZipMatch(..), zipMatch_)
-import           AST.Functor.UTerm (UTerm(..))
+import           AST.Functor.UTerm
 import           AST.Node (Node)
 import           Control.Applicative (Alternative(..))
 import           Control.Lens.Operators
@@ -34,6 +34,7 @@ data Binding m t = Binding
     { lookupVar :: UVar m t -> m (Maybe (UNode m t))
     , newVar :: m (UNode m t)
     , bindVar :: UVar m t -> UNode m t -> m ()
+    , newTerm :: t (UTerm (Var m)) -> m (UNode m t)
     }
 
 class Monad m => MonadOccurs (m :: * -> *) where
@@ -62,12 +63,14 @@ class (Eq (UVar m t), ZipMatch t, MonadOccurs m) => Unify m t where
     structureMismatch _ _ = empty
 
 -- | Embed a pure term as a mutable term.
-unfreeze :: Recursive Children t => Node Identity t -> Node (UTerm v) t
-unfreeze = runIdentity . wrap (Proxy :: Proxy Children) (Identity . UTerm)
+unfreeze ::
+    forall m t. (Monad m, Recursive (Unify m) t) =>
+    Node Identity t -> m (Node (UTerm (Var m)) t)
+unfreeze = wrap (Proxy :: Proxy (Unify m)) (newTerm binding)
 
 -- look up a variable, and return last variable pointing to result.
 -- prune all variable on way to last variable
-semiPruneLookup :: forall m t. Unify m t => UVar m t -> m (UVar m t, Maybe (t (UTerm (Var m))))
+semiPruneLookup :: forall m t. Unify m t => UVar m t -> m (UVar m t, Maybe (UBody (t (UTerm (Var m)))))
 semiPruneLookup v0 =
     lookupVar binding v0
     >>=
@@ -94,7 +97,9 @@ applyBindingsH ::
     Visited m -> UNode m t -> m (UNode m t)
 applyBindingsH visited (UTerm t) =
     withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
-    children (Proxy :: Proxy (Recursive (Unify m))) (applyBindingsH visited) t
+    uBody
+    (children (Proxy :: Proxy (Recursive (Unify m))) (applyBindingsH visited))
+    t
     <&> UTerm
 applyBindingsH visited (UVar v0) =
     withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
@@ -103,14 +108,17 @@ applyBindingsH visited (UVar v0) =
     \case
     (v1, Nothing) -> UVar v1 & pure
     (v1, Just t) ->
-        visit t v1 visited
+        visit (t ^. uBody) v1 visited
         >>= (`applyBindingsH` UTerm t)
 
 -- Note on usage of `semiPruneLookup`:
 --   Variables are pruned to point to other variables rather than terms,
 --   yielding comparison of (sometimes equal) variables,
 --   rather than recursively unifying the terms that they would prune to.
-unify :: forall m t. Recursive (Unify m) t => UNode m t -> UNode m t -> m ()
+unify ::
+    forall m t.
+    (Recursive (Unify m) t, Applicative m) =>
+    UNode m t -> UNode m t -> m ()
 unify (UVar v) (UTerm t) = unifyVarTerm v t
 unify (UTerm t) (UVar v) = unifyVarTerm v t
 unify (UTerm t0) (UTerm t1) = unifyTerms t0 t1
@@ -136,7 +144,7 @@ unifyVars x0 y0
             (y1, Nothing) ->
                 bindVar binding x1 (UVar y1)
 
-unifyVarTerm :: forall m t. Recursive (Unify m) t => UVar m t -> t (UTerm (Var m)) -> m ()
+unifyVarTerm :: forall m t. Recursive (Unify m) t => UVar m t -> UBody (t (UTerm (Var m))) -> m ()
 unifyVarTerm x0 y =
     withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
     semiPruneLookup x0
@@ -147,9 +155,11 @@ unifyVarTerm x0 y =
 
 unifyTerms ::
     forall m t.
-    Recursive (Unify m) t =>
-    t (UTerm (Var m)) -> t (UTerm (Var m)) -> m ()
-unifyTerms x y =
-    withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
-    fromMaybe (structureMismatch x y)
-    (zipMatch_ (Proxy :: Proxy (Recursive (Unify m))) unify x y)
+    (Recursive (Unify m) t, Applicative m) =>
+    UBody (t (UTerm (Var m))) -> UBody (t (UTerm (Var m))) -> m ()
+unifyTerms x y
+    | x ^. uIndex == y ^. uIndex = pure ()
+    | otherwise =
+        withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
+        fromMaybe (structureMismatch (x ^. uBody) (y ^. uBody))
+        (zipMatch_ (Proxy :: Proxy (Recursive (Unify m))) unify (x ^. uBody) (y ^. uBody))

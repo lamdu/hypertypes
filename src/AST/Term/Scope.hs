@@ -110,10 +110,9 @@ instance
                 local
                 (scopeTypes . Lens.at (deBruijnIndexMax (Proxy :: Proxy (Maybe k))) ?~ varType)
                 (inferNode x)
-            pure
-                ( funcType # (varType, xI ^. nodeType) & UTerm
-                , Scope xI
-                )
+            funcType # (varType, xI ^. nodeType)
+                & newTerm binding
+                <&> (, Scope xI)
         \\ (inferMonad :: DeBruijnIndex (Maybe k) :- Infer m (t (Maybe k)))
 
 instance

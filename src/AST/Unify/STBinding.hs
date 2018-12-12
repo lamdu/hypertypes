@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TypeFamilies, FlexibleContexts #-}
+{-# LANGUAGE NoImplicitPrelude, TypeFamilies, FlexibleContexts, TemplateHaskell #-}
 
 module AST.Unify.STBinding
     ( STVar
@@ -9,7 +9,7 @@ module AST.Unify.STBinding
 
 import           AST.Class.Children (Children)
 import           AST.Class.Recursive (Recursive, hoistNodeR)
-import           AST.Functor.UTerm (UTerm(..), _UVar)
+import           AST.Functor.UTerm
 import           AST.Node (Node)
 import           AST.Unify (Binding(..), Var)
 import           Control.Applicative (Alternative(..))
@@ -33,10 +33,19 @@ data STVar s a =
 instance Eq (STVar s a) where
     STVar x _ == STVar y _ = x == y
 
-newtype STBindingState s (t :: (* -> *) -> *) = STBState (STRef s Int)
+data STBindingState s (t :: (* -> *) -> *) =
+    STBState
+    { _nextFreeVar :: STRef s Int
+    , _nextTerm :: STRef s Int
+    }
+Lens.makeLenses ''STBindingState
 
 newSTBindingState :: MonadST m => m (STBindingState (World m) t)
-newSTBindingState = newSTRef 0 & liftST <&> STBState
+newSTBindingState =
+    STBState
+    <$> newSTRef 0
+    <*> newSTRef 0
+    & liftST
 
 increase :: MonadST m => STRef (World m) Int -> m Int
 increase v =
@@ -53,11 +62,14 @@ stBindingState getState =
     Binding
     { lookupVar = liftST . readSTRef . varRef
     , newVar =
-        do
-            STBState nextFreeVarRef <- getState
-            STVar <$> increase nextFreeVarRef <*> newSTRef Nothing
-                & liftST
+        STVar
+        <$> (getState <&> (^. nextFreeVar) >>= increase)
+        <*> liftST (newSTRef Nothing)
         <&> UVar
+    , newTerm =
+        \t ->
+        getState <&> (^. nextTerm) >>= increase
+        <&> (`UBody` t) <&> UTerm
     , bindVar =
         \v t -> writeSTRef (varRef v) (Just t) & liftST
     }
