@@ -51,7 +51,7 @@ class (Eq (UVar m t), ZipMatch t, MonadOccurs m) => Unify m t where
     -- For the error, the term is given for context.
     visit :: t (UTerm (Var m)) -> UVar m t -> Visited m -> m (Visited m)
 
-    -- | What to do when top-levels of terms being unified does not match.
+    -- | What to do when top-levels of terms being unified do not match.
     -- Usually this will throw a failure,
     -- but some AST terms could be equivalent despite not matching,
     -- like record extends with fields ordered differently,
@@ -134,11 +134,13 @@ unify (UVar x0) (UVar y0)
         semiPruneLookup x0
         >>=
         \case
+        (x1, _) | x1 == y0 -> pure ()
         (_, Just x1) -> unifyVarTerm y0 x1
         (x1, Nothing) ->
             semiPruneLookup y0
             >>=
             \case
+            (y1, _) | x1 == y1 -> pure ()
             (_, Just y1) -> unifyVarTerm x1 y1
             (y1, Nothing) ->
                 bindVar binding x1 (UVar y1)
