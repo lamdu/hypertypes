@@ -1,7 +1,8 @@
 {-# LANGUAGE NoImplicitPrelude, MultiParamTypeClasses, FlexibleContexts, LambdaCase, ScopedTypeVariables, TypeFamilies, DefaultSignatures #-}
 
 module AST.Unify
-    ( UniVar, UNode
+    ( HasQuantifiedVar(..)
+    , UniVar, UNode
     , unfreeze
     , Binding(..)
     , MonadUnify(..)
@@ -22,6 +23,10 @@ import           Data.Maybe (fromMaybe)
 import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
+
+class HasQuantifiedVar (t :: (* -> *) -> *) where
+    type family QVar t
+    quantifiedVar :: QVar t -> t f
 
 -- Names modeled after unification-fd
 
@@ -44,7 +49,7 @@ class Monad m => MonadUnify (m :: * -> *) where
     default emptyVisited :: Monoid (Visited m) => Proxy m -> Visited m
     emptyVisited = mempty
 
-class (Eq (UVar m t), ZipMatch t, MonadUnify m) => Unify m t where
+class (Eq (UVar m t), ZipMatch t, HasQuantifiedVar t, MonadUnify m) => Unify m t where
     binding :: Binding m t
 
     -- | Add variable to visited set,
@@ -58,9 +63,13 @@ class (Eq (UVar m t), ZipMatch t, MonadUnify m) => Unify m t where
     -- like record extends with fields ordered differently,
     -- and these could still match.
     structureMismatch :: t (UTerm (UniVar m)) -> t (UTerm (UniVar m)) -> m ()
-
     default structureMismatch :: Alternative m => t (UTerm (UniVar m)) -> t (UTerm (UniVar m)) -> m ()
     structureMismatch _ _ = empty
+
+    newQuantifiedVariable :: Proxy t -> m (QVar t)
+    -- Default for type languages which force quantified variables to a specific type or a hole type
+    default newQuantifiedVariable :: QVar t ~ () => Proxy t -> m (QVar t)
+    newQuantifiedVariable _ = pure ()
 
 -- | Embed a pure term as a mutable term.
 unfreeze :: Recursive Children t => Node Identity t -> Node (UTerm v) t
@@ -84,7 +93,7 @@ semiPruneLookup v0 =
 -- TODO: implement when need / better understand motivations for -
 -- freeze, fullPrune, occursIn, seenAs, getFreeVars, freshen, equals, equiv
 
-applyBindings :: forall m t. Recursive (Unify m) t => UNode m t -> m (UNode m t)
+applyBindings :: forall m t. Recursive (Unify m) t => UNode m t -> m (Node Identity t)
 applyBindings =
     withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
     applyBindingsH (emptyVisited (Proxy :: Proxy m))
@@ -92,17 +101,21 @@ applyBindings =
 applyBindingsH ::
     forall m t.
     Recursive (Unify m) t =>
-    Visited m -> UNode m t -> m (UNode m t)
+    Visited m -> UNode m t -> m (Node Identity t)
 applyBindingsH visited (UTerm t) =
     withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
     children (Proxy :: Proxy (Recursive (Unify m))) (applyBindingsH visited) t
-    <&> UTerm
+    <&> Identity
 applyBindingsH visited (UVar v0) =
     withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
     semiPruneLookup v0
     >>=
     \case
-    (v1, Nothing) -> UVar v1 & pure
+    (v1, Nothing) ->
+        do
+            qvar <- newQuantifiedVariable (Proxy :: Proxy t)
+            bindVar binding v1 (UTerm (quantifiedVar qvar))
+            quantifiedVar qvar & Identity & pure
     (v1, Just t) ->
         visit t v1 visited
         >>= (`applyBindingsH` UTerm t)

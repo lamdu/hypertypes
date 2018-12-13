@@ -5,7 +5,6 @@ import TypeLang
 
 import AST
 import AST.Class.Infer
-import AST.Functor.UTerm
 import AST.Term.Apply
 import AST.Term.Scope
 import AST.Unify
@@ -39,7 +38,7 @@ occurs =
 inferExpr ::
     (DeBruijnIndex k, MonadReader env m, HasScopeTypes (UniVar m) Typ env, Recursive (Unify m) Typ, MonadUnify m) =>
     Node Identity (Term k) ->
-    m (Node (UTerm (UniVar m)) Typ)
+    m (Node Identity Typ)
 inferExpr x =
     inferNode (hoistNode (Ann () . runIdentity) x)
     <&> (^. nodeType)
@@ -58,7 +57,7 @@ main =
     do
         putStrLn ""
         print (runIntInfer (inferExpr expr))
-        print (runST (runSTInfer (inferExpr expr <&> stBindingToInt)))
+        print (runST (runSTInfer (inferExpr expr)))
         putStrLn ""
         print (runIntInfer (inferExpr occurs))
-        print (runST (runSTInfer (inferExpr occurs <&> stBindingToInt)))
+        print (runST (runSTInfer (inferExpr occurs)))

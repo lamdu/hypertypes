@@ -48,6 +48,16 @@ newSTInferState = InferState <$> newSTBindingState <*> newSTBindingState
 emptyInferVisited :: InferState (Const IntSet)
 emptyInferVisited = InferState (Const mempty) (Const mempty)
 
+instance HasQuantifiedVar Typ where
+    type QVar Typ = ()
+    -- We force quantified variables to int
+    quantifiedVar _ = TInt
+
+instance HasQuantifiedVar Row where
+    type QVar Row = ()
+    -- We force quantified variables to empty rows
+    quantifiedVar _ = REmpty
+
 type IntInfer r w = RWST r w (InferState IntBindingState) Maybe
 
 type instance UniVar (IntInfer r w) = Const Int
