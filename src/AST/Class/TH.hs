@@ -204,7 +204,9 @@ makeZipMatch typeName =
         info <- D.reifyDatatype typeName
         (dst, var) <- parts info
         let ctrs = D.datatypeCons info <&> makeZipMatchCtr var
-        instanceD (pure (ctrs >>= zmcContext)) (appT (conT ''ZipMatch) (pure dst))
+        instanceD
+            (pure (ctrs >>= zmcContext & Set.fromList & Set.toList))
+            (appT (conT ''ZipMatch) (pure dst))
             [ funD 'zipMatch
                 ( (ctrs <&> pure . zmcClause) ++ [pure tailClause]
                 )
