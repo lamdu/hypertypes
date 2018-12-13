@@ -37,6 +37,8 @@ dependencies:
 
 library:
   source-dirs: src
+  other-modules:
+    Control.Monad.State.Extended
   ghc-options:
   - -O2
   - -Wall
