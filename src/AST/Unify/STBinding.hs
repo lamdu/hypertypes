@@ -26,6 +26,5 @@ stBindingState =
     Binding
     { lookupVar = liftST . readSTRef . (^. _STVar)
     , newVar = newSTRef Nothing & liftST <&> UVar . STVar
-    , bindVar =
-        \v t -> writeSTRef (v ^. _STVar) (Just t) & liftST
+    , bindVar = \v t -> writeSTRef (v ^. _STVar) (Just t) & liftST
     }
