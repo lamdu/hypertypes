@@ -48,9 +48,7 @@ runIntInfer :: IntInfer (ScopeTypes (Const Int) Typ) () a -> Maybe a
 runIntInfer act = runRWST act mempty emptyIntInferState <&> (^. Lens._1)
 
 runSTInfer :: STInfer (ScopeTypes (STVar s) Typ) s a -> ST s (Maybe a)
-runSTInfer act =
-    newSTInferState <&> (,) mempty
-    >>= runMaybeT . runReaderT act
+runSTInfer act = runReaderT act mempty & runMaybeT
 
 main :: IO ()
 main =

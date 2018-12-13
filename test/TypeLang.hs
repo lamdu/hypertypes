@@ -12,7 +12,6 @@ import qualified Control.Lens as Lens
 import Control.Monad.RWS
 import Control.Monad.Reader
 import Control.Monad.ST
-import Control.Monad.ST.Class (MonadST(..))
 import Control.Monad.Trans.Maybe
 import Data.Functor.Const
 
@@ -41,9 +40,6 @@ Lens.makeLenses ''InferState
 emptyIntInferState :: InferState IntBindingState
 emptyIntInferState = InferState emptyIntBindingState emptyIntBindingState
 
-newSTInferState :: MonadST m => m (InferState (STBindingState (World m)))
-newSTInferState = InferState <$> newSTBindingState <*> newSTBindingState
-
 instance HasQuantifiedVar Typ where
     type QVar Typ = ()
     -- We force quantified variables to int
@@ -67,15 +63,15 @@ instance Monoid w => Unify (IntInfer r w) Row where
 instance Monoid w => Recursive (Unify (IntInfer r w)) Typ
 instance Monoid w => Recursive (Unify (IntInfer r w)) Row
 
-type STInfer r s = ReaderT (r, InferState (STBindingState s)) (MaybeT (ST s))
+type STInfer r s = ReaderT r (MaybeT (ST s))
 
 type instance UniVar (STInfer r s) = STVar s
 
 instance Unify (STInfer r s) Typ where
-    binding = stBindingState (Lens.view (Lens._2 . iTyp))
+    binding = stBindingState
 
 instance Unify (STInfer r s) Row where
-    binding = stBindingState (Lens.view (Lens._2 . iRow))
+    binding = stBindingState
 
 instance Recursive (Unify (STInfer r s)) Typ
 instance Recursive (Unify (STInfer r s)) Row
