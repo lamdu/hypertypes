@@ -8,7 +8,7 @@ module AST.Term.Apply
 import           AST.Class.Infer (Infer(..), inferNode, nodeType, TypeAST, FuncType(..))
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Class.TH (makeChildrenAndZipMatch)
-import           AST.Functor.UTerm (UTerm(..), _UTerm)
+import           AST.Functor.UTerm (_UTerm, uBody, newUTerm)
 import           AST.Node (Node)
 import           AST.Unify (Unify(..), Binding(..), unify)
 import           Control.DeepSeq (NFData)
@@ -53,7 +53,7 @@ instance (Infer m expr, FuncType (TypeAST expr)) => Infer m (Apply expr) where
             let argT = argI ^. nodeType
             funcI <- inferNode func
             let funcT = funcI ^. nodeType
-            case funcT ^? _UTerm . funcType of
+            case funcT ^? _UTerm . uBody . funcType of
                 Just (funcArg, funcRes) ->
                     -- Func already inferred to be function,
                     -- skip creating new variable for result for faster inference.
@@ -61,5 +61,5 @@ instance (Infer m expr, FuncType (TypeAST expr)) => Infer m (Apply expr) where
                 Nothing ->
                     do
                         funcRes <- newVar binding
-                        funcRes <$ unify funcT (UTerm (funcType # (argT, funcRes)))
+                        funcRes <$ unify funcT (newUTerm (funcType # (argT, funcRes)))
                 <&> (, Apply funcI argI)

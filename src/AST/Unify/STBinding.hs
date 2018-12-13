@@ -3,7 +3,7 @@
 module AST.Unify.STBinding
     ( STVar
     , STBindingState, newSTBindingState
-    , stBindingState, stVisit
+    , stBindingState
     , stBindingToInt
     ) where
 
@@ -12,12 +12,9 @@ import           AST.Class.Recursive (Recursive, hoistNodeR)
 import           AST.Functor.UTerm (UTerm(..), _UVar)
 import           AST.Node (Node)
 import           AST.Unify (Binding(..), UniVar)
-import           Control.Applicative (Alternative(..))
-import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.ST.Class (MonadST(..))
 import           Data.Functor.Const (Const(..))
-import           Data.IntSet (IntSet)
 import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
 import           Prelude.Compat
@@ -61,13 +58,6 @@ stBindingState getState =
     , bindVar =
         \v t -> writeSTRef (varRef v) (Just t) & liftST
     }
-
-stVisit :: Alternative f => STVar s a -> IntSet -> f IntSet
-stVisit (STVar idx _) =
-    Lens.contains idx x
-    where
-        x True = empty
-        x False = pure True
 
 stBindingToInt ::
     Recursive Children t =>

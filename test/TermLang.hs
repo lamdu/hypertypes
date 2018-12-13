@@ -33,15 +33,15 @@ instance HasTypeAST1 Term where
     typeAst _ = Dict
 
 instance
-    (MonadReader env m, HasScopeTypes (UniVar m) Typ env, Recursive (Unify m) Typ, MonadUnify m) =>
+    (MonadReader env m, HasScopeTypes (UniVar m) Typ env, Recursive (Unify m) Typ) =>
     Infer1 m Term where
     inferMonad = Sub Dict
 
 instance
-    (DeBruijnIndex k, MonadReader env m, HasScopeTypes (UniVar m) Typ env, Recursive (Unify m) Typ, MonadUnify m) =>
+    (DeBruijnIndex k, MonadReader env m, HasScopeTypes (UniVar m) Typ env, Recursive (Unify m) Typ) =>
     Infer m (Term k) where
 
-    infer (ELit x) = pure (UTerm TInt, ELit x)
+    infer (ELit x) = pure (newUTerm TInt, ELit x)
     infer (EVar x) = infer x <&> _2 %~ EVar
     infer (ELam x) = infer x <&> _2 %~ ELam
     infer (EApp x) = infer x <&> _2 %~ EApp

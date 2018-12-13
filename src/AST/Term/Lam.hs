@@ -9,7 +9,7 @@ module AST.Term.Lam
 import           AST.Class.Infer
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Class.TH (makeChildren)
-import           AST.Functor.UTerm (UTerm(..))
+import           AST.Functor.UTerm (UTerm(..), newUTerm)
 import           AST.Node (Node)
 import           AST.Unify
 import           Control.DeepSeq (NFData)
@@ -73,7 +73,7 @@ instance
                 (scopeTypes . Lens.at p ?~ varType)
                 (inferNode r)
             pure
-                ( funcType # (varType, rI ^. nodeType) & UTerm
+                ( funcType # (varType, rI ^. nodeType) & newUTerm
                 , Lam p rI
                 )
 

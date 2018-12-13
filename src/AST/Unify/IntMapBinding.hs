@@ -2,20 +2,18 @@
 
 module AST.Unify.IntMapBinding
     ( IntBindingState, emptyIntBindingState
-    , intBindingState, intVisit
+    , intBindingState
     ) where
 
 import           AST.Functor.UTerm (UTerm(..))
 import           AST.Node (Node)
 import           AST.Unify (UniVar, Binding(..))
-import           Control.Applicative (Alternative(..))
 import qualified Control.Lens as Lens
 import           Control.Lens (ALens')
 import           Control.Lens.Operators
 import           Control.Monad.State (MonadState(..), modify)
 import           Data.Functor.Const (Const(..))
 import           Data.IntMap (IntMap)
-import           Data.IntSet (IntSet)
 
 import           Prelude.Compat
 
@@ -46,10 +44,3 @@ intBindingState l =
     , newVar = increase (Lens.cloneLens l . nextFreeVar) <&> UVar . Const
     , bindVar = \k v -> Lens.cloneLens l . varBindings . Lens.at (k ^. Lens._Wrapped) ?= v
     }
-
-intVisit :: Alternative m => Const Int f -> IntSet -> m IntSet
-intVisit (Const var) =
-    Lens.contains var x
-    where
-        x True = empty
-        x False = pure True

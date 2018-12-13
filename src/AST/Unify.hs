@@ -5,7 +5,6 @@ module AST.Unify
     , UniVar, UNode
     , unfreeze
     , Binding(..)
-    , MonadUnify(..)
     , Unify(..)
     , applyBindings, unify
     ) where
@@ -13,10 +12,11 @@ module AST.Unify
 import           AST.Class.Children (Children(..))
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint, wrap)
 import           AST.Class.ZipMatch (ZipMatch(..), zipMatch_)
-import           AST.Functor.UTerm (UTerm(..))
+import           AST.Functor.UTerm
 import           AST.Node (Node)
 import           Control.Applicative (Alternative(..))
 import           Control.Lens.Operators
+import           Control.Monad (when)
 import           Data.Constraint
 import           Data.Functor.Identity (Identity(..))
 import           Data.Maybe (fromMaybe)
@@ -42,20 +42,18 @@ data Binding m t = Binding
     , bindVar :: UVar m t -> UNode m t -> m ()
     }
 
-class Monad m => MonadUnify (m :: * -> *) where
-    type Visited m
-    emptyVisited :: Proxy m -> Visited m
-
-    default emptyVisited :: Monoid (Visited m) => Proxy m -> Visited m
-    emptyVisited = mempty
-
-class (Eq (UVar m t), ZipMatch t, HasQuantifiedVar t, MonadUnify m) => Unify m t where
+class (Eq (UVar m t), ZipMatch t, HasQuantifiedVar t, Monad m) => Unify m t where
     binding :: Binding m t
 
-    -- | Add variable to visited set,
-    -- or break with an "occurs" failure due to variable resolving to term that contains itself.
-    -- For the error, the term is given for context.
-    visit :: t (UTerm (UniVar m)) -> UVar m t -> Visited m -> m (Visited m)
+    newQuantifiedVariable :: Proxy t -> m (QVar t)
+    -- Default for type languages which force quantified variables to a specific type or a hole type
+    default newQuantifiedVariable :: QVar t ~ () => Proxy t -> m (QVar t)
+    newQuantifiedVariable _ = pure ()
+
+    -- | Break with an "occurs" error due to variable resolving to term that contains itself.
+    occursError :: UVar m t -> t (UTerm (UniVar m)) -> m ()
+    default occursError :: Alternative m => UVar m t -> t (UTerm (UniVar m)) -> m ()
+    occursError _ _ = empty
 
     -- | What to do when top-levels of terms being unified do not match.
     -- Usually this will throw a failure,
@@ -66,18 +64,13 @@ class (Eq (UVar m t), ZipMatch t, HasQuantifiedVar t, MonadUnify m) => Unify m t
     default structureMismatch :: Alternative m => t (UTerm (UniVar m)) -> t (UTerm (UniVar m)) -> m ()
     structureMismatch _ _ = empty
 
-    newQuantifiedVariable :: Proxy t -> m (QVar t)
-    -- Default for type languages which force quantified variables to a specific type or a hole type
-    default newQuantifiedVariable :: QVar t ~ () => Proxy t -> m (QVar t)
-    newQuantifiedVariable _ = pure ()
-
 -- | Embed a pure term as a mutable term.
 unfreeze :: Recursive Children t => Node Identity t -> Node (UTerm v) t
-unfreeze = runIdentity . wrap (Proxy :: Proxy Children) (Identity . UTerm)
+unfreeze = runIdentity . wrap (Proxy :: Proxy Children) (Identity . newUTerm)
 
 -- look up a variable, and return last variable pointing to result.
 -- prune all variable on way to last variable
-semiPruneLookup :: forall m t. Unify m t => UVar m t -> m (UVar m t, Maybe (t (UTerm (UniVar m))))
+semiPruneLookup :: forall m t. Unify m t => UVar m t -> m (UVar m t, Maybe (UBody (t (UTerm (UniVar m)))))
 semiPruneLookup v0 =
     lookupVar binding v0
     >>=
@@ -94,19 +87,11 @@ semiPruneLookup v0 =
 -- freeze, fullPrune, occursIn, seenAs, getFreeVars, freshen, equals, equiv
 
 applyBindings :: forall m t. Recursive (Unify m) t => UNode m t -> m (Node Identity t)
-applyBindings =
+applyBindings (UTerm t) =
     withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
-    applyBindingsH (emptyVisited (Proxy :: Proxy m))
-
-applyBindingsH ::
-    forall m t.
-    Recursive (Unify m) t =>
-    Visited m -> UNode m t -> m (Node Identity t)
-applyBindingsH visited (UTerm t) =
-    withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
-    children (Proxy :: Proxy (Recursive (Unify m))) (applyBindingsH visited) t
+    children (Proxy :: Proxy (Recursive (Unify m))) applyBindings (t ^. uBody)
     <&> Identity
-applyBindingsH visited (UVar v0) =
+applyBindings (UVar v0) =
     withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
     semiPruneLookup v0
     >>=
@@ -114,20 +99,27 @@ applyBindingsH visited (UVar v0) =
     (v1, Nothing) ->
         do
             qvar <- newQuantifiedVariable (Proxy :: Proxy t)
-            bindVar binding v1 (UTerm (quantifiedVar qvar))
+            bindVar binding v1 (newUTerm (quantifiedVar qvar))
             quantifiedVar qvar & Identity & pure
     (v1, Just t) ->
-        visit t v1 visited
-        >>= (`applyBindingsH` UTerm t)
+        case leafExpr of
+        Just f -> t ^. uBody & f & Identity & pure
+        Nothing ->
+            do
+                when (t ^. uVisited) (occursError v1 (t ^. uBody))
+                t & uVisited .~ True & UTerm & bindVar binding v1
+                r <- applyBindings (UTerm t)
+                bindVar binding v1 (UTerm t)
+                pure r
 
 -- Note on usage of `semiPruneLookup`:
 --   Variables are pruned to point to other variables rather than terms,
 --   yielding comparison of (sometimes equal) variables,
 --   rather than recursively unifying the terms that they would prune to.
 unify :: forall m t. Recursive (Unify m) t => UNode m t -> UNode m t -> m ()
-unify (UVar v) (UTerm t) = unifyVarTerm v t
-unify (UTerm t) (UVar v) = unifyVarTerm v t
-unify (UTerm t0) (UTerm t1) = unifyTerms t0 t1
+unify (UVar v) (UTerm t) = unifyVarTerm v (t ^. uBody)
+unify (UTerm t) (UVar v) = unifyVarTerm v (t ^. uBody)
+unify (UTerm t0) (UTerm t1) = unifyTerms (t0 ^. uBody) (t1 ^. uBody)
 unify (UVar x) (UVar y) = withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) (unifyVars x y)
 
 unifyVars ::
@@ -140,13 +132,13 @@ unifyVars x0 y0
         >>=
         \case
         (x1, _) | x1 == y0 -> pure ()
-        (_, Just x1) -> unifyVarTerm y0 x1
+        (_, Just x1) -> unifyVarTerm y0 (x1 ^. uBody)
         (x1, Nothing) ->
             semiPruneLookup y0
             >>=
             \case
             (y1, _) | x1 == y1 -> pure ()
-            (_, Just y1) -> unifyVarTerm x1 y1
+            (_, Just y1) -> unifyVarTerm x1 (y1 ^. uBody)
             (y1, Nothing) ->
                 bindVar binding x1 (UVar y1)
 
@@ -156,8 +148,8 @@ unifyVarTerm x0 y =
     semiPruneLookup x0
     >>=
     \case
-    (x1, Nothing) -> bindVar binding x1 (UTerm y)
-    (_, Just x1) -> unifyTerms x1 y
+    (x1, Nothing) -> bindVar binding x1 (newUTerm y)
+    (_, Just x1) -> unifyTerms (x1 ^. uBody) y
 
 unifyTerms ::
     forall m t.

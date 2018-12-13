@@ -15,7 +15,6 @@ import Control.Monad.ST
 import Control.Monad.ST.Class (MonadST(..))
 import Control.Monad.Trans.Maybe
 import Data.Functor.Const
-import Data.IntSet
 
 data Typ f
     = TInt
@@ -45,9 +44,6 @@ emptyIntInferState = InferState emptyIntBindingState emptyIntBindingState
 newSTInferState :: MonadST m => m (InferState (STBindingState (World m)))
 newSTInferState = InferState <$> newSTBindingState <*> newSTBindingState
 
-emptyInferVisited :: InferState (Const IntSet)
-emptyInferVisited = InferState (Const mempty) (Const mempty)
-
 instance HasQuantifiedVar Typ where
     type QVar Typ = ()
     -- We force quantified variables to int
@@ -62,17 +58,11 @@ type IntInfer r w = RWST r w (InferState IntBindingState) Maybe
 
 type instance UniVar (IntInfer r w) = Const Int
 
-instance Monoid w => MonadUnify (IntInfer r w) where
-    type Visited (IntInfer r w) = InferState (Const IntSet)
-    emptyVisited _ = emptyInferVisited
-
 instance Monoid w => Unify (IntInfer r w) Typ where
     binding = intBindingState iTyp
-    visit _ = iTyp . Lens._Wrapped . intVisit
 
 instance Monoid w => Unify (IntInfer r w) Row where
     binding = intBindingState iRow
-    visit _ = iRow . Lens._Wrapped . intVisit
 
 instance Monoid w => Recursive (Unify (IntInfer r w)) Typ
 instance Monoid w => Recursive (Unify (IntInfer r w)) Row
@@ -81,17 +71,11 @@ type STInfer r s = ReaderT (r, InferState (STBindingState s)) (MaybeT (ST s))
 
 type instance UniVar (STInfer r s) = STVar s
 
-instance MonadUnify (STInfer r s) where
-    type Visited (STInfer r s) = InferState (Const IntSet)
-    emptyVisited _ = emptyInferVisited
-
 instance Unify (STInfer r s) Typ where
     binding = stBindingState (Lens.view (Lens._2 . iTyp))
-    visit _ = iTyp . Lens._Wrapped . stVisit
 
 instance Unify (STInfer r s) Row where
     binding = stBindingState (Lens.view (Lens._2 . iRow))
-    visit _ = iRow . Lens._Wrapped . stVisit
 
 instance Recursive (Unify (STInfer r s)) Typ
 instance Recursive (Unify (STInfer r s)) Row
