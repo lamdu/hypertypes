@@ -37,11 +37,15 @@ class Children expr where
         Dict (ChildrenConstraint expr EmptyConstraint)
     childrenEmptyConstraints _ = Dict
 
+    leafExpr :: Maybe (expr f -> expr g)
+    leafExpr = Nothing
+
 type ChildrenWithConstraint expr constraint = (Children expr, ChildrenConstraint expr constraint)
 
 instance Children (Const val) where
     type ChildrenConstraint (Const val) constraint = ()
     children _ _ (Const x) = pure (Const x)
+    leafExpr = Just (\(Const x) -> Const x)
 
 -- | Used for standalone deriving clauses like
 -- `deriving instance IfChildNodes Typ f Eq => Eq (Typ f)`
