@@ -1,29 +1,23 @@
-{-# LANGUAGE NoImplicitPrelude, TypeFamilies, FlexibleContexts #-}
+{-# LANGUAGE NoImplicitPrelude, TypeFamilies #-}
 
 module AST.Unify.STBinding
     ( STVar
     , STBindingState, newSTBindingState
     , stBindingState
-    , stBindingToInt
     ) where
 
-import           AST.Class.Children (Children)
-import           AST.Class.Recursive (Recursive, hoistNodeR)
-import           AST.Functor.UTerm (UTerm(..), _UVar)
-import           AST.Node (Node)
+import           AST.Functor.UTerm (UTerm(..))
 import           AST.Unify (Binding(..), UniVar)
 import           Control.Lens.Operators
 import           Control.Monad.ST.Class (MonadST(..))
-import           Data.Functor.Const (Const(..))
 import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
 import           Prelude.Compat
 
 data STVar s a =
     STVar
-    { -- For occurs check.
-      -- A (more efficient?) alternative would mark the state in the referenced value itself!
-      varId :: Int
+    { -- For comparison
+      _varId :: Int
     , varRef :: STRef s (Maybe (UTerm (STVar s) a))
     }
 
@@ -58,8 +52,3 @@ stBindingState getState =
     , bindVar =
         \v t -> writeSTRef (varRef v) (Just t) & liftST
     }
-
-stBindingToInt ::
-    Recursive Children t =>
-    Node (UTerm (STVar s)) t -> Node (UTerm (Const Int)) t
-stBindingToInt = hoistNodeR (_UVar %~ Const . varId)
