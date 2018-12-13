@@ -32,12 +32,12 @@ instance HasTypeAST1 Term where
     typeAst _ = Dict
 
 instance
-    (MonadReader env m, HasScopeTypes (Var m) Typ env, Recursive (Unify m) Typ, MonadOccurs m) =>
+    (MonadReader env m, HasScopeTypes (Var m) Typ env, Recursive (Unify m) Typ, MonadUnify m) =>
     Infer1 m Term where
     inferMonad = Sub Dict
 
 instance
-    (DeBruijnIndex k, MonadReader env m, HasScopeTypes (Var m) Typ env, Recursive (Unify m) Typ, MonadOccurs m) =>
+    (DeBruijnIndex k, MonadReader env m, HasScopeTypes (Var m) Typ env, Recursive (Unify m) Typ, MonadUnify m) =>
     Infer m (Term k) where
 
     infer (ELit x) =

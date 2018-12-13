@@ -14,7 +14,7 @@ import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Class.TH (makeChildrenAndZipMatch)
 import           AST.Functor.UTerm (UTerm(..))
 import           AST.Node (Node)
-import           AST.Unify (Unify(..), Binding(..), MonadOccurs, Var)
+import           AST.Unify (Unify(..), Binding(..), MonadUnify, Var)
 import           Control.Lens (Lens', Prism')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -90,7 +90,7 @@ instance HasTypeAST1 t => HasTypeAST1 (ScopeVar t) where
 instance
     ( HasTypeAST1 t
     , FuncType (TypeAST1 t)
-    , MonadOccurs m
+    , MonadUnify m
     , Infer1 m t
     , Recursive (Unify m) (TypeAST (t k))
     , TypeASTIndexConstraint t ~ DeBruijnIndex
@@ -116,7 +116,7 @@ instance
         \\ (inferMonad :: DeBruijnIndex (Maybe k) :- Infer m (t (Maybe k)))
 
 instance
-    ( MonadOccurs m
+    ( MonadUnify m
     , Recursive (Unify m) (TypeAST (t k))
     , MonadReader env m
     , HasScopeTypes (Var m) (TypeAST (t k)) env

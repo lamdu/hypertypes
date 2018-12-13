@@ -52,7 +52,7 @@ type IntInfer r w = RWST r w (InferState IntBindingState) Maybe
 
 type instance Var (IntInfer r w) = Const Int
 
-instance Monoid w => MonadOccurs (IntInfer r w) where
+instance Monoid w => MonadUnify (IntInfer r w) where
     type Visited (IntInfer r w) = InferState (Const IntSet)
     emptyVisited _ = emptyInferVisited
 
@@ -71,7 +71,7 @@ type STInfer r s = ReaderT (r, InferState (STBindingState s)) (MaybeT (ST s))
 
 type instance Var (STInfer r s) = STVar s
 
-instance MonadOccurs (STInfer r s) where
+instance MonadUnify (STInfer r s) where
     type Visited (STInfer r s) = InferState (Const IntSet)
     emptyVisited _ = emptyInferVisited
 
