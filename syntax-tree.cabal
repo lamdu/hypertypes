@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3d2eb0453975d6fa800f45dfd18ee36ce4ca8518cb55d80bd232dc1e1c9e5ae4
+-- hash: 86d02abfd4b1c40ae065641e3ed9644fca08b9a94c30ae30b93c1d7fe7dec9ba
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -48,7 +48,7 @@ library
       AST.Unify.STBinding
       Language.Haskell.TH.Subst
   other-modules:
-      Control.Monad.State.Extended
+      Paths_syntax_tree
   hs-source-dirs:
       src
   ghc-options: -O2 -Wall -Wnoncanonical-monad-instances -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
