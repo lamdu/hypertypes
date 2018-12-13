@@ -3,6 +3,7 @@
 module AST.Unify.IntMapBinding
     ( IntBindingState, emptyIntBindingState
     , intBindingState
+    , increase
     ) where
 
 import           AST.Functor.UTerm (UTerm(..))

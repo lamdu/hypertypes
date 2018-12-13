@@ -17,6 +17,7 @@ import Control.Monad.ST
 import Control.Monad.Trans.Maybe
 import Data.Functor.Const
 import Data.Functor.Identity
+import Data.STRef
 
 var :: DeBruijnIndex k => Int -> Identity (Term k f)
 var = Identity . EVar . scopeVar
@@ -48,7 +49,10 @@ runIntInfer :: IntInfer (ScopeTypes (Const Int) Typ) () a -> Maybe a
 runIntInfer act = runRWST act mempty emptyIntInferState <&> (^. Lens._1)
 
 runSTInfer :: STInfer (ScopeTypes (STVar s) Typ) s a -> ST s (Maybe a)
-runSTInfer act = runReaderT act mempty & runMaybeT
+runSTInfer act =
+    do
+        qvarGen <- InferState <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
+        runReaderT act (mempty, qvarGen) & runMaybeT
 
 main :: IO ()
 main =
