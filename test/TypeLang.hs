@@ -50,7 +50,7 @@ emptyInferVisited = InferState (Const mempty) (Const mempty)
 
 type IntInfer r w = RWST r w (InferState IntBindingState) Maybe
 
-type instance Var (IntInfer r w) = Const Int
+type instance UniVar (IntInfer r w) = Const Int
 
 instance Monoid w => MonadUnify (IntInfer r w) where
     type Visited (IntInfer r w) = InferState (Const IntSet)
@@ -69,7 +69,7 @@ instance Monoid w => Recursive (Unify (IntInfer r w)) Row
 
 type STInfer r s = ReaderT (r, InferState (STBindingState s)) (MaybeT (ST s))
 
-type instance Var (STInfer r s) = STVar s
+type instance UniVar (STInfer r s) = STVar s
 
 instance MonadUnify (STInfer r s) where
     type Visited (STInfer r s) = InferState (Const IntSet)

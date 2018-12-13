@@ -60,7 +60,7 @@ instance
     ( Infer m t
     , FuncType (TypeAST t)
     , MonadReader env m
-    , HasScopeTypes v (Var m) (TypeAST t) env
+    , HasScopeTypes v (UniVar m) (TypeAST t) env
     ) =>
     Infer m (Lam v t) where
 
@@ -80,7 +80,7 @@ instance
 instance
     ( Infer m t
     , MonadReader env m
-    , HasScopeTypes v (Var m) (TypeAST t) env
+    , HasScopeTypes v (UniVar m) (TypeAST t) env
     ) =>
     Infer m (LamVar v t) where
 

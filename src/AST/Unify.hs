@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, MultiParamTypeClasses, FlexibleContexts, LambdaCase, ScopedTypeVariables, TypeFamilies, DefaultSignatures #-}
 
 module AST.Unify
-    ( Var, UNode
+    ( UniVar, UNode
     , unfreeze
     , Binding(..)
     , MonadUnify(..)
@@ -25,10 +25,11 @@ import           Prelude.Compat
 
 -- Names modeled after unification-fd
 
-type family Var (m :: * -> *) :: * -> *
+-- Unification variable type for a unification monad
+type family UniVar (m :: * -> *) :: * -> *
 
-type UNode m t = Node (UTerm (Var m)) t
-type UVar m t = Var m (t (UTerm (Var m)))
+type UNode m t = Node (UTerm (UniVar m)) t
+type UVar m t = UniVar m (t (UTerm (UniVar m)))
 
 data Binding m t = Binding
     { lookupVar :: UVar m t -> m (Maybe (UNode m t))
@@ -49,16 +50,16 @@ class (Eq (UVar m t), ZipMatch t, MonadUnify m) => Unify m t where
     -- | Add variable to visited set,
     -- or break with an "occurs" failure due to variable resolving to term that contains itself.
     -- For the error, the term is given for context.
-    visit :: t (UTerm (Var m)) -> UVar m t -> Visited m -> m (Visited m)
+    visit :: t (UTerm (UniVar m)) -> UVar m t -> Visited m -> m (Visited m)
 
     -- | What to do when top-levels of terms being unified do not match.
     -- Usually this will throw a failure,
     -- but some AST terms could be equivalent despite not matching,
     -- like record extends with fields ordered differently,
     -- and these could still match.
-    structureMismatch :: t (UTerm (Var m)) -> t (UTerm (Var m)) -> m ()
+    structureMismatch :: t (UTerm (UniVar m)) -> t (UTerm (UniVar m)) -> m ()
 
-    default structureMismatch :: Alternative m => t (UTerm (Var m)) -> t (UTerm (Var m)) -> m ()
+    default structureMismatch :: Alternative m => t (UTerm (UniVar m)) -> t (UTerm (UniVar m)) -> m ()
     structureMismatch _ _ = empty
 
 -- | Embed a pure term as a mutable term.
@@ -67,7 +68,7 @@ unfreeze = runIdentity . wrap (Proxy :: Proxy Children) (Identity . UTerm)
 
 -- look up a variable, and return last variable pointing to result.
 -- prune all variable on way to last variable
-semiPruneLookup :: forall m t. Unify m t => UVar m t -> m (UVar m t, Maybe (t (UTerm (Var m))))
+semiPruneLookup :: forall m t. Unify m t => UVar m t -> m (UVar m t, Maybe (t (UTerm (UniVar m))))
 semiPruneLookup v0 =
     lookupVar binding v0
     >>=
@@ -136,7 +137,7 @@ unifyVars x0 y0
             (y1, Nothing) ->
                 bindVar binding x1 (UVar y1)
 
-unifyVarTerm :: forall m t. Recursive (Unify m) t => UVar m t -> t (UTerm (Var m)) -> m ()
+unifyVarTerm :: forall m t. Recursive (Unify m) t => UVar m t -> t (UTerm (UniVar m)) -> m ()
 unifyVarTerm x0 y =
     withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
     semiPruneLookup x0
@@ -148,7 +149,7 @@ unifyVarTerm x0 y =
 unifyTerms ::
     forall m t.
     Recursive (Unify m) t =>
-    t (UTerm (Var m)) -> t (UTerm (Var m)) -> m ()
+    t (UTerm (UniVar m)) -> t (UTerm (UniVar m)) -> m ()
 unifyTerms x y =
     withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
     fromMaybe (structureMismatch x y)

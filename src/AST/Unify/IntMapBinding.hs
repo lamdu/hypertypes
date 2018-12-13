@@ -7,7 +7,7 @@ module AST.Unify.IntMapBinding
 
 import           AST.Functor.UTerm (UTerm(..))
 import           AST.Node (Node)
-import           AST.Unify (Var, Binding(..))
+import           AST.Unify (UniVar, Binding(..))
 import           Control.Applicative (Alternative(..))
 import qualified Control.Lens as Lens
 import           Control.Lens (ALens')
@@ -37,7 +37,7 @@ increase l =
         r <$ modify (Lens.cloneLens l +~ 1)
 
 intBindingState ::
-    (MonadState s m, Var m ~ Const Int) =>
+    (MonadState s m, UniVar m ~ Const Int) =>
     ALens' s (IntBindingState t) ->
     Binding m t
 intBindingState l =

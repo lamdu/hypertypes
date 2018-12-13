@@ -11,7 +11,7 @@ import           AST.Class.Children (Children)
 import           AST.Class.Recursive (Recursive, hoistNodeR)
 import           AST.Functor.UTerm (UTerm(..), _UVar)
 import           AST.Node (Node)
-import           AST.Unify (Binding(..), Var)
+import           AST.Unify (Binding(..), UniVar)
 import           Control.Applicative (Alternative(..))
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -46,7 +46,7 @@ increase v =
     & liftST
 
 stBindingState ::
-    (MonadST m, Var m ~ STVar (World m)) =>
+    (MonadST m, UniVar m ~ STVar (World m)) =>
     m (STBindingState (World m) t) ->
     Binding m t
 stBindingState getState =
