@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, DeriveTraversable, TemplateHaskell #-}
 
-module AST.Functor.UTerm
+module AST.Knot.UTerm
     ( UTerm(..), _UVar, _UTerm
     , UBody(..), uBody, uVisited
     , newUTerm

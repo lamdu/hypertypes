@@ -7,8 +7,8 @@ module AST.Class.Infer
     ) where
 
 import           AST.Class.Recursive (Recursive)
-import           AST.Functor.Ann (Ann(..), ann)
-import           AST.Functor.UTerm (UTerm)
+import           AST.Knot.Ann (Ann(..), ann)
+import           AST.Knot.UTerm (UTerm)
 import           AST.Node (Node)
 import           AST.Unify (Unify(..), UniVar)
 import           Control.Lens (Lens', Prism')

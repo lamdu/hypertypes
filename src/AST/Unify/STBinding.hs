@@ -4,7 +4,7 @@ module AST.Unify.STBinding
     ( STVar, stBindingState
     ) where
 
-import           AST.Functor.UTerm (UTerm(..))
+import           AST.Knot.UTerm (UTerm(..))
 import           AST.Unify (Binding(..), UniVar)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators

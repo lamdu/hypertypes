@@ -9,7 +9,7 @@ module AST.Term.Lam
 import           AST.Class.Infer
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Class.TH (makeChildren)
-import           AST.Functor.UTerm (UTerm(..), newUTerm)
+import           AST.Knot.UTerm (UTerm(..), newUTerm)
 import           AST.Node (Node)
 import           AST.Unify
 import           Control.DeepSeq (NFData)

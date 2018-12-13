@@ -1,11 +1,11 @@
 {-# LANGUAGE NoImplicitPrelude, TypeFamilies, ConstraintKinds #-}
 {-# OPTIONS -fno-warn-orphans #-} -- Arbitrary instances
-module AST.Functor.Ann.Arbitrary
+module AST.Knot.Ann.Arbitrary
     ( ArbitraryWithContext(..)
     , ArbitraryWithContextOf
     ) where
 
-import           AST.Functor.Ann
+import           AST.Knot.Ann
 import           Test.QuickCheck (Arbitrary(..), Gen)
 
 import           Prelude.Compat hiding (any)

@@ -12,7 +12,7 @@ module AST.Unify
 import           AST.Class.Children (Children(..))
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint, wrap)
 import           AST.Class.ZipMatch (ZipMatch(..), zipMatch_)
-import           AST.Functor.UTerm
+import           AST.Knot.UTerm
 import           AST.Node (Node)
 import           Control.Applicative (Alternative(..))
 import           Control.Lens.Operators

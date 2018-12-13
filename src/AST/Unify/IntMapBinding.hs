@@ -6,7 +6,7 @@ module AST.Unify.IntMapBinding
     , increase
     ) where
 
-import           AST.Functor.UTerm (UTerm(..))
+import           AST.Knot.UTerm (UTerm(..))
 import           AST.Node (Node)
 import           AST.Unify (UniVar, Binding(..))
 import qualified Control.Lens as Lens

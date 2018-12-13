@@ -7,7 +7,7 @@ import TypeLang
 import AST
 import AST.Class.Infer
 import AST.Class.Infer.Infer1
-import AST.Functor.UTerm
+import AST.Knot.UTerm
 import AST.Term.Apply
 import AST.Term.Scope
 import AST.Unify

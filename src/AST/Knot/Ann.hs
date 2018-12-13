@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables, TemplateHaskell, DeriveTraversable, DeriveGeneric, FlexibleContexts, RankNTypes #-}
 
-module AST.Functor.Ann
+module AST.Knot.Ann
     ( Ann(..), ann, val
     , annotations
     , para
