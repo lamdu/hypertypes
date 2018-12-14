@@ -3,7 +3,6 @@
 module AST.Class.Children
     ( Children(..), ChildrenWithConstraint
     , EmptyConstraint
-    , IfChildNodes
     , children_, overChildren, foldMapChildren
     ) where
 
@@ -21,6 +20,8 @@ class EmptyConstraint (expr :: (* -> *) -> *)
 instance EmptyConstraint expr
 
 class Children expr where
+    type SubTreeConstraint expr (k :: * -> *) (constraint :: * -> Constraint) :: Constraint
+
     type ChildrenConstraint expr (constraint :: ((* -> *) -> *) -> Constraint) :: Constraint
 
     children ::
@@ -43,13 +44,10 @@ class Children expr where
 type ChildrenWithConstraint expr constraint = (Children expr, ChildrenConstraint expr constraint)
 
 instance Children (Const val) where
+    type SubTreeConstraint (Const val) f constraint = ()
     type ChildrenConstraint (Const val) constraint = ()
     children _ _ (Const x) = pure (Const x)
     leafExpr = Just (\(Const x) -> Const x)
-
--- | Used for standalone deriving clauses like
--- `deriving instance IfChildNodes Typ f Eq => Eq (Typ f)`
-type IfChildNodes expr f constraint = ChildrenConstraint expr (NodeConstraint constraint f)
 
 children_ ::
     forall f expr constraint n.
