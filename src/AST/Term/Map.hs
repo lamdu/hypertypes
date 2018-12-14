@@ -4,6 +4,8 @@ module AST.Term.Map
     ( TermMap(..), _TermMap
     ) where
 
+import AST.Class.Children
+
 import           AST (Node, Recursive(..), RecursiveConstraint, makeChildren)
 import           AST.Class.ZipMatch (ZipMatch(..))
 import           Control.DeepSeq (NFData)

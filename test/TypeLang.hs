@@ -29,12 +29,12 @@ data Row f
     | RExtend String (Node f Typ) (Node f Row)
     | RVar String
 
-deriving instance IfChildNodes Typ f Show => Show (Typ f)
-deriving instance IfChildNodes Row f Show => Show (Row f)
-
 Lens.makePrisms ''Typ
 Lens.makePrisms ''Row
 makeChildrenAndZipMatch [''Typ, ''Row]
+
+deriving instance SubTreeConstraint Typ f Show => Show (Typ f)
+deriving instance SubTreeConstraint Row f Show => Show (Row f)
 
 data InferState f = InferState
     { _iTyp :: f Typ

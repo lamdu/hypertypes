@@ -77,7 +77,9 @@ makeChildrenForType info =
     do
         inst <-
             instanceD (pure []) (appT (conT ''Children) (pure (tiInstance info)))
-            [ tySynInstD ''ChildrenConstraint
+            [ tySynInstD ''SubTreeConstraint
+                (pure (TySynEqn [tiInstance info, VarT knot, VarT constraint] subTreeConstraint))
+            , tySynInstD ''ChildrenConstraint
                 (pure (TySynEqn [tiInstance info, VarT constraint] childrenConstraint))
             , funD 'children (tiCons info <&> pure . makeChildrenCtr (tiVar info))
             ]
@@ -91,9 +93,14 @@ makeChildrenForType info =
         pure (inst : mono)
     where
         constraint = mkName "constraint"
+        knot = mkName "k"
         childrenConstraint =
             Set.toList (tiChildren info)
             <&> AppT (VarT constraint)
+            & foldl AppT (TupleT (Set.size (tiChildren info)))
+        subTreeConstraint =
+            Set.toList (tiChildren info)
+            <&> (\x -> VarT constraint `AppT` (ConT ''Node `AppT` VarT knot `AppT` x))
             & foldl AppT (TupleT (Set.size (tiChildren info)))
 
 parts :: D.DatatypeInfo -> Q (Type, Name)
