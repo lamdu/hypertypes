@@ -269,8 +269,23 @@ makeZipMatchCtr var info =
             ZipMatchField
             { zmfResult = ConE 'Just `AppE` (VarE 'pure `AppE` VarE x)
             , zmfConds = [InfixE (Just (VarE x)) (VarE '(==)) (Just (VarE y))]
-            , zmfContext = [ConT ''Eq `AppT` t]
+            , zmfContext = [ConT ''Eq `AppT` t | isPolymorphic t]
             }
+
+isPolymorphic :: Type -> Bool
+isPolymorphic VarT{} = True
+isPolymorphic (AppT x y) = isPolymorphic x || isPolymorphic y
+isPolymorphic (ParensT x) = isPolymorphic x
+isPolymorphic ConT{} = False
+isPolymorphic ArrowT{} = False
+isPolymorphic ListT{} = False
+isPolymorphic EqualityT{} = False
+isPolymorphic TupleT{} = False
+isPolymorphic UnboxedTupleT{} = False
+isPolymorphic UnboxedSumT{} = False
+isPolymorphic _ =
+    -- TODO: Cover all cases
+    True
 
 data ZipMatchField = ZipMatchField
     { zmfResult :: Exp
