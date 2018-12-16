@@ -35,9 +35,10 @@ makeChildren :: [Name] -> DecsQ
 makeChildren typeNames =
     do
         typeInfos <- traverse makeTypeInfo typeNames
-        (<>)
-            <$> (traverse makeChildrenForType typeInfos <&> concat)
-            <*> traverse makeRecursiveChildren (findRecursives typeInfos)
+        chldrn <- traverse makeChildrenForType typeInfos
+        let recCtx = chldrn >>= snd & Set.fromList & Set.toList
+        traverse (makeRecursiveChildren recCtx) (findRecursives typeInfos)
+            <&> ((chldrn >>= fst) <>)
 
 findRecursives :: [TypeInfo] -> [TypeInfo]
 findRecursives infos
@@ -48,9 +49,9 @@ findRecursives infos
         hasDeps = all (`Set.member` cur) . Set.toList . tiChildren
         cur = Set.fromList (infos <&> tiInstance)
 
-makeRecursiveChildren :: TypeInfo -> DecQ
-makeRecursiveChildren info =
-    instanceD (pure []) (conT ''Recursive `appT` conT ''Children `appT` pure (tiInstance info)) []
+makeRecursiveChildren :: [Pred] -> TypeInfo -> DecQ
+makeRecursiveChildren ctx info =
+    instanceD (pure ctx) (conT ''Recursive `appT` conT ''Children `appT` pure (tiInstance info)) []
 
 data TypeInfo = TypeInfo
     { tiInstance :: Type
@@ -58,6 +59,7 @@ data TypeInfo = TypeInfo
     , tiChildren :: Set Type
     , tiCons :: [D.ConstructorInfo]
     }
+    deriving Show
 
 makeTypeInfo :: Name -> Q TypeInfo
 makeTypeInfo name =
@@ -72,16 +74,16 @@ makeTypeInfo name =
             , tiCons = D.datatypeCons info
             }
 
-makeChildrenForType :: TypeInfo -> DecsQ
+makeChildrenForType :: TypeInfo -> Q ([Dec], [Pred])
 makeChildrenForType info =
     do
         inst <-
-            instanceD (pure []) (appT (conT ''Children) (pure (tiInstance info)))
+            instanceD (pure ctx) (appT (conT ''Children) (pure (tiInstance info)))
             [ tySynInstD ''SubTreeConstraint
                 (pure (TySynEqn [tiInstance info, VarT knot, VarT constraint] subTreeConstraint))
             , tySynInstD ''ChildrenConstraint
                 (pure (TySynEqn [tiInstance info, VarT constraint] childrenConstraint))
-            , funD 'children (tiCons info <&> pure . makeChildrenCtr (tiVar info))
+            , funD 'children (ctrs <&> pure . ccClause)
             ]
         mono <-
             case Set.toList (tiChildren info) of
@@ -90,8 +92,10 @@ makeChildrenForType info =
                 (pure (TySynEqn [tiInstance info] x))
                 <&> (:[])
             _ -> pure []
-        pure (inst : mono)
+        pure (inst : mono, ctx)
     where
+        ctrs = tiCons info <&> makeChildrenCtr (tiVar info)
+        ctx = ctrs >>= ccContext & Set.fromList & Set.toList
         constraint = mkName "constraint"
         knot = mkName "knot"
         childrenConstraint =
@@ -110,8 +114,11 @@ parts info =
     xs ->
         case last xs of
         SigT (VarT var) _ ->
-            pure (foldl AppT (ConT (D.datatypeName info)) (init xs), var)
+            pure (foldl AppT (ConT (D.datatypeName info)) (init xs <&> stripSigT), var)
         _ -> fail "expected last argument to be variable"
+    where
+        stripSigT (SigT x _) = x
+        stripSigT x = x
 
 childrenTypes ::
     Name -> Type -> StateT (Set Type) Q (Set Type)
@@ -129,7 +136,7 @@ childrenTypes var typ =
                 go as (ConT name) = childrenTypesFromTypeName name as
                 go as (AppT x a) = go (a:as) x
                 go _ _ = pure mempty
-        add (Tof pat) = add pat
+        add (Tof _ pat) = add pat
         add Other{} = pure mempty
 
 matchType :: Name -> Type -> CtrTypePattern
@@ -146,18 +153,19 @@ matchType var (ConT node `AppT` VarT functor `AppT` leaf)
 matchType var (ast `AppT` VarT functor)
     | functor == var =
         XofF ast
-matchType var t@(AppT _ typ) =
+matchType var x@(AppT t typ) =
     -- TODO: check if applied over a functor-kinded type.
     case matchType var typ of
-    Other{} -> Other t
-    pat -> Tof pat
+    Other{} -> Other x
+    pat -> Tof t pat
 matchType _ t = Other t
 
 data CtrTypePattern
     = NodeFofX Type
     | XofF Type
-    | Tof CtrTypePattern
+    | Tof Type CtrTypePattern
     | Other Type
+    deriving Show
 
 childrenTypesFromTypeName ::
     Name -> [Type] -> StateT (Set Type) Q (Set Type)
@@ -178,11 +186,15 @@ childrenTypesFromTypeName name args =
         filterVar (SigT t _, x) = filterVar (t, x)
         filterVar _ = []
 
-makeChildrenCtr :: Name -> D.ConstructorInfo -> Clause
+makeChildrenCtr :: Name -> D.ConstructorInfo -> CtrCase
 makeChildrenCtr var info =
-    Clause
-    [VarP proxy, VarP func, ConP (D.constructorName info) (cVars <&> VarP)]
-    (NormalB body) []
+    CtrCase
+    { ccClause =
+        Clause
+        [VarP proxy, VarP func, ConP (D.constructorName info) (cVars <&> VarP)]
+        (NormalB body) []
+    , ccContext = pats >>= ctxForPat
+    }
     where
         proxy = mkName "_p"
         func = mkName "_f"
@@ -191,13 +203,16 @@ makeChildrenCtr var info =
             & take (length (D.constructorFields info))
         body =
             zipWith AppE
-            (D.constructorFields info <&> matchType var <&> forPat)
+            (pats <&> bodyForPat)
             (cVars <&> VarE)
             & applicativeStyle (ConE (D.constructorName info))
-        forPat NodeFofX{} = VarE func
-        forPat XofF{} = VarE 'children `AppE` VarE proxy `AppE` VarE func
-        forPat (Tof pat) = VarE 'traverse `AppE` forPat pat
-        forPat Other{} = VarE 'pure
+        pats = D.constructorFields info <&> matchType var
+        bodyForPat NodeFofX{} = VarE func
+        bodyForPat XofF{} = VarE 'children `AppE` VarE proxy `AppE` VarE func
+        bodyForPat (Tof _ pat) = VarE 'traverse `AppE` bodyForPat pat
+        bodyForPat Other{} = VarE 'pure
+        ctxForPat (Tof t pat) = [ConT ''Traversable `AppT` t | isPolymorphic t] ++ ctxForPat pat
+        ctxForPat _ = []
 
 applicativeStyle :: Exp -> [Exp] -> Exp
 applicativeStyle f =
