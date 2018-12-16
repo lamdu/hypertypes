@@ -17,31 +17,30 @@ import Control.Monad.RWS
 import Control.Monad.ST
 import Control.Monad.Trans.Maybe
 import Data.Functor.Const
-import Data.Functor.Identity
 import Data.Proxy
 import Data.STRef
 
-var :: DeBruijnIndex k => Int -> Identity (Term k f)
-var = Identity . EVar . scopeVar
+var :: DeBruijnIndex k => Int -> Tree Pure (Term k)
+var = Pure . EVar . scopeVar
 
-expr :: Node Identity (Term EmptyScope)
+expr :: Tree Pure (Term EmptyScope)
 expr =
     -- \x y -> x 5
-    Identity . ELam . scope $ \x ->
-    Identity . ELam . scope $ \_y ->
-    ELit 5 & Identity
-    & Apply (var x) & EApp & Identity
+    Pure . ELam . scope $ \x ->
+    Pure . ELam . scope $ \_y ->
+    ELit 5 & Pure
+    & Apply (var x) & EApp & Pure
 
-infinite :: Node Identity (Term EmptyScope)
+infinite :: Tree Pure (Term EmptyScope)
 infinite =
     -- \x -> x x
-    Identity . ELam . scope $ \x ->
-    Apply (var x) (var x) & EApp & Identity
+    Pure . ELam . scope $ \x ->
+    Apply (var x) (var x) & EApp & Pure
 
 inferExpr ::
     (DeBruijnIndex k, MonadReader env m, HasScopeTypes (UniVar m) Typ env, Recursive (Unify m) Typ) =>
-    Node Identity (Term k) ->
-    m (Node Identity Typ)
+    Tree Pure (Term k) ->
+    m (Tree Pure Typ)
 inferExpr x =
     inferNode (wrap (Proxy :: Proxy Children) (Ann ()) x)
     <&> (^. nodeType)

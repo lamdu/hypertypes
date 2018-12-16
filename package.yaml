@@ -30,7 +30,6 @@ dependencies:
 - monad-st
 - mtl
 - pretty
-- QuickCheck
 - template-haskell
 - th-abstraction
 - transformers

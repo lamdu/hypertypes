@@ -1,4 +1,4 @@
-{-# LANGUAGE StandaloneDeriving, UndecidableInstances, TemplateHaskell, TypeFamilies, FlexibleInstances, MultiParamTypeClasses, FlexibleContexts #-}
+{-# LANGUAGE StandaloneDeriving, UndecidableInstances, TemplateHaskell, TypeFamilies, FlexibleInstances, MultiParamTypeClasses, FlexibleContexts, DataKinds #-}
 
 module TypeLang where
 
@@ -20,13 +20,13 @@ import Data.STRef
 
 data Typ f
     = TInt
-    | TFun (Node f Typ) (Node f Typ)
+    | TFun (Tie f Typ) (Tie f Typ)
     | TRow (Row f)
     | TVar String
 
 data Row f
     = REmpty
-    | RExtend String (Node f Typ) (Node f Row)
+    | RExtend String (Tie f Typ) (Tie f Row)
     | RVar String
 
 Lens.makePrisms ''Typ
@@ -86,7 +86,7 @@ readModifySTRef ref func =
 
 newStQuantified ::
     (MonadReader (a, InferState (Const (STRef (World m) Int))) m, MonadST m) =>
-    ALens' (InferState (Const (STRef (World m) Int))) (Const (STRef (World m) Int) (ast :: (* -> *) -> *)) -> m Int
+    ALens' (InferState (Const (STRef (World m) Int))) (Const (STRef (World m) Int) (ast :: Knot -> *)) -> m Int
 newStQuantified l =
     Lens.view (Lens._2 . Lens.cloneLens l . Lens._Wrapped)
     >>= liftST . fmap fst . (`readModifySTRef` (+1))

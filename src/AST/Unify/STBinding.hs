@@ -13,7 +13,7 @@ import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
 import           Prelude.Compat
 
-newtype STVar s a = STVar (STRef s (Maybe (UTerm (STVar s) a)))
+newtype STVar s a = STVar (STRef s (Maybe a))
 Lens.makePrisms ''STVar
 
 instance Eq (STVar s a) where

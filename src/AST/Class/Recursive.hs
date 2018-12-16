@@ -1,15 +1,16 @@
-{-# LANGUAGE NoImplicitPrelude, RankNTypes, DefaultSignatures, MultiParamTypeClasses, ConstraintKinds, FlexibleInstances, FlexibleContexts, ScopedTypeVariables, UndecidableInstances #-}
+{-# LANGUAGE NoImplicitPrelude, RankNTypes, DefaultSignatures, MultiParamTypeClasses, ConstraintKinds, FlexibleInstances, FlexibleContexts, ScopedTypeVariables #-}
 
 module AST.Class.Recursive
     ( Recursive(..), RecursiveConstraint
-    , wrap, unwrap, wrapM, unwrapM, fold, unfold, foldMapRecursive
-    , hoistNode, hoistNodeR, hoistBody, hoistBodyR
+    , wrap, unwrap, wrapM, unwrapM, fold, unfold
+    , foldMapRecursive
     ) where
 
-import           AST.Class.Children (Children(..), overChildren, foldMapChildren)
-import           AST.Node (Node)
+import           AST.Class.Children (Children(..), foldMapChildren)
+import           AST.Knot (Tree)
+import           AST.Knot.Pure (Pure(..))
 import           Control.Lens.Operators
-import           Data.Constraint
+import           Data.Constraint (Dict(..), withDict)
 import           Data.Functor.Const (Const(..))
 import           Data.Functor.Identity (Identity(..))
 import           Data.Proxy (Proxy(..))
@@ -28,16 +29,17 @@ type RecursiveConstraint expr constraint =
     , ChildrenConstraint expr (Recursive constraint)
     )
 
+instance constraint Pure => Recursive constraint Pure
 instance constraint (Const a) => Recursive constraint (Const a)
 
 wrapM ::
     forall constraint expr f m.
     (Monad m, Recursive constraint expr) =>
     Proxy constraint ->
-    (forall child. constraint child => child f -> m (Node f child)) ->
-    Node Identity expr ->
-    m (Node f expr)
-wrapM p f (Identity x) =
+    (forall child. constraint child => Tree child f -> m (Tree f child)) ->
+    Tree Pure expr ->
+    m (Tree f expr)
+wrapM p f (Pure x) =
     withDict (recursive :: Dict (RecursiveConstraint expr constraint)) $
     children (Proxy :: Proxy (Recursive constraint)) (wrapM p f) x >>= f
 
@@ -45,29 +47,29 @@ unwrapM ::
     forall constraint expr f m.
     (Monad m, Recursive constraint expr) =>
     Proxy constraint ->
-    (forall child. constraint child => Node f child -> m (child f)) ->
-    Node f expr ->
-    m (Node Identity expr)
+    (forall child. constraint child => Tree f child -> m (Tree child f)) ->
+    Tree f expr ->
+    m (Tree Pure expr)
 unwrapM p f x =
     withDict (recursive :: Dict (RecursiveConstraint expr constraint)) $
-    f x >>= children (Proxy :: Proxy (Recursive constraint)) (unwrapM p f) <&> Identity
+    f x >>= children (Proxy :: Proxy (Recursive constraint)) (unwrapM p f) <&> Pure
 
 wrap ::
     forall constraint expr f.
     Recursive constraint expr =>
     Proxy constraint ->
-    (forall child. constraint child => child f -> Node f child) ->
-    Node Identity expr ->
-    Node f expr
+    (forall child. constraint child => Tree child f -> Tree f child) ->
+    Tree Pure expr ->
+    Tree f expr
 wrap p f = runIdentity . wrapM p (Identity . f)
 
 unwrap ::
     forall constraint expr f.
     Recursive constraint expr =>
     Proxy constraint ->
-    (forall child. constraint child => Node f child -> child f) ->
-    Node f expr ->
-    Node Identity expr
+    (forall child. constraint child => Tree f child -> Tree child f) ->
+    Tree f expr ->
+    Tree Pure expr
 unwrap p f = runIdentity . unwrapM p (Identity . f)
 
 -- | Recursively fold up a tree to produce a result.
@@ -76,8 +78,8 @@ fold ::
     forall constraint expr a.
     Recursive constraint expr =>
     Proxy constraint ->
-    (forall child. constraint child => child (Const a) -> a) ->
-    Node Identity expr ->
+    (forall child. constraint child => Tree child (Const a) -> a) ->
+    Tree Pure expr ->
     a
 fold p f = getConst . wrap p (Const . f)
 
@@ -87,56 +89,22 @@ unfold ::
     forall constraint expr a.
     Recursive constraint expr =>
     Proxy constraint ->
-    (forall child. constraint child => a -> child (Const a)) ->
+    (forall child. constraint child => a -> Tree child (Const a)) ->
     a ->
-    Node Identity expr
+    Tree Pure expr
 unfold p f = unwrap p (f . getConst) . Const
 
 foldMapRecursive ::
     forall constraint expr a f.
-    (Recursive constraint expr, Monoid a, Foldable f) =>
+    (Recursive constraint expr, Recursive Children f, Monoid a) =>
     Proxy constraint ->
-    (forall child. constraint child => child f -> a) ->
-    expr f ->
+    (forall child g. (constraint child, Recursive Children g) => Tree child g -> a) ->
+    Tree expr f ->
     a
 foldMapRecursive p f x =
     withDict (recursive :: Dict (RecursiveConstraint expr constraint)) $
+    withDict (recursive :: Dict (RecursiveConstraint f Children)) $
     f x <>
     foldMapChildren (Proxy :: Proxy (Recursive constraint))
-    (foldMap (foldMapRecursive p f)) x
-
-overChildrenRecursive ::
-    forall expr f g.
-    Recursive Children expr =>
-    (forall child. Recursive Children child => Node f child -> Node g child) ->
-    expr f -> expr g
-overChildrenRecursive f =
-    withDict (recursive :: Dict (RecursiveConstraint expr Children)) $
-    overChildren (Proxy :: Proxy (Recursive Children)) f
-
-hoistNode ::
-    (Recursive Children expr, Functor f) =>
-    (forall a. f a -> g a) ->
-    Node f expr -> Node g expr
-hoistNode f = f . fmap (hoistBody f)
-
--- | Like `hoistNode` but requiring `Functor` for the second argument
-hoistNodeR ::
-    (Recursive Children expr, Functor g) =>
-    (forall a. f a -> g a) ->
-    Node f expr -> Node g expr
-hoistNodeR f = fmap (hoistBodyR f) . f
-
-hoistBody ::
-    forall expr f g.
-    (Recursive Children expr, Functor f) =>
-    (forall a. f a -> g a) ->
-    expr f -> expr g
-hoistBody f = overChildrenRecursive (hoistNode f)
-
-hoistBodyR ::
-    forall expr f g.
-    (Recursive Children expr, Functor g) =>
-    (forall a. f a -> g a) ->
-    expr f -> expr g
-hoistBodyR f = overChildrenRecursive (hoistNodeR f)
+    (foldMapChildren (Proxy :: Proxy (Recursive Children)) (foldMapRecursive p f))
+    x

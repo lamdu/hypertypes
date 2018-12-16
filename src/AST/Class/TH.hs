@@ -8,14 +8,12 @@ module AST.Class.TH
 import           AST.Class.Children (Children(..))
 import           AST.Class.Children.Mono (ChildOf)
 import           AST.Class.Recursive (Recursive)
-import           AST.Class.ZipMatch (ZipMatch(..))
-import           AST.Node (Node, LeafNode)
-import           Control.Applicative (liftA2)
+import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
+import           AST.Knot (Knot(..), RunKnot, Tie)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.State (StateT(..), evalStateT, gets, modify)
-import           Data.Functor.Const (Const)
 import qualified Data.Map as Map
 import           Data.Set (Set)
 import qualified Data.Set as Set
@@ -103,7 +101,7 @@ makeChildrenForType info =
             & foldl AppT (TupleT (Set.size (tiChildren info)))
         subTreeConstraint =
             Set.toList (tiChildren info)
-            <&> (\x -> VarT constraint `AppT` (ConT ''Node `AppT` VarT knot `AppT` x))
+            <&> (\x -> VarT constraint `AppT` (ConT ''Tie `AppT` VarT knot `AppT` x))
             & foldl AppT (TupleT (Set.size (tiChildren info)))
 
 parts :: D.DatatypeInfo -> Q (Type, Name)
@@ -112,9 +110,11 @@ parts info =
     [] -> fail "expected type constructor which requires arguments"
     xs ->
         case last xs of
-        SigT (VarT var) _ ->
-            pure (foldl AppT (ConT (D.datatypeName info)) (init xs <&> stripSigT), var)
-        _ -> fail "expected last argument to be variable"
+        SigT (VarT var) (ConT knot) | knot == ''Knot -> pure (res, var)
+        VarT var -> pure (res, var)
+        _ -> fail "expected last argument to be a knot variable"
+        where
+            res = foldl AppT (ConT (D.datatypeName info)) (init xs <&> stripSigT)
     where
         stripSigT (SigT x _) = x
         stripSigT x = x
@@ -139,18 +139,14 @@ childrenTypes var typ =
         add Other{} = pure mempty
 
 matchType :: Name -> Type -> CtrTypePattern
-matchType var (ConT node `AppT` VarT functor `AppT` ast)
-    | node == ''Node && functor == var =
+matchType var (ConT runKnot `AppT` VarT k `AppT` (PromotedT knot `AppT` ast))
+    | runKnot == ''RunKnot && knot == 'Knot && k == var =
         NodeFofX ast
-matchType var (VarT f0 `AppT` (ast `AppT` VarT f1))
-    | f0 == var && f1 == var =
-        -- Node type synonym expanded
+matchType var (ConT tie `AppT` VarT k `AppT` ast)
+    | tie == ''Tie && k == var =
         NodeFofX ast
-matchType var (ConT node `AppT` VarT functor `AppT` leaf)
-    | node == ''LeafNode && functor == var =
-        NodeFofX (AppT (ConT ''Const) leaf)
-matchType var (ast `AppT` VarT functor)
-    | functor == var =
+matchType var (ast `AppT` VarT knot)
+    | knot == var =
         XofF ast
 matchType var x@(AppT t typ) =
     -- TODO: check if applied over a functor-kinded type.
@@ -234,8 +230,7 @@ makeZipMatch typeName =
             ]
             <&> (:[])
     where
-        tailClause =
-            Clause [WildP, WildP, WildP, WildP] (NormalB (ConE 'Nothing)) []
+        tailClause = Clause [WildP, WildP] (NormalB (ConE 'Nothing)) []
 
 data CtrCase =
     CtrCase
@@ -246,12 +241,10 @@ data CtrCase =
 makeZipMatchCtr :: Name -> D.ConstructorInfo -> CtrCase
 makeZipMatchCtr var info =
     CtrCase
-    { ccClause = Clause [VarP proxy, VarP func, con fst, con snd] body []
+    { ccClause = Clause [con fst, con snd] body []
     , ccContext = fieldParts >>= zmfContext
     }
     where
-        proxy = mkName "_p"
-        func = mkName "_f"
         con f = ConP (D.constructorName info) (cVars <&> f <&> VarP)
         cVars =
             [0::Int ..] <&> show <&> (\n -> (mkName ('x':n), mkName ('y':n)))
@@ -262,26 +255,23 @@ makeZipMatchCtr var info =
         checks = fieldParts >>= zmfConds
         mkAnd x y = InfixE (Just x) (VarE '(&&)) (Just y)
         fieldParts = zipWith field cVars (D.constructorFields info <&> matchType var)
-        bodyExp =
-            applicativeStyle2
-            (ConE 'Just `AppE` (VarE 'pure `AppE` ConE (D.constructorName info)))
-            (fieldParts <&> zmfResult)
+        bodyExp = applicativeStyle (ConE (D.constructorName info)) (fieldParts <&> zmfResult)
         field (x, y) NodeFofX{} =
             ZipMatchField
-            { zmfResult = ConE 'Just `AppE` (VarE func `AppE` VarE x `AppE` VarE y)
+            { zmfResult = ConE 'Just `AppE` (ConE 'Both `AppE` VarE x `AppE` VarE y)
             , zmfConds = []
             , zmfContext = []
             }
         field (x, y) (XofF t) =
             ZipMatchField
-            { zmfResult = VarE 'zipMatch `AppE` VarE proxy `AppE` VarE func `AppE` VarE x `AppE` VarE y
+            { zmfResult = VarE 'zipMatch `AppE` VarE x `AppE` VarE y
             , zmfConds = []
             , zmfContext = [ConT ''ZipMatch `AppT` t]
             }
         field _ Tof{} = error "TODO"
         field (x, y) (Other t) =
             ZipMatchField
-            { zmfResult = ConE 'Just `AppE` (VarE 'pure `AppE` VarE x)
+            { zmfResult = ConE 'Just `AppE` VarE x
             , zmfConds = [InfixE (Just (VarE x)) (VarE '(==)) (Just (VarE y))]
             , zmfContext = [ConT ''Eq `AppT` t | isPolymorphic t]
             }
@@ -306,9 +296,3 @@ data ZipMatchField = ZipMatchField
     , zmfConds :: [Exp]
     , zmfContext :: [Pred]
     }
-
-applicativeStyle2 :: Exp -> [Exp] -> Exp
-applicativeStyle2 =
-    foldl ap2
-    where
-        ap2 x y = VarE 'liftA2 `AppE` VarE '(<*>) `AppE` x `AppE` y

@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TypeFamilies, MultiParamTypeClasses, TypeOperators #-}
+{-# LANGUAGE NoImplicitPrelude, TypeFamilies, MultiParamTypeClasses, TypeOperators, DataKinds #-}
 
 -- | `Infer` for indexed AST types (such as `AST.Term.Scope.Scope`)
 
@@ -6,12 +6,13 @@ module AST.Class.Infer.Infer1
     ( HasTypeAST1(..), Infer1(..)
     ) where
 
-import           AST.Class.Infer
-import           Data.Constraint
+import           AST.Class.Infer (Infer, TypeAST)
+import           AST.Knot (Knot)
+import           Data.Constraint (Constraint, Dict, (:-))
 import           Data.Proxy (Proxy(..))
 
 class HasTypeAST1 t where
-    type family TypeAST1 t :: (* -> *) -> *
+    type family TypeAST1 t :: Knot -> *
     type family TypeASTIndexConstraint t :: * -> Constraint
     typeAst :: Proxy (t k) -> Dict (TypeAST (t k) ~ TypeAST1 t)
 

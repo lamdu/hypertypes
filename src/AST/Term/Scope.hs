@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, StandaloneDeriving, UndecidableInstances, TemplateHaskell, KindSignatures, TypeFamilies, LambdaCase, EmptyCase, ScopedTypeVariables, TypeOperators, FlexibleInstances, MultiParamTypeClasses, TupleSections #-}
+{-# LANGUAGE NoImplicitPrelude, StandaloneDeriving, UndecidableInstances, TemplateHaskell, KindSignatures, TypeFamilies, LambdaCase, EmptyCase, ScopedTypeVariables, TypeOperators, FlexibleInstances, MultiParamTypeClasses, TupleSections, DataKinds #-}
 
 module AST.Term.Scope
     ( Scope(..), ScopeVar(..), EmptyScope
@@ -12,14 +12,14 @@ import           AST.Class.Infer.Infer1 (Infer1(..), HasTypeAST1(..))
 import           AST.Class.Children (Children)
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Class.TH (makeChildrenAndZipMatch)
+import           AST.Knot (Knot, Tie, Tree)
 import           AST.Knot.UTerm (UTerm(..), newUTerm)
-import           AST.Node (Node)
 import           AST.Unify (Unify(..), Binding(..), UniVar)
 import           Control.Lens (Lens', Prism')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Reader (MonadReader, local)
-import           Data.Constraint
+import           Data.Constraint (Dict(..), withDict, (:-), (\\))
 import           Data.IntMap (IntMap)
 import           Data.Maybe (fromMaybe)
 import           Data.Proxy (Proxy(..))
@@ -28,8 +28,8 @@ import           Prelude.Compat
 
 data EmptyScope
 
-newtype Scope expr a f = Scope (Node f (expr (Maybe a)))
-newtype ScopeVar (expr :: * -> (* -> *) -> *) a (f :: * -> *) = ScopeVar a
+newtype Scope expr a k = Scope (Tie k (expr (Maybe a)))
+newtype ScopeVar (expr :: * -> Knot -> *) a (k :: Knot) = ScopeVar a
 
 makeChildrenAndZipMatch [''Scope, ''ScopeVar]
 instance Recursive Children (expr (Maybe a)) => Recursive Children (Scope expr a)
@@ -62,13 +62,14 @@ inverseDeBruijnIndex =
 scope ::
     forall expr a f.
     DeBruijnIndex a =>
-    (Int -> Node f (expr (Maybe a))) -> Scope expr a f
+    (Int -> Tree f (expr (Maybe a))) ->
+    Tree (Scope expr a) f
 scope f = Scope (f (inverseDeBruijnIndex # (Nothing :: Maybe a)))
 
 scopeVar :: DeBruijnIndex a => Int -> ScopeVar expr a f
 scopeVar x = ScopeVar (x ^?! inverseDeBruijnIndex)
 
-type ScopeTypes v t = IntMap (Node (UTerm v) t)
+type ScopeTypes v t = IntMap (Tree (UTerm v) t)
 
 class HasScopeTypes v t env where
     scopeTypes :: Lens' env (ScopeTypes v t)

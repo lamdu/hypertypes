@@ -1,8 +1,8 @@
-{-# LANGUAGE NoImplicitPrelude, MultiParamTypeClasses, FlexibleContexts, LambdaCase, ScopedTypeVariables, TypeFamilies, DefaultSignatures #-}
+{-# LANGUAGE NoImplicitPrelude, MultiParamTypeClasses, FlexibleContexts, LambdaCase, ScopedTypeVariables, TypeFamilies, DefaultSignatures, DataKinds #-}
 
 module AST.Unify
     ( HasQuantifiedVar(..)
-    , UniVar, UNode
+    , UniVar
     , unfreeze
     , Binding(..)
     , Unify(..)
@@ -11,19 +11,19 @@ module AST.Unify
 
 import           AST.Class.Children (Children(..))
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint, wrap)
-import           AST.Class.ZipMatch (ZipMatch(..), zipMatch_)
-import           AST.Knot.UTerm
-import           AST.Node (Node)
+import           AST.Class.ZipMatch (ZipMatch(..), zipMatchWith_)
+import           AST.Knot.Pure (Pure(..))
+import           AST.Knot.UTerm (UTerm(..), UBody(..), newUTerm, uBody, uVisited)
+import           AST.Knot (Knot, Tree)
 import           Control.Applicative (Alternative(..))
 import           Control.Lens.Operators
-import           Data.Constraint
-import           Data.Functor.Identity (Identity(..))
+import           Data.Constraint (Dict, withDict)
 import           Data.Maybe (fromMaybe)
 import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
 
-class HasQuantifiedVar (t :: (* -> *) -> *) where
+class HasQuantifiedVar (t :: Knot -> *) where
     type family QVar t
     quantifiedVar :: QVar t -> t f
 
@@ -32,13 +32,12 @@ class HasQuantifiedVar (t :: (* -> *) -> *) where
 -- Unification variable type for a unification monad
 type family UniVar (m :: * -> *) :: * -> *
 
-type UNode m t = Node (UTerm (UniVar m)) t
-type UVar m t = UniVar m (t (UTerm (UniVar m)))
+type UVar m t = UniVar m (Tree (UTerm (UniVar m)) t)
 
 data Binding m t = Binding
-    { lookupVar :: UVar m t -> m (Maybe (UNode m t))
-    , newVar :: m (UNode m t)
-    , bindVar :: UVar m t -> UNode m t -> m ()
+    { lookupVar :: UVar m t -> m (Maybe (Tree (UTerm (UniVar m)) t))
+    , newVar :: m (Tree (UTerm (UniVar m)) t)
+    , bindVar :: UVar m t -> Tree (UTerm (UniVar m)) t -> m ()
     }
 
 class (Eq (UVar m t), ZipMatch t, HasQuantifiedVar t, Monad m) => Unify m t where
@@ -53,8 +52,8 @@ class (Eq (UVar m t), ZipMatch t, HasQuantifiedVar t, Monad m) => Unify m t wher
     -- therefore the type is infinite.
     -- Break with an error if the type system doesn't allow it,
     -- or resolve the situation and generate the type represeting this loop.
-    occurs :: UVar m t -> t (UTerm (UniVar m)) -> m (Node Identity t)
-    default occurs :: Alternative m => UVar m t -> t (UTerm (UniVar m)) -> m (Node Identity t)
+    occurs :: UVar m t -> Tree t (UTerm (UniVar m)) -> m (Tree Pure t)
+    default occurs :: Alternative m => UVar m t -> Tree t (UTerm (UniVar m)) -> m (Tree Pure t)
     occurs _ _ = empty
 
     -- | What to do when top-levels of terms being unified do not match.
@@ -62,17 +61,22 @@ class (Eq (UVar m t), ZipMatch t, HasQuantifiedVar t, Monad m) => Unify m t wher
     -- but some AST terms could be equivalent despite not matching,
     -- like record extends with fields ordered differently,
     -- and these could still match.
-    structureMismatch :: t (UTerm (UniVar m)) -> t (UTerm (UniVar m)) -> m ()
-    default structureMismatch :: Alternative m => t (UTerm (UniVar m)) -> t (UTerm (UniVar m)) -> m ()
+    structureMismatch :: Tree t (UTerm (UniVar m)) -> Tree t (UTerm (UniVar m)) -> m ()
+    default structureMismatch ::
+        Alternative m => Tree t (UTerm (UniVar m)) -> Tree t (UTerm (UniVar m)) -> m ()
     structureMismatch _ _ = empty
 
 -- | Embed a pure term as a mutable term.
-unfreeze :: Recursive Children t => Node Identity t -> Node (UTerm v) t
+unfreeze :: Recursive Children t => Tree Pure t -> Tree (UTerm v) t
 unfreeze = wrap (Proxy :: Proxy Children) newUTerm
 
 -- look up a variable, and return last variable pointing to result.
 -- prune all variable on way to last variable
-semiPruneLookup :: forall m t. Unify m t => UVar m t -> m (UVar m t, Maybe (UBody (t (UTerm (UniVar m)))))
+semiPruneLookup ::
+    forall m t.
+    Unify m t =>
+    UVar m t ->
+    m (UVar m t, Maybe (UBody (Tree t (UTerm (UniVar m)))))
 semiPruneLookup v0 =
     lookupVar binding v0
     >>=
@@ -88,11 +92,11 @@ semiPruneLookup v0 =
 -- TODO: implement when need / better understand motivations for -
 -- freeze, fullPrune, occursIn, seenAs, getFreeVars, freshen, equals, equiv
 
-applyBindings :: forall m t. Recursive (Unify m) t => UNode m t -> m (Node Identity t)
+applyBindings :: forall m t. Recursive (Unify m) t => Tree (UTerm (UniVar m)) t -> m (Tree Pure t)
 applyBindings (UTerm t) =
     withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
     children (Proxy :: Proxy (Recursive (Unify m))) applyBindings (t ^. uBody)
-    <&> Identity
+    <&> Pure
 applyBindings (UVar v0) =
     withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
     semiPruneLookup v0
@@ -102,10 +106,10 @@ applyBindings (UVar v0) =
         do
             qvar <- newQuantifiedVariable (Proxy :: Proxy t)
             bindVar binding v1 (newUTerm (quantifiedVar qvar))
-            quantifiedVar qvar & Identity & pure
+            quantifiedVar qvar & Pure & pure
     (v1, Just t) ->
         case leafExpr of
-        Just f -> t ^. uBody & f & Identity & pure
+        Just f -> t ^. uBody & f & Pure & pure
         Nothing
             | t ^. uVisited -> occurs v1 (t ^. uBody)
             | otherwise ->
@@ -119,7 +123,12 @@ applyBindings (UVar v0) =
 --   Variables are pruned to point to other variables rather than terms,
 --   yielding comparison of (sometimes equal) variables,
 --   rather than recursively unifying the terms that they would prune to.
-unify :: forall m t. Recursive (Unify m) t => UNode m t -> UNode m t -> m ()
+unify ::
+    forall m t.
+    Recursive (Unify m) t =>
+    Tree (UTerm (UniVar m)) t ->
+    Tree (UTerm (UniVar m)) t ->
+    m ()
 unify (UVar v) (UTerm t) = unifyVarTerm v (t ^. uBody)
 unify (UTerm t) (UVar v) = unifyVarTerm v (t ^. uBody)
 unify (UTerm t0) (UTerm t1) = unifyTerms (t0 ^. uBody) (t1 ^. uBody)
@@ -145,7 +154,10 @@ unifyVars x0 y0
             (y1, Nothing) ->
                 bindVar binding x1 (UVar y1)
 
-unifyVarTerm :: forall m t. Recursive (Unify m) t => UVar m t -> t (UTerm (UniVar m)) -> m ()
+unifyVarTerm ::
+    forall m t.
+    Recursive (Unify m) t =>
+    UVar m t -> Tree t (UTerm (UniVar m)) -> m ()
 unifyVarTerm x0 y =
     withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
     semiPruneLookup x0
@@ -157,8 +169,10 @@ unifyVarTerm x0 y =
 unifyTerms ::
     forall m t.
     Recursive (Unify m) t =>
-    t (UTerm (UniVar m)) -> t (UTerm (UniVar m)) -> m ()
+    Tree t (UTerm (UniVar m)) ->
+    Tree t (UTerm (UniVar m)) ->
+    m ()
 unifyTerms x y =
     withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
     fromMaybe (structureMismatch x y)
-    (zipMatch_ (Proxy :: Proxy (Recursive (Unify m))) unify x y)
+    (zipMatchWith_ (Proxy :: Proxy (Recursive (Unify m))) unify x y)

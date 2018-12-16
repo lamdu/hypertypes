@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables, TemplateHaskell, DeriveTraversable, DeriveGeneric, FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables, TemplateHaskell, DeriveGeneric, FlexibleContexts, RankNTypes, TypeFamilies, MultiParamTypeClasses, UndecidableInstances, ConstraintKinds, StandaloneDeriving #-}
 
 module AST.Knot.Ann
     ( Ann(..), ann, val
@@ -8,11 +8,12 @@ module AST.Knot.Ann
 
 import           AST.Class.Children (Children(..), overChildren)
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
-import           AST.Node (Node)
+import           AST.Class.TH (makeChildrenAndZipMatch)
+import           AST.Knot (Tie, Tree)
+import           AST.Knot.Pure (Pure(..))
 import qualified Control.Lens as Lens
 import           Data.Binary (Binary)
-import           Data.Constraint
-import           Data.Functor.Identity (Identity(..))
+import           Data.Constraint (Dict, withDict)
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import qualified Text.PrettyPrint as PP
@@ -21,14 +22,23 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 import           Prelude.Compat
 
 -- Annotate tree nodes
-data Ann a v = Ann
+data Ann a knot = Ann
     { _ann :: a
-    , _val :: v
-    } deriving (Eq, Ord, Show, Functor, Foldable, Traversable, Generic)
-instance (Binary a, Binary v) => Binary (Ann a v)
+    , _val :: Tie knot (Ann a)
+    } deriving Generic
 Lens.makeLenses ''Ann
 
-instance (Pretty a, Pretty v) => Pretty (Ann a v) where
+makeChildrenAndZipMatch [''Ann]
+
+type AnnConstraints c a t = (c a, SubTreeConstraint (Ann a) t c)
+
+deriving instance AnnConstraints Eq   a t => Eq   (Ann a t)
+deriving instance AnnConstraints Ord  a t => Ord  (Ann a t)
+deriving instance AnnConstraints Show a t => Show (Ann a t)
+
+instance AnnConstraints Binary a t => Binary (Ann a t)
+
+instance AnnConstraints Pretty a t => Pretty (Ann a t) where
     pPrintPrec lvl prec (Ann pl b)
         | PP.isEmpty plDoc || plDoc == PP.text "()" = pPrintPrec lvl prec b
         | otherwise =
@@ -41,8 +51,8 @@ annotations ::
     forall e a b.
     Recursive Children e =>
     Lens.Traversal
-    (Node (Ann a) e)
-    (Node (Ann b) e)
+    (Tree (Ann a) e)
+    (Tree (Ann b) e)
     a b
 annotations f (Ann pl x) =
     withDict (recursive :: Dict (RecursiveConstraint e Children)) $
@@ -55,14 +65,13 @@ para ::
     forall constraint expr a.
     Recursive constraint expr =>
     Proxy constraint ->
-    (forall child. Recursive constraint child => child (Ann a) -> a) ->
-    Node Identity expr ->
-    Node (Ann a) expr
+    (forall child. Recursive constraint child => Tree child (Ann a) -> a) ->
+    Tree Pure expr ->
+    Tree (Ann a) expr
 para p f x =
     Ann (f r) r
     where
-        r :: expr (Ann a)
         r =
             withDict (recursive :: Dict (RecursiveConstraint expr constraint)) $
             overChildren (Proxy :: Proxy (Recursive constraint))
-            (para p f) (runIdentity x)
+            (para p f) (getPure x)

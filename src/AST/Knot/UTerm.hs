@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, DeriveTraversable, TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude, DeriveTraversable, TemplateHaskell, TypeFamilies, MultiParamTypeClasses, DataKinds, StandaloneDeriving, ConstraintKinds, UndecidableInstances #-}
 
 module AST.Knot.UTerm
     ( UTerm(..), _UVar, _UTerm
@@ -6,7 +6,9 @@ module AST.Knot.UTerm
     , newUTerm
     ) where
 
-import           AST.Node (Node)
+import           AST.Class.Children (Children(..))
+import           AST.Class.TH (makeChildren)
+import           AST.Knot (Knot, Tie, Tree)
 import qualified Control.Lens as Lens
 
 import           Prelude.Compat
@@ -20,13 +22,17 @@ data UBody a = UBody
     } deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
 Lens.makeLenses ''UBody
 
-data UTerm f a
-    = UVar (f a)
-    | UTerm (UBody a)
-    deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
+data UTerm f (knot :: Knot)
+    = UVar (f (UTerm f knot))
+    | UTerm (UBody (Tie knot (UTerm f)))
 Lens.makePrisms ''UTerm
 
-newUTerm :: t (UTerm v) -> Node (UTerm v) t
+makeChildren [''UTerm]
+
+type UTermConstraints c f t = (c (f (UTerm f t)), SubTreeConstraint (UTerm f) t c)
+deriving instance UTermConstraints Show f t => Show (UTerm f t)
+
+newUTerm :: Tree t (UTerm v) -> Tree (UTerm v) t
 newUTerm x =
     UTerm UBody
     { _uBody = x
