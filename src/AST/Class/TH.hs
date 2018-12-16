@@ -212,10 +212,10 @@ makeZipMatch typeName =
         (dst, var) <- parts info
         let ctrs = D.datatypeCons info <&> makeZipMatchCtr var
         instanceD
-            (pure (ctrs >>= zmcContext & Set.fromList & Set.toList))
+            (pure (ctrs >>= ccContext & Set.fromList & Set.toList))
             (appT (conT ''ZipMatch) (pure dst))
             [ funD 'zipMatch
-                ( (ctrs <&> pure . zmcClause) ++ [pure tailClause]
+                ( (ctrs <&> pure . ccClause) ++ [pure tailClause]
                 )
             ]
             <&> (:[])
@@ -223,17 +223,17 @@ makeZipMatch typeName =
         tailClause =
             Clause [WildP, WildP, WildP, WildP] (NormalB (ConE 'Nothing)) []
 
-data ZipMatchCtr =
-    ZipMatchCtr
-    { zmcClause :: Clause
-    , zmcContext :: [Pred]
+data CtrCase =
+    CtrCase
+    { ccClause :: Clause
+    , ccContext :: [Pred]
     }
 
-makeZipMatchCtr :: Name -> D.ConstructorInfo -> ZipMatchCtr
+makeZipMatchCtr :: Name -> D.ConstructorInfo -> CtrCase
 makeZipMatchCtr var info =
-    ZipMatchCtr
-    { zmcClause = Clause [VarP proxy, VarP func, con fst, con snd] body []
-    , zmcContext = fieldParts >>= zmfContext
+    CtrCase
+    { ccClause = Clause [VarP proxy, VarP func, con fst, con snd] body []
+    , ccContext = fieldParts >>= zmfContext
     }
     where
         proxy = mkName "_p"
