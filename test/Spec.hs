@@ -30,8 +30,8 @@ expr =
     ELit 5 & Identity
     & Apply (var x) & EApp & Identity
 
-occurs :: Node Identity (Term EmptyScope)
-occurs =
+infinite :: Node Identity (Term EmptyScope)
+infinite =
     -- \x -> x x
     Identity . ELam . scope $ \x ->
     Apply (var x) (var x) & EApp & Identity
@@ -61,5 +61,5 @@ main =
         print (runIntInfer (inferExpr expr))
         print (runST (runSTInfer (inferExpr expr)))
         putStrLn ""
-        print (runIntInfer (inferExpr occurs))
-        print (runST (runSTInfer (inferExpr occurs)))
+        print (runIntInfer (inferExpr infinite))
+        print (runST (runSTInfer (inferExpr infinite)))

@@ -16,7 +16,6 @@ import           AST.Knot.UTerm
 import           AST.Node (Node)
 import           Control.Applicative (Alternative(..))
 import           Control.Lens.Operators
-import           Control.Monad (when)
 import           Data.Constraint
 import           Data.Functor.Identity (Identity(..))
 import           Data.Maybe (fromMaybe)
@@ -50,10 +49,13 @@ class (Eq (UVar m t), ZipMatch t, HasQuantifiedVar t, Monad m) => Unify m t wher
     default newQuantifiedVariable :: QVar t ~ () => Proxy t -> m (QVar t)
     newQuantifiedVariable _ = pure ()
 
-    -- | Break with an "occurs" error due to variable resolving to term that contains itself.
-    occursError :: UVar m t -> t (UTerm (UniVar m)) -> m ()
-    default occursError :: Alternative m => UVar m t -> t (UTerm (UniVar m)) -> m ()
-    occursError _ _ = empty
+    -- | A unification variable was unified with a type that contains itself,
+    -- therefore the type is infinite.
+    -- Break with an error if the type system doesn't allow it,
+    -- or resolve the situation and generate the type represeting this loop.
+    occurs :: UVar m t -> t (UTerm (UniVar m)) -> m (Node Identity t)
+    default occurs :: Alternative m => UVar m t -> t (UTerm (UniVar m)) -> m (Node Identity t)
+    occurs _ _ = empty
 
     -- | What to do when top-levels of terms being unified do not match.
     -- Usually this will throw a failure,
@@ -104,13 +106,14 @@ applyBindings (UVar v0) =
     (v1, Just t) ->
         case leafExpr of
         Just f -> t ^. uBody & f & Identity & pure
-        Nothing ->
-            do
-                when (t ^. uVisited) (occursError v1 (t ^. uBody))
-                t & uVisited .~ True & UTerm & bindVar binding v1
-                r <- applyBindings (UTerm t)
-                bindVar binding v1 (UTerm t)
-                pure r
+        Nothing
+            | t ^. uVisited -> occurs v1 (t ^. uBody)
+            | otherwise ->
+                do
+                    t & uVisited .~ True & UTerm & bindVar binding v1
+                    r <- applyBindings (UTerm t)
+                    bindVar binding v1 (UTerm t)
+                    pure r
 
 -- Note on usage of `semiPruneLookup`:
 --   Variables are pruned to point to other variables rather than terms,
