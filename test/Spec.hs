@@ -5,6 +5,7 @@ import TypeLang
 
 import AST
 import AST.Class.Infer
+import AST.Class.Recursive
 import AST.Term.Apply
 import AST.Term.Scope
 import AST.Unify
@@ -17,6 +18,7 @@ import Control.Monad.ST
 import Control.Monad.Trans.Maybe
 import Data.Functor.Const
 import Data.Functor.Identity
+import Data.Proxy
 import Data.STRef
 
 var :: DeBruijnIndex k => Int -> Identity (Term k f)
@@ -41,7 +43,7 @@ inferExpr ::
     Node Identity (Term k) ->
     m (Node Identity Typ)
 inferExpr x =
-    inferNode (hoistNode (Ann () . runIdentity) x)
+    inferNode (wrap (Proxy :: Proxy Children) (Ann ()) x)
     <&> (^. nodeType)
     >>= applyBindings
 
