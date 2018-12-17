@@ -20,7 +20,6 @@ import qualified Data.Map as Map
 import           Data.Set (Set)
 import qualified Data.Set as Set
 import           Language.Haskell.TH
-import           Language.Haskell.TH.Subst (substitute)
 import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
@@ -178,7 +177,7 @@ childrenTypesFromTypeName name args =
                 & Map.fromList
         (_, var) <- parts info & lift
         D.datatypeCons info >>= D.constructorFields
-            <&> substitute substs
+            <&> D.applySubstitution substs
             & traverse (childrenTypes var)
             <&> mconcat
     where
