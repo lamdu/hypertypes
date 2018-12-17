@@ -1,8 +1,8 @@
 # syntax-tree
 
-A Haskell library for diverse (non-uniform) typed syntax trees with external fix-points.
+A Haskell library for diverse (non-uniform) typed syntax trees with external fix-points ("Knots").
 
-Let's consider this recursive diverse AST (without external fix-point):
+Let's consider this co-recursive AST (without knots):
 
 ```Haskell
 data Typ
@@ -19,17 +19,17 @@ Note how `RExtend` contains both a `Typ` and a `Row`. This makes this a non-unif
 
 Many libraries and tutorials for representing ASTs in Haskell with external fix-points,
 suggest to formulate the tree with a type variable for its children,
-however when the tree is diverse that solution doesn't work.
+however when the tree is diverse that solution doesn't work (because the children are not of the same type).
 
-Here's how this library provides an external fix-point to the above AST:
+Here's how this library represents the above AST with Knots:
 
 ```Haskell
-data Typ f
+data Typ k
     = TInt
-    | TFun (Node f Typ) (Node f Typ)
-    | TRow (Row f)
+    | TFun (Tie k Typ) (Tie k Typ)
+    | TRow (Row k)
 
-data Row f
+data Row k
     = REmpty
-    | RExtend String (Node f Typ) (Node f Row)
+    | RExtend String (Tie k Typ) (Tie k Row)
 ```
