@@ -2,7 +2,7 @@
 
 module AST.Class.Recursive
     ( Recursive(..), RecursiveConstraint
-    , wrap, unwrap, fold, unfold, foldMapRecursive
+    , wrap, unwrap, wrapM, unwrapM, fold, unfold, foldMapRecursive
     , hoistNode, hoistNodeR, hoistBody, hoistBodyR
     ) where
 
@@ -30,27 +30,45 @@ type RecursiveConstraint expr constraint =
 
 instance constraint (Const a) => Recursive constraint (Const a)
 
-wrap ::
+wrapM ::
     forall constraint expr f m.
     (Monad m, Recursive constraint expr) =>
     Proxy constraint ->
     (forall child. constraint child => child f -> m (Node f child)) ->
     Node Identity expr ->
     m (Node f expr)
-wrap p f (Identity x) =
+wrapM p f (Identity x) =
     withDict (recursive :: Dict (RecursiveConstraint expr constraint)) $
-    children (Proxy :: Proxy (Recursive constraint)) (wrap p f) x >>= f
+    children (Proxy :: Proxy (Recursive constraint)) (wrapM p f) x >>= f
 
-unwrap ::
+unwrapM ::
     forall constraint expr f m.
     (Monad m, Recursive constraint expr) =>
     Proxy constraint ->
     (forall child. constraint child => Node f child -> m (child f)) ->
     Node f expr ->
     m (Node Identity expr)
-unwrap p f x =
+unwrapM p f x =
     withDict (recursive :: Dict (RecursiveConstraint expr constraint)) $
-    f x >>= children (Proxy :: Proxy (Recursive constraint)) (unwrap p f) <&> Identity
+    f x >>= children (Proxy :: Proxy (Recursive constraint)) (unwrapM p f) <&> Identity
+
+wrap ::
+    forall constraint expr f.
+    Recursive constraint expr =>
+    Proxy constraint ->
+    (forall child. constraint child => child f -> Node f child) ->
+    Node Identity expr ->
+    Node f expr
+wrap p f = runIdentity . wrapM p (Identity . f)
+
+unwrap ::
+    forall constraint expr f.
+    Recursive constraint expr =>
+    Proxy constraint ->
+    (forall child. constraint child => Node f child -> child f) ->
+    Node f expr ->
+    Node Identity expr
+unwrap p f = runIdentity . unwrapM p (Identity . f)
 
 -- | Recursively fold up a tree to produce a result.
 -- TODO: Is this a "cata-morphism"?
@@ -61,7 +79,7 @@ fold ::
     (forall child. constraint child => child (Const a) -> a) ->
     Node Identity expr ->
     a
-fold p f = getConst . runIdentity . wrap p (Identity . Const . f)
+fold p f = getConst . wrap p (Const . f)
 
 -- | Build/load a tree from a seed value.
 -- TODO: Is this an "ana-morphism"?
@@ -72,7 +90,7 @@ unfold ::
     (forall child. constraint child => a -> child (Const a)) ->
     a ->
     Node Identity expr
-unfold p f = runIdentity . unwrap p (Identity . f . getConst) . Const
+unfold p f = unwrap p (f . getConst) . Const
 
 foldMapRecursive ::
     forall constraint expr a f.

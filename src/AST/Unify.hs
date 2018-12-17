@@ -68,7 +68,7 @@ class (Eq (UVar m t), ZipMatch t, HasQuantifiedVar t, Monad m) => Unify m t wher
 
 -- | Embed a pure term as a mutable term.
 unfreeze :: Recursive Children t => Node Identity t -> Node (UTerm v) t
-unfreeze = runIdentity . wrap (Proxy :: Proxy Children) (Identity . newUTerm)
+unfreeze = wrap (Proxy :: Proxy Children) newUTerm
 
 -- look up a variable, and return last variable pointing to result.
 -- prune all variable on way to last variable
