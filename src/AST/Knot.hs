@@ -5,7 +5,7 @@ module AST.Knot
     , Tie, Tree
     ) where
 
-data Knot = Knot (Knot -> *)
+newtype Knot = Knot (Knot -> *)
 type family RunKnot (knot :: Knot) :: Knot -> *
 type instance RunKnot ('Knot t) = t
 
