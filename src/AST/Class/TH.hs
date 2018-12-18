@@ -34,8 +34,11 @@ makeChildren typeNames =
         typeInfos <- traverse makeTypeInfo typeNames
         chldrn <- traverse makeChildrenForType typeInfos
         let recCtx = chldrn >>= snd & Set.fromList & Set.toList
-        traverse (makeRecursiveChildren recCtx) (findRecursives typeInfos)
-            <&> ((chldrn >>= fst) <>)
+        recs <-
+            case recCtx of
+            [] -> traverse makeRecursiveChildren (findRecursives typeInfos)
+            _ -> pure []
+        pure ((chldrn >>= fst) <> recs)
 
 findRecursives :: [TypeInfo] -> [TypeInfo]
 findRecursives infos
@@ -46,9 +49,9 @@ findRecursives infos
         hasDeps = all (`Set.member` cur) . Set.toList . tiChildren
         cur = Set.fromList (infos <&> tiInstance)
 
-makeRecursiveChildren :: [Pred] -> TypeInfo -> DecQ
-makeRecursiveChildren ctx info =
-    instanceD (pure ctx) (conT ''Recursive `appT` conT ''Children `appT` pure (tiInstance info)) []
+makeRecursiveChildren :: TypeInfo -> DecQ
+makeRecursiveChildren info =
+    instanceD (pure []) (conT ''Recursive `appT` conT ''Children `appT` pure (tiInstance info)) []
 
 data TypeInfo = TypeInfo
     { tiInstance :: Type
