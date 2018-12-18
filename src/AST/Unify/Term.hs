@@ -2,39 +2,35 @@
 
 module AST.Unify.Term
     ( UTerm(..), _UVar, _UTerm
-    , UBody(..), uBody, uVisited
-    , newUTerm
+    , VTerm(..), _VVar, _VTerm, _VResolving
     ) where
 
 import           AST.Class.Children (Children(..))
+import           AST.Class.Recursive
 import           AST.Class.TH (makeChildren)
-import           AST.Knot (Tie, Tree)
+import           AST.Knot (Tie)
 import qualified Control.Lens as Lens
 
 import           Prelude.Compat
 
 -- Names modeled after unification-fd
 
-data UBody a = UBody
-    { _uBody :: a
-    , -- Used for occurs-check
-      _uVisited :: Bool
-    } deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
-Lens.makeLenses ''UBody
+data UTerm f ast
+    = UVar (f (VTerm f ast))
+    | UTerm (Tie ast (UTerm f))
 
-data UTerm f knot
-    = UVar (f (UTerm f knot))
-    | UTerm (UBody (Tie knot (UTerm f)))
+data VTerm f ast
+    = VVar (f (VTerm f ast))
+    | VTerm (Tie ast (UTerm f))
+    | VResolving (Tie ast (UTerm f))
+
 Lens.makePrisms ''UTerm
+Lens.makePrisms ''VTerm
 
-makeChildren [''UTerm]
+makeChildren [''UTerm, ''VTerm]
 
-type UTermConstraints c f t = (c (f (UTerm f t)), SubTreeConstraint (UTerm f) t c)
-deriving instance UTermConstraints Show f t => Show (UTerm f t)
+instance Traversable f => Recursive Children (UTerm f)
+instance Traversable f => Recursive Children (VTerm f)
 
-newUTerm :: Tree t (UTerm v) -> Tree (UTerm v) t
-newUTerm x =
-    UTerm UBody
-    { _uBody = x
-    , _uVisited = False
-    }
+deriving instance (Show (Tie t (UTerm f)), Show (f (VTerm f t))) => Show (UTerm f t)
+deriving instance (Show (Tie t (UTerm f)), Show (f (VTerm f t))) => Show (VTerm f t)

@@ -14,7 +14,7 @@ import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Class.TH (makeChildrenAndZipMatch)
 import           AST.Knot (Knot, Tie, Tree)
 import           AST.Unify (Unify(..), Binding(..), UniVar)
-import           AST.Unify.Term (UTerm(..), newUTerm)
+import           AST.Unify.Term (UTerm(..))
 import           Control.Lens (Lens', Prism')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -111,7 +111,7 @@ instance
                 (scopeTypes . Lens.at (deBruijnIndexMax (Proxy :: Proxy (Maybe k))) ?~ varType)
                 (inferNode x)
             pure
-                ( funcType # (varType, xI ^. nodeType) & newUTerm
+                ( funcType # (varType, xI ^. nodeType) & UTerm
                 , Scope xI
                 )
         \\ (inferMonad :: DeBruijnIndex (Maybe k) :- Infer m (t (Maybe k)))

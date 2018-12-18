@@ -11,7 +11,7 @@ import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Class.TH (makeChildren)
 import           AST.Knot (Knot, Tie, Tree)
 import           AST.Unify (Unify(..), UniVar, Binding(..))
-import           AST.Unify.Term (UTerm(..), newUTerm)
+import           AST.Unify.Term (UTerm(..))
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Lens')
 import           Control.Lens.Operators
@@ -73,7 +73,7 @@ instance
                 (scopeTypes . Lens.at p ?~ varType)
                 (inferNode r)
             pure
-                ( funcType # (varType, rI ^. nodeType) & newUTerm
+                ( funcType # (varType, rI ^. nodeType) & UTerm
                 , Lam p rI
                 )
 

@@ -8,7 +8,7 @@ module AST.Unify.IntMapBinding
 
 import           AST.Knot (Tree)
 import           AST.Unify (UniVar, Binding(..))
-import           AST.Unify.Term (UTerm(..))
+import           AST.Unify.Term
 import qualified Control.Lens as Lens
 import           Control.Lens (ALens')
 import           Control.Lens.Operators
@@ -20,7 +20,7 @@ import           Prelude.Compat
 
 data IntBindingState t = IntBindingState
     { _nextFreeVar :: {-# UNPACK #-} !Int
-    , _varBindings :: IntMap (Tree (UTerm (Const Int)) t)
+    , _varBindings :: IntMap (Tree (VTerm (Const Int)) t)
     }
 Lens.makeLenses ''IntBindingState
 

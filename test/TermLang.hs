@@ -41,7 +41,7 @@ instance
     (DeBruijnIndex k, MonadReader env m, HasScopeTypes (UniVar m) Typ env, Recursive (Unify m) Typ) =>
     Infer m (Term k) where
 
-    infer (ELit x) = pure (newUTerm TInt, ELit x)
+    infer (ELit x) = pure (UTerm TInt, ELit x)
     infer (EVar x) = infer x <&> _2 %~ EVar
     infer (ELam x) = infer x <&> _2 %~ ELam
     infer (EApp x) = infer x <&> _2 %~ EApp
