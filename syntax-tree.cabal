@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7cd9a2eaa507fe915a7903013b6814291d8fb3d87821c3ac3411b134c993215c
+-- hash: 7f2f6e34f859cc132f039a222c669e7a4c77744249e4f529f05e73b44a572232
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -37,6 +37,7 @@ library
       AST.Class.ZipMatch
       AST.Knot
       AST.Knot.Ann
+      AST.Knot.Ann.Arbitrary
       AST.Knot.Pure
       AST.Knot.UTerm
       AST.Term.Apply
@@ -52,7 +53,8 @@ library
       src
   ghc-options: -O2 -Wall -Wnoncanonical-monad-instances -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
   build-depends:
-      base
+      QuickCheck
+    , base
     , base-compat
     , binary
     , constraints
@@ -78,7 +80,8 @@ test-suite syntax-tree-test
       test
   ghc-options: -Wall -Wcompat -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base
+      QuickCheck
+    , base
     , base-compat
     , binary
     , constraints
