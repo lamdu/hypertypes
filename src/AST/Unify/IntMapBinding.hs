@@ -7,8 +7,8 @@ module AST.Unify.IntMapBinding
     ) where
 
 import           AST.Knot (Tree)
-import           AST.Knot.UTerm (UTerm(..))
 import           AST.Unify (UniVar, Binding(..))
+import           AST.Unify.Term (UTerm(..))
 import qualified Control.Lens as Lens
 import           Control.Lens (ALens')
 import           Control.Lens.Operators

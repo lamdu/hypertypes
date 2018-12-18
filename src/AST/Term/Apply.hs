@@ -9,8 +9,8 @@ import           AST.Class.Infer (Infer(..), inferNode, nodeType, TypeAST, FuncT
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Class.TH (makeChildrenAndZipMatch)
 import           AST.Knot (Tie)
-import           AST.Knot.UTerm (_UTerm, uBody, newUTerm)
 import           AST.Unify (Unify(..), Binding(..), unify)
+import           AST.Unify.Term (_UTerm, uBody, newUTerm)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Traversal)
 import qualified Control.Lens as Lens

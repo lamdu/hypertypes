@@ -13,8 +13,8 @@ import           AST.Class.Children (Children)
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Class.TH (makeChildrenAndZipMatch)
 import           AST.Knot (Knot, Tie, Tree)
-import           AST.Knot.UTerm (UTerm(..), newUTerm)
 import           AST.Unify (Unify(..), Binding(..), UniVar)
+import           AST.Unify.Term (UTerm(..), newUTerm)
 import           Control.Lens (Lens', Prism')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators

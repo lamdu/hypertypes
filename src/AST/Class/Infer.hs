@@ -9,8 +9,8 @@ module AST.Class.Infer
 import           AST.Class.Recursive (Recursive)
 import           AST.Knot (Knot, Tree)
 import           AST.Knot.Ann (Ann(..), ann)
-import           AST.Knot.UTerm (UTerm)
 import           AST.Unify (Unify(..), UniVar)
+import           AST.Unify.Term (UTerm(..))
 import           Control.Lens (Lens', Prism')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators

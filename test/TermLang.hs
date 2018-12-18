@@ -7,10 +7,10 @@ import TypeLang
 import AST
 import AST.Class.Infer
 import AST.Class.Infer.Infer1
-import AST.Knot.UTerm
 import AST.Term.Apply
 import AST.Term.Scope
 import AST.Unify
+import AST.Unify.Term
 import Control.Lens.Operators
 import Control.Lens.Tuple
 import Control.Monad.Reader

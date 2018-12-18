@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, DeriveTraversable, TemplateHaskell, TypeFamilies, MultiParamTypeClasses, StandaloneDeriving, ConstraintKinds, UndecidableInstances #-}
 
-module AST.Knot.UTerm
+module AST.Unify.Term
     ( UTerm(..), _UVar, _UTerm
     , UBody(..), uBody, uVisited
     , newUTerm

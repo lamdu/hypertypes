@@ -10,8 +10,8 @@ import           AST.Class.Infer (Infer(..), TypeAST, FuncType(..), inferNode, n
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Class.TH (makeChildren)
 import           AST.Knot (Knot, Tie, Tree)
-import           AST.Knot.UTerm (UTerm(..), newUTerm)
 import           AST.Unify (Unify(..), UniVar, Binding(..))
+import           AST.Unify.Term (UTerm(..), newUTerm)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Lens')
 import           Control.Lens.Operators

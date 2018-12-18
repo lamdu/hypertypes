@@ -4,8 +4,8 @@ module AST.Unify.STBinding
     ( STVar, stBindingState
     ) where
 
-import           AST.Knot.UTerm (UTerm(..))
 import           AST.Unify (Binding(..), UniVar)
+import           AST.Unify.Term (UTerm(..))
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.ST.Class (MonadST(..))
