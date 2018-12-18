@@ -5,8 +5,10 @@ module AST.Knot
     , Tie, Tree
     ) where
 
-newtype Knot = Knot (Knot -> *)
-type family RunKnot (knot :: Knot) :: Knot -> *
+import Data.Kind (Type)
+
+newtype Knot = Knot (Knot -> Type)
+type family RunKnot (knot :: Knot) :: Knot -> Type
 type instance RunKnot ('Knot t) = t
 
 type Tie knot ast = RunKnot knot ('Knot ast)
