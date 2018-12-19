@@ -137,6 +137,10 @@ unify ::
     Tree (UniVar m) t -> Tree (UniVar m) t -> m ()
 unify x0 y0 =
     withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
+    let unifyTerms x y =
+            fromMaybe (structureMismatch x y)
+            (zipMatchWith_ (Proxy :: Proxy (Recursive (Unify m))) unify x y)
+    in
     if x0 == y0
         then pure ()
         else go x0 y0 (\x1 xt -> go y0 x1 (const (unifyTerms xt)))
@@ -149,14 +153,3 @@ unify x0 y0 =
             (_, UVar v1) -> bindVar binding v1 (UVar other)
             (v1, UTerm t) -> onTerm v1 t
             (_, _) -> error "This shouldn't happen in unification stage"
-
-unifyTerms ::
-    forall m t.
-    Recursive (Unify m) t =>
-    Tree t (UniVar m) ->
-    Tree t (UniVar m) ->
-    m ()
-unifyTerms x y =
-    withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
-    fromMaybe (structureMismatch x y)
-    (zipMatchWith_ (Proxy :: Proxy (Recursive (Unify m))) unify x y)
