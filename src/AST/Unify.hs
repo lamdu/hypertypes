@@ -108,22 +108,24 @@ applyBindings v0 =
     withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
     semiPruneLookup v0
     >>=
-    \case
-    (_, UResolved t) -> pure t
-    (v1, UVar{}) ->
-        do
-            qvar <- newQuantifiedVariable (Proxy :: Proxy t) <&> quantifiedVar <&> Pure
-            qvar <$ bindVar binding v1 (UResolved qvar)
-    (v1, UResolving t) -> occurs v1 t
-    (v1, UTerm t) ->
+    \(v1, x) ->
+    let result r = r <$ bindVar binding v1 (UResolved r)
+    in
+    case x of
+    UResolving t -> occurs v1 t
+    UResolved t -> pure t
+    UVar{} ->
+        newQuantifiedVariable (Proxy :: Proxy t) <&> quantifiedVar <&> Pure
+        >>= result
+    UTerm t ->
         case leafExpr of
         Just f -> f t & Pure & pure
         Nothing ->
             do
                 bindVar binding v1 (UResolving t)
-                r <- children (Proxy :: Proxy (Recursive (Unify m))) applyBindings t <&> Pure
-                bindVar binding v1 (UResolved r)
-                pure r
+                children (Proxy :: Proxy (Recursive (Unify m))) applyBindings t
+            <&> Pure
+            >>= result
 
 -- Note on usage of `semiPruneLookup`:
 --   Variables are pruned to point to other variables rather than terms,
