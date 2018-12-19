@@ -1,6 +1,7 @@
-# AST Functors
+# AST Knots
 
-Functors for AST Nodes:
+Knots for AST Nodes:
 
+* `Pure` makes a simple recursive tree.
 * `Ann` can be used to annotate every node.
-* `UTerm`/unification-term, adds unification variables to terms.
+* `AST.Knot.Functor.ToKnot` turns functors into knots.
