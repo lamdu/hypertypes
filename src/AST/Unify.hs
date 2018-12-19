@@ -112,9 +112,8 @@ applyBindings v0 =
     (_, UResolved t) -> pure t
     (v1, UVar{}) ->
         do
-            qvar <- newQuantifiedVariable (Proxy :: Proxy t)
-            bindVar binding v1 (UTerm (quantifiedVar qvar))
-            quantifiedVar qvar & Pure & pure
+            qvar <- newQuantifiedVariable (Proxy :: Proxy t) <&> quantifiedVar <&> Pure
+            qvar <$ bindVar binding v1 (UResolved qvar)
     (v1, UResolving t) -> occurs v1 t
     (v1, UTerm t) ->
         case leafExpr of
