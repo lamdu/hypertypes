@@ -72,11 +72,14 @@ makeChildrenForType info =
         childrenConstraint =
             Set.toList (tiChildren info)
             <&> AppT (VarT constraint)
-            & foldl AppT (TupleT (Set.size (tiChildren info)))
+            & toTuple
         subTreeConstraint =
             Set.toList (tiChildren info)
             <&> (\x -> VarT constraint `AppT` (ConT ''Tie `AppT` VarT knot `AppT` x))
-            & foldl AppT (TupleT (Set.size (tiChildren info)))
+            & toTuple
+
+toTuple :: Foldable t => t Type -> Type
+toTuple xs = foldl AppT (TupleT (length xs)) xs
 
 childrenContext :: TypeInfo -> [Pred]
 childrenContext info =
