@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, RankNTypes, ConstraintKinds, ScopedTypeVariables, DataKinds, KindSignatures, TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude, RankNTypes, ConstraintKinds, ScopedTypeVariables, DataKinds, TemplateHaskell, TypeFamilies #-}
 
 module AST.Class.ZipMatch
     ( ZipMatch(..), Both(..), bothA, bothB
@@ -7,6 +7,7 @@ module AST.Class.ZipMatch
     ) where
 
 import           AST.Class.Children (Children(..))
+import           AST.Class.Children.TH (makeChildren)
 import           AST.Knot (Knot, Tree)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -22,10 +23,16 @@ data Both a b (k :: Knot) = Both
     } deriving (Eq, Ord, Show)
 Lens.makeLenses ''Both
 
+makeChildren ''Both
+
 class Children expr => ZipMatch expr where
     zipMatch :: Tree expr a -> Tree expr b -> Maybe (Tree expr (Both a b))
 
+instance (ZipMatch a, ZipMatch b) => ZipMatch (Both a b) where
+    zipMatch (Both a0 b0) (Both a1 b1) = Both <$> zipMatch a0 a1 <*> zipMatch b0 b1
+
 zipMatchWithA ::
+    forall expr f constraint a b c.
     (ZipMatch expr, Applicative f, ChildrenConstraint expr constraint) =>
     Proxy constraint ->
     (forall child. constraint child => Tree a child -> Tree b child -> f (Tree c child)) ->
@@ -33,6 +40,7 @@ zipMatchWithA ::
 zipMatchWithA p f x y =
     zipMatch x y <&> children p g
     where
+        g :: constraint child => Tree (Both a b) child -> f (Tree c child)
         g (Both a b) = f a b
 
 zipMatchWith ::
