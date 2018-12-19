@@ -138,8 +138,8 @@ unify ::
 unify x0 y0 =
     withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
     let unifyTerms x y =
-            fromMaybe (structureMismatch x y)
-            (zipMatchWith_ (Proxy :: Proxy (Recursive (Unify m))) unify x y)
+            zipMatchWith_ (Proxy :: Proxy (Recursive (Unify m))) unify x y
+            & fromMaybe (structureMismatch x y)
     in
     if x0 == y0
         then pure ()
