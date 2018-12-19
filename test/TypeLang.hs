@@ -42,7 +42,9 @@ data InferState f = InferState
     }
 Lens.makeLenses ''InferState
 
-emptyIntInferState :: (InferState IntBindingState, InferState (Const Int))
+type IntInferState = (InferState IntBindingState, InferState (Const Int))
+
+emptyIntInferState :: IntInferState
 emptyIntInferState =
     ( InferState emptyIntBindingState emptyIntBindingState
     , InferState (Const 0) (Const 0)
@@ -58,7 +60,7 @@ instance HasQuantifiedVar Row where
     -- We force quantified variables to empty rows
     quantifiedVar = RVar . ('r':) . show
 
-type IntInfer r w = RWST r w (InferState IntBindingState, InferState (Const Int)) Maybe
+type IntInfer r w = RWST r w IntInferState Maybe
 
 type instance UniVar (IntInfer r w) = Const Int
 
