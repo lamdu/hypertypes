@@ -1,4 +1,4 @@
-{-# LANGUAGE StandaloneDeriving, UndecidableInstances, TemplateHaskell, TypeFamilies, LambdaCase, MultiParamTypeClasses, FlexibleInstances, DataKinds #-}
+{-# LANGUAGE StandaloneDeriving, UndecidableInstances, TemplateHaskell, TypeFamilies, LambdaCase, MultiParamTypeClasses, FlexibleInstances, DataKinds, TupleSections, ScopedTypeVariables #-}
 
 module TermLang where
 
@@ -10,7 +10,6 @@ import AST.Class.Infer.Infer1
 import AST.Term.Apply
 import AST.Term.Scope
 import AST.Unify
-import AST.Unify.Term
 import Control.Lens.Operators
 import Control.Lens.Tuple
 import Control.Monad.Reader
@@ -41,7 +40,9 @@ instance
     (DeBruijnIndex k, MonadReader env m, HasScopeTypes (UniVar m) Typ env, Recursive (Unify m) Typ) =>
     Infer m (Term k) where
 
-    infer (ELit x) = pure (UTerm TInt, ELit x)
+    infer (ELit x) =
+        withDict (recursive :: Dict (RecursiveConstraint Typ (Unify m))) $
+        newTerm TInt <&> (, ELit x)
     infer (EVar x) = infer x <&> _2 %~ EVar
     infer (ELam x) = infer x <&> _2 %~ ELam
     infer (EApp x) = infer x <&> _2 %~ EApp

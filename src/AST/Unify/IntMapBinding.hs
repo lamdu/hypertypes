@@ -20,7 +20,7 @@ import           Prelude.Compat
 
 data IntBindingState t = IntBindingState
     { _nextFreeVar :: {-# UNPACK #-} !Int
-    , _varBindings :: IntMap (Tree (VTerm (Const Int)) t)
+    , _varBindings :: IntMap (Tree (UTerm (Const Int)) t)
     }
 Lens.makeLenses ''IntBindingState
 

@@ -10,8 +10,7 @@ import           AST.Class.Infer (Infer(..), TypeAST, FuncType(..), inferNode, n
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Class.Recursive.TH (makeChildrenRecursive)
 import           AST.Knot (Knot, Tie, Tree)
-import           AST.Unify (Unify(..), UniVar, Binding(..))
-import           AST.Unify.Term (UTerm(..))
+import           AST.Unify (Unify(..), UniVar, Binding(..), newTerm)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Lens')
 import           Control.Lens.Operators
@@ -45,7 +44,7 @@ Lens.makePrisms ''LamVar
 makeChildrenRecursive [''Lam, ''LamVar]
 instance RecursiveConstraint (Lam v expr) constraint => Recursive constraint (Lam v expr)
 
-type ScopeTypes v u t = Map v (Tree (UTerm u) t)
+type ScopeTypes v u t = Map v (Tree u t)
 
 class Ord v => HasScopeTypes v u t env where
     scopeTypes :: Lens' env (ScopeTypes v u t)
@@ -67,15 +66,13 @@ instance
     infer (Lam p r) =
         withDict (recursive :: Dict (RecursiveConstraint (TypeAST t) (Unify m))) $
         do
-            varType <- newVar binding <&> UVar
+            varType <- newVar binding
             rI <-
                 local
                 (scopeTypes . Lens.at p ?~ varType)
                 (inferNode r)
-            pure
-                ( funcType # (varType, rI ^. nodeType) & UTerm
-                , Lam p rI
-                )
+            funcType # (varType, rI ^. nodeType) & newTerm
+                <&> (, Lam p rI)
 
 instance
     ( Infer m t

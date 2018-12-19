@@ -13,8 +13,7 @@ import           AST.Class.Children (Children)
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import           AST.Knot (Knot, Tie, Tree)
-import           AST.Unify (Unify(..), Binding(..), UniVar)
-import           AST.Unify.Term (UTerm(..))
+import           AST.Unify (Unify(..), Binding(..), UniVar, newTerm)
 import           Control.Lens (Lens', Prism')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -69,7 +68,7 @@ scope f = Scope (f (inverseDeBruijnIndex # (Nothing :: Maybe a)))
 scopeVar :: DeBruijnIndex a => Int -> ScopeVar expr a f
 scopeVar x = ScopeVar (x ^?! inverseDeBruijnIndex)
 
-type ScopeTypes v t = IntMap (Tree (UTerm v) t)
+type ScopeTypes v t = IntMap (Tree v t)
 
 class HasScopeTypes v t env where
     scopeTypes :: Lens' env (ScopeTypes v t)
@@ -105,15 +104,13 @@ instance
         withDict (typeAst (Proxy :: Proxy (t k))) $
         withDict (typeAst (Proxy :: Proxy (t (Maybe k)))) $
         do
-            varType <- newVar (binding :: Binding m (TypeAST1 t)) <&> UVar
+            varType <- newVar (binding :: Binding m (TypeAST1 t))
             xI <-
                 local
                 (scopeTypes . Lens.at (deBruijnIndexMax (Proxy :: Proxy (Maybe k))) ?~ varType)
                 (inferNode x)
-            pure
-                ( funcType # (varType, xI ^. nodeType) & UTerm
-                , Scope xI
-                )
+            funcType # (varType, xI ^. nodeType) & newTerm
+                <&> (, Scope xI)
         \\ (inferMonad :: DeBruijnIndex (Maybe k) :- Infer m (t (Maybe k)))
 
 instance

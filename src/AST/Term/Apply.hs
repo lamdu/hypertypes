@@ -9,8 +9,7 @@ import           AST.Class.Infer (Infer(..), inferNode, nodeType, TypeAST, FuncT
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import           AST.Knot (Tie)
-import           AST.Unify (Unify(..), Binding(..), unify)
-import           AST.Unify.Term (UTerm(..), _UTerm)
+import           AST.Unify (Unify(..), Binding(..), unify, newTerm)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Traversal)
 import qualified Control.Lens as Lens
@@ -50,16 +49,8 @@ instance (Infer m expr, FuncType (TypeAST expr)) => Infer m (Apply expr) where
         withDict (recursive :: Dict (RecursiveConstraint (TypeAST expr) (Unify m))) $
         do
             argI <- inferNode arg
-            let argT = argI ^. nodeType
             funcI <- inferNode func
-            let funcT = funcI ^. nodeType
-            case funcT ^? _UTerm . funcType of
-                Just (funcArg, funcRes) ->
-                    -- Func already inferred to be function,
-                    -- skip creating new variable for result for faster inference.
-                    funcRes <$ unify funcArg argT
-                Nothing ->
-                    do
-                        funcRes <- newVar binding <&> UVar
-                        funcRes <$ unify funcT (UTerm (funcType # (argT, funcRes)))
+            funcRes <- newVar binding
+            funcT <- funcType # (argI ^. nodeType, funcRes) & newTerm
+            funcRes <$ unify funcT (funcI ^. nodeType)
                 <&> (, Apply funcI argI)

@@ -5,7 +5,7 @@ module AST.Unify.STBinding
     ) where
 
 import           AST.Unify (Binding(..), UniVar)
-import           AST.Unify.Term (VTerm(..))
+import           AST.Unify.Term (UTerm(..))
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.ST.Class (MonadST(..))
@@ -13,7 +13,7 @@ import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
 import           Prelude.Compat
 
-newtype STVar s t = STVar (STRef s (Maybe (VTerm (STVar s) t)))
+newtype STVar s t = STVar (STRef s (Maybe (UTerm (STVar s) t)))
 Lens.makePrisms ''STVar
 
 instance Eq (STVar s a) where
