@@ -30,17 +30,15 @@ class HasQuantifiedVar (t :: Knot -> *) where
 -- Names modeled after unification-fd
 
 -- Unification variable type for a unification monad
-type family UniVar (m :: * -> *) :: * -> *
-
-type UVar m t = UniVar m (Tree (VTerm (UniVar m)) t)
+type family UniVar (m :: * -> *) :: Knot -> *
 
 data Binding m t = Binding
-    { lookupVar :: UVar m t -> m (Maybe (Tree (VTerm (UniVar m)) t))
+    { lookupVar :: Tree (UniVar m) t -> m (Maybe (Tree (VTerm (UniVar m)) t))
     , newVar :: m (Tree (UTerm (UniVar m)) t)
-    , bindVar :: UVar m t -> Tree (VTerm (UniVar m)) t -> m ()
+    , bindVar :: Tree (UniVar m) t -> Tree (VTerm (UniVar m)) t -> m ()
     }
 
-class (Eq (UVar m t), ZipMatch t, HasQuantifiedVar t, Monad m) => Unify m t where
+class (Eq (Tree (UniVar m) t), ZipMatch t, HasQuantifiedVar t, Monad m) => Unify m t where
     binding :: Binding m t
 
     newQuantifiedVariable :: Proxy t -> m (QVar t)
@@ -52,8 +50,8 @@ class (Eq (UVar m t), ZipMatch t, HasQuantifiedVar t, Monad m) => Unify m t wher
     -- therefore the type is infinite.
     -- Break with an error if the type system doesn't allow it,
     -- or resolve the situation and generate the type represeting this loop.
-    occurs :: UVar m t -> Tree t (UTerm (UniVar m)) -> m (Tree Pure t)
-    default occurs :: Alternative m => UVar m t -> Tree t (UTerm (UniVar m)) -> m (Tree Pure t)
+    occurs :: Tree (UniVar m) t -> Tree t (UTerm (UniVar m)) -> m (Tree Pure t)
+    default occurs :: Alternative m => Tree (UniVar m) t -> Tree t (UTerm (UniVar m)) -> m (Tree Pure t)
     occurs _ _ = empty
 
     -- | What to do when top-levels of terms being unified do not match.
@@ -75,8 +73,8 @@ unfreeze = wrap (Proxy :: Proxy Children) UTerm
 semiPruneLookup ::
     forall m t.
     Unify m t =>
-    UVar m t ->
-    m (UVar m t, Tree (VTerm (UniVar m)) t)
+    Tree (UniVar m) t ->
+    m (Tree (UniVar m) t, Tree (VTerm (UniVar m)) t)
 semiPruneLookup v0 =
     lookupVar binding v0
     >>=
@@ -136,7 +134,7 @@ unify (UVar x) (UVar y) = withDict (recursive :: Dict (RecursiveConstraint t (Un
 
 unifyVars ::
     (Recursive (Unify m) t, RecursiveConstraint t (Unify m)) =>
-    UVar m t -> UVar m t -> m ()
+    Tree (UniVar m) t -> Tree (UniVar m) t -> m ()
 unifyVars x0 y0
     | x0 == y0 = pure ()
     | otherwise =
@@ -159,7 +157,7 @@ unifyVars x0 y0
 unifyVarTerm ::
     forall m t.
     Recursive (Unify m) t =>
-    UVar m t -> Tree t (UTerm (UniVar m)) -> m ()
+    Tree (UniVar m) t -> Tree t (UTerm (UniVar m)) -> m ()
 unifyVarTerm x0 y =
     withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
     semiPruneLookup x0

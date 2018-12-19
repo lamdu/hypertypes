@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, DataKinds #-}
 
 module AST.Unify.IntMapBinding
     ( IntBindingState, emptyIntBindingState
