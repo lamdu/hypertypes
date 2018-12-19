@@ -10,7 +10,7 @@ import           AST.Class.Infer (Infer(..), TypeAST, FuncType(..), inferNode, n
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Class.Recursive.TH (makeChildrenRecursive)
 import           AST.Knot (Knot, Tie, Tree)
-import           AST.Unify (Unify(..), UniVar, Binding(..), newTerm)
+import           AST.Unify (Unify(..), UniVar, newTerm, newUnbound)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Lens')
 import           Control.Lens.Operators
@@ -66,7 +66,7 @@ instance
     infer (Lam p r) =
         withDict (recursive :: Dict (RecursiveConstraint (TypeAST t) (Unify m))) $
         do
-            varType <- newVar binding
+            varType <- newUnbound
             rI <-
                 local
                 (scopeTypes . Lens.at p ?~ varType)

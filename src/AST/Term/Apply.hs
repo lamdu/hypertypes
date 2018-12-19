@@ -9,7 +9,7 @@ import           AST.Class.Infer (Infer(..), inferNode, nodeType, TypeAST, FuncT
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import           AST.Knot (Tie)
-import           AST.Unify (Unify(..), Binding(..), unify, newTerm)
+import           AST.Unify (Unify(..), unify, newTerm, newUnbound)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Traversal)
 import qualified Control.Lens as Lens
@@ -50,7 +50,7 @@ instance (Infer m expr, FuncType (TypeAST expr)) => Infer m (Apply expr) where
         do
             argI <- inferNode arg
             funcI <- inferNode func
-            funcRes <- newVar binding
+            funcRes <- newUnbound
             funcT <- funcType # (argI ^. nodeType, funcRes) & newTerm
             funcRes <$ unify funcT (funcI ^. nodeType)
                 <&> (, Apply funcI argI)

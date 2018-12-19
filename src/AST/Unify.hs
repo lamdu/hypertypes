@@ -3,7 +3,7 @@
 module AST.Unify
     ( HasQuantifiedVar(..)
     , UniVar
-    , newTerm
+    , newTerm, newUnbound
     , Binding(..)
     , Unify(..)
     , applyBindings, unify
@@ -64,12 +64,13 @@ class (Eq (Tree (UniVar m) t), ZipMatch t, HasQuantifiedVar t, Monad m) => Unify
         Alternative m => Tree t (UniVar m) -> Tree t (UniVar m) -> m ()
     structureMismatch _ _ = empty
 
-newTerm ::
-    Unify m t =>
-    Tree t (UniVar m) -> m (Tree (UniVar m) t)
+newUnbound :: Unify m t => m (Tree (UniVar m) t)
+newUnbound = newVar binding
+
+newTerm :: Unify m t => Tree t (UniVar m) -> m (Tree (UniVar m) t)
 newTerm term =
     do
-        var <- newVar binding
+        var <- newUnbound
         var <$ bindVar binding var (UTerm term)
 
 -- look up a variable, and return last variable pointing to result.

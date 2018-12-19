@@ -13,7 +13,7 @@ import           AST.Class.Children (Children)
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import           AST.Knot (Knot, Tie, Tree)
-import           AST.Unify (Unify(..), Binding(..), UniVar, newTerm)
+import           AST.Unify (Unify(..), UniVar, newTerm, newUnbound)
 import           Control.Lens (Lens', Prism')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -104,7 +104,7 @@ instance
         withDict (typeAst (Proxy :: Proxy (t k))) $
         withDict (typeAst (Proxy :: Proxy (t (Maybe k)))) $
         do
-            varType <- newVar binding
+            varType <- newUnbound
             xI <-
                 local
                 (scopeTypes . Lens.at (deBruijnIndexMax (Proxy :: Proxy (Maybe k))) ?~ varType)
