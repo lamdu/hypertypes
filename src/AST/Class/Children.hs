@@ -1,23 +1,18 @@
-{-# LANGUAGE NoImplicitPrelude, DefaultSignatures, FlexibleInstances, TypeFamilies, RankNTypes, ConstraintKinds, ScopedTypeVariables, DataKinds #-}
+{-# LANGUAGE NoImplicitPrelude, DefaultSignatures, TypeFamilies, RankNTypes, ConstraintKinds, ScopedTypeVariables, DataKinds #-}
 
 module AST.Class.Children
     ( Children(..), ChildrenWithConstraint
-    , EmptyConstraint
     , children_, overChildren, foldMapChildren
     ) where
 
 import AST.Knot (Knot, Tree)
 import Control.Lens.Operators
-import Data.Constraint (Dict(..))
 import Data.Functor.Const (Const(..))
 import Data.Functor.Identity (Identity(..))
 import Data.Proxy (Proxy(..))
 import GHC.Exts (Constraint)
 
 import Prelude.Compat
-
-class EmptyConstraint (expr :: Knot -> *)
-instance EmptyConstraint expr
 
 class Children (expr :: Knot -> *) where
     type SubTreeConstraint expr (knot :: Knot) (constraint :: * -> Constraint) :: Constraint
@@ -29,14 +24,6 @@ class Children (expr :: Knot -> *) where
         Proxy constraint ->
         (forall child. constraint child => Tree n child -> f (Tree m child)) ->
         Tree expr n -> f (Tree expr m)
-
-    childrenEmptyConstraints ::
-        Proxy expr -> Dict (ChildrenConstraint expr EmptyConstraint)
-    default childrenEmptyConstraints ::
-        ChildrenConstraint expr EmptyConstraint =>
-        Proxy expr ->
-        Dict (ChildrenConstraint expr EmptyConstraint)
-    childrenEmptyConstraints _ = Dict
 
     leafExpr :: Maybe (expr f -> expr g)
     leafExpr = Nothing
