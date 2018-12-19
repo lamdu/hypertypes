@@ -22,7 +22,7 @@ data Term v f
     | EApp (Apply (Term v) f)
     | ELit Int
 
-makeChildren [''Term]
+makeChildrenRecursive [''Term]
 instance Recursive Children (Term v)
 
 type instance TypeAST (Term k) = Typ

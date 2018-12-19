@@ -4,7 +4,7 @@ module AST.Term.Map
     ( TermMap(..), _TermMap
     ) where
 
-import           AST (Tie, Recursive(..), RecursiveConstraint, makeChildren)
+import           AST (Tie, Recursive(..), RecursiveConstraint, makeChildrenRecursive)
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
@@ -26,7 +26,7 @@ instance (Binary k, Binary (Tie f expr)) => Binary (TermMap k expr f)
 instance (NFData k, NFData (Tie f expr)) => NFData (TermMap k expr f)
 
 Lens.makePrisms ''TermMap
-makeChildren [''TermMap]
+makeChildrenRecursive [''TermMap]
 
 instance RecursiveConstraint (TermMap k expr) constraint => Recursive constraint (TermMap k expr)
 

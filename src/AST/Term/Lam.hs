@@ -6,9 +6,9 @@ module AST.Term.Lam
     , ScopeTypes, HasScopeTypes(..)
     ) where
 
-import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Infer (Infer(..), TypeAST, FuncType(..), inferNode, nodeType)
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
+import           AST.Class.Recursive.TH (makeChildrenRecursive)
 import           AST.Knot (Knot, Tie, Tree)
 import           AST.Unify (Unify(..), UniVar, Binding(..))
 import           AST.Unify.Term (UTerm(..))
@@ -42,7 +42,7 @@ newtype LamVar v (expr :: Knot -> *) (f :: Knot) = LamVar v
     deriving (Eq, Ord, Show, Generic, Binary, NFData)
 Lens.makePrisms ''LamVar
 
-makeChildren [''Lam, ''LamVar]
+makeChildrenRecursive [''Lam, ''LamVar]
 instance RecursiveConstraint (Lam v expr) constraint => Recursive constraint (Lam v expr)
 
 type ScopeTypes v u t = Map v (Tree (UTerm u) t)

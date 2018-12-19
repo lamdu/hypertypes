@@ -6,8 +6,8 @@ module AST.Unify.Term
     ) where
 
 import           AST.Class.Children (Children(..))
-import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Recursive
+import           AST.Class.Recursive.TH (makeChildrenRecursive)
 import           AST.Knot (Tie)
 import           AST.Knot.Pure
 import qualified Control.Lens as Lens
@@ -29,7 +29,7 @@ data VTerm f ast
 Lens.makePrisms ''UTerm
 Lens.makePrisms ''VTerm
 
-makeChildren [''UTerm, ''VTerm]
+makeChildrenRecursive [''UTerm, ''VTerm]
 
 instance Traversable f => Recursive Children (UTerm f)
 instance Traversable f => Recursive Children (VTerm f)

@@ -4,12 +4,11 @@ module AST.Class.Children.TH
     ( makeChildren
     , -- Internals for use in TH for sub-classes
       TypeInfo(..), CtrTypePattern(..), CtrCase(..)
-    , parts, matchType, applicativeStyle, isPolymorphic, childrenContext
+    , parts, matchType, applicativeStyle, isPolymorphic, childrenContext, makeTypeInfo
     ) where
 
 import           AST.Class.Children (Children(..))
 import           AST.Class.Children.Mono (ChildOf)
-import           AST.Class.Recursive (Recursive)
 import           AST.Knot (Knot(..), RunKnot, Tie)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -23,30 +22,8 @@ import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
 
-makeChildren :: [Name] -> DecsQ
-makeChildren typeNames =
-    do
-        typeInfos <- traverse makeTypeInfo typeNames
-        chldrn <- traverse makeChildrenForType typeInfos
-        let recCtx = chldrn >>= snd & Set.fromList & Set.toList
-        recs <-
-            case recCtx of
-            [] -> traverse makeRecursiveChildren (findRecursives typeInfos)
-            _ -> pure []
-        pure ((chldrn >>= fst) <> recs)
-
-findRecursives :: [TypeInfo] -> [TypeInfo]
-findRecursives infos
-    | (infos <&> tiInstance) == (next <&> tiInstance) = infos
-    | otherwise = findRecursives next
-    where
-        next = filter hasDeps infos
-        hasDeps = all (`Set.member` cur) . Set.toList . tiChildren
-        cur = Set.fromList (infos <&> tiInstance)
-
-makeRecursiveChildren :: TypeInfo -> DecQ
-makeRecursiveChildren info =
-    instanceD (pure []) (conT ''Recursive `appT` conT ''Children `appT` pure (tiInstance info)) []
+makeChildren :: Name -> DecsQ
+makeChildren typeName = makeTypeInfo typeName >>= makeChildrenForType
 
 data TypeInfo = TypeInfo
     { tiInstance :: Type
@@ -69,7 +46,7 @@ makeTypeInfo name =
             , tiCons = D.datatypeCons info
             }
 
-makeChildrenForType :: TypeInfo -> Q ([Dec], [Pred])
+makeChildrenForType :: TypeInfo -> DecsQ
 makeChildrenForType info =
     do
         inst <-
@@ -87,7 +64,7 @@ makeChildrenForType info =
                 (pure (TySynEqn [tiInstance info] x))
                 <&> (:[])
             _ -> pure []
-        pure (inst : mono, ctx)
+        inst : mono & pure
     where
         ctx = childrenContext info
         constraint = mkName "constraint"
