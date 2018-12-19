@@ -75,7 +75,9 @@ instance Monoid w => Unify (IntInfer r w) Row where
 instance Monoid w => Recursive (Unify (IntInfer r w)) Typ
 instance Monoid w => Recursive (Unify (IntInfer r w)) Row
 
-type STInfer r s = ReaderT (r, InferState (Const (STRef s Int))) (MaybeT (ST s))
+type STInferState s = InferState (Const (STRef s Int))
+
+type STInfer r s = ReaderT (r, STInferState s) (MaybeT (ST s))
 
 type instance UniVar (STInfer r s) = STVar s
 
@@ -87,8 +89,8 @@ readModifySTRef ref func =
         (old, new) <$ (new `seq` writeSTRef ref new)
 
 newStQuantified ::
-    (MonadReader (a, InferState (Const (STRef (World m) Int))) m, MonadST m) =>
-    ALens' (InferState (Const (STRef (World m) Int))) (Const (STRef (World m) Int) (ast :: Knot -> *)) -> m Int
+    (MonadReader (a, STInferState s) m, MonadST m) =>
+    ALens' (STInferState s) (Const (STRef (World m) Int) (ast :: Knot -> *)) -> m Int
 newStQuantified l =
     Lens.view (Lens._2 . Lens.cloneLens l . Lens._Wrapped)
     >>= liftST . fmap fst . (`readModifySTRef` (+1))
