@@ -139,20 +139,15 @@ unify x0 y0 =
     withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
     if x0 == y0
         then pure ()
-        else
-            semiPruneLookup x0
+        else go x0 y0 (\x1 xt -> go y0 x1 (const (unifyTerms xt)))
+    where
+        go var other onTerm =
+            semiPruneLookup var
             >>=
             \case
-            (x1, _) | x1 == y0 -> pure ()
-            (_, UVar x1) -> bindVar binding x1 (UVar y0)
-            (x1, UTerm xt) ->
-                semiPruneLookup y0
-                >>=
-                \case
-                (y1, _) | x1 == y1 -> pure ()
-                (_, UVar y1) -> bindVar binding y1 (UVar x1)
-                (_, UTerm yt) -> unifyTerms xt yt
-                (_, _) -> error "This shouldn't happen in unification stage"
+            (v1, _) | v1 == other -> pure ()
+            (_, UVar v1) -> bindVar binding v1 (UVar other)
+            (v1, UTerm t) -> onTerm v1 t
             (_, _) -> error "This shouldn't happen in unification stage"
 
 unifyTerms ::
