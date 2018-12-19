@@ -105,7 +105,7 @@ instance
         withDict (typeAst (Proxy :: Proxy (t k))) $
         withDict (typeAst (Proxy :: Proxy (t (Maybe k)))) $
         do
-            varType <- newVar (binding :: Binding m (TypeAST1 t))
+            varType <- newVar (binding :: Binding m (TypeAST1 t)) <&> UVar
             xI <-
                 local
                 (scopeTypes . Lens.at (deBruijnIndexMax (Proxy :: Proxy (Maybe k))) ?~ varType)

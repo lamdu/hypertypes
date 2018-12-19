@@ -34,7 +34,7 @@ type family UniVar (m :: * -> *) :: Knot -> *
 
 data Binding m t = Binding
     { lookupVar :: Tree (UniVar m) t -> m (Maybe (Tree (VTerm (UniVar m)) t))
-    , newVar :: m (Tree (UTerm (UniVar m)) t)
+    , newVar :: m (Tree (UniVar m) t)
     , bindVar :: Tree (UniVar m) t -> Tree (VTerm (UniVar m)) t -> m ()
     }
 

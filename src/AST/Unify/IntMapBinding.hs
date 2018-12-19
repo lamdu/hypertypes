@@ -42,6 +42,6 @@ intBindingState ::
 intBindingState l =
     Binding
     { lookupVar = \k -> Lens.use (Lens.cloneLens l . varBindings . Lens.at (k ^. Lens._Wrapped))
-    , newVar = increase (Lens.cloneLens l . nextFreeVar) <&> UVar . Const
+    , newVar = increase (Lens.cloneLens l . nextFreeVar) <&> Const
     , bindVar = \k v -> Lens.cloneLens l . varBindings . Lens.at (k ^. Lens._Wrapped) ?= v
     }

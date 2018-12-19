@@ -60,6 +60,6 @@ instance (Infer m expr, FuncType (TypeAST expr)) => Infer m (Apply expr) where
                     funcRes <$ unify funcArg argT
                 Nothing ->
                     do
-                        funcRes <- newVar binding
+                        funcRes <- newVar binding <&> UVar
                         funcRes <$ unify funcT (UTerm (funcType # (argT, funcRes)))
                 <&> (, Apply funcI argI)

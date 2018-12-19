@@ -5,7 +5,7 @@ module AST.Unify.STBinding
     ) where
 
 import           AST.Unify (Binding(..), UniVar)
-import           AST.Unify.Term (UTerm(..), VTerm(..))
+import           AST.Unify.Term (VTerm(..))
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.ST.Class (MonadST(..))
@@ -25,6 +25,6 @@ stBindingState ::
 stBindingState =
     Binding
     { lookupVar = liftST . readSTRef . (^. _STVar)
-    , newVar = newSTRef Nothing & liftST <&> UVar . STVar
+    , newVar = newSTRef Nothing & liftST <&> STVar
     , bindVar = \v t -> writeSTRef (v ^. _STVar) (Just t) & liftST
     }

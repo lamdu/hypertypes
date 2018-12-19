@@ -67,7 +67,7 @@ instance
     infer (Lam p r) =
         withDict (recursive :: Dict (RecursiveConstraint (TypeAST t) (Unify m))) $
         do
-            varType <- newVar binding
+            varType <- newVar binding <&> UVar
             rI <-
                 local
                 (scopeTypes . Lens.at p ?~ varType)
