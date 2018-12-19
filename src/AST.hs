@@ -11,3 +11,4 @@ import AST.Class.ZipMatch.TH as X (makeZipMatch, makeChildrenAndZipMatch)
 import AST.Knot as X
 import AST.Knot.Ann as X (Ann(..), ann, annotations)
 import AST.Knot.Pure as X
+import AST.Knot.Functor as X
