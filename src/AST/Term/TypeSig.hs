@@ -5,7 +5,7 @@ module AST.Term.TypeSig
     ) where
 
 import AST
-import AST.Class.Infer (Infer(..), TypeAST, inferNode, nodeType)
+import AST.Class.Infer (MonadInfer(..), Infer(..), TypeAST, inferNode, nodeType)
 import AST.Class.Instantiate (Instantiate(..))
 import AST.Class.Recursive.TH (makeChildrenRecursive)
 import AST.Unify (Unify, unify)
@@ -53,3 +53,4 @@ instance
             instantiate s
                 >>= unify (r ^. nodeType)
                 <&> (, TypeSig s r)
+        & localLevel

@@ -8,11 +8,12 @@ module AST.Term.Scheme
 
 import           AST.Class.Children (Children(..), ChildrenConstraint)
 import           AST.Class.Children.TH (makeChildren)
+import           AST.Class.Infer (MonadInfer(..), newTerm)
 import           AST.Class.Instantiate (Instantiate(..))
 import           AST.Class.Recursive (Recursive, wrapM)
 import           AST.Knot (Tree, Tie, RunKnot)
 import           AST.Knot.Pure (Pure(..))
-import           AST.Unify (Unify(..), HasQuantifiedVar(..), UniVar, newVar, newTerm)
+import           AST.Unify (Unify(..), HasQuantifiedVar(..), UniVar, newVar)
 import           AST.Unify.Term (UTerm(..))
 import           Control.Lens (Lens')
 import qualified Control.Lens as Lens
@@ -43,14 +44,17 @@ class HasChild record typ where
 class    (Unify m typ, HasChild varTypes typ) => CanInstantiate m varTypes typ
 instance (Unify m typ, HasChild varTypes typ) => CanInstantiate m varTypes typ
 
-makeForAlls :: Unify m typ => Tree Vars typ -> m (Tree (ForAlls (UniVar m)) typ)
+makeForAlls :: (MonadInfer m, Unify m typ) => Tree Vars typ -> m (Tree (ForAlls (UniVar m)) typ)
 makeForAlls (Vars xs) =
     traverse makeSkolem xs <&> ForAlls . Map.fromList
     where
-        makeSkolem x = newVar binding USkolem <&> (,) x
+        makeSkolem x =
+            getInferLevel
+            >>= newVar binding . USkolem
+            <&> (,) x
 
 instantiateBody ::
-    (Unify m typ, HasChild varTypes typ) =>
+    (MonadInfer m, Unify m typ, HasChild varTypes typ) =>
     Tree varTypes (ForAlls (UniVar m)) -> Tree typ (UniVar m) -> m (Tree (UniVar m) typ)
 instantiateBody foralls x =
     case x ^? quantifiedVar >>= getForAll of
@@ -65,7 +69,7 @@ instance Children varTypes => Instantiate (Scheme varTypes typ) where
     type InstantiateContext (Scheme varTypes typ) m =
         ( Recursive (CanInstantiate m varTypes) typ
         , ChildrenConstraint varTypes (Unify m)
-        , Monad m
+        , MonadInfer m
         )
 
     instantiate ::

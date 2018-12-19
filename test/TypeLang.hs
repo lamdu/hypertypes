@@ -3,10 +3,12 @@
 module TypeLang where
 
 import AST
+import AST.Class.Infer
 import AST.Class.Instantiate
 import AST.Unify
 import AST.Unify.IntMapBinding
 import AST.Unify.STBinding
+import AST.Unify.Term
 import AST.Term.FuncType
 import AST.Term.Scheme
 import AST.Term.Scope
@@ -66,9 +68,13 @@ instance HasQuantifiedVar Row where
     type QVar Row = String
     quantifiedVar = _RVar
 
-type IntInfer r w = RWST r w IntInferState Maybe
+type IntInfer r w = RWST (r, InferLevel) w IntInferState Maybe
 
 type instance UniVar (IntInfer r w) = Const Int
+
+instance Monoid w => MonadInfer (IntInfer r w) where
+    getInferLevel = Lens.view Lens._2
+    localLevel = local (Lens._2 . _InferLevel +~ 1)
 
 instance Monoid w => Unify (IntInfer r w) Typ where
     binding = intBindingState (Lens._1 . tTyp)
@@ -85,7 +91,7 @@ instance Monoid w => Recursive (CanInstantiate (IntInfer r w) Types) Row
 
 type STInferState s = Tree Types (Const (STRef s Int))
 
-type STInfer r s = ReaderT (r, STInferState s) (MaybeT (ST s))
+type STInfer r s = ReaderT (r, InferLevel, STInferState s) (MaybeT (ST s))
 
 type instance UniVar (STInfer r s) = STVar s
 
@@ -97,11 +103,15 @@ readModifySTRef ref func =
         (old, new) <$ (new `seq` writeSTRef ref new)
 
 newStQuantified ::
-    (MonadReader (a, STInferState s) m, MonadST m) =>
+    (MonadReader (a, InferLevel, STInferState s) m, MonadST m) =>
     ALens' (STInferState s) (Const (STRef (World m) Int) (ast :: Knot)) -> m Int
 newStQuantified l =
-    Lens.view (Lens._2 . Lens.cloneLens l . Lens._Wrapped)
+    Lens.view (Lens._3 . Lens.cloneLens l . Lens._Wrapped)
     >>= liftST . fmap fst . (`readModifySTRef` (+1))
+
+instance MonadInfer (STInfer r s) where
+    getInferLevel = Lens.view Lens._2
+    localLevel = local (Lens._2 . _InferLevel +~ 1)
 
 instance Unify (STInfer r s) Typ where
     binding = stBindingState
@@ -120,4 +130,7 @@ instance HasFuncType Typ where
     funcType = _TFun
 
 instance HasScopeTypes v Typ a => HasScopeTypes v Typ (a, x) where
+    scopeTypes = Lens._1 . scopeTypes
+
+instance HasScopeTypes v Typ a => HasScopeTypes v Typ (a, x, y) where
     scopeTypes = Lens._1 . scopeTypes

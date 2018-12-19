@@ -5,12 +5,12 @@ module AST.Term.Apply
     , applyChildren
     ) where
 
-import AST.Class.Infer (Infer(..), inferNode, nodeType, TypeAST)
+import AST.Class.Infer (Infer(..), newUnbound, newTerm, inferNode, nodeType, TypeAST)
 import AST.Class.Recursive (Recursive(..), RecursiveConstraint, RecursiveDict)
 import AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import AST.Knot (Tie)
 import AST.Term.FuncType
-import AST.Unify (Unify(..), unify, newTerm, newUnbound)
+import AST.Unify (Unify(..), unify)
 import Control.DeepSeq (NFData)
 import Control.Lens (Traversal, makeLenses)
 import Control.Lens.Operators

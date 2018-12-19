@@ -7,14 +7,14 @@ module AST.Term.Scope
     , ScopeTypes, HasScopeTypes(..)
     ) where
 
-import           AST.Class.Infer (Infer(..), inferNode, nodeType, TypeAST)
+import           AST.Class.Infer (Infer(..), MonadInfer(..), newUnbound, newTerm, inferNode, nodeType, TypeAST)
 import           AST.Class.Infer.Infer1 (Infer1(..), HasTypeAST1(..))
 import           AST.Class.Children (Children)
 import           AST.Class.Recursive (Recursive(..), RecursiveDict)
 import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import           AST.Knot (Knot, Tie, Tree)
 import           AST.Term.FuncType
-import           AST.Unify (Unify(..), UniVar, newTerm, newUnbound)
+import           AST.Unify (Unify(..), UniVar)
 import           Control.Lens (Lens', Prism')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -122,6 +122,7 @@ instance
     , MonadReader env m
     , HasScopeTypes (UniVar m) (TypeAST (t k)) env
     , DeBruijnIndex k
+    , MonadInfer m
     ) =>
     Infer m (ScopeVar t k) where
 

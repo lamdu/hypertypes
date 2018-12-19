@@ -35,7 +35,8 @@ instance HasTypeAST1 Term where
     typeAst _ = Dict
 
 type TermInfer1Deps env m =
-    ( MonadReader env m
+    ( MonadInfer m
+    , MonadReader env m
     , HasScopeTypes (UniVar m) Typ env
     , Recursive (Unify m) Typ
     , Recursive (CanInstantiate m Types) Typ
