@@ -3,14 +3,14 @@
 module AST.Unify
     ( HasQuantifiedVar(..)
     , UniVar
-    , newTerm, unfreeze
+    , newTerm
     , Binding(..)
     , Unify(..)
     , applyBindings, unify
     ) where
 
 import           AST.Class.Children (Children(..))
-import           AST.Class.Recursive (Recursive(..), RecursiveConstraint, wrapM)
+import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Class.ZipMatch (ZipMatch(..), zipMatchWith_)
 import           AST.Knot.Pure (Pure(..))
 import           AST.Knot (Knot, Tree)
@@ -72,15 +72,6 @@ newTerm term =
         var <- newVar binding
         var <$ bindVar binding var (UTerm term)
 
--- | Embed a pure term as a mutable term.
-unfreeze ::
-    forall m t.
-    Recursive (Unify m) t =>
-    Tree Pure t -> m (Tree (UTerm (UniVar m)) t)
-unfreeze =
-    withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
-    fmap UVar . wrapM (Proxy :: Proxy (Unify m)) newTerm
-
 -- look up a variable, and return last variable pointing to result.
 -- prune all variable on way to last variable
 semiPruneLookup ::
@@ -101,7 +92,7 @@ semiPruneLookup v0 =
     Just t -> pure (v0, t)
 
 -- TODO: implement when need / better understand motivations for -
--- freeze, fullPrune, occursIn, seenAs, getFreeVars, freshen, equals, equiv
+-- unfreeze, freeze, fullPrune, occursIn, seenAs, getFreeVars, freshen, equals, equiv
 
 applyBindings :: forall m t. Recursive (Unify m) t => Tree (UniVar m) t -> m (Tree Pure t)
 applyBindings v0 =
