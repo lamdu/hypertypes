@@ -1,24 +1,18 @@
-{-# LANGUAGE NoImplicitPrelude, StandaloneDeriving, UndecidableInstances, TypeFamilies #-}
+{-# LANGUAGE NoImplicitPrelude, StandaloneDeriving, UndecidableInstances, TypeFamilies, TemplateHaskell #-}
 
 module AST.Knot.Pure
     ( Pure(..)
     ) where
 
 import AST.Class.Children (Children(..))
-import AST.Class.Children.Mono (ChildOf)
+import AST.Class.Children.TH
 import AST.Knot (Tie)
-import Control.Lens.Operators
 
 import Prelude.Compat
 
 newtype Pure k = Pure { getPure :: Tie k Pure }
 
-instance Children Pure where
-    type SubTreeConstraint Pure k constraint = constraint (Tie k Pure)
-    type ChildrenConstraint Pure constraint = constraint Pure
-    children _ f (Pure x) = f x <&> Pure
-
-type instance ChildOf Pure = Pure
+makeChildren ''Pure
 
 deriving instance SubTreeConstraint Pure f Eq   => Eq   (Pure f)
 deriving instance SubTreeConstraint Pure f Ord  => Ord  (Pure f)
