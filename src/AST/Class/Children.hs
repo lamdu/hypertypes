@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, DefaultSignatures, TypeFamilies, RankNTypes, ConstraintKinds, ScopedTypeVariables, DataKinds #-}
+{-# LANGUAGE NoImplicitPrelude, TypeFamilies, RankNTypes, ConstraintKinds, ScopedTypeVariables, DataKinds #-}
 
 module AST.Class.Children
     ( Children(..), ChildrenWithConstraint
