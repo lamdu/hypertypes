@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, DeriveTraversable, TemplateHaskell, TypeFamilies, MultiParamTypeClasses, StandaloneDeriving, ConstraintKinds, UndecidableInstances #-}
+{-# LANGUAGE NoImplicitPrelude, DeriveTraversable, TemplateHaskell, TypeFamilies, MultiParamTypeClasses, StandaloneDeriving, ConstraintKinds, UndecidableInstances, FlexibleContexts #-}
 
 module AST.Unify.Term
     ( UTerm(..), _UVar, _UTerm
@@ -9,6 +9,7 @@ import           AST.Class.Children (Children(..))
 import           AST.Class.Recursive
 import           AST.Class.TH (makeChildren)
 import           AST.Knot (Tie)
+import           AST.Knot.Pure
 import qualified Control.Lens as Lens
 
 import           Prelude.Compat
@@ -23,6 +24,7 @@ data VTerm f ast
     = VVar (f (VTerm f ast))
     | VTerm (Tie ast (UTerm f))
     | VResolving (Tie ast (UTerm f))
+    | VResolved (Tie ast Pure)
 
 Lens.makePrisms ''UTerm
 Lens.makePrisms ''VTerm
@@ -32,5 +34,7 @@ makeChildren [''UTerm, ''VTerm]
 instance Traversable f => Recursive Children (UTerm f)
 instance Traversable f => Recursive Children (VTerm f)
 
-deriving instance (Show (Tie t (UTerm f)), Show (f (VTerm f t))) => Show (UTerm f t)
-deriving instance (Show (Tie t (UTerm f)), Show (f (VTerm f t))) => Show (VTerm f t)
+type Deps t f = (Show (Tie t (UTerm f)), Show (f (VTerm f t)), Show (Tie t Pure))
+
+deriving instance Deps t f => Show (UTerm f t)
+deriving instance Deps t f => Show (VTerm f t)
