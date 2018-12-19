@@ -16,7 +16,8 @@ import           Prelude.Compat
 -- Names modeled after unification-fd
 
 data UTerm v ast
-    = UVar (v ast)
+    = UUnbound
+    | UVar (v ast)
     | UTerm (Tie ast v)
     | UResolving (Tie ast v)
     | UResolved (Pure ast)

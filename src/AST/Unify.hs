@@ -33,8 +33,8 @@ class HasQuantifiedVar (t :: Knot -> *) where
 type family UniVar (m :: * -> *) :: Knot -> *
 
 data Binding m t = Binding
-    { lookupVar :: Tree (UniVar m) t -> m (Maybe (Tree (UTerm (UniVar m)) t))
-    , newVar :: m (Tree (UniVar m) t)
+    { lookupVar :: Tree (UniVar m) t -> m (Tree (UTerm (UniVar m)) t)
+    , newVar :: Tree (UTerm (UniVar m)) t -> m (Tree (UniVar m) t)
     , bindVar :: Tree (UniVar m) t -> Tree (UTerm (UniVar m)) t -> m ()
     }
 
@@ -65,13 +65,10 @@ class (Eq (Tree (UniVar m) t), ZipMatch t, HasQuantifiedVar t, Monad m) => Unify
     structureMismatch _ _ = empty
 
 newUnbound :: Unify m t => m (Tree (UniVar m) t)
-newUnbound = newVar binding
+newUnbound = newVar binding UUnbound
 
 newTerm :: Unify m t => Tree t (UniVar m) -> m (Tree (UniVar m) t)
-newTerm term =
-    do
-        var <- newUnbound
-        var <$ bindVar binding var (UTerm term)
+newTerm = newVar binding . UTerm
 
 -- look up a variable, and return last variable pointing to result.
 -- prune all variable on way to last variable
@@ -84,13 +81,12 @@ semiPruneLookup v0 =
     lookupVar binding v0
     >>=
     \case
-    Nothing -> pure (v0, UVar v0)
-    Just (UVar v1) ->
+    UVar v1 ->
         do
             (v, r) <- semiPruneLookup v1
             bindVar binding v0 (UVar v)
             pure (v, r)
-    Just t -> pure (v0, t)
+    t -> pure (v0, t)
 
 -- TODO: implement when need / better understand motivations for -
 -- unfreeze, freeze, fullPrune, occursIn, seenAs, getFreeVars, freshen, equals, equiv
@@ -106,7 +102,7 @@ applyBindings v0 =
     case x of
     UResolving t -> occurs v1 t
     UResolved t -> pure t
-    UVar{} ->
+    UUnbound ->
         newQuantifiedVariable (Proxy :: Proxy t) <&> quantifiedVar <&> Pure
         >>= result
     UTerm t ->
@@ -118,6 +114,7 @@ applyBindings v0 =
                 children (Proxy :: Proxy (Recursive (Unify m))) applyBindings t
             <&> Pure
             >>= result
+    UVar{} -> error "lookup not expected to result in var"
 
 -- Note on usage of `semiPruneLookup`:
 --   Variables are pruned to point to other variables rather than terms,
@@ -142,6 +139,6 @@ unify x0 y0 =
             >>=
             \case
             (v1, _) | v1 == other -> pure ()
-            (_, UVar v1) -> bindVar binding v1 (UVar other)
+            (v1, UUnbound) -> bindVar binding v1 (UVar other)
             (v1, UTerm t) -> onTerm v1 t
             (_, _) -> error "This shouldn't happen in unification stage"

@@ -13,7 +13,7 @@ import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
 import           Prelude.Compat
 
-newtype STVar s t = STVar (STRef s (Maybe (UTerm (STVar s) t)))
+newtype STVar s t = STVar (STRef s (UTerm (STVar s) t))
 Lens.makePrisms ''STVar
 
 instance Eq (STVar s a) where
@@ -25,6 +25,6 @@ stBindingState ::
 stBindingState =
     Binding
     { lookupVar = liftST . readSTRef . (^. _STVar)
-    , newVar = newSTRef Nothing & liftST <&> STVar
-    , bindVar = \v t -> writeSTRef (v ^. _STVar) (Just t) & liftST
+    , newVar = \t -> newSTRef t & liftST <&> STVar
+    , bindVar = \v t -> writeSTRef (v ^. _STVar) t & liftST
     }

@@ -15,6 +15,7 @@ import           Control.Lens.Operators
 import           Control.Monad.State (MonadState(..), modify)
 import           Data.Functor.Const (Const(..))
 import           Data.IntMap (IntMap)
+import           Data.Maybe (fromMaybe)
 
 import           Prelude.Compat
 
@@ -41,7 +42,16 @@ intBindingState ::
     Binding m t
 intBindingState l =
     Binding
-    { lookupVar = \k -> Lens.use (Lens.cloneLens l . varBindings . Lens.at (k ^. Lens._Wrapped))
-    , newVar = increase (Lens.cloneLens l . nextFreeVar) <&> Const
-    , bindVar = \k v -> Lens.cloneLens l . varBindings . Lens.at (k ^. Lens._Wrapped) ?= v
+    { lookupVar =
+        \k ->
+        Lens.use (Lens.cloneLens l . varBindings . Lens.at (k ^. Lens._Wrapped))
+        <&> fromMaybe UUnbound
+    , newVar =
+        \x ->
+        do
+            k <- increase (Lens.cloneLens l . nextFreeVar) <&> Const
+            k <$ bind k x
+    , bindVar = bind
     }
+    where
+        bind k v = Lens.cloneLens l . varBindings . Lens.at (k ^. Lens._Wrapped) ?= v
