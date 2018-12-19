@@ -45,7 +45,7 @@ intBindingState l =
     { lookupVar =
         \k ->
         Lens.use (Lens.cloneLens l . varBindings . Lens.at (k ^. Lens._Wrapped))
-        <&> fromMaybe UUnbound
+        <&> fromMaybe (error "variable not found!")
     , newVar =
         \x ->
         do
