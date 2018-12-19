@@ -102,7 +102,7 @@ applyBindings v0 =
     case x of
     UResolving t -> occurs v1 t
     UResolved t -> pure t
-    UUnbound ->
+    UUnbound{} ->
         newQuantifiedVariable (Proxy :: Proxy t) <&> quantifiedVar <&> Pure
         >>= result
     UTerm t ->
@@ -139,6 +139,6 @@ unify x0 y0 =
             >>=
             \case
             (v1, _) | v1 == other -> pure ()
-            (v1, UUnbound) -> bindVar binding v1 (UVar other)
+            (v1, UUnbound{}) -> bindVar binding v1 (UVar other)
             (v1, UTerm t) -> onTerm v1 t
             (_, _) -> error "This shouldn't happen in unification stage"
