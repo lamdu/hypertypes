@@ -6,9 +6,9 @@ module AST.Term.Lam
     , ScopeTypes, HasScopeTypes(..)
     ) where
 
+import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Infer (Infer(..), TypeAST, FuncType(..), inferNode, nodeType)
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
-import           AST.Class.TH (makeChildren)
 import           AST.Knot (Knot, Tie, Tree)
 import           AST.Unify (Unify(..), UniVar, Binding(..))
 import           AST.Unify.Term (UTerm(..))

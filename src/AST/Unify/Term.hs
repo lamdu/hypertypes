@@ -6,8 +6,8 @@ module AST.Unify.Term
     ) where
 
 import           AST.Class.Children (Children(..))
+import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Recursive
-import           AST.Class.TH (makeChildren)
 import           AST.Knot (Tie)
 import           AST.Knot.Pure
 import qualified Control.Lens as Lens

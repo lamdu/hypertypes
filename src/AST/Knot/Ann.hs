@@ -8,7 +8,7 @@ module AST.Knot.Ann
 
 import           AST.Class.Children (Children(..), overChildren)
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
-import           AST.Class.TH (makeChildrenAndZipMatch)
+import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import           AST.Knot (Tie, Tree)
 import           AST.Knot.Pure (Pure(..))
 import qualified Control.Lens as Lens

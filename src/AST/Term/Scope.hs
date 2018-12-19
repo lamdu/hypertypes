@@ -11,7 +11,7 @@ import           AST.Class.Infer (Infer(..), inferNode, nodeType, TypeAST, FuncT
 import           AST.Class.Infer.Infer1 (Infer1(..), HasTypeAST1(..))
 import           AST.Class.Children (Children)
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
-import           AST.Class.TH (makeChildrenAndZipMatch)
+import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import           AST.Knot (Knot, Tie, Tree)
 import           AST.Unify (Unify(..), Binding(..), UniVar)
 import           AST.Unify.Term (UTerm(..))
