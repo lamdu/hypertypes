@@ -24,7 +24,7 @@ data VTerm f ast
     = VVar (f (VTerm f ast))
     | VTerm (Tie ast (UTerm f))
     | VResolving (Tie ast (UTerm f))
-    | VResolved (Tie ast Pure)
+    | VResolved (Pure ast)
 
 Lens.makePrisms ''UTerm
 Lens.makePrisms ''VTerm

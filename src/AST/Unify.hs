@@ -102,7 +102,7 @@ applyBindings (UVar v0) =
     semiPruneLookup v0
     >>=
     \case
-    (_, VResolved t) -> Pure t & pure
+    (_, VResolved t) -> pure t
     (v1, VVar{}) ->
         do
             qvar <- newQuantifiedVariable (Proxy :: Proxy t)
@@ -116,7 +116,7 @@ applyBindings (UVar v0) =
             do
                 bindVar binding v1 (VResolving t)
                 r <- applyBindings (UTerm t)
-                bindVar binding v1 (VResolved (getPure r))
+                bindVar binding v1 (VResolved r)
                 pure r
 
 -- Note on usage of `semiPruneLookup`:
