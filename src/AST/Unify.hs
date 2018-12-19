@@ -143,30 +143,16 @@ unify x0 y0 =
             >>=
             \case
             (x1, _) | x1 == y0 -> pure ()
-            (_, UTerm x1) -> unifyVarTerm y0 x1
-            (x1, UVar{}) ->
+            (_, UVar x1) -> bindVar binding x1 (UVar y0)
+            (x1, UTerm xt) ->
                 semiPruneLookup y0
                 >>=
                 \case
                 (y1, _) | x1 == y1 -> pure ()
-                (_, UTerm y1) -> unifyVarTerm x1 y1
-                (y1, UVar{}) ->
-                    bindVar binding x1 (UVar y1)
+                (_, UVar y1) -> bindVar binding y1 (UVar x1)
+                (_, UTerm yt) -> unifyTerms xt yt
                 (_, _) -> error "This shouldn't happen in unification stage"
             (_, _) -> error "This shouldn't happen in unification stage"
-
-unifyVarTerm ::
-    forall m t.
-    Recursive (Unify m) t =>
-    Tree (UniVar m) t -> Tree t (UniVar m) -> m ()
-unifyVarTerm x0 y =
-    withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
-    semiPruneLookup x0
-    >>=
-    \case
-    (x1, UVar{}) -> bindVar binding x1 (UTerm y)
-    (_, UTerm x1) -> unifyTerms x1 y
-    (_, _) -> error "This shouldn't happen in unification stage"
 
 unifyTerms ::
     forall m t.
