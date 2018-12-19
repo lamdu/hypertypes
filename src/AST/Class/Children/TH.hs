@@ -29,6 +29,7 @@ data TypeInfo = TypeInfo
     { tiInstance :: Type
     , tiVar :: Name
     , tiChildren :: Set Type
+    , tiEmbeds :: Set Type
     , tiCons :: [D.ConstructorInfo]
     }
     deriving Show
@@ -38,11 +39,12 @@ makeTypeInfo name =
     do
         info <- D.reifyDatatype name
         (dst, var) <- parts info
-        childs <- evalStateT (childrenTypes var (AppT dst (VarT var))) mempty
+        (childs, embeds) <- evalStateT (childrenTypes var (AppT dst (VarT var))) mempty
         pure TypeInfo
             { tiInstance = dst
             , tiVar = var
             , tiChildren = childs
+            , tiEmbeds = embeds
             , tiCons = D.datatypeCons info
             }
 
@@ -70,8 +72,9 @@ makeChildrenForType info =
         constraint = mkName "constraint"
         knot = mkName "knot"
         childrenConstraint =
-            Set.toList (tiChildren info)
-            <&> AppT (VarT constraint)
+            (Set.toList (tiChildren info) <&> (VarT constraint `AppT`))
+            <> (Set.toList (tiEmbeds info) <&>
+                (\x -> ConT ''ChildrenConstraint `AppT` x `AppT` VarT constraint))
             & toTuple
         subTreeConstraint =
             Set.toList (tiChildren info)
@@ -101,7 +104,7 @@ parts info =
         stripSigT x = x
 
 childrenTypes ::
-    Name -> Type -> StateT (Set Type) Q (Set Type)
+    Name -> Type -> StateT (Set Type) Q (Set Type, Set Type)
 childrenTypes var typ =
     do
         did <- gets (^. Lens.contains typ)
@@ -109,12 +112,13 @@ childrenTypes var typ =
             then pure mempty
             else modify (Lens.contains typ .~ True) *> add (matchType var typ)
     where
-        add (NodeFofX ast) = Set.singleton ast & pure
+        add (NodeFofX ast) = pure (Set.singleton ast, mempty)
         add (XofF ast) =
             go [] ast
             where
                 go as (ConT name) = childrenTypesFromTypeName name as
                 go as (AppT x a) = go (a:as) x
+                go as x@VarT{} = pure (mempty, Set.singleton (foldl AppT x as))
                 go _ _ = pure mempty
         add (Tof _ pat) = add pat
         add Other{} = pure mempty
@@ -144,7 +148,7 @@ data CtrTypePattern
     deriving Show
 
 childrenTypesFromTypeName ::
-    Name -> [Type] -> StateT (Set Type) Q (Set Type)
+    Name -> [Type] -> StateT (Set Type) Q (Set Type, Set Type)
 childrenTypesFromTypeName name args =
     do
         info <- D.reifyDatatype name & lift
