@@ -4,7 +4,7 @@ module AST.Class.Children.TH
     ( makeChildren
     , -- Internals for use in TH for sub-classes
       TypeInfo(..), CtrTypePattern(..), CtrCase(..)
-    , parts, matchType, applicativeStyle, isPolymorphic
+    , parts, matchType, applicativeStyle, isPolymorphic, childrenContext
     ) where
 
 import           AST.Class.Children (Children(..))
@@ -78,7 +78,7 @@ makeChildrenForType info =
                 (pure (TySynEqn [tiInstance info, VarT knot, VarT constraint] subTreeConstraint))
             , tySynInstD ''ChildrenConstraint
                 (pure (TySynEqn [tiInstance info, VarT constraint] childrenConstraint))
-            , funD 'children (ctrs <&> pure . ccClause)
+            , funD 'children (tiCons info <&> pure . ccClause . makeChildrenCtr (tiVar info))
             ]
         mono <-
             case Set.toList (tiChildren info) of
@@ -89,8 +89,7 @@ makeChildrenForType info =
             _ -> pure []
         pure (inst : mono, ctx)
     where
-        ctrs = tiCons info <&> makeChildrenCtr (tiVar info)
-        ctx = ctrs >>= ccContext & Set.fromList & Set.toList
+        ctx = childrenContext info
         constraint = mkName "constraint"
         knot = mkName "knot"
         childrenConstraint =
@@ -101,6 +100,10 @@ makeChildrenForType info =
             Set.toList (tiChildren info)
             <&> (\x -> VarT constraint `AppT` (ConT ''Tie `AppT` VarT knot `AppT` x))
             & foldl AppT (TupleT (Set.size (tiChildren info)))
+
+childrenContext :: TypeInfo -> [Pred]
+childrenContext info =
+    tiCons info <&> makeChildrenCtr (tiVar info) >>= ccContext & Set.fromList & Set.toList
 
 parts :: D.DatatypeInfo -> Q (Type, Name)
 parts info =
