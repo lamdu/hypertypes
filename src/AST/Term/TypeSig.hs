@@ -17,27 +17,27 @@ import           GHC.Generics (Generic)
 
 import           Prelude.Compat
 
-data TypeSig term k = TypeSig
-    { _tsType :: Tree Pure (TypeAST term)
+data TypeSig tknot term k = TypeSig
+    { _tsType :: Tree tknot (TypeAST term)
     , _tsTerm :: Tie k term
     } deriving Generic
 Lens.makeLenses ''TypeSig
 
 makeChildrenRecursive [''TypeSig]
 
-instance RecursiveConstraint (TypeSig term) constraint => Recursive constraint (TypeSig term)
+instance RecursiveConstraint (TypeSig tknot term) constraint => Recursive constraint (TypeSig tknot term)
 
-type Deps term k cls = ((cls (Tie k term), cls (Tree Pure (TypeAST term))) :: Constraint)
+type Deps tknot term k cls = ((cls (Tie k term), cls (Tree tknot (TypeAST term))) :: Constraint)
 
-deriving instance Deps term k Eq   => Eq   (TypeSig term k)
-deriving instance Deps term k Ord  => Ord  (TypeSig term k)
-deriving instance Deps term k Show => Show (TypeSig term k)
-instance Deps term k Binary => Binary (TypeSig term k)
-instance Deps term k NFData => NFData (TypeSig term k)
+deriving instance Deps tknot term k Eq   => Eq   (TypeSig tknot term k)
+deriving instance Deps tknot term k Ord  => Ord  (TypeSig tknot term k)
+deriving instance Deps tknot term k Show => Show (TypeSig tknot term k)
+instance Deps tknot term k Binary => Binary (TypeSig tknot term k)
+instance Deps tknot term k NFData => NFData (TypeSig tknot term k)
 
-type instance TypeAST (TypeSig term) = TypeAST term
+type instance TypeAST (TypeSig tknot term) = TypeAST term
 
-instance Infer m term => Infer m (TypeSig term) where
+instance Infer m term => Infer m (TypeSig Pure term) where
     infer (TypeSig s x) =
         withDict (recursive :: Dict (RecursiveConstraint (TypeAST term) (Unify m))) $
         do

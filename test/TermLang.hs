@@ -20,7 +20,7 @@ data Term v f
     = ELam (Scope Term v f)
     | EVar (ScopeVar Term v f)
     | EApp (Apply (Term v) f)
-    | ETypeSig (TypeSig (Term v) f)
+    | ETypeSig (TypeSig Pure (Term v) f)
     | ELit Int
 
 makeChildrenRecursive [''Term]
