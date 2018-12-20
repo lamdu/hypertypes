@@ -28,4 +28,4 @@ makeChildrenRecursive [''UTerm]
 
 instance RecursiveConstraint (UTerm v) Children => Recursive Children (UTerm v)
 
-deriving instance (Show (Tie t Pure), Show (v t), Show (Tie t v)) => Show (UTerm v t)
+deriving instance (SubTreeConstraint (UTerm v) t Show) => Show (UTerm v t)
