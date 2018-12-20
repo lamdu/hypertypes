@@ -126,13 +126,15 @@ unify ::
     Tree (UniVar m) t -> Tree (UniVar m) t -> m ()
 unify x0 y0 =
     withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
-    let unifyTerms x y =
-            zipMatchWith_ (Proxy :: Proxy (Recursive (Unify m))) unify x y
-            & fromMaybe (structureMismatch x y)
+    let unifyTerms x1 xt y1 yt =
+            do
+                bindVar binding y1 (UVar x1)
+                zipMatchWith_ (Proxy :: Proxy (Recursive (Unify m))) unify xt yt
+                    & fromMaybe (structureMismatch xt yt)
     in
     if x0 == y0
         then pure ()
-        else go x0 y0 (\x1 xt -> go y0 x1 (const (unifyTerms xt)))
+        else go x0 y0 (\x1 xt -> go y0 x1 (unifyTerms x1 xt))
     where
         go var other onTerm =
             semiPruneLookup var
