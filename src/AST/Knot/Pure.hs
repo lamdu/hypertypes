@@ -18,5 +18,4 @@ deriving instance SubTreeConstraint Pure f Eq   => Eq   (Pure f)
 deriving instance SubTreeConstraint Pure f Ord  => Ord  (Pure f)
 
 instance SubTreeConstraint Pure f Show => Show (Pure f) where
-    -- TODO: Couldn't get x to only have parens when needed..
-    showsPrec p (Pure x) = showParen (p > 0) (("Pure (" <>) . shows x . (")" <>))
+    showsPrec p (Pure x) = showParen (p > 10) (("Pure " <>) . showsPrec 11 x)

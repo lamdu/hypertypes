@@ -33,7 +33,7 @@ instance NFData (Tie k typ) => NFData (FuncType typ k)
 
 instance Show (Tie k typ) => Show (FuncType typ k) where
     showsPrec p (FuncType i o) =
-        showParen (p > 0) (("FuncType " <>) . showsPrec 1 i . (" " <>) . showsPrec 1 o)
+        showParen (p > 10) (("FuncType " <>) . showsPrec 11 i . (" " <>) . showsPrec 11 o)
 
 class HasFuncType typ where
     funcType :: Prism' (Tree typ k) (Tree (FuncType typ) k)
