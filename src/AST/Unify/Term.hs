@@ -19,6 +19,7 @@ data UTerm v ast
     = UUnbound
     | UVar (v ast)
     | UTerm (Tie ast v)
+    | USkolem
     | UResolving (Tie ast v)
     | UResolved (Pure ast)
 

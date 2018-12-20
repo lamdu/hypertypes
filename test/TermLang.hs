@@ -8,6 +8,7 @@ import AST
 import AST.Class.Infer
 import AST.Class.Infer.Infer1
 import AST.Term.Apply
+import AST.Term.Scheme
 import AST.Term.Scope
 import AST.Term.TypeSig
 import AST.Unify
@@ -20,7 +21,7 @@ data Term v f
     = ELam (Scope Term v f)
     | EVar (ScopeVar Term v f)
     | EApp (Apply (Term v) f)
-    | ETypeSig (TypeSig (Tree Pure Typ) (Term v) f)
+    | ETypeSig (TypeSig (Tree Pure (Scheme Types Typ)) (Term v) f)
     | ELit Int
 
 makeChildrenRecursive [''Term]
@@ -33,7 +34,13 @@ instance HasTypeAST1 Term where
     type TypeASTIndexConstraint Term = DeBruijnIndex
     typeAst _ = Dict
 
-type TermInfer1Deps env m = (MonadReader env m, HasScopeTypes (UniVar m) Typ env, Recursive (Unify m) Typ)
+type TermInfer1Deps env m =
+    ( MonadReader env m
+    , HasScopeTypes (UniVar m) Typ env
+    , Recursive (Unify m) Typ
+    , Recursive (CanInstantiate m Types) Typ
+    , ChildrenConstraint Types (Unify m)
+    )
 
 instance TermInfer1Deps env m => Infer1 m Term where
     inferMonad = Sub Dict

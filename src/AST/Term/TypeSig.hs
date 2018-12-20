@@ -5,15 +5,15 @@ module AST.Term.TypeSig
     ) where
 
 import AST
-import AST.Class.Infer
-import AST.Class.Instantiate
+import AST.Class.Infer (Infer(..), TypeAST, inferNode, nodeType)
+import AST.Class.Instantiate (Instantiate(..))
 import AST.Class.Recursive.TH (makeChildrenRecursive)
-import AST.Unify
+import AST.Unify (Unify, unify)
 import Control.DeepSeq (NFData)
 import Control.Lens (makeLenses)
 import Control.Lens.Operators
 import Data.Binary (Binary)
-import Data.Constraint
+import Data.Constraint (Constraint, withDict)
 import GHC.Generics (Generic)
 
 import Prelude.Compat
@@ -39,7 +39,11 @@ instance Deps typ term k NFData => NFData (TypeSig typ term k)
 type instance TypeAST (TypeSig typ term) = TypeAST term
 
 instance
-    (Infer m term, Instantiate scheme, SchemeType scheme ~ TypeAST term) =>
+    ( Infer m term
+    , Instantiate scheme
+    , SchemeType scheme ~ TypeAST term
+    , InstantiateContext scheme m
+    ) =>
     Infer m (TypeSig (Tree Pure scheme) term) where
 
     infer (TypeSig s x) =

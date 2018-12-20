@@ -7,6 +7,7 @@ import AST
 import AST.Class.Infer
 import AST.Class.Recursive
 import AST.Term.Apply
+import AST.Term.Scheme
 import AST.Term.Scope
 import AST.Term.TypeSig
 import AST.Unify
@@ -24,13 +25,20 @@ import Data.STRef
 var :: DeBruijnIndex k => Int -> Tree Pure (Term k)
 var = Pure . EVar . scopeVar
 
+uniType :: Tree Pure Typ -> Tree Pure (Scheme Types Typ)
+uniType typ =
+    Pure Scheme
+    { _sForAlls = Types (Vars []) (Vars [])
+    , _sTyp = typ
+    }
+
 expr :: Tree Pure (Term EmptyScope)
 expr =
     -- \x y -> x (5 :: Int)
     Pure . ELam . scope $ \x ->
     Pure . ELam . scope $ \_y ->
     ELit 5 & Pure
-    & TypeSig (Pure TInt) & ETypeSig & Pure
+    & TypeSig (uniType (Pure TInt)) & ETypeSig & Pure
     & Apply (var x) & EApp & Pure
 
 infinite :: Tree Pure (Term EmptyScope)

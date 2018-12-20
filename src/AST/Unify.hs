@@ -24,7 +24,7 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
-class HasQuantifiedVar (t :: Knot -> *) where
+class Ord (QVar t) => HasQuantifiedVar (t :: Knot -> *) where
     type family QVar t
     quantifiedVar :: Prism' (t f) (QVar t)
 
@@ -64,6 +64,10 @@ class (Eq (Tree (UniVar m) t), ZipMatch t, HasQuantifiedVar t, Monad m) => Unify
     default structureMismatch ::
         Alternative m => Tree t (UniVar m) -> Tree t (UniVar m) -> m (Tree t (UniVar m))
     structureMismatch _ _ = empty
+
+    skolemUnified :: Tree (UniVar m) t -> Tree (UniVar m) t -> m ()
+    default skolemUnified :: Alternative m => Tree (UniVar m) t -> Tree (UniVar m) t -> m ()
+    skolemUnified _ _ = empty
 
 newUnbound :: Unify m t => m (Tree (UniVar m) t)
 newUnbound = newVar binding UUnbound
@@ -108,13 +112,15 @@ applyBindings v0 =
     >>=
     \(v1, x) ->
     let result r = r <$ bindVar binding v1 (UResolved r)
+        quantify =
+            newQuantifiedVariable (Proxy :: Proxy t) <&> (quantifiedVar #) <&> Pure
+            >>= result
     in
     case x of
     UResolving t -> occurs v1 t
     UResolved t -> pure t
-    UUnbound{} ->
-        newQuantifiedVariable (Proxy :: Proxy t) <&> (quantifiedVar #) <&> Pure
-        >>= result
+    UUnbound{} -> quantify
+    USkolem{} -> quantify
     UTerm t ->
         case leafExpr of
         Just f -> f t & Pure & pure
@@ -153,6 +159,7 @@ unify x0 y0 =
             >>=
             \case
             (v1, _) | v1 == other -> pure other
+            (v1, USkolem) -> other <$ skolemUnified v1 other
             (v1, UUnbound{}) -> other <$ bindVar binding v1 (UVar other)
             (v1, UTerm t) -> onTerm v1 t
             (_, _) -> error "This shouldn't happen in unification stage"

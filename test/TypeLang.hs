@@ -8,6 +8,7 @@ import AST.Unify
 import AST.Unify.IntMapBinding
 import AST.Unify.STBinding
 import AST.Term.FuncType
+import AST.Term.Scheme
 import AST.Term.Scope
 import Control.Lens (ALens')
 import qualified Control.Lens as Lens
@@ -44,6 +45,9 @@ makeChildrenAndZipMatch [''Typ, ''Row, ''Types]
 deriving instance SubTreeConstraint Typ f Show => Show (Typ f)
 deriving instance SubTreeConstraint Row f Show => Show (Row f)
 
+instance HasChild Types Typ where getChild = tTyp
+instance HasChild Types Row where getChild = tRow
+
 type IntInferState = (Tree Types IntBindingState, Tree Types (Const Int))
 
 emptyIntInferState :: IntInferState
@@ -76,6 +80,8 @@ instance Monoid w => Unify (IntInfer r w) Row where
 
 instance Monoid w => Recursive (Unify (IntInfer r w)) Typ
 instance Monoid w => Recursive (Unify (IntInfer r w)) Row
+instance Monoid w => Recursive (CanInstantiate (IntInfer r w) Types) Typ
+instance Monoid w => Recursive (CanInstantiate (IntInfer r w) Types) Row
 
 type STInferState s = Tree Types (Const (STRef s Int))
 
@@ -107,6 +113,8 @@ instance Unify (STInfer r s) Row where
 
 instance Recursive (Unify (STInfer r s)) Typ
 instance Recursive (Unify (STInfer r s)) Row
+instance Recursive (CanInstantiate (STInfer r s) Types) Typ
+instance Recursive (CanInstantiate (STInfer r s) Types) Row
 
 instance HasFuncType Typ where
     funcType = _TFun
