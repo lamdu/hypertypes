@@ -31,6 +31,7 @@ dependencies:
 - mtl
 - pretty
 - QuickCheck
+- show-combinators
 - template-haskell
 - th-abstraction
 - transformers

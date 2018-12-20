@@ -13,6 +13,7 @@ import           Control.Lens (Prism')
 import qualified Control.Lens as Lens
 import           Data.Binary (Binary)
 import           GHC.Generics (Generic)
+import           Text.Show.Combinators ((@|), showCon)
 
 import           Prelude.Compat
 
@@ -32,8 +33,7 @@ instance Binary (Tie k typ) => Binary (FuncType typ k)
 instance NFData (Tie k typ) => NFData (FuncType typ k)
 
 instance Show (Tie k typ) => Show (FuncType typ k) where
-    showsPrec p (FuncType i o) =
-        showParen (p > 10) (("FuncType " <>) . showsPrec 11 i . (" " <>) . showsPrec 11 o)
+    showsPrec p (FuncType i o) = (showCon "FuncType" @| i @| o) p
 
 class HasFuncType typ where
     funcType :: Prism' (Tree typ k) (Tree (FuncType typ) k)
