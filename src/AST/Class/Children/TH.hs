@@ -77,8 +77,10 @@ makeChildrenForType info =
                 (\x -> ConT ''ChildrenConstraint `AppT` x `AppT` VarT constraint))
             & toTuple
         subTreeConstraint =
-            Set.toList (tiChildren info)
-            <&> (\x -> VarT constraint `AppT` (ConT ''Tie `AppT` VarT knot `AppT` x))
+            (Set.toList (tiChildren info)
+                <&> (\x -> ConT ''Tie `AppT` VarT knot `AppT` x))
+            <> (Set.toList (tiEmbeds info) <&> (`AppT` VarT knot))
+            <&> (VarT constraint `AppT`)
             & toTuple
 
 toTuple :: Foldable t => t Type -> Type
