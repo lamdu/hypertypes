@@ -28,9 +28,12 @@ instance RecursiveConstraint (FuncType typ) constraint => Recursive constraint (
 
 deriving instance Eq   (Tie k typ) => Eq   (FuncType typ k)
 deriving instance Ord  (Tie k typ) => Ord  (FuncType typ k)
-deriving instance Show (Tie k typ) => Show (FuncType typ k)
 instance Binary (Tie k typ) => Binary (FuncType typ k)
 instance NFData (Tie k typ) => NFData (FuncType typ k)
+
+instance Show (Tie k typ) => Show (FuncType typ k) where
+    showsPrec p (FuncType i o) =
+        showParen (p > 0) (("FuncType " <>) . showsPrec 1 i . (" " <>) . showsPrec 1 o)
 
 class HasFuncType typ where
     funcType :: Prism' (Tree typ k) (Tree (FuncType typ) k)

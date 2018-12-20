@@ -18,7 +18,5 @@ deriving instance SubTreeConstraint Pure f Eq   => Eq   (Pure f)
 deriving instance SubTreeConstraint Pure f Ord  => Ord  (Pure f)
 
 instance SubTreeConstraint Pure f Show => Show (Pure f) where
-    showsPrec p (Pure x) =
-        -- TODO: How to make a proper show instance without extra parens?
-        -- (Not using the built-in one because of the large record syntax)
-        showParen (p > 0) (\rest -> "Pure (" <> show x <> ")" <> rest)
+    -- TODO: Couldn't get x to only have parens when needed..
+    showsPrec p (Pure x) = showParen (p > 0) (("Pure (" <>) . shows x . (")" <>))
