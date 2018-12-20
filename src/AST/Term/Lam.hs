@@ -58,7 +58,7 @@ type instance TypeAST (LamVar v t) = TypeAST t
 
 instance
     ( Infer m t
-    , FuncType (TypeAST t)
+    , HasFuncType (TypeAST t)
     , MonadReader env m
     , HasScopeTypes v (UniVar m) (TypeAST t) env
     ) =>
@@ -72,7 +72,10 @@ instance
                 local
                 (scopeTypes . Lens.at p ?~ varType)
                 (inferNode r)
-            funcType # (varType, rI ^. nodeType) & newTerm
+            funcType # FuncType
+                { _funcIn = varType
+                , _funcOut = rI ^. nodeType
+                } & newTerm
                 <&> (, Lam p rI)
 
 instance

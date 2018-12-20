@@ -90,7 +90,7 @@ instance HasTypeAST1 t => HasTypeAST1 (ScopeVar t) where
 
 instance
     ( HasTypeAST1 t
-    , FuncType (TypeAST1 t)
+    , HasFuncType (TypeAST1 t)
     , Infer1 m t
     , Recursive (Unify m) (TypeAST (t k))
     , TypeASTIndexConstraint t ~ DeBruijnIndex
@@ -110,7 +110,10 @@ instance
                 local
                 (scopeTypes . Lens.at (deBruijnIndexMax (Proxy :: Proxy (Maybe k))) ?~ varType)
                 (inferNode x)
-            funcType # (varType, xI ^. nodeType) & newTerm
+            funcType # FuncType
+                { _funcIn = varType
+                , _funcOut = xI ^. nodeType
+                } & newTerm
                 <&> (, Scope xI)
         \\ (inferMonad :: DeBruijnIndex (Maybe k) :- Infer m (t (Maybe k)))
 

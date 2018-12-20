@@ -20,7 +20,7 @@ import Data.STRef
 
 data Typ f
     = TInt
-    | TFun (Tie f Typ) (Tie f Typ)
+    | TFun (FuncType Typ f)
     | TRow (Row f)
     | TVar String
 
@@ -106,7 +106,7 @@ instance Unify (STInfer r s) Row where
 instance Recursive (Unify (STInfer r s)) Typ
 instance Recursive (Unify (STInfer r s)) Row
 
-instance FuncType Typ where
+instance HasFuncType Typ where
     funcType = _TFun
 
 instance HasScopeTypes v Typ a => HasScopeTypes v Typ (a, x) where

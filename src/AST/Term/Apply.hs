@@ -45,13 +45,17 @@ applyChildren f (Apply x0 x1) = Apply <$> f x0 <*> f x1
 
 type instance TypeAST (Apply expr) = TypeAST expr
 
-instance (Infer m expr, FuncType (TypeAST expr)) => Infer m (Apply expr) where
+instance (Infer m expr, HasFuncType (TypeAST expr)) => Infer m (Apply expr) where
     infer (Apply func arg) =
         withDict (recursive :: Dict (RecursiveConstraint (TypeAST expr) (Unify m))) $
         do
             argI <- inferNode arg
             funcI <- inferNode func
             funcRes <- newUnbound
-            funcT <- funcType # (argI ^. nodeType, funcRes) & newTerm
+            funcT <-
+                funcType # FuncType
+                { _funcIn = argI ^. nodeType
+                , _funcOut = funcRes
+                } & newTerm
             funcRes <$ unify funcT (funcI ^. nodeType)
                 <&> (, Apply funcI argI)
