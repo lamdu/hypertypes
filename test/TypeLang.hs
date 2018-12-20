@@ -3,10 +3,10 @@
 module TypeLang where
 
 import AST
-import AST.Class.Infer
 import AST.Unify
 import AST.Unify.IntMapBinding
 import AST.Unify.STBinding
+import AST.Term.FuncType
 import AST.Term.Scope
 import Control.Lens (ALens')
 import qualified Control.Lens as Lens

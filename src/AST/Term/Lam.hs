@@ -6,10 +6,11 @@ module AST.Term.Lam
     , ScopeTypes, HasScopeTypes(..)
     ) where
 
-import           AST.Class.Infer (Infer(..), TypeAST, FuncType(..), inferNode, nodeType)
+import           AST.Class.Infer (Infer(..), TypeAST, inferNode, nodeType)
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Class.Recursive.TH (makeChildrenRecursive)
 import           AST.Knot (Knot, Tie, Tree)
+import           AST.Term.FuncType
 import           AST.Unify (Unify(..), UniVar, newTerm, newUnbound)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Lens')

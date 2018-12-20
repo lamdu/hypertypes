@@ -3,14 +3,13 @@
 module AST.Class.Infer
     ( TypeAST, Infer(..)
     , INode, inferNode, nodeType
-    , FuncType(..)
     ) where
 
 import           AST.Class.Recursive (Recursive)
 import           AST.Knot (Knot, Tree)
 import           AST.Knot.Ann (Ann(..), ann)
 import           AST.Unify (Unify(..), UniVar)
-import           Control.Lens (Lens', Prism')
+import           Control.Lens (Lens')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 
@@ -30,6 +29,3 @@ inferNode (Ann a x) =
 
 nodeType :: Lens' (INode v t a) (Tree v (TypeAST t))
 nodeType = ann . Lens._1
-
-class FuncType t where
-    funcType :: Prism' (Tree t f) (Tree f t, Tree f t)
