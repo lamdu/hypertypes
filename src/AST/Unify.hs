@@ -11,7 +11,7 @@ module AST.Unify
 
 import           AST.Class.Children (Children(..))
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
-import           AST.Class.ZipMatch (ZipMatch(..), zipMatchWith_)
+import           AST.Class.ZipMatch (ZipMatch(..), zipMatchWithA)
 import           AST.Knot.Pure (Pure(..))
 import           AST.Knot (Knot, Tree)
 import           AST.Unify.Term
@@ -59,9 +59,9 @@ class (Eq (Tree (UniVar m) t), ZipMatch t, HasQuantifiedVar t, Monad m) => Unify
     -- but some AST terms could be equivalent despite not matching,
     -- like record extends with fields ordered differently,
     -- and these could still match.
-    structureMismatch :: Tree t (UniVar m) -> Tree t (UniVar m) -> m ()
+    structureMismatch :: Tree t (UniVar m) -> Tree t (UniVar m) -> m (Tree t (UniVar m))
     default structureMismatch ::
-        Alternative m => Tree t (UniVar m) -> Tree t (UniVar m) -> m ()
+        Alternative m => Tree t (UniVar m) -> Tree t (UniVar m) -> m (Tree t (UniVar m))
     structureMismatch _ _ = empty
 
 newUnbound :: Unify m t => m (Tree (UniVar m) t)
@@ -123,24 +123,26 @@ applyBindings v0 =
 unify ::
     forall m t.
     Recursive (Unify m) t =>
-    Tree (UniVar m) t -> Tree (UniVar m) t -> m ()
+    Tree (UniVar m) t -> Tree (UniVar m) t -> m (Tree (UniVar m) t)
 unify x0 y0 =
     withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
     let unifyTerms x1 xt y1 yt =
             do
                 bindVar binding y1 (UVar x1)
-                zipMatchWith_ (Proxy :: Proxy (Recursive (Unify m))) unify xt yt
+                zipMatchWithA (Proxy :: Proxy (Recursive (Unify m))) unify xt yt
                     & fromMaybe (structureMismatch xt yt)
+                    >>= bindVar binding x1 . UTerm
+                pure x1
     in
     if x0 == y0
-        then pure ()
+        then pure x0
         else go x0 y0 (\x1 xt -> go y0 x1 (unifyTerms x1 xt))
     where
         go var other onTerm =
             semiPruneLookup var
             >>=
             \case
-            (v1, _) | v1 == other -> pure ()
-            (v1, UUnbound{}) -> bindVar binding v1 (UVar other)
+            (v1, _) | v1 == other -> pure other
+            (v1, UUnbound{}) -> other <$ bindVar binding v1 (UVar other)
             (v1, UTerm t) -> onTerm v1 t
             (_, _) -> error "This shouldn't happen in unification stage"
