@@ -8,6 +8,7 @@ import AST.Class.Infer
 import AST.Class.Recursive
 import AST.Term.Apply
 import AST.Term.Scope
+import AST.Term.TypeSig
 import AST.Unify
 import AST.Unify.STBinding
 import qualified Control.Lens as Lens
@@ -25,10 +26,11 @@ var = Pure . EVar . scopeVar
 
 expr :: Tree Pure (Term EmptyScope)
 expr =
-    -- \x y -> x 5
+    -- \x y -> x (5 :: Int)
     Pure . ELam . scope $ \x ->
     Pure . ELam . scope $ \_y ->
     ELit 5 & Pure
+    & TypeSig (Pure TInt) & ETypeSig & Pure
     & Apply (var x) & EApp & Pure
 
 infinite :: Tree Pure (Term EmptyScope)

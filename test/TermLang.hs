@@ -9,6 +9,7 @@ import AST.Class.Infer
 import AST.Class.Infer.Infer1
 import AST.Term.Apply
 import AST.Term.Scope
+import AST.Term.TypeSig
 import AST.Unify
 import Control.Lens.Operators
 import Control.Lens.Tuple
@@ -19,6 +20,7 @@ data Term v f
     = ELam (Scope Term v f)
     | EVar (ScopeVar Term v f)
     | EApp (Apply (Term v) f)
+    | ETypeSig (TypeSig (Term v) f)
     | ELit Int
 
 makeChildrenRecursive [''Term]
@@ -43,6 +45,7 @@ instance
     infer (ELit x) =
         withDict (recursive :: Dict (RecursiveConstraint Typ (Unify m))) $
         newTerm TInt <&> (, ELit x)
-    infer (EVar x) = infer x <&> _2 %~ EVar
-    infer (ELam x) = infer x <&> _2 %~ ELam
-    infer (EApp x) = infer x <&> _2 %~ EApp
+    infer (EVar     x) = infer x <&> _2 %~ EVar
+    infer (ELam     x) = infer x <&> _2 %~ ELam
+    infer (EApp     x) = infer x <&> _2 %~ EApp
+    infer (ETypeSig x) = infer x <&> _2 %~ ETypeSig

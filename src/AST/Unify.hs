@@ -74,10 +74,10 @@ newTerm = newVar binding . UTerm
 unfreeze ::
     forall m t.
     Recursive (Unify m) t =>
-    Tree Pure t -> m (Tree (UTerm (UniVar m)) t)
+    Tree Pure t -> m (Tree (UniVar m) t)
 unfreeze =
     withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
-    fmap UVar . wrapM (Proxy :: Proxy (Unify m)) newTerm
+    wrapM (Proxy :: Proxy (Unify m)) newTerm
 
 -- look up a variable, and return last variable pointing to result.
 -- prune all variable on way to last variable
