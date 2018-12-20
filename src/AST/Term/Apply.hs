@@ -28,8 +28,8 @@ data Apply expr f = Apply
 deriving instance Eq   (Tie f expr) => Eq   (Apply expr f)
 deriving instance Ord  (Tie f expr) => Ord  (Apply expr f)
 deriving instance Show (Tie f expr) => Show (Apply expr f)
-instance (Binary (Tie f expr)) => Binary (Apply expr f)
-instance (NFData (Tie f expr)) => NFData (Apply expr f)
+instance Binary (Tie f expr) => Binary (Apply expr f)
+instance NFData (Tie f expr) => NFData (Apply expr f)
 
 Lens.makeLenses ''Apply
 makeChildrenAndZipMatch [''Apply]
