@@ -4,10 +4,10 @@ module AST.Class.Children.Mono
     ( ChildOf, monoChildren
     ) where
 
-import           AST.Class.Children (Children(..), ChildrenWithConstraint)
-import           AST.Knot (Knot, Tree)
-import           Control.Lens (Traversal)
-import           Data.Proxy (Proxy(..))
+import AST.Class.Children (Children(..), ChildrenWithConstraint)
+import AST.Knot (Knot, Tree)
+import Control.Lens (Traversal)
+import Data.Proxy (Proxy(..))
 
 type family ChildOf (expr :: Knot -> *) :: Knot -> *
 

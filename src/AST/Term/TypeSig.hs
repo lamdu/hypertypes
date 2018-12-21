@@ -4,25 +4,25 @@ module AST.Term.TypeSig
     ( TypeSig(..), tsType, tsTerm
     ) where
 
-import           AST
-import           AST.Class.Infer
-import           AST.Class.Instantiate
-import           AST.Class.Recursive.TH (makeChildrenRecursive)
-import           AST.Unify
-import           Control.DeepSeq (NFData)
-import           Control.Lens.Operators
-import qualified Control.Lens as Lens
-import           Data.Binary (Binary)
-import           Data.Constraint
-import           GHC.Generics (Generic)
+import AST
+import AST.Class.Infer
+import AST.Class.Instantiate
+import AST.Class.Recursive.TH (makeChildrenRecursive)
+import AST.Unify
+import Control.DeepSeq (NFData)
+import Control.Lens (makeLenses)
+import Control.Lens.Operators
+import Data.Binary (Binary)
+import Data.Constraint
+import GHC.Generics (Generic)
 
-import           Prelude.Compat
+import Prelude.Compat
 
 data TypeSig typ term k = TypeSig
     { _tsType :: typ
     , _tsTerm :: Tie k term
     } deriving Generic
-Lens.makeLenses ''TypeSig
+makeLenses ''TypeSig
 
 makeChildrenRecursive [''TypeSig]
 

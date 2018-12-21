@@ -11,7 +11,7 @@ import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import           AST.Knot (Tie, Tree)
 import           AST.Knot.Pure (Pure(..))
-import qualified Control.Lens as Lens
+import           Control.Lens (Traversal, makeLenses)
 import           Data.Binary (Binary)
 import           Data.Constraint (Dict, withDict)
 import           Data.Proxy (Proxy(..))
@@ -26,7 +26,7 @@ data Ann a knot = Ann
     { _ann :: a
     , _val :: Tie knot (Ann a)
     } deriving Generic
-Lens.makeLenses ''Ann
+makeLenses ''Ann
 
 makeChildrenAndZipMatch [''Ann]
 
@@ -50,7 +50,7 @@ instance AnnConstraints Pretty a t => Pretty (Ann a t) where
 annotations ::
     forall e a b.
     Recursive Children e =>
-    Lens.Traversal
+    Traversal
     (Tree (Ann a) e)
     (Tree (Ann b) e)
     a b

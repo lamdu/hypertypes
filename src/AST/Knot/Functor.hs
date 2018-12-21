@@ -5,14 +5,13 @@ module AST.Knot.Functor
     ) where
 
 import AST.Class.Recursive.TH (makeChildrenRecursive)
-import           AST.Knot (Tie)
-import qualified Control.Lens as Lens
-import           Data.Binary
-
+import AST.Knot (Tie)
+import Control.Lens (makePrisms)
+import Data.Binary
 
 newtype ToKnot f k = ToKnot { getToKnot :: f (Tie k (ToKnot f)) }
 
-Lens.makePrisms ''ToKnot
+makePrisms ''ToKnot
 
 type InToKnot f k = f (Tie k (ToKnot f))
 deriving instance Eq     (InToKnot f k) => Eq     (ToKnot f k)

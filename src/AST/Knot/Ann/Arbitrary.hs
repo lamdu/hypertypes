@@ -5,11 +5,11 @@ module AST.Knot.Ann.Arbitrary
     , ArbitraryWithContextOf
     ) where
 
-import           AST.Knot (Tie)
-import           AST.Knot.Ann (Ann(..))
-import           Test.QuickCheck (Arbitrary(..), Gen)
+import AST.Knot (Tie)
+import AST.Knot.Ann (Ann(..))
+import Test.QuickCheck (Arbitrary(..), Gen)
 
-import           Prelude.Compat hiding (any)
+import Prelude.Compat hiding (any)
 
 -- Useful for ASTs
 class Arbitrary a => ArbitraryWithContext a where

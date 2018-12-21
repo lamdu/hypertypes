@@ -6,16 +6,16 @@ module AST.Class.Recursive
     , foldMapRecursive
     ) where
 
-import           AST.Class.Children (Children(..), foldMapChildren)
-import           AST.Knot (Tree)
-import           AST.Knot.Pure (Pure(..))
-import           Control.Lens.Operators
-import           Data.Constraint (Dict(..), withDict)
-import           Data.Functor.Const (Const(..))
-import           Data.Functor.Identity (Identity(..))
-import           Data.Proxy (Proxy(..))
+import AST.Class.Children (Children(..), foldMapChildren)
+import AST.Knot (Tree)
+import AST.Knot.Pure (Pure(..))
+import Control.Lens.Operators
+import Data.Constraint (Dict(..), withDict)
+import Data.Functor.Const (Const(..))
+import Data.Functor.Identity (Identity(..))
+import Data.Proxy (Proxy(..))
 
-import           Prelude.Compat
+import Prelude.Compat
 
 class Children expr => Recursive constraint expr where
     recursive :: Dict (RecursiveConstraint expr constraint)

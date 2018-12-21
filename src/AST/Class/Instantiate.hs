@@ -2,11 +2,11 @@
 
 module AST.Class.Instantiate where
 
-import           AST.Class.Children
-import           AST.Class.Recursive
-import           AST.Knot
-import           AST.Knot.Pure
-import           AST.Unify
+import AST.Class.Children
+import AST.Class.Recursive
+import AST.Knot
+import AST.Knot.Pure
+import AST.Unify
 
 class Children scheme => Instantiate scheme where
     type family SchemeType scheme :: Knot -> *

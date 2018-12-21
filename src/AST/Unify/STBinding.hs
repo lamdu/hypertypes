@@ -4,17 +4,17 @@ module AST.Unify.STBinding
     ( STVar, stBindingState
     ) where
 
-import           AST.Unify (Binding(..), UniVar)
-import           AST.Unify.Term (UTerm(..))
-import qualified Control.Lens as Lens
-import           Control.Lens.Operators
-import           Control.Monad.ST.Class (MonadST(..))
-import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
+import AST.Unify (Binding(..), UniVar)
+import AST.Unify.Term (UTerm(..))
+import Control.Lens (makePrisms)
+import Control.Lens.Operators
+import Control.Monad.ST.Class (MonadST(..))
+import Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
-import           Prelude.Compat
+import Prelude.Compat
 
 newtype STVar s t = STVar (STRef s (UTerm (STVar s) t))
-Lens.makePrisms ''STVar
+makePrisms ''STVar
 
 instance Eq (STVar s a) where
     STVar x == STVar y = x == y

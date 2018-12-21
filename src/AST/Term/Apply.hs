@@ -5,21 +5,20 @@ module AST.Term.Apply
     , applyChildren
     ) where
 
-import           AST.Class.Infer (Infer(..), inferNode, nodeType, TypeAST)
-import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
-import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
-import           AST.Knot (Tie)
-import           AST.Term.FuncType
-import           AST.Unify (Unify(..), unify, newTerm, newUnbound)
-import           Control.DeepSeq (NFData)
-import           Control.Lens (Traversal)
-import qualified Control.Lens as Lens
-import           Control.Lens.Operators
-import           Data.Binary (Binary)
-import           Data.Constraint (Dict, withDict)
-import           GHC.Generics (Generic)
+import AST.Class.Infer (Infer(..), inferNode, nodeType, TypeAST)
+import AST.Class.Recursive (Recursive(..), RecursiveConstraint)
+import AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
+import AST.Knot (Tie)
+import AST.Term.FuncType
+import AST.Unify (Unify(..), unify, newTerm, newUnbound)
+import Control.DeepSeq (NFData)
+import Control.Lens (Traversal, makeLenses)
+import Control.Lens.Operators
+import Data.Binary (Binary)
+import Data.Constraint (Dict, withDict)
+import GHC.Generics (Generic)
 
-import           Prelude.Compat
+import Prelude.Compat
 
 data Apply expr f = Apply
     { _applyFunc :: Tie f expr
@@ -32,7 +31,7 @@ deriving instance Show (Tie f expr) => Show (Apply expr f)
 instance Binary (Tie f expr) => Binary (Apply expr f)
 instance NFData (Tie f expr) => NFData (Apply expr f)
 
-Lens.makeLenses ''Apply
+makeLenses ''Apply
 makeChildrenAndZipMatch [''Apply]
 
 instance RecursiveConstraint (Apply expr) constraint => Recursive constraint (Apply expr)

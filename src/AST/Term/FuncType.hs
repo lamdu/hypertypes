@@ -5,24 +5,23 @@ module AST.Term.FuncType
     , HasFuncType(..)
     ) where
 
-import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
-import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
-import           AST.Knot (Tree, Tie)
-import           Control.DeepSeq (NFData)
-import           Control.Lens (Prism')
-import qualified Control.Lens as Lens
-import           Data.Binary (Binary)
-import           GHC.Generics (Generic)
-import           Text.Show.Combinators ((@|), showCon)
+import AST.Class.Recursive (Recursive(..), RecursiveConstraint)
+import AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
+import AST.Knot (Tree, Tie)
+import Control.DeepSeq (NFData)
+import Control.Lens (Prism', makeLenses)
+import Data.Binary (Binary)
+import GHC.Generics (Generic)
+import Text.Show.Combinators ((@|), showCon)
 
-import           Prelude.Compat
+import Prelude.Compat
 
 data FuncType typ k = FuncType
     { _funcIn  :: Tie k typ
     , _funcOut :: Tie k typ
     } deriving Generic
 
-Lens.makeLenses ''FuncType
+makeLenses ''FuncType
 makeChildrenAndZipMatch [''FuncType]
 
 instance RecursiveConstraint (FuncType typ) constraint => Recursive constraint (FuncType typ)

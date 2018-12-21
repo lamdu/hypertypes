@@ -9,20 +9,20 @@ module AST.Unify
     , applyBindings, unify
     ) where
 
-import           AST.Class.Children (Children(..))
-import           AST.Class.Recursive (Recursive(..), RecursiveConstraint, wrapM)
-import           AST.Class.ZipMatch (ZipMatch(..), zipMatchWithA)
-import           AST.Knot.Pure (Pure(..))
-import           AST.Knot (Knot, Tree)
-import           AST.Unify.Term
-import           Control.Applicative (Alternative(..))
-import           Control.Lens (Prism')
-import           Control.Lens.Operators
-import           Data.Constraint (Dict, withDict)
-import           Data.Maybe (fromMaybe)
-import           Data.Proxy (Proxy(..))
+import AST.Class.Children (Children(..))
+import AST.Class.Recursive (Recursive(..), RecursiveConstraint, wrapM)
+import AST.Class.ZipMatch (ZipMatch(..), zipMatchWithA)
+import AST.Knot.Pure (Pure(..))
+import AST.Knot (Knot, Tree)
+import AST.Unify.Term
+import Control.Applicative (Alternative(..))
+import Control.Lens (Prism')
+import Control.Lens.Operators
+import Data.Constraint (Dict, withDict)
+import Data.Maybe (fromMaybe)
+import Data.Proxy (Proxy(..))
 
-import           Prelude.Compat
+import Prelude.Compat
 
 class HasQuantifiedVar (t :: Knot -> *) where
     type family QVar t

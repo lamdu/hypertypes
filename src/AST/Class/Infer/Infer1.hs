@@ -6,10 +6,10 @@ module AST.Class.Infer.Infer1
     ( HasTypeAST1(..), Infer1(..)
     ) where
 
-import           AST.Class.Infer (Infer, TypeAST)
-import           AST.Knot (Knot)
-import           Data.Constraint (Constraint, Dict, (:-))
-import           Data.Proxy (Proxy(..))
+import AST.Class.Infer (Infer, TypeAST)
+import AST.Knot (Knot)
+import Data.Constraint (Constraint, Dict, (:-))
+import Data.Proxy (Proxy(..))
 
 class HasTypeAST1 t where
     type family TypeAST1 t :: Knot -> *
