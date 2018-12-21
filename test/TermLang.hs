@@ -33,12 +33,12 @@ instance HasTypeAST1 Term where
     type TypeASTIndexConstraint Term = DeBruijnIndex
     typeAst _ = Dict
 
-type Infer1Deps env m = (MonadReader env m, HasScopeTypes (UniVar m) Typ env, Recursive (Unify m) Typ)
+type TermInfer1Deps env m = (MonadReader env m, HasScopeTypes (UniVar m) Typ env, Recursive (Unify m) Typ)
 
-instance Infer1Deps env m => Infer1 m Term where
+instance TermInfer1Deps env m => Infer1 m Term where
     inferMonad = Sub Dict
 
-instance (DeBruijnIndex k, Infer1Deps env m) => Infer m (Term k) where
+instance (DeBruijnIndex k, TermInfer1Deps env m) => Infer m (Term k) where
     infer (ELit x) =
         withDict (recursive :: RecursiveDict (Unify m) Typ) $
         newTerm TInt <&> (, ELit x)

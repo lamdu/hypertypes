@@ -40,7 +40,7 @@ infinite =
     Apply (var x) (var x) & EApp & Pure
 
 inferExpr ::
-    (DeBruijnIndex k, MonadReader env m, HasScopeTypes (UniVar m) Typ env, Recursive (Unify m) Typ) =>
+    (DeBruijnIndex k, TermInfer1Deps env m) =>
     Tree Pure (Term k) ->
     m (Tree Pure Typ)
 inferExpr x =
