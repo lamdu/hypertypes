@@ -16,6 +16,7 @@ import           AST.Knot.Pure (Pure(..))
 import           AST.Knot (Knot, Tree)
 import           AST.Unify.Term
 import           Control.Applicative (Alternative(..))
+import           Control.Lens (Prism')
 import           Control.Lens.Operators
 import           Data.Constraint (Dict, withDict)
 import           Data.Maybe (fromMaybe)
@@ -25,7 +26,7 @@ import           Prelude.Compat
 
 class HasQuantifiedVar (t :: Knot -> *) where
     type family QVar t
-    quantifiedVar :: QVar t -> t f
+    quantifiedVar :: Prism' (t f) (QVar t)
 
 -- Names modeled after unification-fd
 
@@ -112,7 +113,7 @@ applyBindings v0 =
     UResolving t -> occurs v1 t
     UResolved t -> pure t
     UUnbound{} ->
-        newQuantifiedVariable (Proxy :: Proxy t) <&> quantifiedVar <&> Pure
+        newQuantifiedVariable (Proxy :: Proxy t) <&> (quantifiedVar #) <&> Pure
         >>= result
     UTerm t ->
         case leafExpr of

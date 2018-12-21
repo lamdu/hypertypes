@@ -11,6 +11,7 @@ import AST.Term.FuncType
 import AST.Term.Scope
 import Control.Lens (ALens')
 import qualified Control.Lens as Lens
+import Control.Lens.Operators
 import Control.Monad.RWS
 import Control.Monad.Reader
 import Control.Monad.ST
@@ -54,12 +55,12 @@ emptyIntInferState =
 instance Instantiate Typ
 
 instance HasQuantifiedVar Typ where
-    type QVar Typ = Int
-    quantifiedVar = TVar . ('t':) . show
+    type QVar Typ = String
+    quantifiedVar = _TVar
 
 instance HasQuantifiedVar Row where
-    type QVar Row = Int
-    quantifiedVar = RVar . ('r':) . show
+    type QVar Row = String
+    quantifiedVar = _RVar
 
 type IntInfer r w = RWST r w IntInferState Maybe
 
@@ -67,11 +68,11 @@ type instance UniVar (IntInfer r w) = Const Int
 
 instance Monoid w => Unify (IntInfer r w) Typ where
     binding = intBindingState (Lens._1 . iTyp)
-    newQuantifiedVariable _ = increase (Lens._2 . iTyp . Lens._Wrapped)
+    newQuantifiedVariable _ = increase (Lens._2 . iTyp . Lens._Wrapped) <&> ('t':) . show
 
 instance Monoid w => Unify (IntInfer r w) Row where
     binding = intBindingState (Lens._1 . iRow)
-    newQuantifiedVariable _ = increase (Lens._2 . iRow . Lens._Wrapped)
+    newQuantifiedVariable _ = increase (Lens._2 . iRow . Lens._Wrapped) <&> ('r':) . show
 
 instance Monoid w => Recursive (Unify (IntInfer r w)) Typ
 instance Monoid w => Recursive (Unify (IntInfer r w)) Row
@@ -98,11 +99,11 @@ newStQuantified l =
 
 instance Unify (STInfer r s) Typ where
     binding = stBindingState
-    newQuantifiedVariable _ = newStQuantified iTyp
+    newQuantifiedVariable _ = newStQuantified iTyp <&> ('t':) . show
 
 instance Unify (STInfer r s) Row where
     binding = stBindingState
-    newQuantifiedVariable _ = newStQuantified iRow
+    newQuantifiedVariable _ = newStQuantified iRow <&> ('r':) . show
 
 instance Recursive (Unify (STInfer r s)) Typ
 instance Recursive (Unify (STInfer r s)) Row
