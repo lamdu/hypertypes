@@ -5,7 +5,7 @@ module AST (module X) where
 import AST.Class.Children as X
 import AST.Class.Children.Mono as X (monoChildren)
 import AST.Class.Children.TH as X (makeChildren)
-import AST.Class.Recursive as X (Recursive(..), RecursiveConstraint)
+import AST.Class.Recursive as X (Recursive(..), RecursiveConstraint, RecursiveDict)
 import AST.Class.Recursive.TH as X (makeChildrenRecursive)
 import AST.Class.ZipMatch.TH as X (makeZipMatch, makeChildrenAndZipMatch)
 import AST.Knot as X

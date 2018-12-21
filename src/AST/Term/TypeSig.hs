@@ -43,7 +43,7 @@ instance
     Infer m (TypeSig (Tree Pure scheme) term) where
 
     infer (TypeSig s x) =
-        withDict (recursive :: Dict (RecursiveConstraint (TypeAST term) (Unify m))) $
+        withDict (recursive :: RecursiveDict (Unify m) (TypeAST term)) $
         do
             r <- inferNode x
             instantiate s

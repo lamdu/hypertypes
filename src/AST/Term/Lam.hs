@@ -7,7 +7,7 @@ module AST.Term.Lam
     ) where
 
 import           AST.Class.Infer (Infer(..), TypeAST, inferNode, nodeType)
-import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
+import           AST.Class.Recursive (Recursive(..), RecursiveConstraint, RecursiveDict)
 import           AST.Class.Recursive.TH (makeChildrenRecursive)
 import           AST.Knot (Knot, Tie, Tree)
 import           AST.Term.FuncType
@@ -18,7 +18,7 @@ import           Control.Lens.Operators
 import qualified Control.Lens as Lens
 import           Control.Monad.Reader (MonadReader, local)
 import           Data.Binary (Binary)
-import           Data.Constraint (Dict, withDict)
+import           Data.Constraint (withDict)
 import           Data.Map (Map)
 import           Data.Maybe (fromMaybe)
 import           GHC.Generics (Generic)
@@ -65,7 +65,7 @@ instance
     Infer m (Lam v t) where
 
     infer (Lam p r) =
-        withDict (recursive :: Dict (RecursiveConstraint (TypeAST t) (Unify m))) $
+        withDict (recursive :: RecursiveDict (Unify m) (TypeAST t)) $
         do
             varType <- newUnbound
             rI <-

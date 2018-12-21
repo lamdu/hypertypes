@@ -40,7 +40,7 @@ instance Infer1Deps env m => Infer1 m Term where
 
 instance (DeBruijnIndex k, Infer1Deps env m) => Infer m (Term k) where
     infer (ELit x) =
-        withDict (recursive :: Dict (RecursiveConstraint Typ (Unify m))) $
+        withDict (recursive :: RecursiveDict (Unify m) Typ) $
         newTerm TInt <&> (, ELit x)
     infer (EVar     x) = infer x <&> _2 %~ EVar
     infer (ELam     x) = infer x <&> _2 %~ ELam

@@ -10,7 +10,7 @@ module AST.Unify
     ) where
 
 import AST.Class.Children (Children(..))
-import AST.Class.Recursive (Recursive(..), RecursiveConstraint, wrapM)
+import AST.Class.Recursive (Recursive(..), RecursiveDict, wrapM)
 import AST.Class.ZipMatch (ZipMatch(..), zipMatchWithA)
 import AST.Knot.Pure (Pure(..))
 import AST.Knot (Knot, Tree)
@@ -18,7 +18,7 @@ import AST.Unify.Term
 import Control.Applicative (Alternative(..))
 import Control.Lens (Prism')
 import Control.Lens.Operators
-import Data.Constraint (Dict, withDict)
+import Data.Constraint (withDict)
 import Data.Maybe (fromMaybe)
 import Data.Proxy (Proxy(..))
 
@@ -77,7 +77,7 @@ unfreeze ::
     Recursive (Unify m) t =>
     Tree Pure t -> m (Tree (UniVar m) t)
 unfreeze =
-    withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
+    withDict (recursive :: RecursiveDict (Unify m) t) $
     wrapM (Proxy :: Proxy (Unify m)) newTerm
 
 -- look up a variable, and return last variable pointing to result.
@@ -103,7 +103,7 @@ semiPruneLookup v0 =
 
 applyBindings :: forall m t. Recursive (Unify m) t => Tree (UniVar m) t -> m (Tree Pure t)
 applyBindings v0 =
-    withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
+    withDict (recursive :: RecursiveDict (Unify m) t) $
     semiPruneLookup v0
     >>=
     \(v1, x) ->
@@ -135,7 +135,7 @@ unify ::
     Recursive (Unify m) t =>
     Tree (UniVar m) t -> Tree (UniVar m) t -> m (Tree (UniVar m) t)
 unify x0 y0 =
-    withDict (recursive :: Dict (RecursiveConstraint t (Unify m))) $
+    withDict (recursive :: RecursiveDict (Unify m) t) $
     let unifyTerms x1 xt y1 yt =
             do
                 bindVar binding y1 (UVar x1)

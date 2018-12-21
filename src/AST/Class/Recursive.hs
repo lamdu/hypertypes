@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, RankNTypes, DefaultSignatures, MultiParamTypeClasses, ConstraintKinds, FlexibleInstances, FlexibleContexts, ScopedTypeVariables, UndecidableInstances #-}
 
 module AST.Class.Recursive
-    ( Recursive(..), RecursiveConstraint
+    ( Recursive(..), RecursiveConstraint, RecursiveDict
     , wrap, unwrap, wrapM, unwrapM, fold, unfold
     , foldMapRecursive
     ) where
@@ -18,16 +18,16 @@ import Data.Proxy (Proxy(..))
 import Prelude.Compat
 
 class Children expr => Recursive constraint expr where
-    recursive :: Dict (RecursiveConstraint expr constraint)
-    default recursive ::
-        RecursiveConstraint expr constraint =>
-        Dict (RecursiveConstraint expr constraint)
+    recursive :: RecursiveDict constraint expr
+    default recursive :: RecursiveConstraint expr constraint => RecursiveDict constraint expr
     recursive = Dict
 
 type RecursiveConstraint expr constraint =
     ( constraint expr
     , ChildrenConstraint expr (Recursive constraint)
     )
+
+type RecursiveDict constraint expr = Dict (RecursiveConstraint expr constraint)
 
 instance constraint Pure => Recursive constraint Pure
 instance constraint (Const a) => Recursive constraint (Const a)
@@ -40,7 +40,7 @@ wrapM ::
     Tree Pure expr ->
     m (Tree f expr)
 wrapM p f (Pure x) =
-    withDict (recursive :: Dict (RecursiveConstraint expr constraint)) $
+    withDict (recursive :: RecursiveDict constraint expr) $
     children (Proxy :: Proxy (Recursive constraint)) (wrapM p f) x >>= f
 
 unwrapM ::
@@ -51,7 +51,7 @@ unwrapM ::
     Tree f expr ->
     m (Tree Pure expr)
 unwrapM p f x =
-    withDict (recursive :: Dict (RecursiveConstraint expr constraint)) $
+    withDict (recursive :: RecursiveDict constraint expr) $
     f x >>= children (Proxy :: Proxy (Recursive constraint)) (unwrapM p f) <&> Pure
 
 wrap ::
@@ -102,8 +102,8 @@ foldMapRecursive ::
     Tree expr f ->
     a
 foldMapRecursive p f x =
-    withDict (recursive :: Dict (RecursiveConstraint expr constraint)) $
-    withDict (recursive :: Dict (RecursiveConstraint f Children)) $
+    withDict (recursive :: RecursiveDict constraint expr) $
+    withDict (recursive :: RecursiveDict Children f) $
     f x <>
     foldMapChildren (Proxy :: Proxy (Recursive constraint))
     (foldMapChildren (Proxy :: Proxy (Recursive Children)) (foldMapRecursive p f))
