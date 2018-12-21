@@ -21,7 +21,7 @@ import           Prelude.Compat
 
 data IntBindingState t = IntBindingState
     { _nextFreeVar :: {-# UNPACK #-} !Int
-    , _varBindings :: IntMap (Tree (UTerm (Const Int)) t)
+    , _varBindings :: IntMap (UTerm (Const Int) t)
     }
 Lens.makeLenses ''IntBindingState
 
@@ -38,7 +38,7 @@ increase l =
 
 intBindingState ::
     (MonadState s m, UniVar m ~ Const Int) =>
-    ALens' s (IntBindingState t) ->
+    ALens' s (Tree IntBindingState t) ->
     Binding m t
 intBindingState l =
     Binding

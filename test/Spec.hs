@@ -54,7 +54,7 @@ runIntInfer act = runRWST act mempty emptyIntInferState <&> (^. Lens._1)
 runSTInfer :: STInfer (ScopeTypes (STVar s) Typ) s a -> ST s (Maybe a)
 runSTInfer act =
     do
-        qvarGen <- InferState <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
+        qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
         runReaderT act (mempty, qvarGen) & runMaybeT
 
 main :: IO ()
