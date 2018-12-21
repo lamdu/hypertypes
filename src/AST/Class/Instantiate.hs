@@ -1,6 +1,8 @@
 {-# LANGUAGE NoImplicitPrelude, DataKinds, TypeFamilies, FlexibleContexts, DefaultSignatures #-}
 
-module AST.Class.Instantiate where
+module AST.Class.Instantiate
+    ( Instantiate(..)
+    ) where
 
 import AST.Class.Children
 import AST.Class.Recursive
