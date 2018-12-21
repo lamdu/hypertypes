@@ -1,4 +1,4 @@
-{-# LANGUAGE StandaloneDeriving, UndecidableInstances, TemplateHaskell, TypeFamilies, LambdaCase, MultiParamTypeClasses, FlexibleInstances, DataKinds, TupleSections, ScopedTypeVariables #-}
+{-# LANGUAGE StandaloneDeriving, UndecidableInstances, TemplateHaskell, TypeFamilies, LambdaCase, MultiParamTypeClasses, FlexibleInstances, DataKinds, TupleSections, ScopedTypeVariables, ConstraintKinds, FlexibleContexts #-}
 
 module TermLang where
 
@@ -33,15 +33,12 @@ instance HasTypeAST1 Term where
     type TypeASTIndexConstraint Term = DeBruijnIndex
     typeAst _ = Dict
 
-instance
-    (MonadReader env m, HasScopeTypes (UniVar m) Typ env, Recursive (Unify m) Typ) =>
-    Infer1 m Term where
+type Infer1Deps env m = (MonadReader env m, HasScopeTypes (UniVar m) Typ env, Recursive (Unify m) Typ)
+
+instance Infer1Deps env m => Infer1 m Term where
     inferMonad = Sub Dict
 
-instance
-    (DeBruijnIndex k, MonadReader env m, HasScopeTypes (UniVar m) Typ env, Recursive (Unify m) Typ) =>
-    Infer m (Term k) where
-
+instance (DeBruijnIndex k, Infer1Deps env m) => Infer m (Term k) where
     infer (ELit x) =
         withDict (recursive :: Dict (RecursiveConstraint Typ (Unify m))) $
         newTerm TInt <&> (, ELit x)
