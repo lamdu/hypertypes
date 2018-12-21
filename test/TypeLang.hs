@@ -3,6 +3,7 @@
 module TypeLang where
 
 import AST
+import AST.Class.Instantiate
 import AST.Unify
 import AST.Unify.IntMapBinding
 import AST.Unify.STBinding
@@ -49,6 +50,8 @@ emptyIntInferState =
     ( InferState emptyIntBindingState emptyIntBindingState
     , InferState (Const 0) (Const 0)
     )
+
+instance Instantiate Typ
 
 instance HasQuantifiedVar Typ where
     type QVar Typ = Int

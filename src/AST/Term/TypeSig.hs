@@ -6,6 +6,7 @@ module AST.Term.TypeSig
 
 import           AST
 import           AST.Class.Infer
+import           AST.Class.Instantiate
 import           AST.Class.Recursive.TH (makeChildrenRecursive)
 import           AST.Unify
 import           Control.DeepSeq (NFData)
@@ -37,11 +38,14 @@ instance Deps typ term k NFData => NFData (TypeSig typ term k)
 
 type instance TypeAST (TypeSig typ term) = TypeAST term
 
-instance (typ ~ TypeAST term, Infer m term) => Infer m (TypeSig (Tree Pure typ) term) where
+instance
+    (Infer m term, Instantiate scheme, SchemeType scheme ~ TypeAST term) =>
+    Infer m (TypeSig (Tree Pure scheme) term) where
+
     infer (TypeSig s x) =
         withDict (recursive :: Dict (RecursiveConstraint (TypeAST term) (Unify m))) $
         do
             r <- inferNode x
-            unfreeze s
+            instantiate s
                 >>= unify (r ^. nodeType)
                 <&> (, TypeSig s r)
