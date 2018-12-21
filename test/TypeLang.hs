@@ -55,12 +55,10 @@ instance Instantiate Typ
 
 instance HasQuantifiedVar Typ where
     type QVar Typ = Int
-    -- We force quantified variables to int
     quantifiedVar = TVar . ('t':) . show
 
 instance HasQuantifiedVar Row where
     type QVar Row = Int
-    -- We force quantified variables to empty rows
     quantifiedVar = RVar . ('r':) . show
 
 type IntInfer r w = RWST r w IntInferState Maybe
