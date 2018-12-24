@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric, StandaloneDeriving, UndecidableInstances, GeneralizedNewtypeDeriving, TupleSections, MultiParamTypeClasses, TypeFamilies, FlexibleInstances, ScopedTypeVariables, DataKinds #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric, StandaloneDeriving, UndecidableInstances, GeneralizedNewtypeDeriving, TupleSections, MultiParamTypeClasses, TypeFamilies, FlexibleInstances, ScopedTypeVariables, DataKinds, ConstraintKinds #-}
 
 module AST.Term.Lam
     ( Lam(..), lamIn, lamOut
@@ -18,7 +18,7 @@ import           Control.Lens.Operators
 import qualified Control.Lens as Lens
 import           Control.Monad.Reader (MonadReader, local)
 import           Data.Binary (Binary)
-import           Data.Constraint (withDict)
+import           Data.Constraint (Constraint, withDict)
 import           Data.Map (Map)
 import           Data.Maybe (fromMaybe)
 import           GHC.Generics (Generic)
@@ -31,12 +31,13 @@ data Lam v expr f = Lam
     } deriving Generic
 Lens.makeLenses ''Lam
 
+type Deps v expr f cls = ((cls v, cls (Tie f expr)) :: Constraint)
 -- Note that `Eq` is not alpha-equivalence!
-deriving instance (Eq   v, Eq   (Tie f expr)) => Eq   (Lam v expr f)
-deriving instance (Ord  v, Ord  (Tie f expr)) => Ord  (Lam v expr f)
-deriving instance (Show v, Show (Tie f expr)) => Show (Lam v expr f)
-instance (Binary v, Binary (Tie f expr)) => Binary (Lam v expr f)
-instance (NFData v, NFData (Tie f expr)) => NFData (Lam v expr f)
+deriving instance Deps v expr f Eq   => Eq   (Lam v expr f)
+deriving instance Deps v expr f Ord  => Ord  (Lam v expr f)
+deriving instance Deps v expr f Show => Show (Lam v expr f)
+instance Deps v expr f Binary => Binary (Lam v expr f)
+instance Deps v expr f NFData => NFData (Lam v expr f)
 
 newtype LamVar v (expr :: Knot -> *) (f :: Knot) = LamVar v
     deriving (Eq, Ord, Show, Generic, Binary, NFData)
