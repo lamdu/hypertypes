@@ -2,7 +2,7 @@
 
 module AST.Unify
     ( HasQuantifiedVar(..)
-    , UniVar
+    , UVar
     , Binding(..)
     , Unify(..)
     , applyBindings, unify
@@ -31,15 +31,15 @@ class Ord (QVar t) => HasQuantifiedVar (t :: Knot -> *) where
 -- Names modeled after unification-fd
 
 -- Unification variable type for a unification monad
-type family UniVar (m :: * -> *) :: Knot -> *
+type family UVar (m :: * -> *) :: Knot -> *
 
 data Binding m t = Binding
-    { lookupVar :: Tree (UniVar m) t -> m (Tree (UTerm (UniVar m)) t)
-    , newVar :: Tree (UTerm (UniVar m)) t -> m (Tree (UniVar m) t)
-    , bindVar :: Tree (UniVar m) t -> Tree (UTerm (UniVar m)) t -> m ()
+    { lookupVar :: Tree (UVar m) t -> m (Tree (UTerm (UVar m)) t)
+    , newVar :: Tree (UTerm (UVar m)) t -> m (Tree (UVar m) t)
+    , bindVar :: Tree (UVar m) t -> Tree (UTerm (UVar m)) t -> m ()
     }
 
-class (Eq (Tree (UniVar m) t), ZipMatch t, HasQuantifiedVar t, Monad m) => Unify m t where
+class (Eq (Tree (UVar m) t), ZipMatch t, HasQuantifiedVar t, Monad m) => Unify m t where
     binding :: Binding m t
 
     newQuantifiedVariable :: Proxy t -> m (QVar t)
@@ -51,8 +51,8 @@ class (Eq (Tree (UniVar m) t), ZipMatch t, HasQuantifiedVar t, Monad m) => Unify
     -- therefore the type is infinite.
     -- Break with an error if the type system doesn't allow it,
     -- or resolve the situation and generate the type represeting this loop.
-    occurs :: Tree (UniVar m) t -> Tree t (UniVar m) -> m (Tree Pure t)
-    default occurs :: Alternative m => Tree (UniVar m) t -> Tree t (UniVar m) -> m (Tree Pure t)
+    occurs :: Tree (UVar m) t -> Tree t (UVar m) -> m (Tree Pure t)
+    default occurs :: Alternative m => Tree (UVar m) t -> Tree t (UVar m) -> m (Tree Pure t)
     occurs _ _ = empty
 
     -- | What to do when top-levels of terms being unified do not match.
@@ -60,17 +60,17 @@ class (Eq (Tree (UniVar m) t), ZipMatch t, HasQuantifiedVar t, Monad m) => Unify
     -- but some AST terms could be equivalent despite not matching,
     -- like record extends with fields ordered differently,
     -- and these could still match.
-    structureMismatch :: Tree (UTermBody (UniVar m)) t -> Tree (UTermBody (UniVar m)) t -> m (Tree t (UniVar m))
+    structureMismatch :: Tree (UTermBody (UVar m)) t -> Tree (UTermBody (UVar m)) t -> m (Tree t (UVar m))
     default structureMismatch ::
-        Alternative m => Tree (UTermBody (UniVar m)) t -> Tree (UTermBody (UniVar m)) t -> m (Tree t (UniVar m))
+        Alternative m => Tree (UTermBody (UVar m)) t -> Tree (UTermBody (UVar m)) t -> m (Tree t (UVar m))
     structureMismatch _ _ = empty
 
-    skolemUnified :: Tree (UniVar m) t -> Tree (UniVar m) t -> m ()
-    default skolemUnified :: Alternative m => Tree (UniVar m) t -> Tree (UniVar m) t -> m ()
+    skolemUnified :: Tree (UVar m) t -> Tree (UVar m) t -> m ()
+    default skolemUnified :: Alternative m => Tree (UVar m) t -> Tree (UVar m) t -> m ()
     skolemUnified _ _ = empty
 
-    skolemEscape :: Tree (UniVar m) t -> m ()
-    default skolemEscape :: Alternative m => Tree (UniVar m) t -> m ()
+    skolemEscape :: Tree (UVar m) t -> m ()
+    default skolemEscape :: Alternative m => Tree (UVar m) t -> m ()
     skolemEscape _ = empty
 
 -- look up a variable, and return last variable pointing to result.
@@ -78,8 +78,8 @@ class (Eq (Tree (UniVar m) t), ZipMatch t, HasQuantifiedVar t, Monad m) => Unify
 semiPruneLookup ::
     forall m t.
     Unify m t =>
-    Tree (UniVar m) t ->
-    m (Tree (UniVar m) t, Tree (UTerm (UniVar m)) t)
+    Tree (UVar m) t ->
+    m (Tree (UVar m) t, Tree (UTerm (UVar m)) t)
 semiPruneLookup v0 =
     lookupVar binding v0
     >>=
@@ -94,7 +94,7 @@ semiPruneLookup v0 =
 -- TODO: implement when need / better understand motivations for -
 -- freeze, fullPrune, occursIn, seenAs, getFreeVars, freshen, equals, equiv
 
-applyBindings :: forall m t. Recursive (Unify m) t => Tree (UniVar m) t -> m (Tree Pure t)
+applyBindings :: forall m t. Recursive (Unify m) t => Tree (UVar m) t -> m (Tree Pure t)
 applyBindings v0 =
     withDict (recursive :: RecursiveDict (Unify m) t) $
     semiPruneLookup v0
@@ -124,7 +124,7 @@ applyBindings v0 =
 updateLevel ::
     forall m t.
     Recursive (Unify m) t =>
-    InferLevel -> Tree (UniVar m) t -> m (Tree (UniVar m) t)
+    InferLevel -> Tree (UVar m) t -> m (Tree (UVar m) t)
 updateLevel level var =
     withDict (recursive :: RecursiveDict (Unify m) t) $
     do
@@ -144,7 +144,7 @@ updateLevel level var =
 updateTermLevel ::
     forall m t.
     Recursive (Unify m) t =>
-    Tree (UniVar m) t -> Tree (UTermBody (UniVar m)) t -> InferLevel -> m ()
+    Tree (UVar m) t -> Tree (UTermBody (UVar m)) t -> InferLevel -> m ()
 updateTermLevel v t level =
     withDict (recursive :: RecursiveDict (Unify m) t) $
     if level >= t ^. uLevel
@@ -162,7 +162,7 @@ updateTermLevel v t level =
 unify ::
     forall m t.
     Recursive (Unify m) t =>
-    Tree (UniVar m) t -> Tree (UniVar m) t -> m (Tree (UniVar m) t)
+    Tree (UVar m) t -> Tree (UVar m) t -> m (Tree (UVar m) t)
 unify x0 y0 =
     withDict (recursive :: RecursiveDict (Unify m) t) $
     let unifyTerms x1 xt y1 yt =

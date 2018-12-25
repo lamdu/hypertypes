@@ -74,7 +74,7 @@ instance HasQuantifiedVar Row where
 
 type IntInfer r w = RWST (r, InferLevel) w IntInferState Maybe
 
-type instance UniVar (IntInfer r w) = Const Int
+type instance UVar (IntInfer r w) = Const Int
 
 instance Monoid w => MonadInfer (IntInfer r w) where
     getInferLevel = Lens.view Lens._2
@@ -97,7 +97,7 @@ type STInferState s = Tree Types (Const (STRef s Int))
 
 type STInfer r s = ReaderT (r, InferLevel, STInferState s) (MaybeT (ST s))
 
-type instance UniVar (STInfer r s) = STVar s
+type instance UVar (STInfer r s) = STVar s
 
 readModifySTRef :: STRef s a -> (a -> a) -> ST s (a, a)
 readModifySTRef ref func =
@@ -147,7 +147,7 @@ newtype IntInferB v a =
     , MonadState IntInferState
     )
 
-type instance UniVar (IntInferB v) = Const Int
+type instance UVar (IntInferB v) = Const Int
 
 instance Ord v => MonadScopeTypes v Typ (IntInferB v) where
     scopeType v = Lens.view (Lens._1 . Lens.at v) >>= fromMaybe (error "name error")
@@ -177,7 +177,7 @@ newtype STInferB v s a =
     , MonadReader (Map v (STInferB v s (Tree (STVar s) Typ)), InferLevel, STInferState s)
     )
 
-type instance UniVar (STInferB v s) = STVar s
+type instance UVar (STInferB v s) = STVar s
 
 instance Ord v => MonadScopeTypes v Typ (STInferB v s) where
     scopeType v = Lens.view (Lens._1 . Lens.at v) >>= fromMaybe (error "name error")

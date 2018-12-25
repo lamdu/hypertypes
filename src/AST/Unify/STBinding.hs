@@ -4,7 +4,7 @@ module AST.Unify.STBinding
     ( STVar, stBindingState
     ) where
 
-import AST.Unify (Binding(..), UniVar)
+import AST.Unify (Binding(..), UVar)
 import AST.Unify.Term (UTerm(..))
 import Control.Lens (makePrisms)
 import Control.Lens.Operators
@@ -20,7 +20,7 @@ instance Eq (STVar s a) where
     STVar x == STVar y = x == y
 
 stBindingState ::
-    (MonadST m, UniVar m ~ STVar (World m)) =>
+    (MonadST m, UVar m ~ STVar (World m)) =>
     Binding m t
 stBindingState =
     Binding

@@ -13,7 +13,7 @@ import           AST.Class.Instantiate (Instantiate(..), SchemeType)
 import           AST.Class.Recursive (Recursive, wrapM)
 import           AST.Knot (Tree, Tie, RunKnot)
 import           AST.Knot.Pure (Pure(..))
-import           AST.Unify (Unify(..), HasQuantifiedVar(..), UniVar, newVar)
+import           AST.Unify (Unify(..), HasQuantifiedVar(..), UVar, newVar)
 import           AST.Unify.Term (UTerm(..))
 import           Control.Lens (Lens')
 import qualified Control.Lens as Lens
@@ -44,7 +44,7 @@ class HasChild record typ where
 class    (Unify m typ, HasChild varTypes typ) => CanInstantiate m varTypes typ
 instance (Unify m typ, HasChild varTypes typ) => CanInstantiate m varTypes typ
 
-makeForAlls :: (MonadInfer m, Unify m typ) => Tree Vars typ -> m (Tree (ForAlls (UniVar m)) typ)
+makeForAlls :: (MonadInfer m, Unify m typ) => Tree Vars typ -> m (Tree (ForAlls (UVar m)) typ)
 makeForAlls (Vars xs) =
     traverse makeSkolem xs <&> ForAlls . Map.fromList
     where
@@ -55,7 +55,7 @@ makeForAlls (Vars xs) =
 
 instantiateBody ::
     (MonadInfer m, Unify m typ, HasChild varTypes typ) =>
-    Tree varTypes (ForAlls (UniVar m)) -> Tree typ (UniVar m) -> m (Tree (UniVar m) typ)
+    Tree varTypes (ForAlls (UVar m)) -> Tree typ (UVar m) -> m (Tree (UVar m) typ)
 instantiateBody foralls x =
     case x ^? quantifiedVar >>= getForAll of
     Nothing -> newTerm x

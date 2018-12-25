@@ -7,7 +7,7 @@ module AST.Unify.IntMapBinding
     ) where
 
 import           AST.Knot (Tree)
-import           AST.Unify (UniVar, Binding(..))
+import           AST.Unify (UVar, Binding(..))
 import           AST.Unify.Term
 import qualified Control.Lens as Lens
 import           Control.Lens (ALens')
@@ -37,7 +37,7 @@ increase l =
         r <$ modify (Lens.cloneLens l +~ 1)
 
 intBindingState ::
-    (MonadState s m, UniVar m ~ Const Int) =>
+    (MonadState s m, UVar m ~ Const Int) =>
     ALens' s (Tree IntBindingState t) ->
     Binding m t
 intBindingState l =

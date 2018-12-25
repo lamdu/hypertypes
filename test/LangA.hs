@@ -39,7 +39,7 @@ instance HasTypeAST1 LangA where
 type TermInfer1Deps env m =
     ( MonadInfer m
     , MonadReader env m
-    , HasScopeTypes (UniVar m) Typ env
+    , HasScopeTypes (UVar m) Typ env
     , Recursive (Unify m) Typ
     , Recursive (CanInstantiate m Types) Typ
     , ChildrenConstraint Types (Unify m)

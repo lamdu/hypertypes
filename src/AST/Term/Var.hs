@@ -9,7 +9,7 @@ import           AST.Class.Infer (MonadInfer, Infer(..), TypeAST)
 import           AST.Class.Recursive (Recursive)
 import           AST.Class.Recursive.TH (makeChildrenRecursive)
 import           AST.Knot (Knot, Tree)
-import           AST.Unify (Unify, UniVar)
+import           AST.Unify (Unify, UVar)
 import           Control.DeepSeq (NFData)
 import           Control.Lens.Operators
 import qualified Control.Lens as Lens
@@ -28,8 +28,8 @@ Lens.makePrisms ''Var
 makeChildrenRecursive [''Var]
 
 class MonadScopeTypes v t m where
-    scopeType :: v -> m (Tree (UniVar m) t)
-    localScopeType :: v -> m (Tree (UniVar m) t) -> m a -> m a
+    scopeType :: v -> m (Tree (UVar m) t)
+    localScopeType :: v -> m (Tree (UVar m) t) -> m a -> m a
 
 type instance TypeAST (Var v t) = TypeAST t
 

@@ -22,15 +22,15 @@ import           Data.Proxy
 import           Prelude.Compat
 
 data GTerm m ast
-    = GMono (UniVar m ast)
-    | GPoly (UniVar m ast)
+    = GMono (UVar m ast)
+    | GPoly (UVar m ast)
     | GBody (Tie ast (GTerm m))
 Lens.makePrisms ''GTerm
 
 generalize ::
     forall m t.
     (MonadInfer m, Recursive (Unify m) t) =>
-    Tree (UniVar m) t -> m (Tree (GTerm m) t)
+    Tree (UVar m) t -> m (Tree (GTerm m) t)
 generalize typ =
     do
         level <- getInferLevel
@@ -40,7 +40,7 @@ generalize typ =
         go ::
             forall typ.
             Recursive (Unify m) typ =>
-            InferLevel -> Tree (UniVar m) typ -> m (Tree (GTerm m) typ)
+            InferLevel -> Tree (UVar m) typ -> m (Tree (GTerm m) typ)
         go level v0 =
             withDict (recursive :: RecursiveDict (Unify m) typ) $
             do
@@ -74,7 +74,7 @@ instance (MonadInfer m, Recursive (Unify m) t) => Instantiate m (Tree (GTerm m) 
             go ::
                 forall child.
                 Recursive (Unify m) child =>
-                Tree (GTerm m) child -> WriterT [m ()] m (Tree (UniVar m) child)
+                Tree (GTerm m) child -> WriterT [m ()] m (Tree (UVar m) child)
             go =
                 withDict (recursive :: RecursiveDict (Unify m) child) $
                 \case
