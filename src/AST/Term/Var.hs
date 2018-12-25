@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, KindSignatures, DataKinds, DeriveGeneric, GeneralizedNewtypeDeriving, TupleSections, MultiParamTypeClasses, TypeFamilies, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DataKinds, DeriveGeneric, GeneralizedNewtypeDeriving, TupleSections, MultiParamTypeClasses, TypeFamilies, FlexibleInstances, UndecidableInstances #-}
 
 module AST.Term.Var
     ( Var(..), _Var
