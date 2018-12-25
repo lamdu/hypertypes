@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 591e97bc7ad4e20b0977f516aad62d85c9ea6171ae6db83fa2a49389d39ae482
+-- hash: eaa92c6775ac8e346b650779e0c829d83ff0c5dc22ac125de074656924b397a3
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -83,6 +83,7 @@ test-suite syntax-tree-test
   main-is: Spec.hs
   other-modules:
       LangA
+      LangB
       TypeLang
       Paths_syntax_tree
   hs-source-dirs:
