@@ -1,7 +1,9 @@
 {-# LANGUAGE NoImplicitPrelude, StandaloneDeriving, UndecidableInstances, TemplateHaskell, KindSignatures, TypeFamilies, LambdaCase, EmptyCase, ScopedTypeVariables, TypeOperators, FlexibleInstances, MultiParamTypeClasses, TupleSections, DataKinds #-}
 
 module AST.Term.Scope
-    ( Scope(..), ScopeVar(..), EmptyScope
+    ( Scope(..), _Scope
+    , ScopeVar(..), _ScopeVar
+    , EmptyScope
     , DeBruijnIndex(..)
     , scope, scopeVar
     , ScopeTypes, HasScopeTypes(..)
@@ -29,7 +31,10 @@ import           Prelude.Compat
 data EmptyScope
 
 newtype Scope expr a k = Scope (Tie k (expr (Maybe a)))
+Lens.makePrisms ''Scope
+
 newtype ScopeVar (expr :: * -> Knot -> *) a (k :: Knot) = ScopeVar a
+Lens.makePrisms ''ScopeVar
 
 makeChildrenAndZipMatch [''Scope, ''ScopeVar]
 instance Recursive Children (expr (Maybe a)) => Recursive Children (Scope expr a)
