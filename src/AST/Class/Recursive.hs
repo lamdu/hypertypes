@@ -19,6 +19,8 @@ import Prelude.Compat
 
 class Children expr => Recursive constraint expr where
     recursive :: RecursiveDict constraint expr
+    -- TODO: RecursiveConstraint params are same order as
+    -- ChildrenConstraint, but opposite of Recursive, which is better?
     default recursive :: RecursiveConstraint expr constraint => RecursiveDict constraint expr
     recursive = Dict
 

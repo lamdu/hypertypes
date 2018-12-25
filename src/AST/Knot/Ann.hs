@@ -11,6 +11,7 @@ import           AST.Class.Recursive (Recursive(..), RecursiveDict)
 import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import           AST.Knot (Tie, Tree)
 import           AST.Knot.Pure (Pure(..))
+import           Control.DeepSeq (NFData)
 import           Control.Lens (Traversal, makeLenses)
 import           Data.Binary (Binary)
 import           Data.Constraint (withDict)
@@ -37,6 +38,7 @@ deriving instance AnnConstraints Ord  a t => Ord  (Ann a t)
 deriving instance AnnConstraints Show a t => Show (Ann a t)
 
 instance AnnConstraints Binary a t => Binary (Ann a t)
+instance AnnConstraints NFData a t => NFData (Ann a t)
 
 instance AnnConstraints Pretty a t => Pretty (Ann a t) where
     pPrintPrec lvl prec (Ann pl b)
