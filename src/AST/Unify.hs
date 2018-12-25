@@ -6,6 +6,7 @@ module AST.Unify
     , Binding(..)
     , Unify(..)
     , applyBindings, unify
+    , semiPruneLookup
     ) where
 
 import AST.Class.Children (Children(..))

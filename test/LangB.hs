@@ -9,6 +9,7 @@ import AST.Class.Infer
 import AST.Unify
 import AST.Term.Apply
 import AST.Term.Lam
+import AST.Term.Let
 import AST.Term.Var
 import Control.Lens.Operators
 import Control.Lens.Tuple
@@ -16,9 +17,10 @@ import Data.Constraint
 
 data LangB k
     = BLit Int
-    | BLam (Lam String LangB k)
-    | BVar (Var String LangB k)
     | BApp (Apply LangB k)
+    | BVar (Var String LangB k)
+    | BLam (Lam String LangB k)
+    | BLet (Let String LangB k)
 
 makeChildrenRecursive [''LangB]
 
@@ -31,3 +33,4 @@ instance (MonadInfer m, MonadScopeTypes [Char] Typ m, Recursive (Unify m) Typ) =
     infer (BApp x) = infer x <&> _2 %~ BApp
     infer (BVar x) = infer x <&> _2 %~ BVar
     infer (BLam x) = infer x <&> _2 %~ BLam
+    infer (BLet x) = infer x <&> _2 %~ BLet

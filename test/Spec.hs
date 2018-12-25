@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 import LangA
+import LangB
 import TypeLang
 
 import AST
@@ -8,9 +9,12 @@ import AST.Class.Infer
 import AST.Class.Recursive
 import AST.Term.Apply
 import AST.Term.FuncType
+import AST.Term.Lam
+import AST.Term.Let
 import AST.Term.Scheme
 import AST.Term.Scope
 import AST.Term.TypeSig
+import AST.Term.Var
 import AST.Unify
 import AST.Unify.STBinding
 import AST.Unify.Term
@@ -69,13 +73,21 @@ validForAll =
             (Types (Vars ["a"]) (Vars []))
             (Pure (TFun (FuncType (Pure (TVar "a")) (Pure (TVar "a")))))
         ))
-    & ATypeSig
-    & Pure
+    & ATypeSig & Pure
+
+letGen :: Tree Pure LangB
+letGen =
+    BLit 5 & Pure
+    & Apply (Pure (BApp (Apply i i))) & BApp & Pure
+    & Let "id" (Pure (BLam (Lam "x" (Pure (BVar (Var "x"))))))
+    & BLet & Pure
+    where
+        i = Var "id" & BVar & Pure
 
 inferExpr ::
-    (DeBruijnIndex k, TermInfer1Deps env m) =>
-    Tree Pure (LangA k) ->
-    m (Tree Pure Typ)
+    (Infer m t, Recursive Children t) =>
+    Tree Pure t ->
+    m (Tree Pure (TypeAST t))
 inferExpr x =
     inferNode (wrap (Proxy :: Proxy Children) (Ann ()) x)
     <&> (^. nodeType)
@@ -86,6 +98,16 @@ runIntInfer act = runRWST act (mempty, InferLevel 0) emptyIntInferState <&> (^. 
 
 runSTInfer :: STInfer (ScopeTypes (STVar s) Typ) s a -> ST s (Maybe a)
 runSTInfer act =
+    do
+        qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
+        runReaderT act (mempty, InferLevel 0, qvarGen) & runMaybeT
+
+execIntInferB :: IntInferB String a -> Maybe a
+execIntInferB (IntInferB act) =
+    runRWST act (mempty, InferLevel 0) emptyIntInferState <&> (^. Lens._1)
+
+execSTInferB :: STInferB String s a -> ST s (Maybe a)
+execSTInferB (STInferB act) =
     do
         qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
         runReaderT act (mempty, InferLevel 0, qvarGen) & runMaybeT
@@ -105,3 +127,6 @@ main =
         putStrLn ""
         print (runIntInfer (inferExpr validForAll))
         print (runST (runSTInfer (inferExpr validForAll)))
+        putStrLn ""
+        print (execIntInferB (inferExpr letGen))
+        print (runST (execSTInferB (inferExpr letGen)))
