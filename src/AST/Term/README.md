@@ -4,6 +4,7 @@ Common terms:
 
 * `Apply`: Function application
 * `Lam`: Lambdas with named variables
+* `Var`: Named variables
 * `Scope`: "Locally-nameless" variable scoping in the spirit of the [`bound`](https://github.com/ekmett/bound/) library
 * `TypeSig`: A term with a type signature
 * `FuncType`: Type of functions (used as type in `Apply`, `Lam`, `Scope`)

@@ -1,15 +1,14 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric, StandaloneDeriving, UndecidableInstances, GeneralizedNewtypeDeriving, TupleSections, MultiParamTypeClasses, TypeFamilies, FlexibleInstances, ScopedTypeVariables, DataKinds, ConstraintKinds #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric, StandaloneDeriving, KindSignatures, ConstraintKinds, UndecidableInstances, TupleSections, TypeFamilies, FlexibleInstances, MultiParamTypeClasses, ScopedTypeVariables #-}
 
 module AST.Term.Lam
     ( Lam(..), lamIn, lamOut
-    , LamVar(..), _LamVar
     , ScopeTypes, HasScopeTypes(..)
     ) where
 
+import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Infer (Infer(..), TypeAST, newUnbound, newTerm, inferNode, nodeType)
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint, RecursiveDict)
-import           AST.Class.Recursive.TH (makeChildrenRecursive)
-import           AST.Knot (Knot, Tie, Tree)
+import           AST.Knot (Tie, Tree)
 import           AST.Term.FuncType
 import           AST.Unify (Unify(..), UniVar)
 import           Control.DeepSeq (NFData)
@@ -20,7 +19,6 @@ import           Control.Monad.Reader (MonadReader, local)
 import           Data.Binary (Binary)
 import           Data.Constraint (Constraint, withDict)
 import           Data.Map (Map)
-import           Data.Maybe (fromMaybe)
 import           GHC.Generics (Generic)
 
 import           Prelude.Compat
@@ -39,11 +37,7 @@ deriving instance Deps v expr f Show => Show (Lam v expr f)
 instance Deps v expr f Binary => Binary (Lam v expr f)
 instance Deps v expr f NFData => NFData (Lam v expr f)
 
-newtype LamVar v (expr :: Knot -> *) (f :: Knot) = LamVar v
-    deriving (Eq, Ord, Show, Generic, Binary, NFData)
-Lens.makePrisms ''LamVar
-
-makeChildrenRecursive [''Lam, ''LamVar]
+makeChildren ''Lam
 instance RecursiveConstraint (Lam v expr) constraint => Recursive constraint (Lam v expr)
 
 type ScopeTypes v u t = Map v (Tree u t)
@@ -55,7 +49,6 @@ instance Ord v => HasScopeTypes v u t (ScopeTypes v u t) where
     scopeTypes = id
 
 type instance TypeAST (Lam v t) = TypeAST t
-type instance TypeAST (LamVar v t) = TypeAST t
 
 instance
     ( Infer m t
@@ -78,15 +71,3 @@ instance
                 , _funcOut = rI ^. nodeType
                 } & newTerm
                 <&> (, Lam p rI)
-
-instance
-    ( Infer m t
-    , MonadReader env m
-    , HasScopeTypes v (UniVar m) (TypeAST t) env
-    ) =>
-    Infer m (LamVar v t) where
-
-    infer (LamVar x) =
-        Lens.view (scopeTypes . Lens.at x)
-        <&> fromMaybe (error "name error")
-        <&> (, LamVar x)
