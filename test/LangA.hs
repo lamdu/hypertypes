@@ -1,4 +1,4 @@
-{-# LANGUAGE StandaloneDeriving, UndecidableInstances, TemplateHaskell, TypeFamilies, LambdaCase, MultiParamTypeClasses, FlexibleInstances, DataKinds, TupleSections, ScopedTypeVariables, ConstraintKinds, FlexibleContexts #-}
+{-# LANGUAGE StandaloneDeriving, UndecidableInstances, TemplateHaskell, TypeFamilies, LambdaCase, MultiParamTypeClasses, FlexibleInstances, DataKinds, TupleSections, ConstraintKinds, FlexibleContexts #-}
 
 -- | A test language with locally-nameless variable scoping and type signatures with for-alls
 
@@ -49,9 +49,7 @@ instance TermInfer1Deps env m => Infer1 m LangA where
     inferMonad = Sub Dict
 
 instance (DeBruijnIndex k, TermInfer1Deps env m) => Infer m (LangA k) where
-    infer (ALit x) =
-        withDict (recursive :: RecursiveDict (Unify m) Typ) $
-        newTerm TInt <&> (, ALit x)
+    infer (ALit     x) = newTerm TInt <&> (, ALit x)
     infer (AVar     x) = infer x <&> _2 %~ AVar
     infer (ALam     x) = infer x <&> _2 %~ ALam
     infer (AApp     x) = infer x <&> _2 %~ AApp
