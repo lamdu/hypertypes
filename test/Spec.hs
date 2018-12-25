@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-import TermLang
+import LangA
 import TypeLang
 
 import AST
@@ -24,8 +24,8 @@ import Data.Functor.Const
 import Data.Proxy
 import Data.STRef
 
-var :: DeBruijnIndex k => Int -> Tree Pure (Term k)
-var = Pure . EVar . scopeVar
+var :: DeBruijnIndex k => Int -> Tree Pure (LangA k)
+var = Pure . AVar . scopeVar
 
 uniType :: Tree Pure Typ -> Tree Pure (Scheme Types Typ)
 uniType typ =
@@ -34,47 +34,47 @@ uniType typ =
     , _sTyp = typ
     }
 
-expr :: Tree Pure (Term EmptyScope)
+expr :: Tree Pure (LangA EmptyScope)
 expr =
     -- \x y -> x (5 :: Int)
-    Pure . ELam . scope $ \x ->
-    Pure . ELam . scope $ \_y ->
-    ELit 5 & Pure
-    & TypeSig (uniType (Pure TInt)) & ETypeSig & Pure
-    & Apply (var x) & EApp & Pure
+    Pure . ALam . scope $ \x ->
+    Pure . ALam . scope $ \_y ->
+    ALit 5 & Pure
+    & TypeSig (uniType (Pure TInt)) & ATypeSig & Pure
+    & Apply (var x) & AApp & Pure
 
-infinite :: Tree Pure (Term EmptyScope)
+infinite :: Tree Pure (LangA EmptyScope)
 infinite =
     -- \x -> x x
-    Pure . ELam . scope $ \x ->
-    Apply (var x) (var x) & EApp & Pure
+    Pure . ALam . scope $ \x ->
+    Apply (var x) (var x) & AApp & Pure
 
-skolem :: Tree Pure (Term EmptyScope)
+skolem :: Tree Pure (LangA EmptyScope)
 skolem =
     -- \x -> (x :: forall a. a)
-    Pure . ELam . scope $ \x ->
+    Pure . ALam . scope $ \x ->
     var x
     & TypeSig (Pure
         (Scheme
             (Types (Vars ["a"]) (Vars []))
             (Pure (TVar "a"))
-        )) & ETypeSig & Pure
+        )) & ATypeSig & Pure
 
-validForAll :: Tree Pure (Term EmptyScope)
+validForAll :: Tree Pure (LangA EmptyScope)
 validForAll =
     -- (\x -> x) :: forall a. a
-    scope var & ELam & Pure
+    scope var & ALam & Pure
     & TypeSig
         (Pure (Scheme
             (Types (Vars ["a"]) (Vars []))
             (Pure (TFun (FuncType (Pure (TVar "a")) (Pure (TVar "a")))))
         ))
-    & ETypeSig
+    & ATypeSig
     & Pure
 
 inferExpr ::
     (DeBruijnIndex k, TermInfer1Deps env m) =>
-    Tree Pure (Term k) ->
+    Tree Pure (LangA k) ->
     m (Tree Pure Typ)
 inferExpr x =
     inferNode (wrap (Proxy :: Proxy Children) (Ann ()) x)
