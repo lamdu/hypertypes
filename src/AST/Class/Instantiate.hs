@@ -1,36 +1,20 @@
-{-# LANGUAGE NoImplicitPrelude, DataKinds, TypeFamilies, FlexibleContexts, DefaultSignatures, ConstraintKinds #-}
+{-# LANGUAGE NoImplicitPrelude, DefaultSignatures, DataKinds, TypeFamilies, MultiParamTypeClasses, FlexibleContexts #-}
 
 module AST.Class.Instantiate
-    ( Instantiate(..)
+    ( Instantiate(..), SchemeType
     ) where
 
-import AST.Class.Children
 import AST.Class.Infer
 import AST.Class.Recursive
 import AST.Knot
 import AST.Knot.Pure
 import AST.Unify
-import Data.Constraint (Constraint)
 
-type DefaultInstantiateContext scheme m =
-    ( MonadInfer m
-    , Recursive (Unify m) (SchemeType scheme)
-    )
+type family SchemeType s :: Knot -> *
 
-class Children scheme => Instantiate scheme where
-    type family SchemeType scheme :: Knot -> *
-    type SchemeType scheme = scheme
-
-    type family InstantiateContext scheme (m :: * -> *) :: Constraint
-    type instance InstantiateContext scheme m = DefaultInstantiateContext scheme m
-
-    instantiate ::
-        InstantiateContext scheme m =>
-        Tree Pure scheme -> m (Tree (UniVar m) (SchemeType scheme))
+class (MonadInfer m, Recursive (Unify m) (SchemeType s)) => Instantiate m s where
+    instantiate :: s -> m (Tree (UniVar m) (SchemeType s))
     default instantiate ::
-        ( SchemeType scheme ~ scheme
-        , InstantiateContext scheme m ~ DefaultInstantiateContext scheme m
-        , InstantiateContext scheme m
-        ) =>
-        Tree Pure scheme -> m (Tree (UniVar m) (SchemeType scheme))
+        (s ~ Tree Pure typ, SchemeType s ~ typ) =>
+        s -> m (Tree (UniVar m) (SchemeType s))
     instantiate = unfreeze

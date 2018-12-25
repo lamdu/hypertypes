@@ -58,7 +58,8 @@ emptyIntInferState =
     , Types (Const 0) (Const 0)
     )
 
-instance Instantiate Typ
+type instance SchemeType (Tree Pure Typ) = Typ
+instance (MonadInfer m, Recursive (Unify m) Typ) => Instantiate m (Tree Pure Typ)
 
 instance HasQuantifiedVar Typ where
     type QVar Typ = String

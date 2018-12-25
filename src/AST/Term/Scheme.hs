@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, InstanceSigs, FlexibleContexts, ScopedTypeVariables, MultiParamTypeClasses, FlexibleInstances #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, ScopedTypeVariables, MultiParamTypeClasses, FlexibleInstances, UndecidableInstances #-}
 
 module AST.Term.Scheme
     ( Scheme(..), sForAlls, sTyp
@@ -6,10 +6,10 @@ module AST.Term.Scheme
     , HasChild(..), CanInstantiate
     ) where
 
-import           AST.Class.Children (Children(..), ChildrenConstraint)
+import           AST.Class.Children (Children(..), ChildrenWithConstraint)
 import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Infer (MonadInfer(..), newTerm)
-import           AST.Class.Instantiate (Instantiate(..))
+import           AST.Class.Instantiate (Instantiate(..), SchemeType)
 import           AST.Class.Recursive (Recursive, wrapM)
 import           AST.Knot (Tree, Tie, RunKnot)
 import           AST.Knot.Pure (Pure(..))
@@ -63,19 +63,16 @@ instantiateBody foralls x =
     where
         getForAll v = foralls ^? getChild . _ForAlls . Lens.ix v
 
-instance Children varTypes => Instantiate (Scheme varTypes typ) where
-    type SchemeType (Scheme varTypes typ) = typ
+type instance SchemeType (Tree Pure (Scheme varTypes typ)) = typ
 
-    type InstantiateContext (Scheme varTypes typ) m =
-        ( Recursive (CanInstantiate m varTypes) typ
-        , ChildrenConstraint varTypes (Unify m)
-        , MonadInfer m
-        )
+instance
+    ( MonadInfer m
+    , Recursive (Unify m) typ
+    , Recursive (CanInstantiate m varTypes) typ
+    , ChildrenWithConstraint varTypes (Unify m)
+    ) =>
+    Instantiate m (Tree Pure (Scheme varTypes typ)) where
 
-    instantiate ::
-        forall m.
-        InstantiateContext (Scheme varTypes typ) m =>
-        Tree Pure (Scheme varTypes typ) -> m (Tree (UniVar m) typ)
     instantiate (Pure (Scheme vars typ)) =
         do
             foralls <- children (Proxy :: Proxy (Unify m)) makeForAlls vars
