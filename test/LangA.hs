@@ -1,4 +1,4 @@
-{-# LANGUAGE StandaloneDeriving, UndecidableInstances, TemplateHaskell, TypeFamilies, LambdaCase, MultiParamTypeClasses, FlexibleInstances, DataKinds, TupleSections, ConstraintKinds, FlexibleContexts, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE StandaloneDeriving, UndecidableInstances, TemplateHaskell, TypeFamilies, LambdaCase, MultiParamTypeClasses, FlexibleInstances, DataKinds, TupleSections, ConstraintKinds, FlexibleContexts, GeneralizedNewtypeDeriving, TypeOperators #-}
 
 -- | A test language with locally-nameless variable scoping and type signatures with for-alls
 
@@ -7,6 +7,7 @@ module LangA where
 import TypeLang
 
 import AST
+import AST.Class.Combinators
 import AST.Class.Infer
 import AST.Class.Infer.Infer1
 import AST.Term.Apply
@@ -50,7 +51,7 @@ type TermInfer1Deps env m =
     , MonadReader env m
     , HasScopeTypes (UVar m) Typ env
     , Recursive (Unify m) Typ
-    , Recursive (CanInstantiate m Types) Typ
+    , Recursive (And (Unify m) (HasChild Types)) Typ
     , ChildrenConstraint Types (Unify m)
     )
 
@@ -89,8 +90,8 @@ instance Unify IntInferA Row where
 
 instance Recursive (Unify IntInferA) Typ
 instance Recursive (Unify IntInferA) Row
-instance Recursive (CanInstantiate IntInferA Types) Typ
-instance Recursive (CanInstantiate IntInferA Types) Row
+instance Recursive (Unify IntInferA `And` HasChild Types) Typ
+instance Recursive (Unify IntInferA `And` HasChild Types) Row
 
 newtype STInferA s a =
     STInferA (ReaderT (ScopeTypes (STVar s) Typ, QuantificationScope, STInferState s) (MaybeT (ST s)) a)
@@ -115,5 +116,5 @@ instance Unify (STInferA s) Row where
 
 instance Recursive (Unify (STInferA s)) Typ
 instance Recursive (Unify (STInferA s)) Row
-instance Recursive (CanInstantiate (STInferA s) Types) Typ
-instance Recursive (CanInstantiate (STInferA s) Types) Row
+instance Recursive (Unify (STInferA s) `And` HasChild Types) Typ
+instance Recursive (Unify (STInferA s) `And` HasChild Types) Row

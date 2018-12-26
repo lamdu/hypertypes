@@ -3,11 +3,12 @@
 module AST.Term.Scheme
     ( Scheme(..), sForAlls, sTyp
     , Vars(..), _Vars
-    , HasChild(..), CanInstantiate
+    , HasChild(..)
     ) where
 
 import           AST.Class.Children (Children(..), ChildrenWithConstraint)
 import           AST.Class.Children.TH (makeChildren)
+import           AST.Class.Combinators (And)
 import           AST.Class.Infer (MonadInfer(..), newTerm)
 import           AST.Class.Instantiate (Instantiate(..), SchemeType)
 import           AST.Class.Recursive (Recursive, wrapM)
@@ -41,9 +42,6 @@ Lens.makePrisms ''ForAlls
 class HasChild record typ where
     getChild :: Lens' (Tree record k) (Tree k typ)
 
-class    (Unify m typ, HasChild varTypes typ) => CanInstantiate m varTypes typ
-instance (Unify m typ, HasChild varTypes typ) => CanInstantiate m varTypes typ
-
 makeForAlls :: (MonadInfer m, Unify m typ) => Tree Vars typ -> m (Tree (ForAlls (UVar m)) typ)
 makeForAlls (Vars xs) =
     traverse makeSkolem xs <&> ForAlls . Map.fromList
@@ -68,7 +66,7 @@ type instance SchemeType (Tree Pure (Scheme varTypes typ)) = typ
 instance
     ( MonadInfer m
     , Recursive (Unify m) typ
-    , Recursive (CanInstantiate m varTypes) typ
+    , Recursive (And (Unify m) (HasChild varTypes)) typ
     , ChildrenWithConstraint varTypes (Unify m)
     ) =>
     Instantiate m (Tree Pure (Scheme varTypes typ)) where
@@ -76,4 +74,4 @@ instance
     instantiate (Pure (Scheme vars typ)) =
         do
             foralls <- children (Proxy :: Proxy (Unify m)) makeForAlls vars
-            wrapM (Proxy :: Proxy (CanInstantiate m varTypes)) (instantiateBody foralls) typ
+            wrapM (Proxy :: Proxy (And (Unify m) (HasChild varTypes))) (instantiateBody foralls) typ
