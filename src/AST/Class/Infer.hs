@@ -15,7 +15,6 @@ import           AST.Unify.Term
 import           Control.Lens (Lens')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Data.Constraint (withDict)
 import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
@@ -47,9 +46,7 @@ unfreeze ::
     forall m t.
     (MonadInfer m, Recursive (Unify m) t) =>
     Tree Pure t -> m (Tree (UVar m) t)
-unfreeze =
-    withDict (recursive :: RecursiveDict (Unify m) t) $
-    wrapM (Proxy :: Proxy (Unify m)) newTerm
+unfreeze = wrapM (Proxy :: Proxy (Unify m)) newTerm
 
 inferNode :: Infer m t => Tree (Ann a) t -> m (INode (UVar m) t a)
 inferNode (Ann a x) =
