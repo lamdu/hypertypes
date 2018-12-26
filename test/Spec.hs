@@ -16,7 +16,6 @@ import AST.Term.Scope
 import AST.Term.TypeSig
 import AST.Term.Var
 import AST.Unify
-import AST.Unify.STBinding
 import AST.Unify.Term
 import qualified Control.Lens as Lens
 import Control.Lens.Operators
@@ -93,11 +92,12 @@ inferExpr x =
     <&> (^. nodeType)
     >>= applyBindings
 
-runIntInfer :: IntInfer (ScopeTypes (Const Int) Typ) () a -> Maybe a
-runIntInfer act = runRWST act (mempty, InferLevel 0) emptyIntInferState <&> (^. Lens._1)
+execIntInferA :: IntInferA a -> Maybe a
+execIntInferA (IntInferA act) =
+    runRWST act (mempty, InferLevel 0) emptyIntInferState <&> (^. Lens._1)
 
-runSTInfer :: STInfer (ScopeTypes (STVar s) Typ) s a -> ST s (Maybe a)
-runSTInfer act =
+execSTInferA :: STInferA s a -> ST s (Maybe a)
+execSTInferA (STInferA act) =
     do
         qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
         runReaderT act (mempty, InferLevel 0, qvarGen) & runMaybeT
@@ -116,17 +116,17 @@ main :: IO ()
 main =
     do
         putStrLn ""
-        print (runIntInfer (inferExpr expr))
-        print (runST (runSTInfer (inferExpr expr)))
+        print (execIntInferA (inferExpr expr))
+        print (runST (execSTInferA (inferExpr expr)))
         putStrLn ""
-        print (runIntInfer (inferExpr infinite))
-        print (runST (runSTInfer (inferExpr infinite)))
+        print (execIntInferA (inferExpr infinite))
+        print (runST (execSTInferA (inferExpr infinite)))
         putStrLn ""
-        print (runIntInfer (inferExpr skolem))
-        print (runST (runSTInfer (inferExpr skolem)))
+        print (execIntInferA (inferExpr skolem))
+        print (runST (execSTInferA (inferExpr skolem)))
         putStrLn ""
-        print (runIntInfer (inferExpr validForAll))
-        print (runST (runSTInfer (inferExpr validForAll)))
+        print (execIntInferA (inferExpr validForAll))
+        print (runST (execSTInferA (inferExpr validForAll)))
         putStrLn ""
         print (execIntInferB (inferExpr letGen))
         print (runST (execSTInferB (inferExpr letGen)))
