@@ -1,23 +1,19 @@
-name:                syntax-tree
-version:             0.1.0.0
-github:              "githubuser/syntax-tree"
-license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2018 Author name here"
+name: syntax-tree
+version: 0.1.0.0
+github: "lamdu/syntax-tree"
+license: BSD3
+author: "Yair Chuchem"
+maintainer: "yairchu@gmail.com"
+copyright: 2018 Yair Chuchem"
 
 extra-source-files:
 - README.md
 - ChangeLog.md
 
-# Metadata used when publishing your package
-# synopsis:            Short description of your package
-# category:            Web
+synopsis: Typed ASTs
+category: Algorithms, Compilers/Interpreters, Language, Logic, Unification
 
-# To avoid duplicated efforts in documentation and dealing with the
-# complications of embedding Haddock markup inside cabal files, it is
-# common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/githubuser/syntax-tree#readme>
+description: Please see the README on GitHub at <https://github.com/lamdu/syntax-tree#readme>
 
 dependencies:
 - base
@@ -50,8 +46,8 @@ library:
 
 tests:
   syntax-tree-test:
-    main:                Spec.hs
-    source-dirs:         test
+    main: Spec.hs
+    source-dirs: test
     ghc-options:
     - -Wall
     - -Wcompat
