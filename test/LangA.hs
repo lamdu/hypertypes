@@ -66,10 +66,10 @@ instance (DeBruijnIndex k, TermInfer1Deps env m) => Infer m (LangA k) where
 
 -- Monads for inferring `LangA`:
 
-newtype IntInferA a = IntInferA (RWST (ScopeTypes (Const Int) Typ, InferLevel) () IntInferState Maybe a)
+newtype IntInferA a = IntInferA (RWST (ScopeTypes (Const Int) Typ, QuantificationScope) () IntInferState Maybe a)
     deriving
     ( Functor, Applicative, Alternative, Monad
-    , MonadReader (ScopeTypes (Const Int) Typ, InferLevel)
+    , MonadReader (ScopeTypes (Const Int) Typ, QuantificationScope)
     , MonadState IntInferState
     )
 
@@ -77,7 +77,7 @@ type instance UVar IntInferA = Const Int
 
 instance MonadInfer IntInferA where
     getInferLevel = Lens.view Lens._2
-    localLevel = local (Lens._2 . _InferLevel +~ 1)
+    localLevel = local (Lens._2 . _QuantificationScope +~ 1)
 
 instance Unify IntInferA Typ where
     binding = intBindingState (Lens._1 . tTyp)
@@ -93,17 +93,17 @@ instance Recursive (CanInstantiate IntInferA Types) Typ
 instance Recursive (CanInstantiate IntInferA Types) Row
 
 newtype STInferA s a =
-    STInferA (ReaderT (ScopeTypes (STVar s) Typ, InferLevel, STInferState s) (MaybeT (ST s)) a)
+    STInferA (ReaderT (ScopeTypes (STVar s) Typ, QuantificationScope, STInferState s) (MaybeT (ST s)) a)
     deriving
     ( Functor, Applicative, Alternative, Monad, MonadST
-    , MonadReader (ScopeTypes (STVar s) Typ, InferLevel, STInferState s)
+    , MonadReader (ScopeTypes (STVar s) Typ, QuantificationScope, STInferState s)
     )
 
 type instance UVar (STInferA s) = STVar s
 
 instance MonadInfer (STInferA s) where
     getInferLevel = Lens.view Lens._2
-    localLevel = local (Lens._2 . _InferLevel +~ 1)
+    localLevel = local (Lens._2 . _QuantificationScope +~ 1)
 
 instance Unify (STInferA s) Typ where
     binding = stBindingState

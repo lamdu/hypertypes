@@ -121,11 +121,11 @@ applyBindings v0 =
             >>= result
     UVar{} -> error "lookup not expected to result in var"
 
-updateLevel ::
+updateConstraints ::
     forall m t.
     Recursive (Unify m) t =>
-    InferLevel -> Tree (UVar m) t -> m (Tree (UVar m) t)
-updateLevel level var =
+    QuantificationScope -> Tree (UVar m) t -> m (Tree (UVar m) t)
+updateConstraints level var =
     withDict (recursive :: RecursiveDict (Unify m) t) $
     do
         (v1, x) <- semiPruneLookup var
@@ -136,23 +136,23 @@ updateLevel level var =
             USkolem l
                 | l <= level -> pure ()
                 | otherwise -> skolemEscape v1
-            UTerm t -> updateTermLevel v1 t level
+            UTerm t -> updateTermConstraints v1 t level
             UResolving t -> () <$ occurs var t
             _ -> error "This shouldn't happen in unification stage"
         pure v1
 
-updateTermLevel ::
+updateTermConstraints ::
     forall m t.
     Recursive (Unify m) t =>
-    Tree (UVar m) t -> Tree (UTermBody (UVar m)) t -> InferLevel -> m ()
-updateTermLevel v t level =
+    Tree (UVar m) t -> Tree (UTermBody (UVar m)) t -> QuantificationScope -> m ()
+updateTermConstraints v t level =
     withDict (recursive :: RecursiveDict (Unify m) t) $
     if level >= t ^. uLevel
         then pure ()
         else
             do
                 bindVar binding v (UResolving (t ^. uBody))
-                children (Proxy :: Proxy (Recursive (Unify m))) (updateLevel level) (t ^. uBody)
+                children (Proxy :: Proxy (Recursive (Unify m))) (updateConstraints level) (t ^. uBody)
                     >>= bindVar binding v . UTerm . UTermBody level
 
 -- Note on usage of `semiPruneLookup`:
@@ -180,11 +180,11 @@ unify x0 y0 =
         bindToTerm dstVar dstTerm var level =
             do
                 bindVar binding var (UVar dstVar)
-                updateTermLevel dstVar dstTerm level
+                updateTermConstraints dstVar dstTerm level
                 pure dstVar
         unbound other var level =
             do
-                r <- updateLevel level other
+                r <- updateConstraints level other
                 r <$ bindVar binding var (UVar r)
         go var other onUnbound onTerm =
             semiPruneLookup var

@@ -40,7 +40,7 @@ generalize typ =
         go ::
             forall typ.
             Recursive (Unify m) typ =>
-            InferLevel -> Tree (UVar m) typ -> m (Tree (GTerm m) typ)
+            QuantificationScope -> Tree (UVar m) typ -> m (Tree (GTerm m) typ)
         go level v0 =
             withDict (recursive :: RecursiveDict (Unify m) typ) $
             do

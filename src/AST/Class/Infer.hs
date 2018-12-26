@@ -26,8 +26,8 @@ type TypeOf m t = Tree (UVar m) (TypeAST t)
 type INode v t a = Tree (Ann (Tree v (TypeAST t), a)) t
 
 class Monad m => MonadInfer m where
-    getInferLevel :: m InferLevel
-    getInferLevel = pure (InferLevel 0)
+    getInferLevel :: m QuantificationScope
+    getInferLevel = pure (QuantificationScope 0)
 
     localLevel :: m a -> m a
     -- Default implementation for type systems without skolems

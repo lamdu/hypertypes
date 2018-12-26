@@ -50,10 +50,10 @@ instance (MonadInfer m, MonadScopeTypes [Char] Typ m, Recursive (Unify m) Typ) =
 -- Monads for inferring `LangB`:
 
 newtype IntInferB a =
-    IntInferB (RWST (Map String (IntInferB (Tree (Const Int) Typ)), InferLevel) () IntInferState Maybe a)
+    IntInferB (RWST (Map String (IntInferB (Tree (Const Int) Typ)), QuantificationScope) () IntInferState Maybe a)
     deriving
     ( Functor, Applicative, Alternative, Monad
-    , MonadReader (Map String (IntInferB (Tree (Const Int) Typ)), InferLevel)
+    , MonadReader (Map String (IntInferB (Tree (Const Int) Typ)), QuantificationScope)
     , MonadState IntInferState
     )
 
@@ -65,7 +65,7 @@ instance MonadScopeTypes String Typ IntInferB where
 
 instance MonadInfer IntInferB where
     getInferLevel = Lens.view Lens._2
-    localLevel = local (Lens._2 . _InferLevel +~ 1)
+    localLevel = local (Lens._2 . _QuantificationScope +~ 1)
 
 instance Unify IntInferB Typ where
     binding = intBindingState (Lens._1 . tTyp)
@@ -80,10 +80,10 @@ instance Recursive (Unify IntInferB) Row
 
 newtype STInferB s a =
     STInferB
-    (ReaderT (Map String (STInferB s (Tree (STVar s) Typ)), InferLevel, STInferState s) (MaybeT (ST s)) a)
+    (ReaderT (Map String (STInferB s (Tree (STVar s) Typ)), QuantificationScope, STInferState s) (MaybeT (ST s)) a)
     deriving
     ( Functor, Applicative, Alternative, Monad, MonadST
-    , MonadReader (Map String (STInferB s (Tree (STVar s) Typ)), InferLevel, STInferState s)
+    , MonadReader (Map String (STInferB s (Tree (STVar s) Typ)), QuantificationScope, STInferState s)
     )
 
 type instance UVar (STInferB s) = STVar s
@@ -94,7 +94,7 @@ instance MonadScopeTypes String Typ (STInferB s) where
 
 instance MonadInfer (STInferB s) where
     getInferLevel = Lens.view Lens._2
-    localLevel = local (Lens._2 . _InferLevel +~ 1)
+    localLevel = local (Lens._2 . _QuantificationScope +~ 1)
 
 instance Unify (STInferB s) Typ where
     binding = stBindingState

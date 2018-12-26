@@ -3,7 +3,7 @@
 module AST.Unify.Term
     ( UTerm(..), _UVar, _UTerm, _UResolving
     , UTermBody(..), uBody, uLevel
-    , InferLevel(..), _InferLevel
+    , QuantificationScope(..), _QuantificationScope
     ) where
 
 import AST.Knot
@@ -12,19 +12,19 @@ import Control.Lens (makeLenses, makePrisms)
 
 import Prelude.Compat
 
-newtype InferLevel = InferLevel Int
+newtype QuantificationScope = QuantificationScope Int
     deriving (Eq, Ord, Show)
-makePrisms ''InferLevel
+makePrisms ''QuantificationScope
 
 data UTermBody v ast = UTermBody
-    { _uLevel :: InferLevel
+    { _uLevel :: QuantificationScope
     , _uBody :: Tie ast v
     }
 makeLenses ''UTermBody
 
 data UTerm v ast
-    = UUnbound InferLevel
-    | USkolem InferLevel
+    = UUnbound QuantificationScope
+    | USkolem QuantificationScope
     | UVar (v ast)
     | UTerm (UTermBody v ast)
     | UResolving (Tie ast v)

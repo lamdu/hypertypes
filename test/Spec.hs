@@ -94,23 +94,23 @@ inferExpr x =
 
 execIntInferA :: IntInferA a -> Maybe a
 execIntInferA (IntInferA act) =
-    runRWST act (mempty, InferLevel 0) emptyIntInferState <&> (^. Lens._1)
+    runRWST act (mempty, QuantificationScope 0) emptyIntInferState <&> (^. Lens._1)
 
 execSTInferA :: STInferA s a -> ST s (Maybe a)
 execSTInferA (STInferA act) =
     do
         qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
-        runReaderT act (mempty, InferLevel 0, qvarGen) & runMaybeT
+        runReaderT act (mempty, QuantificationScope 0, qvarGen) & runMaybeT
 
 execIntInferB :: IntInferB a -> Maybe a
 execIntInferB (IntInferB act) =
-    runRWST act (mempty, InferLevel 0) emptyIntInferState <&> (^. Lens._1)
+    runRWST act (mempty, QuantificationScope 0) emptyIntInferState <&> (^. Lens._1)
 
 execSTInferB :: STInferB s a -> ST s (Maybe a)
 execSTInferB (STInferB act) =
     do
         qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
-        runReaderT act (mempty, InferLevel 0, qvarGen) & runMaybeT
+        runReaderT act (mempty, QuantificationScope 0, qvarGen) & runMaybeT
 
 main :: IO ()
 main =
