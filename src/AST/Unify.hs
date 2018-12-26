@@ -4,13 +4,15 @@ module AST.Unify
     ( HasQuantifiedVar(..)
     , UVar
     , Binding(..)
+    , MonadUnify(..)
     , Unify(..)
     , applyBindings, unify
     , semiPruneLookup
+    , newUnbound, newTerm, unfreeze
     ) where
 
 import AST.Class.Children (Children(..))
-import AST.Class.Recursive (Recursive(..), RecursiveDict)
+import AST.Class.Recursive (Recursive(..), RecursiveDict, wrapM)
 import AST.Class.ZipMatch (ZipMatch(..), zipMatchWithA)
 import AST.Knot.Pure (Pure(..))
 import AST.Knot (Knot, Tree)
@@ -39,7 +41,10 @@ data Binding m t = Binding
     , bindVar :: Tree (UVar m) t -> Tree (UTerm (UVar m)) t -> m ()
     }
 
-class (Eq (Tree (UVar m) t), ZipMatch t, HasQuantifiedVar t, Monad m) => Unify m t where
+class Monad m => MonadUnify m where
+    scopeConstraints :: m QuantificationScope
+
+class (Eq (Tree (UVar m) t), ZipMatch t, HasQuantifiedVar t, MonadUnify m) => Unify m t where
     binding :: Binding m t
 
     newQuantifiedVariable :: Proxy t -> m (QVar t)
@@ -72,6 +77,21 @@ class (Eq (Tree (UVar m) t), ZipMatch t, HasQuantifiedVar t, Monad m) => Unify m
     skolemEscape :: Tree (UVar m) t -> m ()
     default skolemEscape :: Alternative m => Tree (UVar m) t -> m ()
     skolemEscape _ = empty
+
+newUnbound :: Unify m t => m (Tree (UVar m) t)
+newUnbound = scopeConstraints >>= newVar binding . UUnbound
+
+newTerm :: Unify m t => Tree t (UVar m) -> m (Tree (UVar m) t)
+newTerm x = scopeConstraints >>= newVar binding . UTerm . (`UTermBody` x)
+
+-- | Embed a pure term as a mutable term.
+unfreeze ::
+    forall m t.
+    Recursive (Unify m) t =>
+    Tree Pure t -> m (Tree (UVar m) t)
+unfreeze =
+    withDict (recursive :: RecursiveDict (Unify m) t) $
+    wrapM (Proxy :: Proxy (Unify m)) newTerm
 
 -- look up a variable, and return last variable pointing to result.
 -- prune all variable on way to last variable

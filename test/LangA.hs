@@ -76,8 +76,10 @@ newtype IntInferA a = IntInferA (RWST (ScopeTypes (Const Int) Typ, Quantificatio
 
 type instance UVar IntInferA = Const Int
 
+instance MonadUnify IntInferA where
+    scopeConstraints = Lens.view Lens._2
+
 instance MonadInfer IntInferA where
-    getInferLevel = Lens.view Lens._2
     localLevel = local (Lens._2 . _QuantificationScope +~ 1)
 
 instance Unify IntInferA Typ where
@@ -102,8 +104,10 @@ newtype STInferA s a =
 
 type instance UVar (STInferA s) = STVar s
 
+instance MonadUnify (STInferA s) where
+    scopeConstraints = Lens.view Lens._2
+
 instance MonadInfer (STInferA s) where
-    getInferLevel = Lens.view Lens._2
     localLevel = local (Lens._2 . _QuantificationScope +~ 1)
 
 instance Unify (STInferA s) Typ where

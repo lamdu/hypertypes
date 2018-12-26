@@ -5,12 +5,12 @@ module AST.Term.Lam
     ) where
 
 import AST.Class.Children.TH (makeChildren)
-import AST.Class.Infer (Infer(..), TypeAST, newUnbound, newTerm, inferNode, nodeType)
+import AST.Class.Infer (Infer(..), TypeAST, inferNode, nodeType)
 import AST.Class.Recursive (Recursive(..), RecursiveConstraint, RecursiveDict)
 import AST.Knot (Tie)
 import AST.Term.FuncType
 import AST.Term.Var
-import AST.Unify (Unify(..))
+import AST.Unify (Unify(..), newUnbound, newTerm)
 import Control.DeepSeq (NFData)
 import Control.Lens (makeLenses)
 import Control.Lens.Operators

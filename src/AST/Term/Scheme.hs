@@ -9,12 +9,12 @@ module AST.Term.Scheme
 import           AST.Class.Children (Children(..), ChildrenWithConstraint)
 import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Combinators (And)
-import           AST.Class.Infer (MonadInfer(..), newTerm)
+import           AST.Class.Infer (MonadInfer(..))
 import           AST.Class.Instantiate (Instantiate(..), SchemeType)
 import           AST.Class.Recursive (Recursive, wrapM)
 import           AST.Knot (Tree, Tie, RunKnot)
 import           AST.Knot.Pure (Pure(..))
-import           AST.Unify (Unify(..), HasQuantifiedVar(..), UVar, newVar)
+import           AST.Unify (MonadUnify(..), Unify(..), HasQuantifiedVar(..), UVar, newVar, newTerm)
 import           AST.Unify.Term (UTerm(..))
 import           Control.Lens (Lens')
 import qualified Control.Lens as Lens
@@ -42,12 +42,15 @@ Lens.makePrisms ''ForAlls
 class HasChild record typ where
     getChild :: Lens' (Tree record k) (Tree k typ)
 
-makeForAlls :: (MonadInfer m, Unify m typ) => Tree Vars typ -> m (Tree (ForAlls (UVar m)) typ)
+makeForAlls ::
+    forall m typ.
+    (MonadInfer m, Unify m typ) =>
+    Tree Vars typ -> m (Tree (ForAlls (UVar m)) typ)
 makeForAlls (Vars xs) =
     traverse makeSkolem xs <&> ForAlls . Map.fromList
     where
         makeSkolem x =
-            getInferLevel
+            scopeConstraints
             >>= newVar binding . USkolem
             <&> (,) x
 

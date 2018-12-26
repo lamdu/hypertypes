@@ -9,14 +9,14 @@ module AST.Term.Scope
     , ScopeTypes, HasScopeTypes(..)
     ) where
 
-import           AST.Class.Infer (Infer(..), MonadInfer(..), newUnbound, newTerm, inferNode, nodeType, TypeAST)
+import           AST.Class.Infer (Infer(..), MonadInfer(..), inferNode, nodeType, TypeAST)
 import           AST.Class.Infer.Infer1 (Infer1(..), HasTypeAST1(..))
 import           AST.Class.Children (Children)
 import           AST.Class.Recursive (Recursive(..), RecursiveDict)
 import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import           AST.Knot (Knot, Tie, Tree)
 import           AST.Term.FuncType
-import           AST.Unify (Unify(..), UVar)
+import           AST.Unify (Unify(..), UVar, newUnbound, newTerm)
 import           Control.Lens (Lens', Prism')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators

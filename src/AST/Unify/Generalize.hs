@@ -33,7 +33,7 @@ generalize ::
     Tree (UVar m) t -> m (Tree (GTerm m) t)
 generalize typ =
     do
-        level <- getInferLevel
+        level <- scopeConstraints
         go level typ
     where
         p = Proxy :: Proxy (Recursive (Unify m))

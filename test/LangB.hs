@@ -63,8 +63,10 @@ instance MonadScopeTypes String Typ IntInferB where
     scopeType v = Lens.view (Lens._1 . Lens.at v) >>= fromMaybe (error "name error")
     localScopeType v t = local (Lens._1 . Lens.at v ?~ t)
 
+instance MonadUnify IntInferB where
+    scopeConstraints = Lens.view Lens._2
+
 instance MonadInfer IntInferB where
-    getInferLevel = Lens.view Lens._2
     localLevel = local (Lens._2 . _QuantificationScope +~ 1)
 
 instance Unify IntInferB Typ where
@@ -92,8 +94,10 @@ instance MonadScopeTypes String Typ (STInferB s) where
     scopeType v = Lens.view (Lens._1 . Lens.at v) >>= fromMaybe (error "name error")
     localScopeType v t = local (Lens._1 . Lens.at v ?~ t)
 
+instance MonadUnify (STInferB s) where
+    scopeConstraints = Lens.view Lens._2
+
 instance MonadInfer (STInferB s) where
-    getInferLevel = Lens.view Lens._2
     localLevel = local (Lens._2 . _QuantificationScope +~ 1)
 
 instance Unify (STInferB s) Typ where
