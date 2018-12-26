@@ -74,14 +74,26 @@ validForAll =
         ))
     & ATypeSig & Pure
 
+lam :: String -> (Tree Pure LangB -> Tree Pure LangB) -> Tree Pure LangB
+lam v mk = Var v & BVar & Pure & mk & Lam v & BLam & Pure
+
+($$) :: Tree Pure LangB -> Tree Pure LangB -> Tree Pure LangB
+x $$ y = Apply x y & BApp & Pure
+
 letGen :: Tree Pure LangB
 letGen =
-    BLit 5 & Pure
-    & Apply (Pure (BApp (Apply i i))) & BApp & Pure
-    & Let "id" (Pure (BLam (Lam "x" (Pure (BVar (Var "x"))))))
-    & BLet & Pure
+    -- let id x = x in id id 5
+    (i $$ i) $$ Pure (BLit 5)
+    & Let "id" (lam "x" id) & BLet & Pure
     where
         i = Var "id" & BVar & Pure
+
+shouldNotGen :: Tree Pure LangB
+shouldNotGen =
+    -- (\x -> let y = x in y)
+    lam "x" $ \x ->
+    Var "y" & BVar & Pure
+    & Let "y" x & BLet & Pure
 
 inferExpr ::
     (Infer m t, Recursive Children t) =>
@@ -130,3 +142,6 @@ main =
         putStrLn ""
         print (execIntInferB (inferExpr letGen))
         print (runST (execSTInferB (inferExpr letGen)))
+        putStrLn ""
+        print (execIntInferB (inferExpr shouldNotGen))
+        print (runST (execSTInferB (inferExpr shouldNotGen)))
