@@ -14,7 +14,6 @@ import AST.Term.Scheme
 import AST.Term.Scope
 import AST.Term.Var
 import Control.Applicative
-import Control.Lens (ALens')
 import qualified Control.Lens as Lens
 import Control.Lens.Operators
 import Control.Monad.RWS
@@ -99,31 +98,17 @@ type STInfer r s = ReaderT (r, InferLevel, STInferState s) (MaybeT (ST s))
 
 type instance UVar (STInfer r s) = STVar s
 
-readModifySTRef :: STRef s a -> (a -> a) -> ST s (a, a)
-readModifySTRef ref func =
-    do
-        old <- readSTRef ref
-        let new = func old
-        (old, new) <$ (new `seq` writeSTRef ref new)
-
-newStQuantified ::
-    (MonadReader (a, InferLevel, STInferState s) m, MonadST m) =>
-    ALens' (STInferState s) (Const (STRef (World m) Int) (ast :: Knot)) -> m Int
-newStQuantified l =
-    Lens.view (Lens._3 . Lens.cloneLens l . Lens._Wrapped)
-    >>= liftST . fmap fst . (`readModifySTRef` (+1))
-
 instance MonadInfer (STInfer r s) where
     getInferLevel = Lens.view Lens._2
     localLevel = local (Lens._2 . _InferLevel +~ 1)
 
 instance Unify (STInfer r s) Typ where
     binding = stBindingState
-    newQuantifiedVariable _ = newStQuantified tTyp <&> ('t':) . show
+    newQuantifiedVariable _ = newStQuantified (Lens._3 . tTyp) <&> ('t':) . show
 
 instance Unify (STInfer r s) Row where
     binding = stBindingState
-    newQuantifiedVariable _ = newStQuantified tRow <&> ('r':) . show
+    newQuantifiedVariable _ = newStQuantified (Lens._3 . tRow) <&> ('r':) . show
 
 instance Recursive (Unify (STInfer r s)) Typ
 instance Recursive (Unify (STInfer r s)) Row
@@ -187,11 +172,11 @@ instance MonadInfer (STInferB v s) where
 
 instance Unify (STInferB v s) Typ where
     binding = stBindingState
-    newQuantifiedVariable _ = newStQuantified tTyp <&> ('t':) . show
+    newQuantifiedVariable _ = newStQuantified (Lens._3 . tTyp) <&> ('t':) . show
 
 instance Unify (STInferB v s) Row where
     binding = stBindingState
-    newQuantifiedVariable _ = newStQuantified tRow <&> ('r':) . show
+    newQuantifiedVariable _ = newStQuantified (Lens._3 . tRow) <&> ('r':) . show
 
 instance Recursive (Unify (STInferB v s)) Typ
 instance Recursive (Unify (STInferB v s)) Row
