@@ -167,8 +167,6 @@ instance Unify (IntInferB v) Row where
 
 instance Recursive (Unify (IntInferB v)) Typ
 instance Recursive (Unify (IntInferB v)) Row
-instance Recursive (CanInstantiate (IntInferB v) Types) Typ
-instance Recursive (CanInstantiate (IntInferB v) Types) Row
 
 newtype STInferB v s a =
     STInferB (STInfer (Map v (STInferB v s (Tree (STVar s) Typ))) s a)
@@ -197,5 +195,3 @@ instance Unify (STInferB v s) Row where
 
 instance Recursive (Unify (STInferB v s)) Typ
 instance Recursive (Unify (STInferB v s)) Row
-instance Recursive (CanInstantiate (STInferB v s) Types) Typ
-instance Recursive (CanInstantiate (STInferB v s) Types) Row
