@@ -30,38 +30,30 @@ Lens.makePrisms ''GTerm
 generalize ::
     forall m t.
     (MonadInfer m, Recursive (Unify m) t) =>
-    Tree (UVar m) t -> m (Tree (GTerm m) t)
-generalize typ =
+    QuantificationScope -> Tree (UVar m) t -> m (Tree (GTerm m) t)
+generalize level v0 =
+    withDict (recursive :: RecursiveDict (Unify m) t) $
     do
-        level <- scopeConstraints
-        go level typ
+        (v1, u) <- semiPruneLookup v0
+        case u of
+            UUnbound l | l >= level ->
+                GPoly v1 <$
+                -- We set the variable to a skolem,
+                -- so additional unifications after generalization
+                -- (for example hole resumptions where supported)
+                -- cannot unify it with anything.
+                bindVar binding v1 (USkolem l)
+            USkolem l | l >= level -> pure (GPoly v1)
+            UTerm t ->
+                children p (generalize level) (t ^. uBody)
+                <&> onBody
+                where
+                    onBody b
+                        | foldMapChildren p (All . Lens.has _GMono) b ^. Lens._Wrapped = GMono v1
+                        | otherwise = GBody b
+            _ -> pure (GMono v1)
     where
         p = Proxy :: Proxy (Recursive (Unify m))
-        go ::
-            forall typ.
-            Recursive (Unify m) typ =>
-            QuantificationScope -> Tree (UVar m) typ -> m (Tree (GTerm m) typ)
-        go level v0 =
-            withDict (recursive :: RecursiveDict (Unify m) typ) $
-            do
-                (v1, u) <- semiPruneLookup v0
-                case u of
-                    UUnbound l | l > level ->
-                        GPoly v1 <$
-                        -- We set the variable to a skolem,
-                        -- so additional unifications after generalization
-                        -- (for example hole resumptions where supported)
-                        -- cannot unify it with anything.
-                        bindVar binding v1 (USkolem l)
-                    USkolem l | l > level -> pure (GPoly v1)
-                    UTerm t ->
-                        children p (go level) (t ^. uBody)
-                        <&> onBody
-                        where
-                            onBody b
-                                | foldMapChildren p (All . Lens.has _GMono) b ^. Lens._Wrapped = GMono v1
-                                | otherwise = GBody b
-                    _ -> pure (GMono v1)
 
 type instance SchemeType (Tree (GTerm v) t) = t
 
