@@ -30,6 +30,7 @@ library:
   - base-compat
   - binary
   - deepseq
+  - lattices
   - pretty
   - QuickCheck
   - show-combinators

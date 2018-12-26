@@ -7,6 +7,8 @@ import AST.Class.Infer
 import AST.Class.Instantiate
 import AST.Unify
 import AST.Unify.IntMapBinding
+import AST.Unify.QuantificationScope
+import AST.Unify.Term
 import AST.Term.FuncType
 import AST.Term.Scheme
 import AST.Term.Scope
@@ -40,6 +42,9 @@ deriving instance SubTreeConstraint Row f Show => Show (Row f)
 
 instance HasChild Types Typ where getChild = tTyp
 instance HasChild Types Row where getChild = tRow
+
+type instance TypeConstraints Typ = QuantificationScope
+type instance TypeConstraints Row = QuantificationScope
 
 type IntInferState = (Tree Types IntBindingState, Tree Types (Const Int))
 

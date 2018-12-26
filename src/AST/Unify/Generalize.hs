@@ -4,6 +4,7 @@ module AST.Unify.Generalize
     ( GTerm, generalize
     ) where
 
+import           Algebra.PartialOrd (PartialOrd(..))
 import           AST.Class.Children
 import           AST.Class.Infer
 import           AST.Class.Instantiate
@@ -30,22 +31,24 @@ Lens.makePrisms ''GTerm
 generalize ::
     forall m t.
     (MonadInfer m, Recursive (Unify m) t) =>
-    QuantificationScope -> Tree (UVar m) t -> m (Tree (GTerm m) t)
-generalize level v0 =
+    ScopeConstraints m -> Tree (UVar m) t -> m (Tree (GTerm m) t)
+generalize s v0 =
     withDict (recursive :: RecursiveDict (Unify m) t) $
+    let c = liftScopeConstraints (Proxy :: Proxy m) (Proxy :: Proxy t) s
+    in
     do
         (v1, u) <- semiPruneLookup v0
         case u of
-            UUnbound l | l >= level ->
+            UUnbound l | l `leq` c ->
                 GPoly v1 <$
                 -- We set the variable to a skolem,
                 -- so additional unifications after generalization
                 -- (for example hole resumptions where supported)
                 -- cannot unify it with anything.
                 bindVar binding v1 (USkolem l)
-            USkolem l | l >= level -> pure (GPoly v1)
+            USkolem l | l `leq` c -> pure (GPoly v1)
             UTerm t ->
-                children p (generalize level) (t ^. uBody)
+                children p (generalize s) (t ^. uBody)
                 <&> onBody
                 where
                     onBody b

@@ -1,30 +1,29 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DataKinds, TypeFamilies, MultiParamTypeClasses, FlexibleInstances #-}
 
 module AST.Unify.Term
-    ( UTerm(..), _UVar, _UTerm, _UResolving
+    ( TypeConstraints, TypeConstraintsAre
+    , UTerm(..), _UVar, _UTerm, _UResolving
     , UTermBody(..), uBody, uConstraints
-    , QuantificationScope(..), _QuantificationScope
     ) where
 
 import AST.Knot
 import AST.Knot.Pure
 import Control.Lens (makeLenses, makePrisms)
 
-import Prelude.Compat
+type family TypeConstraints (ast :: Knot -> *)
 
-newtype QuantificationScope = QuantificationScope Int
-    deriving (Eq, Ord, Show)
-makePrisms ''QuantificationScope
+class TypeConstraints ast ~ constraints => TypeConstraintsAre constraints ast
+instance TypeConstraints ast ~ constraints => TypeConstraintsAre constraints ast
 
 data UTermBody v ast = UTermBody
-    { _uConstraints :: QuantificationScope
+    { _uConstraints :: TypeConstraints (RunKnot ast)
     , _uBody :: Tie ast v
     }
 makeLenses ''UTermBody
 
 data UTerm v ast
-    = UUnbound QuantificationScope
-    | USkolem QuantificationScope
+    = UUnbound (TypeConstraints (RunKnot ast))
+    | USkolem (TypeConstraints (RunKnot ast))
     | UVar (v ast)
     | UTerm (UTermBody v ast)
     | UResolving (Tie ast v)

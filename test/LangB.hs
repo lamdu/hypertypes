@@ -12,8 +12,8 @@ import AST.Term.Lam
 import AST.Term.Let
 import AST.Term.Var
 import AST.Unify.IntMapBinding
+import AST.Unify.QuantificationScope
 import AST.Unify.STBinding
-import AST.Unify.Term
 import Control.Applicative
 import qualified Control.Lens as Lens
 import Control.Lens.Operators
@@ -64,6 +64,7 @@ instance MonadScopeTypes String Typ IntInferB where
     localScopeType v t = local (Lens._1 . Lens.at v ?~ t)
 
 instance MonadUnify IntInferB where
+    type ScopeConstraints IntInferB = QuantificationScope
     scopeConstraints = Lens.view Lens._2
 
 instance MonadInfer IntInferB where
@@ -71,10 +72,12 @@ instance MonadInfer IntInferB where
 
 instance Unify IntInferB Typ where
     binding = intBindingState (Lens._1 . tTyp)
+    liftScopeConstraints _ _ = id
     newQuantifiedVariable _ = increase (Lens._2 . tTyp . Lens._Wrapped) <&> ('t':) . show
 
 instance Unify IntInferB Row where
     binding = intBindingState (Lens._1 . tRow)
+    liftScopeConstraints _ _ = id
     newQuantifiedVariable _ = increase (Lens._2 . tRow . Lens._Wrapped) <&> ('r':) . show
 
 instance Recursive (Unify IntInferB) Typ
@@ -95,6 +98,7 @@ instance MonadScopeTypes String Typ (STInferB s) where
     localScopeType v t = local (Lens._1 . Lens.at v ?~ t)
 
 instance MonadUnify (STInferB s) where
+    type ScopeConstraints (STInferB s) = QuantificationScope
     scopeConstraints = Lens.view Lens._2
 
 instance MonadInfer (STInferB s) where
@@ -102,10 +106,12 @@ instance MonadInfer (STInferB s) where
 
 instance Unify (STInferB s) Typ where
     binding = stBindingState
+    liftScopeConstraints _ _ = id
     newQuantifiedVariable _ = newStQuantified (Lens._3 . tTyp) <&> ('t':) . show
 
 instance Unify (STInferB s) Row where
     binding = stBindingState
+    liftScopeConstraints _ _ = id
     newQuantifiedVariable _ = newStQuantified (Lens._3 . tRow) <&> ('r':) . show
 
 instance Recursive (Unify (STInferB s)) Typ

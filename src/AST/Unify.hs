@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, MultiParamTypeClasses, FlexibleContexts, LambdaCase, ScopedTypeVariables, TypeFamilies, DefaultSignatures, DataKinds #-}
+{-# LANGUAGE NoImplicitPrelude, MultiParamTypeClasses, FlexibleContexts, LambdaCase, ScopedTypeVariables, TypeFamilies, DefaultSignatures, DataKinds, TypeOperators #-}
 
 module AST.Unify
     ( HasQuantifiedVar(..)
@@ -11,7 +11,10 @@ module AST.Unify
     , newUnbound, newTerm, unfreeze
     ) where
 
+import Algebra.PartialOrd (PartialOrd(..))
+import Algebra.Lattice (JoinSemiLattice(..))
 import AST.Class.Children (Children(..))
+import AST.Class.Combinators (And)
 import AST.Class.Recursive (Recursive(..), RecursiveDict, wrapM)
 import AST.Class.ZipMatch (ZipMatch(..), zipMatchWithA)
 import AST.Knot.Pure (Pure(..))
@@ -42,10 +45,21 @@ data Binding m t = Binding
     }
 
 class Monad m => MonadUnify m where
-    scopeConstraints :: m QuantificationScope
+    type ScopeConstraints m
+    scopeConstraints :: m (ScopeConstraints m)
 
-class (Eq (Tree (UVar m) t), ZipMatch t, HasQuantifiedVar t, MonadUnify m) => Unify m t where
+class
+    ( Eq (Tree (UVar m) t)
+    , PartialOrd (TypeConstraints t)
+    , JoinSemiLattice (TypeConstraints t)
+    , ZipMatch t
+    , HasQuantifiedVar t
+    , MonadUnify m
+    ) => Unify m t where
+
     binding :: Binding m t
+
+    liftScopeConstraints :: Proxy m -> Proxy t -> ScopeConstraints m -> TypeConstraints t
 
     newQuantifiedVariable :: Proxy t -> m (QVar t)
     -- Default for type languages which force quantified variables to a specific type or a hole type
@@ -78,11 +92,29 @@ class (Eq (Tree (UVar m) t), ZipMatch t, HasQuantifiedVar t, MonadUnify m) => Un
     default skolemEscape :: Alternative m => Tree (UVar m) t -> m ()
     skolemEscape _ = empty
 
-newUnbound :: Unify m t => m (Tree (UVar m) t)
-newUnbound = scopeConstraints >>= newVar binding . UUnbound
+    updateChildConstraints :: TypeConstraints t -> Tree t (UVar m) -> m (Tree t (UVar m))
+    default updateChildConstraints ::
+        ChildrenConstraint t (Unify m `And` TypeConstraintsAre (TypeConstraints t)) =>
+        TypeConstraints t -> Tree t (UVar m) -> m (Tree t (UVar m))
+    updateChildConstraints level =
+        children
+        (Proxy :: Proxy (Unify m `And` TypeConstraintsAre (TypeConstraints t)))
+        onChild
+        where
+            onChild ::
+                forall child.
+                (Unify m child, TypeConstraintsAre (TypeConstraints t) child) =>
+                Tree (UVar m) child -> m (Tree (UVar m) child)
+            onChild = updateConstraints level
 
-newTerm :: Unify m t => Tree t (UVar m) -> m (Tree (UVar m) t)
-newTerm x = scopeConstraints >>= newVar binding . UTerm . (`UTermBody` x)
+scopeConstraintsForType :: forall m t. Unify m t => Proxy t -> m (TypeConstraints t)
+scopeConstraintsForType p = scopeConstraints <&> liftScopeConstraints (Proxy :: Proxy m) p
+
+newUnbound :: forall m t. Unify m t => m (Tree (UVar m) t)
+newUnbound = scopeConstraintsForType (Proxy :: Proxy t) >>= newVar binding . UUnbound
+
+newTerm :: forall m t. Unify m t => Tree t (UVar m) -> m (Tree (UVar m) t)
+newTerm x = scopeConstraintsForType (Proxy :: Proxy t) >>= newVar binding . UTerm . (`UTermBody` x)
 
 -- | Embed a pure term as a mutable term.
 unfreeze ::
@@ -142,46 +174,34 @@ applyBindings v0 =
     UVar{} -> error "lookup not expected to result in var"
 
 updateConstraints ::
-    forall m t.
-    Recursive (Unify m) t =>
-    QuantificationScope -> Tree (UVar m) t -> m (Tree (UVar m) t)
-updateConstraints level var =
-    withDict (recursive :: RecursiveDict (Unify m) t) $
+    Unify m t =>
+    TypeConstraints t -> Tree (UVar m) t -> m (Tree (UVar m) t)
+updateConstraints newConstraints var =
     do
         (v1, x) <- semiPruneLookup var
         case x of
             UUnbound l
-                | l <= level -> pure ()
-                | otherwise -> bindVar binding v1 (UUnbound level)
+                | newConstraints `leq` l -> pure ()
+                | otherwise -> bindVar binding v1 (UUnbound newConstraints)
             USkolem l
-                | l <= level -> pure ()
+                | newConstraints `leq` l -> pure ()
                 | otherwise -> skolemEscape v1
-            UTerm t -> updateTermConstraints v1 t level
+            UTerm t -> updateTermConstraints v1 t newConstraints
             UResolving t -> () <$ occurs var t
             _ -> error "This shouldn't happen in unification stage"
         pure v1
 
-updateChildConstraints ::
-    forall m t.
-    Recursive (Unify m) t =>
-    QuantificationScope -> Tree t (UVar m) -> m (Tree t (UVar m))
-updateChildConstraints level =
-    withDict (recursive :: RecursiveDict (Unify m) t) $
-    children (Proxy :: Proxy (Recursive (Unify m))) (updateConstraints level)
-
 updateTermConstraints ::
-    forall m t.
-    Recursive (Unify m) t =>
-    Tree (UVar m) t -> Tree (UTermBody (UVar m)) t -> QuantificationScope -> m ()
-updateTermConstraints v t level =
-    withDict (recursive :: RecursiveDict (Unify m) t) $
-    if level >= t ^. uConstraints
+    Unify m t =>
+    Tree (UVar m) t -> Tree (UTermBody (UVar m)) t -> TypeConstraints t -> m ()
+updateTermConstraints v t newConstraints =
+    if newConstraints `leq` (t ^. uConstraints)
         then pure ()
         else
             do
                 bindVar binding v (UResolving (t ^. uBody))
-                updateChildConstraints level (t ^. uBody)
-                    >>= bindVar binding v . UTerm . UTermBody level
+                updateChildConstraints newConstraints (t ^. uBody)
+                    >>= bindVar binding v . UTerm . UTermBody newConstraints
 
 -- Note on usage of `semiPruneLookup`:
 --   Variables are pruned to point to other variables rather than terms,
@@ -198,7 +218,7 @@ unify x0 y0 =
                 bindVar binding y1 (UVar x1)
                 zipMatchWithA (Proxy :: Proxy (Recursive (Unify m))) unify (xt ^. uBody) (yt ^. uBody)
                     & fromMaybe (structureMismatch xt yt)
-                    >>= bindVar binding x1 . UTerm . UTermBody (min (xt ^. uConstraints) (yt ^. uConstraints))
+                    >>= bindVar binding x1 . UTerm . UTermBody (xt ^. uConstraints \/ yt ^. uConstraints)
                 pure x1
     in
     if x0 == y0

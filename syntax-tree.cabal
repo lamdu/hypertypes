@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 406181b2332fbaf9b47ea8a14ebf5d05c0594aadd10f35c619f2239461db2b7e
+-- hash: cdf9215348d6f8c34081ab0250a494b4c4135aa916792dac86cb3c6bc4282aba
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -58,6 +58,7 @@ library
       AST.Unify
       AST.Unify.Generalize
       AST.Unify.IntMapBinding
+      AST.Unify.QuantificationScope
       AST.Unify.STBinding
       AST.Unify.Term
   other-modules:
@@ -73,6 +74,7 @@ library
     , constraints
     , containers
     , deepseq
+    , lattices
     , lens
     , monad-st
     , mtl

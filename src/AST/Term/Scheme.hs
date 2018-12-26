@@ -51,7 +51,7 @@ makeForAlls (Vars xs) =
     where
         makeSkolem x =
             scopeConstraints
-            >>= newVar binding . USkolem
+            >>= newVar binding . USkolem . liftScopeConstraints (Proxy :: Proxy m) (Proxy :: Proxy typ)
             <&> (,) x
 
 instantiateBody ::
