@@ -21,23 +21,24 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base
-- base-compat
-- binary
 - constraints
 - containers
-- deepseq
 - lens
 - monad-st
 - mtl
-- pretty
-- QuickCheck
-- show-combinators
-- template-haskell
-- th-abstraction
 - transformers
 
 library:
   source-dirs: src
+  dependencies:
+  - base-compat
+  - binary
+  - deepseq
+  - pretty
+  - QuickCheck
+  - show-combinators
+  - template-haskell
+  - th-abstraction
   ghc-options:
   - -O2
   - -Wall
@@ -58,6 +59,4 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - containers
-    - lens
     - syntax-tree

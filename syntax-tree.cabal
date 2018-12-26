@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e6946b33a65b4fd53b86705b580a13edfa81855c1564fb50635f6680bc3567c8
+-- hash: 97b58741f5682a04ff1bc96708913704198efafcd67beb4d9ddc6622200e723d
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -92,20 +92,12 @@ test-suite syntax-tree-test
       test
   ghc-options: -Wall -Wcompat -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      QuickCheck
-    , base
-    , base-compat
-    , binary
+      base
     , constraints
     , containers
-    , deepseq
     , lens
     , monad-st
     , mtl
-    , pretty
-    , show-combinators
     , syntax-tree
-    , template-haskell
-    , th-abstraction
     , transformers
   default-language: Haskell2010
