@@ -15,8 +15,6 @@ import Control.Lens (makeLenses, makePrisms)
 
 import Prelude.Compat
 
--- Names modeled after unification-fd
-
 newtype InferLevel = InferLevel Int
     deriving (Eq, Ord, Show)
 makePrisms ''InferLevel
