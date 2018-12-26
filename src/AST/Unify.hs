@@ -141,6 +141,14 @@ updateConstraints level var =
             _ -> error "This shouldn't happen in unification stage"
         pure v1
 
+updateChildConstraints ::
+    forall m t.
+    Recursive (Unify m) t =>
+    QuantificationScope -> Tree t (UVar m) -> m (Tree t (UVar m))
+updateChildConstraints level =
+    withDict (recursive :: RecursiveDict (Unify m) t) $
+    children (Proxy :: Proxy (Recursive (Unify m))) (updateConstraints level)
+
 updateTermConstraints ::
     forall m t.
     Recursive (Unify m) t =>
@@ -152,7 +160,7 @@ updateTermConstraints v t level =
         else
             do
                 bindVar binding v (UResolving (t ^. uBody))
-                children (Proxy :: Proxy (Recursive (Unify m))) (updateConstraints level) (t ^. uBody)
+                updateChildConstraints level (t ^. uBody)
                     >>= bindVar binding v . UTerm . UTermBody level
 
 -- Note on usage of `semiPruneLookup`:
