@@ -2,7 +2,7 @@
 
 module AST.Unify.Term
     ( UTerm(..), _UVar, _UTerm, _UResolving
-    , UTermBody(..), uBody, uLevel
+    , UTermBody(..), uBody, uConstraints
     , QuantificationScope(..), _QuantificationScope
     ) where
 
@@ -17,7 +17,7 @@ newtype QuantificationScope = QuantificationScope Int
 makePrisms ''QuantificationScope
 
 data UTermBody v ast = UTermBody
-    { _uLevel :: QuantificationScope
+    { _uConstraints :: QuantificationScope
     , _uBody :: Tie ast v
     }
 makeLenses ''UTermBody

@@ -155,7 +155,7 @@ updateTermConstraints ::
     Tree (UVar m) t -> Tree (UTermBody (UVar m)) t -> QuantificationScope -> m ()
 updateTermConstraints v t level =
     withDict (recursive :: RecursiveDict (Unify m) t) $
-    if level >= t ^. uLevel
+    if level >= t ^. uConstraints
         then pure ()
         else
             do
@@ -178,7 +178,7 @@ unify x0 y0 =
                 bindVar binding y1 (UVar x1)
                 zipMatchWithA (Proxy :: Proxy (Recursive (Unify m))) unify (xt ^. uBody) (yt ^. uBody)
                     & fromMaybe (structureMismatch xt yt)
-                    >>= bindVar binding x1 . UTerm . UTermBody (min (xt ^. uLevel) (yt ^. uLevel))
+                    >>= bindVar binding x1 . UTerm . UTermBody (min (xt ^. uConstraints) (yt ^. uConstraints))
                 pure x1
     in
     if x0 == y0
