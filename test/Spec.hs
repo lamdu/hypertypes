@@ -102,11 +102,11 @@ execSTInferA (STInferA act) =
         qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
         runReaderT act (mempty, InferLevel 0, qvarGen) & runMaybeT
 
-execIntInferB :: IntInferB String a -> Maybe a
+execIntInferB :: IntInferB a -> Maybe a
 execIntInferB (IntInferB act) =
     runRWST act (mempty, InferLevel 0) emptyIntInferState <&> (^. Lens._1)
 
-execSTInferB :: STInferB String s a -> ST s (Maybe a)
+execSTInferB :: STInferB s a -> ST s (Maybe a)
 execSTInferB (STInferB act) =
     do
         qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
