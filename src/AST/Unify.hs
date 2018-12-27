@@ -73,10 +73,10 @@ class
         Proxy m -> Proxy t -> ALens' (TypeConstraints t) (ScopeConstraints m)
     typeScopeConstraints _ _ = id
 
-    newQuantifiedVariable :: Proxy t -> m (QVar t)
+    newQuantifiedVariable :: Proxy t -> TypeConstraints t -> m (QVar t)
     -- Default for type languages which force quantified variables to a specific type or a hole type
-    default newQuantifiedVariable :: QVar t ~ () => Proxy t -> m (QVar t)
-    newQuantifiedVariable _ = pure ()
+    default newQuantifiedVariable :: QVar t ~ () => Proxy t -> TypeConstraints t -> m (QVar t)
+    newQuantifiedVariable _ _ = pure ()
 
     -- | A unification variable was unified with a type that contains itself,
     -- therefore the type is infinite.
@@ -165,15 +165,15 @@ applyBindings v0 =
     >>=
     \(v1, x) ->
     let result r = r <$ bindVar binding v1 (UResolved r)
-        quantify =
-            newQuantifiedVariable (Proxy :: Proxy t) <&> (quantifiedVar #) <&> Pure
+        quantify c =
+            newQuantifiedVariable (Proxy :: Proxy t) c <&> (quantifiedVar #) <&> Pure
             >>= result
     in
     case x of
     UResolving t -> occurs v1 t
     UResolved t -> pure t
-    UUnbound{} -> quantify
-    USkolem{} -> quantify
+    UUnbound c -> quantify c
+    USkolem c -> quantify c
     UTerm UTermBody{_uBody = t} ->
         case leafExpr of
         Just f -> f t & Pure & pure

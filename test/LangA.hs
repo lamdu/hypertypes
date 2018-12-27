@@ -88,11 +88,11 @@ instance MonadInfer IntInferA where
 
 instance Unify IntInferA Typ where
     binding = intBindingState (Lens._1 . tTyp)
-    newQuantifiedVariable _ = increase (Lens._2 . tTyp . Lens._Wrapped) <&> ('t':) . show
+    newQuantifiedVariable _ _ = increase (Lens._2 . tTyp . Lens._Wrapped) <&> ('t':) . show
 
 instance Unify IntInferA Row where
     binding = intBindingState (Lens._1 . tRow)
-    newQuantifiedVariable _ = increase (Lens._2 . tRow . Lens._Wrapped) <&> ('r':) . show
+    newQuantifiedVariable _ _ = increase (Lens._2 . tRow . Lens._Wrapped) <&> ('r':) . show
 
 instance Recursive (Unify IntInferA) Typ
 instance Recursive (Unify IntInferA) Row
@@ -117,11 +117,11 @@ instance MonadInfer (STInferA s) where
 
 instance Unify (STInferA s) Typ where
     binding = stBindingState
-    newQuantifiedVariable _ = newStQuantified (Lens._3 . tTyp) <&> ('t':) . show
+    newQuantifiedVariable _ _ = newStQuantified (Lens._3 . tTyp) <&> ('t':) . show
 
 instance Unify (STInferA s) Row where
     binding = stBindingState
-    newQuantifiedVariable _ = newStQuantified (Lens._3 . tRow) <&> ('r':) . show
+    newQuantifiedVariable _ _ = newStQuantified (Lens._3 . tRow) <&> ('r':) . show
 
 instance Recursive (Unify (STInferA s)) Typ
 instance Recursive (Unify (STInferA s)) Row
