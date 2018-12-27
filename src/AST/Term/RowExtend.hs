@@ -4,16 +4,18 @@
 {-# LANGUAGE ScopedTypeVariables, FlexibleContexts #-}
 
 module AST.Term.RowExtend
-    ( RowExtend(..), rowKey, rowVal, rowRest
+    ( RowExtend(..), rowFields, rowRest
     , updateRowChildConstraints, rowStructureMismatch, inferRowExtend
     ) where
 
 import Algebra.Lattice (JoinSemiLattice(..))
+import AST.Class.Children.Mono
 import AST.Class.Infer (Infer(..), TypeAST, TypeOf, inferNode, nodeType)
 import AST.Class.Recursive (Recursive(..), RecursiveConstraint, RecursiveDict)
 import AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import AST.Knot (Tree, Tie)
 import AST.Knot.Ann (Ann)
+import AST.Term.Map
 import AST.Unify (Unify(..), UVar, updateConstraints, newVar, unify, scopeConstraintsForType, newTerm)
 import AST.Unify.Term (TypeConstraints, UTermBody(..), UTerm(..))
 import Control.DeepSeq (NFData)
@@ -21,15 +23,16 @@ import Control.Lens (cloneLens, makeLenses)
 import Control.Lens.Operators
 import Data.Binary (Binary)
 import Data.Constraint (Constraint, withDict)
+import Data.Map (keysSet)
 import Data.Proxy (Proxy(..))
+import Data.Set (Set)
 import GHC.Generics (Generic)
 
 import Prelude.Compat
 
 -- | Row-extend primitive for use in both value-level and type-level
 data RowExtend key val rest k = RowExtend
-    { _rowKey :: key
-    , _rowVal :: Tie k val
+    { _rowFields :: TermMap key val k
     , _rowRest :: Tie k rest
     } deriving Generic
 
@@ -49,42 +52,47 @@ instance Deps NFData key val rest k => NFData (RowExtend key val rest k)
 
 type instance TypeConstraints (RowExtend key valTyp rowTyp) = TypeConstraints rowTyp
 
+fieldKeys :: TermMap key t k -> Set key
+fieldKeys x = x ^. _TermMap & keysSet
+
 updateRowChildConstraints ::
     forall m key valTyp rowTyp.
     (Unify m valTyp, Unify m rowTyp) =>
-    (key -> TypeConstraints rowTyp -> TypeConstraints rowTyp) ->
+    (Set key -> TypeConstraints rowTyp -> TypeConstraints rowTyp) ->
     TypeConstraints rowTyp ->
     Tree (RowExtend key valTyp rowTyp) (UVar m) ->
     m (Tree (RowExtend key valTyp rowTyp) (UVar m))
-updateRowChildConstraints forbid c (RowExtend k v r) =
-    RowExtend k
-    <$> updateConstraints valConstraints v
-    <*> updateConstraints (forbid k c) r
+updateRowChildConstraints forbid c (RowExtend fields rest) =
+    RowExtend
+    <$> monoChildren (updateConstraints valConstraints) fields
+    <*> updateConstraints (forbid (fieldKeys fields) c) rest
     where
-        pm = Proxy :: Proxy m
         valConstraints =
             c ^. cloneLens (typeScopeConstraints pm (Proxy :: Proxy rowTyp))
             & liftScopeConstraints pm (Proxy :: Proxy valTyp)
+        pm = Proxy :: Proxy m
 
 rowStructureMismatch ::
     forall m key valTyp rowTyp.
-    ( Recursive (Unify m) rowTyp
+    ( Ord key
+    , Recursive (Unify m) rowTyp
     , Unify m (RowExtend key valTyp rowTyp)
     ) =>
+    (Set key -> TypeConstraints rowTyp -> TypeConstraints rowTyp) ->
     (Tree (RowExtend key valTyp rowTyp) (UVar m) -> m (Tree (UVar m) rowTyp)) ->
     Tree (UTermBody (UVar m)) (RowExtend key valTyp rowTyp) ->
     Tree (UTermBody (UVar m)) (RowExtend key valTyp rowTyp) ->
     m (Tree (RowExtend key valTyp rowTyp) (UVar m))
-rowStructureMismatch mkExtend
-    (UTermBody c0 (RowExtend k0 v0 r0))
-    (UTermBody c1 (RowExtend k1 v1 r1)) =
+rowStructureMismatch forbid mkExtend
+    (UTermBody c0 (RowExtend f0 r0))
+    (UTermBody c1 (RowExtend f1 r1)) =
     withDict (recursive :: RecursiveDict (Unify m) rowTyp) $
     do
-        restVar <- c0 \/ c1 & UUnbound & newVar binding
-        _ <- RowExtend k0 v0 restVar & mkExtend >>= unify r1
-        RowExtend k1 v1 restVar & mkExtend
+        restVar <- c0 \/ c1 & forbid (fieldKeys f0 <> fieldKeys f1) & UUnbound & newVar binding
+        _ <- RowExtend f0 restVar & mkExtend >>= unify r1
+        RowExtend f1 restVar & mkExtend
             >>= unify r0
-            <&> RowExtend k0 v0
+            <&> RowExtend f0
 
 inferRowExtend ::
     forall m val rowTyp key a.
@@ -92,21 +100,21 @@ inferRowExtend ::
     , Unify m rowTyp
     , Unify m (RowExtend key (TypeAST val) rowTyp)
     ) =>
-    (key -> TypeConstraints rowTyp -> TypeConstraints rowTyp) ->
+    (Set key -> TypeConstraints rowTyp -> TypeConstraints rowTyp) ->
     (Tree (UVar m) rowTyp -> m (Tree (UVar m) (TypeAST val))) ->
     Tree (RowExtend key val val) (Ann a) ->
     m
     ( Tree (UVar m) (RowExtend key (TypeAST val) rowTyp)
     , Tree (RowExtend key val val) (Ann (TypeOf m val, a))
     )
-inferRowExtend forbid mkRowTyp (RowExtend k v r) =
+inferRowExtend forbid mkRowTyp (RowExtend fields rest) =
     withDict (recursive :: RecursiveDict (Unify m) (TypeAST val)) $
     do
-        vI <- inferNode v
-        rI <- inferNode r
+        (fieldsT, fieldsI) <- inferTermMap fields
+        restI <- inferNode rest
         restVar <-
             scopeConstraintsForType (Proxy :: Proxy rowTyp)
-            >>= newVar binding . UUnbound . forbid k
-        _ <- mkRowTyp restVar >>= unify (rI ^. nodeType)
-        RowExtend k (vI ^. nodeType) restVar & newTerm
-            <&> (, RowExtend k vI rI)
+            >>= newVar binding . UUnbound . forbid (fieldKeys fields)
+        _ <- mkRowTyp restVar >>= unify (restI ^. nodeType)
+        RowExtend fieldsT restVar & newTerm
+            <&> (, RowExtend fieldsI restI)
