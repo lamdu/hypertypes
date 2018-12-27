@@ -43,8 +43,8 @@ deriving instance SubTreeConstraint Row f Show => Show (Row f)
 instance HasChild Types Typ where getChild = tTyp
 instance HasChild Types Row where getChild = tRow
 
-type instance TypeConstraintsOf Typ = QuantificationScope
-type instance TypeConstraintsOf Row = QuantificationScope
+instance HasTypeConstraints Typ
+instance HasTypeConstraints Row
 
 type IntInferState = (Tree Types IntBindingState, Tree Types (Const Int))
 

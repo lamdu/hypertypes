@@ -17,7 +17,7 @@ import AST.Knot (Tree, Tie)
 import AST.Knot.Ann (Ann)
 import AST.Term.Map (TermMap, _TermMap, inferTermMap)
 import AST.Unify (Unify(..), UVar, updateConstraints, newVar, unify, scopeConstraintsForType, newTerm)
-import AST.Unify.Constraints (TypeConstraints(..), TypeConstraintsOf)
+import AST.Unify.Constraints (TypeConstraints(..), HasTypeConstraints(..))
 import AST.Unify.Term (UTermBody(..), UTerm(..))
 import Control.DeepSeq (NFData)
 import Control.Lens (makeLenses)
@@ -51,19 +51,29 @@ deriving instance Deps Show key val rest k => Show (RowExtend key val rest k)
 instance Deps Binary key val rest k => Binary (RowExtend key val rest k)
 instance Deps NFData key val rest k => NFData (RowExtend key val rest k)
 
-type instance TypeConstraintsOf (RowExtend key valTyp rowTyp) = TypeConstraintsOf rowTyp
+instance
+    (HasTypeConstraints valTyp, HasTypeConstraints rowTyp) =>
+    HasTypeConstraints (RowExtend key valTyp rowTyp) where
+
+    type TypeConstraintsOf (RowExtend key valTyp rowTyp) = TypeConstraintsOf rowTyp
+    propagateConstraints _ c upd (RowExtend fields rest) =
+        RowExtend
+        <$> monoChildren (upd (constraintsFromScope (c ^. constraintsScope))) fields
+        <*> upd c rest
 
 fieldKeys :: TermMap key t k -> Set key
 fieldKeys x = x ^. _TermMap & keysSet
 
 updateRowChildConstraints ::
     forall m key valTyp rowTyp.
-    (Unify m valTyp, Unify m rowTyp) =>
+    Recursive (Unify m) (RowExtend key valTyp rowTyp) =>
     (Set key -> TypeConstraintsOf rowTyp -> TypeConstraintsOf rowTyp) ->
     TypeConstraintsOf rowTyp ->
     Tree (RowExtend key valTyp rowTyp) (UVar m) ->
     m (Tree (RowExtend key valTyp rowTyp) (UVar m))
 updateRowChildConstraints forbid c (RowExtend fields rest) =
+    withDict (recursive :: RecursiveDict (Unify m) (RowExtend key valTyp rowTyp)) $
+    withDict (recursive :: RecursiveDict (Unify m) valTyp) $
     RowExtend
     <$> monoChildren (updateConstraints (constraintsFromScope (c ^. constraintsScope))) fields
     <*> updateConstraints (forbid (fieldKeys fields) c) rest

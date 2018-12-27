@@ -1,6 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude, MultiParamTypeClasses, FlexibleContexts #-}
-{-# LANGUAGE LambdaCase, ScopedTypeVariables, TypeFamilies #-}
-{-# LANGUAGE DefaultSignatures, DataKinds, TypeOperators #-}
+{-# LANGUAGE NoImplicitPrelude, MultiParamTypeClasses, TypeFamilies, LambdaCase #-}
+{-# LANGUAGE DataKinds, ScopedTypeVariables, FlexibleContexts, DefaultSignatures #-}
 
 module AST.Unify
     ( HasQuantifiedVar(..)
@@ -16,13 +15,12 @@ module AST.Unify
 import Algebra.PartialOrd (PartialOrd(..))
 import Algebra.Lattice (JoinSemiLattice(..))
 import AST.Class.Children (Children(..))
-import AST.Class.Combinators (And)
 import AST.Class.Recursive (Recursive(..), RecursiveDict, wrapM)
 import AST.Class.ZipMatch (ZipMatch(..), zipMatchWithA)
 import AST.Knot.Pure (Pure(..))
 import AST.Knot (Knot, Tree)
-import AST.Unify.Constraints
-import AST.Unify.Term
+import AST.Unify.Constraints (TypeConstraints(..), HasTypeConstraints(..), QuantificationScope)
+import AST.Unify.Term (UTerm(..), UTermBody(..), uConstraints, uBody)
 import Control.Applicative (Alternative(..))
 import Control.Lens (Prism')
 import Control.Lens.Operators
@@ -52,8 +50,8 @@ class Monad m => MonadUnify m where
 
 class
     ( Eq (Tree (UVar m) t)
-    , TypeConstraints (TypeConstraintsOf t)
     , ZipMatch t
+    , HasTypeConstraints t
     , HasQuantifiedVar t
     , MonadUnify m
     ) => Unify m t where
@@ -90,21 +88,6 @@ class
     skolemEscape :: Tree (UVar m) t -> m ()
     default skolemEscape :: Alternative m => Tree (UVar m) t -> m ()
     skolemEscape _ = empty
-
-    updateChildConstraints :: TypeConstraintsOf t -> Tree t (UVar m) -> m (Tree t (UVar m))
-    default updateChildConstraints ::
-        ChildrenConstraint t (Unify m `And` TypeConstraintsAre (TypeConstraintsOf t)) =>
-        TypeConstraintsOf t -> Tree t (UVar m) -> m (Tree t (UVar m))
-    updateChildConstraints level =
-        children
-        (Proxy :: Proxy (Unify m `And` TypeConstraintsAre (TypeConstraintsOf t)))
-        onChild
-        where
-            onChild ::
-                forall child.
-                (Unify m child, TypeConstraintsAre (TypeConstraintsOf t) child) =>
-                Tree (UVar m) child -> m (Tree (UVar m) child)
-            onChild = updateConstraints level
 
 scopeConstraintsForType :: forall m t. Unify m t => Proxy t -> m (TypeConstraintsOf t)
 scopeConstraintsForType _ = scopeConstraints <&> constraintsFromScope
@@ -173,9 +156,11 @@ applyBindings v0 =
     UVar{} -> error "lookup not expected to result in var"
 
 updateConstraints ::
-    Unify m t =>
+    forall m t.
+    Recursive (Unify m) t =>
     TypeConstraintsOf t -> Tree (UVar m) t -> m (Tree (UVar m) t)
 updateConstraints newConstraints var =
+    withDict (recursive :: RecursiveDict (Unify m) t) $
     do
         (v1, x) <- semiPruneLookup var
         case x of
@@ -191,15 +176,19 @@ updateConstraints newConstraints var =
         pure v1
 
 updateTermConstraints ::
-    Unify m t =>
+    forall m t.
+    Recursive (Unify m) t =>
     Tree (UVar m) t -> Tree (UTermBody (UVar m)) t -> TypeConstraintsOf t -> m ()
 updateTermConstraints v t newConstraints =
+    withDict (recursive :: RecursiveDict (Unify m) t) $
     if newConstraints `leq` (t ^. uConstraints)
         then pure ()
         else
             do
                 bindVar binding v (UResolving (t ^. uBody))
-                updateChildConstraints newConstraints (t ^. uBody)
+                propagateConstraints (Proxy :: Proxy (Recursive (Unify m))) newConstraints
+                    updateConstraints
+                    (t ^. uBody)
                     >>= bindVar binding v . UTerm . UTermBody newConstraints
 
 -- Note on usage of `semiPruneLookup`:
