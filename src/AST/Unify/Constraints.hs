@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell #-}
 
-module AST.Unify.QuantificationScope
+module AST.Unify.Constraints
     ( QuantificationScope(..), _QuantificationScope
     ) where
 

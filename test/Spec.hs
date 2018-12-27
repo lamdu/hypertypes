@@ -16,7 +16,7 @@ import AST.Term.Scope
 import AST.Term.TypeSig
 import AST.Term.Var
 import AST.Unify
-import AST.Unify.QuantificationScope
+import AST.Unify.Constraints
 import qualified Control.Lens as Lens
 import Control.Lens.Operators
 import Control.Monad.Reader

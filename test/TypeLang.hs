@@ -7,8 +7,8 @@ import AST
 import AST.Class.Infer
 import AST.Class.Instantiate
 import AST.Unify
+import AST.Unify.Constraints
 import AST.Unify.IntMapBinding
-import AST.Unify.QuantificationScope
 import AST.Unify.Term
 import AST.Term.FuncType
 import AST.Term.Scheme

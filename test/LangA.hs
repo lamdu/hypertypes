@@ -18,8 +18,8 @@ import AST.Term.Scheme
 import AST.Term.Scope
 import AST.Term.TypeSig
 import AST.Unify
+import AST.Unify.Constraints
 import AST.Unify.IntMapBinding
-import AST.Unify.QuantificationScope
 import AST.Unify.STBinding
 import Control.Applicative
 import qualified Control.Lens as Lens
