@@ -3,7 +3,7 @@
 
 module AST.Class.Infer
     ( TypeAST, Infer(..), MonadInfer(..)
-    , INode, inferNode, nodeType
+    , TypeOf, INode, inferNode, nodeType
     ) where
 
 import           AST.Class.Recursive

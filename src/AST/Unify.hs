@@ -9,7 +9,7 @@ module AST.Unify
     , MonadUnify(..)
     , Unify(..)
     , applyBindings, unify
-    , semiPruneLookup
+    , updateConstraints, semiPruneLookup, scopeConstraintsForType
     , newUnbound, newTerm, unfreeze
     ) where
 
