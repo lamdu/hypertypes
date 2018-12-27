@@ -23,7 +23,7 @@ import AST.Knot.Pure (Pure(..))
 import AST.Knot (Knot, Tree)
 import AST.Unify.Term
 import Control.Applicative (Alternative(..))
-import Control.Lens (Prism')
+import Control.Lens (ALens', Prism')
 import Control.Lens.Operators
 import Data.Constraint (withDict)
 import Data.Maybe (fromMaybe)
@@ -66,6 +66,12 @@ class
         ScopeConstraints m ~ TypeConstraints t =>
         Proxy m -> Proxy t -> ScopeConstraints m -> TypeConstraints t
     liftScopeConstraints _ _ = id
+
+    typeScopeConstraints :: Proxy m -> Proxy t -> ALens' (TypeConstraints t) (ScopeConstraints m)
+    default typeScopeConstraints ::
+        ScopeConstraints m ~ TypeConstraints t =>
+        Proxy m -> Proxy t -> ALens' (TypeConstraints t) (ScopeConstraints m)
+    typeScopeConstraints _ _ = id
 
     newQuantifiedVariable :: Proxy t -> m (QVar t)
     -- Default for type languages which force quantified variables to a specific type or a hole type
