@@ -1,12 +1,15 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DataKinds, TypeFamilies #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module AST.Unify.Constraints
     ( QuantificationScope(..), _QuantificationScope
     , TypeConstraints(..)
+    , TypeConstraintsOf, TypeConstraintsAre
     ) where
 
 import Algebra.Lattice (JoinSemiLattice(..))
 import Algebra.PartialOrd (PartialOrd(..))
+import AST.Knot (Knot)
 import Control.Lens (Lens', makePrisms)
 
 import Prelude.Compat
@@ -28,3 +31,9 @@ class (PartialOrd c, JoinSemiLattice c) => TypeConstraints c where
 instance TypeConstraints QuantificationScope where
     constraintsFromScope = id
     constraintsScope = id
+
+type family TypeConstraintsOf (ast :: Knot -> *)
+
+class TypeConstraintsOf ast ~ constraints => TypeConstraintsAre constraints ast
+instance TypeConstraintsOf ast ~ constraints => TypeConstraintsAre constraints ast
+

@@ -1,20 +1,14 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DataKinds, TypeFamilies #-}
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell #-}
 
 module AST.Unify.Term
-    ( TypeConstraintsOf, TypeConstraintsAre
-    , UTerm(..), _UVar, _UTerm, _UResolving
+    ( UTerm(..), _UVar, _UTerm, _UResolving
     , UTermBody(..), uBody, uConstraints
     ) where
 
-import AST.Knot
-import AST.Knot.Pure
+import AST.Knot (Tie, RunKnot)
+import AST.Knot.Pure (Pure)
+import AST.Unify.Constraints (TypeConstraintsOf)
 import Control.Lens (makeLenses, makePrisms)
-
-type family TypeConstraintsOf (ast :: Knot -> *)
-
-class TypeConstraintsOf ast ~ constraints => TypeConstraintsAre constraints ast
-instance TypeConstraintsOf ast ~ constraints => TypeConstraintsAre constraints ast
 
 data UTermBody v ast = UTermBody
     { _uConstraints :: TypeConstraintsOf (RunKnot ast)

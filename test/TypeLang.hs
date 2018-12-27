@@ -9,7 +9,6 @@ import AST.Class.Instantiate
 import AST.Unify
 import AST.Unify.Constraints
 import AST.Unify.IntMapBinding
-import AST.Unify.Term
 import AST.Term.FuncType
 import AST.Term.Scheme
 import AST.Term.Scope
