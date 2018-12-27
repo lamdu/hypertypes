@@ -26,8 +26,8 @@ makeChildrenAndZipMatch [''FuncType]
 
 instance RecursiveConstraint (FuncType typ) constraint => Recursive constraint (FuncType typ)
 
-deriving instance Eq   (Tie k typ) => Eq   (FuncType typ k)
-deriving instance Ord  (Tie k typ) => Ord  (FuncType typ k)
+deriving instance Eq  (Tie k typ) => Eq  (FuncType typ k)
+deriving instance Ord (Tie k typ) => Ord (FuncType typ k)
 instance Binary (Tie k typ) => Binary (FuncType typ k)
 instance NFData (Tie k typ) => NFData (FuncType typ k)
 
