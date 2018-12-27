@@ -1,4 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude, TypeFamilies, MultiParamTypeClasses, TypeOperators, DataKinds #-}
+{-# LANGUAGE NoImplicitPrelude, TypeFamilies, MultiParamTypeClasses #-}
+{-# LANGUAGE TypeOperators, DataKinds #-}
 
 -- | `Infer` for indexed AST types (such as `AST.Term.Scope.Scope`)
 

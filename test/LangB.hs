@@ -1,4 +1,6 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeFamilies, FlexibleInstances, UndecidableInstances, TupleSections, ScopedTypeVariables, GeneralizedNewtypeDeriving, DataKinds #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeFamilies #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances, TupleSections #-}
+{-# LANGUAGE ScopedTypeVariables, GeneralizedNewtypeDeriving, DataKinds #-}
 
 module LangB where
 

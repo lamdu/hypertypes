@@ -1,4 +1,5 @@
-{-# LANGUAGE TemplateHaskell, StandaloneDeriving, UndecidableInstances, MultiParamTypeClasses, TypeFamilies, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, StandaloneDeriving, UndecidableInstances #-}
+{-# LANGUAGE MultiParamTypeClasses, TypeFamilies, FlexibleInstances #-}
 
 module TypeLang where
 

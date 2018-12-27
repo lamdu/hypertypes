@@ -1,4 +1,6 @@
-{-# LANGUAGE NoImplicitPrelude, StandaloneDeriving, UndecidableInstances, DeriveGeneric, TemplateHaskell, TypeFamilies, FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE NoImplicitPrelude, StandaloneDeriving, UndecidableInstances #-}
+{-# LANGUAGE DeriveGeneric, TemplateHaskell, TypeFamilies #-}
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 
 module AST.Term.FuncType
     ( FuncType(..), funcIn, funcOut

@@ -1,4 +1,7 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, FlexibleInstances, MultiParamTypeClasses, UndecidableInstances, TupleSections, StandaloneDeriving, DeriveGeneric, ScopedTypeVariables #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies #-}
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
+{-# LANGUAGE TupleSections, StandaloneDeriving, DeriveGeneric #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module AST.Term.Apply
     ( Apply(..), applyFunc, applyArg

@@ -1,5 +1,6 @@
 -- | Functors as Knots
-{-# LANGUAGE TemplateHaskell, TypeFamilies, StandaloneDeriving, UndecidableInstances, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies, StandaloneDeriving #-}
+{-# LANGUAGE UndecidableInstances, GeneralizedNewtypeDeriving #-}
 module AST.Knot.Functor
     ( ToKnot(..), _ToKnot
     ) where

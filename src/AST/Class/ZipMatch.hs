@@ -1,4 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude, RankNTypes, ConstraintKinds, ScopedTypeVariables, DataKinds, TemplateHaskell, TypeFamilies #-}
+{-# LANGUAGE NoImplicitPrelude, RankNTypes, ConstraintKinds, TypeFamilies #-}
+{-# LANGUAGE ScopedTypeVariables, DataKinds, TemplateHaskell #-}
 
 module AST.Class.ZipMatch
     ( ZipMatch(..), Both(..), bothA, bothB

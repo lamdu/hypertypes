@@ -1,4 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DataKinds, TypeFamilies, MultiParamTypeClasses, FlexibleInstances #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DataKinds, TypeFamilies #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module AST.Unify.Term
     ( TypeConstraints, TypeConstraintsAre

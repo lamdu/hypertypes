@@ -1,4 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude, KindSignatures, DataKinds, MultiParamTypeClasses, ConstraintKinds, UndecidableSuperClasses, FlexibleInstances #-}
+{-# LANGUAGE NoImplicitPrelude, KindSignatures, DataKinds, FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses, ConstraintKinds, UndecidableSuperClasses #-}
 
 -- TODO: Document and find good names!
 

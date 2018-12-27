@@ -1,4 +1,6 @@
-{-# LANGUAGE NoImplicitPrelude, RankNTypes, DefaultSignatures, MultiParamTypeClasses, ConstraintKinds, FlexibleInstances, FlexibleContexts, ScopedTypeVariables, UndecidableInstances #-}
+{-# LANGUAGE NoImplicitPrelude, RankNTypes, DefaultSignatures #-}
+{-# LANGUAGE MultiParamTypeClasses, ConstraintKinds, FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts, ScopedTypeVariables, UndecidableInstances #-}
 
 module AST.Class.Recursive
     ( Recursive(..), RecursiveConstraint, RecursiveDict

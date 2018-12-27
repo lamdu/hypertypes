@@ -1,4 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude, DefaultSignatures, DataKinds, TypeFamilies, MultiParamTypeClasses, FlexibleContexts #-}
+{-# LANGUAGE NoImplicitPrelude, DefaultSignatures, DataKinds, TypeFamilies #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleContexts #-}
 
 module AST.Class.Instantiate
     ( Instantiate(..), SchemeType

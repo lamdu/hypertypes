@@ -1,4 +1,7 @@
-{-# LANGUAGE NoImplicitPrelude, StandaloneDeriving, UndecidableInstances, TemplateHaskell, TypeFamilies, LambdaCase, EmptyCase, ScopedTypeVariables, TypeOperators, FlexibleInstances, MultiParamTypeClasses, TupleSections, DataKinds #-}
+{-# LANGUAGE NoImplicitPrelude, StandaloneDeriving, UndecidableInstances #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies, LambdaCase, EmptyCase #-}
+{-# LANGUAGE ScopedTypeVariables, TypeOperators, FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses, TupleSections, DataKinds #-}
 
 module AST.Term.Scope
     ( Scope(..), _Scope

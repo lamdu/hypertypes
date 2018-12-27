@@ -1,4 +1,6 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, ScopedTypeVariables, MultiParamTypeClasses, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies #-}
+{-# LANGUAGE ScopedTypeVariables, MultiParamTypeClasses, FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module AST.Term.Scheme
     ( Scheme(..), sForAlls, sTyp

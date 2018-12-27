@@ -1,4 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude, TypeFamilies, MultiParamTypeClasses, FlexibleContexts, DataKinds #-}
+{-# LANGUAGE NoImplicitPrelude, TypeFamilies, MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleContexts, DataKinds #-}
 
 module AST.Class.Infer
     ( TypeAST, Infer(..), MonadInfer(..)

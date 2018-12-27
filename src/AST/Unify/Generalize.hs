@@ -1,4 +1,6 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, FlexibleContexts, ScopedTypeVariables, FlexibleInstances, MultiParamTypeClasses, LambdaCase #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies #-}
+{-# LANGUAGE FlexibleContexts, ScopedTypeVariables, FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses, LambdaCase #-}
 
 module AST.Unify.Generalize
     ( GTerm, generalize

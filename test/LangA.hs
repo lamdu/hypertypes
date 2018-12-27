@@ -1,4 +1,7 @@
-{-# LANGUAGE StandaloneDeriving, UndecidableInstances, TemplateHaskell, TypeFamilies, LambdaCase, MultiParamTypeClasses, FlexibleInstances, DataKinds, TupleSections, ConstraintKinds, FlexibleContexts, GeneralizedNewtypeDeriving, TypeOperators #-}
+{-# LANGUAGE StandaloneDeriving, UndecidableInstances, TemplateHaskell #-}
+{-# LANGUAGE TypeFamilies, LambdaCase, MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances, DataKinds, TupleSections, ConstraintKinds #-}
+{-# LANGUAGE FlexibleContexts, GeneralizedNewtypeDeriving, TypeOperators #-}
 
 -- | A test language with locally-nameless variable scoping and type signatures with for-alls
 

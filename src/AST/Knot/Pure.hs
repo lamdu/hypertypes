@@ -1,4 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude, StandaloneDeriving, UndecidableInstances, TypeFamilies, TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude, StandaloneDeriving, UndecidableInstances #-}
+{-# LANGUAGE TypeFamilies, TemplateHaskell #-}
 
 module AST.Knot.Pure
     ( Pure(..)

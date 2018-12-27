@@ -1,5 +1,7 @@
-{-# LANGUAGE NoImplicitPrelude, TypeFamilies, ConstraintKinds, UndecidableInstances #-}
+{-# LANGUAGE NoImplicitPrelude, TypeFamilies, ConstraintKinds #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS -fno-warn-orphans #-} -- Arbitrary instances
+
 module AST.Knot.Ann.Arbitrary
     ( ArbitraryWithContext(..)
     , ArbitraryWithContextOf

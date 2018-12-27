@@ -1,4 +1,6 @@
-{-# LANGUAGE NoImplicitPrelude, MultiParamTypeClasses, FlexibleContexts, LambdaCase, ScopedTypeVariables, TypeFamilies, DefaultSignatures, DataKinds, TypeOperators #-}
+{-# LANGUAGE NoImplicitPrelude, MultiParamTypeClasses, FlexibleContexts #-}
+{-# LANGUAGE LambdaCase, ScopedTypeVariables, TypeFamilies #-}
+{-# LANGUAGE DefaultSignatures, DataKinds, TypeOperators #-}
 
 module AST.Unify
     ( HasQuantifiedVar(..)

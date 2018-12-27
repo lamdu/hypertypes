@@ -1,4 +1,6 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric, StandaloneDeriving, ConstraintKinds, UndecidableInstances, TypeFamilies, FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric #-}
+{-# LANGUAGE StandaloneDeriving, ConstraintKinds, UndecidableInstances #-}
+{-# LANGUAGE TypeFamilies, FlexibleInstances, MultiParamTypeClasses #-}
 
 module AST.Term.Let
     ( Let(..), letVar, letEquals, letIn
