@@ -60,6 +60,10 @@ class
     binding :: Binding m t
 
     liftScopeConstraints :: Proxy m -> Proxy t -> ScopeConstraints m -> TypeConstraints t
+    default liftScopeConstraints ::
+        ScopeConstraints m ~ TypeConstraints t =>
+        Proxy m -> Proxy t -> ScopeConstraints m -> TypeConstraints t
+    liftScopeConstraints _ _ = id
 
     newQuantifiedVariable :: Proxy t -> m (QVar t)
     -- Default for type languages which force quantified variables to a specific type or a hole type

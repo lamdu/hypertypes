@@ -72,12 +72,10 @@ instance MonadInfer IntInferB where
 
 instance Unify IntInferB Typ where
     binding = intBindingState (Lens._1 . tTyp)
-    liftScopeConstraints _ _ = id
     newQuantifiedVariable _ = increase (Lens._2 . tTyp . Lens._Wrapped) <&> ('t':) . show
 
 instance Unify IntInferB Row where
     binding = intBindingState (Lens._1 . tRow)
-    liftScopeConstraints _ _ = id
     newQuantifiedVariable _ = increase (Lens._2 . tRow . Lens._Wrapped) <&> ('r':) . show
 
 instance Recursive (Unify IntInferB) Typ
@@ -106,12 +104,10 @@ instance MonadInfer (STInferB s) where
 
 instance Unify (STInferB s) Typ where
     binding = stBindingState
-    liftScopeConstraints _ _ = id
     newQuantifiedVariable _ = newStQuantified (Lens._3 . tTyp) <&> ('t':) . show
 
 instance Unify (STInferB s) Row where
     binding = stBindingState
-    liftScopeConstraints _ _ = id
     newQuantifiedVariable _ = newStQuantified (Lens._3 . tRow) <&> ('r':) . show
 
 instance Recursive (Unify (STInferB s)) Typ
