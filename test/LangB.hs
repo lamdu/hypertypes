@@ -66,7 +66,6 @@ instance MonadScopeTypes String Typ IntInferB where
     localScopeType v t = local (Lens._1 . Lens.at v ?~ t)
 
 instance MonadUnify IntInferB where
-    type ScopeConstraints IntInferB = QuantificationScope
     scopeConstraints = Lens.view Lens._2
 
 instance MonadInfer IntInferB where
@@ -98,7 +97,6 @@ instance MonadScopeTypes String Typ (STInferB s) where
     localScopeType v t = local (Lens._1 . Lens.at v ?~ t)
 
 instance MonadUnify (STInferB s) where
-    type ScopeConstraints (STInferB s) = QuantificationScope
     scopeConstraints = Lens.view Lens._2
 
 instance MonadInfer (STInferB s) where

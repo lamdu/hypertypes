@@ -16,7 +16,7 @@ import           AST.Class.Instantiate (Instantiate(..), SchemeType)
 import           AST.Class.Recursive (Recursive, wrapM)
 import           AST.Knot (Tree, Tie, RunKnot)
 import           AST.Knot.Pure (Pure(..))
-import           AST.Unify (MonadUnify(..), Unify(..), HasQuantifiedVar(..), UVar, newVar, newTerm)
+import           AST.Unify (Unify(..), HasQuantifiedVar(..), UVar, newVar, newTerm, scopeConstraintsForType)
 import           AST.Unify.Term (UTerm(..))
 import           Control.Lens (Lens')
 import qualified Control.Lens as Lens
@@ -52,8 +52,8 @@ makeForAlls (Vars xs) =
     traverse makeSkolem xs <&> ForAlls . Map.fromList
     where
         makeSkolem x =
-            scopeConstraints
-            >>= newVar binding . USkolem . liftScopeConstraints (Proxy :: Proxy m) (Proxy :: Proxy typ)
+            scopeConstraintsForType (Proxy :: Proxy typ)
+            >>= newVar binding . USkolem
             <&> (,) x
 
 instantiateBody ::

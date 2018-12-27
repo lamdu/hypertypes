@@ -15,11 +15,12 @@ import AST.Class.Recursive (Recursive(..), RecursiveConstraint, RecursiveDict)
 import AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import AST.Knot (Tree, Tie)
 import AST.Knot.Ann (Ann)
-import AST.Term.Map
+import AST.Term.Map (TermMap, _TermMap, inferTermMap)
 import AST.Unify (Unify(..), UVar, updateConstraints, newVar, unify, scopeConstraintsForType, newTerm)
-import AST.Unify.Term (TypeConstraints, UTermBody(..), UTerm(..))
+import AST.Unify.Constraints (TypeConstraints(..))
+import AST.Unify.Term (TypeConstraintsOf, UTermBody(..), UTerm(..))
 import Control.DeepSeq (NFData)
-import Control.Lens (cloneLens, makeLenses)
+import Control.Lens (makeLenses)
 import Control.Lens.Operators
 import Data.Binary (Binary)
 import Data.Constraint (Constraint, withDict)
@@ -50,7 +51,7 @@ deriving instance Deps Show key val rest k => Show (RowExtend key val rest k)
 instance Deps Binary key val rest k => Binary (RowExtend key val rest k)
 instance Deps NFData key val rest k => NFData (RowExtend key val rest k)
 
-type instance TypeConstraints (RowExtend key valTyp rowTyp) = TypeConstraints rowTyp
+type instance TypeConstraintsOf (RowExtend key valTyp rowTyp) = TypeConstraintsOf rowTyp
 
 fieldKeys :: TermMap key t k -> Set key
 fieldKeys x = x ^. _TermMap & keysSet
@@ -58,19 +59,14 @@ fieldKeys x = x ^. _TermMap & keysSet
 updateRowChildConstraints ::
     forall m key valTyp rowTyp.
     (Unify m valTyp, Unify m rowTyp) =>
-    (Set key -> TypeConstraints rowTyp -> TypeConstraints rowTyp) ->
-    TypeConstraints rowTyp ->
+    (Set key -> TypeConstraintsOf rowTyp -> TypeConstraintsOf rowTyp) ->
+    TypeConstraintsOf rowTyp ->
     Tree (RowExtend key valTyp rowTyp) (UVar m) ->
     m (Tree (RowExtend key valTyp rowTyp) (UVar m))
 updateRowChildConstraints forbid c (RowExtend fields rest) =
     RowExtend
-    <$> monoChildren (updateConstraints valConstraints) fields
+    <$> monoChildren (updateConstraints (constraintsFromScope (c ^. constraintsScope))) fields
     <*> updateConstraints (forbid (fieldKeys fields) c) rest
-    where
-        valConstraints =
-            c ^. cloneLens (typeScopeConstraints pm (Proxy :: Proxy rowTyp))
-            & liftScopeConstraints pm (Proxy :: Proxy valTyp)
-        pm = Proxy :: Proxy m
 
 rowStructureMismatch ::
     forall m key valTyp rowTyp.
@@ -78,7 +74,7 @@ rowStructureMismatch ::
     , Recursive (Unify m) rowTyp
     , Unify m (RowExtend key valTyp rowTyp)
     ) =>
-    (Set key -> TypeConstraints rowTyp -> TypeConstraints rowTyp) ->
+    (Set key -> TypeConstraintsOf rowTyp -> TypeConstraintsOf rowTyp) ->
     (Tree (RowExtend key valTyp rowTyp) (UVar m) -> m (Tree (UVar m) rowTyp)) ->
     Tree (UTermBody (UVar m)) (RowExtend key valTyp rowTyp) ->
     Tree (UTermBody (UVar m)) (RowExtend key valTyp rowTyp) ->
@@ -99,7 +95,7 @@ inferRowExtend ::
     ( Infer m val
     , Unify m rowTyp
     ) =>
-    (Set key -> TypeConstraints rowTyp -> TypeConstraints rowTyp) ->
+    (Set key -> TypeConstraintsOf rowTyp -> TypeConstraintsOf rowTyp) ->
     (Tree (UVar m) rowTyp -> m (Tree (UVar m) (TypeAST val))) ->
     (Tree (RowExtend key (TypeAST val) rowTyp) (UVar m) -> Tree rowTyp (UVar m)) ->
     Tree (RowExtend key val val) (Ann a) ->

@@ -21,9 +21,10 @@ import AST.Class.Recursive (Recursive(..), RecursiveDict, wrapM)
 import AST.Class.ZipMatch (ZipMatch(..), zipMatchWithA)
 import AST.Knot.Pure (Pure(..))
 import AST.Knot (Knot, Tree)
+import AST.Unify.Constraints
 import AST.Unify.Term
 import Control.Applicative (Alternative(..))
-import Control.Lens (ALens', Prism')
+import Control.Lens (Prism')
 import Control.Lens.Operators
 import Data.Constraint (withDict)
 import Data.Maybe (fromMaybe)
@@ -47,13 +48,11 @@ data Binding m t = Binding
     }
 
 class Monad m => MonadUnify m where
-    type ScopeConstraints m
-    scopeConstraints :: m (ScopeConstraints m)
+    scopeConstraints :: m QuantificationScope
 
 class
     ( Eq (Tree (UVar m) t)
-    , PartialOrd (TypeConstraints t)
-    , JoinSemiLattice (TypeConstraints t)
+    , TypeConstraints (TypeConstraintsOf t)
     , ZipMatch t
     , HasQuantifiedVar t
     , MonadUnify m
@@ -61,21 +60,9 @@ class
 
     binding :: Binding m t
 
-    liftScopeConstraints :: Proxy m -> Proxy t -> ScopeConstraints m -> TypeConstraints t
-    default liftScopeConstraints ::
-        ScopeConstraints m ~ TypeConstraints t =>
-        Proxy m -> Proxy t -> ScopeConstraints m -> TypeConstraints t
-    liftScopeConstraints _ _ = id
-
-    typeScopeConstraints :: Proxy m -> Proxy t -> ALens' (TypeConstraints t) (ScopeConstraints m)
-    default typeScopeConstraints ::
-        ScopeConstraints m ~ TypeConstraints t =>
-        Proxy m -> Proxy t -> ALens' (TypeConstraints t) (ScopeConstraints m)
-    typeScopeConstraints _ _ = id
-
-    newQuantifiedVariable :: Proxy t -> TypeConstraints t -> m (QVar t)
+    newQuantifiedVariable :: Proxy t -> TypeConstraintsOf t -> m (QVar t)
     -- Default for type languages which force quantified variables to a specific type or a hole type
-    default newQuantifiedVariable :: QVar t ~ () => Proxy t -> TypeConstraints t -> m (QVar t)
+    default newQuantifiedVariable :: QVar t ~ () => Proxy t -> TypeConstraintsOf t -> m (QVar t)
     newQuantifiedVariable _ _ = pure ()
 
     -- | A unification variable was unified with a type that contains itself,
@@ -104,23 +91,23 @@ class
     default skolemEscape :: Alternative m => Tree (UVar m) t -> m ()
     skolemEscape _ = empty
 
-    updateChildConstraints :: TypeConstraints t -> Tree t (UVar m) -> m (Tree t (UVar m))
+    updateChildConstraints :: TypeConstraintsOf t -> Tree t (UVar m) -> m (Tree t (UVar m))
     default updateChildConstraints ::
-        ChildrenConstraint t (Unify m `And` TypeConstraintsAre (TypeConstraints t)) =>
-        TypeConstraints t -> Tree t (UVar m) -> m (Tree t (UVar m))
+        ChildrenConstraint t (Unify m `And` TypeConstraintsAre (TypeConstraintsOf t)) =>
+        TypeConstraintsOf t -> Tree t (UVar m) -> m (Tree t (UVar m))
     updateChildConstraints level =
         children
-        (Proxy :: Proxy (Unify m `And` TypeConstraintsAre (TypeConstraints t)))
+        (Proxy :: Proxy (Unify m `And` TypeConstraintsAre (TypeConstraintsOf t)))
         onChild
         where
             onChild ::
                 forall child.
-                (Unify m child, TypeConstraintsAre (TypeConstraints t) child) =>
+                (Unify m child, TypeConstraintsAre (TypeConstraintsOf t) child) =>
                 Tree (UVar m) child -> m (Tree (UVar m) child)
             onChild = updateConstraints level
 
-scopeConstraintsForType :: forall m t. Unify m t => Proxy t -> m (TypeConstraints t)
-scopeConstraintsForType p = scopeConstraints <&> liftScopeConstraints (Proxy :: Proxy m) p
+scopeConstraintsForType :: forall m t. Unify m t => Proxy t -> m (TypeConstraintsOf t)
+scopeConstraintsForType _ = scopeConstraints <&> constraintsFromScope
 
 newUnbound :: forall m t. Unify m t => m (Tree (UVar m) t)
 newUnbound = scopeConstraintsForType (Proxy :: Proxy t) >>= newVar binding . UUnbound
@@ -187,7 +174,7 @@ applyBindings v0 =
 
 updateConstraints ::
     Unify m t =>
-    TypeConstraints t -> Tree (UVar m) t -> m (Tree (UVar m) t)
+    TypeConstraintsOf t -> Tree (UVar m) t -> m (Tree (UVar m) t)
 updateConstraints newConstraints var =
     do
         (v1, x) <- semiPruneLookup var
@@ -205,7 +192,7 @@ updateConstraints newConstraints var =
 
 updateTermConstraints ::
     Unify m t =>
-    Tree (UVar m) t -> Tree (UTermBody (UVar m)) t -> TypeConstraints t -> m ()
+    Tree (UVar m) t -> Tree (UTermBody (UVar m)) t -> TypeConstraintsOf t -> m ()
 updateTermConstraints v t newConstraints =
     if newConstraints `leq` (t ^. uConstraints)
         then pure ()

@@ -2,11 +2,12 @@
 
 module AST.Unify.Constraints
     ( QuantificationScope(..), _QuantificationScope
+    , TypeConstraints(..)
     ) where
 
 import Algebra.Lattice (JoinSemiLattice(..))
 import Algebra.PartialOrd (PartialOrd(..))
-import Control.Lens (makePrisms)
+import Control.Lens (Lens', makePrisms)
 
 import Prelude.Compat
 
@@ -19,3 +20,11 @@ instance PartialOrd QuantificationScope where
 
 instance JoinSemiLattice QuantificationScope where
     QuantificationScope x \/ QuantificationScope y = QuantificationScope (min x y)
+
+class (PartialOrd c, JoinSemiLattice c) => TypeConstraints c where
+    constraintsFromScope :: QuantificationScope -> c
+    constraintsScope :: Lens' c QuantificationScope
+
+instance TypeConstraints QuantificationScope where
+    constraintsFromScope = id
+    constraintsScope = id

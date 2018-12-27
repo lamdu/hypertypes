@@ -13,6 +13,7 @@ import           AST.Class.Instantiate
 import           AST.Class.Recursive
 import           AST.Knot
 import           AST.Unify
+import           AST.Unify.Constraints
 import           AST.Unify.Term
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -33,10 +34,10 @@ Lens.makePrisms ''GTerm
 generalize ::
     forall m t.
     (MonadInfer m, Recursive (Unify m) t) =>
-    ScopeConstraints m -> Tree (UVar m) t -> m (Tree (GTerm m) t)
+    QuantificationScope -> Tree (UVar m) t -> m (Tree (GTerm m) t)
 generalize s v0 =
     withDict (recursive :: RecursiveDict (Unify m) t) $
-    let c = liftScopeConstraints (Proxy :: Proxy m) (Proxy :: Proxy t) s
+    let c = constraintsFromScope s :: TypeConstraintsOf t
     in
     do
         (v1, u) <- semiPruneLookup v0
