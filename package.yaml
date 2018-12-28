@@ -19,6 +19,7 @@ dependencies:
 - base
 - constraints
 - containers
+- lattices
 - lens
 - monad-st
 - mtl
@@ -30,7 +31,6 @@ library:
   - base-compat
   - binary
   - deepseq
-  - lattices
   - pretty
   - QuickCheck
   - show-combinators

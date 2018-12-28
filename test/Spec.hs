@@ -11,6 +11,8 @@ import AST.Term.Apply
 import AST.Term.FuncType
 import AST.Term.Lam
 import AST.Term.Let
+import AST.Term.Map
+import AST.Term.RowExtend
 import AST.Term.Scheme
 import AST.Term.Scope
 import AST.Term.TypeSig
@@ -95,6 +97,30 @@ shouldNotGen =
     Var "y" & BVar & Pure
     & Let "y" x & BLet & Pure
 
+record :: Tree Pure LangB
+record =
+    -- {a: 5}
+    BRecExtend RowExtend
+    { _rowFields = TermMap (mempty & Lens.at "a" ?~ Pure (BLit 5))
+    , _rowRest = Pure BRecEmpty
+    } & Pure
+
+extendLit :: Tree Pure LangB
+extendLit =
+    -- {a: 5 | 7}
+    BRecExtend RowExtend
+    { _rowFields = TermMap (mempty & Lens.at "a" ?~ Pure (BLit 5))
+    , _rowRest = BLit 7 & Pure
+    } & Pure
+
+extendDup :: Tree Pure LangB
+extendDup =
+    -- {a: 7 | a : 5}
+    BRecExtend RowExtend
+    { _rowFields = TermMap (mempty & Lens.at "a" ?~ Pure (BLit 5))
+    , _rowRest = record
+    } & Pure
+
 inferExpr ::
     (Infer m t, Recursive Children t) =>
     Tree Pure t ->
@@ -145,3 +171,12 @@ main =
         putStrLn ""
         print (execIntInferB (inferExpr shouldNotGen))
         print (runST (execSTInferB (inferExpr shouldNotGen)))
+        putStrLn ""
+        print (execIntInferB (inferExpr record))
+        print (runST (execSTInferB (inferExpr record)))
+        putStrLn ""
+        print (execIntInferB (inferExpr extendLit))
+        print (runST (execSTInferB (inferExpr extendLit)))
+        putStrLn ""
+        print (execIntInferB (inferExpr extendDup))
+        print (runST (execSTInferB (inferExpr extendDup)))

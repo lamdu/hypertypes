@@ -43,6 +43,7 @@ class
 
     type TypeConstraintsOf ast
     type TypeConstraintsOf ast = QuantificationScope
+
     propagateConstraints ::
         (Applicative m, ChildrenWithConstraint ast constraint) =>
         Proxy constraint ->
