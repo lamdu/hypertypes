@@ -89,6 +89,10 @@ class
     default skolemEscape :: Alternative m => Tree (UVar m) t -> m ()
     skolemEscape _ = empty
 
+    constraintsMismatch :: Tree t (UVar m) -> TypeConstraintsOf t -> m (Tree t (UVar m))
+    default constraintsMismatch :: Alternative m => Tree t (UVar m) -> TypeConstraintsOf t -> m (Tree t (UVar m))
+    constraintsMismatch _ _ = empty
+
 scopeConstraintsForType :: forall m t. Unify m t => Proxy t -> m (TypeConstraintsOf t)
 scopeConstraintsForType _ = scopeConstraints <&> constraintsFromScope
 
@@ -187,6 +191,7 @@ updateTermConstraints v t newConstraints =
             do
                 bindVar binding v (UResolving (t ^. uBody))
                 propagateConstraints (Proxy :: Proxy (Recursive (Unify m))) newConstraints
+                    (constraintsMismatch (t ^. uBody))
                     updateConstraints
                     (t ^. uBody)
                     >>= bindVar binding v . UTerm . UTermBody newConstraints

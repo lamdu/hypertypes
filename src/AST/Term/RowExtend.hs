@@ -8,7 +8,7 @@ module AST.Term.RowExtend
     , propagateRowConstraints, rowStructureMismatch, inferRowExtend
     ) where
 
-import Algebra.Lattice (JoinSemiLattice(..))
+import Algebra.Lattice (JoinSemiLattice(..), MeetSemiLattice(..))
 import AST.Class.Children.Mono
 import AST.Class.Infer (Infer(..), TypeAST, TypeOf, inferNode, nodeType)
 import AST.Class.Recursive (Recursive(..), RecursiveConstraint, RecursiveDict)
@@ -20,13 +20,13 @@ import AST.Unify (Unify(..), UVar, newVar, unify, scopeConstraintsForType, newTe
 import AST.Unify.Constraints (TypeConstraints(..), HasTypeConstraints(..))
 import AST.Unify.Term (UTermBody(..), UTerm(..))
 import Control.DeepSeq (NFData)
-import Control.Lens (makeLenses)
+import Control.Lens (ALens', makeLenses, cloneLens)
 import Control.Lens.Operators
 import Data.Binary (Binary)
 import Data.Constraint (Constraint, withDict)
 import Data.Map (keysSet)
 import Data.Proxy (Proxy(..))
-import Data.Set (Set)
+import Data.Set (Set, disjoint)
 import GHC.Generics (Generic)
 
 import Prelude.Compat
@@ -56,7 +56,7 @@ instance
     HasTypeConstraints (RowExtend key valTyp rowTyp) where
 
     type TypeConstraintsOf (RowExtend key valTyp rowTyp) = TypeConstraintsOf rowTyp
-    propagateConstraints _ c upd (RowExtend fields rest) =
+    propagateConstraints _ c _ upd (RowExtend fields rest) =
         RowExtend
         <$> monoChildren (upd (constraintsFromScope (c ^. constraintsScope))) fields
         <*> upd c rest
@@ -68,17 +68,26 @@ propagateRowConstraints ::
     ( Applicative m
     , constraint valTyp, constraint rowTyp
     , HasTypeConstraints valTyp, HasTypeConstraints rowTyp
+    , Ord key
     ) =>
     Proxy constraint ->
-    (Set key -> TypeConstraintsOf rowTyp -> TypeConstraintsOf rowTyp) ->
+    ALens' (TypeConstraintsOf rowTyp) (Set key) ->
     TypeConstraintsOf rowTyp ->
+    (Set key -> m r) ->
     (forall child. constraint child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
+    (Tree (RowExtend key valTyp rowTyp) q -> r) ->
     Tree (RowExtend key valTyp rowTyp) p ->
-    m (Tree (RowExtend key valTyp rowTyp) q)
-propagateRowConstraints _ forbid c update (RowExtend fields rest) =
-    RowExtend
-    <$> monoChildren (update (constraintsFromScope (c ^. constraintsScope))) fields
-    <*> update (forbid (fieldKeys fields) c) rest
+    m r
+propagateRowConstraints _ forbiddenFields c err update cons (RowExtend fields rest)
+    | disjoint rowKeys forbiddenKeys =
+        RowExtend
+        <$> monoChildren (update (constraintsFromScope (c ^. constraintsScope))) fields
+        <*> update (c & cloneLens forbiddenFields <>~ rowKeys) rest
+        <&> cons
+    | otherwise = rowKeys /\ forbiddenKeys & err
+    where
+        rowKeys = fieldKeys fields
+        forbiddenKeys = c ^. cloneLens forbiddenFields
 
 rowStructureMismatch ::
     forall m key valTyp rowTyp.

@@ -29,6 +29,12 @@ instance PartialOrd QuantificationScope where
 instance JoinSemiLattice QuantificationScope where
     QuantificationScope x \/ QuantificationScope y = QuantificationScope (min x y)
 
+instance Semigroup QuantificationScope where
+    (<>) = (\/)
+
+instance Monoid QuantificationScope where
+    mempty = QuantificationScope maxBound
+
 class (PartialOrd c, JoinSemiLattice c) => TypeConstraints c where
     constraintsFromScope :: QuantificationScope -> c
     constraintsScope :: Lens' c QuantificationScope
@@ -48,6 +54,7 @@ class
         (Applicative m, ChildrenWithConstraint ast constraint) =>
         Proxy constraint ->
         TypeConstraintsOf ast ->
+        (TypeConstraintsOf ast -> m (Tree ast q)) ->
         (forall child. constraint child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
         Tree ast p -> m (Tree ast q)
     default propagateConstraints ::
@@ -58,9 +65,10 @@ class
         ) =>
         Proxy constraint ->
         TypeConstraintsOf ast ->
+        (TypeConstraintsOf ast -> m (Tree ast q)) ->
         (forall child. constraint child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
         Tree ast p -> m (Tree ast q)
-    propagateConstraints _ constraints update =
+    propagateConstraints _ constraints _ update =
         children (Proxy :: Proxy (constraint `And` HasTypeConstraints))
         (update (constraintsFromScope constraints))
 

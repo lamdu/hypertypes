@@ -117,7 +117,15 @@ extendDup :: Tree Pure LangB
 extendDup =
     -- {a: 7 | a : 5}
     BRecExtend RowExtend
-    { _rowFields = TermMap (mempty & Lens.at "a" ?~ Pure (BLit 5))
+    { _rowFields = TermMap (mempty & Lens.at "a" ?~ Pure (BLit 7))
+    , _rowRest = record
+    } & Pure
+
+extendGood :: Tree Pure LangB
+extendGood =
+    -- {b: 7 | a : 5}
+    BRecExtend RowExtend
+    { _rowFields = TermMap (mempty & Lens.at "b" ?~ Pure (BLit 7))
     , _rowRest = record
     } & Pure
 
@@ -180,3 +188,6 @@ main =
         putStrLn ""
         print (execIntInferB (inferExpr extendDup))
         print (runST (execSTInferB (inferExpr extendDup)))
+        putStrLn ""
+        print (execIntInferB (inferExpr extendGood))
+        print (runST (execSTInferB (inferExpr extendGood)))
