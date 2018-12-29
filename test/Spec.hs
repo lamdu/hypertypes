@@ -11,7 +11,6 @@ import AST.Term.Apply
 import AST.Term.FuncType
 import AST.Term.Lam
 import AST.Term.Let
-import AST.Term.Map
 import AST.Term.RowExtend
 import AST.Term.Scheme
 import AST.Term.Scope
@@ -100,34 +99,24 @@ shouldNotGen =
 record :: Tree Pure LangB
 record =
     -- {a: 5}
-    BRecExtend RowExtend
-    { _rowFields = TermMap (mempty & Lens.at "a" ?~ Pure (BLit 5))
-    , _rowRest = Pure BRecEmpty
-    } & Pure
+    Pure BRecEmpty
+    & RowExtend "a" (Pure (BLit 5)) & BRecExtend & Pure
 
 extendLit :: Tree Pure LangB
 extendLit =
     -- {a: 5 | 7}
-    BRecExtend RowExtend
-    { _rowFields = TermMap (mempty & Lens.at "a" ?~ Pure (BLit 5))
-    , _rowRest = BLit 7 & Pure
-    } & Pure
+    BLit 7 & Pure
+    & RowExtend "a" (Pure (BLit 5)) & BRecExtend & Pure
 
 extendDup :: Tree Pure LangB
 extendDup =
     -- {a: 7 | a : 5}
-    BRecExtend RowExtend
-    { _rowFields = TermMap (mempty & Lens.at "a" ?~ Pure (BLit 7))
-    , _rowRest = record
-    } & Pure
+    RowExtend "a" (Pure (BLit 7)) record & BRecExtend & Pure
 
 extendGood :: Tree Pure LangB
 extendGood =
     -- {b: 7 | a : 5}
-    BRecExtend RowExtend
-    { _rowFields = TermMap (mempty & Lens.at "b" ?~ Pure (BLit 7))
-    , _rowRest = record
-    } & Pure
+    RowExtend "b" (Pure (BLit 7)) record & BRecExtend & Pure
 
 inferExpr ::
     (Infer m t, Recursive Children t) =>

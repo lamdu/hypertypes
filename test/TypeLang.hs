@@ -70,7 +70,7 @@ instance HasTypeConstraints Row where
     propagateConstraints _ _ _ _ REmpty = pure REmpty
     propagateConstraints _ _ _ _ (RVar x) = RVar x & pure
     propagateConstraints p c e u (RExtend x) =
-        propagateRowConstraints p rForbiddenFields c (e . (`RowConstraints` mempty)) u RExtend x
+        propagateRowConstraints p rForbiddenFields c (e . (`RowConstraints` mempty) . singleton) u RExtend x
 
 type IntInferState = (Tree Types IntBindingState, Tree Types (Const Int))
 

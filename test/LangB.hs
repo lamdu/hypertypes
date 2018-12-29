@@ -52,7 +52,7 @@ instance (MonadInfer m, MonadScopeTypes [Char] Typ m, Recursive (Unify m) Typ) =
         withDict (recursive :: RecursiveDict (Unify m) Typ) $
         withDict (recursive :: RecursiveDict (Unify m) Row) $
         do
-            (xT, xI) <- inferRowExtend (rForbiddenFields <>~) TRec RExtend x
+            (xT, xI) <- inferRowExtend rForbiddenFields TRec RExtend x
             TRec xT & newTerm <&> (, BRecExtend xI)
     infer (BLit x) =
         withDict (recursive :: RecursiveDict (Unify m) Typ) $

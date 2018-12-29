@@ -4,15 +4,10 @@
 
 module AST.Term.Map
     ( TermMap(..), _TermMap
-    , inferTermMap
     ) where
 
 import           AST (Tie, Recursive(..), RecursiveConstraint, makeChildrenRecursive)
-import           AST.Class.Infer
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
-import           AST.Knot
-import           AST.Knot.Ann
-import           AST.Unify
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -51,18 +46,3 @@ zipMatchList ((k0, v0) : xs) ((k1, v1) : ys)
     | k0 == k1 =
         zipMatchList xs ys <&> ((k0, (v0, v1)) :)
 zipMatchList _ _ = Nothing
-
-inferTermMap ::
-    Infer m val =>
-    Tree (TermMap key val) (Ann a) ->
-    m
-    ( Tree (TermMap key (TypeAST val)) (UVar m)
-    , Tree (TermMap key val) (Ann (TypeOf m val, a))
-    )
-inferTermMap (TermMap x) =
-    traverse inferNode x
-    <&>
-    \xI ->
-    ( xI <&> (^. nodeType) & TermMap
-    , TermMap xI
-    )
