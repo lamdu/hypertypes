@@ -25,6 +25,7 @@ import Data.Constraint (Constraint, withDict)
 import Data.Proxy (Proxy(..))
 import Data.Set (Set)
 import GHC.Generics (Generic)
+import Text.Show.Combinators ((@|), showCon)
 
 import Prelude.Compat
 
@@ -45,9 +46,11 @@ instance
 type Deps c key val rest k = ((c key, c (Tie k val), c (Tie k rest)) :: Constraint)
 deriving instance Deps Eq   key val rest k => Eq   (RowExtend key val rest k)
 deriving instance Deps Ord  key val rest k => Ord  (RowExtend key val rest k)
-deriving instance Deps Show key val rest k => Show (RowExtend key val rest k)
 instance Deps Binary key val rest k => Binary (RowExtend key val rest k)
 instance Deps NFData key val rest k => NFData (RowExtend key val rest k)
+
+instance Deps Show key val rest k => Show (RowExtend key val rest k) where
+    showsPrec p (RowExtend k v r) = (showCon "RowExtend" @| k @| v @| r) p
 
 instance
     (HasTypeConstraints valTyp, HasTypeConstraints rowTyp) =>
