@@ -36,8 +36,6 @@ generalize ::
     QuantificationScope -> Tree (UVar m) t -> m (Tree (GTerm m) t)
 generalize s v0 =
     withDict (recursive :: RecursiveDict (Unify m) t) $
-    let c = constraintsFromScope s :: TypeConstraintsOf t
-    in
     do
         (v1, u) <- semiPruneLookup v0
         case u of
@@ -58,6 +56,7 @@ generalize s v0 =
                         | otherwise = GBody b
             _ -> pure (GMono v1)
     where
+        c = constraintsFromScope s :: TypeConstraintsOf t
         p = Proxy :: Proxy (Recursive (Unify m))
 
 type instance SchemeType (Tree (GTerm v) t) = t
