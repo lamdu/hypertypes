@@ -81,10 +81,13 @@ lam v mk = Var v & BVar & Pure & mk & Lam v & BLam & Pure
 ($$) :: Tree Pure LangB -> Tree Pure LangB -> Tree Pure LangB
 x $$ y = Apply x y & BApp & Pure
 
+bLit :: Int -> Tree Pure LangB
+bLit = Pure . BLit
+
 letGen :: Tree Pure LangB
 letGen =
     -- let id x = x in id id 5
-    (i $$ i) $$ Pure (BLit 5)
+    (i $$ i) $$ bLit 5
     & Let "id" (lam "x" id) & BLet & Pure
     where
         i = Var "id" & BVar & Pure
@@ -96,27 +99,31 @@ shouldNotGen =
     Var "y" & BVar & Pure
     & Let "y" x & BLet & Pure
 
+recExtend :: [(String, Tree Pure LangB)] -> Tree Pure LangB -> Tree Pure LangB
+recExtend fields rest = foldr (fmap (Pure . BRecExtend) . uncurry RowExtend) rest fields
+
+closedRec :: [(String, Tree Pure LangB)] -> Tree Pure LangB
+closedRec fields = recExtend fields (Pure BRecEmpty)
+
 record :: Tree Pure LangB
 record =
     -- {a: 5}
-    Pure BRecEmpty
-    & RowExtend "a" (Pure (BLit 5)) & BRecExtend & Pure
+    closedRec [("a", bLit 5)]
 
 extendLit :: Tree Pure LangB
 extendLit =
     -- {a: 5 | 7}
-    BLit 7 & Pure
-    & RowExtend "a" (Pure (BLit 5)) & BRecExtend & Pure
+    recExtend [("a", bLit 5)] (bLit 7)
 
 extendDup :: Tree Pure LangB
 extendDup =
     -- {a: 7 | a : 5}
-    RowExtend "a" (Pure (BLit 7)) record & BRecExtend & Pure
+    recExtend [("a", bLit 7)] record
 
 extendGood :: Tree Pure LangB
 extendGood =
     -- {b: 7 | a : 5}
-    RowExtend "b" (Pure (BLit 7)) record & BRecExtend & Pure
+    recExtend [("b", bLit 7)] record
 
 inferExpr ::
     (Infer m t, Recursive Children t) =>
