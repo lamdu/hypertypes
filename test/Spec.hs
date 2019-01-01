@@ -44,8 +44,9 @@ lamXYx5 =
     -- \x y -> x (5 :: Int)
     Pure . ALam . scope $ \x ->
     Pure . ALam . scope $ \_y ->
-    ALit 5 & Pure
-    & TypeSig (uniType (Pure TInt)) & ATypeSig & Pure
+    Pure TInt & uniType
+    & TypeSig (Pure (ALit 5))
+    & ATypeSig & Pure
     & Apply (var x) & AApp & Pure
 
 infinite :: Tree Pure (LangA EmptyScope)
@@ -58,22 +59,17 @@ skolem :: Tree Pure (LangA EmptyScope)
 skolem =
     -- \x -> (x :: forall a. a)
     Pure . ALam . scope $ \x ->
-    var x
-    & TypeSig (Pure
-        (Scheme
-            (Types (Vars ["a"]) (Vars []))
-            (Pure (TVar "a"))
-        )) & ATypeSig & Pure
+    TVar "a" & Pure
+    & Scheme (Types (Vars ["a"]) (Vars [])) & Pure
+    & TypeSig (var x) & ATypeSig & Pure
 
 validForAll :: Tree Pure (LangA EmptyScope)
 validForAll =
     -- (\x -> x) :: forall a. a
-    scope var & ALam & Pure
-    & TypeSig
-        (Pure (Scheme
-            (Types (Vars ["a"]) (Vars []))
-            (Pure (TFun (FuncType (Pure (TVar "a")) (Pure (TVar "a")))))
-        ))
+    FuncType (Pure (TVar "a")) (Pure (TVar "a"))
+    & TFun & Pure
+    & Scheme (Types (Vars ["a"]) (Vars [])) & Pure
+    & TypeSig (scope var & ALam & Pure)
     & ATypeSig & Pure
 
 lam :: String -> (Tree Pure LangB -> Tree Pure LangB) -> Tree Pure LangB

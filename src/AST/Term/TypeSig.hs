@@ -22,8 +22,8 @@ import GHC.Generics (Generic)
 import Prelude.Compat
 
 data TypeSig typ term k = TypeSig
-    { _tsType :: typ
-    , _tsTerm :: Tie k term
+    { _tsTerm :: Tie k term
+    , _tsType :: typ
     } deriving Generic
 makeLenses ''TypeSig
 
@@ -49,10 +49,10 @@ instance
     ) =>
     Infer m (TypeSig (Tree Pure scheme) term) where
 
-    infer (TypeSig s x) =
+    infer (TypeSig x s) =
         do
             r <- inferNode x
             instantiate s
                 >>= unify (r ^. nodeType)
-                <&> (, TypeSig s r)
+                <&> (, TypeSig r s)
         & localLevel
