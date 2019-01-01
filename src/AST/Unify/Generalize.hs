@@ -37,7 +37,7 @@ generalize v0 =
     withDict (recursive :: RecursiveDict (Unify m) t) $
     do
         (v1, u) <- semiPruneLookup v0
-        c <- scopeConstraintsForType (Proxy :: Proxy t)
+        c <- scopeConstraints (Proxy :: Proxy t)
         case u of
             UUnbound l | l `leq` c ->
                 GPoly v1 <$

@@ -73,21 +73,22 @@ instance PartialOrd RConstraints where
 instance JoinSemiLattice RConstraints where
     RowConstraints f0 s0 \/ RowConstraints f1 s1 = RowConstraints (f0 \/ f1) (s0 \/ s1)
 
-instance TypeConstraints RConstraints where
-    constraintsFromScope = RowConstraints mempty
-    constraintsScope = rScope
-
 instance RowConstraints RConstraints where
     type RowConstraintsKey RConstraints = String
     forbidden = rForbiddenFields
 
-instance HasTypeConstraints Typ
+instance HasTypeConstraints Typ where
+    applyConstraints _ _ _ _ TInt = pure TInt
+    applyConstraints _ _ _ _ (TVar v) = TVar v & pure
+    applyConstraints _ c _ u (TFun f) = monoChildren (u c) f <&> TFun
+    applyConstraints _ c _ u (TRec r) = u (RowConstraints mempty c) r <&> TRec
+
 instance HasTypeConstraints Row where
     type TypeConstraintsOf Row = RConstraints
     applyConstraints _ _ _ _ REmpty = pure REmpty
     applyConstraints _ _ _ _ (RVar x) = RVar x & pure
     applyConstraints p c e u (RExtend x) =
-        applyRowConstraints p c (e . (`RowConstraints` mempty) . singleton) u RExtend x
+        applyRowConstraints p c (^. rScope) (e . (`RowConstraints` mempty) . singleton) u RExtend x
 
 type IntInferState = (Tree Types IntBindingState, Tree Types (Const Int))
 

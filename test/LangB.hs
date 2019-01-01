@@ -74,18 +74,17 @@ instance MonadScopeTypes String Typ IntInferB where
     scopeType v = Lens.view (Lens._1 . Lens.at v) >>= fromMaybe (error "name error")
     localScopeType v t = local (Lens._1 . Lens.at v ?~ t)
 
-instance MonadUnify IntInferB where
-    scopeConstraints = Lens.view Lens._2
-
 instance MonadLevel IntInferB where
     localLevel = local (Lens._2 . _QuantificationScope +~ 1)
 
 instance Unify IntInferB Typ where
     binding = intBindingState (Lens._1 . tTyp)
+    scopeConstraints _ = Lens.view Lens._2
     newQuantifiedVariable _ _ = increase (Lens._2 . tTyp . Lens._Wrapped) <&> ('t':) . show
 
 instance Unify IntInferB Row where
     binding = intBindingState (Lens._1 . tRow)
+    scopeConstraints _ = Lens.view Lens._2 <&> RowConstraints mempty
     newQuantifiedVariable _ _ = increase (Lens._2 . tRow . Lens._Wrapped) <&> ('r':) . show
     structureMismatch = rStructureMismatch
 
@@ -106,18 +105,17 @@ instance MonadScopeTypes String Typ (STInferB s) where
     scopeType v = Lens.view (Lens._1 . Lens.at v) >>= fromMaybe (error "name error")
     localScopeType v t = local (Lens._1 . Lens.at v ?~ t)
 
-instance MonadUnify (STInferB s) where
-    scopeConstraints = Lens.view Lens._2
-
 instance MonadLevel (STInferB s) where
     localLevel = local (Lens._2 . _QuantificationScope +~ 1)
 
 instance Unify (STInferB s) Typ where
     binding = stBindingState
+    scopeConstraints _ = Lens.view Lens._2
     newQuantifiedVariable _ _ = newStQuantified (Lens._3 . tTyp) <&> ('t':) . show
 
 instance Unify (STInferB s) Row where
     binding = stBindingState
+    scopeConstraints _ = Lens.view Lens._2 <&> RowConstraints mempty
     newQuantifiedVariable _ _ = newStQuantified (Lens._3 . tRow) <&> ('r':) . show
     structureMismatch = rStructureMismatch
 

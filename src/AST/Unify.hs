@@ -5,10 +5,9 @@ module AST.Unify
     ( HasQuantifiedVar(..)
     , UVar
     , Binding(..)
-    , MonadUnify(..)
     , Unify(..)
     , applyBindings, unify
-    , semiPruneLookup, scopeConstraintsForType
+    , semiPruneLookup
     , newUnbound, newTerm, unfreeze
     ) where
 
@@ -19,7 +18,7 @@ import AST.Class.Recursive (Recursive(..), RecursiveDict, wrapM)
 import AST.Class.ZipMatch (ZipMatch(..), zipMatchWithA)
 import AST.Knot.Pure (Pure(..))
 import AST.Knot (Knot, Tree)
-import AST.Unify.Constraints (TypeConstraints(..), HasTypeConstraints(..), QuantificationScope)
+import AST.Unify.Constraints (HasTypeConstraints(..))
 import AST.Unify.Term (UTerm(..), UTermBody(..), uConstraints, uBody)
 import Control.Applicative (Alternative(..))
 import Control.Lens (Prism')
@@ -45,18 +44,17 @@ data Binding m t = Binding
     , bindVar :: Tree (UVar m) t -> Tree (UTerm (UVar m)) t -> m ()
     }
 
-class Monad m => MonadUnify m where
-    scopeConstraints :: m QuantificationScope
-
 class
     ( Eq (Tree (UVar m) t)
     , ZipMatch t
     , HasTypeConstraints t
     , HasQuantifiedVar t
-    , MonadUnify m
+    , Monad m
     ) => Unify m t where
 
     binding :: Binding m t
+
+    scopeConstraints :: Proxy t -> m (TypeConstraintsOf t)
 
     newQuantifiedVariable :: Proxy t -> TypeConstraintsOf t -> m (QVar t)
     -- Default for type languages which force quantified variables to a specific type or a hole type
@@ -93,14 +91,11 @@ class
     default constraintsMismatch :: Alternative m => Tree t (UVar m) -> TypeConstraintsOf t -> m (Tree t (UVar m))
     constraintsMismatch _ _ = empty
 
-scopeConstraintsForType :: Unify m t => Proxy t -> m (TypeConstraintsOf t)
-scopeConstraintsForType _ = scopeConstraints <&> constraintsFromScope
-
 newUnbound :: forall m t. Unify m t => m (Tree (UVar m) t)
-newUnbound = scopeConstraintsForType (Proxy :: Proxy t) >>= newVar binding . UUnbound
+newUnbound = scopeConstraints (Proxy :: Proxy t) >>= newVar binding . UUnbound
 
 newTerm :: forall m t. Unify m t => Tree t (UVar m) -> m (Tree (UVar m) t)
-newTerm x = scopeConstraintsForType (Proxy :: Proxy t) >>= newVar binding . UTerm . (`UTermBody` x)
+newTerm x = scopeConstraints (Proxy :: Proxy t) >>= newVar binding . UTerm . (`UTermBody` x)
 
 -- | Embed a pure term as a mutable term.
 unfreeze ::

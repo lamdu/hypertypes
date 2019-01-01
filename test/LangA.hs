@@ -79,18 +79,17 @@ newtype IntInferA a = IntInferA (RWST (ScopeTypes (Const Int) Typ, Quantificatio
 
 type instance UVar IntInferA = Const Int
 
-instance MonadUnify IntInferA where
-    scopeConstraints = Lens.view Lens._2
-
 instance MonadLevel IntInferA where
     localLevel = local (Lens._2 . _QuantificationScope +~ 1)
 
 instance Unify IntInferA Typ where
     binding = intBindingState (Lens._1 . tTyp)
+    scopeConstraints _ = Lens.view Lens._2
     newQuantifiedVariable _ _ = increase (Lens._2 . tTyp . Lens._Wrapped) <&> ('t':) . show
 
 instance Unify IntInferA Row where
     binding = intBindingState (Lens._1 . tRow)
+    scopeConstraints _ = Lens.view Lens._2 <&> RowConstraints mempty
     newQuantifiedVariable _ _ = increase (Lens._2 . tRow . Lens._Wrapped) <&> ('r':) . show
     structureMismatch = rStructureMismatch
 
@@ -108,18 +107,17 @@ newtype STInferA s a =
 
 type instance UVar (STInferA s) = STVar s
 
-instance MonadUnify (STInferA s) where
-    scopeConstraints = Lens.view Lens._2
-
 instance MonadLevel (STInferA s) where
     localLevel = local (Lens._2 . _QuantificationScope +~ 1)
 
 instance Unify (STInferA s) Typ where
     binding = stBindingState
+    scopeConstraints _ = Lens.view Lens._2
     newQuantifiedVariable _ _ = newStQuantified (Lens._3 . tTyp) <&> ('t':) . show
 
 instance Unify (STInferA s) Row where
     binding = stBindingState
+    scopeConstraints _ = Lens.view Lens._2 <&> RowConstraints mempty
     newQuantifiedVariable _ _ = newStQuantified (Lens._3 . tRow) <&> ('r':) . show
     structureMismatch = rStructureMismatch
 

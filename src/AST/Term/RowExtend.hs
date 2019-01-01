@@ -14,8 +14,8 @@ import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import           AST.Knot (Tree, Tie)
 import           AST.Knot.Ann (Ann)
-import           AST.Unify (Unify(..), UVar, newVar, unify, scopeConstraintsForType, newTerm)
-import           AST.Unify.Constraints (TypeConstraints(..), HasTypeConstraints(..))
+import           AST.Unify (Unify(..), UVar, newVar, unify, newTerm)
+import           AST.Unify.Constraints (HasTypeConstraints(..))
 import           AST.Unify.Term (UTerm(..))
 import           Algebra.Lattice (JoinSemiLattice(..))
 import           Control.DeepSeq (NFData)
@@ -73,21 +73,21 @@ type RowKey typ = RowConstraintsKey (TypeConstraintsOf typ)
 applyRowConstraints ::
     ( Applicative m
     , constraint valTyp, constraint rowTyp
-    , HasTypeConstraints valTyp, HasTypeConstraints rowTyp
     , RowConstraints (TypeConstraintsOf rowTyp)
     ) =>
     Proxy constraint ->
     TypeConstraintsOf rowTyp ->
+    (TypeConstraintsOf rowTyp -> TypeConstraintsOf valTyp) ->
     (RowKey rowTyp -> m r) ->
     (forall child. constraint child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
     (Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) q -> r) ->
     Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) p ->
     m r
-applyRowConstraints _ c err update cons (RowExtend k v rest)
+applyRowConstraints _ c toChildC err update cons (RowExtend k v rest)
     | c ^. forbidden . contains k = err k
     | otherwise =
         RowExtend k
-        <$> update (constraintsFromScope (c ^. constraintsScope)) v
+        <$> update (c & forbidden .~ mempty & toChildC) v
         <*> update (c & forbidden . contains k .~ True) rest
         <&> cons
 
@@ -123,7 +123,7 @@ inferRowExtend rowToTyp extendToRow (RowExtend k v r) =
         vI <- inferNode v
         rI <- inferNode r
         restVar <-
-            scopeConstraintsForType (Proxy :: Proxy rowTyp)
+            scopeConstraints (Proxy :: Proxy rowTyp)
             >>= newVar binding . UUnbound . (forbidden . contains k .~ True)
         _ <- rowToTyp restVar & newTerm >>= unify (rI ^. nodeType)
         RowExtend k (vI ^. nodeType) restVar & extendToRow & newTerm
