@@ -28,7 +28,7 @@ import           Data.Set (Set)
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
-import           Text.PrettyPrint.HughesPJClass (Pretty(..))
+import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 import           Text.Show.Combinators ((@|), showCon)
 
 import           Prelude.Compat
@@ -57,12 +57,13 @@ instance Deps Show key val rest k => Show (RowExtend key val rest k) where
     showsPrec p (RowExtend k v r) = (showCon "RowExtend" @| k @| v @| r) p
 
 instance Deps Pretty key val rest k => Pretty (RowExtend key val rest k) where
-    pPrint (RowExtend k v r) =
-        pPrint k <+>
+    pPrintPrec lvl p (RowExtend k v r) =
+        pPrintPrec lvl 20 k <+>
         Pretty.text ":" <+>
-        pPrint v <+>
+        pPrintPrec lvl 2 v <+>
         Pretty.text ":*:" <+>
-        pPrint r
+        pPrintPrec lvl 1 r
+        & maybeParens (p > 1)
 
 class Ord (RowConstraintsKey constraints) => RowConstraints constraints where
     type RowConstraintsKey constraints

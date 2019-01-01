@@ -12,11 +12,12 @@ import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import           AST.Knot (Tree, Tie)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Prism', makeLenses)
+import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
-import           Text.PrettyPrint.HughesPJClass (Pretty(..))
+import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 import           Text.Show.Combinators ((@|), showCon)
 
 import           Prelude.Compat
@@ -27,7 +28,9 @@ data FuncType typ k = FuncType
     } deriving Generic
 
 instance Pretty (Tie k typ) => Pretty (FuncType typ k) where
-    pPrint (FuncType i o) = pPrint i <+> Pretty.text "->" <+> pPrint o
+    pPrintPrec lvl p (FuncType i o) =
+        pPrintPrec lvl 11 i <+> Pretty.text "->" <+> pPrintPrec lvl 10 o
+        & maybeParens (p > 10)
 
 makeLenses ''FuncType
 makeChildrenAndZipMatch [''FuncType]

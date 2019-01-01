@@ -24,4 +24,4 @@ instance SubTreeConstraint Pure f Show => Show (Pure f) where
     showsPrec p (Pure x) = (showCon "Pure" @| x) p
 
 instance SubTreeConstraint Pure f Pretty => Pretty (Pure f) where
-    pPrint (Pure x) = pPrint x
+    pPrintPrec lvl p (Pure x) = pPrintPrec lvl p x

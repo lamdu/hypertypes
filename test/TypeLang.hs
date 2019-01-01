@@ -55,15 +55,15 @@ deriving instance SubTreeConstraint Typ f Show => Show (Typ f)
 deriving instance SubTreeConstraint Row f Show => Show (Row f)
 
 instance SubTreeConstraint Typ k Pretty => Pretty (Typ k) where
-    pPrint TInt = Pretty.text "Int"
-    pPrint (TFun x) = pPrint x
-    pPrint (TRec x) = pPrint x
-    pPrint (TVar s) = '#':s & Pretty.text
+    pPrintPrec _ _ TInt = Pretty.text "Int"
+    pPrintPrec lvl p (TFun x) = pPrintPrec lvl p x
+    pPrintPrec lvl p (TRec x) = pPrintPrec lvl p x
+    pPrintPrec _ _ (TVar s) = '#':s & Pretty.text
 
 instance SubTreeConstraint Row k Pretty => Pretty (Row k) where
-    pPrint REmpty = Pretty.text "{}"
-    pPrint (RExtend x) = pPrint x
-    pPrint (RVar s) = '#':s & Pretty.text
+    pPrintPrec _ _ REmpty = Pretty.text "{}"
+    pPrintPrec lvl p (RExtend x) = pPrintPrec lvl p x
+    pPrintPrec _ _ (RVar s) = '#':s & Pretty.text
 
 instance HasChild Types Typ where getChild = tTyp
 instance HasChild Types Row where getChild = tRow
