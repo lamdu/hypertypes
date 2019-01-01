@@ -154,36 +154,30 @@ execSTInferB (STInferB act) =
         qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
         runReaderT act (mempty, QuantificationScope 0, qvarGen) & runMaybeT
 
+testA :: Tree Pure (LangA EmptyScope) -> IO ()
+testA expr =
+    do
+        putStrLn ""
+        print (execIntInferA (inferExpr expr))
+        print (runST (execSTInferA (inferExpr expr)))
+
+testB :: Tree Pure LangB -> IO ()
+testB expr =
+    do
+        putStrLn ""
+        print (execIntInferB (inferExpr expr))
+        print (runST (execSTInferB (inferExpr expr)))
+
 main :: IO ()
 main =
     do
-        putStrLn ""
-        print (execIntInferA (inferExpr lamXYx5))
-        print (runST (execSTInferA (inferExpr lamXYx5)))
-        putStrLn ""
-        print (execIntInferA (inferExpr infinite))
-        print (runST (execSTInferA (inferExpr infinite)))
-        putStrLn ""
-        print (execIntInferA (inferExpr skolem))
-        print (runST (execSTInferA (inferExpr skolem)))
-        putStrLn ""
-        print (execIntInferA (inferExpr validForAll))
-        print (runST (execSTInferA (inferExpr validForAll)))
-        putStrLn ""
-        print (execIntInferB (inferExpr letGen))
-        print (runST (execSTInferB (inferExpr letGen)))
-        putStrLn ""
-        print (execIntInferB (inferExpr shouldNotGen))
-        print (runST (execSTInferB (inferExpr shouldNotGen)))
-        putStrLn ""
-        print (execIntInferB (inferExpr record))
-        print (runST (execSTInferB (inferExpr record)))
-        putStrLn ""
-        print (execIntInferB (inferExpr extendLit))
-        print (runST (execSTInferB (inferExpr extendLit)))
-        putStrLn ""
-        print (execIntInferB (inferExpr extendDup))
-        print (runST (execSTInferB (inferExpr extendDup)))
-        putStrLn ""
-        print (execIntInferB (inferExpr extendGood))
-        print (runST (execSTInferB (inferExpr extendGood)))
+        testA lamXYx5
+        testA infinite
+        testA skolem
+        testA validForAll
+        testB letGen
+        testB shouldNotGen
+        testB record
+        testB extendLit
+        testB extendDup
+        testB extendGood
