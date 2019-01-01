@@ -20,7 +20,8 @@ import           Data.Maybe (fromMaybe)
 import           Prelude.Compat
 
 data IntBindingState t = IntBindingState
-    { _nextVar :: {-# UNPACK #-} !Int
+    { -- Could had used varBindings's size if IntMap's size was fast/O(1)
+      _nextVar :: {-# UNPACK #-} !Int
     , _varBindings :: IntMap (UTerm (Const Int) t)
     }
 Lens.makeLenses ''IntBindingState
