@@ -17,7 +17,7 @@ import AST.Knot (Tree, Tie)
 import AST.Knot.Ann (Ann)
 import AST.Unify (Unify(..), UVar, newVar, unify, scopeConstraintsForType, newTerm)
 import AST.Unify.Constraints (TypeConstraints(..), HasTypeConstraints(..))
-import AST.Unify.Term (UTermBody(..), UTerm(..))
+import AST.Unify.Term (UTerm(..))
 import Control.DeepSeq (NFData)
 import Control.Lens (Lens', makeLenses, contains)
 import Control.Lens.Operators
@@ -59,16 +59,6 @@ class Ord (RowConstraintsKey constraints) => RowConstraints constraints where
 
 type RowKey typ = RowConstraintsKey (TypeConstraintsOf typ)
 
-instance
-    (HasTypeConstraints valTyp, HasTypeConstraints rowTyp) =>
-    HasTypeConstraints (RowExtend key valTyp rowTyp) where
-
-    type TypeConstraintsOf (RowExtend key valTyp rowTyp) = TypeConstraintsOf rowTyp
-    applyConstraints _ c _ upd (RowExtend k v r) =
-        RowExtend k
-        <$> upd (constraintsFromScope (c ^. constraintsScope)) v
-        <*> upd c r
-
 applyRowConstraints ::
     ( Applicative m
     , constraint valTyp, constraint rowTyp
@@ -93,12 +83,10 @@ applyRowConstraints _ c err update cons (RowExtend k v rest)
 rowStructureMismatch ::
     Recursive (Unify m) rowTyp =>
     (Tree (RowExtend key valTyp rowTyp) (UVar m) -> m (Tree (UVar m) rowTyp)) ->
-    Tree (UTermBody (UVar m)) (RowExtend key valTyp rowTyp) ->
-    Tree (UTermBody (UVar m)) (RowExtend key valTyp rowTyp) ->
+    (TypeConstraintsOf rowTyp, Tree (RowExtend key valTyp rowTyp) (UVar m)) ->
+    (TypeConstraintsOf rowTyp, Tree (RowExtend key valTyp rowTyp) (UVar m)) ->
     m (Tree (RowExtend key valTyp rowTyp) (UVar m))
-rowStructureMismatch mkExtend
-    (UTermBody c0 (RowExtend k0 v0 r0))
-    (UTermBody c1 (RowExtend k1 v1 r1)) =
+rowStructureMismatch mkExtend (c0, RowExtend k0 v0 r0) (c1, RowExtend k1 v1 r1) =
     do
         restVar <- c0 \/ c1 & UUnbound & newVar binding
         _ <- RowExtend k0 v0 restVar & mkExtend >>= unify r1

@@ -110,5 +110,5 @@ rStructureMismatch ::
     (Alternative m, Recursive (Unify m) Row) =>
     Tree (UTermBody (UVar m)) Row -> Tree (UTermBody (UVar m)) Row -> m (Tree Row (UVar m))
 rStructureMismatch (UTermBody c0 (RExtend r0)) (UTermBody c1 (RExtend r1)) =
-    rowStructureMismatch (newTerm . RExtend) (UTermBody c0 r0) (UTermBody c1 r1) <&> RExtend
+    rowStructureMismatch (newTerm . RExtend) (c0, r0) (c1, r1) <&> RExtend
 rStructureMismatch _ _ = empty
