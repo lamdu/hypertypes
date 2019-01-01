@@ -14,5 +14,9 @@ type family ChildOf (expr :: Knot -> *) :: Knot -> *
 monoChildren ::
     forall expr n m.
     (ChildrenWithConstraint expr ((~) (ChildOf expr))) =>
-    Traversal (Tree expr n) (Tree expr m) (Tree n (ChildOf expr)) (Tree m (ChildOf expr))
+    Traversal
+    (Tree expr n)
+    (Tree expr m)
+    (Tree n (ChildOf expr))
+    (Tree m (ChildOf expr))
 monoChildren = children (Proxy :: Proxy ((~) (ChildOf expr)))

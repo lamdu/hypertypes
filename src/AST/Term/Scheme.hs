@@ -40,6 +40,7 @@ makeChildren ''Scheme
 newtype ForAlls k typ = ForAlls (Map (QVar (RunKnot typ)) (k typ))
 Lens.makePrisms ''ForAlls
 
+-- TODO: Extract somewhere?
 class HasChild record typ where
     getChild :: Lens' (Tree record k) (Tree k typ)
 
