@@ -20,7 +20,7 @@ import           Data.Maybe (fromMaybe)
 import           Prelude.Compat
 
 data IntBindingState t = IntBindingState
-    { _nextFreeVar :: {-# UNPACK #-} !Int
+    { _nextVar :: {-# UNPACK #-} !Int
     , _varBindings :: IntMap (UTerm (Const Int) t)
     }
 Lens.makeLenses ''IntBindingState
@@ -49,7 +49,7 @@ intBindingState l =
     , newVar =
         \x ->
         do
-            k <- increase (Lens.cloneLens l . nextFreeVar) <&> Const
+            k <- increase (Lens.cloneLens l . nextVar) <&> Const
             k <$ bind k x
     , bindVar = bind
     }
