@@ -15,7 +15,7 @@ import           AST.Class.Instantiate (Instantiate(..), SchemeType)
 import           AST.Class.Recursive (Recursive, wrapM)
 import           AST.Knot (Tree, Tie, RunKnot)
 import           AST.Knot.Pure (Pure(..))
-import           AST.Unify (MonadUnify, Unify(..), HasQuantifiedVar(..), UVar, newVar, newTerm, scopeConstraintsForType)
+import           AST.Unify (Unify(..), HasQuantifiedVar(..), UVar, newVar, newTerm, scopeConstraintsForType)
 import           AST.Unify.Term (UTerm(..))
 import           Control.Lens (Lens')
 import qualified Control.Lens as Lens
@@ -68,8 +68,7 @@ instantiateBody foralls x =
 type instance SchemeType (Tree Pure (Scheme varTypes typ)) = typ
 
 instance
-    ( MonadUnify m
-    , Recursive (Unify m) typ
+    ( Recursive (Unify m) typ
     , Recursive (And (Unify m) (HasChild varTypes)) typ
     , ChildrenWithConstraint varTypes (Unify m)
     ) =>

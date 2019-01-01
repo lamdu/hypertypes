@@ -1,7 +1,6 @@
-{-# LANGUAGE NoImplicitPrelude, DeriveGeneric, TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude, DeriveGeneric, TemplateHaskell, TupleSections #-}
 {-# LANGUAGE TypeFamilies, FlexibleInstances, MultiParamTypeClasses #-}
-{-# LANGUAGE UndecidableInstances, StandaloneDeriving, ScopedTypeVariables #-}
-{-# LANGUAGE TupleSections, ConstraintKinds #-}
+{-# LANGUAGE UndecidableInstances, StandaloneDeriving, ConstraintKinds #-}
 
 module AST.Term.TypeSig
     ( TypeSig(..), tsType, tsTerm
@@ -11,12 +10,12 @@ import AST
 import AST.Class.Infer (MonadLevel(..), Infer(..), TypeAST, inferNode, nodeType)
 import AST.Class.Instantiate (Instantiate(..), SchemeType)
 import AST.Class.Recursive.TH (makeChildrenRecursive)
-import AST.Unify (Unify, unify)
+import AST.Unify (unify)
 import Control.DeepSeq (NFData)
 import Control.Lens (makeLenses)
 import Control.Lens.Operators
 import Data.Binary (Binary)
-import Data.Constraint (Constraint, withDict)
+import Data.Constraint (Constraint)
 import GHC.Generics (Generic)
 
 import Prelude.Compat
@@ -50,7 +49,6 @@ instance
     Infer m (TypeSig (Tree Pure scheme) term) where
 
     infer (TypeSig s x) =
-        withDict (recursive :: RecursiveDict (Unify m) (TypeAST term)) $
         do
             r <- inferNode x
             instantiate s

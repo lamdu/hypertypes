@@ -1,6 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, RankNTypes, DefaultSignatures #-}
 {-# LANGUAGE MultiParamTypeClasses, ConstraintKinds, FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts, ScopedTypeVariables, UndecidableInstances #-}
+{-# LANGUAGE UndecidableSuperClasses #-}
 
 module AST.Class.Recursive
     ( Recursive(..), RecursiveConstraint, RecursiveDict
@@ -19,7 +20,7 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
-class Children expr => Recursive constraint expr where
+class (Children expr, constraint expr) => Recursive constraint expr where
     recursive :: RecursiveDict constraint expr
     -- TODO: RecursiveConstraint params are same order as
     -- ChildrenConstraint, but opposite of Recursive, which is better?

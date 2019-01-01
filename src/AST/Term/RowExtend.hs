@@ -10,7 +10,7 @@ module AST.Term.RowExtend
 
 import Algebra.Lattice (JoinSemiLattice(..))
 import AST.Class.Infer (Infer(..), TypeAST, TypeOf, inferNode, nodeType)
-import AST.Class.Recursive (Recursive(..), RecursiveConstraint, RecursiveDict)
+import AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import AST.Knot (Tree, Tie)
 import AST.Knot.Ann (Ann)
@@ -21,7 +21,7 @@ import Control.DeepSeq (NFData)
 import Control.Lens (ALens', makeLenses, cloneLens, contains)
 import Control.Lens.Operators
 import Data.Binary (Binary)
-import Data.Constraint (Constraint, withDict)
+import Data.Constraint (Constraint)
 import Data.Proxy (Proxy(..))
 import Data.Set (Set)
 import GHC.Generics (Generic)
@@ -85,10 +85,7 @@ propagateRowConstraints _ forbiddenFields c err update cons (RowExtend k v rest)
         <&> cons
 
 rowStructureMismatch ::
-    forall m key valTyp rowTyp.
-    ( Recursive (Unify m) rowTyp
-    , Unify m (RowExtend key valTyp rowTyp)
-    ) =>
+    Recursive (Unify m) rowTyp =>
     (Tree (RowExtend key valTyp rowTyp) (UVar m) -> m (Tree (UVar m) rowTyp)) ->
     Tree (UTermBody (UVar m)) (RowExtend key valTyp rowTyp) ->
     Tree (UTermBody (UVar m)) (RowExtend key valTyp rowTyp) ->
@@ -96,7 +93,6 @@ rowStructureMismatch ::
 rowStructureMismatch mkExtend
     (UTermBody c0 (RowExtend k0 v0 r0))
     (UTermBody c1 (RowExtend k1 v1 r1)) =
-    withDict (recursive :: RecursiveDict (Unify m) rowTyp) $
     do
         restVar <- c0 \/ c1 & UUnbound & newVar binding
         _ <- RowExtend k0 v0 restVar & mkExtend >>= unify r1
@@ -119,7 +115,6 @@ inferRowExtend ::
     , Tree (RowExtend key val val) (Ann (TypeOf m val, a))
     )
 inferRowExtend forbiddenFields rowToTyp extendToRow (RowExtend k v r) =
-    withDict (recursive :: RecursiveDict (Unify m) (TypeAST val)) $
     do
         vI <- inferNode v
         rI <- inferNode r

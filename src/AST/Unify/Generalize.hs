@@ -32,7 +32,7 @@ Lens.makePrisms ''GTerm
 
 generalize ::
     forall m t.
-    (MonadUnify m, Recursive (Unify m) t) =>
+    Recursive (Unify m) t =>
     QuantificationScope -> Tree (UVar m) t -> m (Tree (GTerm m) t)
 generalize s v0 =
     withDict (recursive :: RecursiveDict (Unify m) t) $
@@ -62,7 +62,7 @@ generalize s v0 =
 
 type instance SchemeType (Tree (GTerm v) t) = t
 
-instance (MonadUnify m, Recursive (Unify m) t) => Instantiate m (Tree (GTerm m) t) where
+instance Recursive (Unify m) t => Instantiate m (Tree (GTerm m) t) where
     instantiate g =
         do
             (r, recover) <- runWriterT (go g)

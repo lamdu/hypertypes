@@ -24,7 +24,7 @@ type INode v t a = Tree (Ann (Tree v (TypeAST t), a)) t
 class MonadUnify m => MonadLevel m where
     localLevel :: m a -> m a
 
-class (Recursive (Unify m) (TypeAST t), MonadUnify m) => Infer m t where
+class Recursive (Unify m) (TypeAST t) => Infer m t where
     infer :: Tree t (Ann a) -> m (TypeOf m t, Tree t (Ann (TypeOf m t, a)))
 
 inferNode :: Infer m t => Tree (Ann a) t -> m (INode (UVar m) t a)

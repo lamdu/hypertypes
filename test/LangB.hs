@@ -48,18 +48,14 @@ instance (MonadLevel m, MonadScopeTypes [Char] Typ m, Recursive (Unify m) Typ) =
     infer (BVar x) = infer x <&> _2 %~ BVar
     infer (BLam x) = infer x <&> _2 %~ BLam
     infer (BLet x) = infer x <&> _2 %~ BLet
+    infer (BLit x) = newTerm TInt <&> (, BLit x)
     infer (BRecExtend x) =
         withDict (recursive :: RecursiveDict (Unify m) Typ) $
-        withDict (recursive :: RecursiveDict (Unify m) Row) $
         do
             (xT, xI) <- inferRowExtend rForbiddenFields TRec RExtend x
             TRec xT & newTerm <&> (, BRecExtend xI)
-    infer (BLit x) =
-        withDict (recursive :: RecursiveDict (Unify m) Typ) $
-        newTerm TInt <&> (, BLit x)
     infer BRecEmpty =
         withDict (recursive :: RecursiveDict (Unify m) Typ) $
-        withDict (recursive :: RecursiveDict (Unify m) Row) $
         newTerm REmpty >>= newTerm . TRec <&> (, BRecEmpty)
 
 -- Monads for inferring `LangB`:

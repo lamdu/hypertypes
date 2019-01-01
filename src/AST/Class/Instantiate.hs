@@ -12,7 +12,7 @@ import AST.Unify
 
 type family SchemeType s :: Knot -> *
 
-class (MonadUnify m, Recursive (Unify m) (SchemeType s)) => Instantiate m s where
+class Recursive (Unify m) (SchemeType s) => Instantiate m s where
     instantiate :: s -> m (Tree (UVar m) (SchemeType s))
     default instantiate ::
         (s ~ Tree Pure typ, SchemeType s ~ typ) =>

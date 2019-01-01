@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric #-}
 {-# LANGUAGE StandaloneDeriving, ConstraintKinds, UndecidableInstances #-}
 {-# LANGUAGE TupleSections, TypeFamilies, FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses, ScopedTypeVariables #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module AST.Term.Lam
     ( Lam(..), lamIn, lamOut
@@ -9,16 +9,16 @@ module AST.Term.Lam
 
 import AST.Class.Children.TH (makeChildren)
 import AST.Class.Infer (Infer(..), TypeAST, inferNode, nodeType)
-import AST.Class.Recursive (Recursive(..), RecursiveConstraint, RecursiveDict)
+import AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import AST.Knot (Tie)
 import AST.Term.FuncType
 import AST.Term.Var
-import AST.Unify (Unify(..), newUnbound, newTerm)
+import AST.Unify (newUnbound, newTerm)
 import Control.DeepSeq (NFData)
 import Control.Lens (makeLenses)
 import Control.Lens.Operators
 import Data.Binary (Binary)
-import Data.Constraint (Constraint, withDict)
+import Data.Constraint (Constraint)
 import GHC.Generics (Generic)
 
 import Prelude.Compat
@@ -50,7 +50,6 @@ instance
     Infer m (Lam v t) where
 
     infer (Lam p r) =
-        withDict (recursive :: RecursiveDict (Unify m) (TypeAST t)) $
         do
             varType <- newUnbound
             rI <- localScopeType p (pure varType) (inferNode r)

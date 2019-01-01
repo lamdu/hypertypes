@@ -1,7 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
 {-# LANGUAGE TupleSections, StandaloneDeriving, DeriveGeneric #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
 module AST.Term.Apply
     ( Apply(..), applyFunc, applyArg
@@ -9,16 +8,15 @@ module AST.Term.Apply
     ) where
 
 import AST.Class.Infer (Infer(..), inferNode, nodeType, TypeAST)
-import AST.Class.Recursive (Recursive(..), RecursiveConstraint, RecursiveDict)
+import AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import AST.Knot (Tie)
 import AST.Term.FuncType
-import AST.Unify (Unify(..), unify, newUnbound, newTerm)
+import AST.Unify (unify, newUnbound, newTerm)
 import Control.DeepSeq (NFData)
 import Control.Lens (Traversal, makeLenses)
 import Control.Lens.Operators
 import Data.Binary (Binary)
-import Data.Constraint (withDict)
 import GHC.Generics (Generic)
 
 import Prelude.Compat
@@ -49,7 +47,6 @@ type instance TypeAST (Apply expr) = TypeAST expr
 
 instance (Infer m expr, HasFuncType (TypeAST expr)) => Infer m (Apply expr) where
     infer (Apply func arg) =
-        withDict (recursive :: RecursiveDict (Unify m) (TypeAST expr)) $
         do
             argI <- inferNode arg
             funcI <- inferNode func

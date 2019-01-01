@@ -93,7 +93,7 @@ class
     default constraintsMismatch :: Alternative m => Tree t (UVar m) -> TypeConstraintsOf t -> m (Tree t (UVar m))
     constraintsMismatch _ _ = empty
 
-scopeConstraintsForType :: forall m t. Unify m t => Proxy t -> m (TypeConstraintsOf t)
+scopeConstraintsForType :: Unify m t => Proxy t -> m (TypeConstraintsOf t)
 scopeConstraintsForType _ = scopeConstraints <&> constraintsFromScope
 
 newUnbound :: forall m t. Unify m t => m (Tree (UVar m) t)
@@ -107,14 +107,11 @@ unfreeze ::
     forall m t.
     Recursive (Unify m) t =>
     Tree Pure t -> m (Tree (UVar m) t)
-unfreeze =
-    withDict (recursive :: RecursiveDict (Unify m) t) $
-    wrapM (Proxy :: Proxy (Unify m)) newTerm
+unfreeze = wrapM (Proxy :: Proxy (Unify m)) newTerm
 
 -- look up a variable, and return last variable pointing to result.
 -- prune all variable on way to last variable
 semiPruneLookup ::
-    forall m t.
     Unify m t =>
     Tree (UVar m) t ->
     m (Tree (UVar m) t, Tree (UTerm (UVar m)) t)
@@ -160,11 +157,9 @@ applyBindings v0 =
     UVar{} -> error "lookup not expected to result in var"
 
 updateConstraints ::
-    forall m t.
     Recursive (Unify m) t =>
     TypeConstraintsOf t -> Tree (UVar m) t -> m (Tree (UVar m) t)
 updateConstraints newConstraints var =
-    withDict (recursive :: RecursiveDict (Unify m) t) $
     do
         (v1, x) <- semiPruneLookup var
         case x of
