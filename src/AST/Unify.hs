@@ -1,5 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, MultiParamTypeClasses, TypeFamilies, LambdaCase #-}
 {-# LANGUAGE DataKinds, ScopedTypeVariables, FlexibleContexts, DefaultSignatures #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module AST.Unify
     ( HasQuantifiedVar(..)
@@ -14,10 +15,11 @@ module AST.Unify
 import Algebra.PartialOrd (PartialOrd(..))
 import Algebra.Lattice (JoinSemiLattice(..))
 import AST.Class.Children (Children(..))
+import AST.Class.Children.TH (makeChildren)
 import AST.Class.Recursive (Recursive(..), RecursiveDict, wrapM)
 import AST.Class.ZipMatch (ZipMatch(..), zipMatchWithA)
 import AST.Knot.Pure (Pure(..))
-import AST.Knot (Knot, Tree)
+import AST.Knot (Knot, Tree, Tie)
 import AST.Unify.Constraints (HasTypeConstraints(..))
 import AST.Unify.Term (UTerm(..), UTermBody(..), uConstraints, uBody)
 import Control.Applicative (Alternative(..))
@@ -28,6 +30,12 @@ import Data.Maybe (fromMaybe)
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
+
+data UnifyError t k
+    = SkolemUnified (Tie k t) (Tie k t)
+    | SkolemEscape (Tie k t)
+    | ConstraintsMismatch (t k) (TypeConstraintsOf t)
+makeChildren ''UnifyError
 
 class Ord (QVar t) => HasQuantifiedVar (t :: Knot -> *) where
     type family QVar t
@@ -43,11 +51,6 @@ data Binding m t = Binding
     , newVar :: Tree (UTerm (UVar m)) t -> m (Tree (UVar m) t)
     , bindVar :: Tree (UVar m) t -> Tree (UTerm (UVar m)) t -> m ()
     }
-
-data UnifyError k t
-    = SkolemUnified (Tree k t) (Tree k t)
-    | SkolemEscape (Tree k t)
-    | ConstraintsMismatch (Tree t k) (TypeConstraintsOf t)
 
 class
     ( Eq (Tree (UVar m) t)
@@ -81,8 +84,8 @@ class
         Alternative m => Tree (UTermBody (UVar m)) t -> Tree (UTermBody (UVar m)) t -> m (Tree t (UVar m))
     structureMismatch _ _ = empty
 
-    unifyError :: UnifyError (UVar m) t -> m ()
-    default unifyError :: Alternative m => UnifyError (UVar m) t -> m ()
+    unifyError :: Tree (UnifyError t) (UVar m) -> m ()
+    default unifyError :: Alternative m => Tree (UnifyError t) (UVar m) -> m ()
     unifyError _ = empty
 
 newUnbound :: forall m t. Unify m t => m (Tree (UVar m) t)
