@@ -11,13 +11,13 @@ module AST.Term.Scheme
 import           AST.Class.Children (Children(..), ChildrenWithConstraint)
 import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Combinators (And)
+import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Instantiate (Instantiate(..), SchemeType)
 import           AST.Class.Recursive (Recursive, wrapM)
 import           AST.Knot (Tree, Tie, RunKnot)
 import           AST.Knot.Pure (Pure(..))
 import           AST.Unify (Unify(..), HasQuantifiedVar(..), UVar, newVar, newTerm)
 import           AST.Unify.Term (UTerm(..))
-import           Control.Lens (Lens')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Map (Map)
@@ -53,10 +53,6 @@ makeChildren ''Scheme
 
 newtype ForAlls k typ = ForAlls (Map (QVar (RunKnot typ)) (k typ))
 Lens.makePrisms ''ForAlls
-
--- TODO: Extract somewhere?
-class HasChild record typ where
-    getChild :: Lens' (Tree record k) (Tree k typ)
 
 makeForAlls ::
     forall m typ.
