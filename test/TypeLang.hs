@@ -1,5 +1,5 @@
-{-# LANGUAGE TemplateHaskell, StandaloneDeriving, UndecidableInstances #-}
-{-# LANGUAGE MultiParamTypeClasses, TypeFamilies, FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses, StandaloneDeriving, UndecidableInstances #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies, FlexibleInstances, FlexibleContexts #-}
 
 module TypeLang where
 
@@ -10,6 +10,7 @@ import AST.Class.Instantiate
 import AST.Unify
 import AST.Unify.Constraints
 import AST.Unify.IntMapBinding
+import AST.Unify.Term
 import AST.Term.FuncType
 import AST.Term.RowExtend
 import AST.Term.Scheme
@@ -17,7 +18,7 @@ import AST.Term.Scope
 import Control.Applicative
 import qualified Control.Lens as Lens
 import Control.Lens.Operators
-import Data.Set
+import Data.Set (Set, singleton)
 import Data.STRef
 
 data Typ f
@@ -104,3 +105,10 @@ instance HasScopeTypes v Typ a => HasScopeTypes v Typ (a, x) where
 
 instance HasScopeTypes v Typ a => HasScopeTypes v Typ (a, x, y) where
     scopeTypes = Lens._1 . scopeTypes
+
+rStructureMismatch ::
+    (Alternative m, Recursive (Unify m) Row) =>
+    Tree (UTermBody (UVar m)) Row -> Tree (UTermBody (UVar m)) Row -> m (Tree Row (UVar m))
+rStructureMismatch (UTermBody c0 (RExtend r0)) (UTermBody c1 (RExtend r1)) =
+    rowStructureMismatch (newTerm . RExtend) (UTermBody c0 r0) (UTermBody c1 r1) <&> RExtend
+rStructureMismatch _ _ = empty

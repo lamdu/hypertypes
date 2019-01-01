@@ -27,7 +27,7 @@ import Control.Monad.ST
 import Control.Monad.ST.Class (MonadST(..))
 import Control.Monad.Trans.Maybe
 import Data.Constraint
-import Data.Map
+import Data.Map (Map)
 import Data.Maybe
 
 data LangB k
@@ -87,6 +87,7 @@ instance Unify IntInferB Typ where
 instance Unify IntInferB Row where
     binding = intBindingState (Lens._1 . tRow)
     newQuantifiedVariable _ _ = increase (Lens._2 . tRow . Lens._Wrapped) <&> ('r':) . show
+    structureMismatch = rStructureMismatch
 
 instance Recursive (Unify IntInferB) Typ
 instance Recursive (Unify IntInferB) Row
@@ -118,6 +119,7 @@ instance Unify (STInferB s) Typ where
 instance Unify (STInferB s) Row where
     binding = stBindingState
     newQuantifiedVariable _ _ = newStQuantified (Lens._3 . tRow) <&> ('r':) . show
+    structureMismatch = rStructureMismatch
 
 instance Recursive (Unify (STInferB s)) Typ
 instance Recursive (Unify (STInferB s)) Row

@@ -92,6 +92,7 @@ instance Unify IntInferA Typ where
 instance Unify IntInferA Row where
     binding = intBindingState (Lens._1 . tRow)
     newQuantifiedVariable _ _ = increase (Lens._2 . tRow . Lens._Wrapped) <&> ('r':) . show
+    structureMismatch = rStructureMismatch
 
 instance Recursive (Unify IntInferA) Typ
 instance Recursive (Unify IntInferA) Row
@@ -120,6 +121,7 @@ instance Unify (STInferA s) Typ where
 instance Unify (STInferA s) Row where
     binding = stBindingState
     newQuantifiedVariable _ _ = newStQuantified (Lens._3 . tRow) <&> ('r':) . show
+    structureMismatch = rStructureMismatch
 
 instance Recursive (Unify (STInferA s)) Typ
 instance Recursive (Unify (STInferA s)) Row
