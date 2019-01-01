@@ -7,14 +7,14 @@ module AST.Term.Scope
     ( Scope(..), _Scope
     , ScopeVar(..), _ScopeVar
     , EmptyScope
-    , DeBruijnIndex(..)
+    , DeBruijnIndex(..), inverseDeBruijnIndex
     , scope, scopeVar
     , ScopeTypes, HasScopeTypes(..)
     ) where
 
+import           AST.Class.Children (Children)
 import           AST.Class.Infer (Infer(..), inferNode, nodeType, TypeAST)
 import           AST.Class.Infer.Infer1 (Infer1(..), HasTypeAST1(..))
-import           AST.Class.Children (Children)
 import           AST.Class.Recursive (Recursive(..))
 import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import           AST.Knot (Knot, Tie, Tree)

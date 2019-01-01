@@ -6,20 +6,23 @@ module AST.Term.TypeSig
     ( TypeSig(..), tsType, tsTerm
     ) where
 
-import AST
-import AST.Class.Infer (Infer(..), TypeAST, inferNode, nodeType)
-import AST.Class.Infer.ScopeLevel (MonadScopeLevel(..))
-import AST.Class.Instantiate (Instantiate(..), SchemeType)
-import AST.Class.Recursive.TH (makeChildrenRecursive)
-import AST.Unify (unify)
-import Control.DeepSeq (NFData)
-import Control.Lens (makeLenses)
-import Control.Lens.Operators
-import Data.Binary (Binary)
-import Data.Constraint (Constraint)
-import GHC.Generics (Generic)
+import           AST
+import           AST.Class.Infer (Infer(..), TypeAST, inferNode, nodeType)
+import           AST.Class.Infer.ScopeLevel (MonadScopeLevel(..))
+import           AST.Class.Instantiate (Instantiate(..), SchemeType)
+import           AST.Class.Recursive.TH (makeChildrenRecursive)
+import           AST.Unify (unify)
+import           Control.DeepSeq (NFData)
+import           Control.Lens (makeLenses)
+import           Control.Lens.Operators
+import           Data.Binary (Binary)
+import           Data.Constraint (Constraint)
+import           GHC.Generics (Generic)
+import           Text.PrettyPrint ((<+>))
+import qualified Text.PrettyPrint as Pretty
+import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
-import Prelude.Compat
+import           Prelude.Compat
 
 data TypeSig typ term k = TypeSig
     { _tsTerm :: Tie k term
@@ -38,6 +41,10 @@ deriving instance Deps typ term k Ord  => Ord  (TypeSig typ term k)
 deriving instance Deps typ term k Show => Show (TypeSig typ term k)
 instance Deps typ term k Binary => Binary (TypeSig typ term k)
 instance Deps typ term k NFData => NFData (TypeSig typ term k)
+instance Deps typ term k Pretty => Pretty (TypeSig typ term k) where
+    pPrintPrec lvl p (TypeSig term typ) =
+        pPrintPrec lvl 0 term <+> Pretty.text ":" <+> pPrintPrec lvl 0 typ
+        & maybeParens (p > 0)
 
 type instance TypeAST (TypeSig typ term) = TypeAST term
 

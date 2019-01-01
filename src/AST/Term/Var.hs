@@ -13,21 +13,25 @@ import           AST.Class.Recursive.TH (makeChildrenRecursive)
 import           AST.Knot (Knot, Tree)
 import           AST.Unify (Unify, UVar)
 import           Control.DeepSeq (NFData)
-import           Control.Lens.Operators
 import qualified Control.Lens as Lens
+import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           GHC.Generics (Generic)
+import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 
 import           Prelude.Compat
 
 -- | Parametrized by term AST and not by its type AST
 -- (which currently is its only part used),
 -- for future evaluation/complilation support.
-newtype Var v (expr :: Knot -> *) (f :: Knot) = Var v
+newtype Var v (expr :: Knot -> *) (k :: Knot) = Var v
     deriving (Eq, Ord, Show, Generic, Binary, NFData)
 Lens.makePrisms ''Var
 
 makeChildrenRecursive [''Var]
+
+instance Pretty v => Pretty (Var v expr k) where
+    pPrintPrec lvl p (Var v) = pPrintPrec lvl p v
 
 class MonadScopeTypes v t m where
     scopeType :: v -> m (Tree (UVar m) t)

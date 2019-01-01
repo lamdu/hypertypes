@@ -27,6 +27,8 @@ import           Control.Monad.Trans.Maybe
 import           Data.Functor.Const
 import           Data.Proxy
 import           Data.STRef
+import           Text.PrettyPrint (($+$))
+import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 
 var :: DeBruijnIndex k => Int -> Tree Pure (LangA k)
@@ -162,17 +164,23 @@ execSTInferB (STInferB act) =
 prettyPrint :: Pretty a => a -> IO ()
 prettyPrint = print . pPrint
 
+testPrelude :: Pretty (Tree lang Pure) => Tree Pure lang -> IO ()
+testPrelude expr =
+    do
+        putStrLn ""
+        pPrint expr $+$ Pretty.text "inferred to:" & print
+
 testA :: Tree Pure (LangA EmptyScope) -> IO ()
 testA expr =
     do
-        putStrLn ""
+        testPrelude expr
         execIntInferA (inferExpr expr) & prettyPrint
         runST (execSTInferA (inferExpr expr)) & prettyPrint
 
 testB :: Tree Pure LangB -> IO ()
 testB expr =
     do
-        putStrLn ""
+        testPrelude expr
         execIntInferB (inferExpr expr) & prettyPrint
         runST (execSTInferB (inferExpr expr)) & prettyPrint
 

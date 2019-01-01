@@ -4,31 +4,34 @@
 
 module LangB where
 
-import TypeLang
+import           TypeLang
 
-import AST
-import AST.Class.Infer
-import AST.Class.Infer.ScopeLevel
-import AST.Unify
-import AST.Term.Apply
-import AST.Term.Lam
-import AST.Term.Let
-import AST.Term.RowExtend
-import AST.Term.Var
-import AST.Unify.PureBinding
-import AST.Unify.STBinding
-import Control.Applicative
+import           AST
+import           AST.Class.Infer
+import           AST.Class.Infer.ScopeLevel
+import           AST.Term.Apply
+import           AST.Term.Lam
+import           AST.Term.Let
+import           AST.Term.RowExtend
+import           AST.Term.Var
+import           AST.Unify
+import           AST.Unify.PureBinding
+import           AST.Unify.STBinding
+import           Control.Applicative
 import qualified Control.Lens as Lens
-import Control.Lens.Operators
-import Control.Lens.Tuple
-import Control.Monad.Reader
-import Control.Monad.RWS
-import Control.Monad.ST
-import Control.Monad.ST.Class (MonadST(..))
-import Control.Monad.Trans.Maybe
-import Data.Constraint
-import Data.Map (Map)
-import Data.Maybe
+import           Control.Lens.Operators
+import           Control.Lens.Tuple
+import           Control.Monad.RWS
+import           Control.Monad.Reader
+import           Control.Monad.ST
+import           Control.Monad.ST.Class (MonadST(..))
+import           Control.Monad.Trans.Maybe
+import           Data.Constraint
+import           Data.Map (Map)
+import           Data.Maybe
+import           Text.PrettyPrint ((<+>))
+import qualified Text.PrettyPrint as Pretty
+import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 data LangB k
     = BLit Int
@@ -42,6 +45,20 @@ data LangB k
 makeChildrenRecursive [''LangB]
 
 type instance TypeAST LangB = Typ
+
+instance Pretty (Tree LangB Pure) where
+    pPrintPrec _ _ (BLit i) = pPrint i
+    pPrintPrec _ _ BRecEmpty = Pretty.text "{}"
+    pPrintPrec lvl p (BRecExtend (RowExtend k v r)) =
+        pPrintPrec lvl 20 k <+>
+        Pretty.text "=" <+>
+        (pPrintPrec lvl 2 v <> Pretty.text ",") <+>
+        pPrintPrec lvl 1 r
+        & maybeParens (p > 1)
+    pPrintPrec lvl p (BApp x) = pPrintPrec lvl p x
+    pPrintPrec lvl p (BVar x) = pPrintPrec lvl p x
+    pPrintPrec lvl p (BLam x) = pPrintPrec lvl p x
+    pPrintPrec lvl p (BLet x) = pPrintPrec lvl p x
 
 instance (MonadScopeLevel m, MonadScopeTypes [Char] Typ m, Recursive (Unify m) Typ) => Infer m LangB where
     infer (BApp x) = infer x <&> _2 %~ BApp

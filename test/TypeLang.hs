@@ -21,8 +21,9 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.STRef
 import           Data.Set (Set, singleton)
+import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
-import           Text.PrettyPrint.HughesPJClass (Pretty(..))
+import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 data Typ k
     = TInt
@@ -51,8 +52,13 @@ Lens.makeLenses ''RConstraints
 Lens.makeLenses ''Types
 makeChildrenAndZipMatch [''Typ, ''Row, ''Types]
 
-deriving instance SubTreeConstraint Typ f Show => Show (Typ f)
-deriving instance SubTreeConstraint Row f Show => Show (Row f)
+deriving instance SubTreeConstraint Typ k Show => Show (Typ k)
+deriving instance SubTreeConstraint Row k Show => Show (Row k)
+
+instance SubTreeConstraint Types k Pretty => Pretty (Types k) where
+    pPrintPrec lvl p (Types typ row) =
+        pPrintPrec lvl p typ <+>
+        pPrintPrec lvl p row
 
 instance SubTreeConstraint Typ k Pretty => Pretty (Typ k) where
     pPrintPrec _ _ TInt = Pretty.text "Int"
@@ -62,7 +68,13 @@ instance SubTreeConstraint Typ k Pretty => Pretty (Typ k) where
 
 instance SubTreeConstraint Row k Pretty => Pretty (Row k) where
     pPrintPrec _ _ REmpty = Pretty.text "{}"
-    pPrintPrec lvl p (RExtend x) = pPrintPrec lvl p x
+    pPrintPrec lvl p (RExtend (RowExtend k v r)) =
+        pPrintPrec lvl 20 k <+>
+        Pretty.text ":" <+>
+        pPrintPrec lvl 2 v <+>
+        Pretty.text ":*:" <+>
+        pPrintPrec lvl 1 r
+        & maybeParens (p > 1)
     pPrintPrec _ _ (RVar s) = '#':s & Pretty.text
 
 instance HasChild Types Typ where getChild = tTyp

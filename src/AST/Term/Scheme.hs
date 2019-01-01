@@ -20,9 +20,12 @@ import           AST.Unify.Term (UTerm(..))
 import           Control.Lens (Lens')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Data.Proxy (Proxy(..))
 import           Data.Map (Map)
 import qualified Data.Map as Map
+import           Data.Proxy (Proxy(..))
+import           Text.PrettyPrint ((<+>))
+import qualified Text.PrettyPrint as Pretty
+import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 import           Prelude.Compat
 
@@ -32,6 +35,17 @@ data Scheme varTypes typ k = Scheme
     }
 
 newtype Vars typ = Vars [QVar (RunKnot typ)]
+
+instance (Pretty (Tree varTypes Vars), Pretty (Tie k typ)) =>
+         Pretty (Scheme varTypes typ k) where
+    pPrintPrec lvl p (Scheme forAlls typ) =
+        pPrintPrec lvl 0 forAlls <+>
+        pPrintPrec lvl 0 typ
+        & maybeParens (p > 0)
+
+instance Pretty (QVar (RunKnot typ)) => Pretty (Vars typ) where
+    pPrint (Vars qVars) =
+        qVars <&> pPrint <&> (Pretty.text "∀" <>) & Pretty.hsep
 
 Lens.makeLenses ''Scheme
 Lens.makePrisms ''Vars

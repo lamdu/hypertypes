@@ -7,35 +7,44 @@ module AST.Term.Lam
     ( Lam(..), lamIn, lamOut
     ) where
 
-import AST.Class.Children.TH (makeChildren)
-import AST.Class.Infer (Infer(..), TypeAST, inferNode, nodeType)
-import AST.Class.Recursive (Recursive(..), RecursiveConstraint)
-import AST.Knot (Tie)
-import AST.Term.FuncType
-import AST.Term.Var
-import AST.Unify (newUnbound, newTerm)
-import Control.DeepSeq (NFData)
-import Control.Lens (makeLenses)
-import Control.Lens.Operators
-import Data.Binary (Binary)
-import Data.Constraint (Constraint)
-import GHC.Generics (Generic)
+import           AST.Class.Children.TH (makeChildren)
+import           AST.Class.Infer (Infer(..), TypeAST, inferNode, nodeType)
+import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
+import           AST.Knot (Tie)
+import           AST.Term.FuncType
+import           AST.Term.Var
+import           AST.Unify (newUnbound, newTerm)
+import           Control.DeepSeq (NFData)
+import           Control.Lens (makeLenses)
+import           Control.Lens.Operators
+import           Data.Binary (Binary)
+import           Data.Constraint (Constraint)
+import           GHC.Generics (Generic)
+import qualified Text.PrettyPrint as Pretty
+import           Text.PrettyPrint ((<+>))
+import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
-import Prelude.Compat
+import           Prelude.Compat
 
-data Lam v expr f = Lam
+data Lam v expr k = Lam
     { _lamIn :: v
-    , _lamOut :: Tie f expr
+    , _lamOut :: Tie k expr
     } deriving Generic
 makeLenses ''Lam
 
-type Deps v expr f cls = ((cls v, cls (Tie f expr)) :: Constraint)
+type Deps v expr k cls = ((cls v, cls (Tie k expr)) :: Constraint)
 -- Note that `Eq` is not alpha-equivalence!
-deriving instance Deps v expr f Eq   => Eq   (Lam v expr f)
-deriving instance Deps v expr f Ord  => Ord  (Lam v expr f)
-deriving instance Deps v expr f Show => Show (Lam v expr f)
-instance Deps v expr f Binary => Binary (Lam v expr f)
-instance Deps v expr f NFData => NFData (Lam v expr f)
+deriving instance Deps v expr k Eq   => Eq   (Lam v expr k)
+deriving instance Deps v expr k Ord  => Ord  (Lam v expr k)
+deriving instance Deps v expr k Show => Show (Lam v expr k)
+instance Deps v expr k Binary => Binary (Lam v expr k)
+instance Deps v expr k NFData => NFData (Lam v expr k)
+
+instance Deps v expr k Pretty => Pretty (Lam v expr k) where
+    pPrintPrec lvl p (Lam i o) =
+        (Pretty.text "λ" <> pPrintPrec lvl 0 i)
+        <+> Pretty.text "->" <+> pPrintPrec lvl 0 o
+        & maybeParens (p > 0)
 
 makeChildren ''Lam
 instance RecursiveConstraint (Lam v expr) constraint => Recursive constraint (Lam v expr)

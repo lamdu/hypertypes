@@ -2,47 +2,66 @@
 {-# LANGUAGE TypeFamilies, LambdaCase, MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances, DataKinds, TupleSections, ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts, GeneralizedNewtypeDeriving, TypeOperators #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 -- | A test language with locally-nameless variable scoping and type signatures with for-alls
 
 module LangA where
 
-import TypeLang
+import           TypeLang
 
-import AST
-import AST.Class.Combinators
-import AST.Class.Infer
-import AST.Class.Infer.Infer1
-import AST.Class.Infer.ScopeLevel
-import AST.Term.Apply
-import AST.Term.Scheme
-import AST.Term.Scope
-import AST.Term.TypeSig
-import AST.Unify
-import AST.Unify.PureBinding
-import AST.Unify.STBinding
-import Control.Applicative
+import           AST
+import           AST.Class.Combinators
+import           AST.Class.Infer
+import           AST.Class.Infer.Infer1
+import           AST.Class.Infer.ScopeLevel
+import           AST.Term.Apply
+import           AST.Term.Scheme
+import           AST.Term.Scope
+import           AST.Term.TypeSig
+import           AST.Unify
+import           AST.Unify.PureBinding
+import           AST.Unify.STBinding
+import           Control.Applicative
 import qualified Control.Lens as Lens
-import Control.Lens.Operators
-import Control.Lens.Tuple
-import Control.Monad.Reader
-import Control.Monad.RWS
-import Control.Monad.ST
-import Control.Monad.ST.Class (MonadST(..))
-import Control.Monad.Trans.Maybe
-import Data.Constraint
+import           Control.Lens.Operators
+import           Control.Lens.Tuple
+import           Control.Monad.RWS
+import           Control.Monad.Reader
+import           Control.Monad.ST
+import           Control.Monad.ST.Class (MonadST(..))
+import           Control.Monad.Trans.Maybe
+import           Data.Constraint
+import           Data.Proxy (Proxy(..))
+import           Text.PrettyPrint ((<+>))
+import qualified Text.PrettyPrint as Pretty
+import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 
-data LangA v f
-    = ALam (Scope LangA v f)
-    | AVar (ScopeVar LangA v f)
-    | AApp (Apply (LangA v) f)
-    | ATypeSig (TypeSig (Tree Pure (Scheme Types Typ)) (LangA v) f)
+data LangA v k
+    = ALam (Scope LangA v k)
+    | AVar (ScopeVar LangA v k)
+    | AApp (Apply (LangA v) k)
+    | ATypeSig (TypeSig (Tree Pure (Scheme Types Typ)) (LangA v) k)
     | ALit Int
 
 makeChildrenRecursive [''LangA]
 instance Recursive Children (LangA v)
 
 type instance TypeAST (LangA k) = Typ
+
+instance DeBruijnIndex v => Pretty (LangA v ('Knot Pure)) where
+    pPrintPrec lvl p (ALam (Scope expr)) =
+        Pretty.hcat
+        [ Pretty.text "λ("
+        , pPrint (1 + deBruijnIndexMax (Proxy :: Proxy v))
+        , Pretty.text ")."
+        ] <+> pPrintPrec lvl p expr
+    pPrintPrec _ _ (AVar (ScopeVar v)) =
+        Pretty.text "#" <> pPrint (inverseDeBruijnIndex # v)
+    pPrintPrec lvl p (AApp (Apply f x)) =
+        pPrintPrec lvl p f <+> pPrintPrec lvl p x
+    pPrintPrec lvl p (ATypeSig typeSig) = pPrintPrec lvl p typeSig
+    pPrintPrec _ _ (ALit i) = pPrint i
 
 instance HasTypeAST1 LangA where
     type TypeAST1 LangA = Typ

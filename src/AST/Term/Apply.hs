@@ -18,19 +18,27 @@ import Control.Lens (Traversal, makeLenses)
 import Control.Lens.Operators
 import Data.Binary (Binary)
 import GHC.Generics (Generic)
+import Text.PrettyPrint ((<+>))
+import Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 import Prelude.Compat
 
-data Apply expr f = Apply
-    { _applyFunc :: Tie f expr
-    , _applyArg :: Tie f expr
+data Apply expr k = Apply
+    { _applyFunc :: Tie k expr
+    , _applyArg :: Tie k expr
     } deriving Generic
 
-deriving instance Eq   (Tie f expr) => Eq   (Apply expr f)
-deriving instance Ord  (Tie f expr) => Ord  (Apply expr f)
-deriving instance Show (Tie f expr) => Show (Apply expr f)
-instance Binary (Tie f expr) => Binary (Apply expr f)
-instance NFData (Tie f expr) => NFData (Apply expr f)
+deriving instance Eq   (Tie k expr) => Eq   (Apply expr k)
+deriving instance Ord  (Tie k expr) => Ord  (Apply expr k)
+deriving instance Show (Tie k expr) => Show (Apply expr k)
+instance Binary (Tie k expr) => Binary (Apply expr k)
+instance NFData (Tie k expr) => NFData (Apply expr k)
+
+instance Pretty (Tie k expr) => Pretty (Apply expr k) where
+    pPrintPrec lvl p (Apply f x) =
+        pPrintPrec lvl 11 f <+>
+        pPrintPrec lvl 10 x
+        & maybeParens (p > 10)
 
 makeLenses ''Apply
 makeChildrenAndZipMatch [''Apply]
