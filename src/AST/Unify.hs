@@ -4,7 +4,7 @@
 module AST.Unify
     ( HasQuantifiedVar(..)
     , UVar
-    , Binding(..)
+    , Binding(..), UnifyError(..)
     , Unify(..)
     , applyBindings, unify
     , semiPruneLookup
@@ -44,6 +44,11 @@ data Binding m t = Binding
     , bindVar :: Tree (UVar m) t -> Tree (UTerm (UVar m)) t -> m ()
     }
 
+data UnifyError m t
+    = SkolemUnified (Tree (UVar m) t) (Tree (UVar m) t)
+    | SkolemEscape (Tree (UVar m) t)
+    | ConstraintsMismatch (Tree t (UVar m)) (TypeConstraintsOf t)
+
 class
     ( Eq (Tree (UVar m) t)
     , ZipMatch t
@@ -79,17 +84,9 @@ class
         Alternative m => Tree (UTermBody (UVar m)) t -> Tree (UTermBody (UVar m)) t -> m (Tree t (UVar m))
     structureMismatch _ _ = empty
 
-    skolemUnified :: Tree (UVar m) t -> Tree (UVar m) t -> m ()
-    default skolemUnified :: Alternative m => Tree (UVar m) t -> Tree (UVar m) t -> m ()
-    skolemUnified _ _ = empty
-
-    skolemEscape :: Tree (UVar m) t -> m ()
-    default skolemEscape :: Alternative m => Tree (UVar m) t -> m ()
-    skolemEscape _ = empty
-
-    constraintsMismatch :: Tree t (UVar m) -> TypeConstraintsOf t -> m ()
-    default constraintsMismatch :: Alternative m => Tree t (UVar m) -> TypeConstraintsOf t -> m ()
-    constraintsMismatch _ _ = empty
+    unifyError :: UnifyError m t -> m ()
+    default unifyError :: Alternative m => UnifyError m t -> m ()
+    unifyError _ = empty
 
 newUnbound :: forall m t. Unify m t => m (Tree (UVar m) t)
 newUnbound = scopeConstraints (Proxy :: Proxy t) >>= newVar binding . UUnbound
@@ -163,7 +160,7 @@ updateConstraints newConstraints var =
                 | otherwise -> bindVar binding v1 (UUnbound newConstraints)
             USkolem l
                 | newConstraints `leq` l -> pure ()
-                | otherwise -> skolemEscape v1
+                | otherwise -> SkolemEscape v1 & unifyError
             UTerm t -> updateTermConstraints v1 t newConstraints
             UResolving t -> () <$ occurs var t
             _ -> error "This shouldn't happen in unification stage"
@@ -181,7 +178,7 @@ updateTermConstraints v t newConstraints =
             do
                 bindVar binding v (UResolving (t ^. uBody))
                 applyConstraints (Proxy :: Proxy (Recursive (Unify m))) newConstraints
-                    (constraintsMismatch (t ^. uBody))
+                    (unifyError . ConstraintsMismatch (t ^. uBody))
                     updateConstraints
                     (t ^. uBody)
                     >>= bindVar binding v . UTerm . UTermBody newConstraints
@@ -222,7 +219,7 @@ unify x0 y0 =
             >>=
             \case
             (v1, _) | v1 == other -> pure other
-            (v1, USkolem{}) -> other <$ skolemUnified v1 other
+            (v1, USkolem{}) -> other <$ unifyError (SkolemUnified v1 other)
             (v1, UUnbound level) -> onUnbound v1 level
             (v1, UTerm t) -> onTerm v1 t
             (_, _) -> error "This shouldn't happen in unification stage"
