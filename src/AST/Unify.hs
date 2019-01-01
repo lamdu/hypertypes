@@ -44,10 +44,10 @@ data Binding m t = Binding
     , bindVar :: Tree (UVar m) t -> Tree (UTerm (UVar m)) t -> m ()
     }
 
-data UnifyError m t
-    = SkolemUnified (Tree (UVar m) t) (Tree (UVar m) t)
-    | SkolemEscape (Tree (UVar m) t)
-    | ConstraintsMismatch (Tree t (UVar m)) (TypeConstraintsOf t)
+data UnifyError k t
+    = SkolemUnified (Tree k t) (Tree k t)
+    | SkolemEscape (Tree k t)
+    | ConstraintsMismatch (Tree t k) (TypeConstraintsOf t)
 
 class
     ( Eq (Tree (UVar m) t)
@@ -81,8 +81,8 @@ class
         Alternative m => Tree (UTermBody (UVar m)) t -> Tree (UTermBody (UVar m)) t -> m (Tree t (UVar m))
     structureMismatch _ _ = empty
 
-    unifyError :: UnifyError m t -> m ()
-    default unifyError :: Alternative m => UnifyError m t -> m ()
+    unifyError :: UnifyError (UVar m) t -> m ()
+    default unifyError :: Alternative m => UnifyError (UVar m) t -> m ()
     unifyError _ = empty
 
 newUnbound :: forall m t. Unify m t => m (Tree (UVar m) t)
