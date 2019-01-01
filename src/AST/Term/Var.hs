@@ -7,11 +7,11 @@ module AST.Term.Var
     , MonadScopeTypes(..)
     ) where
 
-import           AST.Class.Infer (MonadInfer, Infer(..), TypeAST)
+import           AST.Class.Infer (Infer(..), TypeAST)
 import           AST.Class.Recursive (Recursive)
 import           AST.Class.Recursive.TH (makeChildrenRecursive)
 import           AST.Knot (Knot, Tree)
-import           AST.Unify (Unify, UVar)
+import           AST.Unify (MonadUnify, Unify, UVar)
 import           Control.DeepSeq (NFData)
 import           Control.Lens.Operators
 import qualified Control.Lens as Lens
@@ -36,7 +36,7 @@ class MonadScopeTypes v t m where
 type instance TypeAST (Var v t) = TypeAST t
 
 instance
-    ( MonadInfer m
+    ( MonadUnify m
     , Recursive (Unify m) (TypeAST expr)
     , MonadScopeTypes v (TypeAST expr) m
     ) =>

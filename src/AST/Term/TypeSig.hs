@@ -8,7 +8,7 @@ module AST.Term.TypeSig
     ) where
 
 import AST
-import AST.Class.Infer (MonadInfer(..), Infer(..), TypeAST, inferNode, nodeType)
+import AST.Class.Infer (MonadLevel(..), Infer(..), TypeAST, inferNode, nodeType)
 import AST.Class.Instantiate (Instantiate(..), SchemeType)
 import AST.Class.Recursive.TH (makeChildrenRecursive)
 import AST.Unify (Unify, unify)
@@ -42,7 +42,8 @@ instance Deps typ term k NFData => NFData (TypeSig typ term k)
 type instance TypeAST (TypeSig typ term) = TypeAST term
 
 instance
-    ( Infer m term
+    ( MonadLevel m
+    , Infer m term
     , Instantiate m (Tree Pure scheme)
     , SchemeType (Tree Pure scheme) ~ TypeAST term
     ) =>

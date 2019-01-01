@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleContexts, DataKinds #-}
 
 module AST.Class.Infer
-    ( TypeAST, Infer(..), MonadInfer(..)
+    ( TypeAST, Infer(..), MonadLevel(..)
     , TypeOf, INode, inferNode, nodeType
     ) where
 
@@ -21,12 +21,10 @@ type family TypeAST (t :: Knot -> *) :: Knot -> *
 type TypeOf m t = Tree (UVar m) (TypeAST t)
 type INode v t a = Tree (Ann (Tree v (TypeAST t), a)) t
 
-class MonadUnify m => MonadInfer m where
+class MonadUnify m => MonadLevel m where
     localLevel :: m a -> m a
-    -- Default implementation for type systems without skolems
-    localLevel = error "Skolems not supported in this type system"
 
-class (Recursive (Unify m) (TypeAST t), MonadInfer m) => Infer m t where
+class (Recursive (Unify m) (TypeAST t), MonadUnify m) => Infer m t where
     infer :: Tree t (Ann a) -> m (TypeOf m t, Tree t (Ann (TypeOf m t, a)))
 
 inferNode :: Infer m t => Tree (Ann a) t -> m (INode (UVar m) t a)

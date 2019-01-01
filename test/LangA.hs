@@ -50,7 +50,7 @@ instance HasTypeAST1 LangA where
     typeAst _ = Dict
 
 type TermInfer1Deps env m =
-    ( MonadInfer m
+    ( MonadLevel m
     , MonadReader env m
     , HasScopeTypes (UVar m) Typ env
     , Recursive (Unify m) Typ
@@ -82,7 +82,7 @@ type instance UVar IntInferA = Const Int
 instance MonadUnify IntInferA where
     scopeConstraints = Lens.view Lens._2
 
-instance MonadInfer IntInferA where
+instance MonadLevel IntInferA where
     localLevel = local (Lens._2 . _QuantificationScope +~ 1)
 
 instance Unify IntInferA Typ where
@@ -110,7 +110,7 @@ type instance UVar (STInferA s) = STVar s
 instance MonadUnify (STInferA s) where
     scopeConstraints = Lens.view Lens._2
 
-instance MonadInfer (STInferA s) where
+instance MonadLevel (STInferA s) where
     localLevel = local (Lens._2 . _QuantificationScope +~ 1)
 
 instance Unify (STInferA s) Typ where

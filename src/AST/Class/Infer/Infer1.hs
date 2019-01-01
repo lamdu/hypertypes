@@ -7,8 +7,9 @@ module AST.Class.Infer.Infer1
     ( HasTypeAST1(..), Infer1(..)
     ) where
 
-import AST.Class.Infer (MonadInfer, Infer, TypeAST)
+import AST.Class.Infer (Infer, TypeAST)
 import AST.Knot (Knot)
+import AST.Unify (MonadUnify)
 import Data.Constraint (Constraint, Dict, (:-))
 import Data.Proxy (Proxy(..))
 
@@ -17,5 +18,5 @@ class HasTypeAST1 t where
     type family TypeASTIndexConstraint t :: * -> Constraint
     typeAst :: Proxy (t k) -> Dict (TypeAST (t k) ~ TypeAST1 t)
 
-class (MonadInfer m, HasTypeAST1 t) => Infer1 m t where
+class (MonadUnify m, HasTypeAST1 t) => Infer1 m t where
     inferMonad :: TypeASTIndexConstraint t i :- Infer m (t i)

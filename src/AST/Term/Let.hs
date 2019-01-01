@@ -43,7 +43,7 @@ instance RecursiveConstraint (Let v expr) constraint => Recursive constraint (Le
 
 type instance TypeAST (Let v t) = TypeAST t
 
-instance (Infer m expr, MonadScopeTypes v (TypeAST expr) m) => Infer m (Let v expr) where
+instance (MonadLevel m, Infer m expr, MonadScopeTypes v (TypeAST expr) m) => Infer m (Let v expr) where
     infer (Let v e i) =
         do
             (eI, innerScope) <- (,) <$> inferNode e <*> scopeConstraints & localLevel

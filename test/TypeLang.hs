@@ -6,7 +6,6 @@ module TypeLang where
 import Algebra.Lattice
 import Algebra.PartialOrd
 import AST
-import AST.Class.Infer
 import AST.Class.Instantiate
 import AST.Unify
 import AST.Unify.Constraints
@@ -83,7 +82,7 @@ emptyIntInferState =
 type STInferState s = Tree Types (Const (STRef s Int))
 
 type instance SchemeType (Tree Pure Typ) = Typ
-instance (MonadInfer m, Recursive (Unify m) Typ) => Instantiate m (Tree Pure Typ)
+instance (MonadUnify m, Recursive (Unify m) Typ) => Instantiate m (Tree Pure Typ)
 
 instance HasQuantifiedVar Typ where
     type QVar Typ = String

@@ -43,7 +43,7 @@ makeChildrenRecursive [''LangB]
 
 type instance TypeAST LangB = Typ
 
-instance (MonadInfer m, MonadScopeTypes [Char] Typ m, Recursive (Unify m) Typ) => Infer m LangB where
+instance (MonadLevel m, MonadScopeTypes [Char] Typ m, Recursive (Unify m) Typ) => Infer m LangB where
     infer (BApp x) = infer x <&> _2 %~ BApp
     infer (BVar x) = infer x <&> _2 %~ BVar
     infer (BLam x) = infer x <&> _2 %~ BLam
@@ -81,7 +81,7 @@ instance MonadScopeTypes String Typ IntInferB where
 instance MonadUnify IntInferB where
     scopeConstraints = Lens.view Lens._2
 
-instance MonadInfer IntInferB where
+instance MonadLevel IntInferB where
     localLevel = local (Lens._2 . _QuantificationScope +~ 1)
 
 instance Unify IntInferB Typ where
@@ -112,7 +112,7 @@ instance MonadScopeTypes String Typ (STInferB s) where
 instance MonadUnify (STInferB s) where
     scopeConstraints = Lens.view Lens._2
 
-instance MonadInfer (STInferB s) where
+instance MonadLevel (STInferB s) where
     localLevel = local (Lens._2 . _QuantificationScope +~ 1)
 
 instance Unify (STInferB s) Typ where

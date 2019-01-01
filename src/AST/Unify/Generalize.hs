@@ -8,7 +8,6 @@ module AST.Unify.Generalize
 
 import           Algebra.PartialOrd (PartialOrd(..))
 import           AST.Class.Children
-import           AST.Class.Infer
 import           AST.Class.Instantiate
 import           AST.Class.Recursive
 import           AST.Knot
@@ -33,7 +32,7 @@ Lens.makePrisms ''GTerm
 
 generalize ::
     forall m t.
-    (MonadInfer m, Recursive (Unify m) t) =>
+    (MonadUnify m, Recursive (Unify m) t) =>
     QuantificationScope -> Tree (UVar m) t -> m (Tree (GTerm m) t)
 generalize s v0 =
     withDict (recursive :: RecursiveDict (Unify m) t) $
@@ -63,7 +62,7 @@ generalize s v0 =
 
 type instance SchemeType (Tree (GTerm v) t) = t
 
-instance (MonadInfer m, Recursive (Unify m) t) => Instantiate m (Tree (GTerm m) t) where
+instance (MonadUnify m, Recursive (Unify m) t) => Instantiate m (Tree (GTerm m) t) where
     instantiate g =
         do
             (r, recover) <- runWriterT (go g)
