@@ -8,6 +8,7 @@ module AST.Term.Let
 
 import AST.Class.Children.TH (makeChildren)
 import AST.Class.Infer
+import AST.Class.Infer.ScopeLevel
 import AST.Class.Instantiate
 import AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import AST.Knot (Tie)

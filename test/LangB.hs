@@ -8,13 +8,13 @@ import TypeLang
 
 import AST
 import AST.Class.Infer
+import AST.Class.Infer.ScopeLevel
 import AST.Unify
 import AST.Term.Apply
 import AST.Term.Lam
 import AST.Term.Let
 import AST.Term.RowExtend
 import AST.Term.Var
-import AST.Unify.Constraints
 import AST.Unify.IntMapBinding
 import AST.Unify.STBinding
 import Control.Applicative

@@ -6,6 +6,7 @@ import           TypeLang
 
 import           AST
 import           AST.Class.Infer
+import           AST.Class.Infer.ScopeLevel
 import           AST.Class.Recursive
 import           AST.Term.Apply
 import           AST.Term.FuncType
@@ -17,7 +18,6 @@ import           AST.Term.Scope
 import           AST.Term.TypeSig
 import           AST.Term.Var
 import           AST.Unify
-import           AST.Unify.Constraints
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.RWS

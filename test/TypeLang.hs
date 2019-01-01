@@ -4,6 +4,7 @@
 module TypeLang where
 
 import           AST
+import           AST.Class.Infer.ScopeLevel
 import           AST.Class.Instantiate
 import           AST.Term.FuncType
 import           AST.Term.RowExtend
@@ -78,6 +79,7 @@ instance RowConstraints RConstraints where
     forbidden = rForbiddenFields
 
 instance HasTypeConstraints Typ where
+    type TypeConstraintsOf Typ = QuantificationScope
     applyConstraints _ _ _ _ TInt = pure TInt
     applyConstraints _ _ _ _ (TVar v) = TVar v & pure
     applyConstraints _ c _ u (TFun f) = monoChildren (u c) f <&> TFun

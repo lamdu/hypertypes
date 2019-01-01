@@ -13,12 +13,12 @@ import AST
 import AST.Class.Combinators
 import AST.Class.Infer
 import AST.Class.Infer.Infer1
+import AST.Class.Infer.ScopeLevel
 import AST.Term.Apply
 import AST.Term.Scheme
 import AST.Term.Scope
 import AST.Term.TypeSig
 import AST.Unify
-import AST.Unify.Constraints
 import AST.Unify.IntMapBinding
 import AST.Unify.STBinding
 import Control.Applicative

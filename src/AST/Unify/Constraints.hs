@@ -1,10 +1,9 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DataKinds, TypeFamilies, RankNTypes #-}
+{-# LANGUAGE NoImplicitPrelude, DataKinds, TypeFamilies, RankNTypes #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, DefaultSignatures, FlexibleContexts #-}
 {-# LANGUAGE ConstraintKinds, TypeOperators, ScopedTypeVariables, UndecidableInstances #-}
 
 module AST.Unify.Constraints
-    ( QuantificationScope(..), _QuantificationScope
-    , TypeConstraints
+    ( TypeConstraints
     , HasTypeConstraints(..)
     , TypeConstraintsAre
     ) where
@@ -14,26 +13,9 @@ import Algebra.PartialOrd (PartialOrd(..))
 import AST.Class.Children (Children(..), ChildrenWithConstraint)
 import AST.Class.Combinators (And)
 import AST.Knot (Knot, Tree)
-import Control.Lens (makePrisms)
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
-
-newtype QuantificationScope = QuantificationScope Int
-    deriving (Eq, Show)
-makePrisms ''QuantificationScope
-
-instance PartialOrd QuantificationScope where
-    QuantificationScope x `leq` QuantificationScope y = x >= y
-
-instance JoinSemiLattice QuantificationScope where
-    QuantificationScope x \/ QuantificationScope y = QuantificationScope (min x y)
-
-instance Semigroup QuantificationScope where
-    (<>) = (\/)
-
-instance Monoid QuantificationScope where
-    mempty = QuantificationScope maxBound
 
 class (PartialOrd c, JoinSemiLattice c) => TypeConstraints c
 instance (PartialOrd c, JoinSemiLattice c) => TypeConstraints c
@@ -43,7 +25,6 @@ class
     HasTypeConstraints (ast :: Knot -> *) where
 
     type TypeConstraintsOf ast
-    type TypeConstraintsOf ast = QuantificationScope
 
     applyConstraints ::
         (Applicative m, ChildrenWithConstraint ast constraint) =>

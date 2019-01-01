@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleContexts, DataKinds #-}
 
 module AST.Class.Infer
-    ( TypeAST, Infer(..), MonadLevel(..)
+    ( TypeAST, Infer(..)
     , TypeOf, INode, inferNode, nodeType
     ) where
 
@@ -20,9 +20,6 @@ type family TypeAST (t :: Knot -> *) :: Knot -> *
 
 type TypeOf m t = Tree (UVar m) (TypeAST t)
 type INode v t a = Tree (Ann (Tree v (TypeAST t), a)) t
-
-class Monad m => MonadLevel m where
-    localLevel :: m a -> m a
 
 class Recursive (Unify m) (TypeAST t) => Infer m t where
     infer :: Tree t (Ann a) -> m (TypeOf m t, Tree t (Ann (TypeOf m t, a)))

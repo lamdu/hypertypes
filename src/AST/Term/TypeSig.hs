@@ -7,7 +7,8 @@ module AST.Term.TypeSig
     ) where
 
 import AST
-import AST.Class.Infer (MonadLevel(..), Infer(..), TypeAST, inferNode, nodeType)
+import AST.Class.Infer (Infer(..), TypeAST, inferNode, nodeType)
+import AST.Class.Infer.ScopeLevel (MonadLevel(..))
 import AST.Class.Instantiate (Instantiate(..), SchemeType)
 import AST.Class.Recursive.TH (makeChildrenRecursive)
 import AST.Unify (unify)
