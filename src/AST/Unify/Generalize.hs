@@ -12,7 +12,6 @@ import           AST.Class.Instantiate
 import           AST.Class.Recursive
 import           AST.Knot
 import           AST.Unify
-import           AST.Unify.Constraints
 import           AST.Unify.Term
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -33,11 +32,12 @@ Lens.makePrisms ''GTerm
 generalize ::
     forall m t.
     Recursive (Unify m) t =>
-    QuantificationScope -> Tree (UVar m) t -> m (Tree (GTerm m) t)
-generalize s v0 =
+    Tree (UVar m) t -> m (Tree (GTerm m) t)
+generalize v0 =
     withDict (recursive :: RecursiveDict (Unify m) t) $
     do
         (v1, u) <- semiPruneLookup v0
+        c <- scopeConstraintsForType (Proxy :: Proxy t)
         case u of
             UUnbound l | l `leq` c ->
                 GPoly v1 <$
@@ -48,7 +48,7 @@ generalize s v0 =
                 bindVar binding v1 (USkolem l)
             USkolem l | l `leq` c -> pure (GPoly v1)
             UTerm t ->
-                children p (generalize s) (t ^. uBody)
+                children p generalize (t ^. uBody)
                 <&> onBody
                 where
                     onBody b
@@ -56,7 +56,6 @@ generalize s v0 =
                         | otherwise = GBody b
             _ -> pure (GMono v1)
     where
-        c = constraintsFromScope s :: TypeConstraintsOf t
         p = Proxy :: Proxy (Recursive (Unify m))
 
 type instance SchemeType (Tree (GTerm v) t) = t

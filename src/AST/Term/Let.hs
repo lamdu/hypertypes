@@ -1,6 +1,6 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric, TypeFamilies #-}
 {-# LANGUAGE StandaloneDeriving, ConstraintKinds, UndecidableInstances #-}
-{-# LANGUAGE TypeFamilies, FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE TupleSections, FlexibleInstances, MultiParamTypeClasses #-}
 
 module AST.Term.Let
     ( Let(..), letVar, letEquals, letIn
@@ -12,7 +12,6 @@ import AST.Class.Instantiate
 import AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import AST.Knot (Tie)
 import AST.Term.Var
-import AST.Unify (MonadUnify(..))
 import AST.Unify.Generalize
 import Control.DeepSeq (NFData)
 import Control.Lens (makeLenses)
@@ -46,7 +45,9 @@ type instance TypeAST (Let v t) = TypeAST t
 instance (MonadLevel m, Infer m expr, MonadScopeTypes v (TypeAST expr) m) => Infer m (Let v expr) where
     infer (Let v e i) =
         do
-            (eI, innerScope) <- (,) <$> inferNode e <*> scopeConstraints & localLevel
-            eG <- generalize innerScope (eI ^. nodeType)
+            (eI, eG) <-
+                do
+                    eI <- inferNode e
+                    generalize (eI ^. nodeType) <&> (eI ,)
             iI <- localScopeType v (instantiate eG) (inferNode i)
             pure (iI ^. nodeType, Let v eI iI)
