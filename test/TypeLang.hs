@@ -102,7 +102,7 @@ instance HasTypeConstraints Row where
     applyConstraints _ _ _ _ REmpty = pure REmpty
     applyConstraints _ _ _ _ (RVar x) = RVar x & pure
     applyConstraints p c e u (RExtend x) =
-        applyRowConstraints p c (^. rScope) (e . (`RowConstraints` mempty) . singleton) u RExtend x
+        applyRowConstraints p c (^. rScope) (e . (`RowConstraints` mempty) . singleton) u x <&> RExtend
 
 type PureInferState = (Tree Types PureBinding, Tree Types (Const Int))
 

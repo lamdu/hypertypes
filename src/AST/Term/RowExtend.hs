@@ -21,6 +21,7 @@ import Algebra.Lattice (JoinSemiLattice(..))
 import Control.DeepSeq (NFData)
 import Control.Lens (Lens', makeLenses, contains)
 import Control.Lens.Operators
+import Control.Monad (when)
 import Data.Binary (Binary)
 import Data.Constraint (Constraint)
 import Data.Proxy (Proxy(..))
@@ -67,18 +68,17 @@ applyRowConstraints ::
     Proxy constraint ->
     TypeConstraintsOf rowTyp ->
     (TypeConstraintsOf rowTyp -> TypeConstraintsOf valTyp) ->
-    (RowKey rowTyp -> m r) ->
+    (RowKey rowTyp -> m ()) ->
     (forall child. constraint child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
-    (Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) q -> r) ->
     Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) p ->
-    m r
-applyRowConstraints _ c toChildC err update cons (RowExtend k v rest)
-    | c ^. forbidden . contains k = err k
-    | otherwise =
-        RowExtend k
+    m (Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) q)
+applyRowConstraints _ c toChildC err update (RowExtend k v rest) =
+    when (c ^. forbidden . contains k) (err k)
+    *>
+    (RowExtend k
         <$> update (c & forbidden .~ mempty & toChildC) v
         <*> update (c & forbidden . contains k .~ True) rest
-        <&> cons
+    )
 
 rowStructureMismatch ::
     Recursive (Unify m) rowTyp =>

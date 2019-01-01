@@ -30,7 +30,7 @@ class
         (Applicative m, ChildrenWithConstraint ast constraint) =>
         Proxy constraint ->
         TypeConstraintsOf ast ->
-        (TypeConstraintsOf ast -> m (Tree ast q)) ->
+        (TypeConstraintsOf ast -> m ()) ->
         (forall child. constraint child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
         Tree ast p -> m (Tree ast q)
     default applyConstraints ::
@@ -40,7 +40,7 @@ class
         ) =>
         Proxy constraint ->
         TypeConstraintsOf ast ->
-        (TypeConstraintsOf ast -> m (Tree ast q)) ->
+        (TypeConstraintsOf ast -> m ()) ->
         (forall child. constraint child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
         Tree ast p -> m (Tree ast q)
     applyConstraints _ constraints _ update =

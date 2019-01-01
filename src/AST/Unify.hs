@@ -87,8 +87,8 @@ class
     default skolemEscape :: Alternative m => Tree (UVar m) t -> m ()
     skolemEscape _ = empty
 
-    constraintsMismatch :: Tree t (UVar m) -> TypeConstraintsOf t -> m (Tree t (UVar m))
-    default constraintsMismatch :: Alternative m => Tree t (UVar m) -> TypeConstraintsOf t -> m (Tree t (UVar m))
+    constraintsMismatch :: Tree t (UVar m) -> TypeConstraintsOf t -> m ()
+    default constraintsMismatch :: Alternative m => Tree t (UVar m) -> TypeConstraintsOf t -> m ()
     constraintsMismatch _ _ = empty
 
 newUnbound :: forall m t. Unify m t => m (Tree (UVar m) t)
