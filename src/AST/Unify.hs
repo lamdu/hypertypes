@@ -62,9 +62,6 @@ class
     scopeConstraints :: Proxy t -> m (TypeConstraintsOf t)
 
     newQuantifiedVariable :: Proxy t -> TypeConstraintsOf t -> m (QVar t)
-    -- Default for type languages which force quantified variables to a specific type or a hole type
-    default newQuantifiedVariable :: QVar t ~ () => Proxy t -> TypeConstraintsOf t -> m (QVar t)
-    newQuantifiedVariable _ _ = pure ()
 
     -- | A unification variable was unified with a type that contains itself,
     -- therefore the type is infinite.
