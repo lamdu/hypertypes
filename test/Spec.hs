@@ -125,6 +125,14 @@ extendGood =
     -- {b: 7 | a : 5}
     recExtend [("b", bLit 7)] record
 
+unifyRows :: Tree Pure LangB
+unifyRows =
+    -- \f -> f {a : 5, b : 7} (f {b : 5, a : 7} 12)
+    lam "f" $ \f ->
+    (f $$ closedRec [("a", bLit 5), ("b", bLit 7)])
+    $$
+    ((f $$ closedRec [("b", bLit 5), ("a", bLit 7)]) $$ bLit 12)
+
 inferExpr ::
     (Infer m t, Recursive Children t) =>
     Tree Pure t ->
@@ -181,3 +189,4 @@ main =
         testB extendLit
         testB extendDup
         testB extendGood
+        testB unifyRows
