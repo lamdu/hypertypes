@@ -24,6 +24,7 @@ dependencies:
 - monad-st
 - mtl
 - transformers
+- pretty
 
 library:
   source-dirs: src

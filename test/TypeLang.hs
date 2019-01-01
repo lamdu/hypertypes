@@ -3,33 +3,35 @@
 
 module TypeLang where
 
-import Algebra.Lattice
-import Algebra.PartialOrd
-import AST
-import AST.Class.Instantiate
-import AST.Unify
-import AST.Unify.Constraints
-import AST.Unify.IntMapBinding
-import AST.Unify.Term
-import AST.Term.FuncType
-import AST.Term.RowExtend
-import AST.Term.Scheme
-import AST.Term.Scope
-import Control.Applicative
+import           AST
+import           AST.Class.Instantiate
+import           AST.Term.FuncType
+import           AST.Term.RowExtend
+import           AST.Term.Scheme
+import           AST.Term.Scope
+import           AST.Unify
+import           AST.Unify.Constraints
+import           AST.Unify.IntMapBinding
+import           AST.Unify.Term
+import           Algebra.Lattice
+import           Algebra.PartialOrd
+import           Control.Applicative
 import qualified Control.Lens as Lens
-import Control.Lens.Operators
-import Data.Set (Set, singleton)
-import Data.STRef
+import           Control.Lens.Operators
+import           Data.STRef
+import           Data.Set (Set, singleton)
+import qualified Text.PrettyPrint as Pretty
+import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 
-data Typ f
+data Typ k
     = TInt
-    | TFun (FuncType Typ f)
-    | TRec (Tie f Row)
+    | TFun (FuncType Typ k)
+    | TRec (Tie k Row)
     | TVar String
 
-data Row f
+data Row k
     = REmpty
-    | RExtend (RowExtend String Typ Row f)
+    | RExtend (RowExtend String Typ Row k)
     | RVar String
 
 data RConstraints = RowConstraints
@@ -37,9 +39,9 @@ data RConstraints = RowConstraints
     , _rScope :: QuantificationScope
     } deriving (Eq, Show)
 
-data Types f = Types
-    { _tTyp :: Tie f Typ
-    , _tRow :: Tie f Row
+data Types k = Types
+    { _tTyp :: Tie k Typ
+    , _tRow :: Tie k Row
     }
 
 Lens.makePrisms ''Typ
@@ -50,6 +52,17 @@ makeChildrenAndZipMatch [''Typ, ''Row, ''Types]
 
 deriving instance SubTreeConstraint Typ f Show => Show (Typ f)
 deriving instance SubTreeConstraint Row f Show => Show (Row f)
+
+instance SubTreeConstraint Typ k Pretty => Pretty (Typ k) where
+    pPrint TInt = Pretty.text "Int"
+    pPrint (TFun x) = pPrint x
+    pPrint (TRec x) = pPrint x
+    pPrint (TVar s) = '#':s & Pretty.text
+
+instance SubTreeConstraint Row k Pretty => Pretty (Row k) where
+    pPrint REmpty = Pretty.text "{}"
+    pPrint (RExtend x) = pPrint x
+    pPrint (RVar s) = '#':s & Pretty.text
 
 instance HasChild Types Typ where getChild = tTyp
 instance HasChild Types Row where getChild = tRow

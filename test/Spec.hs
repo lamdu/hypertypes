@@ -1,32 +1,33 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-import LangA
-import LangB
-import TypeLang
+import           LangA
+import           LangB
+import           TypeLang
 
-import AST
-import AST.Class.Infer
-import AST.Class.Recursive
-import AST.Term.Apply
-import AST.Term.FuncType
-import AST.Term.Lam
-import AST.Term.Let
-import AST.Term.RowExtend
-import AST.Term.Scheme
-import AST.Term.Scope
-import AST.Term.TypeSig
-import AST.Term.Var
-import AST.Unify
-import AST.Unify.Constraints
+import           AST
+import           AST.Class.Infer
+import           AST.Class.Recursive
+import           AST.Term.Apply
+import           AST.Term.FuncType
+import           AST.Term.Lam
+import           AST.Term.Let
+import           AST.Term.RowExtend
+import           AST.Term.Scheme
+import           AST.Term.Scope
+import           AST.Term.TypeSig
+import           AST.Term.Var
+import           AST.Unify
+import           AST.Unify.Constraints
 import qualified Control.Lens as Lens
-import Control.Lens.Operators
-import Control.Monad.Reader
-import Control.Monad.RWS
-import Control.Monad.ST
-import Control.Monad.Trans.Maybe
-import Data.Functor.Const
-import Data.Proxy
-import Data.STRef
+import           Control.Lens.Operators
+import           Control.Monad.RWS
+import           Control.Monad.Reader
+import           Control.Monad.ST
+import           Control.Monad.Trans.Maybe
+import           Data.Functor.Const
+import           Data.Proxy
+import           Data.STRef
+import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 
 var :: DeBruijnIndex k => Int -> Tree Pure (LangA k)
 var = Pure . AVar . scopeVar
@@ -162,19 +163,22 @@ execSTInferB (STInferB act) =
         qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
         runReaderT act (mempty, QuantificationScope 0, qvarGen) & runMaybeT
 
+prettyPrint :: Pretty a => a -> IO ()
+prettyPrint = print . pPrint
+
 testA :: Tree Pure (LangA EmptyScope) -> IO ()
 testA expr =
     do
         putStrLn ""
-        print (execIntInferA (inferExpr expr))
-        print (runST (execSTInferA (inferExpr expr)))
+        execIntInferA (inferExpr expr) & prettyPrint
+        runST (execSTInferA (inferExpr expr)) & prettyPrint
 
 testB :: Tree Pure LangB -> IO ()
 testB expr =
     do
         putStrLn ""
-        print (execIntInferB (inferExpr expr))
-        print (runST (execSTInferB (inferExpr expr)))
+        execIntInferB (inferExpr expr) & prettyPrint
+        runST (execSTInferB (inferExpr expr)) & prettyPrint
 
 main :: IO ()
 main =

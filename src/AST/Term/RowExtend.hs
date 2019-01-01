@@ -9,26 +9,29 @@ module AST.Term.RowExtend
     , applyRowConstraints, rowStructureMismatch, inferRowExtend
     ) where
 
-import Algebra.Lattice (JoinSemiLattice(..))
-import AST.Class.Infer (Infer(..), TypeAST, TypeOf, inferNode, nodeType)
-import AST.Class.Recursive (Recursive(..), RecursiveConstraint)
-import AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
-import AST.Knot (Tree, Tie)
-import AST.Knot.Ann (Ann)
-import AST.Unify (Unify(..), UVar, newVar, unify, scopeConstraintsForType, newTerm)
-import AST.Unify.Constraints (TypeConstraints(..), HasTypeConstraints(..))
-import AST.Unify.Term (UTerm(..))
-import Control.DeepSeq (NFData)
-import Control.Lens (Lens', makeLenses, contains)
-import Control.Lens.Operators
-import Data.Binary (Binary)
-import Data.Constraint (Constraint)
-import Data.Proxy (Proxy(..))
-import Data.Set (Set)
-import GHC.Generics (Generic)
-import Text.Show.Combinators ((@|), showCon)
+import           AST.Class.Infer (Infer(..), TypeAST, TypeOf, inferNode, nodeType)
+import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
+import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
+import           AST.Knot (Tree, Tie)
+import           AST.Knot.Ann (Ann)
+import           AST.Unify (Unify(..), UVar, newVar, unify, scopeConstraintsForType, newTerm)
+import           AST.Unify.Constraints (TypeConstraints(..), HasTypeConstraints(..))
+import           AST.Unify.Term (UTerm(..))
+import           Algebra.Lattice (JoinSemiLattice(..))
+import           Control.DeepSeq (NFData)
+import           Control.Lens (Lens', makeLenses, contains)
+import           Control.Lens.Operators
+import           Data.Binary (Binary)
+import           Data.Constraint (Constraint)
+import           Data.Proxy (Proxy(..))
+import           Data.Set (Set)
+import           GHC.Generics (Generic)
+import           Text.PrettyPrint ((<+>))
+import qualified Text.PrettyPrint as Pretty
+import           Text.PrettyPrint.HughesPJClass (Pretty(..))
+import           Text.Show.Combinators ((@|), showCon)
 
-import Prelude.Compat
+import           Prelude.Compat
 
 -- | Row-extend primitive for use in both value-level and type-level
 data RowExtend key val rest k = RowExtend
@@ -52,6 +55,14 @@ instance Deps NFData key val rest k => NFData (RowExtend key val rest k)
 
 instance Deps Show key val rest k => Show (RowExtend key val rest k) where
     showsPrec p (RowExtend k v r) = (showCon "RowExtend" @| k @| v @| r) p
+
+instance Deps Pretty key val rest k => Pretty (RowExtend key val rest k) where
+    pPrint (RowExtend k v r) =
+        pPrint k <+>
+        Pretty.text ":" <+>
+        pPrint v <+>
+        Pretty.text ":*:" <+>
+        pPrint r
 
 class Ord (RowConstraintsKey constraints) => RowConstraints constraints where
     type RowConstraintsKey constraints
