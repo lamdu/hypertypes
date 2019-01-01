@@ -38,8 +38,8 @@ uniType typ =
     , _sTyp = typ
     }
 
-expr :: Tree Pure (LangA EmptyScope)
-expr =
+lamXYx5 :: Tree Pure (LangA EmptyScope)
+lamXYx5 =
     -- \x y -> x (5 :: Int)
     Pure . ALam . scope $ \x ->
     Pure . ALam . scope $ \_y ->
@@ -158,8 +158,8 @@ main :: IO ()
 main =
     do
         putStrLn ""
-        print (execIntInferA (inferExpr expr))
-        print (runST (execSTInferA (inferExpr expr)))
+        print (execIntInferA (inferExpr lamXYx5))
+        print (runST (execSTInferA (inferExpr lamXYx5)))
         putStrLn ""
         print (execIntInferA (inferExpr infinite))
         print (runST (execSTInferA (inferExpr infinite)))
