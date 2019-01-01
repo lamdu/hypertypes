@@ -49,5 +49,6 @@ instance (MonadLevel m, Infer m expr, MonadScopeTypes v (TypeAST expr) m) => Inf
                 do
                     eI <- inferNode e
                     generalize (eI ^. nodeType) <&> (eI ,)
+                & localLevel
             iI <- localScopeType v (instantiate eG) (inferNode i)
             pure (iI ^. nodeType, Let v eI iI)
