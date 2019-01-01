@@ -14,20 +14,16 @@ import           Control.Lens (ALens')
 import           Control.Lens.Operators
 import           Control.Monad.State (MonadState(..), modify)
 import           Data.Functor.Const (Const(..))
-import           Data.IntMap (IntMap)
-import           Data.Maybe (fromMaybe)
+import           Data.Sequence
+import qualified Data.Sequence as Sequence
 
 import           Prelude.Compat
 
-data PureBinding t = PureBinding
-    { -- Could had used varBindings's size if IntMap's size was fast/O(1)
-      _nextVar :: {-# UNPACK #-} !Int
-    , _varBindings :: IntMap (UTerm (Const Int) t)
-    }
-Lens.makeLenses ''PureBinding
+newtype PureBinding t = PureBinding (Seq (UTerm (Const Int) t))
+Lens.makePrisms ''PureBinding
 
 emptyPureBinding :: PureBinding t
-emptyPureBinding = PureBinding 0 mempty
+emptyPureBinding = PureBinding mempty
 
 increase ::
     MonadState s m =>
@@ -45,14 +41,14 @@ pureBinding l =
     Binding
     { lookupVar =
         \k ->
-        Lens.use (Lens.cloneLens l . varBindings . Lens.at (k ^. Lens._Wrapped))
-        <&> fromMaybe (error "variable not found!")
+        Lens.use (Lens.cloneLens l . _PureBinding)
+        <&> (`Sequence.index` (k ^. Lens._Wrapped))
     , newVar =
         \x ->
         do
-            k <- increase (Lens.cloneLens l . nextVar) <&> Const
-            k <$ bind k x
+            s <- Lens.use (Lens.cloneLens l . _PureBinding)
+            Const (Sequence.length s) <$ (Lens.cloneLens l . _PureBinding .= s Sequence.|> x)
     , bindVar = bind
     }
     where
-        bind k v = Lens.cloneLens l . varBindings . Lens.at (k ^. Lens._Wrapped) ?= v
+        bind k v = Lens.cloneLens l . _PureBinding %= Sequence.update (k ^. Lens._Wrapped) v
