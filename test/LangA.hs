@@ -50,7 +50,7 @@ instance HasTypeAST1 LangA where
     typeAst _ = Dict
 
 type TermInfer1Deps env m =
-    ( MonadLevel m
+    ( MonadScopeLevel m
     , MonadReader env m
     , HasScopeTypes (UVar m) Typ env
     , Recursive (Unify m) Typ
@@ -70,17 +70,17 @@ instance (DeBruijnIndex k, TermInfer1Deps env m) => Infer m (LangA k) where
 
 -- Monads for inferring `LangA`:
 
-newtype IntInferA a = IntInferA (RWST (ScopeTypes (Const Int) Typ, QuantificationScope) () IntInferState Maybe a)
+newtype IntInferA a = IntInferA (RWST (ScopeTypes (Const Int) Typ, ScopeLevel) () IntInferState Maybe a)
     deriving
     ( Functor, Applicative, Alternative, Monad
-    , MonadReader (ScopeTypes (Const Int) Typ, QuantificationScope)
+    , MonadReader (ScopeTypes (Const Int) Typ, ScopeLevel)
     , MonadState IntInferState
     )
 
 type instance UVar IntInferA = Const Int
 
-instance MonadLevel IntInferA where
-    localLevel = local (Lens._2 . _QuantificationScope +~ 1)
+instance MonadScopeLevel IntInferA where
+    localLevel = local (Lens._2 . _ScopeLevel +~ 1)
 
 instance Unify IntInferA Typ where
     binding = intBindingState (Lens._1 . tTyp)
@@ -99,16 +99,16 @@ instance Recursive (Unify IntInferA `And` HasChild Types) Typ
 instance Recursive (Unify IntInferA `And` HasChild Types) Row
 
 newtype STInferA s a =
-    STInferA (ReaderT (ScopeTypes (STVar s) Typ, QuantificationScope, STInferState s) (MaybeT (ST s)) a)
+    STInferA (ReaderT (ScopeTypes (STVar s) Typ, ScopeLevel, STInferState s) (MaybeT (ST s)) a)
     deriving
     ( Functor, Applicative, Alternative, Monad, MonadST
-    , MonadReader (ScopeTypes (STVar s) Typ, QuantificationScope, STInferState s)
+    , MonadReader (ScopeTypes (STVar s) Typ, ScopeLevel, STInferState s)
     )
 
 type instance UVar (STInferA s) = STVar s
 
-instance MonadLevel (STInferA s) where
-    localLevel = local (Lens._2 . _QuantificationScope +~ 1)
+instance MonadScopeLevel (STInferA s) where
+    localLevel = local (Lens._2 . _ScopeLevel +~ 1)
 
 instance Unify (STInferA s) Typ where
     binding = stBindingState

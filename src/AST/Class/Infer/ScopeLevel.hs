@@ -1,8 +1,8 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell #-}
 
 module AST.Class.Infer.ScopeLevel
-    ( MonadLevel(..)
-    , QuantificationScope(..), _QuantificationScope
+    ( MonadScopeLevel(..)
+    , ScopeLevel(..), _ScopeLevel
     ) where
 
 import Algebra.Lattice (JoinSemiLattice(..))
@@ -11,21 +11,21 @@ import Control.Lens (makePrisms)
 
 import Prelude.Compat
 
-class Monad m => MonadLevel m where
+class Monad m => MonadScopeLevel m where
     localLevel :: m a -> m a
 
-newtype QuantificationScope = QuantificationScope Int
+newtype ScopeLevel = ScopeLevel Int
     deriving (Eq, Show)
-makePrisms ''QuantificationScope
+makePrisms ''ScopeLevel
 
-instance PartialOrd QuantificationScope where
-    QuantificationScope x `leq` QuantificationScope y = x >= y
+instance PartialOrd ScopeLevel where
+    ScopeLevel x `leq` ScopeLevel y = x >= y
 
-instance JoinSemiLattice QuantificationScope where
-    QuantificationScope x \/ QuantificationScope y = QuantificationScope (min x y)
+instance JoinSemiLattice ScopeLevel where
+    ScopeLevel x \/ ScopeLevel y = ScopeLevel (min x y)
 
-instance Semigroup QuantificationScope where
+instance Semigroup ScopeLevel where
     (<>) = (\/)
 
-instance Monoid QuantificationScope where
-    mempty = QuantificationScope maxBound
+instance Monoid ScopeLevel where
+    mempty = ScopeLevel maxBound

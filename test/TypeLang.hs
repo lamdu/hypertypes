@@ -37,7 +37,7 @@ data Row k
 
 data RConstraints = RowConstraints
     { _rForbiddenFields :: Set String
-    , _rScope :: QuantificationScope
+    , _rScope :: ScopeLevel
     } deriving (Eq, Show)
 
 data Types k = Types
@@ -79,7 +79,7 @@ instance RowConstraints RConstraints where
     forbidden = rForbiddenFields
 
 instance HasTypeConstraints Typ where
-    type TypeConstraintsOf Typ = QuantificationScope
+    type TypeConstraintsOf Typ = ScopeLevel
     applyConstraints _ _ _ _ TInt = pure TInt
     applyConstraints _ _ _ _ (TVar v) = TVar v & pure
     applyConstraints _ c _ u (TFun f) = monoChildren (u c) f <&> TFun

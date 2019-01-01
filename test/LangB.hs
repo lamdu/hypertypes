@@ -43,7 +43,7 @@ makeChildrenRecursive [''LangB]
 
 type instance TypeAST LangB = Typ
 
-instance (MonadLevel m, MonadScopeTypes [Char] Typ m, Recursive (Unify m) Typ) => Infer m LangB where
+instance (MonadScopeLevel m, MonadScopeTypes [Char] Typ m, Recursive (Unify m) Typ) => Infer m LangB where
     infer (BApp x) = infer x <&> _2 %~ BApp
     infer (BVar x) = infer x <&> _2 %~ BVar
     infer (BLam x) = infer x <&> _2 %~ BLam
@@ -61,10 +61,10 @@ instance (MonadLevel m, MonadScopeTypes [Char] Typ m, Recursive (Unify m) Typ) =
 -- Monads for inferring `LangB`:
 
 newtype IntInferB a =
-    IntInferB (RWST (Map String (IntInferB (Tree (Const Int) Typ)), QuantificationScope) () IntInferState Maybe a)
+    IntInferB (RWST (Map String (IntInferB (Tree (Const Int) Typ)), ScopeLevel) () IntInferState Maybe a)
     deriving
     ( Functor, Applicative, Alternative, Monad
-    , MonadReader (Map String (IntInferB (Tree (Const Int) Typ)), QuantificationScope)
+    , MonadReader (Map String (IntInferB (Tree (Const Int) Typ)), ScopeLevel)
     , MonadState IntInferState
     )
 
@@ -74,8 +74,8 @@ instance MonadScopeTypes String Typ IntInferB where
     scopeType v = Lens.view (Lens._1 . Lens.at v) >>= fromMaybe (error "name error")
     localScopeType v t = local (Lens._1 . Lens.at v ?~ t)
 
-instance MonadLevel IntInferB where
-    localLevel = local (Lens._2 . _QuantificationScope +~ 1)
+instance MonadScopeLevel IntInferB where
+    localLevel = local (Lens._2 . _ScopeLevel +~ 1)
 
 instance Unify IntInferB Typ where
     binding = intBindingState (Lens._1 . tTyp)
@@ -93,10 +93,10 @@ instance Recursive (Unify IntInferB) Row
 
 newtype STInferB s a =
     STInferB
-    (ReaderT (Map String (STInferB s (Tree (STVar s) Typ)), QuantificationScope, STInferState s) (MaybeT (ST s)) a)
+    (ReaderT (Map String (STInferB s (Tree (STVar s) Typ)), ScopeLevel, STInferState s) (MaybeT (ST s)) a)
     deriving
     ( Functor, Applicative, Alternative, Monad, MonadST
-    , MonadReader (Map String (STInferB s (Tree (STVar s) Typ)), QuantificationScope, STInferState s)
+    , MonadReader (Map String (STInferB s (Tree (STVar s) Typ)), ScopeLevel, STInferState s)
     )
 
 type instance UVar (STInferB s) = STVar s
@@ -105,8 +105,8 @@ instance MonadScopeTypes String Typ (STInferB s) where
     scopeType v = Lens.view (Lens._1 . Lens.at v) >>= fromMaybe (error "name error")
     localScopeType v t = local (Lens._1 . Lens.at v ?~ t)
 
-instance MonadLevel (STInferB s) where
-    localLevel = local (Lens._2 . _QuantificationScope +~ 1)
+instance MonadScopeLevel (STInferB s) where
+    localLevel = local (Lens._2 . _ScopeLevel +~ 1)
 
 instance Unify (STInferB s) Typ where
     binding = stBindingState
