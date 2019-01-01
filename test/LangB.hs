@@ -52,7 +52,7 @@ instance (MonadLevel m, MonadScopeTypes [Char] Typ m, Recursive (Unify m) Typ) =
     infer (BRecExtend x) =
         withDict (recursive :: RecursiveDict (Unify m) Typ) $
         do
-            (xT, xI) <- inferRowExtend rForbiddenFields TRec RExtend x
+            (xT, xI) <- inferRowExtend TRec RExtend x
             TRec xT & newTerm <&> (, BRecExtend xI)
     infer BRecEmpty =
         withDict (recursive :: RecursiveDict (Unify m) Typ) $

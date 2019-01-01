@@ -5,6 +5,7 @@
 
 module AST.Term.RowExtend
     ( RowExtend(..), rowKey, rowVal, rowRest
+    , RowConstraints(..), RowKey
     , propagateRowConstraints, rowStructureMismatch, inferRowExtend
     ) where
 
@@ -18,7 +19,7 @@ import AST.Unify (Unify(..), UVar, newVar, unify, scopeConstraintsForType, newTe
 import AST.Unify.Constraints (TypeConstraints(..), HasTypeConstraints(..))
 import AST.Unify.Term (UTermBody(..), UTerm(..))
 import Control.DeepSeq (NFData)
-import Control.Lens (ALens', makeLenses, cloneLens, contains)
+import Control.Lens (Lens', makeLenses, contains)
 import Control.Lens.Operators
 import Data.Binary (Binary)
 import Data.Constraint (Constraint)
@@ -52,6 +53,12 @@ instance Deps NFData key val rest k => NFData (RowExtend key val rest k)
 instance Deps Show key val rest k => Show (RowExtend key val rest k) where
     showsPrec p (RowExtend k v r) = (showCon "RowExtend" @| k @| v @| r) p
 
+class Ord (RowConstraintsKey constraints) => RowConstraints constraints where
+    type RowConstraintsKey constraints
+    forbidden :: Lens' constraints (Set (RowConstraintsKey constraints))
+
+type RowKey typ = RowConstraintsKey (TypeConstraintsOf typ)
+
 instance
     (HasTypeConstraints valTyp, HasTypeConstraints rowTyp) =>
     HasTypeConstraints (RowExtend key valTyp rowTyp) where
@@ -66,22 +73,21 @@ propagateRowConstraints ::
     ( Applicative m
     , constraint valTyp, constraint rowTyp
     , HasTypeConstraints valTyp, HasTypeConstraints rowTyp
-    , Ord key
+    , RowConstraints (TypeConstraintsOf rowTyp)
     ) =>
     Proxy constraint ->
-    ALens' (TypeConstraintsOf rowTyp) (Set key) ->
     TypeConstraintsOf rowTyp ->
-    (key -> m r) ->
+    (RowKey rowTyp -> m r) ->
     (forall child. constraint child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
-    (Tree (RowExtend key valTyp rowTyp) q -> r) ->
-    Tree (RowExtend key valTyp rowTyp) p ->
+    (Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) q -> r) ->
+    Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) p ->
     m r
-propagateRowConstraints _ forbiddenFields c err update cons (RowExtend k v rest)
-    | c ^. cloneLens forbiddenFields . contains k = err k
+propagateRowConstraints _ c err update cons (RowExtend k v rest)
+    | c ^. forbidden . contains k = err k
     | otherwise =
         RowExtend k
         <$> update (constraintsFromScope (c ^. constraintsScope)) v
-        <*> update (c & cloneLens forbiddenFields . contains k .~ True) rest
+        <*> update (c & forbidden . contains k .~ True) rest
         <&> cons
 
 rowStructureMismatch ::
@@ -101,26 +107,25 @@ rowStructureMismatch mkExtend
             <&> RowExtend k0 v0
 
 inferRowExtend ::
-    forall m val rowTyp key a.
+    forall m val rowTyp a.
     ( Infer m val
     , Unify m rowTyp
-    , Ord key
+    , RowConstraints (TypeConstraintsOf rowTyp)
     ) =>
-    ALens' (TypeConstraintsOf rowTyp) (Set key) ->
     (Tree (UVar m) rowTyp -> Tree (TypeAST val) (UVar m)) ->
-    (Tree (RowExtend key (TypeAST val) rowTyp) (UVar m) -> Tree rowTyp (UVar m)) ->
-    Tree (RowExtend key val val) (Ann a) ->
+    (Tree (RowExtend (RowKey rowTyp) (TypeAST val) rowTyp) (UVar m) -> Tree rowTyp (UVar m)) ->
+    Tree (RowExtend (RowKey rowTyp) val val) (Ann a) ->
     m
     ( Tree (UVar m) rowTyp
-    , Tree (RowExtend key val val) (Ann (TypeOf m val, a))
+    , Tree (RowExtend (RowKey rowTyp) val val) (Ann (TypeOf m val, a))
     )
-inferRowExtend forbiddenFields rowToTyp extendToRow (RowExtend k v r) =
+inferRowExtend rowToTyp extendToRow (RowExtend k v r) =
     do
         vI <- inferNode v
         rI <- inferNode r
         restVar <-
             scopeConstraintsForType (Proxy :: Proxy rowTyp)
-            >>= newVar binding . UUnbound . (cloneLens forbiddenFields . contains k .~ True)
+            >>= newVar binding . UUnbound . (forbidden . contains k .~ True)
         _ <- rowToTyp restVar & newTerm >>= unify (rI ^. nodeType)
         RowExtend k (vI ^. nodeType) restVar & extendToRow & newTerm
             <&> (, RowExtend k vI rI)

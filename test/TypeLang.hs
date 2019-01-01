@@ -63,13 +63,17 @@ instance TypeConstraints RConstraints where
     constraintsFromScope = RowConstraints mempty
     constraintsScope = rScope
 
+instance RowConstraints RConstraints where
+    type RowConstraintsKey RConstraints = String
+    forbidden = rForbiddenFields
+
 instance HasTypeConstraints Typ
 instance HasTypeConstraints Row where
     type TypeConstraintsOf Row = RConstraints
     propagateConstraints _ _ _ _ REmpty = pure REmpty
     propagateConstraints _ _ _ _ (RVar x) = RVar x & pure
     propagateConstraints p c e u (RExtend x) =
-        propagateRowConstraints p rForbiddenFields c (e . (`RowConstraints` mempty) . singleton) u RExtend x
+        propagateRowConstraints p c (e . (`RowConstraints` mempty) . singleton) u RExtend x
 
 type IntInferState = (Tree Types IntBindingState, Tree Types (Const Int))
 
