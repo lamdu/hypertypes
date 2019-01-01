@@ -89,33 +89,33 @@ instance (DeBruijnIndex k, TermInfer1Deps env m) => Infer m (LangA k) where
 
 -- Monads for inferring `LangA`:
 
-newtype IntInferA a = IntInferA (RWST (ScopeTypes (Const Int) Typ, ScopeLevel) () IntInferState Maybe a)
+newtype PureInferA a = PureInferA (RWST (ScopeTypes (Const Int) Typ, ScopeLevel) () PureInferState Maybe a)
     deriving
     ( Functor, Applicative, Alternative, Monad
     , MonadReader (ScopeTypes (Const Int) Typ, ScopeLevel)
-    , MonadState IntInferState
+    , MonadState PureInferState
     )
 
-type instance UVar IntInferA = Const Int
+type instance UVar PureInferA = Const Int
 
-instance MonadScopeLevel IntInferA where
+instance MonadScopeLevel PureInferA where
     localLevel = local (Lens._2 . _ScopeLevel +~ 1)
 
-instance Unify IntInferA Typ where
+instance Unify PureInferA Typ where
     binding = pureBinding (Lens._1 . tTyp)
     scopeConstraints _ = Lens.view Lens._2
     newQuantifiedVariable _ _ = increase (Lens._2 . tTyp . Lens._Wrapped) <&> ('t':) . show
 
-instance Unify IntInferA Row where
+instance Unify PureInferA Row where
     binding = pureBinding (Lens._1 . tRow)
     scopeConstraints _ = Lens.view Lens._2 <&> RowConstraints mempty
     newQuantifiedVariable _ _ = increase (Lens._2 . tRow . Lens._Wrapped) <&> ('r':) . show
     structureMismatch = rStructureMismatch
 
-instance Recursive (Unify IntInferA) Typ
-instance Recursive (Unify IntInferA) Row
-instance Recursive (Unify IntInferA `And` HasChild Types) Typ
-instance Recursive (Unify IntInferA `And` HasChild Types) Row
+instance Recursive (Unify PureInferA) Typ
+instance Recursive (Unify PureInferA) Row
+instance Recursive (Unify PureInferA `And` HasChild Types) Typ
+instance Recursive (Unify PureInferA `And` HasChild Types) Row
 
 newtype STInferA s a =
     STInferA (ReaderT (ScopeTypes (STVar s) Typ, ScopeLevel, STInferState s) (MaybeT (ST s)) a)

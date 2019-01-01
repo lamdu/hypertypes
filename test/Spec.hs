@@ -141,9 +141,9 @@ inferExpr x =
     <&> (^. nodeType)
     >>= applyBindings
 
-execIntInferA :: IntInferA a -> Maybe a
-execIntInferA (IntInferA act) =
-    runRWST act (mempty, ScopeLevel 0) emptyIntInferState <&> (^. Lens._1)
+execPureInferA :: PureInferA a -> Maybe a
+execPureInferA (PureInferA act) =
+    runRWST act (mempty, ScopeLevel 0) emptyPureInferState <&> (^. Lens._1)
 
 execSTInferA :: STInferA s a -> ST s (Maybe a)
 execSTInferA (STInferA act) =
@@ -151,9 +151,9 @@ execSTInferA (STInferA act) =
         qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
         runReaderT act (mempty, ScopeLevel 0, qvarGen) & runMaybeT
 
-execIntInferB :: IntInferB a -> Maybe a
-execIntInferB (IntInferB act) =
-    runRWST act (mempty, ScopeLevel 0) emptyIntInferState <&> (^. Lens._1)
+execPureInferB :: PureInferB a -> Maybe a
+execPureInferB (PureInferB act) =
+    runRWST act (mempty, ScopeLevel 0) emptyPureInferState <&> (^. Lens._1)
 
 execSTInferB :: STInferB s a -> ST s (Maybe a)
 execSTInferB (STInferB act) =
@@ -174,14 +174,14 @@ testA :: Tree Pure (LangA EmptyScope) -> IO ()
 testA expr =
     do
         testPrelude expr
-        execIntInferA (inferExpr expr) & prettyPrint
+        execPureInferA (inferExpr expr) & prettyPrint
         runST (execSTInferA (inferExpr expr)) & prettyPrint
 
 testB :: Tree Pure LangB -> IO ()
 testB expr =
     do
         testPrelude expr
-        execIntInferB (inferExpr expr) & prettyPrint
+        execPureInferB (inferExpr expr) & prettyPrint
         runST (execSTInferB (inferExpr expr)) & prettyPrint
 
 main :: IO ()

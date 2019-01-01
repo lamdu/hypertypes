@@ -104,10 +104,10 @@ instance HasTypeConstraints Row where
     applyConstraints p c e u (RExtend x) =
         applyRowConstraints p c (^. rScope) (e . (`RowConstraints` mempty) . singleton) u RExtend x
 
-type IntInferState = (Tree Types PureBinding, Tree Types (Const Int))
+type PureInferState = (Tree Types PureBinding, Tree Types (Const Int))
 
-emptyIntInferState :: IntInferState
-emptyIntInferState =
+emptyPureInferState :: PureInferState
+emptyPureInferState =
     ( Types emptyPureBinding emptyPureBinding
     , Types (Const 0) (Const 0)
     )
