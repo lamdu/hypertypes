@@ -60,7 +60,7 @@ library
       AST.Unify
       AST.Unify.Constraints
       AST.Unify.Generalize
-      AST.Unify.IntMapBinding
+      AST.Unify.PureBinding
       AST.Unify.STBinding
       AST.Unify.Term
   other-modules:

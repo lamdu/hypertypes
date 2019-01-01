@@ -1,8 +1,8 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, DataKinds #-}
 
-module AST.Unify.IntMapBinding
-    ( IntBindingState, emptyIntBindingState
-    , intBindingState
+module AST.Unify.PureBinding
+    ( PureBinding, emptyPureBinding
+    , pureBinding
     , increase
     ) where
 
@@ -19,15 +19,15 @@ import           Data.Maybe (fromMaybe)
 
 import           Prelude.Compat
 
-data IntBindingState t = IntBindingState
+data PureBinding t = PureBinding
     { -- Could had used varBindings's size if IntMap's size was fast/O(1)
       _nextVar :: {-# UNPACK #-} !Int
     , _varBindings :: IntMap (UTerm (Const Int) t)
     }
-Lens.makeLenses ''IntBindingState
+Lens.makeLenses ''PureBinding
 
-emptyIntBindingState :: IntBindingState t
-emptyIntBindingState = IntBindingState 0 mempty
+emptyPureBinding :: PureBinding t
+emptyPureBinding = PureBinding 0 mempty
 
 increase ::
     MonadState s m =>
@@ -37,11 +37,11 @@ increase l =
         r <- Lens.use (Lens.cloneLens l)
         r <$ modify (Lens.cloneLens l +~ 1)
 
-intBindingState ::
+pureBinding ::
     (MonadState s m, UVar m ~ Const Int) =>
-    ALens' s (Tree IntBindingState t) ->
+    ALens' s (Tree PureBinding t) ->
     Binding m t
-intBindingState l =
+pureBinding l =
     Binding
     { lookupVar =
         \k ->

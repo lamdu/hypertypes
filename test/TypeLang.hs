@@ -12,7 +12,7 @@ import           AST.Term.Scheme
 import           AST.Term.Scope
 import           AST.Unify
 import           AST.Unify.Constraints
-import           AST.Unify.IntMapBinding
+import           AST.Unify.PureBinding
 import           AST.Unify.Term
 import           Algebra.Lattice
 import           Algebra.PartialOrd
@@ -92,11 +92,11 @@ instance HasTypeConstraints Row where
     applyConstraints p c e u (RExtend x) =
         applyRowConstraints p c (^. rScope) (e . (`RowConstraints` mempty) . singleton) u RExtend x
 
-type IntInferState = (Tree Types IntBindingState, Tree Types (Const Int))
+type IntInferState = (Tree Types PureBinding, Tree Types (Const Int))
 
 emptyIntInferState :: IntInferState
 emptyIntInferState =
-    ( Types emptyIntBindingState emptyIntBindingState
+    ( Types emptyPureBinding emptyPureBinding
     , Types (Const 0) (Const 0)
     )
 

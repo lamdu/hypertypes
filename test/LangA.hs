@@ -19,7 +19,7 @@ import AST.Term.Scheme
 import AST.Term.Scope
 import AST.Term.TypeSig
 import AST.Unify
-import AST.Unify.IntMapBinding
+import AST.Unify.PureBinding
 import AST.Unify.STBinding
 import Control.Applicative
 import qualified Control.Lens as Lens
@@ -83,12 +83,12 @@ instance MonadScopeLevel IntInferA where
     localLevel = local (Lens._2 . _ScopeLevel +~ 1)
 
 instance Unify IntInferA Typ where
-    binding = intBindingState (Lens._1 . tTyp)
+    binding = pureBinding (Lens._1 . tTyp)
     scopeConstraints _ = Lens.view Lens._2
     newQuantifiedVariable _ _ = increase (Lens._2 . tTyp . Lens._Wrapped) <&> ('t':) . show
 
 instance Unify IntInferA Row where
-    binding = intBindingState (Lens._1 . tRow)
+    binding = pureBinding (Lens._1 . tRow)
     scopeConstraints _ = Lens.view Lens._2 <&> RowConstraints mempty
     newQuantifiedVariable _ _ = increase (Lens._2 . tRow . Lens._Wrapped) <&> ('r':) . show
     structureMismatch = rStructureMismatch
