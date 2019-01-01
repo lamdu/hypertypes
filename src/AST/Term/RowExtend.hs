@@ -6,7 +6,7 @@
 module AST.Term.RowExtend
     ( RowExtend(..), rowKey, rowVal, rowRest
     , RowConstraints(..), RowKey
-    , propagateRowConstraints, rowStructureMismatch, inferRowExtend
+    , applyRowConstraints, rowStructureMismatch, inferRowExtend
     ) where
 
 import Algebra.Lattice (JoinSemiLattice(..))
@@ -64,12 +64,12 @@ instance
     HasTypeConstraints (RowExtend key valTyp rowTyp) where
 
     type TypeConstraintsOf (RowExtend key valTyp rowTyp) = TypeConstraintsOf rowTyp
-    propagateConstraints _ c _ upd (RowExtend k v r) =
+    applyConstraints _ c _ upd (RowExtend k v r) =
         RowExtend k
         <$> upd (constraintsFromScope (c ^. constraintsScope)) v
         <*> upd c r
 
-propagateRowConstraints ::
+applyRowConstraints ::
     ( Applicative m
     , constraint valTyp, constraint rowTyp
     , HasTypeConstraints valTyp, HasTypeConstraints rowTyp
@@ -82,7 +82,7 @@ propagateRowConstraints ::
     (Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) q -> r) ->
     Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) p ->
     m r
-propagateRowConstraints _ c err update cons (RowExtend k v rest)
+applyRowConstraints _ c err update cons (RowExtend k v rest)
     | c ^. forbidden . contains k = err k
     | otherwise =
         RowExtend k

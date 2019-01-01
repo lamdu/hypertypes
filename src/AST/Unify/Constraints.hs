@@ -50,14 +50,14 @@ class
     type TypeConstraintsOf ast
     type TypeConstraintsOf ast = QuantificationScope
 
-    propagateConstraints ::
+    applyConstraints ::
         (Applicative m, ChildrenWithConstraint ast constraint) =>
         Proxy constraint ->
         TypeConstraintsOf ast ->
         (TypeConstraintsOf ast -> m (Tree ast q)) ->
         (forall child. constraint child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
         Tree ast p -> m (Tree ast q)
-    default propagateConstraints ::
+    default applyConstraints ::
         forall m constraint p q.
         ( TypeConstraintsOf ast ~ QuantificationScope
         , ChildrenWithConstraint ast (constraint `And` HasTypeConstraints)
@@ -68,7 +68,7 @@ class
         (TypeConstraintsOf ast -> m (Tree ast q)) ->
         (forall child. constraint child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
         Tree ast p -> m (Tree ast q)
-    propagateConstraints _ constraints _ update =
+    applyConstraints _ constraints _ update =
         children (Proxy :: Proxy (constraint `And` HasTypeConstraints))
         (update (constraintsFromScope constraints))
 
