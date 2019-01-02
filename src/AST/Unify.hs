@@ -73,8 +73,8 @@ class
     -- but some AST terms could be equivalent despite not matching,
     -- like record extends with fields ordered differently,
     -- and these could still match.
-    structureMismatch :: Tree (UTermBody (UVar m)) t -> Tree (UTermBody (UVar m)) t -> m (Tree t (UVar m))
-    structureMismatch x y = x ^. uBody <$ unifyError (Mismatch (x ^. uBody) (y ^. uBody))
+    structureMismatch :: Tree (UTermBody (UVar m)) t -> Tree (UTermBody (UVar m)) t -> m ()
+    structureMismatch x y = unifyError (Mismatch (x ^. uBody) (y ^. uBody))
 
 newUnbound :: forall m t. Unify m t => m (Tree (UVar m) t)
 newUnbound = scopeConstraints (Proxy :: Proxy t) >>= newVar binding . UUnbound
@@ -196,7 +196,7 @@ unify x0 y0 =
             do
                 bindVar binding y1 (UVar x1)
                 zipMatchWithA (Proxy :: Proxy (Recursive (Unify m))) unify (xt ^. uBody) (yt ^. uBody)
-                    & fromMaybe (structureMismatch xt yt)
+                    & fromMaybe (xt ^. uBody <$ structureMismatch xt yt)
                     >>= bindVar binding x1 . UTerm . UTermBody (xt ^. uConstraints \/ yt ^. uConstraints)
                 pure x1
     in

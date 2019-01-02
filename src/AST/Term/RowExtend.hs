@@ -85,14 +85,13 @@ rowStructureMismatch ::
     (Tree (RowExtend key valTyp rowTyp) (UVar m) -> m (Tree (UVar m) rowTyp)) ->
     (TypeConstraintsOf rowTyp, Tree (RowExtend key valTyp rowTyp) (UVar m)) ->
     (TypeConstraintsOf rowTyp, Tree (RowExtend key valTyp rowTyp) (UVar m)) ->
-    m (Tree (RowExtend key valTyp rowTyp) (UVar m))
+    m ()
 rowStructureMismatch mkExtend (c0, RowExtend k0 v0 r0) (c1, RowExtend k1 v1 r1) =
     do
         restVar <- c0 \/ c1 & UUnbound & newVar binding
         _ <- RowExtend k0 v0 restVar & mkExtend >>= unify r1
-        RowExtend k1 v1 restVar & mkExtend
-            >>= unify r0
-            <&> RowExtend k0 v0
+        _ <- RowExtend k1 v1 restVar & mkExtend >>= unify r0
+        pure ()
 
 inferRowExtend ::
     forall m val rowTyp a.
