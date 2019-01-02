@@ -9,9 +9,8 @@ module AST.Term.Let
 import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Infer
 import           AST.Class.Infer.ScopeLevel
-import           AST.Class.Instantiate
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
-import           AST.Knot (Tie)
+import           AST.Knot (Tree, Tie)
 import           AST.Term.Var
 import           AST.Unify.Generalize
 import           Control.DeepSeq (NFData)
@@ -53,7 +52,13 @@ instance RecursiveConstraint (Let v expr) constraint => Recursive constraint (Le
 
 type instance TypeOf (Let v t) = TypeOf t
 
-instance (MonadScopeLevel m, Infer m expr, MonadScopeTypes v (TypeOf expr) m) => Infer m (Let v expr) where
+instance
+    ( MonadScopeLevel m
+    , Infer m expr
+    , LocalScopeType v (Tree (GTerm m) (TypeOf expr)) m
+    ) =>
+    Infer m (Let v expr) where
+
     infer (Let v e i) =
         do
             (eI, eG) <-
@@ -61,5 +66,5 @@ instance (MonadScopeLevel m, Infer m expr, MonadScopeTypes v (TypeOf expr) m) =>
                     eI <- inferNode e
                     generalize (eI ^. iType) <&> (eI ,)
                 & localLevel
-            iI <- localScopeType v (instantiate eG) (inferNode i)
+            iI <- localScopeType v eG (inferNode i)
             pure (iI ^. iType, Let v eI iI)

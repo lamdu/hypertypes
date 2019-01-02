@@ -4,7 +4,7 @@
 
 module AST.Term.Var
     ( Var(..), _Var
-    , MonadScopeTypes(..)
+    , MonadScopeTypes(..), LocalScopeType(..)
     ) where
 
 import           AST.Class.Infer (Infer(..), TypeOf)
@@ -35,7 +35,9 @@ instance Pretty v => Pretty (Var v expr k) where
 
 class MonadScopeTypes v t m where
     scopeType :: v -> m (Tree (UVar m) t)
-    localScopeType :: v -> m (Tree (UVar m) t) -> m a -> m a
+
+class LocalScopeType v r m where
+    localScopeType :: v -> r -> m a -> m a
 
 type instance TypeOf (Var v t) = TypeOf t
 

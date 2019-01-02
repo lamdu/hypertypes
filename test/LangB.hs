@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeFamilies #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeFamilies, LambdaCase #-}
 {-# LANGUAGE FlexibleInstances, UndecidableInstances, TupleSections #-}
 {-# LANGUAGE ScopedTypeVariables, GeneralizedNewtypeDeriving, DataKinds #-}
 
@@ -9,12 +9,14 @@ import           TypeLang
 import           AST
 import           AST.Class.Infer
 import           AST.Class.Infer.ScopeLevel
+import           AST.Class.Instantiate
 import           AST.Term.Apply
 import           AST.Term.Lam
 import           AST.Term.Let
 import           AST.Term.RowExtend
 import           AST.Term.Var
 import           AST.Unify
+import           AST.Unify.Generalize
 import           AST.Unify.PureBinding
 import           AST.Unify.STBinding
 import           Control.Applicative
@@ -61,7 +63,15 @@ instance Pretty (Tree LangB Pure) where
     pPrintPrec lvl p (BLam x) = pPrintPrec lvl p x
     pPrintPrec lvl p (BLet x) = pPrintPrec lvl p x
 
-instance (MonadScopeLevel m, MonadScopeTypes Name Typ m, Recursive (Unify m) Typ) => Infer m LangB where
+instance
+    ( MonadScopeLevel m
+    , MonadScopeTypes Name Typ m
+    , LocalScopeType Name (Tree (UVar m) Typ) m
+    , LocalScopeType Name (Tree (GTerm m) Typ) m
+    , Recursive (Unify m) Typ
+    ) =>
+    Infer m LangB where
+
     infer (BApp x) = infer x <&> _2 %~ BApp
     infer (BVar x) = infer x <&> _2 %~ BVar
     infer (BLam x) = infer x <&> _2 %~ BLam
@@ -78,7 +88,7 @@ instance (MonadScopeLevel m, MonadScopeTypes Name Typ m, Recursive (Unify m) Typ
 
 -- Monads for inferring `LangB`:
 
-newtype ScopeTypes m = ScopeTypes (Map Name (m (Tree (UVar m) Typ)))
+newtype ScopeTypes m = ScopeTypes (Map Name (Either (Tree (UVar m) Typ) (Tree (GTerm m) Typ)))
     deriving (Semigroup, Monoid)
 Lens.makePrisms ''ScopeTypes
 
@@ -97,8 +107,16 @@ newtype PureInferB a =
 type instance UVar PureInferB = Const Int
 
 instance MonadScopeTypes Name Typ PureInferB where
-    scopeType v = Lens.view (Lens._1 . _ScopeTypes . Lens.at v) >>= fromMaybe (error "name error")
-    localScopeType v t = local (Lens._1 . _ScopeTypes . Lens.at v ?~ t)
+    scopeType v =
+        Lens.view (Lens._1 . _ScopeTypes . Lens.at v)
+        <&> fromMaybe (error "name error")
+        >>= either pure instantiate
+
+instance LocalScopeType Name (Tree (Const Int) Typ) PureInferB where
+    localScopeType k v = local (Lens._1 . _ScopeTypes . Lens.at k ?~ Left v)
+
+instance LocalScopeType Name (Tree (GTerm PureInferB) Typ) PureInferB where
+    localScopeType k v = local (Lens._1 . _ScopeTypes . Lens.at k ?~ Right v)
 
 instance MonadScopeLevel PureInferB where
     localLevel = local (Lens._2 . _ScopeLevel +~ 1)
@@ -137,8 +155,16 @@ newtype STInferB s a =
 type instance UVar (STInferB s) = STVar s
 
 instance MonadScopeTypes Name Typ (STInferB s) where
-    scopeType v = Lens.view (Lens._1 . _ScopeTypes . Lens.at v) >>= fromMaybe (error "name error")
-    localScopeType v t = local (Lens._1 . _ScopeTypes . Lens.at v ?~ t)
+    scopeType v =
+        Lens.view (Lens._1 . _ScopeTypes . Lens.at v)
+        <&> fromMaybe (error "name error")
+        >>= either pure instantiate
+
+instance LocalScopeType Name (Tree (STVar s) Typ) (STInferB s) where
+    localScopeType k v = local (Lens._1 . _ScopeTypes . Lens.at k ?~ Left v)
+
+instance LocalScopeType Name (Tree (GTerm (STInferB s)) Typ) (STInferB s) where
+    localScopeType k v = local (Lens._1 . _ScopeTypes . Lens.at k ?~ Right v)
 
 instance MonadScopeLevel (STInferB s) where
     localLevel = local (Lens._2 . _ScopeLevel +~ 1)

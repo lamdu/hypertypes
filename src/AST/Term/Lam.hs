@@ -10,10 +10,10 @@ module AST.Term.Lam
 import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Infer (Infer(..), TypeOf, inferNode, iType)
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
-import           AST.Knot (Tie)
+import           AST.Knot (Tree, Tie)
 import           AST.Term.FuncType
 import           AST.Term.Var
-import           AST.Unify (newUnbound, newTerm)
+import           AST.Unify (UVar, newUnbound, newTerm)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
@@ -54,14 +54,14 @@ type instance TypeOf (Lam v t) = TypeOf t
 instance
     ( Infer m t
     , HasFuncType (TypeOf t)
-    , MonadScopeTypes v (TypeOf t) m
+    , LocalScopeType v (Tree (UVar m) (TypeOf t)) m
     ) =>
     Infer m (Lam v t) where
 
     infer (Lam p r) =
         do
             varType <- newUnbound
-            rI <- localScopeType p (pure varType) (inferNode r)
+            rI <- localScopeType p varType (inferNode r)
             funcType # FuncType
                 { _funcIn = varType
                 , _funcOut = rI ^. iType
