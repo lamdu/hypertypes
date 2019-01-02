@@ -1,7 +1,8 @@
 {-# LANGUAGE NoImplicitPrelude, TypeFamilies, TemplateHaskell, DataKinds #-}
 
 module AST.Unify.STBinding
-    ( STVar, stBindingState
+    ( STVar(..), _STVar
+    , stBindingState
     , newStQuantified
     ) where
 

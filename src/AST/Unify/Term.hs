@@ -10,6 +10,8 @@ import AST.Knot.Pure (Pure)
 import AST.Unify.Constraints (TypeConstraintsOf)
 import Control.Lens (makeLenses, makePrisms)
 
+import Prelude.Compat
+
 data UTermBody v ast = UTermBody
     { _uConstraints :: TypeConstraintsOf (RunKnot ast)
     , _uBody :: Tie ast v
@@ -23,4 +25,6 @@ data UTerm v ast
     | UTerm (UTermBody v ast)
     | UResolving (UTermBody v ast)
     | UResolved (Pure ast)
+    | -- Used in AST.Unify.STBinding.Save while converting to a pure binding.
+      UConverted Int
 makePrisms ''UTerm

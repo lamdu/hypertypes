@@ -50,6 +50,7 @@ loadUTerm src conv (UTerm u) =
     uBody (loadBody src conv) u <&> UTerm
 loadUTerm _ _ UResolving{} = error "converting bindings after resolution"
 loadUTerm _ _ UResolved{} = error "converting bindings after resolution"
+loadUTerm _ _ UConverted{} = error "loading while saving?"
 
 loadVar ::
     forall m typeVars t.
