@@ -31,15 +31,16 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
+class Ord (QVar t) => HasQuantifiedVar (t :: Knot -> *) where
+    type family QVar t
+    quantifiedVar :: Prism' (t f) (QVar t)
+
 data UnifyError t k
     = SkolemUnified (Tie k t) (Tie k t)
     | SkolemEscape (Tie k t)
     | ConstraintsMismatch (t k) (TypeConstraintsOf t)
+    | Occurs (QVar t) (t k)
 makeChildren ''UnifyError
-
-class Ord (QVar t) => HasQuantifiedVar (t :: Knot -> *) where
-    type family QVar t
-    quantifiedVar :: Prism' (t f) (QVar t)
 
 -- Names modeled after unification-fd
 
@@ -65,14 +66,6 @@ class
     scopeConstraints :: Proxy t -> m (TypeConstraintsOf t)
 
     newQuantifiedVariable :: Proxy t -> TypeConstraintsOf t -> m (QVar t)
-
-    -- | A unification variable was unified with a type that contains itself,
-    -- therefore the type is infinite.
-    -- Break with an error if the type system doesn't allow it,
-    -- or resolve the situation and generate the type represeting this loop.
-    occurs :: Tree (UVar m) t -> Tree t (UVar m) -> m (Tree Pure t)
-    default occurs :: Alternative m => Tree (UVar m) t -> Tree t (UVar m) -> m (Tree Pure t)
-    occurs _ _ = empty
 
     -- | What to do when top-levels of terms being unified do not match.
     -- Usually this will throw a failure,
@@ -121,6 +114,17 @@ semiPruneLookup v0 =
 -- TODO: implement when need / better understand motivations for -
 -- freeze, fullPrune, occursIn, seenAs, getFreeVars, freshen, equals, equiv
 
+occurs ::
+    forall m t.
+    Unify m t =>
+    Tree (UVar m) t -> Tree (UTermBody (UVar m)) t -> m (Tree Pure t)
+occurs v (UTermBody c b) =
+    do
+        q <- newQuantifiedVariable (Proxy :: Proxy t) c
+        let r = quantifiedVar # q & Pure
+        bindVar binding v (UResolved r)
+        r <$ unifyError (Occurs q b)
+
 applyBindings :: forall m t. Recursive (Unify m) t => Tree (UVar m) t -> m (Tree Pure t)
 applyBindings v0 =
     withDict (recursive :: RecursiveDict (Unify m) t) $
@@ -137,13 +141,13 @@ applyBindings v0 =
     UResolved t -> pure t
     UUnbound c -> quantify c
     USkolem c -> quantify c
-    UTerm UTermBody{_uBody = t} ->
+    UTerm b ->
         case leafExpr of
-        Just f -> f t & Pure & pure
+        Just f -> b ^. uBody & f & Pure & pure
         Nothing ->
             do
-                bindVar binding v1 (UResolving t)
-                children (Proxy :: Proxy (Recursive (Unify m))) applyBindings t
+                bindVar binding v1 (UResolving b)
+                children (Proxy :: Proxy (Recursive (Unify m))) applyBindings (b ^. uBody)
             <&> Pure
             >>= result
     UVar{} -> error "lookup not expected to result in var"
@@ -176,7 +180,7 @@ updateTermConstraints v t newConstraints =
         then pure ()
         else
             do
-                bindVar binding v (UResolving (t ^. uBody))
+                bindVar binding v (UResolving t)
                 applyConstraints (Proxy :: Proxy (Recursive (Unify m))) newConstraints
                     (unifyError . ConstraintsMismatch (t ^. uBody))
                     updateConstraints

@@ -21,6 +21,6 @@ data UTerm v ast
     | USkolem (TypeConstraintsOf (RunKnot ast))
     | UVar (v ast)
     | UTerm (UTermBody v ast)
-    | UResolving (Tie ast v)
+    | UResolving (UTermBody v ast)
     | UResolved (Pure ast)
 makePrisms ''UTerm
