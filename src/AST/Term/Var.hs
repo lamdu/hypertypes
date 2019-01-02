@@ -7,7 +7,7 @@ module AST.Term.Var
     , MonadScopeTypes(..)
     ) where
 
-import           AST.Class.Infer (Infer(..), TypeAST)
+import           AST.Class.Infer (Infer(..), TypeOf)
 import           AST.Class.Recursive (Recursive)
 import           AST.Class.Recursive.TH (makeChildrenRecursive)
 import           AST.Knot (Knot, Tree)
@@ -37,11 +37,11 @@ class MonadScopeTypes v t m where
     scopeType :: v -> m (Tree (UVar m) t)
     localScopeType :: v -> m (Tree (UVar m) t) -> m a -> m a
 
-type instance TypeAST (Var v t) = TypeAST t
+type instance TypeOf (Var v t) = TypeOf t
 
 instance
-    ( Recursive (Unify m) (TypeAST expr)
-    , MonadScopeTypes v (TypeAST expr) m
+    ( Recursive (Unify m) (TypeOf expr)
+    , MonadScopeTypes v (TypeOf expr) m
     ) =>
     Infer m (Var v expr) where
 

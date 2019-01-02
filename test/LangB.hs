@@ -45,7 +45,7 @@ data LangB k
 
 makeChildrenRecursive [''LangB]
 
-type instance TypeAST LangB = Typ
+type instance TypeOf LangB = Typ
 
 instance Pretty (Tree LangB Pure) where
     pPrintPrec _ _ (BLit i) = pPrint i

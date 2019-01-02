@@ -143,7 +143,7 @@ unifyRows =
 inferExpr ::
     (Infer m t, Recursive Children t) =>
     Tree Pure t ->
-    m (Tree Pure (TypeAST t))
+    m (Tree Pure (TypeOf t))
 inferExpr x =
     inferNode (wrap (Proxy :: Proxy Children) (Ann ()) x)
     <&> (^. iType)

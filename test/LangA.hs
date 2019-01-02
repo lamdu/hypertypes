@@ -47,7 +47,7 @@ data LangA v k
 makeChildrenRecursive [''LangA]
 instance Recursive Children (LangA v)
 
-type instance TypeAST (LangA k) = Typ
+type instance TypeOf (LangA k) = Typ
 
 instance DeBruijnIndex v => Pretty (LangA v ('Knot Pure)) where
     pPrintPrec lvl p (ALam (Scope expr)) =
@@ -63,9 +63,9 @@ instance DeBruijnIndex v => Pretty (LangA v ('Knot Pure)) where
     pPrintPrec lvl p (ATypeSig typeSig) = pPrintPrec lvl p typeSig
     pPrintPrec _ _ (ALit i) = pPrint i
 
-instance HasTypeAST1 LangA where
-    type TypeAST1 LangA = Typ
-    type TypeASTIndexConstraint LangA = DeBruijnIndex
+instance HasTypeOf1 LangA where
+    type TypeOf1 LangA = Typ
+    type TypeOfIndexConstraint LangA = DeBruijnIndex
     typeAst _ = Dict
 
 type TermInfer1Deps env m =

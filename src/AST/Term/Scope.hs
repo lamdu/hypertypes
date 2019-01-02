@@ -13,8 +13,8 @@ module AST.Term.Scope
     ) where
 
 import           AST.Class.Children (Children)
-import           AST.Class.Infer (Infer(..), inferNode, iType, TypeAST)
-import           AST.Class.Infer.Infer1 (Infer1(..), HasTypeAST1(..))
+import           AST.Class.Infer (Infer(..), inferNode, iType, TypeOf)
+import           AST.Class.Infer.Infer1 (Infer1(..), HasTypeOf1(..))
 import           AST.Class.Recursive (Recursive(..))
 import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import           AST.Knot (Knot, Tie, Tree)
@@ -85,26 +85,26 @@ class HasScopeTypes v t env where
 instance HasScopeTypes v t (ScopeTypes v t) where
     scopeTypes = id
 
-type instance TypeAST (Scope t k) = TypeAST (t k)
-type instance TypeAST (ScopeVar t k) = TypeAST (t k)
-instance HasTypeAST1 t => HasTypeAST1 (Scope t) where
-    type TypeAST1 (Scope t) = TypeAST1 t
-    type TypeASTIndexConstraint (Scope t) = DeBruijnIndex
+type instance TypeOf (Scope t k) = TypeOf (t k)
+type instance TypeOf (ScopeVar t k) = TypeOf (t k)
+instance HasTypeOf1 t => HasTypeOf1 (Scope t) where
+    type TypeOf1 (Scope t) = TypeOf1 t
+    type TypeOfIndexConstraint (Scope t) = DeBruijnIndex
     typeAst p = withDict (typeAst p) Dict
-instance HasTypeAST1 t => HasTypeAST1 (ScopeVar t) where
-    type TypeAST1 (ScopeVar t) = TypeAST1 t
-    type TypeASTIndexConstraint (ScopeVar t) = DeBruijnIndex
+instance HasTypeOf1 t => HasTypeOf1 (ScopeVar t) where
+    type TypeOf1 (ScopeVar t) = TypeOf1 t
+    type TypeOfIndexConstraint (ScopeVar t) = DeBruijnIndex
     typeAst p = withDict (typeAst p) Dict
 
 instance
-    ( HasTypeAST1 t
-    , HasFuncType (TypeAST1 t)
+    ( HasTypeOf1 t
+    , HasFuncType (TypeOf1 t)
     , Infer1 m t
-    , Recursive (Unify m) (TypeAST (t k))
-    , TypeASTIndexConstraint t ~ DeBruijnIndex
+    , Recursive (Unify m) (TypeOf (t k))
+    , TypeOfIndexConstraint t ~ DeBruijnIndex
     , DeBruijnIndex k
     , MonadReader env m
-    , HasScopeTypes (UVar m) (TypeAST1 t) env
+    , HasScopeTypes (UVar m) (TypeOf1 t) env
     ) =>
     Infer m (Scope t k) where
 
@@ -125,9 +125,9 @@ instance
         \\ (inferMonad :: DeBruijnIndex (Maybe k) :- Infer m (t (Maybe k)))
 
 instance
-    ( Recursive (Unify m) (TypeAST (t k))
+    ( Recursive (Unify m) (TypeOf (t k))
     , MonadReader env m
-    , HasScopeTypes (UVar m) (TypeAST (t k)) env
+    , HasScopeTypes (UVar m) (TypeOf (t k)) env
     , DeBruijnIndex k
     ) =>
     Infer m (ScopeVar t k) where

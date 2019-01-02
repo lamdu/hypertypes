@@ -8,7 +8,7 @@ module AST.Term.Lam
     ) where
 
 import           AST.Class.Children.TH (makeChildren)
-import           AST.Class.Infer (Infer(..), TypeAST, inferNode, iType)
+import           AST.Class.Infer (Infer(..), TypeOf, inferNode, iType)
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Knot (Tie)
 import           AST.Term.FuncType
@@ -49,12 +49,12 @@ instance Deps v expr k Pretty => Pretty (Lam v expr k) where
 makeChildren ''Lam
 instance RecursiveConstraint (Lam v expr) constraint => Recursive constraint (Lam v expr)
 
-type instance TypeAST (Lam v t) = TypeAST t
+type instance TypeOf (Lam v t) = TypeOf t
 
 instance
     ( Infer m t
-    , HasFuncType (TypeAST t)
-    , MonadScopeTypes v (TypeAST t) m
+    , HasFuncType (TypeOf t)
+    , MonadScopeTypes v (TypeOf t) m
     ) =>
     Infer m (Lam v t) where
 

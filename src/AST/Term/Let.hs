@@ -51,9 +51,9 @@ instance Deps v expr k Pretty => Pretty (Let v expr k) where
 makeChildren ''Let
 instance RecursiveConstraint (Let v expr) constraint => Recursive constraint (Let v expr)
 
-type instance TypeAST (Let v t) = TypeAST t
+type instance TypeOf (Let v t) = TypeOf t
 
-instance (MonadScopeLevel m, Infer m expr, MonadScopeTypes v (TypeAST expr) m) => Infer m (Let v expr) where
+instance (MonadScopeLevel m, Infer m expr, MonadScopeTypes v (TypeOf expr) m) => Infer m (Let v expr) where
     infer (Let v e i) =
         do
             (eI, eG) <-
