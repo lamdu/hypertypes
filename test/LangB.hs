@@ -36,11 +36,11 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 data LangB k
     = BLit Int
     | BApp (Apply LangB k)
-    | BVar (Var String LangB k)
-    | BLam (Lam String LangB k)
-    | BLet (Let String LangB k)
+    | BVar (Var Name LangB k)
+    | BLam (Lam Name LangB k)
+    | BLet (Let Name LangB k)
     | BRecEmpty
-    | BRecExtend (RowExtend String LangB LangB k)
+    | BRecExtend (RowExtend Name LangB LangB k)
 
 makeChildrenRecursive [''LangB]
 
@@ -60,7 +60,7 @@ instance Pretty (Tree LangB Pure) where
     pPrintPrec lvl p (BLam x) = pPrintPrec lvl p x
     pPrintPrec lvl p (BLet x) = pPrintPrec lvl p x
 
-instance (MonadScopeLevel m, MonadScopeTypes [Char] Typ m, Recursive (Unify m) Typ) => Infer m LangB where
+instance (MonadScopeLevel m, MonadScopeTypes Name Typ m, Recursive (Unify m) Typ) => Infer m LangB where
     infer (BApp x) = infer x <&> _2 %~ BApp
     infer (BVar x) = infer x <&> _2 %~ BVar
     infer (BLam x) = infer x <&> _2 %~ BLam
@@ -78,16 +78,16 @@ instance (MonadScopeLevel m, MonadScopeTypes [Char] Typ m, Recursive (Unify m) T
 -- Monads for inferring `LangB`:
 
 newtype PureInferB a =
-    PureInferB (RWST (Map String (PureInferB (Tree (Const Int) Typ)), ScopeLevel) () PureInferState Maybe a)
+    PureInferB (RWST (Map Name (PureInferB (Tree (Const Int) Typ)), ScopeLevel) () PureInferState Maybe a)
     deriving
     ( Functor, Applicative, Alternative, Monad
-    , MonadReader (Map String (PureInferB (Tree (Const Int) Typ)), ScopeLevel)
+    , MonadReader (Map Name (PureInferB (Tree (Const Int) Typ)), ScopeLevel)
     , MonadState PureInferState
     )
 
 type instance UVar PureInferB = Const Int
 
-instance MonadScopeTypes String Typ PureInferB where
+instance MonadScopeTypes Name Typ PureInferB where
     scopeType v = Lens.view (Lens._1 . Lens.at v) >>= fromMaybe (error "name error")
     localScopeType v t = local (Lens._1 . Lens.at v ?~ t)
 
@@ -97,12 +97,12 @@ instance MonadScopeLevel PureInferB where
 instance Unify PureInferB Typ where
     binding = pureBinding (Lens._1 . tTyp)
     scopeConstraints _ = Lens.view Lens._2
-    newQuantifiedVariable _ _ = increase (Lens._2 . tTyp . Lens._Wrapped) <&> ('t':) . show
+    newQuantifiedVariable _ _ = increase (Lens._2 . tTyp . Lens._Wrapped) <&> Name . ('t':) . show
 
 instance Unify PureInferB Row where
     binding = pureBinding (Lens._1 . tRow)
     scopeConstraints _ = Lens.view Lens._2 <&> RowConstraints mempty
-    newQuantifiedVariable _ _ = increase (Lens._2 . tRow . Lens._Wrapped) <&> ('r':) . show
+    newQuantifiedVariable _ _ = increase (Lens._2 . tRow . Lens._Wrapped) <&> Name . ('r':) . show
     structureMismatch = rStructureMismatch
 
 instance Recursive (Unify PureInferB) Typ
@@ -110,15 +110,15 @@ instance Recursive (Unify PureInferB) Row
 
 newtype STInferB s a =
     STInferB
-    (ReaderT (Map String (STInferB s (Tree (STVar s) Typ)), ScopeLevel, STInferState s) (MaybeT (ST s)) a)
+    (ReaderT (Map Name (STInferB s (Tree (STVar s) Typ)), ScopeLevel, STInferState s) (MaybeT (ST s)) a)
     deriving
     ( Functor, Applicative, Alternative, Monad, MonadST
-    , MonadReader (Map String (STInferB s (Tree (STVar s) Typ)), ScopeLevel, STInferState s)
+    , MonadReader (Map Name (STInferB s (Tree (STVar s) Typ)), ScopeLevel, STInferState s)
     )
 
 type instance UVar (STInferB s) = STVar s
 
-instance MonadScopeTypes String Typ (STInferB s) where
+instance MonadScopeTypes Name Typ (STInferB s) where
     scopeType v = Lens.view (Lens._1 . Lens.at v) >>= fromMaybe (error "name error")
     localScopeType v t = local (Lens._1 . Lens.at v ?~ t)
 
@@ -128,12 +128,12 @@ instance MonadScopeLevel (STInferB s) where
 instance Unify (STInferB s) Typ where
     binding = stBindingState
     scopeConstraints _ = Lens.view Lens._2
-    newQuantifiedVariable _ _ = newStQuantified (Lens._3 . tTyp) <&> ('t':) . show
+    newQuantifiedVariable _ _ = newStQuantified (Lens._3 . tTyp) <&> Name . ('t':) . show
 
 instance Unify (STInferB s) Row where
     binding = stBindingState
     scopeConstraints _ = Lens.view Lens._2 <&> RowConstraints mempty
-    newQuantifiedVariable _ _ = newStQuantified (Lens._3 . tRow) <&> ('r':) . show
+    newQuantifiedVariable _ _ = newStQuantified (Lens._3 . tRow) <&> Name . ('r':) . show
     structureMismatch = rStructureMismatch
 
 instance Recursive (Unify (STInferB s)) Typ

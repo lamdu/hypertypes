@@ -25,19 +25,21 @@ import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
+newtype Name = Name String deriving (Eq, Ord, Show)
+
 data Typ k
     = TInt
     | TFun (FuncType Typ k)
     | TRec (Tie k Row)
-    | TVar String
+    | TVar Name
 
 data Row k
     = REmpty
-    | RExtend (RowExtend String Typ Row k)
-    | RVar String
+    | RExtend (RowExtend Name Typ Row k)
+    | RVar Name
 
 data RConstraints = RowConstraints
-    { _rForbiddenFields :: Set String
+    { _rForbiddenFields :: Set Name
     , _rScope :: ScopeLevel
     } deriving (Eq, Show)
 
@@ -57,6 +59,9 @@ deriving instance SubTreeConstraint Row k Eq   => Eq   (Row k)
 deriving instance SubTreeConstraint Typ k Show => Show (Typ k)
 deriving instance SubTreeConstraint Row k Show => Show (Row k)
 
+instance Pretty Name where
+    pPrint (Name x) = Pretty.text x
+
 instance SubTreeConstraint Types k Pretty => Pretty (Types k) where
     pPrintPrec lvl p (Types typ row) =
         pPrintPrec lvl p typ <+>
@@ -66,7 +71,7 @@ instance SubTreeConstraint Typ k Pretty => Pretty (Typ k) where
     pPrintPrec _ _ TInt = Pretty.text "Int"
     pPrintPrec lvl p (TFun x) = pPrintPrec lvl p x
     pPrintPrec lvl p (TRec x) = pPrintPrec lvl p x
-    pPrintPrec _ _ (TVar s) = '#':s & Pretty.text
+    pPrintPrec _ _ (TVar s) = pPrint s
 
 instance SubTreeConstraint Row k Pretty => Pretty (Row k) where
     pPrintPrec _ _ REmpty = Pretty.text "{}"
@@ -77,7 +82,7 @@ instance SubTreeConstraint Row k Pretty => Pretty (Row k) where
         Pretty.text ":*:" <+>
         pPrintPrec lvl 1 r
         & maybeParens (p > 1)
-    pPrintPrec _ _ (RVar s) = '#':s & Pretty.text
+    pPrintPrec _ _ (RVar s) = pPrint s
 
 instance HasChild Types Typ where getChild = tTyp
 instance HasChild Types Row where getChild = tRow
@@ -89,7 +94,7 @@ instance JoinSemiLattice RConstraints where
     RowConstraints f0 s0 \/ RowConstraints f1 s1 = RowConstraints (f0 \/ f1) (s0 \/ s1)
 
 instance RowConstraints RConstraints where
-    type RowConstraintsKey RConstraints = String
+    type RowConstraintsKey RConstraints = Name
     forbidden = rForbiddenFields
 
 instance HasTypeConstraints Typ where
@@ -120,11 +125,11 @@ type instance SchemeType (Tree Pure Typ) = Typ
 instance Recursive (Unify m) Typ => Instantiate m (Tree Pure Typ)
 
 instance HasQuantifiedVar Typ where
-    type QVar Typ = String
+    type QVar Typ = Name
     quantifiedVar = _TVar
 
 instance HasQuantifiedVar Row where
-    type QVar Row = String
+    type QVar Row = Name
     quantifiedVar = _RVar
 
 instance HasFuncType Typ where

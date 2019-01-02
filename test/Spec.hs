@@ -57,27 +57,33 @@ infinite =
     Pure . ALam . scope $ \x ->
     Apply (var x) (var x) & AApp & Pure
 
+tVar :: String -> Tree Pure Typ
+tVar = Pure . TVar . Name
+
 skolem :: Tree Pure (LangA EmptyScope)
 skolem =
     -- \x -> (x :: forall a. a)
     -- TODO: This doesn't get pretty printed with parens!
     Pure . ALam . scope $ \x ->
-    TVar "a" & Pure
-    & Scheme (Types (Vars ["a"]) (Vars [])) & Pure
+    tVar "a"
+    & Scheme (Types (Vars [Name "a"]) (Vars [])) & Pure
     & TypeSig (var x) & ATypeSig & Pure
 
 validForAll :: Tree Pure (LangA EmptyScope)
 validForAll =
     -- (\x -> x) :: forall a. a
     -- TODO: This doesn't get pretty printed with parens!
-    FuncType (Pure (TVar "a")) (Pure (TVar "a"))
+    FuncType (tVar "a") (tVar "a")
     & TFun & Pure
-    & Scheme (Types (Vars ["a"]) (Vars [])) & Pure
+    & Scheme (Types (Vars [Name "a"]) (Vars [])) & Pure
     & TypeSig (scope var & ALam & Pure)
     & ATypeSig & Pure
 
+bVar :: String -> Tree Pure LangB
+bVar = Pure . BVar . Var . Name
+
 lam :: String -> (Tree Pure LangB -> Tree Pure LangB) -> Tree Pure LangB
-lam v mk = Var v & BVar & Pure & mk & Lam v & BLam & Pure
+lam v mk = bVar v & mk & Lam (Name v) & BLam & Pure
 
 ($$) :: Tree Pure LangB -> Tree Pure LangB -> Tree Pure LangB
 x $$ y = Apply x y & BApp & Pure
@@ -89,19 +95,19 @@ letGen :: Tree Pure LangB
 letGen =
     -- let id x = x in id id 5
     (i $$ i) $$ bLit 5
-    & Let "id" (lam "x" id) & BLet & Pure
+    & Let (Name "id") (lam "x" id) & BLet & Pure
     where
-        i = Var "id" & BVar & Pure
+        i = bVar "id"
 
 shouldNotGen :: Tree Pure LangB
 shouldNotGen =
     -- (\x -> let y = x in y)
     lam "x" $ \x ->
-    Var "y" & BVar & Pure
-    & Let "y" x & BLet & Pure
+    bVar "y"
+    & Let (Name "y") x & BLet & Pure
 
 recExtend :: [(String, Tree Pure LangB)] -> Tree Pure LangB -> Tree Pure LangB
-recExtend fields rest = foldr (fmap (Pure . BRecExtend) . uncurry RowExtend) rest fields
+recExtend fields rest = foldr (fmap (Pure . BRecExtend) . uncurry (RowExtend . Name)) rest fields
 
 closedRec :: [(String, Tree Pure LangB)] -> Tree Pure LangB
 closedRec fields = recExtend fields (Pure BRecEmpty)
@@ -208,16 +214,16 @@ main =
         when (numFails > 0) exitFailure
     where
         tests =
-            [ testA lamXYx5      "Just ((Int -> #t0) -> #t1 -> #t0)"
+            [ testA lamXYx5      "Just ((Int -> t0) -> t1 -> t0)"
             , testA infinite     "Nothing"
             , testA skolem       "Nothing"
-            , testA validForAll  "Just (#t0 -> #t0)"
+            , testA validForAll  "Just (t0 -> t0)"
             , testB letGen       "Just Int"
-            , testB shouldNotGen "Just (#t0 -> #t0)"
-            , testB record       "Just (\"a\" : Int :*: {})"
+            , testB shouldNotGen "Just (t0 -> t0)"
+            , testB record       "Just (a : Int :*: {})"
             , testB extendLit    "Nothing"
             , testB extendDup    "Nothing"
-            , testB extendGood   "Just (\"b\" : Int :*: \"a\" : Int :*: {})"
-            , testB unifyRows    "Just (((\"a\" : Int :*: \"b\" : Int :*: {}) -> Int -> Int) -> Int)"
+            , testB extendGood   "Just (b : Int :*: a : Int :*: {})"
+            , testB unifyRows    "Just (((a : Int :*: b : Int :*: {}) -> Int -> Int) -> Int)"
             ]
 
