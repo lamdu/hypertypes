@@ -112,13 +112,13 @@ semiPruneLookup v0 =
     t -> pure (v0, t)
 
 -- TODO: implement when need / better understand motivations for -
--- freeze, fullPrune, occursIn, seenAs, getFreeVars, freshen, equals, equiv
+-- occursIn, seenAs, getFreeVars, freshen, equals, equiv
 
-occurs ::
+occursError ::
     forall m t.
     Unify m t =>
     Tree (UVar m) t -> Tree (UTermBody (UVar m)) t -> m (Tree Pure t)
-occurs v (UTermBody c b) =
+occursError v (UTermBody c b) =
     do
         q <- newQuantifiedVariable (Proxy :: Proxy t) c
         let r = quantifiedVar # q & Pure
