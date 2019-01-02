@@ -12,6 +12,7 @@ import           AST.Class.Infer.ScopeLevel
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Knot (Tree, Tie)
 import           AST.Term.Var
+import           AST.Unify (UVar)
 import           AST.Unify.Generalize
 import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)
@@ -55,7 +56,7 @@ type instance TypeOf (Let v t) = TypeOf t
 instance
     ( MonadScopeLevel m
     , Infer m expr
-    , LocalScopeType v (Tree (GTerm m) (TypeOf expr)) m
+    , LocalScopeType v (Tree (GTerm (UVar m)) (TypeOf expr)) m
     ) =>
     Infer m (Let v expr) where
 

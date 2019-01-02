@@ -23,16 +23,16 @@ import           Data.Proxy
 
 import           Prelude.Compat
 
-data GTerm m ast
-    = GMono (UVar m ast)
-    | GPoly (UVar m ast)
-    | GBody (Tie ast (GTerm m))
+data GTerm v ast
+    = GMono (v ast)
+    | GPoly (v ast)
+    | GBody (Tie ast (GTerm v))
 Lens.makePrisms ''GTerm
 
 generalize ::
     forall m t.
     Recursive (Unify m) t =>
-    Tree (UVar m) t -> m (Tree (GTerm m) t)
+    Tree (UVar m) t -> m (Tree (GTerm (UVar m)) t)
 generalize v0 =
     withDict (recursive :: RecursiveDict (Unify m) t) $
     do
@@ -60,7 +60,7 @@ generalize v0 =
 
 type instance SchemeType (Tree (GTerm v) t) = t
 
-instance Recursive (Unify m) t => Instantiate m (Tree (GTerm m) t) where
+instance (v ~ UVar m, Recursive (Unify m) t) => Instantiate m (Tree (GTerm v) t) where
     instantiate g =
         do
             (r, recover) <- runWriterT (go g)
@@ -69,7 +69,7 @@ instance Recursive (Unify m) t => Instantiate m (Tree (GTerm m) t) where
             go ::
                 forall child.
                 Recursive (Unify m) child =>
-                Tree (GTerm m) child -> WriterT [m ()] m (Tree (UVar m) child)
+                Tree (GTerm (UVar m)) child -> WriterT [m ()] m (Tree (UVar m) child)
             go =
                 withDict (recursive :: RecursiveDict (Unify m) child) $
                 \case

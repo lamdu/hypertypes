@@ -67,7 +67,7 @@ instance
     ( MonadScopeLevel m
     , MonadScopeTypes Name Typ m
     , LocalScopeType Name (Tree (UVar m) Typ) m
-    , LocalScopeType Name (Tree (GTerm m) Typ) m
+    , LocalScopeType Name (Tree (GTerm (UVar m)) Typ) m
     , Recursive (Unify m) Typ
     ) =>
     Infer m LangB where
@@ -88,7 +88,7 @@ instance
 
 -- Monads for inferring `LangB`:
 
-newtype ScopeTypes m = ScopeTypes (Map Name (Either (Tree (UVar m) Typ) (Tree (GTerm m) Typ)))
+newtype ScopeTypes m = ScopeTypes (Map Name (Either (Tree (UVar m) Typ) (Tree (GTerm (UVar m)) Typ)))
     deriving (Semigroup, Monoid)
 Lens.makePrisms ''ScopeTypes
 
@@ -115,7 +115,7 @@ instance MonadScopeTypes Name Typ PureInferB where
 instance LocalScopeType Name (Tree (Const Int) Typ) PureInferB where
     localScopeType k v = local (Lens._1 . _ScopeTypes . Lens.at k ?~ Left v)
 
-instance LocalScopeType Name (Tree (GTerm PureInferB) Typ) PureInferB where
+instance LocalScopeType Name (Tree (GTerm (Const Int)) Typ) PureInferB where
     localScopeType k v = local (Lens._1 . _ScopeTypes . Lens.at k ?~ Right v)
 
 instance MonadScopeLevel PureInferB where
@@ -163,7 +163,7 @@ instance MonadScopeTypes Name Typ (STInferB s) where
 instance LocalScopeType Name (Tree (STVar s) Typ) (STInferB s) where
     localScopeType k v = local (Lens._1 . _ScopeTypes . Lens.at k ?~ Left v)
 
-instance LocalScopeType Name (Tree (GTerm (STInferB s)) Typ) (STInferB s) where
+instance LocalScopeType Name (Tree (GTerm (STVar s)) Typ) (STInferB s) where
     localScopeType k v = local (Lens._1 . _ScopeTypes . Lens.at k ?~ Right v)
 
 instance MonadScopeLevel (STInferB s) where
