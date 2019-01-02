@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, MultiParamTypeClasses, TypeFamilies, LambdaCase #-}
-{-# LANGUAGE DataKinds, ScopedTypeVariables, FlexibleContexts, TemplateHaskell #-}
+{-# LANGUAGE DataKinds, ScopedTypeVariables, FlexibleContexts #-}
 
 module AST.Unify
     ( HasQuantifiedVar(..)
@@ -14,13 +14,13 @@ module AST.Unify
 import Algebra.PartialOrd (PartialOrd(..))
 import Algebra.Lattice (JoinSemiLattice(..))
 import AST.Class.Children (Children(..))
-import AST.Class.Children.TH (makeChildren)
 import AST.Class.Recursive (Recursive(..), RecursiveDict, wrapM)
 import AST.Class.ZipMatch (ZipMatch(..), zipMatchWithA)
 import AST.Knot.Pure (Pure(..))
-import AST.Knot (Knot, Tree, Tie)
+import AST.Knot (Knot, Tree)
 import AST.Unify.Constraints (HasTypeConstraints(..))
 import AST.Unify.Term (UTerm(..), UTermBody(..), uConstraints, uBody)
+import AST.Unify.Error (UnifyError(..))
 import Control.Lens (Prism')
 import Control.Lens.Operators
 import Data.Constraint (withDict)
@@ -32,14 +32,6 @@ import Prelude.Compat
 class Ord (QVar t) => HasQuantifiedVar (t :: Knot -> *) where
     type family QVar t
     quantifiedVar :: Prism' (t f) (QVar t)
-
-data UnifyError t k
-    = SkolemUnified (Tie k t) (Tie k t)
-    | SkolemEscape (Tie k t)
-    | ConstraintsMismatch (t k) (TypeConstraintsOf t)
-    | Occurs (QVar t) (t k)
-    | Mismatch (t k) (t k)
-makeChildren ''UnifyError
 
 -- Names modeled after unification-fd
 
@@ -116,9 +108,9 @@ occursError ::
 occursError v (UTermBody c b) =
     do
         q <- newQuantifiedVariable (Proxy :: Proxy t) c
-        let r = quantifiedVar # q & Pure
-        bindVar binding v (UResolved r)
-        r <$ unifyError (Occurs q b)
+        let r = quantifiedVar # q
+        bindVar binding v (UResolved (Pure r))
+        Pure r <$ unifyError (Occurs (quantifiedVar # q) b)
 
 applyBindings :: forall m t. Recursive (Unify m) t => Tree (UVar m) t -> m (Tree Pure t)
 applyBindings v0 =
