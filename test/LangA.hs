@@ -49,6 +49,7 @@ makeChildrenRecursive [''LangA]
 instance Recursive Children (LangA v)
 
 type instance TypeOf (LangA k) = Typ
+type instance ScopeOf (LangA k) = ScopeTypes Typ
 
 instance InvDeBruijnIndex v => Pretty (LangA v ('Knot Pure)) where
     pPrintPrec lvl p (ALam (Scope expr)) =
@@ -73,6 +74,7 @@ type TermInfer1Deps env m =
     ( MonadScopeLevel m
     , MonadReader env m
     , HasScopeTypes (UVar m) Typ env
+    , HasScope m (ScopeTypes Typ)
     , Recursive (Unify m) Typ
     , Recursive (And (Unify m) (HasChild Types)) Typ
     , ChildrenConstraint Types (Unify m)
@@ -103,6 +105,9 @@ newtype PureInferA a =
     )
 
 type instance UVar PureInferA = Const Int
+
+instance HasScope PureInferA (ScopeTypes Typ) where
+    getScope = Lens.view Lens._1
 
 instance MonadScopeLevel PureInferA where
     localLevel = local (Lens._2 . _ScopeLevel +~ 1)
@@ -141,6 +146,9 @@ newtype STInferA s a =
     )
 
 type instance UVar (STInferA s) = STVar s
+
+instance HasScope (STInferA s) (ScopeTypes Typ) where
+    getScope = Lens.view Lens._1
 
 instance MonadScopeLevel (STInferA s) where
     localLevel = local (Lens._2 . _ScopeLevel +~ 1)

@@ -11,7 +11,6 @@ import           AST.Class.Infer
 import           AST.Class.Infer.ScopeLevel
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Knot (Tree, Tie)
-import           AST.Term.Var
 import           AST.Unify (UVar)
 import           AST.Unify.Generalize
 import           Control.DeepSeq (NFData)
@@ -51,7 +50,8 @@ instance Deps v expr k Pretty => Pretty (Let v expr k) where
 makeChildren ''Let
 instance RecursiveConstraint (Let v expr) constraint => Recursive constraint (Let v expr)
 
-type instance TypeOf (Let v t) = TypeOf t
+type instance TypeOf  (Let v t) = TypeOf  t
+type instance ScopeOf (Let v t) = ScopeOf t
 
 instance
     ( MonadScopeLevel m

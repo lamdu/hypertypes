@@ -1,21 +1,22 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DataKinds, DeriveGeneric #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving, TypeFamilies, UndecidableInstances #-}
 {-# LANGUAGE MultiParamTypeClasses, TupleSections, FlexibleInstances #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module AST.Term.Var
     ( Var(..), _Var
-    , MonadScopeTypes(..), LocalScopeType(..)
     ) where
 
-import           AST.Class.Infer (Infer(..), TypeOf)
+import           AST.Class.Infer (Infer(..), HasScope(..), ScopeLookup(..), TypeOf, ScopeOf)
 import           AST.Class.Recursive (Recursive)
 import           AST.Class.Recursive.TH (makeChildrenRecursive)
-import           AST.Knot (Knot, Tree)
-import           AST.Unify (Unify, UVar)
+import           AST.Knot (Knot)
+import           AST.Unify (Unify)
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
+import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 
@@ -33,18 +34,15 @@ makeChildrenRecursive [''Var]
 instance Pretty v => Pretty (Var v expr k) where
     pPrintPrec lvl p (Var v) = pPrintPrec lvl p v
 
-class MonadScopeTypes v t m where
-    scopeType :: v -> m (Tree (UVar m) t)
-
-class LocalScopeType v r m where
-    localScopeType :: v -> r -> m a -> m a
-
-type instance TypeOf (Var v t) = TypeOf t
+type instance TypeOf  (Var v t) = TypeOf  t
+type instance ScopeOf (Var v t) = ScopeOf t
 
 instance
     ( Recursive (Unify m) (TypeOf expr)
-    , MonadScopeTypes v (TypeOf expr) m
+    , HasScope m (ScopeOf expr)
+    , ScopeLookup v expr
     ) =>
     Infer m (Var v expr) where
 
-    infer (Var x) = scopeType x <&> (, Var x)
+    infer (Var x) =
+        getScope >>= scopeType (Proxy :: Proxy expr) x <&> (, Var x)

@@ -8,11 +8,10 @@ module AST.Term.Lam
     ) where
 
 import           AST.Class.Children.TH (makeChildren)
-import           AST.Class.Infer (Infer(..), TypeOf, inferNode, iType)
+import           AST.Class.Infer
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Knot (Tree, Tie)
 import           AST.Term.FuncType
-import           AST.Term.Var
 import           AST.Unify (UVar, newUnbound, newTerm)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)
@@ -49,7 +48,8 @@ instance Deps v expr k Pretty => Pretty (Lam v expr k) where
 makeChildren ''Lam
 instance RecursiveConstraint (Lam v expr) constraint => Recursive constraint (Lam v expr)
 
-type instance TypeOf (Lam v t) = TypeOf t
+type instance TypeOf  (Lam v t) = TypeOf  t
+type instance ScopeOf (Lam v t) = ScopeOf t
 
 instance
     ( Infer m t

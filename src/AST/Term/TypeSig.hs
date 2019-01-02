@@ -7,7 +7,7 @@ module AST.Term.TypeSig
     ) where
 
 import           AST
-import           AST.Class.Infer (Infer(..), TypeOf, inferNode, iType)
+import           AST.Class.Infer (Infer(..), TypeOf, ScopeOf, inferNode, iType)
 import           AST.Class.Infer.ScopeLevel (MonadScopeLevel(..))
 import           AST.Class.Instantiate (Instantiate(..), SchemeType)
 import           AST.Class.Recursive.TH (makeChildrenRecursive)
@@ -46,7 +46,8 @@ instance Deps typ term k Pretty => Pretty (TypeSig typ term k) where
         pPrintPrec lvl 0 term <+> Pretty.text ":" <+> pPrintPrec lvl 0 typ
         & maybeParens (p > 0)
 
-type instance TypeOf (TypeSig typ term) = TypeOf term
+type instance TypeOf  (TypeSig typ term) = TypeOf  term
+type instance ScopeOf (TypeSig typ term) = ScopeOf term
 
 instance
     ( MonadScopeLevel m

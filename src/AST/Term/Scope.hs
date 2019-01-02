@@ -8,11 +8,11 @@ module AST.Term.Scope
     , ScopeVar(..), _ScopeVar
     , EmptyScope
     , DeBruijnIndex(..)
-    , ScopeTypes, HasScopeTypes(..)
+    , ScopeTypes(..), _ScopeTypes, HasScopeTypes(..)
     ) where
 
 import           AST.Class.Children (Children)
-import           AST.Class.Infer (Infer(..), inferNode, iType, TypeOf)
+import           AST.Class.Infer (Infer(..), HasScope, inferNode, iType, TypeOf, ScopeOf)
 import           AST.Class.Infer.Infer1 (Infer1(..), HasTypeOf1(..))
 import           AST.Class.Recursive (Recursive(..))
 import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
@@ -61,6 +61,7 @@ newtype ScopeTypes t v = ScopeTypes (Seq (Tie v t))
     deriving (Semigroup, Monoid)
 Lens.makePrisms ''ScopeTypes
 
+-- TODO: Replace this class with ones from Infer
 class HasScopeTypes v t env where
     scopeTypes :: Lens' env (Tree (ScopeTypes t) v)
 
@@ -69,6 +70,8 @@ instance HasScopeTypes v t (Tree (ScopeTypes t) v) where
 
 type instance TypeOf (Scope t k) = TypeOf (t k)
 type instance TypeOf (ScopeVar t k) = TypeOf (t k)
+type instance ScopeOf (Scope t k) = ScopeTypes (TypeOf (t k))
+type instance ScopeOf (ScopeVar t k) = ScopeTypes (TypeOf (t k))
 instance HasTypeOf1 t => HasTypeOf1 (Scope t) where
     type TypeOf1 (Scope t) = TypeOf1 t
     type TypeOfIndexConstraint (Scope t) = DeBruijnIndex
@@ -87,6 +90,7 @@ instance
     , DeBruijnIndex k
     , MonadReader env m
     , HasScopeTypes (UVar m) (TypeOf1 t) env
+    , HasScope m (ScopeTypes (TypeOf (t k)))
     ) =>
     Infer m (Scope t k) where
 
@@ -111,6 +115,7 @@ instance
     , MonadReader env m
     , HasScopeTypes (UVar m) (TypeOf (t k)) env
     , DeBruijnIndex k
+    , HasScope m (ScopeTypes (TypeOf (t k)))
     ) =>
     Infer m (ScopeVar t k) where
 

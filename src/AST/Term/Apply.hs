@@ -7,7 +7,7 @@ module AST.Term.Apply
     , applyChildren
     ) where
 
-import AST.Class.Infer (Infer(..), inferNode, iType, TypeOf)
+import AST.Class.Infer (Infer(..), inferNode, iType, TypeOf, ScopeOf)
 import AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import AST.Knot (Tie)
@@ -51,7 +51,8 @@ applyChildren ::
     Traversal (Apply t0 f0) (Apply t1 f1) (Tie f0 t0) (Tie f1 t1)
 applyChildren f (Apply x0 x1) = Apply <$> f x0 <*> f x1
 
-type instance TypeOf (Apply expr) = TypeOf expr
+type instance TypeOf  (Apply expr) = TypeOf  expr
+type instance ScopeOf (Apply expr) = ScopeOf expr
 
 instance (Infer m expr, HasFuncType (TypeOf expr)) => Infer m (Apply expr) where
     infer (Apply func arg) =

@@ -30,7 +30,6 @@ import           Control.Monad.ST
 import           Control.Monad.ST.Class (MonadST(..))
 import           Data.Constraint
 import           Data.Map (Map)
-import           Data.Maybe
 import           Data.Proxy
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
@@ -48,6 +47,7 @@ data LangB k
 makeChildrenRecursive [''LangB]
 
 type instance TypeOf LangB = Typ
+type instance ScopeOf LangB = ScopeTypes
 
 instance Pretty (Tree LangB Pure) where
     pPrintPrec _ _ (BLit i) = pPrint i
@@ -63,12 +63,18 @@ instance Pretty (Tree LangB Pure) where
     pPrintPrec lvl p (BLam x) = pPrintPrec lvl p x
     pPrintPrec lvl p (BLet x) = pPrintPrec lvl p x
 
+instance ScopeLookup Name LangB where
+    scopeType _ k (ScopeTypes t) =
+        case t ^?! Lens.ix k of
+        Left x -> pure x
+        Right x -> instantiate x
+
 instance
     ( MonadScopeLevel m
-    , MonadScopeTypes Name Typ m
     , LocalScopeType Name (Tree (UVar m) Typ) m
     , LocalScopeType Name (Tree (GTerm (UVar m)) Typ) m
     , Recursive (Unify m) Typ
+    , HasScope m ScopeTypes
     ) =>
     Infer m LangB where
 
@@ -106,11 +112,8 @@ newtype PureInferB a =
 
 type instance UVar PureInferB = Const Int
 
-instance MonadScopeTypes Name Typ PureInferB where
-    scopeType v =
-        Lens.view (Lens._1 . _ScopeTypes . Lens.at v)
-        <&> fromMaybe (error "name error")
-        >>= either pure instantiate
+instance HasScope PureInferB ScopeTypes where
+    getScope = Lens.view Lens._1
 
 instance LocalScopeType Name (Tree (Const Int) Typ) PureInferB where
     localScopeType k v = local (Lens._1 . _ScopeTypes . Lens.at k ?~ Left v)
@@ -154,11 +157,8 @@ newtype STInferB s a =
 
 type instance UVar (STInferB s) = STVar s
 
-instance MonadScopeTypes Name Typ (STInferB s) where
-    scopeType v =
-        Lens.view (Lens._1 . _ScopeTypes . Lens.at v)
-        <&> fromMaybe (error "name error")
-        >>= either pure instantiate
+instance HasScope (STInferB s) ScopeTypes where
+    getScope = Lens.view Lens._1
 
 instance LocalScopeType Name (Tree (STVar s) Typ) (STInferB s) where
     localScopeType k v = local (Lens._1 . _ScopeTypes . Lens.at k ?~ Left v)
