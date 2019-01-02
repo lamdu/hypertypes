@@ -78,15 +78,17 @@ instance (MonadScopeLevel m, MonadScopeTypes Name Typ m, Recursive (Unify m) Typ
 
 -- Monads for inferring `LangB`:
 
+type ScopeTypes m v = Map Name (m (Tree v Typ))
+
 newtype PureInferB a =
     PureInferB
-    ( RWST (Map Name (PureInferB (Tree (Const Int) Typ)), ScopeLevel) () PureInferState
+    ( RWST (ScopeTypes PureInferB (Const Int), ScopeLevel) () PureInferState
         (Either (Tree TypeError Pure)) a
     )
     deriving
     ( Functor, Applicative, Monad
     , MonadError (Tree TypeError Pure)
-    , MonadReader (Map Name (PureInferB (Tree (Const Int) Typ)), ScopeLevel)
+    , MonadReader (ScopeTypes PureInferB (Const Int), ScopeLevel)
     , MonadState PureInferState
     )
 
@@ -121,13 +123,13 @@ instance Recursive (Unify PureInferB) Row
 
 newtype STInferB s a =
     STInferB
-    (ReaderT (Map Name (STInferB s (Tree (STVar s) Typ)), ScopeLevel, STInferState s)
+    (ReaderT (ScopeTypes (STInferB s) (STVar s), ScopeLevel, STInferState s)
         (ExceptT (Tree TypeError Pure) (ST s)) a
     )
     deriving
     ( Functor, Applicative, Monad, MonadST
     , MonadError (Tree TypeError Pure)
-    , MonadReader (Map Name (STInferB s (Tree (STVar s) Typ)), ScopeLevel, STInferState s)
+    , MonadReader (ScopeTypes (STInferB s) (STVar s), ScopeLevel, STInferState s)
     )
 
 type instance UVar (STInferB s) = STVar s
