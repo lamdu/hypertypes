@@ -78,25 +78,27 @@ instance (MonadScopeLevel m, MonadScopeTypes Name Typ m, Recursive (Unify m) Typ
 
 -- Monads for inferring `LangB`:
 
-type ScopeTypes m v = Map Name (m (Tree v Typ))
+newtype ScopeTypes m = ScopeTypes (Map Name (m (Tree (UVar m) Typ)))
+    deriving (Semigroup, Monoid)
+Lens.makePrisms ''ScopeTypes
 
 newtype PureInferB a =
     PureInferB
-    ( RWST (ScopeTypes PureInferB (Const Int), ScopeLevel) () PureInferState
+    ( RWST (ScopeTypes PureInferB, ScopeLevel) () PureInferState
         (Either (Tree TypeError Pure)) a
     )
     deriving
     ( Functor, Applicative, Monad
     , MonadError (Tree TypeError Pure)
-    , MonadReader (ScopeTypes PureInferB (Const Int), ScopeLevel)
+    , MonadReader (ScopeTypes PureInferB, ScopeLevel)
     , MonadState PureInferState
     )
 
 type instance UVar PureInferB = Const Int
 
 instance MonadScopeTypes Name Typ PureInferB where
-    scopeType v = Lens.view (Lens._1 . Lens.at v) >>= fromMaybe (error "name error")
-    localScopeType v t = local (Lens._1 . Lens.at v ?~ t)
+    scopeType v = Lens.view (Lens._1 . _ScopeTypes . Lens.at v) >>= fromMaybe (error "name error")
+    localScopeType v t = local (Lens._1 . _ScopeTypes . Lens.at v ?~ t)
 
 instance MonadScopeLevel PureInferB where
     localLevel = local (Lens._2 . _ScopeLevel +~ 1)
@@ -123,20 +125,20 @@ instance Recursive (Unify PureInferB) Row
 
 newtype STInferB s a =
     STInferB
-    (ReaderT (ScopeTypes (STInferB s) (STVar s), ScopeLevel, STInferState s)
+    (ReaderT (ScopeTypes (STInferB s), ScopeLevel, STInferState s)
         (ExceptT (Tree TypeError Pure) (ST s)) a
     )
     deriving
     ( Functor, Applicative, Monad, MonadST
     , MonadError (Tree TypeError Pure)
-    , MonadReader (ScopeTypes (STInferB s) (STVar s), ScopeLevel, STInferState s)
+    , MonadReader (ScopeTypes (STInferB s), ScopeLevel, STInferState s)
     )
 
 type instance UVar (STInferB s) = STVar s
 
 instance MonadScopeTypes Name Typ (STInferB s) where
-    scopeType v = Lens.view (Lens._1 . Lens.at v) >>= fromMaybe (error "name error")
-    localScopeType v t = local (Lens._1 . Lens.at v ?~ t)
+    scopeType v = Lens.view (Lens._1 . _ScopeTypes . Lens.at v) >>= fromMaybe (error "name error")
+    localScopeType v t = local (Lens._1 . _ScopeTypes . Lens.at v ?~ t)
 
 instance MonadScopeLevel (STInferB s) where
     localLevel = local (Lens._2 . _ScopeLevel +~ 1)

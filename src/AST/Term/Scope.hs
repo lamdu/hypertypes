@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, UndecidableInstances #-}
+{-# LANGUAGE NoImplicitPrelude, UndecidableInstances, GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TemplateHaskell, TypeFamilies, LambdaCase, EmptyCase #-}
 {-# LANGUAGE ScopedTypeVariables, TypeOperators, FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses, TupleSections, DataKinds #-}
@@ -57,7 +57,9 @@ instance DeBruijnIndex a => DeBruijnIndex (Maybe a) where
                 | x == 0 = Just Nothing
                 | otherwise = (x - 1) ^? deBruijnIndex <&> Just
 
-type ScopeTypes v t = Seq (Tree v t)
+newtype ScopeTypes v t = ScopeTypes (Seq (Tree v t))
+    deriving (Semigroup, Monoid)
+Lens.makePrisms ''ScopeTypes
 
 class HasScopeTypes v t env where
     scopeTypes :: Lens' env (ScopeTypes v t)
@@ -95,7 +97,7 @@ instance
             varType <- newUnbound
             xI <-
                 local
-                (scopeTypes %~ (varType Sequence.<|))
+                (scopeTypes . _ScopeTypes %~ (varType Sequence.<|))
                 (inferNode x)
             funcType # FuncType
                 { _funcIn = varType
@@ -114,5 +116,6 @@ instance
 
     infer (ScopeVar v) =
         Lens.view scopeTypes
+        <&> (^. _ScopeTypes)
         <&> (`Sequence.index` (deBruijnIndex # v))
         <&> (, ScopeVar v)
