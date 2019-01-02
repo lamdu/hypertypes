@@ -92,13 +92,13 @@ instance (DeBruijnIndex k, TermInfer1Deps env m) => Infer m (LangA k) where
 
 newtype PureInferA a =
     PureInferA
-    ( RWST (ScopeTypes (Const Int) Typ, ScopeLevel) () PureInferState
+    ( RWST (Tree (ScopeTypes Typ) (Const Int), ScopeLevel) () PureInferState
         (Either (Tree TypeError Pure)) a
     )
     deriving
     ( Functor, Applicative, Monad
     , MonadError (Tree TypeError Pure)
-    , MonadReader (ScopeTypes (Const Int) Typ, ScopeLevel)
+    , MonadReader (Tree (ScopeTypes Typ) (Const Int), ScopeLevel)
     , MonadState PureInferState
     )
 
@@ -131,13 +131,13 @@ instance Recursive (Unify PureInferA `And` HasChild Types) Row
 
 newtype STInferA s a =
     STInferA
-    ( ReaderT (ScopeTypes (STVar s) Typ, ScopeLevel, STInferState s)
+    ( ReaderT (Tree (ScopeTypes Typ) (STVar s), ScopeLevel, STInferState s)
         (ExceptT (Tree TypeError Pure) (ST s)) a
     )
     deriving
     ( Functor, Applicative, Monad, MonadST
     , MonadError (Tree TypeError Pure)
-    , MonadReader (ScopeTypes (STVar s) Typ, ScopeLevel, STInferState s)
+    , MonadReader (Tree (ScopeTypes Typ) (STVar s), ScopeLevel, STInferState s)
     )
 
 type instance UVar (STInferA s) = STVar s

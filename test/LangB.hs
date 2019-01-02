@@ -88,19 +88,19 @@ instance
 
 -- Monads for inferring `LangB`:
 
-newtype ScopeTypes v = ScopeTypes (Map Name (Either (Tree v Typ) (Tree (GTerm v) Typ)))
+newtype ScopeTypes v = ScopeTypes (Map Name (Either (Tie v Typ) (Tree (GTerm (RunKnot v)) Typ)))
     deriving (Semigroup, Monoid)
 Lens.makePrisms ''ScopeTypes
 
 newtype PureInferB a =
     PureInferB
-    ( RWST (ScopeTypes (Const Int), ScopeLevel) () PureInferState
+    ( RWST (Tree ScopeTypes (Const Int), ScopeLevel) () PureInferState
         (Either (Tree TypeError Pure)) a
     )
     deriving
     ( Functor, Applicative, Monad
     , MonadError (Tree TypeError Pure)
-    , MonadReader (ScopeTypes (Const Int), ScopeLevel)
+    , MonadReader (Tree ScopeTypes (Const Int), ScopeLevel)
     , MonadState PureInferState
     )
 
@@ -143,13 +143,13 @@ instance Recursive (Unify PureInferB) Row
 
 newtype STInferB s a =
     STInferB
-    (ReaderT (ScopeTypes (STVar s), ScopeLevel, STInferState s)
+    (ReaderT (Tree ScopeTypes (STVar s), ScopeLevel, STInferState s)
         (ExceptT (Tree TypeError Pure) (ST s)) a
     )
     deriving
     ( Functor, Applicative, Monad, MonadST
     , MonadError (Tree TypeError Pure)
-    , MonadReader (ScopeTypes (STVar s), ScopeLevel, STInferState s)
+    , MonadReader (Tree ScopeTypes (STVar s), ScopeLevel, STInferState s)
     )
 
 type instance UVar (STInferB s) = STVar s

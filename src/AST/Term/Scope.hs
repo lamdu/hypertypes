@@ -57,14 +57,14 @@ instance DeBruijnIndex a => DeBruijnIndex (Maybe a) where
                 | x == 0 = Just Nothing
                 | otherwise = (x - 1) ^? deBruijnIndex <&> Just
 
-newtype ScopeTypes v t = ScopeTypes (Seq (Tree v t))
+newtype ScopeTypes t v = ScopeTypes (Seq (Tie v t))
     deriving (Semigroup, Monoid)
 Lens.makePrisms ''ScopeTypes
 
 class HasScopeTypes v t env where
-    scopeTypes :: Lens' env (ScopeTypes v t)
+    scopeTypes :: Lens' env (Tree (ScopeTypes t) v)
 
-instance HasScopeTypes v t (ScopeTypes v t) where
+instance HasScopeTypes v t (Tree (ScopeTypes t) v) where
     scopeTypes = id
 
 type instance TypeOf (Scope t k) = TypeOf (t k)
