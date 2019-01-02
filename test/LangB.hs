@@ -21,14 +21,15 @@ import           Control.Applicative
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Lens.Tuple
+import           Control.Monad.Except
 import           Control.Monad.RWS
 import           Control.Monad.Reader
 import           Control.Monad.ST
 import           Control.Monad.ST.Class (MonadST(..))
-import           Control.Monad.Trans.Maybe
 import           Data.Constraint
 import           Data.Map (Map)
 import           Data.Maybe
+import           Data.Proxy
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
@@ -78,9 +79,13 @@ instance (MonadScopeLevel m, MonadScopeTypes Name Typ m, Recursive (Unify m) Typ
 -- Monads for inferring `LangB`:
 
 newtype PureInferB a =
-    PureInferB (RWST (Map Name (PureInferB (Tree (Const Int) Typ)), ScopeLevel) () PureInferState Maybe a)
+    PureInferB
+    ( RWST (Map Name (PureInferB (Tree (Const Int) Typ)), ScopeLevel) () PureInferState
+        (Either (Tree TypeError Pure)) a
+    )
     deriving
-    ( Functor, Applicative, Alternative, Monad
+    ( Functor, Applicative, Monad
+    , MonadError (Tree TypeError Pure)
     , MonadReader (Map Name (PureInferB (Tree (Const Int) Typ)), ScopeLevel)
     , MonadState PureInferState
     )
@@ -98,23 +103,30 @@ instance Unify PureInferB Typ where
     binding = pureBinding (Lens._1 . tTyp)
     scopeConstraints _ = Lens.view Lens._2
     newQuantifiedVariable _ _ = increase (Lens._2 . tTyp . Lens._Wrapped) <&> Name . ('t':) . show
-    unifyError _ = empty
+    unifyError e =
+        children (Proxy :: Proxy (Recursive (Unify PureInferB))) applyBindings e
+        >>= throwError . TypError
 
 instance Unify PureInferB Row where
     binding = pureBinding (Lens._1 . tRow)
     scopeConstraints _ = Lens.view Lens._2 <&> RowConstraints mempty
     newQuantifiedVariable _ _ = increase (Lens._2 . tRow . Lens._Wrapped) <&> Name . ('r':) . show
     structureMismatch = rStructureMismatch
-    unifyError _ = empty
+    unifyError e =
+        children (Proxy :: Proxy (Recursive (Unify PureInferB))) applyBindings e
+        >>= throwError . RowError
 
 instance Recursive (Unify PureInferB) Typ
 instance Recursive (Unify PureInferB) Row
 
 newtype STInferB s a =
     STInferB
-    (ReaderT (Map Name (STInferB s (Tree (STVar s) Typ)), ScopeLevel, STInferState s) (MaybeT (ST s)) a)
+    (ReaderT (Map Name (STInferB s (Tree (STVar s) Typ)), ScopeLevel, STInferState s)
+        (ExceptT (Tree TypeError Pure) (ST s)) a
+    )
     deriving
-    ( Functor, Applicative, Alternative, Monad, MonadST
+    ( Functor, Applicative, Monad, MonadST
+    , MonadError (Tree TypeError Pure)
     , MonadReader (Map Name (STInferB s (Tree (STVar s) Typ)), ScopeLevel, STInferState s)
     )
 
@@ -131,14 +143,18 @@ instance Unify (STInferB s) Typ where
     binding = stBindingState
     scopeConstraints _ = Lens.view Lens._2
     newQuantifiedVariable _ _ = newStQuantified (Lens._3 . tTyp) <&> Name . ('t':) . show
-    unifyError _ = empty
+    unifyError e =
+        children (Proxy :: Proxy (Recursive (Unify (STInferB s)))) applyBindings e
+        >>= throwError . TypError
 
 instance Unify (STInferB s) Row where
     binding = stBindingState
     scopeConstraints _ = Lens.view Lens._2 <&> RowConstraints mempty
     newQuantifiedVariable _ _ = newStQuantified (Lens._3 . tRow) <&> Name . ('r':) . show
     structureMismatch = rStructureMismatch
-    unifyError _ = empty
+    unifyError e =
+        children (Proxy :: Proxy (Recursive (Unify (STInferB s)))) applyBindings e
+        >>= throwError . RowError
 
 instance Recursive (Unify (STInferB s)) Typ
 instance Recursive (Unify (STInferB s)) Row

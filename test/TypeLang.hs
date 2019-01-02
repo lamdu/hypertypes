@@ -48,24 +48,35 @@ data Types k = Types
     , _tRow :: Tie k Row
     }
 
+data TypeError k = TypError (UnifyError Typ k) | RowError (UnifyError Row k)
+
 Lens.makePrisms ''Typ
 Lens.makePrisms ''Row
+Lens.makePrisms ''TypeError
 Lens.makeLenses ''RConstraints
 Lens.makeLenses ''Types
-makeChildrenAndZipMatch [''Typ, ''Row, ''Types]
+makeChildrenAndZipMatch [''Typ, ''Row, ''Types, ''TypeError]
 
 deriving instance SubTreeConstraint Typ k Eq   => Eq   (Typ k)
 deriving instance SubTreeConstraint Row k Eq   => Eq   (Row k)
 deriving instance SubTreeConstraint Typ k Show => Show (Typ k)
 deriving instance SubTreeConstraint Row k Show => Show (Row k)
+deriving instance SubTreeConstraint TypeError k Eq => Eq (TypeError k)
 
 instance Pretty Name where
     pPrint (Name x) = Pretty.text x
+
+instance Pretty RConstraints where
+    pPrint (RowConstraints f _) = Pretty.text "Forbidden fields:" <+> pPrint (f ^.. Lens.folded)
 
 instance SubTreeConstraint Types k Pretty => Pretty (Types k) where
     pPrintPrec lvl p (Types typ row) =
         pPrintPrec lvl p typ <+>
         pPrintPrec lvl p row
+
+instance SubTreeConstraint TypeError k Pretty => Pretty (TypeError k) where
+    pPrint (TypError x) = pPrint x
+    pPrint (RowError x) = pPrint x
 
 instance SubTreeConstraint Typ k Pretty => Pretty (Typ k) where
     pPrintPrec _ _ TInt = Pretty.text "Int"

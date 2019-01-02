@@ -20,10 +20,10 @@ import           AST.Term.Var
 import           AST.Unify
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
+import           Control.Monad.Except
 import           Control.Monad.RWS
 import           Control.Monad.Reader
 import           Control.Monad.ST
-import           Control.Monad.Trans.Maybe
 import           Data.Functor.Const
 import           Data.Proxy
 import           Data.STRef
@@ -149,32 +149,36 @@ inferExpr x =
     <&> (^. nodeType)
     >>= applyBindings
 
-execPureInferA :: PureInferA a -> Maybe a
+execPureInferA :: PureInferA a -> Either (Tree TypeError Pure) a
 execPureInferA (PureInferA act) =
     runRWST act (mempty, ScopeLevel 0) emptyPureInferState <&> (^. Lens._1)
 
-execSTInferA :: STInferA s a -> ST s (Maybe a)
+execSTInferA :: STInferA s a -> ST s (Either (Tree TypeError Pure) a)
 execSTInferA (STInferA act) =
     do
         qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
-        runReaderT act (mempty, ScopeLevel 0, qvarGen) & runMaybeT
+        runReaderT act (mempty, ScopeLevel 0, qvarGen) & runExceptT
 
-execPureInferB :: PureInferB a -> Maybe a
+execPureInferB :: PureInferB a -> Either (Tree TypeError Pure) a
 execPureInferB (PureInferB act) =
     runRWST act (mempty, ScopeLevel 0) emptyPureInferState <&> (^. Lens._1)
 
-execSTInferB :: STInferB s a -> ST s (Maybe a)
+execSTInferB :: STInferB s a -> ST s (Either (Tree TypeError Pure) a)
 execSTInferB (STInferB act) =
     do
         qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
-        runReaderT act (mempty, ScopeLevel 0, qvarGen) & runMaybeT
+        runReaderT act (mempty, ScopeLevel 0, qvarGen) & runExceptT
 
 prettyPrint :: Pretty a => a -> IO ()
 prettyPrint = print . pPrint
 
 testCommon ::
-    Pretty (Tree lang Pure) =>
-    Tree Pure lang -> String -> Maybe (Tree Pure Typ) -> Maybe (Tree Pure Typ) -> IO Bool
+    (Pretty (Tree lang Pure)) =>
+    Tree Pure lang ->
+    String ->
+    Either (Tree TypeError Pure) (Tree Pure Typ) ->
+    Either (Tree TypeError Pure) (Tree Pure Typ) ->
+    IO Bool
 testCommon expr expect pureRes stRes =
     do
         putStrLn ""
@@ -214,16 +218,16 @@ main =
         when (numFails > 0) exitFailure
     where
         tests =
-            [ testA lamXYx5      "Just ((Int -> t0) -> t1 -> t0)"
-            , testA infinite     "Nothing"
-            , testA skolem       "Nothing"
-            , testA validForAll  "Just (t0 -> t0)"
-            , testB letGen       "Just Int"
-            , testB shouldNotGen "Just (t0 -> t0)"
-            , testB record       "Just (a : Int :*: {})"
-            , testB extendLit    "Nothing"
-            , testB extendDup    "Nothing"
-            , testB extendGood   "Just (b : Int :*: a : Int :*: {})"
-            , testB unifyRows    "Just (((a : Int :*: b : Int :*: {}) -> Int -> Int) -> Int)"
+            [ testA lamXYx5      "Right ((Int -> t0) -> t1 -> t0)"
+            , testA infinite     "Left t0 occurs in itself, expands to: t0 -> t1"
+            , testA skolem       "Left SkolemEscape t0"
+            , testA validForAll  "Right (t0 -> t0)"
+            , testB letGen       "Right Int"
+            , testB shouldNotGen "Right (t0 -> t0)"
+            , testB record       "Right (a : Int :*: {})"
+            , testB extendLit    "Left Mismatch Int r0"
+            , testB extendDup    "Left ConstraintsMismatch a : Int :*: {} Forbidden fields: [a]"
+            , testB extendGood   "Right (b : Int :*: a : Int :*: {})"
+            , testB unifyRows    "Right (((a : Int :*: b : Int :*: {}) -> Int -> Int) -> Int)"
             ]
 

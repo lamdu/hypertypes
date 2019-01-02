@@ -5,11 +5,13 @@ module AST.Class.Infer.ScopeLevel
     , ScopeLevel(..), _ScopeLevel
     ) where
 
-import Algebra.Lattice (JoinSemiLattice(..))
-import Algebra.PartialOrd (PartialOrd(..))
-import Control.Lens (makePrisms)
+import           Algebra.Lattice (JoinSemiLattice(..))
+import           Algebra.PartialOrd (PartialOrd(..))
+import           Control.Lens (makePrisms)
+import qualified Text.PrettyPrint as Pretty
+import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 
-import Prelude.Compat
+import           Prelude.Compat
 
 class Monad m => MonadScopeLevel m where
     localLevel :: m a -> m a
@@ -29,3 +31,6 @@ instance Semigroup ScopeLevel where
 
 instance Monoid ScopeLevel where
     mempty = ScopeLevel maxBound
+
+instance Pretty ScopeLevel where
+    pPrint (ScopeLevel x) = Pretty.text "scope#" <> pPrint x
