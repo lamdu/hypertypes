@@ -15,6 +15,7 @@ import           AST.Term.Let
 import           AST.Term.RowExtend
 import           AST.Term.Scheme
 import           AST.Term.Scope
+import           AST.Term.Scope.InvDeBruijn
 import           AST.Term.TypeSig
 import           AST.Term.Var
 import           AST.Unify
@@ -31,7 +32,7 @@ import           System.Exit (exitFailure)
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 
-var :: DeBruijnIndex k => Int -> Tree Pure (LangA k)
+var :: InvDeBruijnIndex k => Int -> Tree Pure (LangA k)
 var = Pure . AVar . scopeVar
 
 uniType :: Tree Pure Typ -> Tree Pure (Scheme Types Typ)

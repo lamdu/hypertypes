@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, StandaloneDeriving, UndecidableInstances #-}
+{-# LANGUAGE NoImplicitPrelude, UndecidableInstances #-}
 {-# LANGUAGE TemplateHaskell, TypeFamilies, LambdaCase, EmptyCase #-}
 {-# LANGUAGE ScopedTypeVariables, TypeOperators, FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses, TupleSections, DataKinds #-}
@@ -7,8 +7,7 @@ module AST.Term.Scope
     ( Scope(..), _Scope
     , ScopeVar(..), _ScopeVar
     , EmptyScope
-    , DeBruijnIndex(..), inverseDeBruijnIndex
-    , scope, scopeVar
+    , DeBruijnIndex(..)
     , ScopeTypes, HasScopeTypes(..)
     ) where
 
@@ -44,11 +43,9 @@ instance Recursive Children (expr (Maybe a)) => Recursive Children (Scope expr a
 
 class DeBruijnIndex a where
     deBruijnIndex :: Prism' Int a
-    deBruijnIndexMax :: Proxy a -> Int
 
 instance DeBruijnIndex EmptyScope where
     deBruijnIndex = Lens.prism (\case) Left
-    deBruijnIndexMax _ = -1
 
 instance DeBruijnIndex a => DeBruijnIndex (Maybe a) where
     deBruijnIndex =
@@ -59,23 +56,6 @@ instance DeBruijnIndex a => DeBruijnIndex (Maybe a) where
             fromInt x
                 | x == 0 = Just Nothing
                 | otherwise = (x - 1) ^? deBruijnIndex <&> Just
-    deBruijnIndexMax _ = 1 + deBruijnIndexMax (Proxy :: Proxy a)
-
-inverseDeBruijnIndex :: forall a. DeBruijnIndex a => Prism' Int a
-inverseDeBruijnIndex =
-    Lens.iso (l -) (l -) . deBruijnIndex
-    where
-        l = deBruijnIndexMax (Proxy :: Proxy a)
-
-scope ::
-    forall expr a f.
-    DeBruijnIndex a =>
-    (Int -> Tree f (expr (Maybe a))) ->
-    Tree (Scope expr a) f
-scope f = Scope (f (inverseDeBruijnIndex # (Nothing :: Maybe a)))
-
-scopeVar :: DeBruijnIndex a => Int -> ScopeVar expr a f
-scopeVar x = ScopeVar (x ^?! inverseDeBruijnIndex)
 
 type ScopeTypes v t = Seq (Tree v t)
 

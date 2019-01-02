@@ -18,6 +18,7 @@ import           AST.Class.Infer.ScopeLevel
 import           AST.Term.Apply
 import           AST.Term.Scheme
 import           AST.Term.Scope
+import           AST.Term.Scope.InvDeBruijn
 import           AST.Term.TypeSig
 import           AST.Unify
 import           AST.Unify.PureBinding
@@ -49,7 +50,7 @@ instance Recursive Children (LangA v)
 
 type instance TypeOf (LangA k) = Typ
 
-instance DeBruijnIndex v => Pretty (LangA v ('Knot Pure)) where
+instance InvDeBruijnIndex v => Pretty (LangA v ('Knot Pure)) where
     pPrintPrec lvl p (ALam (Scope expr)) =
         Pretty.hcat
         [ Pretty.text "λ("
