@@ -25,8 +25,8 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Reader (MonadReader, local)
 import           Data.Constraint (Dict(..), withDict, (:-), (\\))
-import           Data.IntMap (IntMap)
-import           Data.Maybe (fromMaybe)
+import           Data.Sequence (Seq)
+import qualified Data.Sequence as Sequence
 import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
@@ -77,7 +77,7 @@ scope f = Scope (f (inverseDeBruijnIndex # (Nothing :: Maybe a)))
 scopeVar :: DeBruijnIndex a => Int -> ScopeVar expr a f
 scopeVar x = ScopeVar (x ^?! inverseDeBruijnIndex)
 
-type ScopeTypes v t = IntMap (Tree v t)
+type ScopeTypes v t = Seq (Tree v t)
 
 class HasScopeTypes v t env where
     scopeTypes :: Lens' env (ScopeTypes v t)
@@ -115,7 +115,7 @@ instance
             varType <- newUnbound
             xI <-
                 local
-                (scopeTypes . Lens.at (deBruijnIndexMax (Proxy :: Proxy (Maybe k))) ?~ varType)
+                (scopeTypes %~ (varType Sequence.<|))
                 (inferNode x)
             funcType # FuncType
                 { _funcIn = varType
@@ -133,6 +133,6 @@ instance
     Infer m (ScopeVar t k) where
 
     infer (ScopeVar v) =
-        Lens.view (scopeTypes . Lens.at (inverseDeBruijnIndex # v))
-        <&> fromMaybe (error "name error")
+        Lens.view scopeTypes
+        <&> (`Sequence.index` (deBruijnIndex # v))
         <&> (, ScopeVar v)
