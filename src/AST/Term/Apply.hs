@@ -7,7 +7,7 @@ module AST.Term.Apply
     , applyChildren
     ) where
 
-import AST.Class.Infer (Infer(..), inferNode, nodeType, TypeAST)
+import AST.Class.Infer (Infer(..), inferNode, iType, TypeAST)
 import AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import AST.Knot (Tie)
@@ -61,8 +61,8 @@ instance (Infer m expr, HasFuncType (TypeAST expr)) => Infer m (Apply expr) wher
             funcRes <- newUnbound
             funcT <-
                 funcType # FuncType
-                { _funcIn = argI ^. nodeType
+                { _funcIn = argI ^. iType
                 , _funcOut = funcRes
                 } & newTerm
-            funcRes <$ unify funcT (funcI ^. nodeType)
+            funcRes <$ unify funcT (funcI ^. iType)
                 <&> (, Apply funcI argI)

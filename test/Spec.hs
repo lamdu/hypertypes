@@ -146,7 +146,7 @@ inferExpr ::
     m (Tree Pure (TypeAST t))
 inferExpr x =
     inferNode (wrap (Proxy :: Proxy Children) (Ann ()) x)
-    <&> (^. nodeType)
+    <&> (^. iType)
     >>= applyBindings
 
 execPureInferA :: PureInferA a -> Either (Tree TypeError Pure) a

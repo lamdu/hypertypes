@@ -1,32 +1,32 @@
 {-# LANGUAGE NoImplicitPrelude, TypeFamilies, MultiParamTypeClasses #-}
-{-# LANGUAGE FlexibleContexts, DataKinds #-}
+{-# LANGUAGE FlexibleContexts, DataKinds, TemplateHaskell #-}
 
 module AST.Class.Infer
     ( TypeAST, Infer(..)
-    , TypeOf, INode, inferNode, nodeType
+    , TypeOf, inferNode
+    , Inferred(..), iVal, iType, iAnn
     ) where
 
-import           AST.Class.Recursive
-import           AST.Knot (Knot, Tree)
-import           AST.Knot.Ann (Ann(..), ann)
-import           AST.Unify (Unify(..), UVar)
-import           Control.Lens (Lens')
-import qualified Control.Lens as Lens
-import           Control.Lens.Operators
-
-import           Prelude.Compat
+import AST.Class.Recursive
+import AST.Knot (Knot, Tree, Tie, RunKnot)
+import AST.Knot.Ann (Ann(..))
+import AST.Unify (Unify(..), UVar)
+import Control.Lens (makeLenses)
+import Control.Lens.Operators
 
 type family TypeAST (t :: Knot -> *) :: Knot -> *
 
+data Inferred a v e = Inferred
+    { _iVal  :: Tie e (Inferred a v)
+    , _iType :: Tree v (TypeAST (RunKnot e))
+    , _iAnn  :: a
+    }
+makeLenses ''Inferred
+
 type TypeOf m t = Tree (UVar m) (TypeAST t)
-type INode v t a = Tree (Ann (Tree v (TypeAST t), a)) t
 
 class Recursive (Unify m) (TypeAST t) => Infer m t where
-    infer :: Tree t (Ann a) -> m (TypeOf m t, Tree t (Ann (TypeOf m t, a)))
+    infer :: Tree t (Ann a) -> m (TypeOf m t, Tree t (Inferred a (UVar m)))
 
-inferNode :: Infer m t => Tree (Ann a) t -> m (INode (UVar m) t a)
-inferNode (Ann a x) =
-    infer x <&> \(t, xI) -> Ann (t, a) xI
-
-nodeType :: Lens' (INode v t a) (Tree v (TypeAST t))
-nodeType = ann . Lens._1
+inferNode :: Infer m t => Tree (Ann a) t -> m (Tree (Inferred a (UVar m)) t)
+inferNode (Ann a x) = infer x <&> \(t, xI) -> Inferred xI t a

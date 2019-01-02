@@ -59,7 +59,7 @@ instance (MonadScopeLevel m, Infer m expr, MonadScopeTypes v (TypeAST expr) m) =
             (eI, eG) <-
                 do
                     eI <- inferNode e
-                    generalize (eI ^. nodeType) <&> (eI ,)
+                    generalize (eI ^. iType) <&> (eI ,)
                 & localLevel
             iI <- localScopeType v (instantiate eG) (inferNode i)
-            pure (iI ^. nodeType, Let v eI iI)
+            pure (iI ^. iType, Let v eI iI)

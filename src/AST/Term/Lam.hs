@@ -8,7 +8,7 @@ module AST.Term.Lam
     ) where
 
 import           AST.Class.Children.TH (makeChildren)
-import           AST.Class.Infer (Infer(..), TypeAST, inferNode, nodeType)
+import           AST.Class.Infer (Infer(..), TypeAST, inferNode, iType)
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import           AST.Knot (Tie)
 import           AST.Term.FuncType
@@ -64,6 +64,6 @@ instance
             rI <- localScopeType p (pure varType) (inferNode r)
             funcType # FuncType
                 { _funcIn = varType
-                , _funcOut = rI ^. nodeType
+                , _funcOut = rI ^. iType
                 } & newTerm
                 <&> (, Lam p rI)

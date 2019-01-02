@@ -13,7 +13,7 @@ module AST.Term.Scope
     ) where
 
 import           AST.Class.Children (Children)
-import           AST.Class.Infer (Infer(..), inferNode, nodeType, TypeAST)
+import           AST.Class.Infer (Infer(..), inferNode, iType, TypeAST)
 import           AST.Class.Infer.Infer1 (Infer1(..), HasTypeAST1(..))
 import           AST.Class.Recursive (Recursive(..))
 import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
@@ -119,7 +119,7 @@ instance
                 (inferNode x)
             funcType # FuncType
                 { _funcIn = varType
-                , _funcOut = xI ^. nodeType
+                , _funcOut = xI ^. iType
                 } & newTerm
                 <&> (, Scope xI)
         \\ (inferMonad :: DeBruijnIndex (Maybe k) :- Infer m (t (Maybe k)))

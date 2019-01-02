@@ -9,7 +9,7 @@ module AST.Term.RowExtend
     , applyRowConstraints, rowStructureMismatch, inferRowExtend
     ) where
 
-import AST.Class.Infer (Infer(..), TypeAST, TypeOf, inferNode, nodeType)
+import AST.Class.Infer (Infer(..), Inferred, TypeAST, inferNode, iType)
 import AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import AST.Knot (Tree, Tie)
@@ -104,7 +104,7 @@ inferRowExtend ::
     Tree (RowExtend (RowKey rowTyp) val val) (Ann a) ->
     m
     ( Tree (UVar m) rowTyp
-    , Tree (RowExtend (RowKey rowTyp) val val) (Ann (TypeOf m val, a))
+    , Tree (RowExtend (RowKey rowTyp) val val) (Inferred a (UVar m))
     )
 inferRowExtend rowToTyp extendToRow (RowExtend k v r) =
     do
@@ -113,6 +113,6 @@ inferRowExtend rowToTyp extendToRow (RowExtend k v r) =
         restVar <-
             scopeConstraints (Proxy :: Proxy rowTyp)
             >>= newVar binding . UUnbound . (forbidden . contains k .~ True)
-        _ <- rowToTyp restVar & newTerm >>= unify (rI ^. nodeType)
-        RowExtend k (vI ^. nodeType) restVar & extendToRow & newTerm
+        _ <- rowToTyp restVar & newTerm >>= unify (rI ^. iType)
+        RowExtend k (vI ^. iType) restVar & extendToRow & newTerm
             <&> (, RowExtend k vI rI)
