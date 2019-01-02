@@ -1,7 +1,8 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, DataKinds #-}
 
 module AST.Unify.PureBinding
-    ( PureBinding, emptyPureBinding
+    ( PureBinding(..), _PureBinding
+    , emptyPureBinding
     , pureBinding
     , increase
     ) where

@@ -29,6 +29,7 @@ dependencies:
 library:
   source-dirs: src
   dependencies:
+  - array
   - base-compat
   - binary
   - deepseq
