@@ -27,7 +27,7 @@ import           Control.Monad.Trans.Maybe
 import           Data.Functor.Const
 import           Data.Proxy
 import           Data.STRef
-import           Text.PrettyPrint (($+$))
+import           System.Exit (exitFailure)
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 
@@ -60,6 +60,7 @@ infinite =
 skolem :: Tree Pure (LangA EmptyScope)
 skolem =
     -- \x -> (x :: forall a. a)
+    -- TODO: This doesn't get pretty printed with parens!
     Pure . ALam . scope $ \x ->
     TVar "a" & Pure
     & Scheme (Types (Vars ["a"]) (Vars [])) & Pure
@@ -68,6 +69,7 @@ skolem =
 validForAll :: Tree Pure (LangA EmptyScope)
 validForAll =
     -- (\x -> x) :: forall a. a
+    -- TODO: This doesn't get pretty printed with parens!
     FuncType (Pure (TVar "a")) (Pure (TVar "a"))
     & TFun & Pure
     & Scheme (Types (Vars ["a"]) (Vars [])) & Pure
@@ -164,37 +166,58 @@ execSTInferB (STInferB act) =
 prettyPrint :: Pretty a => a -> IO ()
 prettyPrint = print . pPrint
 
-testPrelude :: Pretty (Tree lang Pure) => Tree Pure lang -> IO ()
-testPrelude expr =
+testCommon ::
+    Pretty (Tree lang Pure) =>
+    Tree Pure lang -> String -> Maybe (Tree Pure Typ) -> Maybe (Tree Pure Typ) -> IO Bool
+testCommon expr expect pureRes stRes =
     do
         putStrLn ""
-        pPrint expr $+$ Pretty.text "inferred to:" & print
+        prettyPrint expr
+        putStrLn "inferred to:"
+        prettyPrint pureRes
+        filter (not . fst) checks <&> snd & sequence_
+        all fst checks & pure
+    where
+        checks =
+            [ (Pretty.text expect == pPrint pureRes, putStrLn ("FAIL! Expected:\n" <> expect))
+            , (pureRes == stRes, putStrLn "FAIL! Different result in ST:" *> prettyPrint stRes)
+            ]
 
-testA :: Tree Pure (LangA EmptyScope) -> IO ()
-testA expr =
-    do
-        testPrelude expr
-        execPureInferA (inferExpr expr) & prettyPrint
-        runST (execSTInferA (inferExpr expr)) & prettyPrint
+testA :: Tree Pure (LangA EmptyScope) -> String -> IO Bool
+testA expr expect =
+    testCommon expr expect pureRes stRes
+    where
+        pureRes = execPureInferA (inferExpr expr)
+        stRes = runST (execSTInferA (inferExpr expr))
 
-testB :: Tree Pure LangB -> IO ()
-testB expr =
-    do
-        testPrelude expr
-        execPureInferB (inferExpr expr) & prettyPrint
-        runST (execSTInferB (inferExpr expr)) & prettyPrint
+testB :: Tree Pure LangB -> String -> IO Bool
+testB expr expect =
+    testCommon expr expect pureRes stRes
+    where
+        pureRes = execPureInferB (inferExpr expr)
+        stRes = runST (execSTInferB (inferExpr expr))
 
 main :: IO ()
 main =
     do
-        testA lamXYx5
-        testA infinite
-        testA skolem
-        testA validForAll
-        testB letGen
-        testB shouldNotGen
-        testB record
-        testB extendLit
-        testB extendDup
-        testB extendGood
-        testB unifyRows
+        numFails <-
+            sequenceA tests
+            <&> filter not <&> length
+        putStrLn ""
+        show numFails <> " tests failed out of " <> show (length tests) & putStrLn
+        when (numFails > 0) exitFailure
+    where
+        tests =
+            [ testA lamXYx5      "Just ((Int -> #t0) -> #t1 -> #t0)"
+            , testA infinite     "Nothing"
+            , testA skolem       "Nothing"
+            , testA validForAll  "Just (#t0 -> #t0)"
+            , testB letGen       "Just Int"
+            , testB shouldNotGen "Just (#t0 -> #t0)"
+            , testB record       "Just (\"a\" : Int :*: {})"
+            , testB extendLit    "Nothing"
+            , testB extendDup    "Nothing"
+            , testB extendGood   "Just (\"b\" : Int :*: \"a\" : Int :*: {})"
+            , testB unifyRows    "Just (((\"a\" : Int :*: \"b\" : Int :*: {}) -> Int -> Int) -> Int)"
+            ]
+

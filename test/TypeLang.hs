@@ -52,6 +52,8 @@ Lens.makeLenses ''RConstraints
 Lens.makeLenses ''Types
 makeChildrenAndZipMatch [''Typ, ''Row, ''Types]
 
+deriving instance SubTreeConstraint Typ k Eq   => Eq   (Typ k)
+deriving instance SubTreeConstraint Row k Eq   => Eq   (Row k)
 deriving instance SubTreeConstraint Typ k Show => Show (Typ k)
 deriving instance SubTreeConstraint Row k Show => Show (Row k)
 
