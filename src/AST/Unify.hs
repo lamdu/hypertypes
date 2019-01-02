@@ -1,6 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, MultiParamTypeClasses, TypeFamilies, LambdaCase #-}
-{-# LANGUAGE DataKinds, ScopedTypeVariables, FlexibleContexts, DefaultSignatures #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DataKinds, ScopedTypeVariables, FlexibleContexts, TemplateHaskell #-}
 
 module AST.Unify
     ( HasQuantifiedVar(..)
@@ -22,7 +21,6 @@ import AST.Knot.Pure (Pure(..))
 import AST.Knot (Knot, Tree, Tie)
 import AST.Unify.Constraints (HasTypeConstraints(..))
 import AST.Unify.Term (UTerm(..), UTermBody(..), uConstraints, uBody)
-import Control.Applicative (Alternative(..))
 import Control.Lens (Prism')
 import Control.Lens.Operators
 import Data.Constraint (withDict)
@@ -40,6 +38,7 @@ data UnifyError t k
     | SkolemEscape (Tie k t)
     | ConstraintsMismatch (t k) (TypeConstraintsOf t)
     | Occurs (QVar t) (t k)
+    | Mismatch (t k) (t k)
 makeChildren ''UnifyError
 
 -- Names modeled after unification-fd
@@ -67,19 +66,15 @@ class
 
     newQuantifiedVariable :: Proxy t -> TypeConstraintsOf t -> m (QVar t)
 
+    unifyError :: Tree (UnifyError t) (UVar m) -> m ()
+
     -- | What to do when top-levels of terms being unified do not match.
     -- Usually this will throw a failure,
     -- but some AST terms could be equivalent despite not matching,
     -- like record extends with fields ordered differently,
     -- and these could still match.
     structureMismatch :: Tree (UTermBody (UVar m)) t -> Tree (UTermBody (UVar m)) t -> m (Tree t (UVar m))
-    default structureMismatch ::
-        Alternative m => Tree (UTermBody (UVar m)) t -> Tree (UTermBody (UVar m)) t -> m (Tree t (UVar m))
-    structureMismatch _ _ = empty
-
-    unifyError :: Tree (UnifyError t) (UVar m) -> m ()
-    default unifyError :: Alternative m => Tree (UnifyError t) (UVar m) -> m ()
-    unifyError _ = empty
+    structureMismatch x y = x ^. uBody <$ unifyError (Mismatch (x ^. uBody) (y ^. uBody))
 
 newUnbound :: forall m t. Unify m t => m (Tree (UVar m) t)
 newUnbound = scopeConstraints (Proxy :: Proxy t) >>= newVar binding . UUnbound
@@ -137,7 +132,7 @@ applyBindings v0 =
             >>= result
     in
     case x of
-    UResolving t -> occurs v1 t
+    UResolving t -> occursError v1 t
     UResolved t -> pure t
     UUnbound c -> quantify c
     USkolem c -> quantify c
@@ -166,7 +161,7 @@ updateConstraints newConstraints var =
                 | newConstraints `leq` l -> pure ()
                 | otherwise -> SkolemEscape v1 & unifyError
             UTerm t -> updateTermConstraints v1 t newConstraints
-            UResolving t -> () <$ occurs var t
+            UResolving t -> () <$ occursError var t
             _ -> error "This shouldn't happen in unification stage"
         pure v1
 

@@ -98,12 +98,14 @@ instance Unify PureInferB Typ where
     binding = pureBinding (Lens._1 . tTyp)
     scopeConstraints _ = Lens.view Lens._2
     newQuantifiedVariable _ _ = increase (Lens._2 . tTyp . Lens._Wrapped) <&> Name . ('t':) . show
+    unifyError _ = empty
 
 instance Unify PureInferB Row where
     binding = pureBinding (Lens._1 . tRow)
     scopeConstraints _ = Lens.view Lens._2 <&> RowConstraints mempty
     newQuantifiedVariable _ _ = increase (Lens._2 . tRow . Lens._Wrapped) <&> Name . ('r':) . show
     structureMismatch = rStructureMismatch
+    unifyError _ = empty
 
 instance Recursive (Unify PureInferB) Typ
 instance Recursive (Unify PureInferB) Row
@@ -129,12 +131,14 @@ instance Unify (STInferB s) Typ where
     binding = stBindingState
     scopeConstraints _ = Lens.view Lens._2
     newQuantifiedVariable _ _ = newStQuantified (Lens._3 . tTyp) <&> Name . ('t':) . show
+    unifyError _ = empty
 
 instance Unify (STInferB s) Row where
     binding = stBindingState
     scopeConstraints _ = Lens.view Lens._2 <&> RowConstraints mempty
     newQuantifiedVariable _ _ = newStQuantified (Lens._3 . tRow) <&> Name . ('r':) . show
     structureMismatch = rStructureMismatch
+    unifyError _ = empty
 
 instance Recursive (Unify (STInferB s)) Typ
 instance Recursive (Unify (STInferB s)) Row
