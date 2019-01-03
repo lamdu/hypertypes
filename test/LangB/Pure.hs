@@ -25,6 +25,7 @@ bLet ::
     String -> Tree Pure LangB -> (Tree Pure LangB -> Tree Pure LangB) -> Tree Pure LangB
 bLet v val body = Let (Name v) val (body (bVar v)) & BLet & Pure
 
+infixl 9 $$
 ($$) :: Tree Pure LangB -> Tree Pure LangB -> Tree Pure LangB
 x $$ y = Apply x y & BApp & Pure
 
