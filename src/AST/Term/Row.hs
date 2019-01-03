@@ -6,7 +6,9 @@
 module AST.Term.Row
     ( RowConstraints(..), RowKey
     , RowExtend(..), eKey, eVal, eRest
-    , applyRowExtendConstraints, rowExtendStructureMismatch, inferRowExtend
+    , applyRowExtendConstraints, rowExtendStructureMismatch
+    , inferRowExtend
+    , rowElementInfer
     ) where
 
 import AST.Class.Infer (Infer(..), ITerm, TypeOf, inferNode, iType)
@@ -14,7 +16,7 @@ import AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import AST.Knot (Tree, Tie)
 import AST.Knot.Ann (Ann)
-import AST.Unify (Unify(..), UVar, newVar, unify, newTerm)
+import AST.Unify (Unify(..), UVar, newVar, unify, newTerm, newUnbound)
 import AST.Unify.Constraints (HasTypeConstraints(..))
 import AST.Unify.Term (UTerm(..))
 import Algebra.Lattice (JoinSemiLattice(..))
@@ -121,3 +123,24 @@ inferRowExtend rowToTyp extendToRow (RowExtend k v r) =
         _ <- rowToTyp restVar & newTerm >>= unify (rI ^. iType)
         RowExtend k (vI ^. iType) restVar & extendToRow & newTerm
             <&> (, RowExtend k vI rI)
+
+-- Helper for infering row usages of a row element,
+-- such as getting a field from a record or injecting into a sum type.
+-- Returns a unification variable for the element and for the whole row.
+rowElementInfer ::
+    forall m valTyp rowTyp.
+    ( Unify m valTyp
+    , Unify m rowTyp
+    , RowConstraints (TypeConstraintsOf rowTyp)
+    ) =>
+    (Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) (UVar m) -> Tree rowTyp (UVar m)) ->
+    RowKey rowTyp ->
+    m (Tree (UVar m) valTyp, Tree (UVar m) rowTyp)
+rowElementInfer extendToRow k =
+    do
+        restVar <-
+            scopeConstraints (Proxy :: Proxy rowTyp)
+            >>= newVar binding . UUnbound . (forbidden . contains k .~ True)
+        part <- newUnbound
+        whole <- RowExtend k part restVar & extendToRow & newTerm
+        pure (part, whole)
