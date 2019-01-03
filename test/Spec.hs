@@ -1,23 +1,13 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, TypeFamilies, BlockArguments #-}
 
-import           LangA
-import           LangB
-import           TypeLang
-
+import           LangA.Pure
+import           LangB.Pure
+import           TypeLang.Pure
 import           AST
 import           AST.Class.Infer
 import           AST.Class.Infer.ScopeLevel
 import           AST.Class.Recursive
-import           AST.Term.Apply
-import           AST.Term.FuncType
-import           AST.Term.Lam
-import           AST.Term.Let
-import           AST.Term.RowExtend
-import           AST.Term.Scheme
 import           AST.Term.Scope
-import           AST.Term.Scope.InvDeBruijn
-import           AST.Term.TypeSig
-import           AST.Term.Var
 import           AST.Unify
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -32,86 +22,37 @@ import           System.Exit (exitFailure)
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 
-var :: InvDeBruijnIndex k => Int -> Tree Pure (LangA k)
-var = Pure . AVar . scopeVar
-
-uniType :: Tree Pure Typ -> Tree Pure (Scheme Types Typ)
-uniType typ =
-    Pure Scheme
-    { _sForAlls = Types (Vars []) (Vars [])
-    , _sTyp = typ
-    }
-
 lamXYx5 :: Tree Pure (LangA EmptyScope)
 lamXYx5 =
     -- \x y -> x (5 :: Int)
-    Pure . ALam . scope $ \x ->
-    Pure . ALam . scope $ \_y ->
-    Pure TInt & uniType
-    & TypeSig (Pure (ALit 5))
-    & ATypeSig & Pure
-    & Apply (var x) & AApp & Pure
+    aLam \x -> aLam \_y -> x `aApp` (aLit 5 $:: intA)
 
 infinite :: Tree Pure (LangA EmptyScope)
 infinite =
     -- \x -> x x
-    Pure . ALam . scope $ \x ->
-    Apply (var x) (var x) & AApp & Pure
-
-tVar :: String -> Tree Pure Typ
-tVar = Pure . TVar . Name
+    aLam \x -> x `aApp` x
 
 skolem :: Tree Pure (LangA EmptyScope)
 skolem =
     -- \x -> (x :: forall a. a)
     -- TODO: This doesn't get pretty printed with parens!
-    Pure . ALam . scope $ \x ->
-    tVar "a"
-    & Scheme (Types (Vars [Name "a"]) (Vars [])) & Pure
-    & TypeSig (var x) & ATypeSig & Pure
+    aLam \x -> x $:: scheme ["a"] [] \[a] [] -> a
 
 validForAll :: Tree Pure (LangA EmptyScope)
 validForAll =
     -- (\x -> x) :: forall a. a
     -- TODO: This doesn't get pretty printed with parens!
-    FuncType (tVar "a") (tVar "a")
-    & TFun & Pure
-    & Scheme (Types (Vars [Name "a"]) (Vars [])) & Pure
-    & TypeSig (scope var & ALam & Pure)
-    & ATypeSig & Pure
-
-bVar :: String -> Tree Pure LangB
-bVar = Pure . BVar . Var . Name
-
-lam :: String -> (Tree Pure LangB -> Tree Pure LangB) -> Tree Pure LangB
-lam v mk = bVar v & mk & Lam (Name v) & BLam & Pure
-
-($$) :: Tree Pure LangB -> Tree Pure LangB -> Tree Pure LangB
-x $$ y = Apply x y & BApp & Pure
-
-bLit :: Int -> Tree Pure LangB
-bLit = Pure . BLit
+    aLam id $:: scheme ["a"] [] \[a] [] -> a ~> a
 
 letGen :: Tree Pure LangB
 letGen =
     -- let id x = x in id id 5
-    (i $$ i) $$ bLit 5
-    & Let (Name "id") (lam "x" id) & BLet & Pure
-    where
-        i = bVar "id"
+    bLet "id" (lam "x" id) \i -> i $$ i $$ bLit 5
 
 shouldNotGen :: Tree Pure LangB
 shouldNotGen =
     -- (\x -> let y = x in y)
-    lam "x" $ \x ->
-    bVar "y"
-    & Let (Name "y") x & BLet & Pure
-
-recExtend :: [(String, Tree Pure LangB)] -> Tree Pure LangB -> Tree Pure LangB
-recExtend fields rest = foldr (fmap (Pure . BRecExtend) . uncurry (RowExtend . Name)) rest fields
-
-closedRec :: [(String, Tree Pure LangB)] -> Tree Pure LangB
-closedRec fields = recExtend fields (Pure BRecEmpty)
+    lam "x" \x -> bLet "y" x id
 
 record :: Tree Pure LangB
 record =
@@ -136,7 +77,7 @@ extendGood =
 unifyRows :: Tree Pure LangB
 unifyRows =
     -- \f -> f {a : 5, b : 7} (f {b : 5, a : 7} 12)
-    lam "f" $ \f ->
+    lam "f" \f ->
     (f $$ closedRec [("a", bLit 5), ("b", bLit 7)])
     $$
     ((f $$ closedRec [("b", bLit 5), ("a", bLit 7)]) $$ bLit 12)
