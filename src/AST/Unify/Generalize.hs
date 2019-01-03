@@ -50,17 +50,11 @@ instance Children ast => Children (Generalized ast) where
         case g of
         GMono x -> f x <&> GMono
         GPoly x -> f x <&> GPoly
-        GBody x -> children (Proxy :: Proxy (Recursive constraint)) onTermChild x <&> GBody
+        GBody x ->
+            children (Proxy :: Proxy (Recursive constraint))
+            (fmap (^. _Generalized) . children p f . Generalized) x
+            <&> GBody
         <&> Generalized
-        where
-            onTermChild ::
-                forall child.
-                Recursive constraint child =>
-                Tree (GTerm n) child -> f (Tree (GTerm m) child)
-            onTermChild c =
-                (Generalized c :: Tree (Generalized child) n)
-                & children p f
-                <&> (^. _Generalized)
 
 type instance SchemeType (Tree (Generalized t) v) = t
 
