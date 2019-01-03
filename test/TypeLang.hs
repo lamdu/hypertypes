@@ -9,7 +9,7 @@ import           AST.Class.Combinators
 import           AST.Class.Infer.ScopeLevel
 import           AST.Class.Instantiate
 import           AST.Term.FuncType
-import           AST.Term.RowExtend
+import           AST.Term.Row
 import           AST.Term.Scheme
 import           AST.Term.Scope
 import           AST.Unify
@@ -125,7 +125,7 @@ instance HasTypeConstraints Row where
     applyConstraints _ _ _ _ REmpty = pure REmpty
     applyConstraints _ _ _ _ (RVar x) = RVar x & pure
     applyConstraints p c e u (RExtend x) =
-        applyRowConstraints p c (^. rScope) (e . (`RowConstraints` mempty) . singleton) u x <&> RExtend
+        applyRowExtendConstraints p c (^. rScope) (e . (`RowConstraints` mempty) . singleton) u x <&> RExtend
 
 type PureInferState = (Tree Types PureBinding, Tree Types (Const Int))
 
@@ -170,5 +170,5 @@ rStructureMismatch ::
     (Unify m Typ, Unify m Row) =>
     Tree (UTermBody (UVar m)) Row -> Tree (UTermBody (UVar m)) Row -> m ()
 rStructureMismatch (UTermBody c0 (RExtend r0)) (UTermBody c1 (RExtend r1)) =
-    rowStructureMismatch (newTerm . RExtend) (c0, r0) (c1, r1)
+    rowExtendStructureMismatch (newTerm . RExtend) (c0, r0) (c1, r1)
 rStructureMismatch x y = unifyError (Mismatch (x ^. uBody) (y ^. uBody))

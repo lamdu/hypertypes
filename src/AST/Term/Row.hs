@@ -3,10 +3,10 @@
 {-# LANGUAGE StandaloneDeriving, ConstraintKinds, TupleSections #-}
 {-# LANGUAGE ScopedTypeVariables, FlexibleContexts, RankNTypes #-}
 
-module AST.Term.RowExtend
-    ( RowExtend(..), rowKey, rowVal, rowRest
-    , RowConstraints(..), RowKey
-    , applyRowConstraints, rowStructureMismatch, inferRowExtend
+module AST.Term.Row
+    ( RowConstraints(..), RowKey
+    , RowExtend(..), eKey, eVal, eRest
+    , applyRowExtendConstraints, rowExtendStructureMismatch, inferRowExtend
     ) where
 
 import AST.Class.Infer (Infer(..), ITerm, TypeOf, inferNode, iType)
@@ -31,11 +31,17 @@ import Text.Show.Combinators ((@|), showCon)
 
 import Prelude.Compat
 
+class Ord (RowConstraintsKey constraints) => RowConstraints constraints where
+    type RowConstraintsKey constraints
+    forbidden :: Lens' constraints (Set (RowConstraintsKey constraints))
+
+type RowKey typ = RowConstraintsKey (TypeConstraintsOf typ)
+
 -- | Row-extend primitive for use in both value-level and type-level
 data RowExtend key val rest k = RowExtend
-    { _rowKey :: key
-    , _rowVal :: Tie k val
-    , _rowRest :: Tie k rest
+    { _eKey :: key
+    , _eVal :: Tie k val
+    , _eRest :: Tie k rest
     } deriving Generic
 
 makeLenses ''RowExtend
@@ -54,13 +60,7 @@ instance Deps NFData key val rest k => NFData (RowExtend key val rest k)
 instance Deps Show key val rest k => Show (RowExtend key val rest k) where
     showsPrec p (RowExtend k v r) = (showCon "RowExtend" @| k @| v @| r) p
 
-class Ord (RowConstraintsKey constraints) => RowConstraints constraints where
-    type RowConstraintsKey constraints
-    forbidden :: Lens' constraints (Set (RowConstraintsKey constraints))
-
-type RowKey typ = RowConstraintsKey (TypeConstraintsOf typ)
-
-applyRowConstraints ::
+applyRowExtendConstraints ::
     ( Applicative m
     , constraint valTyp, constraint rowTyp
     , RowConstraints (TypeConstraintsOf rowTyp)
@@ -72,7 +72,7 @@ applyRowConstraints ::
     (forall child. constraint child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
     Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) p ->
     m (Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) q)
-applyRowConstraints _ c toChildC err update (RowExtend k v rest) =
+applyRowExtendConstraints _ c toChildC err update (RowExtend k v rest) =
     when (c ^. forbidden . contains k) (err k)
     *>
     (RowExtend k
@@ -80,13 +80,13 @@ applyRowConstraints _ c toChildC err update (RowExtend k v rest) =
         <*> update (c & forbidden . contains k .~ True) rest
     )
 
-rowStructureMismatch ::
+rowExtendStructureMismatch ::
     Recursive (Unify m) rowTyp =>
     (Tree (RowExtend key valTyp rowTyp) (UVar m) -> m (Tree (UVar m) rowTyp)) ->
     (TypeConstraintsOf rowTyp, Tree (RowExtend key valTyp rowTyp) (UVar m)) ->
     (TypeConstraintsOf rowTyp, Tree (RowExtend key valTyp rowTyp) (UVar m)) ->
     m ()
-rowStructureMismatch mkExtend (c0, RowExtend k0 v0 r0) (c1, RowExtend k1 v1 r1) =
+rowExtendStructureMismatch mkExtend (c0, RowExtend k0 v0 r0) (c1, RowExtend k1 v1 r1) =
     do
         restVar <- c0 \/ c1 & UUnbound & newVar binding
         _ <- RowExtend k0 v0 restVar & mkExtend >>= unify r1

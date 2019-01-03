@@ -14,7 +14,7 @@ import           AST.Class.Instantiate
 import           AST.Term.Apply
 import           AST.Term.Lam
 import           AST.Term.Let
-import           AST.Term.RowExtend
+import           AST.Term.Row
 import           AST.Term.Var
 import           AST.Unify
 import           AST.Unify.Generalize

@@ -9,7 +9,7 @@ import AST
 import AST.Term.Apply
 import AST.Term.Lam
 import AST.Term.Let
-import AST.Term.RowExtend
+import AST.Term.Row
 import AST.Term.Var
 import Control.Lens.Operators
 import LangB
