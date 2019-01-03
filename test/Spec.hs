@@ -35,12 +35,12 @@ infinite =
 skolem :: Tree Pure (LangA EmptyScope)
 skolem =
     -- \x -> (x :: forall a. a)
-    aLam \x -> x $:: scheme ["a"] [] \[a] [] -> a
+    aLam \x -> x $:: forAll ["a"] [] \[a] [] -> a
 
 validForAll :: Tree Pure (LangA EmptyScope)
 validForAll =
     -- (\x -> x) :: forall a. a
-    aLam id $:: scheme ["a"] [] \[a] [] -> a ~> a
+    aLam id $:: forAll ["a"] [] \[a] [] -> a ~> a
 
 letGen :: Tree Pure LangB
 letGen =

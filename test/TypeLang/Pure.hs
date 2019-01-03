@@ -23,11 +23,11 @@ uniType typ =
     , _sTyp = typ
     }
 
-scheme ::
+forAll ::
     [String] -> [String] ->
     ([Tree Pure Typ] -> [Tree Pure Typ] -> Tree Pure typ) ->
     Tree Pure (Scheme Types typ)
-scheme tvs rowvs body =
+forAll tvs rowvs body =
     body (tvs <&> tVar) (rowvs <&> tVar)
     & Scheme (Types (Vars (tvs <&> Name)) (Vars (rowvs <&> Name)))
     & Pure
