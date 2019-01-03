@@ -53,9 +53,7 @@ makeChildrenForType info =
     do
         inst <-
             instanceD (pure ctx) (appT (conT ''Children) (pure (tiInstance info)))
-            [ tySynInstD ''SubTreeConstraint
-                (pure (TySynEqn [tiInstance info, VarT knot, VarT constraint] subTreeConstraint))
-            , tySynInstD ''ChildrenConstraint
+            [ tySynInstD ''ChildrenConstraint
                 (pure (TySynEqn [tiInstance info, VarT constraint] childrenConstraint))
             , funD 'children (tiCons info <&> pure . ccClause . makeChildrenCtr (tiVar info))
             ]
@@ -70,17 +68,10 @@ makeChildrenForType info =
     where
         ctx = childrenContext info
         constraint = mkName "constraint"
-        knot = mkName "knot"
         childrenConstraint =
             (Set.toList (tiChildren info) <&> (VarT constraint `AppT`))
             <> (Set.toList (tiEmbeds info) <&>
                 (\x -> ConT ''ChildrenConstraint `AppT` x `AppT` VarT constraint))
-            & toTuple
-        subTreeConstraint =
-            (Set.toList (tiChildren info)
-                <&> (\x -> ConT ''Tie `AppT` VarT knot `AppT` x))
-            <> (Set.toList (tiEmbeds info) <&> (`AppT` VarT knot))
-            <&> (VarT constraint `AppT`)
             & toTuple
 
 toTuple :: Foldable t => t Type -> Type

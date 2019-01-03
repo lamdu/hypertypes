@@ -17,7 +17,7 @@ import           AST.Knot.Pure (Pure(..))
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Traversal, makeLenses)
 import           Data.Binary (Binary)
-import           Data.Constraint (withDict)
+import           Data.Constraint (Constraint, withDict)
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import qualified Text.PrettyPrint as PP
@@ -34,16 +34,16 @@ makeLenses ''Ann
 
 makeChildrenAndZipMatch [''Ann]
 
-type AnnConstraints c a t = (c a, SubTreeConstraint (Ann a) t c)
+type Deps c a t = ((c a, c (Tie t (Ann a))) :: Constraint)
 
-deriving instance AnnConstraints Eq   a t => Eq   (Ann a t)
-deriving instance AnnConstraints Ord  a t => Ord  (Ann a t)
-deriving instance AnnConstraints Show a t => Show (Ann a t)
+deriving instance Deps Eq   a t => Eq   (Ann a t)
+deriving instance Deps Ord  a t => Ord  (Ann a t)
+deriving instance Deps Show a t => Show (Ann a t)
 
-instance AnnConstraints Binary a t => Binary (Ann a t)
-instance AnnConstraints NFData a t => NFData (Ann a t)
+instance Deps Binary a t => Binary (Ann a t)
+instance Deps NFData a t => NFData (Ann a t)
 
-instance AnnConstraints Pretty a t => Pretty (Ann a t) where
+instance Deps Pretty a t => Pretty (Ann a t) where
     pPrintPrec lvl prec (Ann pl b)
         | PP.isEmpty plDoc || plDoc == PP.text "()" = pPrintPrec lvl prec b
         | otherwise =

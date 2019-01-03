@@ -5,8 +5,7 @@ module AST.Knot.Pure
     ( Pure(..)
     ) where
 
-import AST.Class.Children (Children(..))
-import AST.Class.Children.TH
+import AST.Class.Children.TH (makeChildren)
 import AST.Knot (Tie)
 import Text.PrettyPrint.HughesPJClass (Pretty(..))
 import Text.Show.Combinators ((@|), showCon)
@@ -14,14 +13,13 @@ import Text.Show.Combinators ((@|), showCon)
 import Prelude.Compat
 
 newtype Pure k = Pure { getPure :: Tie k Pure }
-
 makeChildren ''Pure
 
-deriving instance SubTreeConstraint Pure f Eq   => Eq   (Pure f)
-deriving instance SubTreeConstraint Pure f Ord  => Ord  (Pure f)
+deriving instance Eq  (Tie k Pure) => Eq  (Pure k)
+deriving instance Ord (Tie k Pure) => Ord (Pure k)
 
-instance SubTreeConstraint Pure f Show => Show (Pure f) where
+instance Show (Tie k Pure) => Show (Pure k) where
     showsPrec p (Pure x) = (showCon "Pure" @| x) p
 
-instance SubTreeConstraint Pure f Pretty => Pretty (Pure f) where
+instance Pretty (Tie k Pure) => Pretty (Pure k) where
     pPrintPrec lvl p (Pure x) = pPrintPrec lvl p x

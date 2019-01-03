@@ -1,5 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses, StandaloneDeriving, UndecidableInstances #-}
 {-# LANGUAGE TemplateHaskell, TypeFamilies, FlexibleInstances, FlexibleContexts #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module TypeLang where
 
@@ -19,6 +20,7 @@ import           Algebra.PartialOrd
 import           Control.Applicative
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
+import           Data.Constraint
 import           Data.STRef
 import           Data.Set (Set, singleton)
 import           Text.PrettyPrint ((<+>))
@@ -57,11 +59,13 @@ Lens.makeLenses ''RConstraints
 Lens.makeLenses ''Types
 makeChildrenAndZipMatch [''Typ, ''Row, ''Types, ''TypeError]
 
-deriving instance SubTreeConstraint Typ k Eq   => Eq   (Typ k)
-deriving instance SubTreeConstraint Row k Eq   => Eq   (Row k)
-deriving instance SubTreeConstraint Typ k Show => Show (Typ k)
-deriving instance SubTreeConstraint Row k Show => Show (Row k)
-deriving instance SubTreeConstraint TypeError k Eq => Eq (TypeError k)
+type TypDeps cls k = ((cls (Tie k Typ), cls (Tie k Row)) :: Constraint)
+
+deriving instance TypDeps Eq   k => Eq   (Typ k)
+deriving instance TypDeps Eq   k => Eq   (Row k)
+deriving instance TypDeps Eq   k => Eq   (TypeError k)
+deriving instance TypDeps Show k => Show (Typ k)
+deriving instance TypDeps Show k => Show (Row k)
 
 instance Pretty Name where
     pPrint (Name x) = Pretty.text x
@@ -69,22 +73,22 @@ instance Pretty Name where
 instance Pretty RConstraints where
     pPrint (RowConstraints f _) = Pretty.text "Forbidden fields:" <+> pPrint (f ^.. Lens.folded)
 
-instance SubTreeConstraint Types k Pretty => Pretty (Types k) where
+instance TypDeps Pretty k => Pretty (Types k) where
     pPrintPrec lvl p (Types typ row) =
         pPrintPrec lvl p typ <+>
         pPrintPrec lvl p row
 
-instance SubTreeConstraint TypeError k Pretty => Pretty (TypeError k) where
+instance TypDeps Pretty k => Pretty (TypeError k) where
     pPrint (TypError x) = pPrint x
     pPrint (RowError x) = pPrint x
 
-instance SubTreeConstraint Typ k Pretty => Pretty (Typ k) where
+instance TypDeps Pretty k => Pretty (Typ k) where
     pPrintPrec _ _ TInt = Pretty.text "Int"
     pPrintPrec lvl p (TFun x) = pPrintPrec lvl p x
     pPrintPrec lvl p (TRec x) = pPrintPrec lvl p x
     pPrintPrec _ _ (TVar s) = pPrint s
 
-instance SubTreeConstraint Row k Pretty => Pretty (Row k) where
+instance TypDeps Pretty k => Pretty (Row k) where
     pPrintPrec _ _ REmpty = Pretty.text "{}"
     pPrintPrec lvl p (RExtend (RowExtend k v r)) =
         pPrintPrec lvl 20 k <+>

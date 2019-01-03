@@ -16,8 +16,6 @@ import GHC.Exts (Constraint)
 import Prelude.Compat
 
 class Children (expr :: Knot -> *) where
-    type SubTreeConstraint expr (knot :: Knot) (constraint :: * -> Constraint) :: Constraint
-
     type ChildrenConstraint expr (constraint :: (Knot -> *) -> Constraint) :: Constraint
 
     children ::
@@ -32,7 +30,6 @@ class Children (expr :: Knot -> *) where
 type ChildrenWithConstraint expr constraint = (Children expr, ChildrenConstraint expr constraint)
 
 instance Children (Const val) where
-    type SubTreeConstraint (Const val) f constraint = ()
     type ChildrenConstraint (Const val) constraint = ()
     children _ _ (Const x) = pure (Const x)
     leafExpr = Just (\(Const x) -> Const x)
