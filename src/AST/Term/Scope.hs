@@ -12,6 +12,7 @@ module AST.Term.Scope
     ) where
 
 import           AST.Class.Children (Children)
+import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Infer (Infer(..), HasScope, inferNode, iType, TypeOf, ScopeOf)
 import           AST.Class.Infer.Infer1 (Infer1(..), HasTypeOf1(..))
 import           AST.Class.Recursive (Recursive(..))
@@ -60,6 +61,7 @@ instance DeBruijnIndex a => DeBruijnIndex (Maybe a) where
 newtype ScopeTypes t v = ScopeTypes (Seq (Tie v t))
     deriving (Semigroup, Monoid)
 Lens.makePrisms ''ScopeTypes
+makeChildren ''ScopeTypes
 
 -- TODO: Replace this class with ones from Infer
 class HasScopeTypes v t env where
