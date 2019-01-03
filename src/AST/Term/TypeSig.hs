@@ -43,8 +43,8 @@ instance Deps typ term k Binary => Binary (TypeSig typ term k)
 instance Deps typ term k NFData => NFData (TypeSig typ term k)
 instance Deps typ term k Pretty => Pretty (TypeSig typ term k) where
     pPrintPrec lvl p (TypeSig term typ) =
-        pPrintPrec lvl 0 term <+> Pretty.text ":" <+> pPrintPrec lvl 0 typ
-        & maybeParens (p > 0)
+        pPrintPrec lvl 1 term <+> Pretty.text ":" <+> pPrintPrec lvl 1 typ
+        & maybeParens (p > 1)
 
 type instance TypeOf  (TypeSig typ term) = TypeOf  term
 type instance ScopeOf (TypeSig typ term) = ScopeOf term

@@ -45,7 +45,7 @@ instance (Pretty (Tree varTypes Vars), Pretty (Tie k typ)) =>
 
 instance Pretty (QVar (RunKnot typ)) => Pretty (Vars typ) where
     pPrint (Vars qVars) =
-        qVars <&> pPrint <&> (Pretty.text "∀" <>) & Pretty.hsep
+        qVars <&> pPrint <&> (Pretty.text "∀" <>) <&> (<> Pretty.text ".") & Pretty.hsep
 
 Lens.makeLenses ''Scheme
 Lens.makePrisms ''Vars

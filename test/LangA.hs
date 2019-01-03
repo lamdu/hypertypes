@@ -36,7 +36,7 @@ import           Data.Constraint
 import           Data.Proxy (Proxy(..))
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
-import           Text.PrettyPrint.HughesPJClass (Pretty(..))
+import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 data LangA v k
     = ALam (Scope LangA v k)
@@ -57,7 +57,8 @@ instance InvDeBruijnIndex v => Pretty (LangA v ('Knot Pure)) where
         [ Pretty.text "λ("
         , pPrint (1 + deBruijnIndexMax (Proxy :: Proxy v))
         , Pretty.text ")."
-        ] <+> pPrintPrec lvl p expr
+        ] <+> pPrintPrec lvl 0 expr
+        & maybeParens (p > 0)
     pPrintPrec _ _ (AVar (ScopeVar v)) =
         Pretty.text "#" <> pPrint (inverseDeBruijnIndex # v)
     pPrintPrec lvl p (AApp (Apply f x)) =
