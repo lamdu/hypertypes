@@ -1,10 +1,11 @@
 {-# LANGUAGE MultiParamTypeClasses, StandaloneDeriving, UndecidableInstances #-}
 {-# LANGUAGE TemplateHaskell, TypeFamilies, FlexibleInstances, FlexibleContexts #-}
-{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE ConstraintKinds, TypeOperators #-}
 
 module TypeLang where
 
 import           AST
+import           AST.Class.Combinators
 import           AST.Class.Infer.ScopeLevel
 import           AST.Class.Instantiate
 import           AST.Term.FuncType
@@ -136,8 +137,13 @@ emptyPureInferState =
 
 type STInferState s = Tree Types (Const (STRef s Int))
 
+instance (Unify m Typ, Unify m Row) => Recursive (Unify m) Typ
+instance (Unify m Typ, Unify m Row) => Recursive (Unify m) Row
+instance (Unify m Typ, Unify m Row) => Recursive (Unify m `And` HasChild Types) Typ
+instance (Unify m Typ, Unify m Row) => Recursive (Unify m `And` HasChild Types) Row
+
 type instance SchemeType (Tree Pure Typ) = Typ
-instance Recursive (Unify m) Typ => Instantiate m (Tree Pure Typ)
+instance (Unify m Typ, Unify m Row) => Instantiate m (Tree Pure Typ)
 
 instance HasQuantifiedVar Typ where
     type QVar Typ = Name
@@ -157,7 +163,7 @@ instance HasScopeTypes v Typ a => HasScopeTypes v Typ (a, x, y) where
     scopeTypes = Lens._1 . scopeTypes
 
 rStructureMismatch ::
-    Recursive (Unify m) Row =>
+    (Unify m Typ, Unify m Row) =>
     Tree (UTermBody (UVar m)) Row -> Tree (UTermBody (UVar m)) Row -> m ()
 rStructureMismatch (UTermBody c0 (RExtend r0)) (UTermBody c1 (RExtend r1)) =
     rowStructureMismatch (newTerm . RExtend) (c0, r0) (c1, r1)

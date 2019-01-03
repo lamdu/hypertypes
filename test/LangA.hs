@@ -1,8 +1,7 @@
 {-# LANGUAGE StandaloneDeriving, UndecidableInstances, TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies, LambdaCase, MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances, DataKinds, TupleSections, ConstraintKinds #-}
-{-# LANGUAGE FlexibleContexts, GeneralizedNewtypeDeriving, TypeOperators #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts, GeneralizedNewtypeDeriving, ScopedTypeVariables #-}
 
 -- | A test language with locally-nameless variable scoping and type signatures with for-alls
 
@@ -11,7 +10,6 @@ module LangA where
 import           TypeLang
 
 import           AST
-import           AST.Class.Combinators
 import           AST.Class.Infer
 import           AST.Class.Infer.Infer1
 import           AST.Class.Infer.ScopeLevel
@@ -76,8 +74,7 @@ type TermInfer1Deps env m =
     , MonadReader env m
     , HasScopeTypes (UVar m) Typ env
     , HasScope m (ScopeTypes Typ)
-    , Recursive (Unify m) Typ
-    , Recursive (And (Unify m) (HasChild Types)) Typ
+    , Unify m Typ, Unify m Row
     , ChildrenConstraint Types (Unify m)
     )
 
@@ -130,11 +127,6 @@ instance Unify PureInferA Row where
         children (Proxy :: Proxy (Recursive (Unify PureInferA))) applyBindings e
         >>= throwError . RowError
 
-instance Recursive (Unify PureInferA) Typ
-instance Recursive (Unify PureInferA) Row
-instance Recursive (Unify PureInferA `And` HasChild Types) Typ
-instance Recursive (Unify PureInferA `And` HasChild Types) Row
-
 newtype STInferA s a =
     STInferA
     ( ReaderT (Tree (ScopeTypes Typ) (STVar s), ScopeLevel, STInferState s)
@@ -170,8 +162,3 @@ instance Unify (STInferA s) Row where
     unifyError e =
         children (Proxy :: Proxy (Recursive (Unify (STInferA s)))) applyBindings e
         >>= throwError . RowError
-
-instance Recursive (Unify (STInferA s)) Typ
-instance Recursive (Unify (STInferA s)) Row
-instance Recursive (Unify (STInferA s) `And` HasChild Types) Typ
-instance Recursive (Unify (STInferA s) `And` HasChild Types) Row

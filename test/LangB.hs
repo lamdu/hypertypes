@@ -70,7 +70,7 @@ instance
     ( MonadScopeLevel m
     , LocalScopeType Name (Tree (UVar m) Typ) m
     , LocalScopeType Name (Tree (Generalized Typ) (UVar m)) m
-    , Recursive (Unify m) Typ
+    , Unify m Typ, Unify m Row
     , HasScope m ScopeTypes
     ) =>
     Infer m LangB where
@@ -147,9 +147,6 @@ instance Unify PureInferB Row where
         children (Proxy :: Proxy (Recursive (Unify PureInferB))) applyBindings e
         >>= throwError . RowError
 
-instance Recursive (Unify PureInferB) Typ
-instance Recursive (Unify PureInferB) Row
-
 newtype STInferB s a =
     STInferB
     (ReaderT (Tree ScopeTypes (STVar s), ScopeLevel, STInferState s)
@@ -191,6 +188,3 @@ instance Unify (STInferB s) Row where
     unifyError e =
         children (Proxy :: Proxy (Recursive (Unify (STInferB s)))) applyBindings e
         >>= throwError . RowError
-
-instance Recursive (Unify (STInferB s)) Typ
-instance Recursive (Unify (STInferB s)) Row
