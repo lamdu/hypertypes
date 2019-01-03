@@ -3,23 +3,25 @@
 {-# LANGUAGE MultiParamTypeClasses, LambdaCase #-}
 
 module AST.Unify.Generalize
-    ( GTerm, generalize
+    ( GTerm, _GMono, _GPoly, _GBody
+    , generalize
     ) where
 
 import           Algebra.PartialOrd (PartialOrd(..))
-import           AST.Class.Children
-import           AST.Class.Instantiate
-import           AST.Class.Recursive
-import           AST.Knot
+import           AST.Class.Children (Children(..), foldMapChildren)
+import           AST.Class.Children.TH (makeChildren)
+import           AST.Class.Instantiate (Instantiate(..), SchemeType)
+import           AST.Class.Recursive (Recursive(..), RecursiveDict)
+import           AST.Knot (Tree, Tie)
 import           AST.Unify
-import           AST.Unify.Term
+import           AST.Unify.Term (UTerm(..), uBody)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
-import           Control.Monad.Trans.Writer
-import           Data.Constraint
+import           Control.Monad.Trans.Writer (WriterT(..), tell)
+import           Data.Constraint (withDict)
 import           Data.Monoid (All(..))
-import           Data.Proxy
+import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
 
@@ -28,6 +30,7 @@ data GTerm v ast
     | GPoly (v ast)
     | GBody (Tie ast (GTerm v))
 Lens.makePrisms ''GTerm
+makeChildren ''GTerm
 
 type instance SchemeType (Tree (GTerm v) t) = t
 
