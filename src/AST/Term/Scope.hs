@@ -46,7 +46,7 @@ class DeBruijnIndex a where
     deBruijnIndex :: Prism' Int a
 
 instance DeBruijnIndex EmptyScope where
-    deBruijnIndex = Lens.prism (\case) Left
+    deBruijnIndex = Lens.prism (\case{}) Left
 
 instance DeBruijnIndex a => DeBruijnIndex (Maybe a) where
     deBruijnIndex =
@@ -122,7 +122,6 @@ instance
     Infer m (ScopeVar t k) where
 
     infer (ScopeVar v) =
-        Lens.view scopeTypes
-        <&> (^. _ScopeTypes)
+        Lens.view (scopeTypes . _ScopeTypes)
         <&> (`Sequence.index` (deBruijnIndex # v))
         <&> (, ScopeVar v)
