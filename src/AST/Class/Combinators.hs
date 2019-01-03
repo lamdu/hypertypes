@@ -5,6 +5,7 @@
 
 module AST.Class.Combinators
     ( And
+    , NoConstraint
     ) where
 
 import AST.Knot (Knot)
@@ -12,3 +13,6 @@ import AST.Knot (Knot)
 -- Join two classes for usage with `children`/`ChildrenConstraint` or `Recursive`.
 class (c0 k, c1 k) => And c0 c1 (k :: Knot -> *)
 instance (c0 k, c1 k) => And c0 c1 k
+
+class NoConstraint (k :: Knot -> *)
+instance NoConstraint k

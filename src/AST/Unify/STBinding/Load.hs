@@ -8,7 +8,7 @@ module AST.Unify.STBinding.Load
     ) where
 
 import           AST.Class.Children (Children(..), ChildrenWithConstraint)
-import           AST.Class.Combinators (And)
+import           AST.Class.Combinators (And, NoConstraint)
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Recursive (Recursive(..), RecursiveDict)
 import           AST.Knot (Tree)
@@ -91,11 +91,11 @@ load ::
     forall m typeVars t.
     ( MonadST m
     , UVar m ~ STVar (World m)
-    , Children typeVars
+    , ChildrenWithConstraint typeVars NoConstraint
     , ChildrenWithConstraint t (Recursive (HasChild typeVars `And` Unify m))
     ) =>
     Tree typeVars PureBinding -> Tree t (Const Int) -> m (Tree t (STVar (World m)))
 load src collection =
     do
-        conv <- childrenNoConstraint makeConvertState src
+        conv <- children (Proxy :: Proxy NoConstraint) makeConvertState src
         loadBody src conv collection
