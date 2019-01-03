@@ -8,6 +8,7 @@ import           TypeLang
 
 import           AST
 import           AST.Class.Infer
+import           AST.Class.Infer.Inferred
 import           AST.Class.Infer.ScopeLevel
 import           AST.Class.Instantiate
 import           AST.Term.Apply
@@ -88,6 +89,8 @@ instance
     infer BRecEmpty =
         withDict (recursive :: RecursiveDict (Unify m) Typ) $
         newTerm REmpty >>= newTerm . TRec <&> (, BRecEmpty)
+
+instance (Unify m Typ, Unify m Row) => Recursive (InferredChildConstraints (Recursive (Unify m))) LangB
 
 -- Monads for inferring `LangB`:
 

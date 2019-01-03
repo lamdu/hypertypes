@@ -142,6 +142,10 @@ instance (Unify m Typ, Unify m Row) => Recursive (Unify m) Row
 instance (Unify m Typ, Unify m Row) => Recursive (Unify m `And` HasChild Types) Typ
 instance (Unify m Typ, Unify m Row) => Recursive (Unify m `And` HasChild Types) Row
 
+-- TODO: Why are these required by Inferred's Children instance?
+instance (Unify m Typ, Unify m Row) => Recursive (Recursive (Unify m)) Typ
+instance (Unify m Typ, Unify m Row) => Recursive (Recursive (Unify m)) Row
+
 type instance SchemeType (Tree Pure Typ) = Typ
 instance (Unify m Typ, Unify m Row) => Instantiate m (Tree Pure Typ)
 

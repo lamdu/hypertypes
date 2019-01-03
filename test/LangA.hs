@@ -12,6 +12,7 @@ import           TypeLang
 import           AST
 import           AST.Class.Infer
 import           AST.Class.Infer.Infer1
+import           AST.Class.Infer.Inferred
 import           AST.Class.Infer.ScopeLevel
 import           AST.Term.Apply
 import           AST.Term.Scheme
@@ -87,6 +88,8 @@ instance (DeBruijnIndex k, TermInfer1Deps env m) => Infer m (LangA k) where
     infer (ALam     x) = infer x <&> _2 %~ ALam
     infer (AApp     x) = infer x <&> _2 %~ AApp
     infer (ATypeSig x) = infer x <&> _2 %~ ATypeSig
+
+instance (Unify m Typ, Unify m Row) => Recursive (InferredChildConstraints (Recursive (Unify m))) (LangA k)
 
 -- Monads for inferring `LangA`:
 

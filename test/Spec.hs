@@ -1,10 +1,11 @@
-{-# LANGUAGE FlexibleContexts, TypeFamilies, BlockArguments #-}
+{-# LANGUAGE FlexibleContexts, TypeFamilies, BlockArguments, ScopedTypeVariables #-}
 
 import           LangA.Pure
 import           LangB.Pure
 import           TypeLang.Pure
 import           AST
 import           AST.Class.Infer
+import           AST.Class.Infer.Inferred
 import           AST.Class.Infer.ScopeLevel
 import           AST.Class.Recursive
 import           AST.Term.Scope
@@ -61,13 +62,18 @@ unifyRows =
     ((f $$ closedRec [("b", bLit 5), ("a", bLit 7)]) $$ bLit 12)
 
 inferExpr ::
-    (Infer m t, Recursive Children t) =>
+    forall m t.
+    ( Infer m t
+    , Recursive Children t
+    , Recursive (InferredChildConstraints (Recursive (Unify m))) t
+    ) =>
     Tree Pure t ->
     m (Tree Pure (TypeOf t))
 inferExpr x =
     inferNode (wrap (Proxy :: Proxy Children) (Ann ()) x)
-    <&> (^. iType)
-    >>= applyBindings
+    <&> Inferred
+    >>= children (Proxy :: Proxy (Recursive (Unify m))) applyBindings
+    <&> (^. _Inferred . iType)
 
 execPureInferA :: PureInferA a -> Either (Tree TypeError Pure) a
 execPureInferA (PureInferA act) =
