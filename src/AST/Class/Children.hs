@@ -26,11 +26,6 @@ class Children (expr :: Knot -> *) where
         (forall child. constraint child => Tree n child -> f (Tree m child)) ->
         Tree expr n -> f (Tree expr m)
 
-    childrenNoConstraint ::
-        Applicative f =>
-        (forall child. Tree n child -> f (Tree m child)) ->
-        Tree expr n -> f (Tree expr m)
-
     leafExpr :: Maybe (expr f -> expr g)
     leafExpr = Nothing
 
@@ -40,7 +35,6 @@ instance Children (Const val) where
     type SubTreeConstraint (Const val) f constraint = ()
     type ChildrenConstraint (Const val) constraint = ()
     children _ _ (Const x) = pure (Const x)
-    childrenNoConstraint _ (Const x) = pure (Const x)
     leafExpr = Just (\(Const x) -> Const x)
 
 children_ ::

@@ -57,8 +57,7 @@ makeChildrenForType info =
                 (pure (TySynEqn [tiInstance info, VarT knot, VarT constraint] subTreeConstraint))
             , tySynInstD ''ChildrenConstraint
                 (pure (TySynEqn [tiInstance info, VarT constraint] childrenConstraint))
-            , funD 'children (tiCons info <&> pure . ccClause . makeChildrenCtr True (tiVar info))
-            , funD 'childrenNoConstraint (tiCons info <&> pure . ccClause . makeChildrenCtr False (tiVar info))
+            , funD 'children (tiCons info <&> pure . ccClause . makeChildrenCtr (tiVar info))
             ]
         mono <-
             case Set.toList (tiChildren info) of
@@ -89,7 +88,7 @@ toTuple xs = foldl AppT (TupleT (length xs)) xs
 
 childrenContext :: TypeInfo -> [Pred]
 childrenContext info =
-    tiCons info <&> makeChildrenCtr True (tiVar info) >>= ccContext & Set.fromList & Set.toList
+    tiCons info <&> makeChildrenCtr (tiVar info) >>= ccContext & Set.fromList & Set.toList
 
 parts :: D.DatatypeInfo -> Q (Type, Name)
 parts info =
@@ -169,13 +168,12 @@ childrenTypesFromTypeName name args =
         filterVar (SigT t _, x) = filterVar (t, x)
         filterVar _ = []
 
-makeChildrenCtr :: Bool -> Name -> D.ConstructorInfo -> CtrCase
-makeChildrenCtr withConstraint var info =
+makeChildrenCtr :: Name -> D.ConstructorInfo -> CtrCase
+makeChildrenCtr var info =
     CtrCase
     { ccClause =
         Clause
-        ([VarP proxy | withConstraint] <>
-            [VarP func, ConP (D.constructorName info) (cVars <&> VarP)])
+        [VarP proxy, VarP func, ConP (D.constructorName info) (cVars <&> VarP)]
         (NormalB body) []
     , ccContext = pats >>= ctxForPat
     }
@@ -192,9 +190,7 @@ makeChildrenCtr withConstraint var info =
             & applicativeStyle (ConE (D.constructorName info))
         pats = D.constructorFields info <&> matchType var
         bodyForPat NodeFofX{} = VarE func
-        bodyForPat XofF{}
-            | withConstraint = VarE 'children `AppE` VarE proxy `AppE` VarE func
-            | otherwise = VarE 'childrenNoConstraint `AppE` VarE func
+        bodyForPat XofF{} = VarE 'children `AppE` VarE proxy `AppE` VarE func
         bodyForPat (Tof _ pat) = VarE 'traverse `AppE` bodyForPat pat
         bodyForPat Other{} = VarE 'pure
         ctxForPat (Tof t pat) = [ConT ''Traversable `AppT` t | isPolymorphic t] ++ ctxForPat pat
