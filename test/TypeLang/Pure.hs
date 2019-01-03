@@ -32,6 +32,11 @@ forAll tvs rowvs body =
     & Scheme (Types (Vars (tvs <&> Name)) (Vars (rowvs <&> Name)))
     & Pure
 
+forAll1 ::
+    String -> (Tree Pure Typ -> Tree Pure typ) ->
+    Tree Pure (Scheme Types typ)
+forAll1 t body = forAll [t] [] $ \[tv] [] -> body tv
+
 infixr 2 ~>
 (~>) :: Tree Pure Typ -> Tree Pure Typ -> Tree Pure Typ
 a ~> b = FuncType a b & TFun & Pure

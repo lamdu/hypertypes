@@ -23,54 +23,34 @@ import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 
 lamXYx5 :: Tree Pure (LangA EmptyScope)
-lamXYx5 =
-    -- \x y -> x (5 :: Int)
-    aLam \x -> aLam \_y -> x `aApp` (aLit 5 $:: intA)
+lamXYx5 = aLam \x -> aLam \_y -> x `aApp` (aLit 5 $:: intA)
 
 infinite :: Tree Pure (LangA EmptyScope)
-infinite =
-    -- \x -> x x
-    aLam \x -> x `aApp` x
+infinite = aLam \x -> x `aApp` x
 
 skolem :: Tree Pure (LangA EmptyScope)
-skolem =
-    -- \x -> (x :: forall a. a)
-    aLam \x -> x $:: forAll ["a"] [] \[a] [] -> a
+skolem = aLam \x -> x $:: forAll1 "a" \a -> a
 
 validForAll :: Tree Pure (LangA EmptyScope)
-validForAll =
-    -- (\x -> x) :: forall a. a
-    aLam id $:: forAll ["a"] [] \[a] [] -> a ~> a
+validForAll = aLam id $:: forAll1 "a" \a -> a ~> a
 
 letGen :: Tree Pure LangB
-letGen =
-    -- let id x = x in id id 5
-    bLet "id" (lam "x" id) \i -> i $$ i $$ bLit 5
+letGen = bLet "id" (lam "x" id) \i -> i $$ i $$ bLit 5
 
 shouldNotGen :: Tree Pure LangB
-shouldNotGen =
-    -- (\x -> let y = x in y)
-    lam "x" \x -> bLet "y" x id
+shouldNotGen = lam "x" \x -> bLet "y" x id
 
 record :: Tree Pure LangB
-record =
-    -- {a: 5}
-    closedRec [("a", bLit 5)]
+record = closedRec [("a", bLit 5)]
 
 extendLit :: Tree Pure LangB
-extendLit =
-    -- {a: 5 | 7}
-    recExtend [("a", bLit 5)] (bLit 7)
+extendLit = recExtend [("a", bLit 5)] (bLit 7)
 
 extendDup :: Tree Pure LangB
-extendDup =
-    -- {a: 7 | a : 5}
-    recExtend [("a", bLit 7)] record
+extendDup = recExtend [("a", bLit 7)] record
 
 extendGood :: Tree Pure LangB
-extendGood =
-    -- {b: 7 | a : 5}
-    recExtend [("b", bLit 7)] record
+extendGood = recExtend [("b", bLit 7)] record
 
 unifyRows :: Tree Pure LangB
 unifyRows =
