@@ -3,7 +3,7 @@
 
 module AST.Class.Infer
     ( TypeOf, ScopeOf
-    , Inferred(..), iVal, iType, iScope, iAnn
+    , ITerm(..), iVal, iType, iScope, iAnn
     , Infer(..), inferNode
     , HasScope(..), ScopeLookup(..), LocalScopeType(..)
     ) where
@@ -20,13 +20,13 @@ import Prelude.Compat
 type family TypeOf (t :: Knot -> *) :: Knot -> *
 type family ScopeOf (t :: Knot -> *) :: Knot -> *
 
-data Inferred a v e = Inferred
-    { _iVal :: Tie e (Inferred a v)
+data ITerm a v e = ITerm
+    { _iVal :: Tie e (ITerm a v)
     , _iType :: Tree v (TypeOf (RunKnot e))
     , _iScope :: Tree (ScopeOf (RunKnot e)) v
     , _iAnn :: a
     }
-makeLenses ''Inferred
+makeLenses ''ITerm
 
 class HasScope m s where
     getScope :: m (Tree s (UVar m))
@@ -43,10 +43,10 @@ class
     (HasScope m (ScopeOf t), Recursive (Unify m) (TypeOf t)) =>
     Infer m t where
 
-    infer :: Tree t (Ann a) -> m (Tree (UVar m) (TypeOf t), Tree t (Inferred a (UVar m)))
+    infer :: Tree t (Ann a) -> m (Tree (UVar m) (TypeOf t), Tree t (ITerm a (UVar m)))
 
-inferNode :: Infer m t => Tree (Ann a) t -> m (Tree (Inferred a (UVar m)) t)
+inferNode :: Infer m t => Tree (Ann a) t -> m (Tree (ITerm a (UVar m)) t)
 inferNode (Ann a x) =
-    (\s (t, xI) -> Inferred xI t s a)
+    (\s (t, xI) -> ITerm xI t s a)
     <$> getScope
     <*> infer x

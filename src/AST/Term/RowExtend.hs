@@ -9,7 +9,7 @@ module AST.Term.RowExtend
     , applyRowConstraints, rowStructureMismatch, inferRowExtend
     ) where
 
-import AST.Class.Infer (Infer(..), Inferred, TypeOf, inferNode, iType)
+import AST.Class.Infer (Infer(..), ITerm, TypeOf, inferNode, iType)
 import AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import AST.Knot (Tree, Tie)
@@ -104,7 +104,7 @@ inferRowExtend ::
     Tree (RowExtend (RowKey rowTyp) val val) (Ann a) ->
     m
     ( Tree (UVar m) rowTyp
-    , Tree (RowExtend (RowKey rowTyp) val val) (Inferred a (UVar m))
+    , Tree (RowExtend (RowKey rowTyp) val val) (ITerm a (UVar m))
     )
 inferRowExtend rowToTyp extendToRow (RowExtend k v r) =
     do
