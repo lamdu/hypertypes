@@ -29,35 +29,6 @@ data GTerm v ast
     | GBody (Tie ast (GTerm v))
 Lens.makePrisms ''GTerm
 
-generalize ::
-    forall m t.
-    Recursive (Unify m) t =>
-    Tree (UVar m) t -> m (Tree (GTerm (UVar m)) t)
-generalize v0 =
-    withDict (recursive :: RecursiveDict (Unify m) t) $
-    do
-        (v1, u) <- semiPruneLookup v0
-        c <- scopeConstraints (Proxy :: Proxy t)
-        case u of
-            UUnbound l | l `leq` c ->
-                GPoly v1 <$
-                -- We set the variable to a skolem,
-                -- so additional unifications after generalization
-                -- (for example hole resumptions where supported)
-                -- cannot unify it with anything.
-                bindVar binding v1 (USkolem l)
-            USkolem l | l `leq` c -> pure (GPoly v1)
-            UTerm t ->
-                children p generalize (t ^. uBody)
-                <&> onBody
-                where
-                    onBody b
-                        | foldMapChildren p (All . Lens.has _GMono) b ^. Lens._Wrapped = GMono v1
-                        | otherwise = GBody b
-            _ -> pure (GMono v1)
-    where
-        p = Proxy :: Proxy (Recursive (Unify m))
-
 type instance SchemeType (Tree (GTerm v) t) = t
 
 instance (v ~ UVar m, Recursive (Unify m) t) => Instantiate m (Tree (GTerm v) t) where
@@ -87,3 +58,32 @@ instance (v ~ UVar m, Recursive (Unify m) t) => Instantiate m (Tree (GTerm v) t)
                             pure r
                     UVar v -> pure v
                     _ -> error "unexpected state at instantiate's forall"
+
+generalize ::
+    forall m t.
+    Recursive (Unify m) t =>
+    Tree (UVar m) t -> m (Tree (GTerm (UVar m)) t)
+generalize v0 =
+    withDict (recursive :: RecursiveDict (Unify m) t) $
+    do
+        (v1, u) <- semiPruneLookup v0
+        c <- scopeConstraints (Proxy :: Proxy t)
+        case u of
+            UUnbound l | l `leq` c ->
+                GPoly v1 <$
+                -- We set the variable to a skolem,
+                -- so additional unifications after generalization
+                -- (for example hole resumptions where supported)
+                -- cannot unify it with anything.
+                bindVar binding v1 (USkolem l)
+            USkolem l | l `leq` c -> pure (GPoly v1)
+            UTerm t ->
+                children p generalize (t ^. uBody)
+                <&> onBody
+                where
+                    onBody b
+                        | foldMapChildren p (All . Lens.has _GMono) b ^. Lens._Wrapped = GMono v1
+                        | otherwise = GBody b
+            _ -> pure (GMono v1)
+    where
+        p = Proxy :: Proxy (Recursive (Unify m))

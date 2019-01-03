@@ -21,10 +21,10 @@ type family TypeOf (t :: Knot -> *) :: Knot -> *
 type family ScopeOf (t :: Knot -> *) :: Knot -> *
 
 data Inferred a v e = Inferred
-    { _iVal  :: Tie e (Inferred a v)
+    { _iVal :: Tie e (Inferred a v)
     , _iType :: Tree v (TypeOf (RunKnot e))
     , _iScope :: Tree (ScopeOf (RunKnot e)) v
-    , _iAnn  :: a
+    , _iAnn :: a
     }
 makeLenses ''Inferred
 
