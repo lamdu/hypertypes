@@ -60,6 +60,8 @@ instance Deps NFData key val rest k => NFData (RowExtend key val rest k)
 instance Deps Show key val rest k => Show (RowExtend key val rest k) where
     showsPrec p (RowExtend k v r) = (showCon "RowExtend" @| k @| v @| r) p
 
+-- Helpers for Unify instances of type-level RowExtends:
+
 applyRowExtendConstraints ::
     ( Applicative m
     , constraint valTyp, constraint rowTyp
@@ -93,6 +95,9 @@ rowExtendStructureMismatch mkExtend (c0, RowExtend k0 v0 r0) (c1, RowExtend k1 v
         _ <- RowExtend k1 v1 restVar & mkExtend >>= unify r0
         pure ()
 
+-- Helper for Infer instances of value-level RowExtends.
+-- An Infer instance for RowExtend isn't suitable because the term language
+-- may have separate row-extends (for example one for records and one for pattern matches)
 inferRowExtend ::
     forall m val rowTyp a.
     ( Infer m val
