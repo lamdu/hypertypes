@@ -67,12 +67,11 @@ loadVar src conv (Const v) =
     Just x -> pure x
     Nothing ->
         do
-            u <- loadUTerm src conv (Sequence.index tBinding v)
+            u <- loadUTerm src conv (Sequence.index (src ^. getChild . _PureBinding) v)
             r <- newVar binding u
             r <$ liftST (writeArray tConv v (Just r))
     where
-        tConv = (conv ^. getChild :: Tree (ConvertState (World m)) t) ^. _ConvertState
-        tBinding = (src ^. getChild :: Tree PureBinding t) ^. _PureBinding
+        tConv = conv ^. getChild . _ConvertState
 
 loadBody ::
     forall m typeVars t.

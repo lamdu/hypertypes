@@ -54,7 +54,7 @@ saveVar (STVar v) =
     UConverted i -> pure (Const i)
     srcBody ->
         do
-            (pb :: Tree PureBinding t) <- Lens.use (Lens._1 . getChild)
+            pb <- Lens.use (Lens._1 . getChild)
             let r = pb ^. _PureBinding & Sequence.length
             UConverted r & writeSTRef v & liftST
             Lens._2 %= (<> [liftST (writeSTRef v srcBody)])
