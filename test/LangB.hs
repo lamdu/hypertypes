@@ -64,10 +64,7 @@ instance Pretty (Tree LangB Pure) where
     pPrintPrec lvl p (BLet x) = pPrintPrec lvl p x
 
 instance ScopeLookup Name LangB where
-    scopeType _ k (ScopeTypes t) =
-        case t ^?! Lens.ix k of
-        Left x -> pure x
-        Right x -> instantiate x
+    scopeType _ k (ScopeTypes t) = t ^?! Lens.ix k & instantiate
 
 instance
     ( MonadScopeLevel m
@@ -94,7 +91,7 @@ instance
 
 -- Monads for inferring `LangB`:
 
-newtype ScopeTypes v = ScopeTypes (Map Name (Either (Tie v Typ) (Tree (GTerm (RunKnot v)) Typ)))
+newtype ScopeTypes v = ScopeTypes (Map Name (Tree (GTerm (RunKnot v)) Typ))
     deriving (Semigroup, Monoid)
 Lens.makePrisms ''ScopeTypes
 
@@ -116,10 +113,10 @@ instance HasScope PureInferB ScopeTypes where
     getScope = Lens.view Lens._1
 
 instance LocalScopeType Name (Tree (Const Int) Typ) PureInferB where
-    localScopeType k v = local (Lens._1 . _ScopeTypes . Lens.at k ?~ Left v)
+    localScopeType k v = local (Lens._1 . _ScopeTypes . Lens.at k ?~ GMono v)
 
 instance LocalScopeType Name (Tree (GTerm (Const Int)) Typ) PureInferB where
-    localScopeType k v = local (Lens._1 . _ScopeTypes . Lens.at k ?~ Right v)
+    localScopeType k v = local (Lens._1 . _ScopeTypes . Lens.at k ?~ v)
 
 instance MonadScopeLevel PureInferB where
     localLevel = local (Lens._2 . _ScopeLevel +~ 1)
@@ -161,10 +158,10 @@ instance HasScope (STInferB s) ScopeTypes where
     getScope = Lens.view Lens._1
 
 instance LocalScopeType Name (Tree (STVar s) Typ) (STInferB s) where
-    localScopeType k v = local (Lens._1 . _ScopeTypes . Lens.at k ?~ Left v)
+    localScopeType k v = local (Lens._1 . _ScopeTypes . Lens.at k ?~ GMono v)
 
 instance LocalScopeType Name (Tree (GTerm (STVar s)) Typ) (STInferB s) where
-    localScopeType k v = local (Lens._1 . _ScopeTypes . Lens.at k ?~ Right v)
+    localScopeType k v = local (Lens._1 . _ScopeTypes . Lens.at k ?~ v)
 
 instance MonadScopeLevel (STInferB s) where
     localLevel = local (Lens._2 . _ScopeLevel +~ 1)

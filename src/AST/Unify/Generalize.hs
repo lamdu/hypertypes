@@ -3,7 +3,7 @@
 {-# LANGUAGE MultiParamTypeClasses, LambdaCase #-}
 
 module AST.Unify.Generalize
-    ( GTerm, _GMono, _GPoly, _GBody
+    ( GTerm(..), _GMono, _GPoly, _GBody
     , generalize
     ) where
 
