@@ -20,7 +20,10 @@ aLam ::
     ((forall n. InvDeBruijnIndex n =>
         Tree Pure (LangA n)) -> Tree Pure (LangA (Maybe t))) ->
     Tree Pure (LangA t)
-aLam f = (Pure . ALam . scope) (\x -> f (var x))
+aLam f =
+    scope body & ALam & Pure
+    where
+        body x = f (var x)
 
 ($::) :: Tree Pure (LangA n) -> Tree Pure (Scheme Types Typ) -> Tree Pure (LangA n)
 v $:: t = v `TypeSig` t & ATypeSig & Pure
