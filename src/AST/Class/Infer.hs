@@ -13,7 +13,7 @@ import AST.Knot (Knot, Tree, Tie, RunKnot)
 import AST.Knot.Ann (Ann(..))
 import AST.Unify (Unify(..), UVar)
 import Control.Lens (makeLenses)
-import Data.Proxy (Proxy)
+import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
