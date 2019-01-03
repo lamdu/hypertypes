@@ -1,10 +1,12 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts, ScopedTypeVariables, FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses, LambdaCase #-}
+{-# LANGUAGE MultiParamTypeClasses, LambdaCase, InstanceSigs, RankNTypes #-}
 
 module AST.Unify.Generalize
-    ( GTerm(..), _GMono, _GPoly, _GBody
-    , generalize
+    ( Generalized(..), _Generalized
+    , generalize, monomorphic
+    , -- TODO: should these not be exported? (Internals)
+      GTerm(..), _GMono, _GPoly, _GBody
     ) where
 
 import           Algebra.PartialOrd (PartialOrd(..))
@@ -12,7 +14,7 @@ import           AST.Class.Children (Children(..), foldMapChildren)
 import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Instantiate (Instantiate(..), SchemeType)
 import           AST.Class.Recursive (Recursive(..), RecursiveDict)
-import           AST.Knot (Tree, Tie)
+import           AST.Knot (RunKnot, Tree, Tie)
 import           AST.Unify
 import           AST.Unify.Term (UTerm(..), uBody)
 import qualified Control.Lens as Lens
@@ -32,10 +34,38 @@ data GTerm v ast
 Lens.makePrisms ''GTerm
 makeChildren ''GTerm
 
-type instance SchemeType (Tree (GTerm v) t) = t
+newtype Generalized ast v = Generalized (Tree (GTerm (RunKnot v)) ast)
+Lens.makePrisms ''Generalized
 
-instance (v ~ UVar m, Recursive (Unify m) t) => Instantiate m (Tree (GTerm v) t) where
-    instantiate g =
+instance Children ast => Children (Generalized ast) where
+    type ChildrenConstraint (Generalized ast) cls = Recursive cls ast
+    children ::
+        forall f constraint n m.
+        (Applicative f, Recursive constraint ast) =>
+        Proxy constraint ->
+        (forall child. constraint child => Tree n child -> f (Tree m child)) ->
+        Tree (Generalized ast) n -> f (Tree (Generalized ast) m)
+    children p f (Generalized g) =
+        withDict (recursive :: RecursiveDict constraint ast) $
+        case g of
+        GMono x -> f x <&> GMono
+        GPoly x -> f x <&> GPoly
+        GBody x -> children (Proxy :: Proxy (Recursive constraint)) onTermChild x <&> GBody
+        <&> Generalized
+        where
+            onTermChild ::
+                forall child.
+                Recursive constraint child =>
+                Tree (GTerm n) child -> f (Tree (GTerm m) child)
+            onTermChild c =
+                (Generalized c :: Tree (Generalized child) n)
+                & children p f
+                <&> (^. _Generalized)
+
+type instance SchemeType (Tree (Generalized t) v) = t
+
+instance (v ~ UVar m, Recursive (Unify m) t) => Instantiate m (Tree (Generalized t) v) where
+    instantiate (Generalized g) =
         do
             (r, recover) <- runWriterT (go g)
             r <$ sequence_ recover
@@ -65,7 +95,7 @@ instance (v ~ UVar m, Recursive (Unify m) t) => Instantiate m (Tree (GTerm v) t)
 generalize ::
     forall m t.
     Recursive (Unify m) t =>
-    Tree (UVar m) t -> m (Tree (GTerm (UVar m)) t)
+    Tree (UVar m) t -> m (Tree (Generalized t) (UVar m))
 generalize v0 =
     withDict (recursive :: RecursiveDict (Unify m) t) $
     do
@@ -81,12 +111,16 @@ generalize v0 =
                 bindVar binding v1 (USkolem l)
             USkolem l | l `leq` c -> pure (GPoly v1)
             UTerm t ->
-                children p generalize (t ^. uBody)
+                children p (fmap (^. _Generalized) . generalize) (t ^. uBody)
                 <&> onBody
                 where
                     onBody b
                         | foldMapChildren p (All . Lens.has _GMono) b ^. Lens._Wrapped = GMono v1
                         | otherwise = GBody b
             _ -> pure (GMono v1)
+    <&> Generalized
     where
         p = Proxy :: Proxy (Recursive (Unify m))
+
+monomorphic :: Tree v t -> Tree (Generalized t) v
+monomorphic = Generalized . GMono

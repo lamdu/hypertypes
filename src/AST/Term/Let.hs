@@ -56,7 +56,7 @@ type instance ScopeOf (Let v t) = ScopeOf t
 instance
     ( MonadScopeLevel m
     , Infer m expr
-    , LocalScopeType v (Tree (GTerm (UVar m)) (TypeOf expr)) m
+    , LocalScopeType v (Tree (Generalized (TypeOf expr)) (UVar m)) m
     ) =>
     Infer m (Let v expr) where
 
