@@ -48,10 +48,10 @@ extendLit :: Tree Pure LangB
 extendLit = recExtend [("a", bLit 5)] (bLit 7)
 
 extendDup :: Tree Pure LangB
-extendDup = recExtend [("a", bLit 7)] record
+extendDup = closedRec [("a", bLit 7), ("a", bLit 5)]
 
 extendGood :: Tree Pure LangB
-extendGood = recExtend [("b", bLit 7)] record
+extendGood = closedRec [("b", bLit 7), ("a", bLit 5)]
 
 unifyRows :: Tree Pure LangB
 unifyRows =
