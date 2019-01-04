@@ -58,7 +58,10 @@ Lens.makePrisms ''Row
 Lens.makePrisms ''TypeError
 Lens.makeLenses ''RConstraints
 Lens.makeLenses ''Types
-makeChildrenAndZipMatch [''Typ, ''Row, ''Types, ''TypeError]
+makeChildrenAndZipMatch ''Typ
+makeChildrenAndZipMatch ''Row
+makeChildren ''Types
+makeChildren ''TypeError
 
 type TypDeps cls k = ((cls (Tie k Typ), cls (Tie k Row)) :: Constraint)
 

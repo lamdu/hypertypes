@@ -3,8 +3,8 @@
 module AST.Class.Children.TH
     ( makeChildren
     , -- Internals for use in TH for sub-classes
-      TypeInfo(..), CtrTypePattern(..), CtrCase(..)
-    , parts, matchType, applicativeStyle, isPolymorphic, childrenContext, makeTypeInfo
+      CtrTypePattern(..), CtrCase(..)
+    , parts, matchType, applicativeStyle, isPolymorphic
     ) where
 
 import           AST.Class.Children (Children(..))

@@ -7,10 +7,10 @@ module AST.Term.TypeSig
     ) where
 
 import           AST
+import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Infer (Infer(..), TypeOf, ScopeOf, inferNode, iType)
 import           AST.Class.Infer.ScopeLevel (MonadScopeLevel(..))
 import           AST.Class.Instantiate (Instantiate(..), SchemeType)
-import           AST.Class.Recursive.TH (makeChildrenRecursive)
 import           AST.Unify (unify)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)
@@ -30,7 +30,7 @@ data TypeSig typ term k = TypeSig
     } deriving Generic
 makeLenses ''TypeSig
 
-makeChildrenRecursive [''TypeSig]
+makeChildren ''TypeSig
 
 instance RecursiveConstraint (TypeSig typ term) constraint => Recursive constraint (TypeSig typ term)
 

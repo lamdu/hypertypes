@@ -44,7 +44,7 @@ data LangA v k
     | ATypeSig (TypeSig (Tree Pure (Scheme Types Typ)) (LangA v) k)
     | ALit Int
 
-makeChildrenRecursive [''LangA]
+makeChildren ''LangA
 instance Recursive Children (LangA v)
 
 type instance TypeOf (LangA k) = Typ

@@ -47,7 +47,7 @@ data RowExtend key val rest k = RowExtend
     } deriving Generic
 
 makeLenses ''RowExtend
-makeChildrenAndZipMatch [''RowExtend]
+makeChildrenAndZipMatch ''RowExtend
 
 instance
     RecursiveConstraint (RowExtend key val rest) constraint =>

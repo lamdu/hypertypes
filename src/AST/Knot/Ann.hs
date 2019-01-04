@@ -32,7 +32,8 @@ data Ann a knot = Ann
     } deriving Generic
 makeLenses ''Ann
 
-makeChildrenAndZipMatch [''Ann]
+makeChildrenAndZipMatch ''Ann
+instance Recursive Children (Ann a)
 
 type Deps c a t = ((c a, c (Tie t (Ann a))) :: Constraint)
 

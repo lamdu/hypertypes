@@ -41,7 +41,7 @@ instance Pretty (Tie k expr) => Pretty (Apply expr k) where
         & maybeParens (p > 10)
 
 makeLenses ''Apply
-makeChildrenAndZipMatch [''Apply]
+makeChildrenAndZipMatch ''Apply
 
 instance RecursiveConstraint (Apply expr) constraint => Recursive constraint (Apply expr)
 

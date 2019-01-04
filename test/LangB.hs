@@ -45,7 +45,8 @@ data LangB k
     | BRecEmpty
     | BRecExtend (RowExtend Name LangB LangB k)
 
-makeChildrenRecursive [''LangB]
+makeChildren ''LangB
+instance Recursive Children LangB
 
 type instance TypeOf LangB = Typ
 type instance ScopeOf LangB = ScopeTypes

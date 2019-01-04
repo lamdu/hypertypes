@@ -1,15 +1,15 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DataKinds, DeriveGeneric #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving, TypeFamilies, UndecidableInstances #-}
 {-# LANGUAGE MultiParamTypeClasses, TupleSections, FlexibleInstances #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables, ConstraintKinds #-}
 
 module AST.Term.Var
     ( Var(..), _Var
     ) where
 
+import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Infer (Infer(..), HasScope(..), ScopeLookup(..), TypeOf, ScopeOf)
 import           AST.Class.Recursive (Recursive)
-import           AST.Class.Recursive.TH (makeChildrenRecursive)
 import           AST.Knot (Knot)
 import           AST.Unify (Unify)
 import           Control.DeepSeq (NFData)
@@ -27,9 +27,11 @@ import           Prelude.Compat
 -- for future evaluation/complilation support.
 newtype Var v (expr :: Knot -> *) (k :: Knot) = Var v
     deriving (Eq, Ord, Show, Generic, Binary, NFData)
-Lens.makePrisms ''Var
 
-makeChildrenRecursive [''Var]
+Lens.makePrisms ''Var
+makeChildren ''Var
+
+instance c (Var v expr) => Recursive c (Var v expr)
 
 instance Pretty v => Pretty (Var v expr k) where
     pPrintPrec lvl p (Var v) = pPrintPrec lvl p v

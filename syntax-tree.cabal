@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b2f55042dba699e88757d01a7ac9aafe3e095b634534c9511a3ddebd07f245aa
+-- hash: bef9c59c5d49f7bf67ea1e76745ee79bb9f41b84c04c0d0ec77dc1835d5e20b5
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -41,7 +41,6 @@ library
       AST.Class.Infer.ScopeLevel
       AST.Class.Instantiate
       AST.Class.Recursive
-      AST.Class.Recursive.TH
       AST.Class.ZipMatch
       AST.Class.ZipMatch.TH
       AST.Knot

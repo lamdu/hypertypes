@@ -39,7 +39,8 @@ Lens.makePrisms ''Scope
 newtype ScopeVar (expr :: * -> Knot -> *) a (k :: Knot) = ScopeVar a
 Lens.makePrisms ''ScopeVar
 
-makeChildrenAndZipMatch [''Scope, ''ScopeVar]
+makeChildrenAndZipMatch ''Scope
+makeChildrenAndZipMatch ''ScopeVar
 instance Recursive Children (expr (Maybe a)) => Recursive Children (Scope expr a)
 
 class DeBruijnIndex a where

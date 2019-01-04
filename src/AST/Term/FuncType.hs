@@ -33,7 +33,7 @@ instance Pretty (Tie k typ) => Pretty (FuncType typ k) where
         & maybeParens (p > 10)
 
 makeLenses ''FuncType
-makeChildrenAndZipMatch [''FuncType]
+makeChildrenAndZipMatch ''FuncType
 
 instance RecursiveConstraint (FuncType typ) constraint => Recursive constraint (FuncType typ)
 

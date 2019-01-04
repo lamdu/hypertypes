@@ -5,7 +5,6 @@ module AST.Class.ZipMatch.TH
     ) where
 
 import           AST.Class.Children.TH
-import           AST.Class.Recursive.TH (makeChildrenRecursive)
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
 import           Control.Lens.Operators
 import qualified Data.Set as Set
@@ -14,11 +13,11 @@ import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
 
-makeChildrenAndZipMatch :: [Name] -> DecsQ
-makeChildrenAndZipMatch typeNames =
+makeChildrenAndZipMatch :: Name -> DecsQ
+makeChildrenAndZipMatch typeName =
     (<>)
-    <$> makeChildrenRecursive typeNames
-    <*> (traverse makeZipMatch typeNames <&> concat)
+    <$> makeChildren typeName
+    <*> makeZipMatch typeName
 
 makeZipMatch :: Name -> DecsQ
 makeZipMatch typeName =
