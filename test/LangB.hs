@@ -44,6 +44,7 @@ data LangB k
     | BLet (Let Name LangB k)
     | BRecEmpty
     | BRecExtend (RowExtend Name LangB LangB k)
+    | BGetField (Tie k LangB) Name
 
 makeChildren ''LangB
 instance Recursive Children LangB
@@ -64,6 +65,7 @@ instance Pretty (Tree LangB Pure) where
     pPrintPrec lvl p (BVar x) = pPrintPrec lvl p x
     pPrintPrec lvl p (BLam x) = pPrintPrec lvl p x
     pPrintPrec lvl p (BLet x) = pPrintPrec lvl p x
+    pPrintPrec lvl p (BGetField w k) = pPrintPrec lvl p w <> Pretty.text "." <> pPrint k
 
 instance ScopeLookup Name LangB where
     scopeType _ k (ScopeTypes t) = t ^?! Lens.ix k & instantiate
@@ -90,6 +92,12 @@ instance
     infer BRecEmpty =
         withDict (recursive :: RecursiveDict (Unify m) Typ) $
         newTerm REmpty >>= newTerm . TRec <&> (, BRecEmpty)
+    infer (BGetField w k) =
+        do
+            (rT, wR) <- rowElementInfer RExtend k
+            wI <- inferNode w
+            _ <- TRec wR & newTerm >>= unify (wI ^. iType)
+            pure (rT, BGetField wI k)
 
 instance (Unify m Typ, Unify m Row) => Recursive (InferredChildConstraints (Recursive (Unify m))) LangB
 

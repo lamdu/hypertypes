@@ -53,6 +53,9 @@ extendDup = closedRec [("a", bLit 7), ("a", bLit 5)]
 extendGood :: Tree Pure LangB
 extendGood = closedRec [("b", bLit 7), ("a", bLit 5)]
 
+getAField :: Tree Pure LangB
+getAField = lam "x" \x -> getField x "a"
+
 unifyRows :: Tree Pure LangB
 unifyRows =
     -- \f -> f {a : 5, b : 7} (f {b : 5, a : 7} 12)
@@ -155,5 +158,6 @@ main =
             , testB extendDup    "Left ConstraintsMismatch a : Int :*: {} Forbidden fields: [a]"
             , testB extendGood   "Right (b : Int :*: a : Int :*: {})"
             , testB unifyRows    "Right (((a : Int :*: b : Int :*: {}) -> Int -> Int) -> Int)"
+            , testB getAField    "Right ((a : t0 :*: r0) -> t0)"
             ]
 
