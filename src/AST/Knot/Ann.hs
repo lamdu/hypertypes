@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables, TemplateHaskell #-}
 {-# LANGUAGE DeriveGeneric, FlexibleContexts, RankNTypes, TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses, UndecidableInstances, ConstraintKinds #-}
-{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE StandaloneDeriving, FlexibleInstances #-}
 
 module AST.Knot.Ann
     ( Ann(..), ann, val
@@ -33,7 +33,7 @@ data Ann a knot = Ann
 makeLenses ''Ann
 
 makeChildrenAndZipMatch ''Ann
-instance Recursive Children (Ann a)
+instance c (Ann a) => Recursive c (Ann a)
 
 type Deps c a t = ((c a, c (Tie t (Ann a))) :: Constraint)
 

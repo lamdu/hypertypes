@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeFamilies, LambdaCase #-}
-{-# LANGUAGE FlexibleInstances, UndecidableInstances, TupleSections #-}
-{-# LANGUAGE ScopedTypeVariables, GeneralizedNewtypeDeriving, DataKinds #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances, TupleSections, DataKinds #-}
+{-# LANGUAGE ScopedTypeVariables, GeneralizedNewtypeDeriving, ConstraintKinds #-}
 
 module LangB where
 
@@ -99,7 +99,7 @@ instance
             _ <- TRec wR & newTerm >>= unify (wI ^. iType)
             pure (rT, BGetField wI k)
 
-instance (Unify m Typ, Unify m Row) => Recursive (InferredChildConstraints (Recursive (Unify m))) LangB
+instance (c Typ, c Row) => Recursive (InferredChildConstraints (Recursive c)) LangB
 
 -- Monads for inferring `LangB`:
 
