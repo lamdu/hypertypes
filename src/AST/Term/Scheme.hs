@@ -8,6 +8,7 @@ module AST.Term.Scheme
     , HasChild(..)
     ) where
 
+import           Algebra.Lattice (JoinSemiLattice(..))
 import           AST.Class.Children (Children(..), ChildrenWithConstraint)
 import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Combinators (And)
@@ -17,6 +18,7 @@ import           AST.Class.Recursive (Recursive, wrapM)
 import           AST.Knot (Tree, Tie, RunKnot)
 import           AST.Knot.Pure (Pure(..))
 import           AST.Unify (Unify(..), HasQuantifiedVar(..), UVar, newVar, newTerm)
+import           AST.Unify.Constraints (HasTypeConstraints(..))
 import           AST.Unify.Term (UTerm(..))
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -34,7 +36,8 @@ data Scheme varTypes typ k = Scheme
     , _sTyp :: Tie k typ
     }
 
-newtype ForAlls typ = ForAlls [QVar (RunKnot typ)]
+newtype ForAlls typ = ForAlls
+    (Map (QVar (RunKnot typ)) (TypeConstraintsOf (RunKnot typ)))
 
 instance
     (Pretty (Tree varTypes ForAlls), Pretty (Tie k typ)) =>
@@ -45,9 +48,20 @@ instance
         pPrintPrec lvl 0 typ
         & maybeParens (p > 0)
 
-instance Pretty (QVar typ) => Pretty (Tree ForAlls typ) where
+instance
+    (Pretty (TypeConstraintsOf typ), Pretty (QVar typ)) =>
+    Pretty (Tree ForAlls typ) where
+
     pPrint (ForAlls qvars) =
-        qvars <&> pPrint <&> (Pretty.text "∀" <>) <&> (<> Pretty.text ".") & Pretty.hsep
+        Map.toList qvars
+        <&> printVar
+        <&> (Pretty.text "∀" <>) <&> (<> Pretty.text ".") & Pretty.hsep
+        where
+            printVar (q, c)
+                | cP == mempty = pPrint q
+                | otherwise = pPrint q <> Pretty.text "(" <> cP <> Pretty.text ")"
+                where
+                    cP = pPrint c
 
 Lens.makeLenses ''Scheme
 Lens.makePrisms ''ForAlls
@@ -60,13 +74,12 @@ makeInstantiation ::
     forall m typ.
     Unify m typ =>
     Tree ForAlls typ -> m (Tree (Instantiation (UVar m)) typ)
-makeInstantiation (ForAlls xs) =
-    traverse makeSkolem xs <&> Instantiation . Map.fromList
+makeInstantiation (ForAlls foralls) =
+    traverse makeSkolem foralls <&> Instantiation
     where
-        makeSkolem x =
+        makeSkolem c =
             scopeConstraints (Proxy :: Proxy typ)
-            >>= newVar binding . USkolem
-            <&> (,) x
+            >>= newVar binding . USkolem . (c \/)
 
 instantiateBody ::
     (Unify m typ, HasChild varTypes typ) =>

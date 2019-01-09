@@ -112,6 +112,9 @@ instance PartialOrd RConstraints where
 instance JoinSemiLattice RConstraints where
     RowConstraints f0 s0 \/ RowConstraints f1 s1 = RowConstraints (f0 \/ f1) (s0 \/ s1)
 
+instance BoundedJoinSemiLattice RConstraints where
+    bottom = RowConstraints bottom bottom
+
 instance RowConstraints RConstraints where
     type RowConstraintsKey RConstraints = Name
     forbidden = rForbiddenFields

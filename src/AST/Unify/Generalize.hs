@@ -80,7 +80,9 @@ instance (v ~ UVar m, Recursive (Unify m) t) => Instantiate m (Tree (Generalized
                     USkolem l ->
                         do
                             tell [bindVar binding x (USkolem l)]
-                            r <- lift newUnbound
+                            r <-
+                                -- TODO: We should take the non-scope constraints from the skolem
+                                lift newUnbound
                             UVar r & bindVar binding x & lift
                             pure r
                     UVar v -> pure v

@@ -1,14 +1,18 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies, TupleSections, FlexibleContexts #-}
 module TypeLang.Pure
     ( module TypeLang.Pure
     , module TypeLang
     ) where
 
+import           Algebra.Lattice
 import           AST
 import           AST.Term.FuncType
 import           AST.Term.Scheme
+import           AST.Unify
+import           AST.Unify.Constraints
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
+import qualified Data.Map as Map
 import           TypeLang
 
 intA :: Tree Pure (Scheme Types Typ)
@@ -20,7 +24,7 @@ tVar = Pure . TVar . Name
 uniType :: Tree Pure Typ -> Tree Pure (Scheme Types Typ)
 uniType typ =
     Pure Scheme
-    { _sForAlls = Types (ForAlls []) (ForAlls [])
+    { _sForAlls = Types (ForAlls mempty) (ForAlls mempty)
     , _sTyp = typ
     }
 
@@ -34,7 +38,15 @@ forAll tvs rvs body =
     & Scheme (Types (foralls tvs) (foralls rvs))
     & Pure
     where
-        foralls xs = xs ^.. Lens.folded <&> Name & ForAlls
+        foralls ::
+            ( Foldable f
+            , QVar typ ~ Name
+            , BoundedJoinSemiLattice (TypeConstraintsOf typ)
+            ) =>
+            f String -> Tree ForAlls typ
+        foralls xs =
+            xs ^.. Lens.folded <&> Name <&> (, bottom)
+            & Map.fromList & ForAlls
 
 forAll1 ::
     String -> (Tree Pure Typ -> Tree Pure typ) ->
