@@ -36,14 +36,16 @@ data Scheme varTypes typ k = Scheme
 
 newtype ForAlls typ = ForAlls [QVar (RunKnot typ)]
 
-instance (Pretty (Tree varTypes ForAlls), Pretty (Tie k typ)) =>
-         Pretty (Scheme varTypes typ k) where
+instance
+    (Pretty (Tree varTypes ForAlls), Pretty (Tie k typ)) =>
+    Pretty (Scheme varTypes typ k) where
+
     pPrintPrec lvl p (Scheme forAlls typ) =
         pPrintPrec lvl 0 forAlls <+>
         pPrintPrec lvl 0 typ
         & maybeParens (p > 0)
 
-instance Pretty (QVar (RunKnot typ)) => Pretty (ForAlls typ) where
+instance Pretty (QVar typ) => Pretty (Tree ForAlls typ) where
     pPrint (ForAlls qvars) =
         qvars <&> pPrint <&> (Pretty.text "∀" <>) <&> (<> Pretty.text ".") & Pretty.hsep
 

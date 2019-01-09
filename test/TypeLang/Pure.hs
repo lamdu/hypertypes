@@ -29,13 +29,12 @@ forAll ::
     t String -> u String ->
     (t (Tree Pure Typ) -> u (Tree Pure Typ) -> Tree Pure typ) ->
     Tree Pure (Scheme Types typ)
-forAll tvs rowvs body =
-    body (tvs <&> tVar) (rowvs <&> tVar)
-    & Scheme
-        (Types
-            (ForAlls (tvs ^.. Lens.folded <&> Name))
-            (ForAlls (rowvs ^.. Lens.folded <&> Name)))
+forAll tvs rvs body =
+    body (tvs <&> tVar) (rvs <&> tVar)
+    & Scheme (Types (foralls tvs) (foralls rvs))
     & Pure
+    where
+        foralls xs = xs ^.. Lens.folded <&> Name & ForAlls
 
 forAll1 ::
     String -> (Tree Pure Typ -> Tree Pure typ) ->
