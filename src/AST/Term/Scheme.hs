@@ -51,15 +51,15 @@ Lens.makeLenses ''Scheme
 Lens.makePrisms ''Vars
 makeChildren ''Scheme
 
-newtype ForAlls k typ = ForAlls (Map (QVar (RunKnot typ)) (k typ))
-Lens.makePrisms ''ForAlls
+newtype Instantiation k typ = Instantiation (Map (QVar (RunKnot typ)) (k typ))
+Lens.makePrisms ''Instantiation
 
-makeForAlls ::
+makeInstantiation ::
     forall m typ.
     Unify m typ =>
-    Tree Vars typ -> m (Tree (ForAlls (UVar m)) typ)
-makeForAlls (Vars xs) =
-    traverse makeSkolem xs <&> ForAlls . Map.fromList
+    Tree Vars typ -> m (Tree (Instantiation (UVar m)) typ)
+makeInstantiation (Vars xs) =
+    traverse makeSkolem xs <&> Instantiation . Map.fromList
     where
         makeSkolem x =
             scopeConstraints (Proxy :: Proxy typ)
@@ -68,13 +68,13 @@ makeForAlls (Vars xs) =
 
 instantiateBody ::
     (Unify m typ, HasChild varTypes typ) =>
-    Tree varTypes (ForAlls (UVar m)) -> Tree typ (UVar m) -> m (Tree (UVar m) typ)
+    Tree varTypes (Instantiation (UVar m)) -> Tree typ (UVar m) -> m (Tree (UVar m) typ)
 instantiateBody foralls x =
     case x ^? quantifiedVar >>= getForAll of
     Nothing -> newTerm x
     Just r -> pure r
     where
-        getForAll v = foralls ^? getChild . _ForAlls . Lens.ix v
+        getForAll v = foralls ^? getChild . _Instantiation . Lens.ix v
 
 type instance SchemeType (Tree Pure (Scheme varTypes typ)) = typ
 
@@ -87,5 +87,5 @@ instance
 
     instantiate (Pure (Scheme vars typ)) =
         do
-            foralls <- children (Proxy :: Proxy (Unify m)) makeForAlls vars
+            foralls <- children (Proxy :: Proxy (Unify m)) makeInstantiation vars
             wrapM (Proxy :: Proxy (And (Unify m) (HasChild varTypes))) (instantiateBody foralls) typ
