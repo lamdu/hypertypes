@@ -6,7 +6,6 @@ module TypeLang where
 
 import           AST
 import           AST.Class.Infer.ScopeLevel
-import           AST.Class.Instantiate
 import           AST.Term.FuncType
 import           AST.Term.Row
 import           AST.Term.Scheme
@@ -144,9 +143,6 @@ type STInferState s = Tree Types (Const (STRef s Int))
 
 instance (c Typ, c Row) => Recursive c Typ
 instance (c Typ, c Row) => Recursive c Row
-
-type instance SchemeType (Tree Pure Typ) = Typ
-instance (Unify m Typ, Unify m Row) => Instantiate m (Tree Pure Typ)
 
 instance HasQuantifiedVar Typ where
     type QVar Typ = Name
