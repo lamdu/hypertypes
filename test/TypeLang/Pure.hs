@@ -20,7 +20,7 @@ tVar = Pure . TVar . Name
 uniType :: Tree Pure Typ -> Tree Pure (Scheme Types Typ)
 uniType typ =
     Pure Scheme
-    { _sForAlls = Types (Vars []) (Vars [])
+    { _sForAlls = Types (ForAlls []) (ForAlls [])
     , _sTyp = typ
     }
 
@@ -33,8 +33,8 @@ forAll tvs rowvs body =
     body (tvs <&> tVar) (rowvs <&> tVar)
     & Scheme
         (Types
-            (Vars (tvs ^.. Lens.folded <&> Name))
-            (Vars (rowvs ^.. Lens.folded <&> Name)))
+            (ForAlls (tvs ^.. Lens.folded <&> Name))
+            (ForAlls (rowvs ^.. Lens.folded <&> Name)))
     & Pure
 
 forAll1 ::

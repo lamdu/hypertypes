@@ -4,7 +4,7 @@
 
 module AST.Term.Scheme
     ( Scheme(..), sForAlls, sTyp
-    , Vars(..), _Vars
+    , ForAlls(..), _ForAlls
     , HasChild(..)
     ) where
 
@@ -30,25 +30,25 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 import           Prelude.Compat
 
 data Scheme varTypes typ k = Scheme
-    { _sForAlls :: Tree varTypes Vars
+    { _sForAlls :: Tree varTypes ForAlls
     , _sTyp :: Tie k typ
     }
 
-newtype Vars typ = Vars [QVar (RunKnot typ)]
+newtype ForAlls typ = ForAlls [QVar (RunKnot typ)]
 
-instance (Pretty (Tree varTypes Vars), Pretty (Tie k typ)) =>
+instance (Pretty (Tree varTypes ForAlls), Pretty (Tie k typ)) =>
          Pretty (Scheme varTypes typ k) where
     pPrintPrec lvl p (Scheme forAlls typ) =
         pPrintPrec lvl 0 forAlls <+>
         pPrintPrec lvl 0 typ
         & maybeParens (p > 0)
 
-instance Pretty (QVar (RunKnot typ)) => Pretty (Vars typ) where
-    pPrint (Vars qVars) =
-        qVars <&> pPrint <&> (Pretty.text "∀" <>) <&> (<> Pretty.text ".") & Pretty.hsep
+instance Pretty (QVar (RunKnot typ)) => Pretty (ForAlls typ) where
+    pPrint (ForAlls qvars) =
+        qvars <&> pPrint <&> (Pretty.text "∀" <>) <&> (<> Pretty.text ".") & Pretty.hsep
 
 Lens.makeLenses ''Scheme
-Lens.makePrisms ''Vars
+Lens.makePrisms ''ForAlls
 makeChildren ''Scheme
 
 newtype Instantiation k typ = Instantiation (Map (QVar (RunKnot typ)) (k typ))
@@ -57,8 +57,8 @@ Lens.makePrisms ''Instantiation
 makeInstantiation ::
     forall m typ.
     Unify m typ =>
-    Tree Vars typ -> m (Tree (Instantiation (UVar m)) typ)
-makeInstantiation (Vars xs) =
+    Tree ForAlls typ -> m (Tree (Instantiation (UVar m)) typ)
+makeInstantiation (ForAlls xs) =
     traverse makeSkolem xs <&> Instantiation . Map.fromList
     where
         makeSkolem x =
