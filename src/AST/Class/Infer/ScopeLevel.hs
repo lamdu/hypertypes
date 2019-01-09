@@ -5,7 +5,7 @@ module AST.Class.Infer.ScopeLevel
     , ScopeLevel(..), _ScopeLevel
     ) where
 
-import           Algebra.Lattice (JoinSemiLattice(..))
+import           Algebra.Lattice (JoinSemiLattice(..), BoundedJoinSemiLattice(..))
 import           Algebra.PartialOrd (PartialOrd(..))
 import           Control.Lens (makePrisms)
 import qualified Text.PrettyPrint as Pretty
@@ -26,11 +26,8 @@ instance PartialOrd ScopeLevel where
 instance JoinSemiLattice ScopeLevel where
     ScopeLevel x \/ ScopeLevel y = ScopeLevel (min x y)
 
-instance Semigroup ScopeLevel where
-    (<>) = (\/)
-
-instance Monoid ScopeLevel where
-    mempty = ScopeLevel maxBound
+instance BoundedJoinSemiLattice ScopeLevel where
+    bottom = ScopeLevel maxBound
 
 instance Pretty ScopeLevel where
     pPrint (ScopeLevel x) = Pretty.text "scope#" <> pPrint x

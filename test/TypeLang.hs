@@ -21,7 +21,7 @@ import           Algebra.PartialOrd
 import           Control.Applicative
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Data.Constraint
+import           Data.Constraint (Constraint)
 import           Data.STRef
 import           Data.Set (Set, singleton)
 import           Text.PrettyPrint ((<+>))
@@ -128,7 +128,7 @@ instance HasTypeConstraints Row where
     applyConstraints _ _ _ _ REmpty = pure REmpty
     applyConstraints _ _ _ _ (RVar x) = RVar x & pure
     applyConstraints p c e u (RExtend x) =
-        applyRowExtendConstraints p c (^. rScope) (e . (`RowConstraints` mempty) . singleton) u x <&> RExtend
+        applyRowExtendConstraints p c (^. rScope) (e . (`RowConstraints` bottom) . singleton) u x <&> RExtend
 
 type PureInferState = (Tree Types PureBinding, Tree Types (Const Int))
 
