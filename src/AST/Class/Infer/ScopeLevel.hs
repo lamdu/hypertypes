@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric #-}
 
 module AST.Class.Infer.ScopeLevel
     ( MonadScopeLevel(..)
@@ -7,7 +7,10 @@ module AST.Class.Infer.ScopeLevel
 
 import           Algebra.Lattice (JoinSemiLattice(..), BoundedJoinSemiLattice(..))
 import           Algebra.PartialOrd (PartialOrd(..))
+import           Control.DeepSeq (NFData)
+import           Data.Binary (Binary)
 import           Control.Lens (makePrisms)
+import           GHC.Generics (Generic)
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 
@@ -17,7 +20,7 @@ class Monad m => MonadScopeLevel m where
     localLevel :: m a -> m a
 
 newtype ScopeLevel = ScopeLevel Int
-    deriving (Eq, Show)
+    deriving (Eq, Show, Generic)
 makePrisms ''ScopeLevel
 
 instance PartialOrd ScopeLevel where
@@ -31,3 +34,6 @@ instance BoundedJoinSemiLattice ScopeLevel where
 
 instance Pretty ScopeLevel where
     pPrint (ScopeLevel x) = Pretty.text "scope#" <> pPrint x
+
+instance NFData ScopeLevel
+instance Binary ScopeLevel
