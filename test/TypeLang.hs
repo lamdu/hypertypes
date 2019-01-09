@@ -5,10 +5,10 @@
 module TypeLang where
 
 import           AST
+import           AST.Class.HasChild
 import           AST.Class.Infer.ScopeLevel
 import           AST.Term.FuncType
 import           AST.Term.Row
-import           AST.Term.Scheme
 import           AST.Term.Scope
 import           AST.Unify
 import           AST.Unify.Constraints

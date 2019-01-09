@@ -6,7 +6,6 @@
 module AST.Term.Scheme
     ( Scheme(..), sForAlls, sTyp
     , ForAlls(..), _ForAlls
-    , HasChild(..)
     ) where
 
 import           Algebra.Lattice (JoinSemiLattice(..))
