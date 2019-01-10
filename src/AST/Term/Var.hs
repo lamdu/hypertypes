@@ -10,8 +10,8 @@ module AST.Term.Var
 import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Infer (Infer(..), HasScope(..), ScopeLookup(..), TypeOf, ScopeOf)
 import           AST.Class.Recursive (Recursive)
+import           AST.Class.Unify (Unify)
 import           AST.Knot (Knot)
-import           AST.Unify (Unify)
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators

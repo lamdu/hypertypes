@@ -16,10 +16,11 @@ import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Infer (Infer(..), HasScope, inferNode, iType, TypeOf, ScopeOf)
 import           AST.Class.Infer.Infer1 (Infer1(..), HasTypeOf1(..))
 import           AST.Class.Recursive (Recursive(..))
+import           AST.Class.Unify (Unify(..), UVar)
 import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import           AST.Knot (Knot, Tie, Tree)
 import           AST.Term.FuncType
-import           AST.Unify (Unify(..), UVar, newUnbound, newTerm)
+import           AST.Unify (newUnbound, newTerm)
 import           Control.Lens (Lens', Prism')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators

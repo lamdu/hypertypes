@@ -11,6 +11,7 @@ import           AST.Class.Infer
 import           AST.Class.Infer.Inferred
 import           AST.Class.Infer.ScopeLevel
 import           AST.Class.Instantiate
+import           AST.Class.Unify
 import           AST.Term.Apply
 import           AST.Term.Lam
 import           AST.Term.Let

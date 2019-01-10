@@ -13,10 +13,11 @@ module AST.Term.Row
 
 import AST.Class.Infer (Infer(..), ITerm, TypeOf, inferNode, iType)
 import AST.Class.Recursive (Recursive(..), RecursiveConstraint)
+import AST.Class.Unify (Unify(..), UVar)
 import AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import AST.Knot (Tree, Tie)
 import AST.Knot.Ann (Ann)
-import AST.Unify (Unify(..), UVar, unify, newTerm, newUnbound)
+import AST.Unify (unify, newTerm, newUnbound)
 import AST.Unify.Binding (Binding(..))
 import AST.Unify.Constraints (TypeConstraints(..), HasTypeConstraints(..), ScopeConstraintsMonad(..))
 import AST.Unify.Term (UTerm(..))

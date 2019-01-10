@@ -7,6 +7,7 @@ module TypeLang where
 import           AST
 import           AST.Class.HasChild
 import           AST.Class.Infer.ScopeLevel
+import           AST.Class.Unify
 import           AST.Term.FuncType
 import           AST.Term.Row
 import           AST.Term.Scope

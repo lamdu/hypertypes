@@ -9,9 +9,9 @@ module AST.Class.Infer
     ) where
 
 import AST.Class.Recursive
+import AST.Class.Unify (Unify(..), UVar)
 import AST.Knot (Knot, Tree, Tie, RunKnot)
 import AST.Knot.Ann (Ann(..))
-import AST.Unify (Unify(..), UVar)
 import Control.Lens (makeLenses)
 import Data.Proxy (Proxy(..))
 

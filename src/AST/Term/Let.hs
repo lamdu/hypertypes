@@ -10,8 +10,8 @@ import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Infer
 import           AST.Class.Infer.ScopeLevel
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
+import           AST.Class.Unify (UVar)
 import           AST.Knot (Tree, Tie)
-import           AST.Unify (UVar)
 import           AST.Unify.Generalize
 import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)

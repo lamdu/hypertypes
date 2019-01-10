@@ -1,10 +1,8 @@
-{-# LANGUAGE NoImplicitPrelude, MultiParamTypeClasses, TypeFamilies, LambdaCase #-}
-{-# LANGUAGE DataKinds, ScopedTypeVariables, FlexibleContexts #-}
+{-# LANGUAGE NoImplicitPrelude, TypeFamilies, LambdaCase #-}
+{-# LANGUAGE ScopedTypeVariables, FlexibleContexts #-}
 
 module AST.Unify
-    ( UVar
-    , Unify(..)
-    , applyBindings, unify
+    ( applyBindings, unify
     , semiPruneLookup
     , newUnbound, newTerm, unfreeze
     ) where
@@ -13,9 +11,10 @@ import Algebra.PartialOrd (PartialOrd(..))
 import Algebra.Lattice (JoinSemiLattice(..))
 import AST.Class.Children (Children(..))
 import AST.Class.Recursive (Recursive(..), RecursiveDict, wrapM)
-import AST.Class.ZipMatch (ZipMatch(..), zipMatchWithA)
+import AST.Class.Unify (Unify(..), UVar)
+import AST.Class.ZipMatch (zipMatchWithA)
 import AST.Knot.Pure (Pure(..))
-import AST.Knot (Knot, Tree)
+import AST.Knot (Tree)
 import AST.Unify.Binding (Binding(..))
 import AST.Unify.Constraints (HasTypeConstraints(..), ScopeConstraintsMonad(..))
 import AST.Unify.Error (UnifyError(..))
@@ -29,30 +28,6 @@ import Data.Proxy (Proxy(..))
 import Prelude.Compat
 
 -- Names modeled after unification-fd
-
--- Unification variable type for a unification monad
-type family UVar (m :: * -> *) :: Knot -> *
-
-class
-    ( Eq (Tree (UVar m) t)
-    , ZipMatch t
-    , HasTypeConstraints t
-    , HasQuantifiedVar t
-    , ScopeConstraintsMonad (TypeConstraintsOf t) m
-    , MonadQuantify (TypeConstraintsOf t) (QVar t) m
-    ) => Unify m t where
-
-    binding :: Binding (UVar m) m t
-
-    unifyError :: Tree (UnifyError t) (UVar m) -> m ()
-
-    -- | What to do when top-levels of terms being unified do not match.
-    -- Usually this will throw a failure,
-    -- but some AST terms could be equivalent despite not matching,
-    -- like record extends with fields ordered differently,
-    -- and these could still match.
-    structureMismatch :: Tree (UTermBody (UVar m)) t -> Tree (UTermBody (UVar m)) t -> m ()
-    structureMismatch x y = unifyError (Mismatch (x ^. uBody) (y ^. uBody))
 
 newUnbound :: Unify m t => m (Tree (UVar m) t)
 newUnbound = scopeConstraints >>= newVar binding . UUnbound

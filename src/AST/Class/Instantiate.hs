@@ -6,6 +6,7 @@ module AST.Class.Instantiate
     ) where
 
 import AST.Class.Recursive
+import AST.Class.Unify
 import AST.Knot
 import AST.Knot.Pure
 import AST.Unify
