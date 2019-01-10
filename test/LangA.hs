@@ -20,9 +20,9 @@ import           AST.Term.Scope
 import           AST.Term.Scope.InvDeBruijn
 import           AST.Term.TypeSig
 import           AST.Unify
+import           AST.Unify.Binding.Pure
+import           AST.Unify.Binding.ST
 import           AST.Unify.Constraints
-import           AST.Unify.PureBinding
-import           AST.Unify.STBinding
 import           Control.Applicative
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators

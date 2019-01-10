@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TypeFamilies, TemplateHaskell, DataKinds #-}
 
-module AST.Unify.STBinding
+module AST.Unify.Binding.ST
     ( STVar(..), _STVar
     , stBindingState
     , newStQuantified

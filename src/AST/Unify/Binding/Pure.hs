@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, DataKinds #-}
 
-module AST.Unify.PureBinding
+module AST.Unify.Binding.Pure
     ( PureBinding(..), _PureBinding
     , emptyPureBinding
     , pureBinding

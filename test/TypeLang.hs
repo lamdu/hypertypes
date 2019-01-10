@@ -11,9 +11,9 @@ import           AST.Term.FuncType
 import           AST.Term.Row
 import           AST.Term.Scope
 import           AST.Unify
+import           AST.Unify.Binding.Pure
 import           AST.Unify.Constraints
 import           AST.Unify.Error
-import           AST.Unify.PureBinding
 import           AST.Unify.Term
 import           Algebra.Lattice
 import           Algebra.PartialOrd

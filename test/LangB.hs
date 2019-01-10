@@ -17,10 +17,10 @@ import           AST.Term.Let
 import           AST.Term.Row
 import           AST.Term.Var
 import           AST.Unify
+import           AST.Unify.Binding.Pure
+import           AST.Unify.Binding.ST
 import           AST.Unify.Constraints
 import           AST.Unify.Generalize
-import           AST.Unify.PureBinding
-import           AST.Unify.STBinding
 import           Control.Applicative
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators

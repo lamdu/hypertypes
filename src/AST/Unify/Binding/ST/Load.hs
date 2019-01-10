@@ -3,7 +3,7 @@
 
 -- | Load state from pure bindings to ST based bindings
 
-module AST.Unify.STBinding.Load
+module AST.Unify.Binding.ST.Load
     ( load
     ) where
 
@@ -14,8 +14,8 @@ import           AST.Class.Recursive (Recursive(..), RecursiveDict)
 import           AST.Knot (Tree)
 import           AST.Unify (Unify(..), UVar)
 import           AST.Unify.Binding (Binding(..))
-import           AST.Unify.PureBinding (PureBinding(..), _PureBinding)
-import           AST.Unify.STBinding (STVar)
+import           AST.Unify.Binding.Pure (PureBinding(..), _PureBinding)
+import           AST.Unify.Binding.ST (STVar)
 import           AST.Unify.Term (UTerm(..), uBody)
 import           Control.Lens (makePrisms)
 import           Control.Lens.Operators
