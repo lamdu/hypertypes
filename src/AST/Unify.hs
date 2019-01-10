@@ -2,8 +2,7 @@
 {-# LANGUAGE DataKinds, ScopedTypeVariables, FlexibleContexts #-}
 
 module AST.Unify
-    ( HasQuantifiedVar(..)
-    , UVar
+    ( UVar
     , Unify(..)
     , applyBindings, unify
     , semiPruneLookup
@@ -17,21 +16,17 @@ import AST.Class.Recursive (Recursive(..), RecursiveDict, wrapM)
 import AST.Class.ZipMatch (ZipMatch(..), zipMatchWithA)
 import AST.Knot.Pure (Pure(..))
 import AST.Knot (Knot, Tree)
-import AST.Unify.Binding
+import AST.Unify.Binding (Binding(..))
 import AST.Unify.Constraints (HasTypeConstraints(..), ScopeConstraintsMonad(..))
-import AST.Unify.Term (UTerm(..), UTermBody(..), uConstraints, uBody)
 import AST.Unify.Error (UnifyError(..))
-import Control.Lens (Prism')
+import AST.Unify.Term (UTerm(..), UTermBody(..), uConstraints, uBody)
+import AST.Unify.QuantifiedVar (HasQuantifiedVar(..))
 import Control.Lens.Operators
 import Data.Constraint (withDict)
 import Data.Maybe (fromMaybe)
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
-
-class Ord (QVar t) => HasQuantifiedVar (t :: Knot -> *) where
-    type family QVar t
-    quantifiedVar :: Prism' (t f) (QVar t)
 
 -- Names modeled after unification-fd
 

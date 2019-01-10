@@ -14,6 +14,7 @@ import           AST.Unify
 import           AST.Unify.Binding.Pure
 import           AST.Unify.Constraints
 import           AST.Unify.Error
+import           AST.Unify.QuantifiedVar
 import           AST.Unify.Term
 import           Algebra.Lattice
 import           Algebra.PartialOrd

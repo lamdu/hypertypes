@@ -8,8 +8,8 @@ import           Algebra.Lattice
 import           AST
 import           AST.Term.FuncType
 import           AST.Term.Scheme
-import           AST.Unify
 import           AST.Unify.Constraints
+import           AST.Unify.QuantifiedVar
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import qualified Data.Map as Map
