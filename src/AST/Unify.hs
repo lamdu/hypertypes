@@ -4,7 +4,6 @@
 module AST.Unify
     ( HasQuantifiedVar(..)
     , UVar
-    , UnifyError(..)
     , Unify(..)
     , applyBindings, unify
     , semiPruneLookup
