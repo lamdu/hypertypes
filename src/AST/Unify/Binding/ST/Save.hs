@@ -41,7 +41,6 @@ saveUTerm UResolved{} = error "converting bindings after resolution"
 saveUTerm UConverted{} = error "converting variable again"
 
 saveVar ::
-    forall m typeVars t.
     ( MonadST m
     , Recursive (HasChild typeVars) t
     ) =>

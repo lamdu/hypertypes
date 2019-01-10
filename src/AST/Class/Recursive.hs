@@ -60,7 +60,6 @@ unwrapM p f x =
     f x >>= children (Proxy :: Proxy (Recursive constraint)) (unwrapM p f) <&> Pure
 
 wrap ::
-    forall constraint expr f.
     Recursive constraint expr =>
     Proxy constraint ->
     (forall child. constraint child => Tree child f -> Tree f child) ->
@@ -69,7 +68,6 @@ wrap ::
 wrap p f = runIdentity . wrapM p (Identity . f)
 
 unwrap ::
-    forall constraint expr f.
     Recursive constraint expr =>
     Proxy constraint ->
     (forall child. constraint child => Tree f child -> Tree child f) ->
@@ -80,7 +78,6 @@ unwrap p f = runIdentity . unwrapM p (Identity . f)
 -- | Recursively fold up a tree to produce a result.
 -- TODO: Is this a "cata-morphism"?
 fold ::
-    forall constraint expr a.
     Recursive constraint expr =>
     Proxy constraint ->
     (forall child. constraint child => Tree child (Const a) -> a) ->
@@ -91,7 +88,6 @@ fold p f = getConst . wrap p (Const . f)
 -- | Build/load a tree from a seed value.
 -- TODO: Is this an "ana-morphism"?
 unfold ::
-    forall constraint expr a.
     Recursive constraint expr =>
     Proxy constraint ->
     (forall child. constraint child => a -> Tree child (Const a)) ->

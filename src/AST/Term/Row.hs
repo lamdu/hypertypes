@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, DeriveGeneric, TemplateHaskell, TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
 {-# LANGUAGE StandaloneDeriving, ConstraintKinds, TupleSections #-}
-{-# LANGUAGE ScopedTypeVariables, FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes #-}
 
 module AST.Term.Row
     ( RowConstraints(..), RowKey
@@ -105,7 +105,6 @@ rowExtendStructureMismatch mkExtend (c0, RowExtend k0 v0 r0) (c1, RowExtend k1 v
 -- An Infer instance for RowExtend isn't suitable because the term language
 -- may have separate row-extends (for example one for records and one for pattern matches)
 inferRowExtend ::
-    forall m val rowTyp a.
     ( Infer m val
     , Unify m rowTyp
     , RowConstraints (TypeConstraintsOf rowTyp)
@@ -132,7 +131,6 @@ inferRowExtend rowToTyp extendToRow (RowExtend k v r) =
 -- such as getting a field from a record or injecting into a sum type.
 -- Returns a unification variable for the element and for the whole row.
 rowElementInfer ::
-    forall m valTyp rowTyp.
     ( Unify m valTyp
     , Unify m rowTyp
     , RowConstraints (TypeConstraintsOf rowTyp)

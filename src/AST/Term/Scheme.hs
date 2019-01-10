@@ -92,7 +92,6 @@ newtype Instantiation k typ = Instantiation (Map (QVar (RunKnot typ)) (k typ))
 Lens.makePrisms ''Instantiation
 
 makeInstantiation ::
-    forall m typ.
     Unify m typ =>
     Tree ForAlls typ -> m (Tree (Instantiation (UVar m)) typ)
 makeInstantiation (ForAlls foralls) =

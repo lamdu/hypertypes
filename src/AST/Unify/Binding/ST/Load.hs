@@ -54,7 +54,6 @@ loadUTerm _ _ UResolved{} = error "converting bindings after resolution"
 loadUTerm _ _ UConverted{} = error "loading while saving?"
 
 loadVar ::
-    forall m typeVars t.
     ( MonadST m
     , UVar m ~ STVar (World m)
     , Recursive (HasChild typeVars `And` Unify m) t
@@ -88,7 +87,6 @@ loadBody src conv =
     (loadVar src conv)
 
 load ::
-    forall m typeVars t.
     ( MonadST m
     , UVar m ~ STVar (World m)
     , ChildrenWithConstraint typeVars NoConstraint
