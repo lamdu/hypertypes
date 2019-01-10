@@ -1,22 +1,18 @@
 {-# LANGUAGE NoImplicitPrelude, DeriveGeneric, TemplateHaskell, TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
-{-# LANGUAGE StandaloneDeriving, ConstraintKinds, TupleSections #-}
-{-# LANGUAGE FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE StandaloneDeriving, ConstraintKinds, FlexibleContexts, RankNTypes #-}
 
 module AST.Term.Row
     ( RowConstraints(..), RowKey
     , RowExtend(..), eKey, eVal, eRest
     , applyRowExtendConstraints, rowExtendStructureMismatch
-    , inferRowExtend
     , rowElementInfer
     ) where
 
-import AST.Class.Infer (Infer(..), ITerm, TypeOf, inferNode, iType)
 import AST.Class.Recursive (Recursive(..), RecursiveConstraint)
 import AST.Class.Unify (Unify(..), UVar)
 import AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import AST.Knot (Tree, Tie)
-import AST.Knot.Ann (Ann)
 import AST.Unify (TypeConstraints(..), HasTypeConstraints(..), MonadScopeConstraints(..), unify, newTerm, newUnbound)
 import AST.Unify.Binding (Binding(..))
 import AST.Unify.Term (UTerm(..))
@@ -100,32 +96,6 @@ rowExtendStructureMismatch mkExtend (c0, RowExtend k0 v0 r0) (c1, RowExtend k1 v
         _ <- RowExtend k0 v0 restVar & mkExtend >>= unify r1
         _ <- RowExtend k1 v1 restVar & mkExtend >>= unify r0
         pure ()
-
--- Helper for Infer instances of value-level RowExtends.
--- An Infer instance for RowExtend isn't suitable because the term language
--- may have separate row-extends (for example one for records and one for pattern matches)
-inferRowExtend ::
-    ( Infer m val
-    , Unify m rowTyp
-    , RowConstraints (TypeConstraintsOf rowTyp)
-    ) =>
-    (Tree (UVar m) rowTyp -> Tree (TypeOf val) (UVar m)) ->
-    (Tree (RowExtend (RowKey rowTyp) (TypeOf val) rowTyp) (UVar m) -> Tree rowTyp (UVar m)) ->
-    Tree (RowExtend (RowKey rowTyp) val val) (Ann a) ->
-    m
-    ( Tree (UVar m) rowTyp
-    , Tree (RowExtend (RowKey rowTyp) val val) (ITerm a (UVar m))
-    )
-inferRowExtend rowToTyp extendToRow (RowExtend k v r) =
-    do
-        vI <- inferNode v
-        rI <- inferNode r
-        restVar <-
-            scopeConstraints
-            >>= newVar binding . UUnbound . (forbidden . contains k .~ True)
-        _ <- rowToTyp restVar & newTerm >>= unify (rI ^. iType)
-        RowExtend k (vI ^. iType) restVar & extendToRow & newTerm
-            <&> (, RowExtend k vI rI)
 
 -- Helper for infering row usages of a row element,
 -- such as getting a field from a record or injecting into a sum type.

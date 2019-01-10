@@ -18,9 +18,11 @@ import           AST.Term.Let
 import           AST.Term.Row
 import           AST.Term.Var
 import           AST.Unify
+import           AST.Unify.Binding
 import           AST.Unify.Binding.Pure
 import           AST.Unify.Binding.ST
 import           AST.Unify.Generalize
+import           AST.Unify.Term
 import           Control.Applicative
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -85,11 +87,18 @@ instance
     infer (BLam x) = infer x <&> _2 %~ BLam
     infer (BLet x) = infer x <&> _2 %~ BLet
     infer (BLit x) = newTerm TInt <&> (, BLit x)
-    infer (BRecExtend x) =
+    infer (BRecExtend (RowExtend k v r)) =
         withDict (recursive :: RecursiveDict (Unify m) Typ) $
         do
-            (xT, xI) <- inferRowExtend TRec RExtend x
-            TRec xT & newTerm <&> (, BRecExtend xI)
+            vI <- inferNode v
+            rI <- inferNode r
+            restR <-
+                scopeConstraints <&> rForbiddenFields . Lens.contains k .~ True
+                >>= newVar binding . UUnbound
+            _ <- TRec restR & newTerm >>= unify (rI ^. iType)
+            RowExtend k (vI ^. iType) restR & RExtend & newTerm
+                >>= newTerm . TRec
+                <&> (, BRecExtend (RowExtend k vI rI))
     infer BRecEmpty =
         withDict (recursive :: RecursiveDict (Unify m) Typ) $
         newTerm REmpty >>= newTerm . TRec <&> (, BRecEmpty)
