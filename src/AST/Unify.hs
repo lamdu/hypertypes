@@ -54,10 +54,10 @@ class
     structureMismatch :: Tree (UTermBody (UVar m)) t -> Tree (UTermBody (UVar m)) t -> m ()
     structureMismatch x y = unifyError (Mismatch (x ^. uBody) (y ^. uBody))
 
-newUnbound :: forall m t. Unify m t => m (Tree (UVar m) t)
+newUnbound :: Unify m t => m (Tree (UVar m) t)
 newUnbound = scopeConstraints >>= newVar binding . UUnbound
 
-newTerm :: forall m t. Unify m t => Tree t (UVar m) -> m (Tree (UVar m) t)
+newTerm :: Unify m t => Tree t (UVar m) -> m (Tree (UVar m) t)
 newTerm x = scopeConstraints >>= newVar binding . UTerm . (`UTermBody` x)
 
 -- | Embed a pure term as a mutable term.
@@ -88,7 +88,6 @@ semiPruneLookup v0 =
 -- occursIn, seenAs, getFreeVars, freshen, equals, equiv
 
 occursError ::
-    forall m t.
     Unify m t =>
     Tree (UVar m) t -> Tree (UTermBody (UVar m)) t -> m (Tree Pure t)
 occursError v (UTermBody c b) =
