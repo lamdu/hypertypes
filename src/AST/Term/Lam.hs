@@ -10,10 +10,9 @@ module AST.Term.Lam
 import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Infer
 import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
-import           AST.Class.Unify (UVar)
 import           AST.Knot (Tree, Tie)
 import           AST.Term.FuncType
-import           AST.Unify (newUnbound, newTerm)
+import           AST.Unify (UVar, newUnbound, newTerm)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators

@@ -2,7 +2,11 @@
 {-# LANGUAGE ScopedTypeVariables, FlexibleContexts #-}
 
 module AST.Unify
-    ( applyBindings, unify
+    ( module AST.Class.Unify
+    , module AST.Unify.Constraints
+    , module AST.Unify.Error
+    , module AST.Unify.QuantifiedVar
+    , applyBindings, unify
     , semiPruneLookup
     , newUnbound, newTerm, unfreeze
     ) where
@@ -16,7 +20,7 @@ import AST.Class.ZipMatch (zipMatchWithA)
 import AST.Knot.Pure (Pure(..))
 import AST.Knot (Tree)
 import AST.Unify.Binding (Binding(..))
-import AST.Unify.Constraints (HasTypeConstraints(..), MonadScopeConstraints(..))
+import AST.Unify.Constraints (TypeConstraints(..), HasTypeConstraints(..), MonadScopeConstraints(..))
 import AST.Unify.Error (UnifyError(..))
 import AST.Unify.Term (UTerm(..), UTermBody(..), uConstraints, uBody)
 import AST.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify(..))
