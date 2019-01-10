@@ -17,7 +17,7 @@ import AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import AST.Knot (Tree, Tie)
 import AST.Knot.Ann (Ann)
 import AST.Unify (Unify(..), UVar, newVar, unify, newTerm, newUnbound)
-import AST.Unify.Constraints (HasTypeConstraints(..))
+import AST.Unify.Constraints (HasTypeConstraints(..), ScopeConstraintsMonad(..))
 import AST.Unify.Term (UTerm(..))
 import Algebra.Lattice (JoinSemiLattice(..))
 import Control.DeepSeq (NFData)
@@ -118,7 +118,7 @@ inferRowExtend rowToTyp extendToRow (RowExtend k v r) =
         vI <- inferNode v
         rI <- inferNode r
         restVar <-
-            scopeConstraints (Proxy :: Proxy rowTyp)
+            scopeConstraints
             >>= newVar binding . UUnbound . (forbidden . contains k .~ True)
         _ <- rowToTyp restVar & newTerm >>= unify (rI ^. iType)
         RowExtend k (vI ^. iType) restVar & extendToRow & newTerm
@@ -139,7 +139,7 @@ rowElementInfer ::
 rowElementInfer extendToRow k =
     do
         restVar <-
-            scopeConstraints (Proxy :: Proxy rowTyp)
+            scopeConstraints
             >>= newVar binding . UUnbound . (forbidden . contains k .~ True)
         part <- newUnbound
         whole <- RowExtend k part restVar & extendToRow & newTerm

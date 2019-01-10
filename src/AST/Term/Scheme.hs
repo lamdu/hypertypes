@@ -18,7 +18,7 @@ import           AST.Class.Recursive (Recursive, wrapM)
 import           AST.Knot (Tree, Tie, RunKnot)
 import           AST.Knot.Pure (Pure(..))
 import           AST.Unify (Unify(..), HasQuantifiedVar(..), UVar, newVar, newTerm)
-import           AST.Unify.Constraints (HasTypeConstraints(..))
+import           AST.Unify.Constraints (HasTypeConstraints(..), ScopeConstraintsMonad(..))
 import           AST.Unify.Term (UTerm(..))
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
@@ -96,9 +96,7 @@ makeInstantiation ::
 makeInstantiation (ForAlls foralls) =
     traverse makeSkolem foralls <&> Instantiation
     where
-        makeSkolem c =
-            scopeConstraints (Proxy :: Proxy typ)
-            >>= newVar binding . USkolem . (c \/)
+        makeSkolem c = scopeConstraints >>= newVar binding . USkolem . (c \/)
 
 instantiateBody ::
     (Unify m typ, HasChild varTypes typ) =>

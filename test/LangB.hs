@@ -17,6 +17,7 @@ import           AST.Term.Let
 import           AST.Term.Row
 import           AST.Term.Var
 import           AST.Unify
+import           AST.Unify.Constraints
 import           AST.Unify.Generalize
 import           AST.Unify.PureBinding
 import           AST.Unify.STBinding
@@ -142,9 +143,14 @@ instance LocalScopeType Name (Tree (Generalized Typ) (Const Int)) PureInferB whe
 instance MonadScopeLevel PureInferB where
     localLevel = local (Lens._2 . _ScopeLevel +~ 1)
 
+instance ScopeConstraintsMonad ScopeLevel PureInferB where
+    scopeConstraints = Lens.view Lens._2
+
+instance ScopeConstraintsMonad RConstraints PureInferB where
+    scopeConstraints = Lens.view Lens._2 <&> RowConstraints mempty
+
 instance Unify PureInferB Typ where
     binding = pureBinding (Lens._1 . tTyp)
-    scopeConstraints _ = Lens.view Lens._2
     newQuantifiedVariable _ _ = increase (Lens._2 . tTyp . Lens._Wrapped) <&> Name . ('t':) . show
     unifyError e =
         children (Proxy :: Proxy (Recursive (Unify PureInferB))) applyBindings e
@@ -152,7 +158,6 @@ instance Unify PureInferB Typ where
 
 instance Unify PureInferB Row where
     binding = pureBinding (Lens._1 . tRow)
-    scopeConstraints _ = Lens.view Lens._2 <&> RowConstraints mempty
     newQuantifiedVariable _ _ = increase (Lens._2 . tRow . Lens._Wrapped) <&> Name . ('r':) . show
     structureMismatch = rStructureMismatch
     unifyError e =
@@ -184,9 +189,14 @@ instance LocalScopeType Name (Tree (Generalized Typ) (STVar s)) (STInferB s) whe
 instance MonadScopeLevel (STInferB s) where
     localLevel = local (Lens._2 . _ScopeLevel +~ 1)
 
+instance ScopeConstraintsMonad ScopeLevel (STInferB s) where
+    scopeConstraints = Lens.view Lens._2
+
+instance ScopeConstraintsMonad RConstraints (STInferB s) where
+    scopeConstraints = Lens.view Lens._2 <&> RowConstraints mempty
+
 instance Unify (STInferB s) Typ where
     binding = stBindingState
-    scopeConstraints _ = Lens.view Lens._2
     newQuantifiedVariable _ _ = newStQuantified (Lens._3 . tTyp) <&> Name . ('t':) . show
     unifyError e =
         children (Proxy :: Proxy (Recursive (Unify (STInferB s)))) applyBindings e
@@ -194,7 +204,6 @@ instance Unify (STInferB s) Typ where
 
 instance Unify (STInferB s) Row where
     binding = stBindingState
-    scopeConstraints _ = Lens.view Lens._2 <&> RowConstraints mempty
     newQuantifiedVariable _ _ = newStQuantified (Lens._3 . tRow) <&> Name . ('r':) . show
     structureMismatch = rStructureMismatch
     unifyError e =

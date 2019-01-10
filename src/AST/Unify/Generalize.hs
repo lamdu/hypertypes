@@ -15,7 +15,8 @@ import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Instantiate (Instantiate(..), SchemeType)
 import           AST.Class.Recursive (Recursive(..), RecursiveDict)
 import           AST.Knot (RunKnot, Tree, Tie)
-import           AST.Unify
+import           AST.Unify (Unify(..), UVar, newTerm, lookupVar, bindVar, newUnbound, semiPruneLookup)
+import           AST.Unify.Constraints (ScopeConstraintsMonad(..))
 import           AST.Unify.Term (UTerm(..), uBody)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -96,7 +97,7 @@ generalize v0 =
     withDict (recursive :: RecursiveDict (Unify m) t) $
     do
         (v1, u) <- semiPruneLookup v0
-        c <- scopeConstraints (Proxy :: Proxy t)
+        c <- scopeConstraints
         case u of
             UUnbound l | l `leq` c ->
                 GPoly v1 <$

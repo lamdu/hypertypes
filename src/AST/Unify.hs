@@ -18,7 +18,7 @@ import AST.Class.Recursive (Recursive(..), RecursiveDict, wrapM)
 import AST.Class.ZipMatch (ZipMatch(..), zipMatchWithA)
 import AST.Knot.Pure (Pure(..))
 import AST.Knot (Knot, Tree)
-import AST.Unify.Constraints (HasTypeConstraints(..))
+import AST.Unify.Constraints (HasTypeConstraints(..), ScopeConstraintsMonad(..))
 import AST.Unify.Term (UTerm(..), UTermBody(..), uConstraints, uBody)
 import AST.Unify.Error (UnifyError(..))
 import Control.Lens (Prism')
@@ -49,12 +49,10 @@ class
     , ZipMatch t
     , HasTypeConstraints t
     , HasQuantifiedVar t
-    , Monad m
+    , ScopeConstraintsMonad (TypeConstraintsOf t) m
     ) => Unify m t where
 
     binding :: Binding m t
-
-    scopeConstraints :: Proxy t -> m (TypeConstraintsOf t)
 
     newQuantifiedVariable :: Proxy t -> TypeConstraintsOf t -> m (QVar t)
 
@@ -69,10 +67,10 @@ class
     structureMismatch x y = unifyError (Mismatch (x ^. uBody) (y ^. uBody))
 
 newUnbound :: forall m t. Unify m t => m (Tree (UVar m) t)
-newUnbound = scopeConstraints (Proxy :: Proxy t) >>= newVar binding . UUnbound
+newUnbound = scopeConstraints >>= newVar binding . UUnbound
 
 newTerm :: forall m t. Unify m t => Tree t (UVar m) -> m (Tree (UVar m) t)
-newTerm x = scopeConstraints (Proxy :: Proxy t) >>= newVar binding . UTerm . (`UTermBody` x)
+newTerm x = scopeConstraints >>= newVar binding . UTerm . (`UTermBody` x)
 
 -- | Embed a pure term as a mutable term.
 unfreeze ::

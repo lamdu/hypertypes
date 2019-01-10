@@ -6,6 +6,7 @@ module AST.Unify.Constraints
     ( TypeConstraints
     , HasTypeConstraints(..)
     , TypeConstraintsAre
+    , ScopeConstraintsMonad(..)
     ) where
 
 import Algebra.Lattice (JoinSemiLattice(..))
@@ -49,3 +50,6 @@ class
 
 class TypeConstraintsOf ast ~ constraints => TypeConstraintsAre constraints ast
 instance TypeConstraintsOf ast ~ constraints => TypeConstraintsAre constraints ast
+
+class Monad m => ScopeConstraintsMonad c m where
+    scopeConstraints :: m c
