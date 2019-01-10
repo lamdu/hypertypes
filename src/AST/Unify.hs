@@ -38,10 +38,10 @@ class Ord (QVar t) => HasQuantifiedVar (t :: Knot -> *) where
 -- Unification variable type for a unification monad
 type family UVar (m :: * -> *) :: Knot -> *
 
-data Binding m t = Binding
-    { lookupVar :: Tree (UVar m) t -> m (Tree (UTerm (UVar m)) t)
-    , newVar :: Tree (UTerm (UVar m)) t -> m (Tree (UVar m) t)
-    , bindVar :: Tree (UVar m) t -> Tree (UTerm (UVar m)) t -> m ()
+data Binding v m t = Binding
+    { lookupVar :: Tree v t -> m (Tree (UTerm v) t)
+    , newVar :: Tree (UTerm v) t -> m (Tree v t)
+    , bindVar :: Tree v t -> Tree (UTerm v) t -> m ()
     }
 
 class
@@ -52,7 +52,7 @@ class
     , ScopeConstraintsMonad (TypeConstraintsOf t) m
     ) => Unify m t where
 
-    binding :: Binding m t
+    binding :: Binding (UVar m) m t
 
     newQuantifiedVariable :: Proxy t -> TypeConstraintsOf t -> m (QVar t)
 

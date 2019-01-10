@@ -8,7 +8,7 @@ module AST.Unify.PureBinding
     ) where
 
 import           AST.Knot (Tree)
-import           AST.Unify (UVar, Binding(..))
+import           AST.Unify (Binding(..))
 import           AST.Unify.Term
 import qualified Control.Lens as Lens
 import           Control.Lens (ALens')
@@ -35,9 +35,9 @@ increase l =
         r <$ modify (Lens.cloneLens l +~ 1)
 
 pureBinding ::
-    (MonadState s m, UVar m ~ Const Int) =>
+    MonadState s m =>
     ALens' s (Tree PureBinding t) ->
-    Binding m t
+    Binding (Const Int) m t
 pureBinding l =
     Binding
     { lookupVar =

@@ -7,7 +7,7 @@ module AST.Unify.STBinding
     ) where
 
 import           AST.Knot (Knot)
-import           AST.Unify (Binding(..), UVar)
+import           AST.Unify (Binding(..))
 import           AST.Unify.Term (UTerm(..))
 import           Control.Lens (ALens')
 import qualified Control.Lens as Lens
@@ -26,8 +26,8 @@ instance Eq (STVar s a) where
     STVar x == STVar y = x == y
 
 stBindingState ::
-    (MonadST m, UVar m ~ STVar (World m)) =>
-    Binding m t
+    MonadST m =>
+    Binding (STVar (World m)) m t
 stBindingState =
     Binding
     { lookupVar = liftST . readSTRef . (^. _STVar)
