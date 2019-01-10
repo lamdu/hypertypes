@@ -20,7 +20,7 @@ import AST.Unify.Binding (Binding(..))
 import AST.Unify.Constraints (HasTypeConstraints(..), ScopeConstraintsMonad(..))
 import AST.Unify.Error (UnifyError(..))
 import AST.Unify.Term (UTerm(..), UTermBody(..), uConstraints, uBody)
-import AST.Unify.QuantifiedVar (HasQuantifiedVar(..))
+import AST.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify(..))
 import Control.Lens.Operators
 import Data.Constraint (withDict)
 import Data.Maybe (fromMaybe)
@@ -39,11 +39,10 @@ class
     , HasTypeConstraints t
     , HasQuantifiedVar t
     , ScopeConstraintsMonad (TypeConstraintsOf t) m
+    , MonadQuantify (TypeConstraintsOf t) (QVar t) m
     ) => Unify m t where
 
     binding :: Binding (UVar m) m t
-
-    newQuantifiedVariable :: Proxy t -> TypeConstraintsOf t -> m (QVar t)
 
     unifyError :: Tree (UnifyError t) (UVar m) -> m ()
 
@@ -94,7 +93,7 @@ occursError ::
     Tree (UVar m) t -> Tree (UTermBody (UVar m)) t -> m (Tree Pure t)
 occursError v (UTermBody c b) =
     do
-        q <- newQuantifiedVariable (Proxy :: Proxy t) c
+        q <- newQuantifiedVariable c
         let r = quantifiedVar # q
         bindVar binding v (UResolved (Pure r))
         Pure r <$ unifyError (Occurs (quantifiedVar # q) b)
@@ -107,7 +106,7 @@ applyBindings v0 =
     \(v1, x) ->
     let result r = r <$ bindVar binding v1 (UResolved r)
         quantify c =
-            newQuantifiedVariable (Proxy :: Proxy t) c <&> (quantifiedVar #) <&> Pure
+            newQuantifiedVariable c <&> (quantifiedVar #) <&> Pure
             >>= result
     in
     case x of
