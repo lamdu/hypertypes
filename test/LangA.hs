@@ -78,7 +78,6 @@ type TermInfer1Deps env m =
     , HasScopeTypes (UVar m) Typ env
     , HasScope m (ScopeTypes Typ)
     , Unify m Typ, Unify m Row
-    , ChildrenConstraint Types (Unify m)
     )
 
 instance TermInfer1Deps env m => Infer1 m LangA where
