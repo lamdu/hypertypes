@@ -7,6 +7,9 @@ module AST.Term.Scheme
     ( Scheme(..), sForAlls, sTyp
     , ForAlls(..), _ForAlls
     , schemeAsType
+
+    , SchemeVars(..), _SchemeVars
+    , makeSchemeVars
     ) where
 
 import           Algebra.Lattice (JoinSemiLattice(..))

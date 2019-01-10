@@ -1,12 +1,13 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts, ScopedTypeVariables, LambdaCase, InstanceSigs #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes, TupleSections #-}
 
 module AST.Unify.Generalize
     ( Generalized(..), _Generalized
     , generalize, monomorphic, instantiate
     , -- TODO: should these not be exported? (Internals)
-      GTerm(..), _GMono, _GPoly, _GBody
+      instantiateWith
+    , GTerm(..), _GMono, _GPoly, _GBody
     ) where
 
 import           Algebra.Lattice (JoinSemiLattice(..))
@@ -92,14 +93,16 @@ generalize v0 =
 monomorphic :: Tree v t -> Tree (Generalized t) v
 monomorphic = Generalized . GMono
 
-instantiate ::
-    forall m t.
+instantiateWith ::
+    forall m t a.
     Recursive (Unify m) t =>
-    Tree (Generalized t) (UVar m) -> m (Tree (UVar m) t)
-instantiate (Generalized g) =
+    m a ->
+    Tree (Generalized t) (UVar m) ->
+    m (Tree (UVar m) t, a)
+instantiateWith action (Generalized g) =
     do
         (r, recover) <- runWriterT (go g)
-        r <$ sequence_ recover
+        action <* sequence_ recover <&> (r, )
     where
         go ::
             forall child.
@@ -122,3 +125,8 @@ instantiate (Generalized g) =
                         pure r
                 UVar v -> pure v
                 _ -> error "unexpected state at instantiate's forall"
+
+instantiate ::
+    Recursive (Unify m) t =>
+    Tree (Generalized t) (UVar m) -> m (Tree (UVar m) t)
+instantiate g = instantiateWith (pure ()) g <&> (^. Lens._1)
