@@ -145,10 +145,10 @@ instance LocalScopeType Name (Tree (Generalized Typ) (Const Int)) PureInferB whe
 instance MonadScopeLevel PureInferB where
     localLevel = local (Lens._2 . _ScopeLevel +~ 1)
 
-instance ScopeConstraintsMonad ScopeLevel PureInferB where
+instance MonadScopeConstraints ScopeLevel PureInferB where
     scopeConstraints = Lens.view Lens._2
 
-instance ScopeConstraintsMonad RConstraints PureInferB where
+instance MonadScopeConstraints RConstraints PureInferB where
     scopeConstraints = Lens.view Lens._2 <&> RowConstraints mempty
 
 instance MonadQuantify ScopeLevel Name PureInferB where
@@ -195,10 +195,10 @@ instance LocalScopeType Name (Tree (Generalized Typ) (STVar s)) (STInferB s) whe
 instance MonadScopeLevel (STInferB s) where
     localLevel = local (Lens._2 . _ScopeLevel +~ 1)
 
-instance ScopeConstraintsMonad ScopeLevel (STInferB s) where
+instance MonadScopeConstraints ScopeLevel (STInferB s) where
     scopeConstraints = Lens.view Lens._2
 
-instance ScopeConstraintsMonad RConstraints (STInferB s) where
+instance MonadScopeConstraints RConstraints (STInferB s) where
     scopeConstraints = Lens.view Lens._2 <&> RowConstraints mempty
 
 instance MonadQuantify ScopeLevel Name (STInferB s) where

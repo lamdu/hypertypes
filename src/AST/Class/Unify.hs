@@ -9,7 +9,7 @@ import AST.Class.ZipMatch (ZipMatch)
 import AST.Knot (Tree, Knot)
 import AST.Unify.Binding (Binding)
 import AST.Unify.Error (UnifyError(..))
-import AST.Unify.Constraints (HasTypeConstraints(..), ScopeConstraintsMonad)
+import AST.Unify.Constraints (HasTypeConstraints(..), MonadScopeConstraints)
 import AST.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify)
 import AST.Unify.Term (UTermBody, uBody)
 import Control.Lens.Operators
@@ -24,7 +24,7 @@ class
     , ZipMatch t
     , HasTypeConstraints t
     , HasQuantifiedVar t
-    , ScopeConstraintsMonad (TypeConstraintsOf t) m
+    , MonadScopeConstraints (TypeConstraintsOf t) m
     , MonadQuantify (TypeConstraintsOf t) (QVar t) m
     ) => Unify m t where
 

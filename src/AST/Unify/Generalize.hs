@@ -19,7 +19,7 @@ import           AST.Class.Unify (Unify(..), UVar)
 import           AST.Knot (RunKnot, Tree, Tie)
 import           AST.Unify (newTerm, semiPruneLookup)
 import           AST.Unify.Binding (Binding(..))
-import           AST.Unify.Constraints (TypeConstraints(..), ScopeConstraintsMonad(..))
+import           AST.Unify.Constraints (TypeConstraints(..), MonadScopeConstraints(..))
 import           AST.Unify.Term (UTerm(..), uBody)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators

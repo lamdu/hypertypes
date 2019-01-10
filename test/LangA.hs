@@ -115,10 +115,10 @@ instance HasScope PureInferA (ScopeTypes Typ) where
 instance MonadScopeLevel PureInferA where
     localLevel = local (Lens._2 . _ScopeLevel +~ 1)
 
-instance ScopeConstraintsMonad ScopeLevel PureInferA where
+instance MonadScopeConstraints ScopeLevel PureInferA where
     scopeConstraints = Lens.view Lens._2
 
-instance ScopeConstraintsMonad RConstraints PureInferA where
+instance MonadScopeConstraints RConstraints PureInferA where
     scopeConstraints = Lens.view Lens._2 <&> RowConstraints mempty
 
 instance MonadQuantify ScopeLevel Name PureInferA where
@@ -159,10 +159,10 @@ instance HasScope (STInferA s) (ScopeTypes Typ) where
 instance MonadScopeLevel (STInferA s) where
     localLevel = local (Lens._2 . _ScopeLevel +~ 1)
 
-instance ScopeConstraintsMonad ScopeLevel (STInferA s) where
+instance MonadScopeConstraints ScopeLevel (STInferA s) where
     scopeConstraints = Lens.view Lens._2
 
-instance ScopeConstraintsMonad RConstraints (STInferA s) where
+instance MonadScopeConstraints RConstraints (STInferA s) where
     scopeConstraints = Lens.view Lens._2 <&> RowConstraints mempty
 
 instance MonadQuantify ScopeLevel Name (STInferA s) where
