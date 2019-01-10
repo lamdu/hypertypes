@@ -3,7 +3,7 @@
 {-# LANGUAGE ConstraintKinds, TypeOperators, ScopedTypeVariables, UndecidableInstances #-}
 
 module AST.Unify.Constraints
-    ( TypeConstraints
+    ( TypeConstraints(..)
     , HasTypeConstraints(..)
     , TypeConstraintsAre
     , ScopeConstraintsMonad(..)
@@ -18,8 +18,9 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
-class (PartialOrd c, JoinSemiLattice c) => TypeConstraints c
-instance (PartialOrd c, JoinSemiLattice c) => TypeConstraints c
+class (PartialOrd c, JoinSemiLattice c) => TypeConstraints c where
+    -- | Remove scope constraints
+    generalizeConstraints :: c -> c
 
 class
     TypeConstraints (TypeConstraintsOf ast) =>

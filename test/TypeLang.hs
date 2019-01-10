@@ -113,6 +113,9 @@ instance JoinSemiLattice RConstraints where
 instance BoundedJoinSemiLattice RConstraints where
     bottom = RowConstraints bottom bottom
 
+instance TypeConstraints RConstraints where
+    generalizeConstraints = rScope .~ bottom
+
 instance RowConstraints RConstraints where
     type RowConstraintsKey RConstraints = Name
     forbidden = rForbiddenFields

@@ -17,7 +17,7 @@ import AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import AST.Knot (Tree, Tie)
 import AST.Knot.Ann (Ann)
 import AST.Unify (Unify(..), UVar, newVar, unify, newTerm, newUnbound)
-import AST.Unify.Constraints (HasTypeConstraints(..), ScopeConstraintsMonad(..))
+import AST.Unify.Constraints (TypeConstraints(..), HasTypeConstraints(..), ScopeConstraintsMonad(..))
 import AST.Unify.Term (UTerm(..))
 import Algebra.Lattice (JoinSemiLattice(..))
 import Control.DeepSeq (NFData)
@@ -33,7 +33,10 @@ import Text.Show.Combinators ((@|), showCon)
 
 import Prelude.Compat
 
-class Ord (RowConstraintsKey constraints) => RowConstraints constraints where
+class
+    (Ord (RowConstraintsKey constraints), TypeConstraints constraints) =>
+    RowConstraints constraints where
+
     type RowConstraintsKey constraints
     forbidden :: Lens' constraints (Set (RowConstraintsKey constraints))
 

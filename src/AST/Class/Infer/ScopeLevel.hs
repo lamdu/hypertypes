@@ -7,6 +7,7 @@ module AST.Class.Infer.ScopeLevel
 
 import           Algebra.Lattice (JoinSemiLattice(..), BoundedJoinSemiLattice(..))
 import           Algebra.PartialOrd (PartialOrd(..))
+import           AST.Unify.Constraints (TypeConstraints(..))
 import           Control.DeepSeq (NFData)
 import           Data.Binary (Binary)
 import           Control.Lens (makePrisms)
@@ -31,6 +32,9 @@ instance JoinSemiLattice ScopeLevel where
 
 instance BoundedJoinSemiLattice ScopeLevel where
     bottom = ScopeLevel maxBound
+
+instance TypeConstraints ScopeLevel where
+    generalizeConstraints _ = bottom
 
 instance Pretty ScopeLevel where
     pPrint (ScopeLevel x) = Pretty.text "scope#" <> pPrint x

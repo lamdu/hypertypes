@@ -9,14 +9,15 @@ module AST.Unify.Generalize
       GTerm(..), _GMono, _GPoly, _GBody
     ) where
 
+import           Algebra.Lattice (JoinSemiLattice(..))
 import           Algebra.PartialOrd (PartialOrd(..))
 import           AST.Class.Children (Children(..), foldMapChildren)
 import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Instantiate (Instantiate(..), SchemeType)
 import           AST.Class.Recursive (Recursive(..), RecursiveDict)
 import           AST.Knot (RunKnot, Tree, Tie)
-import           AST.Unify (Unify(..), UVar, newTerm, lookupVar, bindVar, newUnbound, semiPruneLookup)
-import           AST.Unify.Constraints (ScopeConstraintsMonad(..))
+import           AST.Unify (Unify(..), UVar, newTerm, lookupVar, newVar, bindVar, semiPruneLookup)
+import           AST.Unify.Constraints (TypeConstraints(..), ScopeConstraintsMonad(..))
 import           AST.Unify.Term (UTerm(..), uBody)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -81,9 +82,7 @@ instance (v ~ UVar m, Recursive (Unify m) t) => Instantiate m (Tree (Generalized
                     USkolem l ->
                         do
                             tell [bindVar binding x (USkolem l)]
-                            r <-
-                                -- TODO: We should take the non-scope constraints from the skolem
-                                lift newUnbound
+                            r <- scopeConstraints <&> (\/ l) >>= newVar binding . UUnbound & lift
                             UVar r & bindVar binding x & lift
                             pure r
                     UVar v -> pure v
@@ -105,7 +104,7 @@ generalize v0 =
                 -- so additional unifications after generalization
                 -- (for example hole resumptions where supported)
                 -- cannot unify it with anything.
-                bindVar binding v1 (USkolem l)
+                bindVar binding v1 (USkolem (generalizeConstraints l))
             USkolem l | l `leq` c -> pure (GPoly v1)
             UTerm t ->
                 children p (fmap (^. _Generalized) . generalize) (t ^. uBody)
