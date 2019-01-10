@@ -7,7 +7,7 @@ module AST.Unify.STBinding
     ) where
 
 import           AST.Knot (Knot)
-import           AST.Unify (Binding(..))
+import           AST.Unify.Binding (Binding(..))
 import           AST.Unify.Term (UTerm(..))
 import           Control.Lens (ALens')
 import qualified Control.Lens as Lens

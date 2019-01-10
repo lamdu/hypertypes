@@ -8,7 +8,7 @@ module AST.Unify.PureBinding
     ) where
 
 import           AST.Knot (Tree)
-import           AST.Unify (Binding(..))
+import           AST.Unify.Binding (Binding(..))
 import           AST.Unify.Term
 import qualified Control.Lens as Lens
 import           Control.Lens (ALens')

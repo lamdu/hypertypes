@@ -4,7 +4,7 @@
 module AST.Unify
     ( HasQuantifiedVar(..)
     , UVar
-    , Binding(..), UnifyError(..)
+    , UnifyError(..)
     , Unify(..)
     , applyBindings, unify
     , semiPruneLookup
@@ -18,6 +18,7 @@ import AST.Class.Recursive (Recursive(..), RecursiveDict, wrapM)
 import AST.Class.ZipMatch (ZipMatch(..), zipMatchWithA)
 import AST.Knot.Pure (Pure(..))
 import AST.Knot (Knot, Tree)
+import AST.Unify.Binding
 import AST.Unify.Constraints (HasTypeConstraints(..), ScopeConstraintsMonad(..))
 import AST.Unify.Term (UTerm(..), UTermBody(..), uConstraints, uBody)
 import AST.Unify.Error (UnifyError(..))
@@ -37,12 +38,6 @@ class Ord (QVar t) => HasQuantifiedVar (t :: Knot -> *) where
 
 -- Unification variable type for a unification monad
 type family UVar (m :: * -> *) :: Knot -> *
-
-data Binding v m t = Binding
-    { lookupVar :: Tree v t -> m (Tree (UTerm v) t)
-    , newVar :: Tree (UTerm v) t -> m (Tree v t)
-    , bindVar :: Tree v t -> Tree (UTerm v) t -> m ()
-    }
 
 class
     ( Eq (Tree (UVar m) t)
