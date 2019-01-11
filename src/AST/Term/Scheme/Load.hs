@@ -16,7 +16,7 @@ import AST.Class.HasChild (HasChild(..))
 import AST.Class.Recursive (Recursive, wrapM)
 import AST.Knot (Tree, RunKnot)
 import AST.Knot.Pure (Pure(..))
-import AST.Term.Scheme (Scheme(..), SchemeVars, _SchemeVars, makeSchemeVars)
+import AST.Term.Scheme (Scheme(..), QVarValues, _QVarValues, makeQVarValues)
 import AST.Unify (Unify(..), UVar, HasQuantifiedVar(..), newTerm)
 import AST.Unify.Binding (Binding(..))
 import AST.Unify.Generalize (Generalized(..), GTerm(..), _GMono, instantiateWith)
@@ -32,7 +32,7 @@ import Prelude.Compat
 
 data LoadedScheme varTypes typ v = LoadedScheme
     { _lTerm :: Generalized typ v
-    , _lVars :: Tree varTypes (SchemeVars (RunKnot v))
+    , _lVars :: Tree varTypes (QVarValues (RunKnot v))
     }
 makeLenses ''LoadedScheme
 
@@ -41,7 +41,7 @@ loadBody ::
     , HasChild varTypes typ
     , ChildrenConstraint typ NoConstraint
     ) =>
-    Tree varTypes (SchemeVars (UVar m)) ->
+    Tree varTypes (QVarValues (UVar m)) ->
     Tree typ (GTerm (UVar m)) ->
     m (Tree (GTerm (UVar m)) typ)
 loadBody foralls x =
@@ -52,7 +52,7 @@ loadBody foralls x =
         Just xm -> newTerm xm <&> GMono
         Nothing -> GBody x & pure
     where
-        getForAll v = foralls ^? getChild . _SchemeVars . ix v
+        getForAll v = foralls ^? getChild . _QVarValues . ix v
 
 loadScheme ::
     forall m varTypes typ.
@@ -64,7 +64,7 @@ loadScheme ::
     m (Tree (LoadedScheme varTypes typ) (UVar m))
 loadScheme (Pure (Scheme vars typ)) =
     do
-        foralls <- children (Proxy :: Proxy (Unify m)) makeSchemeVars vars
+        foralls <- children (Proxy :: Proxy (Unify m)) makeQVarValues vars
         wrapM (Proxy :: Proxy (Unify m `And` HasChild varTypes `And` HasChildrenConstraint NoConstraint))
             (loadBody foralls) typ
             <&> (`LoadedScheme` foralls) . Generalized
@@ -75,9 +75,9 @@ instantiate ::
     , ChildrenWithConstraint varTypes (Unify m)
     ) =>
     Tree (LoadedScheme varTypes typ) (UVar m) ->
-    m (Tree (UVar m) typ, Tree varTypes (SchemeVars (UVar m)))
+    m (Tree (UVar m) typ, Tree varTypes (QVarValues (UVar m)))
 instantiate (LoadedScheme gterm vars) =
-    instantiateWith (children (Proxy :: Proxy (Unify m)) ((_SchemeVars . traverse) f) vars) gterm
+    instantiateWith (children (Proxy :: Proxy (Unify m)) ((_QVarValues . traverse) f) vars) gterm
     where
         f v =
             lookupVar binding v

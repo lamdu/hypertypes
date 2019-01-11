@@ -8,8 +8,8 @@ module AST.Term.Scheme
     , ForAlls(..), _ForAlls
     , schemeAsType
 
-    , SchemeVars(..), _SchemeVars
-    , makeSchemeVars
+    , QVarValues(..), _QVarValues
+    , makeQVarValues
     ) where
 
 import           Algebra.Lattice (JoinSemiLattice(..))
@@ -89,26 +89,26 @@ Lens.makeLenses ''Scheme
 Lens.makePrisms ''ForAlls
 makeChildren ''Scheme
 
-newtype SchemeVars k typ = SchemeVars (Map (QVar (RunKnot typ)) (k typ))
-Lens.makePrisms ''SchemeVars
+newtype QVarValues k typ = QVarValues (Map (QVar (RunKnot typ)) (k typ))
+Lens.makePrisms ''QVarValues
 
-makeSchemeVars ::
+makeQVarValues ::
     Unify m typ =>
-    Tree ForAlls typ -> m (Tree (SchemeVars (UVar m)) typ)
-makeSchemeVars (ForAlls foralls) =
-    traverse makeSkolem foralls <&> SchemeVars
+    Tree ForAlls typ -> m (Tree (QVarValues (UVar m)) typ)
+makeQVarValues (ForAlls foralls) =
+    traverse makeSkolem foralls <&> QVarValues
     where
         makeSkolem c = scopeConstraints >>= newVar binding . USkolem . (c \/)
 
 schemeBodyToType ::
     (Unify m typ, HasChild varTypes typ) =>
-    Tree varTypes (SchemeVars (UVar m)) -> Tree typ (UVar m) -> m (Tree (UVar m) typ)
+    Tree varTypes (QVarValues (UVar m)) -> Tree typ (UVar m) -> m (Tree (UVar m) typ)
 schemeBodyToType foralls x =
     case x ^? quantifiedVar >>= getForAll of
     Nothing -> newTerm x
     Just r -> pure r
     where
-        getForAll v = foralls ^? getChild . _SchemeVars . Lens.ix v
+        getForAll v = foralls ^? getChild . _QVarValues . Lens.ix v
 
 schemeAsType ::
     forall m varTypes typ.
@@ -119,5 +119,5 @@ schemeAsType ::
     Tree Pure (Scheme varTypes typ) -> m (Tree (UVar m) typ)
 schemeAsType (Pure (Scheme vars typ)) =
     do
-        foralls <- children (Proxy :: Proxy (Unify m)) makeSchemeVars vars
+        foralls <- children (Proxy :: Proxy (Unify m)) makeQVarValues vars
         wrapM (Proxy :: Proxy (And (Unify m) (HasChild varTypes))) (schemeBodyToType foralls) typ
