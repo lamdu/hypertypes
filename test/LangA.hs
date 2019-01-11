@@ -16,7 +16,6 @@ import           AST.Class.Infer.Inferred
 import           AST.Class.Infer.ScopeLevel
 import           AST.Class.Unify
 import           AST.Term.Apply
-import           AST.Term.Scheme
 import           AST.Term.Scope
 import           AST.Term.Scope.InvDeBruijn
 import           AST.Term.TypeSig
@@ -42,7 +41,7 @@ data LangA v k
     = ALam (Scope LangA v k)
     | AVar (ScopeVar LangA v k)
     | AApp (Apply (LangA v) k)
-    | ATypeSig (TypeSig (Tree Pure (Scheme Types Typ)) (LangA v) k)
+    | ATypeSig (TypeSig Types (LangA v) k)
     | ALit Int
 
 makeChildren ''LangA

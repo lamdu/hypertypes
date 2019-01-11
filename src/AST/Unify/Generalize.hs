@@ -1,10 +1,10 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, ConstraintKinds #-}
-{-# LANGUAGE FlexibleContexts, ScopedTypeVariables, FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses, LambdaCase, InstanceSigs, RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, ScopedTypeVariables, LambdaCase, InstanceSigs #-}
+{-# LANGUAGE RankNTypes #-}
 
 module AST.Unify.Generalize
     ( Generalized(..), _Generalized
-    , generalize, monomorphic
+    , generalize, monomorphic, instantiate
     , -- TODO: should these not be exported? (Internals)
       GTerm(..), _GMono, _GPoly, _GBody
     ) where
@@ -13,7 +13,6 @@ import           Algebra.Lattice (JoinSemiLattice(..))
 import           Algebra.PartialOrd (PartialOrd(..))
 import           AST.Class.Children (Children(..), foldMapChildren)
 import           AST.Class.Children.TH (makeChildren)
-import           AST.Class.Instantiate (Instantiate(..), SchemeType)
 import           AST.Class.Recursive (Recursive(..), RecursiveDict)
 import           AST.Class.Unify (Unify(..), UVar)
 import           AST.Knot (RunKnot, Tree, Tie)
@@ -60,36 +59,6 @@ instance Children ast => Children (Generalized ast) where
             <&> GBody
         <&> Generalized
 
-type instance SchemeType (Tree (Generalized t) v) = t
-
-instance (v ~ UVar m, Recursive (Unify m) t) => Instantiate m (Tree (Generalized t) v) where
-    instantiate (Generalized g) =
-        do
-            (r, recover) <- runWriterT (go g)
-            r <$ sequence_ recover
-        where
-            go ::
-                forall child.
-                Recursive (Unify m) child =>
-                Tree (GTerm (UVar m)) child -> WriterT [m ()] m (Tree (UVar m) child)
-            go =
-                withDict (recursive :: RecursiveDict (Unify m) child) $
-                \case
-                GMono x -> pure x
-                GBody x -> children (Proxy :: Proxy (Recursive (Unify m))) go x >>= lift . newTerm
-                GPoly x ->
-                    lookupVar binding x & lift
-                    >>=
-                    \case
-                    USkolem l ->
-                        do
-                            tell [bindVar binding x (USkolem l)]
-                            r <- scopeConstraints <&> (\/ l) >>= newVar binding . UUnbound & lift
-                            UVar r & bindVar binding x & lift
-                            pure r
-                    UVar v -> pure v
-                    _ -> error "unexpected state at instantiate's forall"
-
 generalize ::
     forall m t.
     Recursive (Unify m) t =>
@@ -122,3 +91,34 @@ generalize v0 =
 
 monomorphic :: Tree v t -> Tree (Generalized t) v
 monomorphic = Generalized . GMono
+
+instantiate ::
+    forall m t.
+    Recursive (Unify m) t =>
+    Tree (Generalized t) (UVar m) -> m (Tree (UVar m) t)
+instantiate (Generalized g) =
+    do
+        (r, recover) <- runWriterT (go g)
+        r <$ sequence_ recover
+    where
+        go ::
+            forall child.
+            Recursive (Unify m) child =>
+            Tree (GTerm (UVar m)) child -> WriterT [m ()] m (Tree (UVar m) child)
+        go =
+            withDict (recursive :: RecursiveDict (Unify m) child) $
+            \case
+            GMono x -> pure x
+            GBody x -> children (Proxy :: Proxy (Recursive (Unify m))) go x >>= lift . newTerm
+            GPoly x ->
+                lookupVar binding x & lift
+                >>=
+                \case
+                USkolem l ->
+                    do
+                        tell [bindVar binding x (USkolem l)]
+                        r <- scopeConstraints <&> (\/ l) >>= newVar binding . UUnbound & lift
+                        UVar r & bindVar binding x & lift
+                        pure r
+                UVar v -> pure v
+                _ -> error "unexpected state at instantiate's forall"

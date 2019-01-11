@@ -1,11 +1,12 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, DataKinds #-}
-{-# LANGUAGE ScopedTypeVariables, MultiParamTypeClasses, FlexibleInstances #-}
-{-# LANGUAGE UndecidableInstances, DeriveGeneric, StandaloneDeriving #-}
-{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE ScopedTypeVariables, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE DeriveGeneric, StandaloneDeriving, FlexibleContexts #-}
+{-# LANGUAGE ConstraintKinds, TypeOperators #-}
 
 module AST.Term.Scheme
     ( Scheme(..), sForAlls, sTyp
     , ForAlls(..), _ForAlls
+    , schemeAsType
     ) where
 
 import           Algebra.Lattice (JoinSemiLattice(..))
@@ -13,7 +14,6 @@ import           AST.Class.Children (Children(..), ChildrenWithConstraint)
 import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
-import           AST.Class.Instantiate (Instantiate(..), SchemeType)
 import           AST.Class.Recursive (Recursive, wrapM)
 import           AST.Knot (Tree, Tie, RunKnot)
 import           AST.Knot.Pure (Pure(..))
@@ -107,16 +107,14 @@ instantiateBody foralls x =
     where
         getForAll v = foralls ^? getChild . _Instantiation . Lens.ix v
 
-type instance SchemeType (Tree Pure (Scheme varTypes typ)) = typ
-
-instance
-    ( Recursive (Unify m) typ
-    , Recursive (And (Unify m) (HasChild varTypes)) typ
+schemeAsType ::
+    forall m varTypes typ.
+    ( Monad m
     , ChildrenWithConstraint varTypes (Unify m)
+    , Recursive (Unify m `And` HasChild varTypes) typ
     ) =>
-    Instantiate m (Tree Pure (Scheme varTypes typ)) where
-
-    instantiate (Pure (Scheme vars typ)) =
-        do
-            foralls <- children (Proxy :: Proxy (Unify m)) makeInstantiation vars
-            wrapM (Proxy :: Proxy (And (Unify m) (HasChild varTypes))) (instantiateBody foralls) typ
+    Tree Pure (Scheme varTypes typ) -> m (Tree (UVar m) typ)
+schemeAsType (Pure (Scheme vars typ)) =
+    do
+        foralls <- children (Proxy :: Proxy (Unify m)) makeInstantiation vars
+        wrapM (Proxy :: Proxy (And (Unify m) (HasChild varTypes))) (instantiateBody foralls) typ
