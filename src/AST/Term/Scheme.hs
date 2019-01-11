@@ -47,20 +47,6 @@ newtype ForAlls typ = ForAlls
     (Map (QVar (RunKnot typ)) (TypeConstraintsOf (RunKnot typ)))
     deriving Generic
 
-type DepsS c v t k = ((c (Tree v ForAlls), c (Tie k t)) :: Constraint)
-deriving instance DepsS Eq   v t k => Eq   (Scheme v t k)
-deriving instance DepsS Ord  v t k => Ord  (Scheme v t k)
-deriving instance DepsS Show v t k => Show (Scheme v t k)
-instance DepsS Binary v t k => Binary (Scheme v t k)
-instance DepsS NFData v t k => NFData (Scheme v t k)
-
-type DepsF c t = ((c (TypeConstraintsOf t), c (QVar t)) :: Constraint)
-deriving instance DepsF Eq   t => Eq   (Tree ForAlls t)
-deriving instance DepsF Ord  t => Ord  (Tree ForAlls t)
-deriving instance DepsF Show t => Show (Tree ForAlls t)
-instance DepsF Binary t => Binary (Tree ForAlls t)
-instance DepsF NFData t => NFData (Tree ForAlls t)
-
 instance
     (Pretty (Tree varTypes ForAlls), Pretty (Tie k typ)) =>
     Pretty (Scheme varTypes typ k) where
@@ -121,3 +107,17 @@ schemeAsType (Pure (Scheme vars typ)) =
     do
         foralls <- children (Proxy :: Proxy (Unify m)) makeQVarValues vars
         wrapM (Proxy :: Proxy (And (Unify m) (HasChild varTypes))) (schemeBodyToType foralls) typ
+
+type DepsS c v t k = ((c (Tree v ForAlls), c (Tie k t)) :: Constraint)
+deriving instance DepsS Eq   v t k => Eq   (Scheme v t k)
+deriving instance DepsS Ord  v t k => Ord  (Scheme v t k)
+deriving instance DepsS Show v t k => Show (Scheme v t k)
+instance DepsS Binary v t k => Binary (Scheme v t k)
+instance DepsS NFData v t k => NFData (Scheme v t k)
+
+type DepsF c t = ((c (TypeConstraintsOf t), c (QVar t)) :: Constraint)
+deriving instance DepsF Eq   t => Eq   (Tree ForAlls t)
+deriving instance DepsF Ord  t => Ord  (Tree ForAlls t)
+deriving instance DepsF Show t => Show (Tree ForAlls t)
+instance DepsF Binary t => Binary (Tree ForAlls t)
+instance DepsF NFData t => NFData (Tree ForAlls t)

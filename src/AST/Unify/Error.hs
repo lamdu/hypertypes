@@ -29,8 +29,6 @@ makeChildren ''UnifyError
 
 type Deps c t k = ((c (Tie k t), c (t k), c (TypeConstraintsOf t)) :: Constraint)
 
-deriving instance Deps Eq t k => Eq (UnifyError t k)
-
 instance Deps Pretty t k => Pretty (UnifyError t k) where
     pPrint (SkolemUnified x y) = Pretty.text "SkolemUnified" <+> pPrint x <+> pPrint y
     pPrint (SkolemEscape x) = Pretty.text "SkolemEscape" <+> pPrint x
@@ -38,3 +36,5 @@ instance Deps Pretty t k => Pretty (UnifyError t k) where
     pPrint (Mismatch x y) = Pretty.text "Mismatch" <+> pPrint x <+> pPrint y
     pPrint (Occurs x y) =
         pPrint x <+> Pretty.text "occurs in itself, expands to:" <+> pPrint y
+
+deriving instance Deps Eq t k => Eq (UnifyError t k)

@@ -32,12 +32,6 @@ data Lam v expr k = Lam
 makeLenses ''Lam
 
 type Deps v expr k cls = ((cls v, cls (Tie k expr)) :: Constraint)
--- Note that `Eq` is not alpha-equivalence!
-deriving instance Deps v expr k Eq   => Eq   (Lam v expr k)
-deriving instance Deps v expr k Ord  => Ord  (Lam v expr k)
-deriving instance Deps v expr k Show => Show (Lam v expr k)
-instance Deps v expr k Binary => Binary (Lam v expr k)
-instance Deps v expr k NFData => NFData (Lam v expr k)
 
 instance Deps v expr k Pretty => Pretty (Lam v expr k) where
     pPrintPrec lvl p (Lam i o) =
@@ -67,3 +61,9 @@ instance
                 , _funcOut = rI ^. iType
                 } & newTerm
                 <&> (, Lam p rI)
+
+deriving instance Deps v expr k Eq   => Eq   (Lam v expr k)
+deriving instance Deps v expr k Ord  => Ord  (Lam v expr k)
+deriving instance Deps v expr k Show => Show (Lam v expr k)
+instance Deps v expr k Binary => Binary (Lam v expr k)
+instance Deps v expr k NFData => NFData (Lam v expr k)

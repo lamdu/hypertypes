@@ -38,11 +38,6 @@ instance RecursiveConstraint (TypeSig vars term) constraint => Recursive constra
 
 type Deps vars term k cls = ((cls (Tie k term), cls (Tree Pure (Scheme vars (TypeOf term)))) :: Constraint)
 
-deriving instance Deps vars term k Eq   => Eq   (TypeSig vars term k)
-deriving instance Deps vars term k Ord  => Ord  (TypeSig vars term k)
-deriving instance Deps vars term k Show => Show (TypeSig vars term k)
-instance Deps vars term k Binary => Binary (TypeSig vars term k)
-instance Deps vars term k NFData => NFData (TypeSig vars term k)
 instance Deps vars term k Pretty => Pretty (TypeSig vars term k) where
     pPrintPrec lvl p (TypeSig term typ) =
         pPrintPrec lvl 1 term <+> Pretty.text ":" <+> pPrintPrec lvl 1 typ
@@ -66,3 +61,9 @@ instance
                 >>= unify (xI ^. iType)
                 <&> (, TypeSig xI s)
         & localLevel
+
+deriving instance Deps vars term k Eq   => Eq   (TypeSig vars term k)
+deriving instance Deps vars term k Ord  => Ord  (TypeSig vars term k)
+deriving instance Deps vars term k Show => Show (TypeSig vars term k)
+instance Deps vars term k Binary => Binary (TypeSig vars term k)
+instance Deps vars term k NFData => NFData (TypeSig vars term k)

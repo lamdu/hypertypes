@@ -21,13 +21,13 @@ newtype Pure k = Pure { getPure :: Tie k Pure }
 makePrisms ''Pure
 makeChildren ''Pure
 
-deriving instance Eq  (Tie k Pure) => Eq  (Pure k)
-deriving instance Ord (Tie k Pure) => Ord (Pure k)
-instance Binary (Tie k Pure) => Binary (Pure k)
-instance NFData (Tie k Pure) => NFData (Pure k)
-
 instance Show (Tie k Pure) => Show (Pure k) where
     showsPrec p (Pure x) = (showCon "Pure" @| x) p
 
 instance Pretty (Tie k Pure) => Pretty (Pure k) where
     pPrintPrec lvl p (Pure x) = pPrintPrec lvl p x
+
+deriving instance Eq  (Tie k Pure) => Eq  (Pure k)
+deriving instance Ord (Tie k Pure) => Ord (Pure k)
+instance Binary (Tie k Pure) => Binary (Pure k)
+instance NFData (Tie k Pure) => NFData (Pure k)

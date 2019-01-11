@@ -54,10 +54,6 @@ instance
     Recursive constraint (RowExtend key val rest)
 
 type Deps c key val rest k = ((c key, c (Tie k val), c (Tie k rest)) :: Constraint)
-deriving instance Deps Eq   key val rest k => Eq   (RowExtend key val rest k)
-deriving instance Deps Ord  key val rest k => Ord  (RowExtend key val rest k)
-instance Deps Binary key val rest k => Binary (RowExtend key val rest k)
-instance Deps NFData key val rest k => NFData (RowExtend key val rest k)
 
 instance Deps Show key val rest k => Show (RowExtend key val rest k) where
     showsPrec p (RowExtend k v r) = (showCon "RowExtend" @| k @| v @| r) p
@@ -116,3 +112,8 @@ rowElementInfer extendToRow k =
         part <- newUnbound
         whole <- RowExtend k part restVar & extendToRow & newTerm
         pure (part, whole)
+
+deriving instance Deps Eq   key val rest k => Eq   (RowExtend key val rest k)
+deriving instance Deps Ord  key val rest k => Ord  (RowExtend key val rest k)
+instance Deps Binary key val rest k => Binary (RowExtend key val rest k)
+instance Deps NFData key val rest k => NFData (RowExtend key val rest k)

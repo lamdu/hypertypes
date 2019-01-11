@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, StandaloneDeriving #-}
 {-# LANGUAGE UndecidableInstances, DeriveGeneric, TypeFamilies #-}
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, ConstraintKinds #-}
 
 module AST.Term.Map
     ( TermMap(..), _TermMap
@@ -12,6 +12,7 @@ import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
+import           Data.Constraint (Constraint)
 import           Data.Map (Map)
 import qualified Data.Map as Map
 import           GHC.Generics (Generic)
@@ -20,12 +21,6 @@ import           Prelude.Compat
 
 newtype TermMap k expr f = TermMap (Map k (Tie f expr))
     deriving Generic
-
-deriving instance (Eq   k, Eq   (Tie f expr)) => Eq   (TermMap k expr f)
-deriving instance (Ord  k, Ord  (Tie f expr)) => Ord  (TermMap k expr f)
-deriving instance (Show k, Show (Tie f expr)) => Show (TermMap k expr f)
-instance (Binary k, Binary (Tie f expr)) => Binary (TermMap k expr f)
-instance (NFData k, NFData (Tie f expr)) => NFData (TermMap k expr f)
 
 Lens.makePrisms ''TermMap
 makeChildren ''TermMap
@@ -46,3 +41,10 @@ zipMatchList ((k0, v0) : xs) ((k1, v1) : ys)
     | k0 == k1 =
         zipMatchList xs ys <&> ((k0, (v0, v1)) :)
 zipMatchList _ _ = Nothing
+
+type Deps c k e f = ((c k, c (Tie f e)) :: Constraint)
+deriving instance Deps Eq   k e f => Eq   (TermMap k e f)
+deriving instance Deps Ord  k e f => Ord  (TermMap k e f)
+deriving instance Deps Show k e f => Show (TermMap k e f)
+instance Deps Binary k e f => Binary (TermMap k e f)
+instance Deps NFData k e f => NFData (TermMap k e f)

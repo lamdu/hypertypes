@@ -35,15 +35,6 @@ makeLenses ''Ann
 makeChildrenAndZipMatch ''Ann
 instance c (Ann a) => Recursive c (Ann a)
 
-type Deps c a t = ((c a, c (Tie t (Ann a))) :: Constraint)
-
-deriving instance Deps Eq   a t => Eq   (Ann a t)
-deriving instance Deps Ord  a t => Ord  (Ann a t)
-deriving instance Deps Show a t => Show (Ann a t)
-
-instance Deps Binary a t => Binary (Ann a t)
-instance Deps NFData a t => NFData (Ann a t)
-
 instance Deps Pretty a t => Pretty (Ann a t) where
     pPrintPrec lvl prec (Ann pl b)
         | PP.isEmpty plDoc || plDoc == PP.text "()" = pPrintPrec lvl prec b
@@ -81,3 +72,10 @@ para p f x =
             withDict (recursive :: RecursiveDict constraint expr) $
             overChildren (Proxy :: Proxy (Recursive constraint))
             (para p f) (getPure x)
+
+type Deps c a t = ((c a, c (Tie t (Ann a))) :: Constraint)
+deriving instance Deps Eq   a t => Eq   (Ann a t)
+deriving instance Deps Ord  a t => Ord  (Ann a t)
+deriving instance Deps Show a t => Show (Ann a t)
+instance Deps Binary a t => Binary (Ann a t)
+instance Deps NFData a t => NFData (Ann a t)

@@ -33,12 +33,6 @@ data Let v expr k = Let
 makeLenses ''Let
 
 type Deps v expr k cls = ((cls v, cls (Tie k expr)) :: Constraint)
--- Note that `Eq` is not alpha-equivalence!
-deriving instance Deps v expr k Eq   => Eq   (Let v expr k)
-deriving instance Deps v expr k Ord  => Ord  (Let v expr k)
-deriving instance Deps v expr k Show => Show (Let v expr k)
-instance Deps v expr k Binary => Binary (Let v expr k)
-instance Deps v expr k NFData => NFData (Let v expr k)
 
 instance Deps v expr k Pretty => Pretty (Let v expr k) where
     pPrintPrec lvl p (Let v e i) =
@@ -69,3 +63,9 @@ instance
                 & localLevel
             iI <- localScopeType v eG (inferNode i)
             pure (iI ^. iType, Let v eI iI)
+
+deriving instance Deps v expr k Eq   => Eq   (Let v expr k)
+deriving instance Deps v expr k Ord  => Ord  (Let v expr k)
+deriving instance Deps v expr k Show => Show (Let v expr k)
+instance Deps v expr k Binary => Binary (Let v expr k)
+instance Deps v expr k NFData => NFData (Let v expr k)

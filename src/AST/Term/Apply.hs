@@ -28,12 +28,6 @@ data Apply expr k = Apply
     , _applyArg :: Tie k expr
     } deriving Generic
 
-deriving instance Eq   (Tie k expr) => Eq   (Apply expr k)
-deriving instance Ord  (Tie k expr) => Ord  (Apply expr k)
-deriving instance Show (Tie k expr) => Show (Apply expr k)
-instance Binary (Tie k expr) => Binary (Apply expr k)
-instance NFData (Tie k expr) => NFData (Apply expr k)
-
 instance Pretty (Tie k expr) => Pretty (Apply expr k) where
     pPrintPrec lvl p (Apply f x) =
         pPrintPrec lvl 11 f <+>
@@ -67,3 +61,9 @@ instance (Infer m expr, HasFuncType (TypeOf expr)) => Infer m (Apply expr) where
                 } & newTerm
             funcRes <$ unify funcT (funcI ^. iType)
                 <&> (, Apply funcI argI)
+
+deriving instance Eq   (Tie k expr) => Eq   (Apply expr k)
+deriving instance Ord  (Tie k expr) => Ord  (Apply expr k)
+deriving instance Show (Tie k expr) => Show (Apply expr k)
+instance Binary (Tie k expr) => Binary (Apply expr k)
+instance NFData (Tie k expr) => NFData (Apply expr k)

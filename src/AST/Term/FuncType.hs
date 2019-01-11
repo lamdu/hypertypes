@@ -37,13 +37,13 @@ makeChildrenAndZipMatch ''FuncType
 
 instance RecursiveConstraint (FuncType typ) constraint => Recursive constraint (FuncType typ)
 
-deriving instance Eq  (Tie k typ) => Eq  (FuncType typ k)
-deriving instance Ord (Tie k typ) => Ord (FuncType typ k)
-instance Binary (Tie k typ) => Binary (FuncType typ k)
-instance NFData (Tie k typ) => NFData (FuncType typ k)
-
 instance Show (Tie k typ) => Show (FuncType typ k) where
     showsPrec p (FuncType i o) = (showCon "FuncType" @| i @| o) p
 
 class HasFuncType typ where
     funcType :: Prism' (Tree typ k) (Tree (FuncType typ) k)
+
+deriving instance Eq  (Tie k typ) => Eq  (FuncType typ k)
+deriving instance Ord (Tie k typ) => Ord (FuncType typ k)
+instance Binary (Tie k typ) => Binary (FuncType typ k)
+instance NFData (Tie k typ) => NFData (FuncType typ k)
