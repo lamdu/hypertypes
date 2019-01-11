@@ -9,7 +9,7 @@ import           AST.Class.Infer.Inferred
 import           AST.Class.Infer.ScopeLevel
 import           AST.Class.Recursive
 import           AST.Class.Unify
-import           AST.Term.Scope
+import           AST.Term.NamelessScope
 import           AST.Unify
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators

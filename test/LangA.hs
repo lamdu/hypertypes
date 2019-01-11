@@ -16,8 +16,8 @@ import           AST.Class.Infer.Inferred
 import           AST.Class.Infer.ScopeLevel
 import           AST.Class.Unify
 import           AST.Term.Apply
-import           AST.Term.Scope
-import           AST.Term.Scope.InvDeBruijn
+import           AST.Term.NamelessScope
+import           AST.Term.NamelessScope.InvDeBruijn
 import           AST.Term.TypeSig
 import           AST.Unify
 import           AST.Unify.Binding.Pure

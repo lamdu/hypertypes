@@ -9,8 +9,8 @@ import           AST.Class.HasChild
 import           AST.Class.Infer.ScopeLevel
 import           AST.Class.Unify
 import           AST.Term.FuncType
+import           AST.Term.NamelessScope
 import           AST.Term.Row
-import           AST.Term.Scope
 import           AST.Unify
 import           AST.Unify.Binding.Pure
 import           AST.Unify.Term

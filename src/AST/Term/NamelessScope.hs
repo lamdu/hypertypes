@@ -3,7 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables, TypeOperators, FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses, TupleSections, DataKinds #-}
 
-module AST.Term.Scope
+module AST.Term.NamelessScope
     ( Scope(..), _Scope
     , ScopeVar(..), _ScopeVar
     , EmptyScope

@@ -1,11 +1,11 @@
 {-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables #-}
 
-module AST.Term.Scope.InvDeBruijn
+module AST.Term.NamelessScope.InvDeBruijn
     ( InvDeBruijnIndex(..), inverseDeBruijnIndex, scope, scopeVar
     ) where
 
 import AST.Knot (Tree)
-import AST.Term.Scope
+import AST.Term.NamelessScope (DeBruijnIndex(..), EmptyScope, Scope(..), ScopeVar(..))
 import Control.Lens (Prism', iso)
 import Control.Lens.Operators
 import Data.Proxy (Proxy(..))

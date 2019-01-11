@@ -8,8 +8,8 @@ module LangA.Pure
 
 import AST
 import AST.Term.Apply
+import AST.Term.NamelessScope.InvDeBruijn
 import AST.Term.Scheme
-import AST.Term.Scope.InvDeBruijn
 import AST.Term.TypeSig
 import Control.Lens.Operators
 import LangA
