@@ -1,12 +1,13 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric, StandaloneDeriving #-}
-{-# LANGUAGE ConstraintKinds, UndecidableInstances, TypeFamilies #-}
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, ScopedTypeVariables #-}
+{-# LANGUAGE ConstraintKinds, UndecidableInstances, TypeFamilies, ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeOperators, FlexibleContexts, DataKinds, LambdaCase, TupleSections #-}
 
 module AST.Term.Nominal
     ( NominalDecl(..), nParams, nScheme
     , NominalInst(..), nId, nArgs
     , ToNom(..), tnId, tnVal
+    , FromNom(..), _FromNom
 
     , HasNominalInst(..)
 
@@ -20,6 +21,7 @@ import AST.Class.HasChild (HasChild(..))
 import AST.Class.Infer (Infer(..), TypeOf, ScopeOf, inferNode, iType)
 import AST.Class.Recursive (wrapM)
 import AST
+import AST.Term.FuncType (HasFuncType(..), FuncType(..))
 import AST.Term.Scheme (Scheme(..), ForAlls, QVarValues, _QVarValues, makeQVarValues)
 import AST.Unify (Unify(..), UVar, HasQuantifiedVar(..), newTerm, unify, semiPruneLookup)
 import AST.Unify.Binding (Binding(..))
@@ -27,7 +29,7 @@ import AST.Unify.Generalize (Generalized(..), GTerm(..), _GMono, instantiateWith
 import AST.Unify.Term (UTerm(..))
 import Control.Applicative (Alternative(..))
 import Control.DeepSeq (NFData)
-import Control.Lens (Prism', makeLenses, ix)
+import Control.Lens (Prism', makeLenses, makePrisms, ix)
 import Control.Lens.Operators
 import Data.Binary (Binary)
 import Data.Constraint (Constraint)
@@ -59,11 +61,16 @@ data ToNom nomId term k = ToNom
     , _tnVal :: Tie k term
     } deriving Generic
 
+newtype FromNom nomId (term :: Knot -> *) (k :: Knot) = FromNom nomId
+    deriving (Eq, Ord, Show, Generic, Binary, NFData)
+
 makeLenses ''NominalDecl
 makeLenses ''NominalInst
 makeLenses ''ToNom
+makePrisms ''FromNom
 makeChildren ''NominalDecl
 makeChildren ''ToNom
+makeChildren ''FromNom
 
 instance Children varTypes => Children (NominalInst nomId varTypes) where
     type ChildrenConstraint (NominalInst nomId varTypes) c = ChildrenConstraint varTypes c
@@ -173,6 +180,26 @@ instance
                 \case
                 (v1, UUnbound x) -> bindVar binding v1 (USkolem x)
                 _ -> error "unexpected state at instantiate's forall"
+
+type instance TypeOf  (FromNom nomId expr) = TypeOf expr
+type instance ScopeOf (FromNom nomId expr) = ScopeOf expr
+
+instance
+    ( Infer m expr
+    , HasFuncType (TypeOf expr)
+    , HasNominalInst (TypeOf expr)
+    , MonadNominals nomId (TypeOf expr) m
+    , ChildrenWithConstraint (NomVarTypes (TypeOf expr)) (Unify m)
+    ) =>
+    Infer m (FromNom nomId expr) where
+
+    infer (FromNom nomId) =
+        do
+            LoadedNominalDecl params _ gen <- getNominalDecl nomId
+            (typ, paramsT) <- instantiateWith (lookupParams params) gen
+            nomT <- nominalInst # NominalInst nomId paramsT & newTerm
+            funcType # FuncType nomT typ & newTerm
+        <&> (, FromNom nomId)
 
 -- Standalone deriving boilerplate
 
