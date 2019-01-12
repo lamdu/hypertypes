@@ -8,6 +8,8 @@ module AST.Term.Nominal
     , NominalInst(..), nId, nArgs
     , ToNom(..), tnId, tnVal
 
+    , HasNominalInst(..)
+
     , MonadNominals(..)
     , LoadedNominalDecl, loadNominalDecl
     ) where
@@ -25,7 +27,7 @@ import AST.Unify.Generalize (Generalized(..), GTerm(..), _GMono, instantiateWith
 import AST.Unify.Term (UTerm(..))
 import Control.Applicative (Alternative(..))
 import Control.DeepSeq (NFData)
-import Control.Lens (makeLenses, ix)
+import Control.Lens (Prism', makeLenses, ix)
 import Control.Lens.Operators
 import Data.Binary (Binary)
 import Data.Constraint (Constraint)
@@ -122,12 +124,15 @@ loadNominalDecl (Pure (NominalDecl params (Scheme foralls typ))) =
 class MonadNominals nomId typ m where
     getNominalDecl :: nomId -> m (Tree (LoadedNominalDecl typ) (UVar m))
 
-type instance TypeOf  (ToNom nomId expr) = NominalInst nomId (NomVarTypes (TypeOf expr))
+class HasNominalInst typ where
+    nominalInst :: Prism' (Tree typ k) (Tree (NominalInst nomId (NomVarTypes typ)) k)
+
+type instance TypeOf  (ToNom nomId expr) = TypeOf expr
 type instance ScopeOf (ToNom nomId expr) = ScopeOf expr
 
 instance
     ( Infer m expr
-    , Unify m (NominalInst nomId (NomVarTypes (TypeOf expr)))
+    , HasNominalInst (TypeOf expr)
     , MonadNominals nomId (TypeOf expr) m
     , ChildrenWithConstraint (NomVarTypes (TypeOf expr)) (Unify m)
     , ChildrenWithConstraint (NomVarTypes (TypeOf expr)) (Recursive (Unify m))
@@ -144,7 +149,7 @@ instance
                         children (Proxy :: Proxy (Unify m)) ((_QVarValues . traverse) lookupParam) params
             (typ, paramsT) <- instantiateWith initNom gen
             _ <- unify typ (valI ^. iType)
-            NominalInst nomId paramsT & newTerm
+            nominalInst # NominalInst nomId paramsT & newTerm
                 <&> (, ToNom nomId valI)
         where
             setToSkolem v0 =
