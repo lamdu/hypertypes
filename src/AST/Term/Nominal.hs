@@ -151,7 +151,6 @@ instance
     , HasNominalInst (TypeOf expr)
     , MonadNominals nomId (TypeOf expr) m
     , ChildrenWithConstraint (NomVarTypes (TypeOf expr)) (Unify m)
-    , ChildrenWithConstraint (NomVarTypes (TypeOf expr)) (Recursive (Unify m))
     ) =>
     Infer m (ToNom nomId expr) where
 
