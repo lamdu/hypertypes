@@ -142,7 +142,7 @@ instance
     infer (ToNom nomId val) =
         do
             valI <- inferNode val
-            LoadedNominalDecl params foralls gen <- getNominalDecl nomId :: m (Tree (LoadedNominalDecl (TypeOf expr)) (UVar m))
+            LoadedNominalDecl params foralls gen <- getNominalDecl nomId
             let initNom =
                     do
                         children_ (Proxy :: Proxy (Unify m)) (traverse_ setToSkolem . (^. _QVarValues)) foralls
