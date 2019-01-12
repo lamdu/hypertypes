@@ -64,7 +64,7 @@ makeZipMatchCtr var info =
             ZipMatchField
             { zmfResult = VarE 'zipMatch `AppE` VarE x `AppE` VarE y
             , zmfConds = []
-            , zmfContext = [ConT ''ZipMatch `AppT` t]
+            , zmfContext = [ConT ''ZipMatch `AppT` t | isPolymorphic t]
             }
         field _ Tof{} = error "TODO"
         field (x, y) (Other t) =
