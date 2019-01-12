@@ -127,6 +127,22 @@ class MonadNominals nomId typ m where
 class HasNominalInst typ where
     nominalInst :: Prism' (Tree typ k) (Tree (NominalInst nomId (NomVarTypes typ)) k)
 
+lookupParams ::
+    forall m varTypes.
+    ( Applicative m
+    , ChildrenWithConstraint varTypes (Unify m)
+    ) =>
+    Tree varTypes (QVarValues (UVar m)) -> m (Tree varTypes (QVarValues (UVar m)))
+lookupParams =
+    children (Proxy :: Proxy (Unify m)) ((_QVarValues . traverse) lookupParam)
+    where
+        lookupParam v =
+            lookupVar binding v
+            >>=
+            \case
+            UVar r -> pure r
+            _ -> error "unexpected state at instantiate's forall"
+
 type instance TypeOf  (ToNom nomId expr) = TypeOf expr
 type instance ScopeOf (ToNom nomId expr) = ScopeOf expr
 
@@ -146,7 +162,7 @@ instance
             let initNom =
                     do
                         children_ (Proxy :: Proxy (Unify m)) (traverse_ setToSkolem . (^. _QVarValues)) foralls
-                        children (Proxy :: Proxy (Unify m)) ((_QVarValues . traverse) lookupParam) params
+                        lookupParams params
             (typ, paramsT) <- instantiateWith initNom gen
             _ <- unify typ (valI ^. iType)
             nominalInst # NominalInst nomId paramsT & newTerm
@@ -157,12 +173,6 @@ instance
                 >>=
                 \case
                 (v1, UUnbound x) -> bindVar binding v1 (USkolem x)
-                _ -> error "unexpected state at instantiate's forall"
-            lookupParam v =
-                lookupVar binding v
-                >>=
-                \case
-                UVar r -> pure r
                 _ -> error "unexpected state at instantiate's forall"
 
 -- Standalone deriving boilerplate
