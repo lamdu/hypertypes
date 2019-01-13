@@ -22,6 +22,7 @@ import AST.Class.Infer (Infer(..), TypeOf, ScopeOf, inferNode, iType)
 import AST.Class.Recursive (wrapM)
 import AST
 import AST.Term.FuncType (HasFuncType(..), FuncType(..))
+import AST.Term.Map (_TermMap)
 import AST.Term.Scheme (Scheme(..), ForAlls, QVarValues, _QVarValues, makeQVarValues)
 import AST.Unify (Unify(..), UVar, HasQuantifiedVar(..), newTerm, unify, semiPruneLookup)
 import AST.Unify.Binding (Binding(..))
@@ -75,7 +76,7 @@ makeChildren ''FromNom
 instance Children varTypes => Children (NominalInst nomId varTypes) where
     type ChildrenConstraint (NominalInst nomId varTypes) c = ChildrenConstraint varTypes c
     children p f (NominalInst nomId args) =
-        children p ((_QVarValues . traverse) f) args
+        children p ((_QVarValues . monoChildren) f) args
         <&> NominalInst nomId
 
 instance
@@ -108,8 +109,8 @@ loadBody params foralls x =
         Nothing -> GBody x & pure
     where
         get v =
-            params ^? getChild . _QVarValues . ix v <|>
-            foralls ^? getChild . _QVarValues . ix v
+            params ^? getChild . _QVarValues . _TermMap . ix v <|>
+            foralls ^? getChild . _QVarValues . _TermMap . ix v
 
 loadNominalDecl ::
     forall m typ.
@@ -141,7 +142,8 @@ lookupParams ::
     ) =>
     Tree varTypes (QVarValues (UVar m)) -> m (Tree varTypes (QVarValues (UVar m)))
 lookupParams =
-    children (Proxy :: Proxy (Unify m)) ((_QVarValues . traverse) lookupParam)
+    children (Proxy :: Proxy (Unify m))
+    ((_QVarValues . _TermMap . traverse) lookupParam)
     where
         lookupParam v =
             lookupVar binding v
@@ -167,7 +169,9 @@ instance
             LoadedNominalDecl params foralls gen <- getNominalDecl nomId
             let initNom =
                     do
-                        children_ (Proxy :: Proxy (Unify m)) (traverse_ setToSkolem . (^. _QVarValues)) foralls
+                        children_ (Proxy :: Proxy (Unify m))
+                            (traverse_ setToSkolem . (^. _QVarValues . _TermMap))
+                            foralls
                         lookupParams params
             (typ, paramsT) <- instantiateWith initNom gen
             _ <- unify typ (valI ^. iType)

@@ -19,8 +19,9 @@ import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Combinators (And, NoConstraint, HasChildrenConstraint, proxyNoConstraint)
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Recursive (Recursive, wrapM)
-import           AST.Knot (Tree, Tie, RunKnot)
+import           AST.Knot (Knot(..), RunKnot, Tree, Tie)
 import           AST.Knot.Pure (Pure(..))
+import           AST.Term.Map (TermMap(..), _TermMap)
 import           AST.Unify
 import           AST.Unify.Binding (Binding(..))
 import           AST.Unify.Generalize (Generalized(..), GTerm(..), _GMono)
@@ -77,14 +78,14 @@ Lens.makeLenses ''Scheme
 Lens.makePrisms ''ForAlls
 makeChildren ''Scheme
 
-newtype QVarValues k typ = QVarValues (Map (QVar (RunKnot typ)) (k typ))
+newtype QVarValues k typ = QVarValues (TermMap (QVar (RunKnot typ)) (RunKnot typ) ('Knot k))
 Lens.makePrisms ''QVarValues
 
 makeQVarValues ::
     Unify m typ =>
     Tree ForAlls typ -> m (Tree (QVarValues (UVar m)) typ)
 makeQVarValues (ForAlls foralls) =
-    traverse makeSkolem foralls <&> QVarValues
+    traverse makeSkolem foralls <&> TermMap <&> QVarValues
     where
         makeSkolem c = scopeConstraints >>= newVar binding . USkolem . (c \/)
 
@@ -96,7 +97,7 @@ schemeBodyToType foralls x =
     Nothing -> newTerm x
     Just r -> pure r
     where
-        getForAll v = foralls ^? getChild . _QVarValues . Lens.ix v
+        getForAll v = foralls ^? getChild . _QVarValues . _TermMap . Lens.ix v
 
 schemeAsType ::
     forall m varTypes typ.
@@ -126,7 +127,7 @@ loadBody foralls x =
         Just xm -> newTerm xm <&> GMono
         Nothing -> GBody x & pure
     where
-        getForAll v = foralls ^? getChild . _QVarValues . Lens.ix v
+        getForAll v = foralls ^? getChild . _QVarValues . _TermMap . Lens.ix v
 
 -- | Load scheme into unification monad so that different instantiations share
 -- the scheme's monomorphic parts -
