@@ -114,14 +114,14 @@ childrenTypes var typ =
             then pure mempty
             else modify (Lens.contains typ .~ True) *> add (matchType var typ)
     where
-        add (NodeFofX ast) = TypeContents (Set.singleton ast) mempty & pure
+        add (NodeFofX ast) = pure mempty { tcChildren = Set.singleton ast }
         add (XofF ast) =
             go [] ast
             where
                 go as (ConT name) = childrenTypesFromTypeName name as
                 go as (AppT x a) = go (a:as) x
                 go as x@VarT{} =
-                    TypeContents mempty (Set.singleton (foldl AppT x as)) & pure
+                    pure mempty { tcEmbeds = Set.singleton (foldl AppT x as) }
                 go _ _ = pure mempty
         add (Tof _ pat) = add pat
         add Other{} = pure mempty
