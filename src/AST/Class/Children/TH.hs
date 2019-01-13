@@ -28,23 +28,32 @@ makeChildren typeName = makeTypeInfo typeName >>= makeChildrenForType
 data TypeInfo = TypeInfo
     { tiInstance :: Type
     , tiVar :: Name
-    , tiChildren :: Set Type
-    , tiEmbeds :: Set Type
+    , tiContents :: TypeContents
     , tiCons :: [D.ConstructorInfo]
-    }
-    deriving Show
+    } deriving Show
+
+data TypeContents = TypeContents
+    { tcChildren :: Set Type
+    , tcEmbeds :: Set Type
+    } deriving Show
+
+instance Semigroup TypeContents where
+    TypeContents x0 x1 <> TypeContents y0 y1 =
+        TypeContents (x0 <> y0) (x1 <> y1)
+
+instance Monoid TypeContents where
+    mempty = TypeContents mempty mempty
 
 makeTypeInfo :: Name -> Q TypeInfo
 makeTypeInfo name =
     do
         info <- D.reifyDatatype name
         (dst, var) <- parts info
-        (childs, embeds) <- evalStateT (childrenTypes var (AppT dst (VarT var))) mempty
+        contents <- evalStateT (childrenTypes var (AppT dst (VarT var))) mempty
         pure TypeInfo
             { tiInstance = dst
             , tiVar = var
-            , tiChildren = childs
-            , tiEmbeds = embeds
+            , tiContents = contents
             , tiCons = D.datatypeCons info
             }
 
@@ -58,7 +67,7 @@ makeChildrenForType info =
             , funD 'children (tiCons info <&> pure . ccClause . makeChildrenCtr (tiVar info))
             ]
         mono <-
-            case Set.toList (tiChildren info) of
+            case Set.toList (tcChildren (tiContents info)) of
             [x] ->
                 tySynInstD ''ChildOf
                 (pure (TySynEqn [tiInstance info] x))
@@ -69,8 +78,8 @@ makeChildrenForType info =
         ctx = childrenContext info
         constraint = mkName "constraint"
         childrenConstraint =
-            (Set.toList (tiChildren info) <&> (VarT constraint `AppT`))
-            <> (Set.toList (tiEmbeds info) <&>
+            (Set.toList (tcChildren (tiContents info)) <&> (VarT constraint `AppT`))
+            <> (Set.toList (tcEmbeds (tiContents info)) <&>
                 (\x -> ConT ''ChildrenConstraint `AppT` x `AppT` VarT constraint))
             & toTuple
 
@@ -97,7 +106,7 @@ parts info =
         stripSigT x = x
 
 childrenTypes ::
-    Name -> Type -> StateT (Set Type) Q (Set Type, Set Type)
+    Name -> Type -> StateT (Set Type) Q TypeContents
 childrenTypes var typ =
     do
         did <- gets (^. Lens.contains typ)
@@ -105,13 +114,14 @@ childrenTypes var typ =
             then pure mempty
             else modify (Lens.contains typ .~ True) *> add (matchType var typ)
     where
-        add (NodeFofX ast) = pure (Set.singleton ast, mempty)
+        add (NodeFofX ast) = TypeContents (Set.singleton ast) mempty & pure
         add (XofF ast) =
             go [] ast
             where
                 go as (ConT name) = childrenTypesFromTypeName name as
                 go as (AppT x a) = go (a:as) x
-                go as x@VarT{} = pure (mempty, Set.singleton (foldl AppT x as))
+                go as x@VarT{} =
+                    TypeContents mempty (Set.singleton (foldl AppT x as)) & pure
                 go _ _ = pure mempty
         add (Tof _ pat) = add pat
         add Other{} = pure mempty
@@ -141,7 +151,7 @@ data CtrTypePattern
     deriving Show
 
 childrenTypesFromTypeName ::
-    Name -> [Type] -> StateT (Set Type) Q (Set Type, Set Type)
+    Name -> [Type] -> StateT (Set Type) Q TypeContents
 childrenTypesFromTypeName name args =
     do
         info <- D.reifyDatatype name & lift
