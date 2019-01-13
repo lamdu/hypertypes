@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, LambdaCase #-}
 
 module AST.Class.Children.TH
     ( makeChildren
@@ -116,7 +116,11 @@ childrenTypes var typ =
     where
         add (NodeFofX ast) = pure mempty { tcChildren = Set.singleton ast }
         add (XofF ast) =
-            go [] ast
+            reifyInstances ''Children [ast] & lift
+            >>=
+            \case
+            [] -> go [] ast
+            _ -> pure mempty { tcEmbeds = Set.singleton ast }
             where
                 go as (ConT name) = childrenTypesFromTypeName name as
                 go as (AppT x a) = go (a:as) x
