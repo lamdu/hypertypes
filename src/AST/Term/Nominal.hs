@@ -20,10 +20,11 @@ import AST.Class.Combinators (NoConstraint, And, HasChildrenConstraint, proxyNoC
 import AST.Class.HasChild (HasChild(..))
 import AST.Class.Infer (Infer(..), TypeOf, ScopeOf, inferNode, iType)
 import AST.Class.Recursive (wrapM)
+import AST.Class.ZipMatch (ZipMatch(..), Both(..))
 import AST
 import AST.Term.FuncType (HasFuncType(..), FuncType(..))
 import AST.Term.Map (_TermMap)
-import AST.Term.Scheme (Scheme(..), ForAlls, QVarValues, _QVarValues, makeQVarValues)
+import AST.Term.Scheme (Scheme(..), ForAlls, QVarValues(..), _QVarValues, makeQVarValues)
 import AST.Unify (Unify(..), UVar, HasQuantifiedVar(..), newTerm, unify, semiPruneLookup)
 import AST.Unify.Binding (Binding(..))
 import AST.Unify.Generalize (Generalized(..), GTerm(..), _GMono, instantiateWith)
@@ -34,8 +35,8 @@ import Control.Lens (Prism', makeLenses, makePrisms, ix)
 import Control.Lens.Operators
 import Data.Binary (Binary)
 import Data.Constraint (Constraint)
-import Data.Proxy (Proxy(..))
 import Data.Foldable (traverse_)
+import Data.Proxy (Proxy(..))
 import GHC.Generics (Generic)
 
 import Prelude.Compat
@@ -78,6 +79,22 @@ instance Children varTypes => Children (NominalInst nomId varTypes) where
     children p f (NominalInst nomId args) =
         children p ((_QVarValues . monoChildren) f) args
         <&> NominalInst nomId
+
+instance
+    ( Eq nomId
+    , ZipMatch varTypes
+    , ChildrenConstraint varTypes (ZipMatch `And` HasQuantifiedVar)
+    ) =>
+    ZipMatch (NominalInst nomId varTypes) where
+
+    zipMatch (NominalInst xId x) (NominalInst yId y)
+        | xId /= yId = Nothing
+        | otherwise =
+            zipMatch x y
+            >>= children (Proxy :: Proxy (ZipMatch `And` HasQuantifiedVar))
+                (\(Both (QVarValues c0) (QVarValues c1)) ->
+                    zipMatch c0 c1 <&> QVarValues)
+            <&> NominalInst xId
 
 instance
     ( c (NominalInst nomId varTypes)
