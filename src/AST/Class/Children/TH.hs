@@ -116,11 +116,7 @@ childrenTypes var typ =
     where
         add (NodeFofX ast) = pure mempty { tcChildren = Set.singleton ast }
         add (XofF ast) =
-            reifyInstances ''Children [ast] & lift
-            >>=
-            \case
-            [] -> go [] ast
-            _ -> pure mempty { tcEmbeds = Set.singleton ast }
+            go [] ast
             where
                 go as (ConT name) = childrenTypesFromTypeName name as
                 go as (AppT x a) = go (a:as) x
@@ -138,7 +134,7 @@ matchType var (ConT tie `AppT` VarT k `AppT` ast)
     | tie == ''Tie && k == var =
         NodeFofX ast
 matchType var (ast `AppT` VarT knot)
-    | knot == var =
+    | knot == var && ast /= ConT ''RunKnot =
         XofF ast
 matchType var x@(AppT t typ) =
     -- TODO: check if applied over a functor-kinded type.
