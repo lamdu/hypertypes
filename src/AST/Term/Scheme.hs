@@ -9,8 +9,8 @@ module AST.Term.Scheme
     , schemeAsType
     , loadScheme
 
-    , QVarValues(..), _QVarValues
-    , makeQVarValues
+    , QVarInstances(..), _QVarInstances
+    , makeQVarInstances
     ) where
 
 import           Algebra.Lattice (JoinSemiLattice(..))
@@ -78,28 +78,28 @@ Lens.makeLenses ''Scheme
 Lens.makePrisms ''ForAlls
 makeChildren ''Scheme
 
-newtype QVarValues k typ =
-    QVarValues (Tree (TermMap (QVar (RunKnot typ)) (RunKnot typ)) k)
+newtype QVarInstances k typ =
+    QVarInstances (Tree (TermMap (QVar (RunKnot typ)) (RunKnot typ)) k)
     deriving Generic
-Lens.makePrisms ''QVarValues
+Lens.makePrisms ''QVarInstances
 
-makeQVarValues ::
+makeQVarInstances ::
     Unify m typ =>
-    Tree ForAlls typ -> m (Tree (QVarValues (UVar m)) typ)
-makeQVarValues (ForAlls foralls) =
-    traverse makeSkolem foralls <&> TermMap <&> QVarValues
+    Tree ForAlls typ -> m (Tree (QVarInstances (UVar m)) typ)
+makeQVarInstances (ForAlls foralls) =
+    traverse makeSkolem foralls <&> TermMap <&> QVarInstances
     where
         makeSkolem c = scopeConstraints >>= newVar binding . USkolem . (c \/)
 
 schemeBodyToType ::
     (Unify m typ, HasChild varTypes typ) =>
-    Tree varTypes (QVarValues (UVar m)) -> Tree typ (UVar m) -> m (Tree (UVar m) typ)
+    Tree varTypes (QVarInstances (UVar m)) -> Tree typ (UVar m) -> m (Tree (UVar m) typ)
 schemeBodyToType foralls x =
     case x ^? quantifiedVar >>= getForAll of
     Nothing -> newTerm x
     Just r -> pure r
     where
-        getForAll v = foralls ^? getChild . _QVarValues . _TermMap . Lens.ix v
+        getForAll v = foralls ^? getChild . _QVarInstances . _TermMap . Lens.ix v
 
 schemeAsType ::
     forall m varTypes typ.
@@ -110,7 +110,7 @@ schemeAsType ::
     Tree Pure (Scheme varTypes typ) -> m (Tree (UVar m) typ)
 schemeAsType (Pure (Scheme vars typ)) =
     do
-        foralls <- children (Proxy :: Proxy (Unify m)) makeQVarValues vars
+        foralls <- children (Proxy :: Proxy (Unify m)) makeQVarInstances vars
         wrapM (Proxy :: Proxy (And (Unify m) (HasChild varTypes))) (schemeBodyToType foralls) typ
 
 loadBody ::
@@ -118,7 +118,7 @@ loadBody ::
     , HasChild varTypes typ
     , ChildrenConstraint typ NoConstraint
     ) =>
-    Tree varTypes (QVarValues (UVar m)) ->
+    Tree varTypes (QVarInstances (UVar m)) ->
     Tree typ (GTerm (UVar m)) ->
     m (Tree (GTerm (UVar m)) typ)
 loadBody foralls x =
@@ -129,7 +129,7 @@ loadBody foralls x =
         Just xm -> newTerm xm <&> GMono
         Nothing -> GBody x & pure
     where
-        getForAll v = foralls ^? getChild . _QVarValues . _TermMap . Lens.ix v
+        getForAll v = foralls ^? getChild . _QVarInstances . _TermMap . Lens.ix v
 
 -- | Load scheme into unification monad so that different instantiations share
 -- the scheme's monomorphic parts -
@@ -144,7 +144,7 @@ loadScheme ::
     m (Tree (Generalized typ) (UVar m))
 loadScheme (Pure (Scheme vars typ)) =
     do
-        foralls <- children (Proxy :: Proxy (Unify m)) makeQVarValues vars
+        foralls <- children (Proxy :: Proxy (Unify m)) makeQVarInstances vars
         wrapM (Proxy :: Proxy (Unify m `And` HasChild varTypes `And` HasChildrenConstraint NoConstraint))
             (loadBody foralls) typ
             <&> Generalized
@@ -164,8 +164,8 @@ instance DepsF Binary t => Binary (Tree ForAlls t)
 instance DepsF NFData t => NFData (Tree ForAlls t)
 
 type DepsQ c k t = ((c (QVar (RunKnot t)), c (Tree k (RunKnot t))) :: Constraint)
-deriving instance DepsQ Eq   k t => Eq   (QVarValues k t)
-deriving instance DepsQ Ord  k t => Ord  (QVarValues k t)
-deriving instance DepsQ Show k t => Show (QVarValues k t)
-instance DepsQ Binary k t => Binary (QVarValues k t)
-instance DepsQ NFData k t => NFData (QVarValues k t)
+deriving instance DepsQ Eq   k t => Eq   (QVarInstances k t)
+deriving instance DepsQ Ord  k t => Ord  (QVarInstances k t)
+deriving instance DepsQ Show k t => Show (QVarInstances k t)
+instance DepsQ Binary k t => Binary (QVarInstances k t)
+instance DepsQ NFData k t => NFData (QVarInstances k t)

@@ -24,7 +24,7 @@ import AST.Class.ZipMatch (ZipMatch(..), Both(..))
 import AST
 import AST.Term.FuncType (HasFuncType(..), FuncType(..))
 import AST.Term.Map (_TermMap)
-import AST.Term.Scheme (Scheme(..), ForAlls, QVarValues(..), _QVarValues, makeQVarValues)
+import AST.Term.Scheme (Scheme(..), ForAlls, QVarInstances(..), _QVarInstances, makeQVarInstances)
 import AST.Unify (Unify(..), UVar, HasQuantifiedVar(..), newTerm, unify, semiPruneLookup)
 import AST.Unify.Binding (Binding(..))
 import AST.Unify.Generalize (Generalized(..), GTerm(..), _GMono, instantiateWith)
@@ -52,7 +52,7 @@ data NominalDecl typ k = NominalDecl
 -- | An instantiation of a nominal type
 data NominalInst nomId varTypes k = NominalInst
     { _nId :: nomId
-    , _nArgs :: Tree varTypes (QVarValues (RunKnot k))
+    , _nArgs :: Tree varTypes (QVarInstances (RunKnot k))
     } deriving Generic
 
 -- | Nominal data constructor.
@@ -77,7 +77,7 @@ makeChildren ''FromNom
 instance Children varTypes => Children (NominalInst nomId varTypes) where
     type ChildrenConstraint (NominalInst nomId varTypes) c = ChildrenConstraint varTypes c
     children p f (NominalInst nomId args) =
-        children p ((_QVarValues . monoChildren) f) args
+        children p ((_QVarInstances . monoChildren) f) args
         <&> NominalInst nomId
 
 instance
@@ -92,8 +92,8 @@ instance
         | otherwise =
             zipMatch x y
             >>= children (Proxy :: Proxy (ZipMatch `And` HasQuantifiedVar))
-                (\(Both (QVarValues c0) (QVarValues c1)) ->
-                    zipMatch c0 c1 <&> QVarValues)
+                (\(Both (QVarInstances c0) (QVarInstances c1)) ->
+                    zipMatch c0 c1 <&> QVarInstances)
             <&> NominalInst xId
 
 instance
@@ -103,8 +103,8 @@ instance
     Recursive c (NominalInst nomId varTypes)
 
 data LoadedNominalDecl typ v = LoadedNominalDecl
-    { _lnParams :: Tree (NomVarTypes typ) (QVarValues (RunKnot v))
-    , _lnForalls :: Tree (NomVarTypes typ) (QVarValues (RunKnot v))
+    { _lnParams :: Tree (NomVarTypes typ) (QVarInstances (RunKnot v))
+    , _lnForalls :: Tree (NomVarTypes typ) (QVarInstances (RunKnot v))
     , _lnType :: Generalized typ v
     }
 
@@ -113,8 +113,8 @@ loadBody ::
     , HasChild varTypes typ
     , ChildrenConstraint typ NoConstraint
     ) =>
-    Tree varTypes (QVarValues (UVar m)) ->
-    Tree varTypes (QVarValues (UVar m)) ->
+    Tree varTypes (QVarInstances (UVar m)) ->
+    Tree varTypes (QVarInstances (UVar m)) ->
     Tree typ (GTerm (UVar m)) ->
     m (Tree (GTerm (UVar m)) typ)
 loadBody params foralls x =
@@ -126,8 +126,8 @@ loadBody params foralls x =
         Nothing -> GBody x & pure
     where
         get v =
-            params ^? getChild . _QVarValues . _TermMap . ix v <|>
-            foralls ^? getChild . _QVarValues . _TermMap . ix v
+            params ^? getChild . _QVarInstances . _TermMap . ix v <|>
+            foralls ^? getChild . _QVarInstances . _TermMap . ix v
 
 loadNominalDecl ::
     forall m typ.
@@ -139,8 +139,8 @@ loadNominalDecl ::
     m (Tree (LoadedNominalDecl typ) (UVar m))
 loadNominalDecl (Pure (NominalDecl params (Scheme foralls typ))) =
     do
-        paramsL <- children (Proxy :: Proxy (Unify m)) makeQVarValues params
-        forallsL <- children (Proxy :: Proxy (Unify m)) makeQVarValues foralls
+        paramsL <- children (Proxy :: Proxy (Unify m)) makeQVarInstances params
+        forallsL <- children (Proxy :: Proxy (Unify m)) makeQVarInstances foralls
         wrapM (Proxy :: Proxy (Unify m `And` HasChild (NomVarTypes typ) `And` HasChildrenConstraint NoConstraint))
             (loadBody paramsL forallsL) typ
             <&> Generalized
@@ -157,10 +157,10 @@ lookupParams ::
     ( Applicative m
     , ChildrenWithConstraint varTypes (Unify m)
     ) =>
-    Tree varTypes (QVarValues (UVar m)) -> m (Tree varTypes (QVarValues (UVar m)))
+    Tree varTypes (QVarInstances (UVar m)) -> m (Tree varTypes (QVarInstances (UVar m)))
 lookupParams =
     children (Proxy :: Proxy (Unify m))
-    ((_QVarValues . _TermMap . traverse) lookupParam)
+    ((_QVarInstances . _TermMap . traverse) lookupParam)
     where
         lookupParam v =
             lookupVar binding v
@@ -187,7 +187,7 @@ instance
             let initNom =
                     do
                         children_ (Proxy :: Proxy (Unify m))
-                            (traverse_ setToSkolem . (^. _QVarValues . _TermMap))
+                            (traverse_ setToSkolem . (^. _QVarInstances . _TermMap))
                             foralls
                         lookupParams params
             (typ, paramsT) <- instantiateWith initNom gen
@@ -231,7 +231,7 @@ deriving instance DepsD Show t k => Show (NominalDecl t k)
 instance DepsD Binary t k => Binary (NominalDecl t k)
 instance DepsD NFData t k => NFData (NominalDecl t k)
 
-type DepsI c n v k = ((c n, c (Tree v (QVarValues (RunKnot k)))) :: Constraint)
+type DepsI c n v k = ((c n, c (Tree v (QVarInstances (RunKnot k)))) :: Constraint)
 deriving instance DepsI Eq   n v k => Eq   (NominalInst n v k)
 deriving instance DepsI Ord  n v k => Ord  (NominalInst n v k)
 deriving instance DepsI Show n v k => Show (NominalInst n v k)
