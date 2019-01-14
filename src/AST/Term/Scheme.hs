@@ -19,7 +19,7 @@ import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Combinators (And, NoConstraint, HasChildrenConstraint, proxyNoConstraint)
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Recursive (Recursive, wrapM)
-import           AST.Knot (Knot(..), RunKnot, Tree, Tie)
+import           AST.Knot (RunKnot, Tree, Tie)
 import           AST.Knot.Pure (Pure(..))
 import           AST.Term.Map (TermMap(..), _TermMap)
 import           AST.Unify
@@ -78,7 +78,9 @@ Lens.makeLenses ''Scheme
 Lens.makePrisms ''ForAlls
 makeChildren ''Scheme
 
-newtype QVarValues k typ = QVarValues (TermMap (QVar (RunKnot typ)) (RunKnot typ) ('Knot k))
+newtype QVarValues k typ =
+    QVarValues (Tree (TermMap (QVar (RunKnot typ)) (RunKnot typ)) k)
+    deriving Generic
 Lens.makePrisms ''QVarValues
 
 makeQVarValues ::
@@ -160,3 +162,10 @@ deriving instance DepsF Ord  t => Ord  (Tree ForAlls t)
 deriving instance DepsF Show t => Show (Tree ForAlls t)
 instance DepsF Binary t => Binary (Tree ForAlls t)
 instance DepsF NFData t => NFData (Tree ForAlls t)
+
+type DepsQ c k t = ((c (QVar (RunKnot t)), c (Tree k (RunKnot t))) :: Constraint)
+deriving instance DepsQ Eq   k t => Eq   (QVarValues k t)
+deriving instance DepsQ Ord  k t => Ord  (QVarValues k t)
+deriving instance DepsQ Show k t => Show (QVarValues k t)
+instance DepsQ Binary k t => Binary (QVarValues k t)
+instance DepsQ NFData k t => NFData (QVarValues k t)
