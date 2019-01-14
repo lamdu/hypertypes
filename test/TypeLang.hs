@@ -63,12 +63,6 @@ makeChildren ''TypeError
 
 type TypDeps cls k = ((cls (Tie k Typ), cls (Tie k Row)) :: Constraint)
 
-deriving instance TypDeps Eq   k => Eq   (Typ k)
-deriving instance TypDeps Eq   k => Eq   (Row k)
-deriving instance TypDeps Eq   k => Eq   (TypeError k)
-deriving instance TypDeps Show k => Show (Typ k)
-deriving instance TypDeps Show k => Show (Row k)
-
 instance Pretty Name where
     pPrint (Name x) = Pretty.text x
 
@@ -170,3 +164,9 @@ rStructureMismatch ::
 rStructureMismatch (UTermBody c0 (RExtend r0)) (UTermBody c1 (RExtend r1)) =
     rowExtendStructureMismatch (newTerm . RExtend) (c0, r0) (c1, r1)
 rStructureMismatch x y = unifyError (Mismatch (x ^. uBody) (y ^. uBody))
+
+deriving instance TypDeps Eq   k => Eq   (Typ k)
+deriving instance TypDeps Eq   k => Eq   (Row k)
+deriving instance TypDeps Eq   k => Eq   (TypeError k)
+deriving instance TypDeps Show k => Show (Typ k)
+deriving instance TypDeps Show k => Show (Row k)
