@@ -10,7 +10,9 @@ import           AST.Class.Infer.ScopeLevel
 import           AST.Class.Unify
 import           AST.Term.FuncType
 import           AST.Term.NamelessScope
+import           AST.Term.Nominal
 import           AST.Term.Row
+import           AST.Term.Scheme
 import           AST.Unify
 import           AST.Unify.Binding.Pure
 import           AST.Unify.Term
@@ -20,6 +22,7 @@ import           Control.Applicative
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Constraint (Constraint)
+import qualified Data.Map as Map
 import           Data.STRef
 import           Data.Set (Set, singleton)
 import           Text.PrettyPrint ((<+>))
@@ -33,6 +36,7 @@ data Typ k
     | TFun (FuncType Typ k)
     | TRec (Tie k Row)
     | TVar Name
+    | TNom (NominalInst String Types k)
 
 data Row k
     = REmpty
@@ -58,7 +62,7 @@ Lens.makeLenses ''RConstraints
 Lens.makeLenses ''Types
 makeChildrenAndZipMatch ''Typ
 makeChildrenAndZipMatch ''Row
-makeChildren ''Types
+makeChildrenAndZipMatch ''Types
 makeChildren ''TypeError
 
 type TypDeps cls k = ((cls (Tie k Typ), cls (Tie k Row)) :: Constraint)
@@ -83,6 +87,19 @@ instance TypDeps Pretty k => Pretty (Typ k) where
     pPrintPrec lvl p (TFun x) = pPrintPrec lvl p x
     pPrintPrec lvl p (TRec x) = pPrintPrec lvl p x
     pPrintPrec _ _ (TVar s) = pPrint s
+    pPrintPrec _ _ (TNom (NominalInst nomId (Types t r))) =
+        Pretty.text nomId <>
+        formatArgs (formatParams t <> formatParams r)
+        where
+            formatArgs [] = mempty
+            formatArgs xs =
+                Pretty.text "[" <>
+                Pretty.sep (Pretty.punctuate (Pretty.text ",") xs)
+                <> Pretty.text "]"
+            formatParams (QVarInstances m) =
+                Map.toList m <&>
+                \(k, v) ->
+                (pPrint k <> Pretty.text ":") <+> pPrint v
 
 instance TypDeps Pretty k => Pretty (Row k) where
     pPrintPrec _ _ REmpty = Pretty.text "{}"
@@ -120,6 +137,11 @@ instance HasTypeConstraints Typ where
     applyConstraints _ _ _ _ (TVar v) = TVar v & pure
     applyConstraints _ c _ u (TFun f) = monoChildren (u c) f <&> TFun
     applyConstraints _ c _ u (TRec r) = u (RowConstraints mempty c) r <&> TRec
+    applyConstraints _ c _ u (TNom (NominalInst n (Types t r))) =
+        Types
+        <$> (_QVarInstances . traverse) (u c) t
+        <*> (_QVarInstances . traverse) (u (RowConstraints mempty c)) r
+        <&> NominalInst n <&> TNom
 
 instance HasTypeConstraints Row where
     type TypeConstraintsOf Row = RConstraints
@@ -167,6 +189,8 @@ rStructureMismatch x y = unifyError (Mismatch (x ^. uBody) (y ^. uBody))
 
 deriving instance TypDeps Eq   k => Eq   (Typ k)
 deriving instance TypDeps Eq   k => Eq   (Row k)
+deriving instance TypDeps Eq   k => Eq   (Types k)
 deriving instance TypDeps Eq   k => Eq   (TypeError k)
 deriving instance TypDeps Show k => Show (Typ k)
 deriving instance TypDeps Show k => Show (Row k)
+deriving instance TypDeps Show k => Show (Types k)
