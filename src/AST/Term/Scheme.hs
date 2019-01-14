@@ -19,9 +19,8 @@ import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Combinators (And, NoConstraint, HasChildrenConstraint, proxyNoConstraint)
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Recursive (Recursive, wrapM)
-import           AST.Knot (RunKnot, Tree, Tie)
+import           AST.Knot (Tree, Tie, RunKnot)
 import           AST.Knot.Pure (Pure(..))
-import           AST.Term.Map (TermMap(..), _TermMap)
 import           AST.Unify
 import           AST.Unify.Binding (Binding(..))
 import           AST.Unify.Generalize (Generalized(..), GTerm(..), _GMono)
@@ -78,8 +77,7 @@ Lens.makeLenses ''Scheme
 Lens.makePrisms ''ForAlls
 makeChildren ''Scheme
 
-newtype QVarInstances k typ =
-    QVarInstances (Tree (TermMap (QVar (RunKnot typ)) (RunKnot typ)) k)
+newtype QVarInstances k typ = QVarInstances (Map (QVar (RunKnot typ)) (k typ))
     deriving Generic
 Lens.makePrisms ''QVarInstances
 
@@ -87,7 +85,7 @@ makeQVarInstances ::
     Unify m typ =>
     Tree ForAlls typ -> m (Tree (QVarInstances (UVar m)) typ)
 makeQVarInstances (ForAlls foralls) =
-    traverse makeSkolem foralls <&> TermMap <&> QVarInstances
+    traverse makeSkolem foralls <&> QVarInstances
     where
         makeSkolem c = scopeConstraints >>= newVar binding . USkolem . (c \/)
 
@@ -99,7 +97,7 @@ schemeBodyToType foralls x =
     Nothing -> newTerm x
     Just r -> pure r
     where
-        getForAll v = foralls ^? getChild . _QVarInstances . _TermMap . Lens.ix v
+        getForAll v = foralls ^? getChild . _QVarInstances . Lens.ix v
 
 schemeAsType ::
     forall m varTypes typ.
@@ -129,7 +127,7 @@ loadBody foralls x =
         Just xm -> newTerm xm <&> GMono
         Nothing -> GBody x & pure
     where
-        getForAll v = foralls ^? getChild . _QVarInstances . _TermMap . Lens.ix v
+        getForAll v = foralls ^? getChild . _QVarInstances . Lens.ix v
 
 -- | Load scheme into unification monad so that different instantiations share
 -- the scheme's monomorphic parts -
@@ -163,7 +161,7 @@ deriving instance DepsF Show t => Show (Tree ForAlls t)
 instance DepsF Binary t => Binary (Tree ForAlls t)
 instance DepsF NFData t => NFData (Tree ForAlls t)
 
-type DepsQ c k t = ((c (QVar (RunKnot t)), c (Tree k (RunKnot t))) :: Constraint)
+type DepsQ c k t = ((c (QVar (RunKnot t)), c (k t)) :: Constraint)
 deriving instance DepsQ Eq   k t => Eq   (QVarInstances k t)
 deriving instance DepsQ Ord  k t => Ord  (QVarInstances k t)
 deriving instance DepsQ Show k t => Show (QVarInstances k t)

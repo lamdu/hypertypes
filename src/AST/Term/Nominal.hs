@@ -23,7 +23,7 @@ import AST.Class.Recursive (wrapM)
 import AST.Class.ZipMatch (ZipMatch(..), Both(..))
 import AST
 import AST.Term.FuncType (HasFuncType(..), FuncType(..))
-import AST.Term.Map (_TermMap)
+import AST.Term.Map (TermMap(..), _TermMap)
 import AST.Term.Scheme (Scheme(..), ForAlls, QVarInstances(..), _QVarInstances, makeQVarInstances)
 import AST.Unify (Unify(..), UVar, HasQuantifiedVar(..), newTerm, unify, semiPruneLookup)
 import AST.Unify.Binding (Binding(..))
@@ -77,7 +77,7 @@ makeChildren ''FromNom
 instance Children varTypes => Children (NominalInst nomId varTypes) where
     type ChildrenConstraint (NominalInst nomId varTypes) c = ChildrenConstraint varTypes c
     children p f (NominalInst nomId args) =
-        children p ((_QVarInstances . monoChildren) f) args
+        children p ((_QVarInstances . traverse) f) args
         <&> NominalInst nomId
 
 instance
@@ -93,7 +93,10 @@ instance
             zipMatch x y
             >>= children (Proxy :: Proxy (ZipMatch `And` HasQuantifiedVar))
                 (\(Both (QVarInstances c0) (QVarInstances c1)) ->
-                    zipMatch c0 c1 <&> QVarInstances)
+                    zipMatch (TermMap c0) (TermMap c1)
+                    <&> (^. _TermMap)
+                    <&> QVarInstances
+                )
             <&> NominalInst xId
 
 instance
@@ -126,8 +129,8 @@ loadBody params foralls x =
         Nothing -> GBody x & pure
     where
         get v =
-            params ^? getChild . _QVarInstances . _TermMap . ix v <|>
-            foralls ^? getChild . _QVarInstances . _TermMap . ix v
+            params ^? getChild . _QVarInstances . ix v <|>
+            foralls ^? getChild . _QVarInstances . ix v
 
 loadNominalDecl ::
     forall m typ.
@@ -159,8 +162,7 @@ lookupParams ::
     ) =>
     Tree varTypes (QVarInstances (UVar m)) -> m (Tree varTypes (QVarInstances (UVar m)))
 lookupParams =
-    children (Proxy :: Proxy (Unify m))
-    ((_QVarInstances . _TermMap . traverse) lookupParam)
+    children (Proxy :: Proxy (Unify m)) ((_QVarInstances . traverse) lookupParam)
     where
         lookupParam v =
             lookupVar binding v
@@ -187,7 +189,7 @@ instance
             let initNom =
                     do
                         children_ (Proxy :: Proxy (Unify m))
-                            (traverse_ setToSkolem . (^. _QVarInstances . _TermMap))
+                            (traverse_ setToSkolem . (^. _QVarInstances))
                             foralls
                         lookupParams params
             (typ, paramsT) <- instantiateWith initNom gen
