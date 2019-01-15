@@ -180,7 +180,7 @@ loadNominalDecl (Pure (NominalDecl params (Scheme foralls typ))) =
 class MonadNominals nomId typ m where
     getNominalDecl :: nomId -> m (Tree (LoadedNominalDecl typ) (UVar m))
 
-class HasNominalInst typ where
+class HasNominalInst nomId typ where
     nominalInst :: Prism' (Tree typ k) (Tree (NominalInst nomId (NomVarTypes typ)) k)
 
 lookupParams ::
@@ -204,7 +204,7 @@ type instance ScopeOf (ToNom nomId expr) = ScopeOf expr
 
 instance
     ( Infer m expr
-    , HasNominalInst (TypeOf expr)
+    , HasNominalInst nomId (TypeOf expr)
     , MonadNominals nomId (TypeOf expr) m
     , ChildrenWithConstraint (NomVarTypes (TypeOf expr)) (Unify m)
     ) =>
@@ -238,7 +238,7 @@ type instance ScopeOf (FromNom nomId expr) = ScopeOf expr
 instance
     ( Infer m expr
     , HasFuncType (TypeOf expr)
-    , HasNominalInst (TypeOf expr)
+    , HasNominalInst nomId (TypeOf expr)
     , MonadNominals nomId (TypeOf expr) m
     , ChildrenWithConstraint (NomVarTypes (TypeOf expr)) (Unify m)
     ) =>
