@@ -13,7 +13,7 @@ import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Infer (Infer(..), TypeOf, ScopeOf, inferNode, iType)
 import           AST.Class.Infer.ScopeLevel (MonadScopeLevel(..))
 import           AST.Term.Scheme (Scheme, schemeAsType)
-import           AST.Unify (Unify, unify)
+import           AST.Unify (Unify, unify, QVarHasInstance)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
@@ -50,7 +50,7 @@ instance
     ( MonadScopeLevel m
     , Infer m term
     , ChildrenWithConstraint vars (Unify m)
-    , Recursive (Unify m `And` HasChild vars) (TypeOf term)
+    , Recursive (Unify m `And` HasChild vars `And` QVarHasInstance Ord) (TypeOf term)
     ) =>
     Infer m (TypeSig vars term) where
 

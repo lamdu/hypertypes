@@ -90,7 +90,7 @@ makeQVarInstances (ForAlls foralls) =
         makeSkolem c = scopeConstraints >>= newVar binding . USkolem . (c \/)
 
 schemeBodyToType ::
-    (Unify m typ, HasChild varTypes typ) =>
+    (Unify m typ, HasChild varTypes typ, Ord (QVar typ)) =>
     Tree varTypes (QVarInstances (UVar m)) -> Tree typ (UVar m) -> m (Tree (UVar m) typ)
 schemeBodyToType foralls x =
     case x ^? quantifiedVar >>= getForAll of
@@ -103,18 +103,21 @@ schemeAsType ::
     forall m varTypes typ.
     ( Monad m
     , ChildrenWithConstraint varTypes (Unify m)
-    , Recursive (Unify m `And` HasChild varTypes) typ
+    , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
     ) =>
     Tree Pure (Scheme varTypes typ) -> m (Tree (UVar m) typ)
 schemeAsType (Pure (Scheme vars typ)) =
     do
         foralls <- children (Proxy :: Proxy (Unify m)) makeQVarInstances vars
-        wrapM (Proxy :: Proxy (And (Unify m) (HasChild varTypes))) (schemeBodyToType foralls) typ
+        wrapM
+            (Proxy :: Proxy (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord))
+            (schemeBodyToType foralls) typ
 
 loadBody ::
     ( Unify m typ
     , HasChild varTypes typ
     , ChildrenConstraint typ NoConstraint
+    , Ord (QVar typ)
     ) =>
     Tree varTypes (QVarInstances (UVar m)) ->
     Tree typ (GTerm (UVar m)) ->
@@ -136,14 +139,14 @@ loadScheme ::
     forall m varTypes typ.
     ( Monad m
     , ChildrenWithConstraint varTypes (Unify m)
-    , Recursive (Unify m `And` HasChild varTypes `And` HasChildrenConstraint NoConstraint) typ
+    , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord `And` HasChildrenConstraint NoConstraint) typ
     ) =>
     Tree Pure (Scheme varTypes typ) ->
     m (Tree (Generalized typ) (UVar m))
 loadScheme (Pure (Scheme vars typ)) =
     do
         foralls <- children (Proxy :: Proxy (Unify m)) makeQVarInstances vars
-        wrapM (Proxy :: Proxy (Unify m `And` HasChild varTypes `And` HasChildrenConstraint NoConstraint))
+        wrapM (Proxy :: Proxy (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord `And` HasChildrenConstraint NoConstraint))
             (loadBody foralls) typ
             <&> Generalized
 

@@ -25,7 +25,7 @@ import AST
 import AST.Term.FuncType (HasFuncType(..), FuncType(..))
 import AST.Term.Map (TermMap(..), _TermMap)
 import AST.Term.Scheme (Scheme(..), ForAlls, QVarInstances(..), _QVarInstances, makeQVarInstances)
-import AST.Unify (Unify(..), UVar, HasQuantifiedVar(..), newTerm, unify, semiPruneLookup)
+import AST.Unify
 import AST.Unify.Binding (Binding(..))
 import AST.Unify.Generalize (Generalized(..), GTerm(..), _GMono, instantiateWith)
 import AST.Unify.Term (UTerm(..))
@@ -83,7 +83,7 @@ instance Children varTypes => Children (NominalInst nomId varTypes) where
 instance
     ( Eq nomId
     , ZipMatch varTypes
-    , ChildrenConstraint varTypes (ZipMatch `And` HasQuantifiedVar)
+    , ChildrenConstraint varTypes (ZipMatch `And` HasQuantifiedVar `And` QVarHasInstance Ord)
     ) =>
     ZipMatch (NominalInst nomId varTypes) where
 
@@ -91,7 +91,7 @@ instance
         | xId /= yId = Nothing
         | otherwise =
             zipMatch x y
-            >>= children (Proxy :: Proxy (ZipMatch `And` HasQuantifiedVar))
+            >>= children (Proxy :: Proxy (ZipMatch `And` HasQuantifiedVar `And` QVarHasInstance Ord))
                 (\(Both (QVarInstances c0) (QVarInstances c1)) ->
                     zipMatch (TermMap c0) (TermMap c1)
                     <&> (^. _TermMap)
@@ -115,6 +115,7 @@ loadBody ::
     ( Unify m typ
     , HasChild varTypes typ
     , ChildrenConstraint typ NoConstraint
+    , Ord (QVar typ)
     ) =>
     Tree varTypes (QVarInstances (UVar m)) ->
     Tree varTypes (QVarInstances (UVar m)) ->
@@ -136,7 +137,7 @@ loadNominalDecl ::
     forall m typ.
     ( Monad m
     , ChildrenWithConstraint (NomVarTypes typ) (Unify m)
-    , Recursive (Unify m `And` HasChild (NomVarTypes typ) `And` HasChildrenConstraint NoConstraint) typ
+    , Recursive (Unify m `And` HasChild (NomVarTypes typ) `And` QVarHasInstance Ord `And` HasChildrenConstraint NoConstraint) typ
     ) =>
     Tree Pure (NominalDecl typ) ->
     m (Tree (LoadedNominalDecl typ) (UVar m))
@@ -144,7 +145,7 @@ loadNominalDecl (Pure (NominalDecl params (Scheme foralls typ))) =
     do
         paramsL <- children (Proxy :: Proxy (Unify m)) makeQVarInstances params
         forallsL <- children (Proxy :: Proxy (Unify m)) makeQVarInstances foralls
-        wrapM (Proxy :: Proxy (Unify m `And` HasChild (NomVarTypes typ) `And` HasChildrenConstraint NoConstraint))
+        wrapM (Proxy :: Proxy (Unify m `And` HasChild (NomVarTypes typ) `And` QVarHasInstance Ord `And` HasChildrenConstraint NoConstraint))
             (loadBody paramsL forallsL) typ
             <&> Generalized
             <&> LoadedNominalDecl paramsL forallsL

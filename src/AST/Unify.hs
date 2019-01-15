@@ -23,7 +23,7 @@ import AST.Unify.Binding (Binding(..))
 import AST.Unify.Constraints (TypeConstraints(..), HasTypeConstraints(..), MonadScopeConstraints(..))
 import AST.Unify.Error (UnifyError(..))
 import AST.Unify.Term (UTerm(..), UTermBody(..), uConstraints, uBody)
-import AST.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify(..))
+import AST.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify(..), QVarHasInstance)
 import Control.Lens.Operators
 import Data.Constraint (withDict)
 import Data.Maybe (fromMaybe)
