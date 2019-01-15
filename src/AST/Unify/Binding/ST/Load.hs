@@ -7,12 +7,10 @@ module AST.Unify.Binding.ST.Load
     ( load
     ) where
 
-import           AST.Class.Children (Children(..), ChildrenWithConstraint)
+import           AST
 import           AST.Class.Combinators (And, NoConstraint)
 import           AST.Class.HasChild (HasChild(..))
-import           AST.Class.Recursive (Recursive(..), RecursiveDict)
 import           AST.Class.Unify (Unify(..), UVar)
-import           AST.Knot (Tree)
 import           AST.Unify.Binding (Binding(..))
 import           AST.Unify.Binding.Pure (PureBinding(..), _PureBinding)
 import           AST.Unify.Binding.ST (STVar)

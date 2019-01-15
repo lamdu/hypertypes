@@ -7,9 +7,7 @@ module AST.Term.FuncType
     , HasFuncType(..)
     ) where
 
-import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
-import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
-import           AST.Knot (Tree, Tie)
+import           AST
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Prism', makeLenses)
 import           Control.Lens.Operators

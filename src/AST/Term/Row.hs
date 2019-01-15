@@ -9,10 +9,8 @@ module AST.Term.Row
     , rowElementInfer
     ) where
 
-import AST.Class.Recursive (Recursive(..), RecursiveConstraint)
+import AST
 import AST.Class.Unify (Unify(..), UVar)
-import AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
-import AST.Knot (Tree, Tie)
 import AST.Unify (TypeConstraints(..), HasTypeConstraints(..), MonadScopeConstraints(..), unify, newTerm, newUnbound)
 import AST.Unify.Binding (Binding(..))
 import AST.Unify.Term (UTerm(..))

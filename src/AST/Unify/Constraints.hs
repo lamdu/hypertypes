@@ -11,9 +11,8 @@ module AST.Unify.Constraints
 
 import Algebra.Lattice (JoinSemiLattice(..))
 import Algebra.PartialOrd (PartialOrd(..))
-import AST.Class.Children (Children(..), ChildrenWithConstraint)
+import AST
 import AST.Class.Combinators (And)
-import AST.Knot (Knot, Tree)
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat

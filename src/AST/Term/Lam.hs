@@ -7,10 +7,8 @@ module AST.Term.Lam
     ( Lam(..), lamIn, lamOut
     ) where
 
-import           AST.Class.Children.TH (makeChildren)
+import           AST
 import           AST.Class.Infer
-import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
-import           AST.Knot (Tree, Tie)
 import           AST.Term.FuncType
 import           AST.Unify (UVar, newUnbound, newTerm)
 import           Control.DeepSeq (NFData)

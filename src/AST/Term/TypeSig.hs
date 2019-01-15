@@ -7,7 +7,6 @@ module AST.Term.TypeSig
     ) where
 
 import           AST
-import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Infer (Infer(..), TypeOf, ScopeOf, inferNode, iType)

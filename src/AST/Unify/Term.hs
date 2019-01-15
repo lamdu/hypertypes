@@ -5,8 +5,7 @@ module AST.Unify.Term
     , UTermBody(..), uBody, uConstraints
     ) where
 
-import AST.Knot (Tie, RunKnot)
-import AST.Knot.Pure (Pure)
+import AST
 import AST.Unify.Constraints (TypeConstraintsOf)
 import Control.Lens (makeLenses, makePrisms)
 

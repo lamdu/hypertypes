@@ -6,13 +6,11 @@ module AST.Term.Let
     ( Let(..), letVar, letEquals, letIn
     ) where
 
-import           AST.Class.Children.TH (makeChildren)
+import           AST
 import           AST.Class.Infer
-import           AST.Class.Infer.ScopeLevel
-import           AST.Class.Recursive (Recursive(..), RecursiveConstraint)
+import           AST.Class.Infer.ScopeLevel (MonadScopeLevel(..))
 import           AST.Class.Unify (UVar)
-import           AST.Knot (Tree, Tie)
-import           AST.Unify.Generalize
+import           AST.Unify.Generalize (Generalized, generalize)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators

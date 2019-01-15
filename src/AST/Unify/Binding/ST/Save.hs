@@ -4,10 +4,8 @@ module AST.Unify.Binding.ST.Save
     ( save
     ) where
 
-import           AST.Class.Children (Children(..), ChildrenWithConstraint)
+import           AST
 import           AST.Class.HasChild (HasChild(..))
-import           AST.Class.Recursive (Recursive(..), RecursiveDict)
-import           AST.Knot (Tree)
 import           AST.Unify.Binding.Pure (PureBinding, _PureBinding)
 import           AST.Unify.Binding.ST (STVar(..))
 import           AST.Unify.Term (UTerm(..), uBody)

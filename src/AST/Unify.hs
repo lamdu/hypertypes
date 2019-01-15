@@ -13,12 +13,10 @@ module AST.Unify
 
 import Algebra.PartialOrd (PartialOrd(..))
 import Algebra.Lattice (JoinSemiLattice(..))
-import AST.Class.Children (Children(..))
-import AST.Class.Recursive (Recursive(..), RecursiveDict, wrapM)
+import AST
+import AST.Class.Recursive (wrapM)
 import AST.Class.Unify (Unify(..), UVar)
 import AST.Class.ZipMatch (zipMatchWithA)
-import AST.Knot.Pure (Pure(..))
-import AST.Knot (Tree)
 import AST.Unify.Binding (Binding(..))
 import AST.Unify.Constraints (TypeConstraints(..), HasTypeConstraints(..), MonadScopeConstraints(..))
 import AST.Unify.Error (UnifyError(..))

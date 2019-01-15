@@ -14,13 +14,10 @@ module AST.Term.Scheme
     ) where
 
 import           Algebra.Lattice (JoinSemiLattice(..))
-import           AST.Class.Children (Children(..), ChildrenWithConstraint)
-import           AST.Class.Children.TH (makeChildren)
+import           AST
 import           AST.Class.Combinators (And, NoConstraint, HasChildrenConstraint, proxyNoConstraint)
 import           AST.Class.HasChild (HasChild(..))
-import           AST.Class.Recursive (Recursive, wrapM)
-import           AST.Knot (Tree, Tie, RunKnot)
-import           AST.Knot.Pure (Pure(..))
+import           AST.Class.Recursive (wrapM)
 import           AST.Unify
 import           AST.Unify.Binding (Binding(..))
 import           AST.Unify.Generalize (Generalized(..), GTerm(..), _GMono)

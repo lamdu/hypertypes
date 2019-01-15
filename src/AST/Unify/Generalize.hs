@@ -12,11 +12,8 @@ module AST.Unify.Generalize
 
 import           Algebra.Lattice (JoinSemiLattice(..))
 import           Algebra.PartialOrd (PartialOrd(..))
-import           AST.Class.Children (Children(..), foldMapChildren)
-import           AST.Class.Children.TH (makeChildren)
-import           AST.Class.Recursive (Recursive(..), RecursiveDict)
+import           AST
 import           AST.Class.Unify (Unify(..), UVar)
-import           AST.Knot (RunKnot, Tree, Tie)
 import           AST.Unify (newTerm, semiPruneLookup)
 import           AST.Unify.Binding (Binding(..))
 import           AST.Unify.Constraints (TypeConstraints(..), MonadScopeConstraints(..))

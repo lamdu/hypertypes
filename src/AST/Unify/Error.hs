@@ -7,8 +7,7 @@ module AST.Unify.Error
     , _Occurs, _Mismatch
     ) where
 
-import           AST.Class.Children.TH (makeChildren)
-import           AST.Knot (Tie)
+import           AST
 import           AST.Unify.Constraints (HasTypeConstraints(..))
 import           Control.Lens (makePrisms)
 import           Data.Constraint (Constraint)

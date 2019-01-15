@@ -8,9 +8,7 @@ module AST.Term.Apply
     ) where
 
 import AST.Class.Infer (Infer(..), inferNode, iType, TypeOf, ScopeOf)
-import AST.Class.Recursive (Recursive(..), RecursiveConstraint)
-import AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
-import AST.Knot (Tie)
+import AST
 import AST.Term.FuncType
 import AST.Unify (unify, newUnbound, newTerm)
 import Control.DeepSeq (NFData)
