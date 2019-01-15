@@ -10,6 +10,8 @@ import           AST.Class.Infer.ScopeLevel
 import           AST.Class.Recursive
 import           AST.Class.Unify
 import           AST.Term.NamelessScope
+import           AST.Term.Nominal
+import           AST.Term.Scheme
 import           AST.Unify
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -35,6 +37,21 @@ skolem = aLam \x -> x $:: forAll1 "a" \a -> a
 
 validForAll :: Tree Pure (LangA EmptyScope)
 validForAll = aLam id $:: forAll1 "a" \a -> a ~> a
+
+nomLam :: Tree Pure (LangA EmptyScope)
+nomLam =
+    aLam \x -> x $:: s
+    where
+        s =
+            mempty
+            & Lens.at (Name "key") ?~ Pure TInt
+            & Lens.at (Name "value") ?~ Pure TInt
+            & QVarInstances
+            & (`Types` QVarInstances mempty)
+            & NominalInst (Name "Map")
+            & TNom
+            & Pure
+            & uniType
 
 letGen :: Tree Pure LangB
 letGen = bLet "id" (lam "x" id) \i -> i $$ i $$ bLit 5
@@ -152,6 +169,7 @@ main =
             , testA infinite     "Left t0 occurs in itself, expands to: t0 -> t1"
             , testA skolem       "Left SkolemEscape t0"
             , testA validForAll  "Right (t0 -> t0)"
+            , testA nomLam       "Right (Map[key: Int, value: Int] -> Map[key: Int, value: Int])"
             , testB letGen       "Right Int"
             , testB shouldNotGen "Right (t0 -> t0)"
             , testB record       "Right (a : Int :*: {})"

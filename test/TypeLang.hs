@@ -22,7 +22,6 @@ import           Control.Applicative
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Constraint (Constraint)
-import qualified Data.Map as Map
 import           Data.STRef
 import           Data.Set (Set, singleton)
 import           Text.PrettyPrint ((<+>))
@@ -36,7 +35,7 @@ data Typ k
     | TFun (FuncType Typ k)
     | TRec (Tie k Row)
     | TVar Name
-    | TNom (NominalInst String Types k)
+    | TNom (NominalInst Name Types k)
 
 data Row k
     = REmpty
@@ -87,19 +86,7 @@ instance TypDeps Pretty k => Pretty (Typ k) where
     pPrintPrec lvl p (TFun x) = pPrintPrec lvl p x
     pPrintPrec lvl p (TRec x) = pPrintPrec lvl p x
     pPrintPrec _ _ (TVar s) = pPrint s
-    pPrintPrec _ _ (TNom (NominalInst nomId (Types t r))) =
-        Pretty.text nomId <>
-        formatArgs (formatParams t <> formatParams r)
-        where
-            formatArgs [] = mempty
-            formatArgs xs =
-                Pretty.text "[" <>
-                Pretty.sep (Pretty.punctuate (Pretty.text ",") xs)
-                <> Pretty.text "]"
-            formatParams (QVarInstances m) =
-                Map.toList m <&>
-                \(k, v) ->
-                (pPrint k <> Pretty.text ":") <+> pPrint v
+    pPrintPrec _ _ (TNom n) = pPrint n
 
 instance TypDeps Pretty k => Pretty (Row k) where
     pPrintPrec _ _ REmpty = Pretty.text "{}"

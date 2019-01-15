@@ -15,31 +15,35 @@ module AST.Term.Nominal
     , LoadedNominalDecl, loadNominalDecl
     ) where
 
-import AST.Class.Children.TH (makeChildren)
-import AST.Class.Combinators (NoConstraint, And, HasChildrenConstraint, proxyNoConstraint)
-import AST.Class.HasChild (HasChild(..))
-import AST.Class.Infer (Infer(..), TypeOf, ScopeOf, inferNode, iType)
-import AST.Class.Recursive (wrapM)
-import AST.Class.ZipMatch (ZipMatch(..), Both(..))
-import AST
-import AST.Term.FuncType (HasFuncType(..), FuncType(..))
-import AST.Term.Map (TermMap(..), _TermMap)
-import AST.Term.Scheme (Scheme(..), ForAlls, QVarInstances(..), _QVarInstances, makeQVarInstances)
-import AST.Unify
-import AST.Unify.Binding (Binding(..))
-import AST.Unify.Generalize (Generalized(..), GTerm(..), _GMono, instantiateWith)
-import AST.Unify.Term (UTerm(..))
-import Control.Applicative (Alternative(..))
-import Control.DeepSeq (NFData)
-import Control.Lens (Prism', makeLenses, makePrisms, ix)
-import Control.Lens.Operators
-import Data.Binary (Binary)
-import Data.Constraint (Constraint)
-import Data.Foldable (traverse_)
-import Data.Proxy (Proxy(..))
-import GHC.Generics (Generic)
+import           AST.Class.Children.TH (makeChildren)
+import           AST.Class.Combinators
+import           AST.Class.HasChild (HasChild(..))
+import           AST.Class.Infer (Infer(..), TypeOf, ScopeOf, inferNode, iType)
+import           AST.Class.Recursive (wrapM)
+import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
+import           AST
+import           AST.Term.FuncType (HasFuncType(..), FuncType(..))
+import           AST.Term.Map (TermMap(..), _TermMap)
+import           AST.Term.Scheme
+import           AST.Unify
+import           AST.Unify.Binding (Binding(..))
+import           AST.Unify.Generalize (Generalized(..), GTerm(..), _GMono, instantiateWith)
+import           AST.Unify.Term (UTerm(..))
+import           Control.Applicative (Alternative(..))
+import           Control.DeepSeq (NFData)
+import           Control.Lens (Prism', makeLenses, makePrisms, ix)
+import           Control.Lens.Operators
+import           Data.Binary (Binary)
+import           Data.Constraint (Constraint)
+import           Data.Foldable (traverse_)
+import           Data.Proxy (Proxy(..))
+import qualified Data.Map as Map
+import           GHC.Generics (Generic)
+import           Text.PrettyPrint ((<+>))
+import qualified Text.PrettyPrint as Pretty
+import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 
-import Prelude.Compat
+import           Prelude.Compat
 
 type family NomVarTypes (typ :: Knot -> *) :: Knot -> *
 
@@ -104,6 +108,30 @@ instance
     , ChildrenWithConstraint varTypes (Recursive c)
     ) =>
     Recursive c (NominalInst nomId varTypes)
+
+instance
+    ( Pretty nomId
+    , ChildrenWithConstraint varTypes
+        (QVarHasInstance Pretty `And` TieHasConstraint Pretty k)
+    ) =>
+    Pretty (NominalInst nomId varTypes k) where
+
+    pPrint (NominalInst n vars) =
+        pPrint n <>
+        joinArgs
+        (foldMapChildren
+            (Proxy :: Proxy (QVarHasInstance Pretty `And` TieHasConstraint Pretty k))
+            mkArgs vars)
+        where
+            joinArgs [] = mempty
+            joinArgs xs =
+                Pretty.text "[" <>
+                Pretty.sep (Pretty.punctuate (Pretty.text ",") xs)
+                <> Pretty.text "]"
+            mkArgs (QVarInstances m) =
+                Map.toList m <&>
+                \(k, v) ->
+                (pPrint k <> Pretty.text ":") <+> pPrint v
 
 data LoadedNominalDecl typ v = LoadedNominalDecl
     { _lnParams :: Tree (NomVarTypes typ) (QVarInstances (RunKnot v))
