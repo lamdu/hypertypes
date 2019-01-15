@@ -10,7 +10,7 @@ module AST.Term.Nominal
     , FromNom(..), _FromNom
 
     , HasNominalInst(..)
-
+    , NomVarTypes
     , MonadNominals(..)
     , LoadedNominalDecl, loadNominalDecl
     ) where
