@@ -27,14 +27,14 @@ class
 
     type TypeConstraintsOf ast
 
-    applyConstraints ::
+    verifyConstraints ::
         (Applicative m, ChildrenWithConstraint ast constraint) =>
         Proxy constraint ->
         TypeConstraintsOf ast ->
         (TypeConstraintsOf ast -> m ()) ->
         (forall child. constraint child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
         Tree ast p -> m (Tree ast q)
-    default applyConstraints ::
+    default verifyConstraints ::
         forall m constraint p q.
         ( ChildrenWithConstraint ast (constraint `And` TypeConstraintsAre (TypeConstraintsOf ast))
         , Applicative m
@@ -44,7 +44,7 @@ class
         (TypeConstraintsOf ast -> m ()) ->
         (forall child. constraint child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
         Tree ast p -> m (Tree ast q)
-    applyConstraints _ constraints _ update =
+    verifyConstraints _ constraints _ update =
         children (Proxy :: Proxy (constraint `And` TypeConstraintsAre (TypeConstraintsOf ast)))
         (update constraints)
 

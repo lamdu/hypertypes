@@ -131,7 +131,7 @@ updateTermConstraints v t newConstraints =
         else
             do
                 bindVar binding v (UResolving t)
-                applyConstraints (Proxy :: Proxy (Recursive (Unify m))) newConstraints
+                verifyConstraints (Proxy :: Proxy (Recursive (Unify m))) newConstraints
                     (unifyError . ConstraintsViolation (t ^. uBody))
                     updateConstraints
                     (t ^. uBody)
