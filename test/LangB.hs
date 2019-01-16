@@ -16,6 +16,7 @@ import           AST.Term.Lam
 import           AST.Term.Let
 import           AST.Term.Row
 import           AST.Term.Var
+import           AST.Term.Nominal
 import           AST.Unify
 import           AST.Unify.Binding
 import           AST.Unify.Binding.Pure
@@ -47,6 +48,7 @@ data LangB k
     | BRecEmpty
     | BRecExtend (RowExtend Name LangB LangB k)
     | BGetField (Tie k LangB) Name
+    | BToNom (ToNom Name LangB k)
 
 makeChildren ''LangB
 instance Recursive Children LangB
@@ -67,7 +69,9 @@ instance Pretty (Tree LangB Pure) where
     pPrintPrec lvl p (BVar x) = pPrintPrec lvl p x
     pPrintPrec lvl p (BLam x) = pPrintPrec lvl p x
     pPrintPrec lvl p (BLet x) = pPrintPrec lvl p x
-    pPrintPrec lvl p (BGetField w k) = pPrintPrec lvl p w <> Pretty.text "." <> pPrint k
+    pPrintPrec lvl p (BGetField w k) =
+        pPrintPrec lvl p w <> Pretty.text "." <> pPrint k
+    pPrintPrec lvl p (BToNom n) = pPrintPrec lvl p n
 
 instance VarType Name LangB where
     varType _ k (ScopeTypes t) = t ^?! Lens.ix k & instantiate
@@ -78,6 +82,7 @@ instance
     , LocalScopeType Name (Tree (Generalized Typ) (UVar m)) m
     , Unify m Typ, Unify m Row
     , HasScope m ScopeTypes
+    , MonadNominals Name Typ m
     ) =>
     Infer m LangB where
 
@@ -86,6 +91,7 @@ instance
     infer (BLam x) = infer x <&> _2 %~ BLam
     infer (BLet x) = infer x <&> _2 %~ BLet
     infer (BLit x) = newTerm TInt <&> (, BLit x)
+    infer (BToNom x) = infer x <&> _2 %~ BToNom
     infer (BRecExtend (RowExtend k v r)) =
         withDict (recursive :: RecursiveDict (Unify m) Typ) $
         do
@@ -119,8 +125,12 @@ Lens.makePrisms ''ScopeTypes
 data InferScope v = InferScope
     { _varSchemes :: Tree ScopeTypes v
     , _scopeLevel :: ScopeLevel
+    , _nominals :: Map Name (Tree (LoadedNominalDecl Typ) v)
     }
 Lens.makeLenses ''InferScope
+
+emptyInferScope :: InferScope v
+emptyInferScope = InferScope mempty (ScopeLevel 0) mempty
 
 -- TODO: `AST.Class.Children.TH.makeChildren` should be able to generate this.
 -- (whereas it currently generate empty `ChildrenConstraint`).
@@ -144,6 +154,9 @@ newtype PureInferB a =
     )
 
 type instance UVar PureInferB = Const Int
+
+instance MonadNominals Name Typ PureInferB where
+    getNominalDecl name = Lens.view nominals <&> (^?! Lens.ix name)
 
 instance HasScope PureInferB ScopeTypes where
     getScope = Lens.view varSchemes
@@ -195,6 +208,9 @@ newtype STInferB s a =
     )
 
 type instance UVar (STInferB s) = STVar s
+
+instance MonadNominals Name Typ (STInferB s) where
+    getNominalDecl name = Lens.view (Lens._1 . nominals) <&> (^?! Lens.ix name)
 
 instance HasScope (STInferB s) ScopeTypes where
     getScope = Lens.view (Lens._1 . varSchemes)

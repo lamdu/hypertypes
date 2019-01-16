@@ -108,14 +108,14 @@ execSTInferA (STInferA act) =
 
 execPureInferB :: PureInferB a -> Either (Tree TypeError Pure) a
 execPureInferB (PureInferB act) =
-    runRWST act (InferScope mempty (ScopeLevel 0)) emptyPureInferState
+    runRWST act emptyInferScope emptyPureInferState
     <&> (^. Lens._1)
 
 execSTInferB :: STInferB s a -> ST s (Either (Tree TypeError Pure) a)
 execSTInferB (STInferB act) =
     do
         qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
-        runReaderT act (InferScope mempty (ScopeLevel 0), qvarGen) & runExceptT
+        runReaderT act (emptyInferScope, qvarGen) & runExceptT
 
 prettyPrint :: Pretty a => a -> IO ()
 prettyPrint = print . pPrint

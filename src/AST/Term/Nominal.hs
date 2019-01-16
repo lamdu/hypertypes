@@ -40,7 +40,7 @@ import qualified Data.Map as Map
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
-import           Text.PrettyPrint.HughesPJClass (Pretty(..))
+import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 import           Prelude.Compat
 
@@ -107,6 +107,11 @@ instance
     , ChildrenWithConstraint varTypes (Recursive c)
     ) =>
     Recursive c (NominalInst nomId varTypes)
+
+instance DepsT Pretty nomId term k => Pretty (ToNom nomId term k) where
+    pPrintPrec lvl p (ToNom nomId term) =
+        (pPrint nomId <> Pretty.text "#") <+> pPrintPrec lvl 9 term
+        & maybeParens (p > 9)
 
 instance
     ( Pretty nomId

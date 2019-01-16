@@ -69,6 +69,10 @@ makeChildren ''TypeError
 
 type TypDeps cls k = ((cls (Tie k Typ), cls (Tie k Row)) :: Constraint)
 
+type instance NomVarTypes Typ = Types
+
+instance HasNominalInst Name Typ where nominalInst = _TNom
+
 instance Pretty Name where
     pPrint (Name x) = Pretty.text x
 
