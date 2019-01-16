@@ -37,6 +37,7 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 import           Prelude.Compat
 
+-- | A type scheme representing a polymorphic type.
 data Scheme varTypes typ k = Scheme
     { _sForAlls :: Tree varTypes ForAlls
     , _sTyp :: Tie k typ

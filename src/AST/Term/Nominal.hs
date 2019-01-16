@@ -188,7 +188,8 @@ lookupParams ::
     ( Applicative m
     , ChildrenWithConstraint varTypes (Unify m)
     ) =>
-    Tree varTypes (QVarInstances (UVar m)) -> m (Tree varTypes (QVarInstances (UVar m)))
+    Tree varTypes (QVarInstances (UVar m)) ->
+    m (Tree varTypes (QVarInstances (UVar m)))
 lookupParams =
     children (Proxy :: Proxy (Unify m)) ((_QVarInstances . traverse) lookupParam)
     where
