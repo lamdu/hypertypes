@@ -67,19 +67,20 @@ makeChildrenForType info =
             , funD 'children (tiCons info <&> pure . ccClause . makeChildrenCtr (tiVar info))
             ]
         mono <-
-            case Set.toList (tcChildren (tiContents info)) of
-            [x] ->
+            case Set.toList (tcChildren contents) of
+            [x] | Set.null (tcEmbeds contents) ->
                 tySynInstD ''ChildOf
                 (pure (TySynEqn [tiInstance info] x))
                 <&> (:[])
             _ -> pure []
         inst : mono & pure
     where
+        contents = tiContents info
         ctx = childrenContext info
         constraint = mkName "constraint"
         childrenConstraint =
-            (Set.toList (tcChildren (tiContents info)) <&> (VarT constraint `AppT`))
-            <> (Set.toList (tcEmbeds (tiContents info)) <&>
+            (Set.toList (tcChildren contents) <&> (VarT constraint `AppT`))
+            <> (Set.toList (tcEmbeds contents) <&>
                 (\x -> ConT ''ChildrenConstraint `AppT` x `AppT` VarT constraint))
             & toTuple
 
