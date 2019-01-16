@@ -19,6 +19,11 @@ import Prelude.Compat
 
 class (PartialOrd c, JoinSemiLattice c) => TypeConstraints c where
     -- | Remove scope constraints
+    --
+    -- When generalizing unification variables into universally
+    -- quantified variables, and then into fresh unification variables
+    -- upon instantiation, some constraints need to be carried over,
+    -- and the "scope" constraints need to be erased.
     generalizeConstraints :: c -> c
 
 class
@@ -27,25 +32,30 @@ class
 
     type TypeConstraintsOf ast
 
+    -- | Verify constraints on the ast and apply the given child
+    -- verifier on children
     verifyConstraints ::
-        (Applicative m, ChildrenWithConstraint ast constraint) =>
-        Proxy constraint ->
+        (Applicative m, ChildrenWithConstraint ast childOp) =>
+        Proxy childOp ->
         TypeConstraintsOf ast ->
         (TypeConstraintsOf ast -> m ()) ->
-        (forall child. constraint child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
+        (forall child. childOp child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
         Tree ast p -> m (Tree ast q)
+    -- | A default implementation for when the verification only needs
+    -- to propagate the unchanged constraints to the direct AST
+    -- children
     default verifyConstraints ::
-        forall m constraint p q.
-        ( ChildrenWithConstraint ast (constraint `And` TypeConstraintsAre (TypeConstraintsOf ast))
+        forall m childOp p q.
+        ( ChildrenWithConstraint ast (childOp `And` TypeConstraintsAre (TypeConstraintsOf ast))
         , Applicative m
         ) =>
-        Proxy constraint ->
+        Proxy childOp ->
         TypeConstraintsOf ast ->
         (TypeConstraintsOf ast -> m ()) ->
-        (forall child. constraint child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
+        (forall child. childOp child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
         Tree ast p -> m (Tree ast q)
     verifyConstraints _ constraints _ update =
-        children (Proxy :: Proxy (constraint `And` TypeConstraintsAre (TypeConstraintsOf ast)))
+        children (Proxy :: Proxy (childOp `And` TypeConstraintsAre (TypeConstraintsOf ast)))
         (update constraints)
 
 class TypeConstraintsOf ast ~ constraints => TypeConstraintsAre constraints ast

@@ -37,7 +37,7 @@ newUnbound = scopeConstraints >>= newVar binding . UUnbound
 newTerm :: Unify m t => Tree t (UVar m) -> m (Tree (UVar m) t)
 newTerm x = scopeConstraints >>= newVar binding . UTerm . (`UTermBody` x)
 
--- | Embed a pure term as a mutable term.
+-- | Embed a pure term as a unification term.
 unfreeze ::
     forall m t.
     Recursive (Unify m) t =>
@@ -45,7 +45,7 @@ unfreeze ::
 unfreeze = wrapM (Proxy :: Proxy (Unify m)) newTerm
 
 -- look up a variable, and return last variable pointing to result.
--- prune all variable on way to last variable
+-- prune all variable on way to last variable (path-compression ala union-find)
 semiPruneLookup ::
     Unify m t =>
     Tree (UVar m) t ->

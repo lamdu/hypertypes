@@ -20,11 +20,16 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
+-- | `Recursive` carries a constraint to all of the descendant types
+-- of an AST. As opposed to the `ChildrenConstraint` type family which
+-- only carries a constraint to the direct children of an AST.
 class (Children expr, constraint expr) => Recursive constraint expr where
     recursive :: RecursiveDict constraint expr
-    -- TODO: RecursiveConstraint params are same order as
-    -- ChildrenConstraint, but opposite of Recursive, which is better?
-    default recursive :: RecursiveConstraint expr constraint => RecursiveDict constraint expr
+    -- | When an instance's constraints already imply
+    -- `RecursiveConstraint expr constraint`, the default
+    -- implementation can be used.
+    default recursive ::
+        RecursiveConstraint expr constraint => RecursiveDict constraint expr
     recursive = Dict
 
 type RecursiveConstraint expr constraint =

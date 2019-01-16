@@ -19,6 +19,13 @@ import Prelude.Compat
 type family TypeOf (t :: Knot -> *) :: Knot -> *
 type family ScopeOf (t :: Knot -> *) :: Knot -> *
 
+-- | Knot for terms, annotating them with inference results
+--
+-- 'e' may vary in different sub-terms, allowing differently typed
+-- type annotations and scopes.
+--
+-- See also `AST.Class.Infer.Inferred.Inferred`, a newtype wrapper
+-- knotted by `v` whose children are the types.
 data ITerm a v e = ITerm
     { _iVal :: Tie e (ITerm a v)
     , _iType :: Tree v (TypeOf (RunKnot e))

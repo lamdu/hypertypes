@@ -28,13 +28,23 @@ import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
 
+-- | An efficient representation of a type scheme arising from
+-- generalizing a unification term. Type subexpressions which are
+-- completely monomoprhic are tagged as such, to avoid redundant
+-- instantation and unification work
 data GTerm v ast
-    = GMono (v ast)
+    = GMono (v ast) -- ^ Completely monomoprhic term
     | GPoly (v ast)
-    | GBody (Tie ast (GTerm v))
+        -- ^ Points to a quantified variable (instantiation will
+        -- create fresh unification terms) (`AST.Unify.Term.USkolem`
+        -- or `AST.Unify.Term.UResolved`)
+    | GBody (Tie ast (GTerm v)) -- ^ Term with some polymorphic parts
 Lens.makePrisms ''GTerm
 makeChildren ''GTerm
 
+-- | Wrapper for `GTerm` whose children are all the pointed
+-- unification terms in the entire GTerm ast (all monomorphic terms
+-- and the quantified variables).
 newtype Generalized ast v = Generalized (Tree (GTerm (RunKnot v)) ast)
 Lens.makePrisms ''Generalized
 
@@ -57,6 +67,9 @@ instance Children ast => Children (Generalized ast) where
             <&> GBody
         <&> Generalized
 
+-- | Generalize a unification term pointed by the given variable to a
+-- `Generalized` term. Unification variables that are scoped within
+-- the term become universally quantified skolems.
 generalize ::
     forall m t.
     Recursive (Unify m) t =>
@@ -87,6 +100,7 @@ generalize v0 =
     where
         p = Proxy :: Proxy (Recursive (Unify m))
 
+-- | Lift a monomorphic type term into `Generalized`
 monomorphic :: Tree v t -> Tree (Generalized t) v
 monomorphic = Generalized . GMono
 
@@ -123,6 +137,8 @@ instantiateWith action (Generalized g) =
                 UInstantiated v -> pure v
                 _ -> error "unexpected state at instantiate's forall"
 
+-- | Instantiate a `Generalized` type with fresh unification variables
+-- for the quantified variables
 instantiate ::
     Recursive (Unify m) t =>
     Tree (Generalized t) (UVar m) -> m (Tree (UVar m) t)

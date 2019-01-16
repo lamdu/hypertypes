@@ -1,5 +1,3 @@
--- TODO: Better naming
-
 {-# LANGUAGE NoImplicitPrelude, MultiParamTypeClasses #-}
 
 module AST.Class.HasChild
@@ -9,5 +7,7 @@ module AST.Class.HasChild
 import AST.Knot (Tree)
 import Control.Lens (Lens')
 
+-- | When `record` has exactly one child of type `typ`, `HasChild`
+-- provides a lens to access it
 class HasChild record typ where
     getChild :: Lens' (Tree record k) (Tree k typ)

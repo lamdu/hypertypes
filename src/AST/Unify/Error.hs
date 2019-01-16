@@ -17,12 +17,19 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 
 import           Prelude.Compat
 
+-- | An error that occurred during unification
 data UnifyError t k
     = SkolemUnified (Tie k t) (Tie k t)
+      -- ^ A universally quantified variable was unified with a
+      -- different type
     | SkolemEscape (Tie k t)
+      -- ^ A universally quantified variable escapes its scope
     | ConstraintsViolation (t k) (TypeConstraintsOf t)
+      -- ^ A term violates constraints that should apply to it
     | Occurs (t k) (t k)
+      -- ^ Infinite type encountered. A type occurs within itself
     | Mismatch (t k) (t k)
+      -- ^ Unification between two mismatching type structures
 makePrisms ''UnifyError
 makeChildren ''UnifyError
 

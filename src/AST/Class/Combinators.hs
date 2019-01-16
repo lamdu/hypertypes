@@ -2,7 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses, ConstraintKinds, UndecidableSuperClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 
--- TODO: Document and find good names!
+-- | Combinators for partially applied constraints on knots
 
 module AST.Class.Combinators
     ( And
@@ -16,7 +16,6 @@ import AST.Class.Children (Children(..))
 import AST.Knot (Knot, Tie)
 import Data.Proxy (Proxy(..))
 
--- Join two classes for usage with `children`/`ChildrenConstraint` or `Recursive`.
 class    (c0 k, c1 k) => And c0 c1 (k :: Knot -> *)
 instance (c0 k, c1 k) => And c0 c1 k
 

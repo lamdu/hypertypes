@@ -19,16 +19,28 @@ data UTermBody v ast = UTermBody
     }
 makeLenses ''UTermBody
 
+-- | A unification term pointed by a unification variable
 data UTerm v ast
     = UUnbound (TypeConstraintsOf (RunKnot ast))
+      -- ^ Unbound variable with at least the given constraints
     | USkolem (TypeConstraintsOf (RunKnot ast))
+      -- ^ A variable bound by a rigid quantified variable with
+      -- *exactly* the given constraints
     | UVar (v ast)
+      -- ^ Unified with another variable (union-find)
     | UTerm (UTermBody v ast)
+      -- ^ Known type term with unification variables as children
     | UInstantiated (v ast)
       -- ^ Temporary state during instantiation indicating which fresh
       -- unification variable a skolem is mapped to
     | UResolving (UTermBody v ast)
+      -- ^ Temporary state while unification term is being traversed,
+      -- if it occurs inside itself (detected via state still being
+      -- UResolving), then the type is an infinite type
     | UResolved (Pure ast)
-    | -- Used in AST.Unify.STBinding.Save while converting to a pure binding.
-      UConverted Int
+      -- ^ Final resolved state. `AST.Unify.applyBindings` resolved to
+      -- this expression (allowing caching/sharing)
+    | UConverted Int
+      -- ^ Temporary state used in "AST.Unify.Binding.ST.Save" while
+      -- converting to a pure binding
 makePrisms ''UTerm
