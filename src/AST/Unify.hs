@@ -101,6 +101,7 @@ applyBindings v0 =
             >>= result
     UVar{} -> error "lookup not expected to result in var"
     UConverted{} -> error "conversion state not expected in applyBindings"
+    UInstantiated{} -> error "applyBindings during instantiation"
 
 updateConstraints ::
     Recursive (Unify m) t =>

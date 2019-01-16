@@ -50,6 +50,7 @@ loadUTerm src conv (UTerm u) =
 loadUTerm _ _ UResolving{} = error "converting bindings after resolution"
 loadUTerm _ _ UResolved{} = error "converting bindings after resolution"
 loadUTerm _ _ UConverted{} = error "loading while saving?"
+loadUTerm _ _ UInstantiated{} = error "loading during instantiation"
 
 loadVar ::
     ( MonadST m

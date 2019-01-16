@@ -1,7 +1,9 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell #-}
 
 module AST.Unify.Term
-    ( UTerm(..), _UVar, _UTerm, _UResolving
+    ( UTerm(..)
+        , _UUnbound, _USkolem, _UVar, _UTerm, _UInstantiated
+        , _UResolving, _UResolved, _UConverted
     , UTermBody(..), uBody, uConstraints
     ) where
 
@@ -22,6 +24,9 @@ data UTerm v ast
     | USkolem (TypeConstraintsOf (RunKnot ast))
     | UVar (v ast)
     | UTerm (UTermBody v ast)
+    | UInstantiated (v ast)
+      -- ^ Temporary state during instantiation indicating which fresh
+      -- unification variable a skolem is mapped to
     | UResolving (UTermBody v ast)
     | UResolved (Pure ast)
     | -- Used in AST.Unify.STBinding.Save while converting to a pure binding.

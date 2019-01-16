@@ -34,6 +34,7 @@ saveUTerm (UVar v) = saveVar v <&> UVar
 saveUTerm (UTerm u) =
     withDict (recursive :: RecursiveDict (HasChild typeVars) t) $
     uBody saveBody u <&> UTerm
+saveUTerm UInstantiated{} = error "converting bindings during instantiation"
 saveUTerm UResolving{} = error "converting bindings after resolution"
 saveUTerm UResolved{} = error "converting bindings after resolution"
 saveUTerm UConverted{} = error "converting variable again"

@@ -118,9 +118,9 @@ instantiateWith action (Generalized g) =
                     do
                         tell [bindVar binding x (USkolem l)]
                         r <- scopeConstraints <&> (\/ l) >>= newVar binding . UUnbound & lift
-                        UVar r & bindVar binding x & lift
+                        UInstantiated r & bindVar binding x & lift
                         pure r
-                UVar v -> pure v
+                UInstantiated v -> pure v
                 _ -> error "unexpected state at instantiate's forall"
 
 instantiate ::
