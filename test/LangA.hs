@@ -119,10 +119,12 @@ instance MonadScopeConstraints RConstraints PureInferA where
     scopeConstraints = Lens.view Lens._2 <&> RowConstraints mempty
 
 instance MonadQuantify ScopeLevel Name PureInferA where
-    newQuantifiedVariable _ = increase (Lens._2 . tTyp . Lens._Wrapped) <&> Name . ('t':) . show
+    newQuantifiedVariable _ =
+        Lens._2 . tTyp . Lens._Wrapped <<+= 1 <&> Name . ('t':) . show
 
 instance MonadQuantify RConstraints Name PureInferA where
-    newQuantifiedVariable _ = increase (Lens._2 . tRow . Lens._Wrapped) <&> Name . ('r':) . show
+    newQuantifiedVariable _ =
+        Lens._2 . tRow . Lens._Wrapped <<+= 1 <&> Name . ('r':) . show
 
 instance Unify PureInferA Typ where
     binding = pureBinding (Lens._1 . tTyp)

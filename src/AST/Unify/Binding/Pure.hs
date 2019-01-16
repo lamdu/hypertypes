@@ -4,7 +4,6 @@ module AST.Unify.Binding.Pure
     ( PureBinding(..), _PureBinding
     , emptyPureBinding
     , pureBinding
-    , increase
     ) where
 
 import           AST.Knot (Tree)
@@ -13,7 +12,7 @@ import           AST.Unify.Term
 import qualified Control.Lens as Lens
 import           Control.Lens (ALens')
 import           Control.Lens.Operators
-import           Control.Monad.State (MonadState(..), modify)
+import           Control.Monad.State (MonadState(..))
 import           Data.Functor.Const (Const(..))
 import           Data.Sequence
 import qualified Data.Sequence as Sequence
@@ -25,14 +24,6 @@ Lens.makePrisms ''PureBinding
 
 emptyPureBinding :: PureBinding t
 emptyPureBinding = PureBinding mempty
-
-increase ::
-    MonadState s m =>
-    ALens' s Int -> m Int
-increase l =
-    do
-        r <- Lens.use (Lens.cloneLens l)
-        r <$ modify (Lens.cloneLens l +~ 1)
 
 pureBinding ::
     MonadState s m =>
