@@ -34,13 +34,12 @@ pureBinding l =
     { lookupVar =
         \k ->
         Lens.use (Lens.cloneLens l . _PureBinding)
-        <&> (`Sequence.index` (k ^. Lens._Wrapped))
+        <&> (^?! Lens.ix (k ^. Lens._Wrapped))
     , newVar =
         \x ->
-        do
-            s <- Lens.use (Lens.cloneLens l . _PureBinding)
-            Const (Sequence.length s) <$ (Lens.cloneLens l . _PureBinding .= s Sequence.|> x)
-    , bindVar = bind
+        Lens.cloneLens l . _PureBinding <<%= (Sequence.|> x)
+        <&> Sequence.length <&> Const
+    , bindVar =
+        \k v ->
+        Lens.cloneLens l . _PureBinding . Lens.ix (k ^. Lens._Wrapped) .= v
     }
-    where
-        bind k v = Lens.cloneLens l . _PureBinding %= Sequence.update (k ^. Lens._Wrapped) v

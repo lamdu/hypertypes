@@ -22,12 +22,13 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 import           Prelude.Compat
 
 class VarType var expr where
+    -- | Instantiate a type for a variable in a given scope
     varType ::
         Recursive (Unify m) (TypeOf expr) =>
         Proxy expr -> var -> Tree (ScopeOf expr) (UVar m) ->
         m (Tree (UVar m) (TypeOf expr))
 
--- | Parametrized by term AST and not by its type AST
+-- | Parameterized by term AST and not by its type AST
 -- (which currently is its only part used),
 -- for future evaluation/complilation support.
 newtype Var v (expr :: Knot -> *) (k :: Knot) = Var v

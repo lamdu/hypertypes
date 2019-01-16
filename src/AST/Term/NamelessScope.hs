@@ -120,5 +120,5 @@ instance
 
     infer (ScopeVar v) =
         Lens.view (scopeTypes . _ScopeTypes)
-        <&> (`Sequence.index` (deBruijnIndex # v))
+        <&> (^?! Lens.ix (deBruijnIndex # v))
         <&> (, ScopeVar v)

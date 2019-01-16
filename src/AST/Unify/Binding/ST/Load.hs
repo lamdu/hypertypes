@@ -15,7 +15,7 @@ import           AST.Unify.Binding (Binding(..))
 import           AST.Unify.Binding.Pure (PureBinding(..), _PureBinding)
 import           AST.Unify.Binding.ST (STVar)
 import           AST.Unify.Term (UTerm(..), uBody)
-import           Control.Lens (makePrisms)
+import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.ST.Class (MonadST(..))
 import           Data.Array.ST (STArray, newArray, readArray, writeArray)
@@ -27,7 +27,7 @@ import qualified Data.Sequence as Sequence
 import           Prelude.Compat
 
 newtype ConvertState s t = ConvertState (STArray s Int (Maybe (STVar s t)))
-makePrisms ''ConvertState
+Lens.makePrisms ''ConvertState
 
 makeConvertState :: MonadST m => Tree PureBinding t -> m (Tree (ConvertState (World m)) t)
 makeConvertState (PureBinding x) =
@@ -65,7 +65,9 @@ loadVar src conv (Const v) =
     Just x -> pure x
     Nothing ->
         do
-            u <- loadUTerm src conv (Sequence.index (src ^. getChild . _PureBinding) v)
+            u <-
+                loadUTerm src conv
+                (src ^?! getChild . _PureBinding . Lens.ix v)
             r <- newVar binding u
             r <$ liftST (writeArray tConv v (Just r))
     where
