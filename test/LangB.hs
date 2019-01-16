@@ -216,13 +216,13 @@ instance MonadQuantify RConstraints Name (STInferB s) where
     newQuantifiedVariable _ = newStQuantified (Lens._3 . tRow) <&> Name . ('r':) . show
 
 instance Unify (STInferB s) Typ where
-    binding = stBindingState
+    binding = stBinding
     unifyError e =
         children (Proxy :: Proxy (Recursive (Unify (STInferB s)))) applyBindings e
         >>= throwError . TypError
 
 instance Unify (STInferB s) Row where
-    binding = stBindingState
+    binding = stBinding
     structureMismatch = rStructureMismatch
     unifyError e =
         children (Proxy :: Proxy (Recursive (Unify (STInferB s)))) applyBindings e

@@ -2,7 +2,7 @@
 
 module AST.Unify.Binding.ST
     ( STVar(..), _STVar
-    , stBindingState
+    , stBinding
     , newStQuantified
     ) where
 
@@ -20,15 +20,13 @@ import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 import           Prelude.Compat
 
 newtype STVar s t = STVar (STRef s (UTerm (STVar s) t))
+    deriving Eq
 Lens.makePrisms ''STVar
 
-instance Eq (STVar s a) where
-    STVar x == STVar y = x == y
-
-stBindingState ::
+stBinding ::
     MonadST m =>
     Binding (STVar (World m)) m t
-stBindingState =
+stBinding =
     Binding
     { lookupVar = liftST . readSTRef . (^. _STVar)
     , newVar = \t -> newSTRef t & liftST <&> STVar
