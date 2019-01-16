@@ -5,7 +5,7 @@
 
 module AST.Term.Var
     ( Var(..), _Var
-    , ScopeLookup(..)
+    , VarType(..)
     ) where
 
 import           AST
@@ -21,8 +21,8 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 
 import           Prelude.Compat
 
-class ScopeLookup var expr where
-    scopeType ::
+class VarType var expr where
+    varType ::
         Recursive (Unify m) (TypeOf expr) =>
         Proxy expr -> var -> Tree (ScopeOf expr) (UVar m) ->
         m (Tree (UVar m) (TypeOf expr))
@@ -47,9 +47,9 @@ type instance ScopeOf (Var v t) = ScopeOf t
 instance
     ( Recursive (Unify m) (TypeOf expr)
     , HasScope m (ScopeOf expr)
-    , ScopeLookup v expr
+    , VarType v expr
     ) =>
     Infer m (Var v expr) where
 
     infer (Var x) =
-        getScope >>= scopeType (Proxy :: Proxy expr) x <&> (, Var x)
+        getScope >>= varType (Proxy :: Proxy expr) x <&> (, Var x)

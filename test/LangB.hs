@@ -69,8 +69,8 @@ instance Pretty (Tree LangB Pure) where
     pPrintPrec lvl p (BLet x) = pPrintPrec lvl p x
     pPrintPrec lvl p (BGetField w k) = pPrintPrec lvl p w <> Pretty.text "." <> pPrint k
 
-instance ScopeLookup Name LangB where
-    scopeType _ k (ScopeTypes t) = t ^?! Lens.ix k & instantiate
+instance VarType Name LangB where
+    varType _ k (ScopeTypes t) = t ^?! Lens.ix k & instantiate
 
 instance
     ( MonadScopeLevel m
