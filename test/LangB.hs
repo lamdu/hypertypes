@@ -180,13 +180,13 @@ instance Unify PureInferB Row where
 
 newtype STInferB s a =
     STInferB
-    (ReaderT (Tree ScopeTypes (STVar s), ScopeLevel, STInferState s)
+    (ReaderT (Tree ScopeTypes (STVar s), ScopeLevel, STNameGen s)
         (ExceptT (Tree TypeError Pure) (ST s)) a
     )
     deriving
     ( Functor, Applicative, Monad, MonadST
     , MonadError (Tree TypeError Pure)
-    , MonadReader (Tree ScopeTypes (STVar s), ScopeLevel, STInferState s)
+    , MonadReader (Tree ScopeTypes (STVar s), ScopeLevel, STNameGen s)
     )
 
 type instance UVar (STInferB s) = STVar s

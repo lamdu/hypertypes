@@ -148,7 +148,7 @@ emptyPureInferState =
     , Types (Const 0) (Const 0)
     )
 
-type STInferState s = Tree Types (Const (STRef s Int))
+type STNameGen s = Tree Types (Const (STRef s Int))
 
 instance (c Typ, c Row) => Recursive c Typ
 instance (c Typ, c Row) => Recursive c Row
