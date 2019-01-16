@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses, StandaloneDeriving, UndecidableInstances #-}
 {-# LANGUAGE TemplateHaskell, TypeFamilies, FlexibleInstances, FlexibleContexts #-}
-{-# LANGUAGE ConstraintKinds, TypeOperators #-}
+{-# LANGUAGE ConstraintKinds, TypeOperators, DataKinds #-}
 
 module TypeLang where
 
@@ -19,8 +19,11 @@ import           AST.Unify.Term
 import           Algebra.Lattice
 import           Algebra.PartialOrd
 import           Control.Applicative
+import           Control.Lens (ALens')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
+import           Control.Monad.Reader (MonadReader)
+import           Control.Monad.ST.Class (MonadST(..))
 import           Data.Constraint (Constraint)
 import           Data.STRef
 import           Data.Set (Set, singleton)
@@ -173,6 +176,21 @@ rStructureMismatch ::
 rStructureMismatch (UTermBody c0 (RExtend r0)) (UTermBody c1 (RExtend r1)) =
     rowExtendStructureMismatch (newTerm . RExtend) (c0, r0) (c1, r1)
 rStructureMismatch x y = unifyError (Mismatch (x ^. uBody) (y ^. uBody))
+
+readModifySTRef :: MonadST m => STRef (World m) a -> (a -> a) -> m a
+readModifySTRef ref func =
+    do
+        old <- readSTRef ref
+        old <$ (writeSTRef ref $! func old)
+        & liftST
+
+newStQuantified ::
+    (MonadReader env m, MonadST m, Enum a) =>
+    ALens' env (Const (STRef (World m) a) (ast :: Knot)) ->
+    m a
+newStQuantified l =
+    Lens.view (Lens.cloneLens l . Lens._Wrapped)
+    >>= (`readModifySTRef` succ)
 
 deriving instance TypDeps Eq   k => Eq   (Typ k)
 deriving instance TypDeps Eq   k => Eq   (Row k)
