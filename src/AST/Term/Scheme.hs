@@ -5,7 +5,7 @@
 
 module AST.Term.Scheme
     ( Scheme(..), sForAlls, sTyp
-    , ForAlls(..), _ForAlls
+    , QVars(..), _QVars
     , schemeAsType
     , loadScheme
 
@@ -39,16 +39,16 @@ import           Prelude.Compat
 
 -- | A type scheme representing a polymorphic type.
 data Scheme varTypes typ k = Scheme
-    { _sForAlls :: Tree varTypes ForAlls
+    { _sForAlls :: Tree varTypes QVars
     , _sTyp :: Tie k typ
     } deriving Generic
 
-newtype ForAlls typ = ForAlls
+newtype QVars typ = QVars
     (Map (QVar (RunKnot typ)) (TypeConstraintsOf (RunKnot typ)))
     deriving Generic
 
 instance
-    (Pretty (Tree varTypes ForAlls), Pretty (Tie k typ)) =>
+    (Pretty (Tree varTypes QVars), Pretty (Tie k typ)) =>
     Pretty (Scheme varTypes typ k) where
 
     pPrintPrec lvl p (Scheme forAlls typ) =
@@ -58,9 +58,9 @@ instance
 
 instance
     (Pretty (TypeConstraintsOf typ), Pretty (QVar typ)) =>
-    Pretty (Tree ForAlls typ) where
+    Pretty (Tree QVars typ) where
 
-    pPrint (ForAlls qvars) =
+    pPrint (QVars qvars) =
         Map.toList qvars
         <&> printVar
         <&> (Pretty.text "∀" <>) <&> (<> Pretty.text ".") & Pretty.hsep
@@ -72,7 +72,7 @@ instance
                     cP = pPrint c
 
 Lens.makeLenses ''Scheme
-Lens.makePrisms ''ForAlls
+Lens.makePrisms ''QVars
 makeChildren ''Scheme
 
 newtype QVarInstances k typ = QVarInstances (Map (QVar (RunKnot typ)) (k typ))
@@ -81,8 +81,8 @@ Lens.makePrisms ''QVarInstances
 
 makeQVarInstances ::
     Unify m typ =>
-    Tree ForAlls typ -> m (Tree (QVarInstances (UVar m)) typ)
-makeQVarInstances (ForAlls foralls) =
+    Tree QVars typ -> m (Tree (QVarInstances (UVar m)) typ)
+makeQVarInstances (QVars foralls) =
     traverse makeSkolem foralls <&> QVarInstances
     where
         makeSkolem c = scopeConstraints >>= newVar binding . USkolem . (c \/)
@@ -148,7 +148,7 @@ loadScheme (Pure (Scheme vars typ)) =
             (loadBody foralls) typ
             <&> Generalized
 
-type DepsS c v t k = ((c (Tree v ForAlls), c (Tie k t)) :: Constraint)
+type DepsS c v t k = ((c (Tree v QVars), c (Tie k t)) :: Constraint)
 deriving instance DepsS Eq   v t k => Eq   (Scheme v t k)
 deriving instance DepsS Ord  v t k => Ord  (Scheme v t k)
 deriving instance DepsS Show v t k => Show (Scheme v t k)
@@ -156,11 +156,11 @@ instance DepsS Binary v t k => Binary (Scheme v t k)
 instance DepsS NFData v t k => NFData (Scheme v t k)
 
 type DepsF c t = ((c (TypeConstraintsOf t), c (QVar t)) :: Constraint)
-deriving instance DepsF Eq   t => Eq   (Tree ForAlls t)
-deriving instance DepsF Ord  t => Ord  (Tree ForAlls t)
-deriving instance DepsF Show t => Show (Tree ForAlls t)
-instance DepsF Binary t => Binary (Tree ForAlls t)
-instance DepsF NFData t => NFData (Tree ForAlls t)
+deriving instance DepsF Eq   t => Eq   (Tree QVars t)
+deriving instance DepsF Ord  t => Ord  (Tree QVars t)
+deriving instance DepsF Show t => Show (Tree QVars t)
+instance DepsF Binary t => Binary (Tree QVars t)
+instance DepsF NFData t => NFData (Tree QVars t)
 
 type DepsQ c k t = ((c (QVar (RunKnot t)), c (k t)) :: Constraint)
 deriving instance DepsQ Eq   k t => Eq   (QVarInstances k t)

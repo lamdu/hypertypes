@@ -48,7 +48,7 @@ type family NomVarTypes (typ :: Knot -> *) :: Knot -> *
 
 -- | A declaration of a nominal type.
 data NominalDecl typ k = NominalDecl
-    { _nParams :: Tree (NomVarTypes typ) ForAlls
+    { _nParams :: Tree (NomVarTypes typ) QVars
     , _nScheme :: Scheme (NomVarTypes typ) typ k
     } deriving Generic
 
@@ -260,7 +260,7 @@ instance
 
 -- Standalone deriving boilerplate
 
-type DepsD c t k = ((c (Tree (NomVarTypes t) ForAlls), c (Tie k t)) :: Constraint)
+type DepsD c t k = ((c (Tree (NomVarTypes t) QVars), c (Tie k t)) :: Constraint)
 deriving instance DepsD Eq   t k => Eq   (NominalDecl t k)
 deriving instance DepsD Ord  t k => Ord  (NominalDecl t k)
 deriving instance DepsD Show t k => Show (NominalDecl t k)

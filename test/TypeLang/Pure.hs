@@ -23,7 +23,7 @@ tVar = Pure . TVar . Name
 uniType :: Tree Pure Typ -> Tree Pure (Scheme Types Typ)
 uniType typ =
     Pure Scheme
-    { _sForAlls = Types (ForAlls mempty) (ForAlls mempty)
+    { _sForAlls = Types (QVars mempty) (QVars mempty)
     , _sTyp = typ
     }
 
@@ -42,10 +42,10 @@ forAll tvs rvs body =
             , QVar typ ~ Name
             , BoundedJoinSemiLattice (TypeConstraintsOf typ)
             ) =>
-            f String -> Tree ForAlls typ
+            f String -> Tree QVars typ
         foralls xs =
             xs ^.. Lens.folded <&> Name <&> (, bottom)
-            & Map.fromList & ForAlls
+            & Map.fromList & QVars
 
 forAll1 ::
     String -> (Tree Pure Typ -> Tree Pure typ) ->
