@@ -116,6 +116,12 @@ newtype ScopeTypes v = ScopeTypes (Map Name (Generalized Typ v))
     deriving (Semigroup, Monoid)
 Lens.makePrisms ''ScopeTypes
 
+data InferScope v = InferScope
+    { _varSchemes :: Tree ScopeTypes v
+    , _scopeLevel :: ScopeLevel
+    }
+Lens.makeLenses ''InferScope
+
 -- TODO: `AST.Class.Children.TH.makeChildren` should be able to generate this.
 -- (whereas it currently generate empty `ChildrenConstraint`).
 -- The problem is that simply referring to the `ChildrenConstraint`s
@@ -127,35 +133,35 @@ instance Children ScopeTypes where
 
 newtype PureInferB a =
     PureInferB
-    ( RWST (Tree ScopeTypes (Const Int), ScopeLevel) () PureInferState
+    ( RWST (InferScope (Const Int)) () PureInferState
         (Either (Tree TypeError Pure)) a
     )
     deriving
     ( Functor, Applicative, Monad
     , MonadError (Tree TypeError Pure)
-    , MonadReader (Tree ScopeTypes (Const Int), ScopeLevel)
+    , MonadReader (InferScope (Const Int))
     , MonadState PureInferState
     )
 
 type instance UVar PureInferB = Const Int
 
 instance HasScope PureInferB ScopeTypes where
-    getScope = Lens.view Lens._1
+    getScope = Lens.view varSchemes
 
 instance LocalScopeType Name (Tree (Const Int) Typ) PureInferB where
-    localScopeType k v = local (Lens._1 . _ScopeTypes . Lens.at k ?~ monomorphic v)
+    localScopeType k v = local (varSchemes . _ScopeTypes . Lens.at k ?~ monomorphic v)
 
 instance LocalScopeType Name (Tree (Generalized Typ) (Const Int)) PureInferB where
-    localScopeType k v = local (Lens._1 . _ScopeTypes . Lens.at k ?~ v)
+    localScopeType k v = local (varSchemes . _ScopeTypes . Lens.at k ?~ v)
 
 instance MonadScopeLevel PureInferB where
-    localLevel = local (Lens._2 . _ScopeLevel +~ 1)
+    localLevel = local (scopeLevel . _ScopeLevel +~ 1)
 
 instance MonadScopeConstraints ScopeLevel PureInferB where
-    scopeConstraints = Lens.view Lens._2
+    scopeConstraints = Lens.view scopeLevel
 
 instance MonadScopeConstraints RConstraints PureInferB where
-    scopeConstraints = Lens.view Lens._2 <&> RowConstraints mempty
+    scopeConstraints = Lens.view scopeLevel <&> RowConstraints mempty
 
 instance MonadQuantify ScopeLevel Name PureInferB where
     newQuantifiedVariable _ =
@@ -180,40 +186,39 @@ instance Unify PureInferB Row where
 
 newtype STInferB s a =
     STInferB
-    (ReaderT (Tree ScopeTypes (STVar s), ScopeLevel, STNameGen s)
-        (ExceptT (Tree TypeError Pure) (ST s)) a
-    )
+    (ReaderT (InferScope (STVar s), STNameGen s)
+        (ExceptT (Tree TypeError Pure) (ST s)) a)
     deriving
     ( Functor, Applicative, Monad, MonadST
     , MonadError (Tree TypeError Pure)
-    , MonadReader (Tree ScopeTypes (STVar s), ScopeLevel, STNameGen s)
+    , MonadReader (InferScope (STVar s), STNameGen s)
     )
 
 type instance UVar (STInferB s) = STVar s
 
 instance HasScope (STInferB s) ScopeTypes where
-    getScope = Lens.view Lens._1
+    getScope = Lens.view (Lens._1 . varSchemes)
 
 instance LocalScopeType Name (Tree (STVar s) Typ) (STInferB s) where
-    localScopeType k v = local (Lens._1 . _ScopeTypes . Lens.at k ?~ monomorphic v)
+    localScopeType k v = local (Lens._1 . varSchemes . _ScopeTypes . Lens.at k ?~ monomorphic v)
 
 instance LocalScopeType Name (Tree (Generalized Typ) (STVar s)) (STInferB s) where
-    localScopeType k v = local (Lens._1 . _ScopeTypes . Lens.at k ?~ v)
+    localScopeType k v = local (Lens._1 . varSchemes . _ScopeTypes . Lens.at k ?~ v)
 
 instance MonadScopeLevel (STInferB s) where
-    localLevel = local (Lens._2 . _ScopeLevel +~ 1)
+    localLevel = local (Lens._1 . scopeLevel . _ScopeLevel +~ 1)
 
 instance MonadScopeConstraints ScopeLevel (STInferB s) where
-    scopeConstraints = Lens.view Lens._2
+    scopeConstraints = Lens.view (Lens._1 . scopeLevel)
 
 instance MonadScopeConstraints RConstraints (STInferB s) where
-    scopeConstraints = Lens.view Lens._2 <&> RowConstraints mempty
+    scopeConstraints = Lens.view (Lens._1 . scopeLevel) <&> RowConstraints mempty
 
 instance MonadQuantify ScopeLevel Name (STInferB s) where
-    newQuantifiedVariable _ = newStQuantified (Lens._3 . tTyp) <&> Name . ('t':) . show
+    newQuantifiedVariable _ = newStQuantified (Lens._2 . tTyp) <&> Name . ('t':) . show
 
 instance MonadQuantify RConstraints Name (STInferB s) where
-    newQuantifiedVariable _ = newStQuantified (Lens._3 . tRow) <&> Name . ('r':) . show
+    newQuantifiedVariable _ = newStQuantified (Lens._2 . tRow) <&> Name . ('r':) . show
 
 instance Unify (STInferB s) Typ where
     binding = stBinding
