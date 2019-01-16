@@ -174,7 +174,7 @@ main =
             , testB shouldNotGen "Right (t0 -> t0)"
             , testB record       "Right (a : Int :*: {})"
             , testB extendLit    "Left Mismatch Int r0"
-            , testB extendDup    "Left ConstraintsMismatch a : Int :*: {} Forbidden fields: [a]"
+            , testB extendDup    "Left ConstraintsViolation a : Int :*: {} Forbidden fields: [a]"
             , testB extendGood   "Right (b : Int :*: a : Int :*: {})"
             , testB unifyRows    "Right (((a : Int :*: b : Int :*: {}) -> Int -> Int) -> Int)"
             , testB getAField    "Right ((a : t0 :*: r0) -> t0)"

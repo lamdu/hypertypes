@@ -132,7 +132,7 @@ updateTermConstraints v t newConstraints =
             do
                 bindVar binding v (UResolving t)
                 applyConstraints (Proxy :: Proxy (Recursive (Unify m))) newConstraints
-                    (unifyError . ConstraintsMismatch (t ^. uBody))
+                    (unifyError . ConstraintsViolation (t ^. uBody))
                     updateConstraints
                     (t ^. uBody)
                     >>= bindVar binding v . UTerm . UTermBody newConstraints
