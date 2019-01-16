@@ -11,6 +11,7 @@ import AST.Term.Lam
 import AST.Term.Let
 import AST.Term.Row
 import AST.Term.Var
+import AST.Term.Nominal
 import Control.Lens.Operators
 import LangB
 import TypeLang.Pure
@@ -40,3 +41,6 @@ closedRec fields = recExtend fields (Pure BRecEmpty)
 
 getField :: Tree Pure LangB -> String -> Tree Pure LangB
 getField w k = Name k & BGetField w & Pure
+
+toNom :: String -> Tree Pure LangB -> Tree Pure LangB
+toNom name = Pure . BToNom . ToNom (Name name)

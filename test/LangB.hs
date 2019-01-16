@@ -153,6 +153,8 @@ newtype PureInferB a =
     , MonadState PureInferState
     )
 
+Lens.makePrisms ''PureInferB
+
 type instance UVar PureInferB = Const Int
 
 instance MonadNominals Name Typ PureInferB where
@@ -206,6 +208,8 @@ newtype STInferB s a =
     , MonadError (Tree TypeError Pure)
     , MonadReader (InferScope (STVar s), STNameGen s)
     )
+
+Lens.makePrisms ''STInferB
 
 type instance UVar (STInferB s) = STVar s
 

@@ -4,15 +4,25 @@ module TypeLang.Pure
     , module TypeLang
     ) where
 
-import           Algebra.Lattice
 import           AST
 import           AST.Term.FuncType
+import           AST.Term.Row
 import           AST.Term.Scheme
 import           AST.Unify
+import           Algebra.Lattice
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import qualified Data.Map as Map
 import           TypeLang
+
+rowExtends :: Tree Pure Row -> [(String, Tree Pure Typ)] -> Tree Pure Row
+rowExtends =
+    foldr extend
+    where
+        extend (name, typ) = Pure . RExtend . RowExtend (Name name) typ
+
+record :: [(String, Tree Pure Typ)] -> Tree Pure Typ
+record = Pure . TRec . rowExtends (Pure REmpty)
 
 intA :: Tree Pure (Scheme Types Typ)
 intA = Pure TInt & uniType

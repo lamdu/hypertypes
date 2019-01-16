@@ -1,8 +1,5 @@
 {-# LANGUAGE FlexibleContexts, TypeFamilies, BlockArguments, ScopedTypeVariables #-}
 
-import           LangA.Pure
-import           LangB.Pure
-import           TypeLang.Pure
 import           AST
 import           AST.Class.Infer
 import           AST.Class.Infer.Inferred
@@ -13,6 +10,7 @@ import           AST.Term.NamelessScope
 import           AST.Term.Nominal
 import           AST.Term.Scheme
 import           AST.Unify
+import           Algebra.Lattice
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Except
@@ -22,9 +20,12 @@ import           Control.Monad.ST
 import           Data.Functor.Const
 import           Data.Proxy
 import           Data.STRef
+import           LangA.Pure
+import           LangB.Pure
 import           System.Exit (exitFailure)
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
+import           TypeLang.Pure
 
 lamXYx5 :: Tree Pure (LangA EmptyScope)
 lamXYx5 = aLam \x -> aLam \_y -> x `aApp` (aLit 5 $:: intA)
@@ -59,8 +60,8 @@ letGen = bLet "id" (lam "x" id) \i -> i $$ i $$ bLit 5
 shouldNotGen :: Tree Pure LangB
 shouldNotGen = lam "x" \x -> bLet "y" x id
 
-record :: Tree Pure LangB
-record = closedRec [("a", bLit 5)]
+simpleRec :: Tree Pure LangB
+simpleRec = closedRec [("a", bLit 5)]
 
 extendLit :: Tree Pure LangB
 extendLit = recExtend [("a", bLit 5)] (bLit 7)
@@ -73,6 +74,10 @@ extendGood = closedRec [("b", bLit 7), ("a", bLit 5)]
 
 getAField :: Tree Pure LangB
 getAField = lam "x" \x -> getField x "a"
+
+badVecApp :: Tree Pure LangB
+badVecApp =
+    lam "x" \x -> lam "y" \y -> closedRec [("x", x), ("y", y)] & toNom "Vec"
 
 unifyRows :: Tree Pure LangB
 unifyRows =
@@ -106,16 +111,39 @@ execSTInferA (STInferA act) =
         qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
         runReaderT act (mempty, ScopeLevel 0, qvarGen) & runExceptT
 
+vecNominalDecl :: Tree Pure (NominalDecl Typ)
+vecNominalDecl =
+    Pure NominalDecl
+    { _nParams =
+        Types
+        { _tRow = bottom
+        , _tTyp = bottom & Lens.at (Name "elem") ?~ bottom
+        }
+    , _nScheme =
+        Scheme
+        { _sForAlls = Types bottom bottom
+        , _sTyp = record [("x", tVar "elem"), ("y", tVar "elem")]
+        }
+    }
+
+withNominals ::
+    (Unify m Row, Unify m Typ, MonadReader env m) =>
+    Lens.LensLike' Lens.Identity env (InferScope (UVar m)) -> m a -> m a
+withNominals l act =
+    do
+        vec <- loadNominalDecl vecNominalDecl
+        local (l . nominals . Lens.at (Name "Vec") ?~ vec) act
+
 execPureInferB :: PureInferB a -> Either (Tree TypeError Pure) a
-execPureInferB (PureInferB act) =
-    runRWST act emptyInferScope emptyPureInferState
+execPureInferB act =
+    runRWST (withNominals id act ^. _PureInferB) emptyInferScope emptyPureInferState
     <&> (^. Lens._1)
 
 execSTInferB :: STInferB s a -> ST s (Either (Tree TypeError Pure) a)
-execSTInferB (STInferB act) =
+execSTInferB act =
     do
         qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
-        runReaderT act (emptyInferScope, qvarGen) & runExceptT
+        runReaderT (withNominals Lens._1 act ^. _STInferB) (emptyInferScope, qvarGen) & runExceptT
 
 prettyPrint :: Pretty a => a -> IO ()
 prettyPrint = print . pPrint
@@ -173,11 +201,12 @@ main =
             , testA nomLam       "Right (Map[key: Int, value: Int] -> Map[key: Int, value: Int])"
             , testB letGen       "Right Int"
             , testB shouldNotGen "Right (t0 -> t0)"
-            , testB record       "Right (a : Int :*: {})"
+            , testB simpleRec    "Right (a : Int :*: {})"
             , testB extendLit    "Left Mismatch Int r0"
             , testB extendDup    "Left ConstraintsViolation a : Int :*: {} Forbidden fields: [a]"
             , testB extendGood   "Right (b : Int :*: a : Int :*: {})"
             , testB unifyRows    "Right (((a : Int :*: b : Int :*: {}) -> Int -> Int) -> Int)"
             , testB getAField    "Right ((a : t0 :*: r0) -> t0)"
+            , testB badVecApp    "Right (t0 -> t0 -> Vec[elem: t0])"
             ]
 

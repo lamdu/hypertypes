@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, DataKinds #-}
 {-# LANGUAGE ScopedTypeVariables, FlexibleInstances, UndecidableInstances #-}
 {-# LANGUAGE DeriveGeneric, StandaloneDeriving, FlexibleContexts #-}
-{-# LANGUAGE ConstraintKinds, TypeOperators #-}
+{-# LANGUAGE ConstraintKinds, TypeOperators, GeneralizedNewtypeDeriving #-}
 
 module AST.Term.Scheme
     ( Scheme(..), sForAlls, sTyp
@@ -13,7 +13,7 @@ module AST.Term.Scheme
     , makeQVarInstances
     ) where
 
-import           Algebra.Lattice (JoinSemiLattice(..))
+import           Algebra.Lattice (JoinSemiLattice(..), BoundedJoinSemiLattice)
 import           AST
 import           AST.Class.Combinators (And, NoConstraint, HasChildrenConstraint, proxyNoConstraint)
 import           AST.Class.HasChild (HasChild(..))
@@ -45,7 +45,7 @@ data Scheme varTypes typ k = Scheme
 
 newtype QVars typ = QVars
     (Map (QVar (RunKnot typ)) (TypeConstraintsOf (RunKnot typ)))
-    deriving Generic
+    deriving (Generic)
 
 instance
     (Pretty (Tree varTypes QVars), Pretty (Tie k typ)) =>
@@ -74,6 +74,14 @@ instance
 Lens.makeLenses ''Scheme
 Lens.makePrisms ''QVars
 makeChildren ''Scheme
+
+type instance Lens.Index (QVars typ) = QVar (RunKnot typ)
+type instance Lens.IxValue (QVars typ) = TypeConstraintsOf (RunKnot typ)
+
+instance Ord (QVar (RunKnot typ)) => Lens.Ixed (QVars typ)
+
+instance Ord (QVar (RunKnot typ)) => Lens.At (QVars typ) where
+    at k = _QVars . Lens.at k
 
 newtype QVarInstances k typ = QVarInstances (Map (QVar (RunKnot typ)) (k typ))
     deriving Generic
@@ -168,3 +176,14 @@ deriving instance DepsQ Ord  k t => Ord  (QVarInstances k t)
 deriving instance DepsQ Show k t => Show (QVarInstances k t)
 instance DepsQ Binary k t => Binary (QVarInstances k t)
 instance DepsQ NFData k t => NFData (QVarInstances k t)
+
+deriving instance
+    ( Ord (QVar (RunKnot typ))
+    , JoinSemiLattice (TypeConstraintsOf (RunKnot typ))
+    ) =>
+    JoinSemiLattice (QVars typ)
+deriving instance
+    ( Ord (QVar (RunKnot typ))
+    , JoinSemiLattice (TypeConstraintsOf (RunKnot typ))
+    ) =>
+    BoundedJoinSemiLattice (QVars typ)
