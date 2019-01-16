@@ -202,7 +202,7 @@ lookupParams =
             lookupVar binding v
             >>=
             \case
-            UVar r -> pure r
+            UInstantiated r -> pure r
             _ -> error "unexpected state at instantiate's forall"
 
 type instance TypeOf  (ToNom nomId expr) = TypeOf expr
