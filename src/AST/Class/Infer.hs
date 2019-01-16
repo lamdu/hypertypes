@@ -5,7 +5,7 @@ module AST.Class.Infer
     ( TypeOf, ScopeOf
     , ITerm(..), iVal, iType, iScope, iAnn
     , Infer(..), inferNode
-    , HasScope(..), ScopeLookup(..), LocalScopeType(..)
+    , HasScope(..), LocalScopeType(..)
     ) where
 
 import AST.Class.Recursive
@@ -13,7 +13,6 @@ import AST.Class.Unify (Unify(..), UVar)
 import AST.Knot (Knot, Tree, Tie, RunKnot)
 import AST.Knot.Ann (Ann(..))
 import Control.Lens (makeLenses)
-import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
@@ -30,11 +29,6 @@ makeLenses ''ITerm
 
 class HasScope m s where
     getScope :: m (Tree s (UVar m))
-
-class ScopeLookup var expr where
-    scopeType ::
-        Recursive (Unify m) (TypeOf expr) =>
-        Proxy expr -> var -> Tree (ScopeOf expr) (UVar m) -> m (Tree (UVar m) (TypeOf expr))
 
 class LocalScopeType var scheme m where
     localScopeType :: var -> scheme -> m a -> m a

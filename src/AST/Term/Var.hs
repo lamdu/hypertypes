@@ -1,15 +1,16 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DataKinds, DeriveGeneric #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving, TypeFamilies, UndecidableInstances #-}
 {-# LANGUAGE MultiParamTypeClasses, TupleSections, FlexibleInstances #-}
-{-# LANGUAGE ScopedTypeVariables, ConstraintKinds #-}
+{-# LANGUAGE ScopedTypeVariables, ConstraintKinds, FlexibleContexts #-}
 
 module AST.Term.Var
     ( Var(..), _Var
+    , ScopeLookup(..)
     ) where
 
 import           AST
-import           AST.Class.Infer (Infer(..), HasScope(..), ScopeLookup(..), TypeOf, ScopeOf)
-import           AST.Class.Unify (Unify)
+import           AST.Class.Infer (Infer(..), HasScope(..), TypeOf, ScopeOf)
+import           AST.Unify (Unify, UVar)
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -19,6 +20,12 @@ import           GHC.Generics (Generic)
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 
 import           Prelude.Compat
+
+class ScopeLookup var expr where
+    scopeType ::
+        Recursive (Unify m) (TypeOf expr) =>
+        Proxy expr -> var -> Tree (ScopeOf expr) (UVar m) ->
+        m (Tree (UVar m) (TypeOf expr))
 
 -- | Parametrized by term AST and not by its type AST
 -- (which currently is its only part used),
