@@ -15,6 +15,7 @@ module AST.Term.Nominal
     , LoadedNominalDecl, loadNominalDecl
     ) where
 
+import           Algebra.Lattice (JoinSemiLattice(..))
 import           AST
 import           AST.Class.Combinators
 import           AST.Class.HasChild (HasChild(..))
@@ -203,6 +204,9 @@ lookupParams =
             >>=
             \case
             UInstantiated r -> pure r
+            USkolem l ->
+                -- This is a phantom-type, wasn't instantiated by `instantiate`.
+                scopeConstraints <&> (\/ l) >>= newVar binding . UUnbound
             _ -> error "unexpected state at instantiate's forall"
 
 type instance TypeOf  (ToNom nomId expr) = TypeOf expr
