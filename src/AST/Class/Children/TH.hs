@@ -117,15 +117,19 @@ childrenTypes var typ =
     where
         add (NodeFofX ast) = pure mempty { tcChildren = Set.singleton ast }
         add (XofF ast) =
-            go [] ast
-            where
-                go as (ConT name) = childrenTypesFromTypeName name as
-                go as (AppT x a) = go (a:as) x
-                go as x@VarT{} =
-                    pure mempty { tcEmbeds = Set.singleton (foldl AppT x as) }
-                go _ _ = pure mempty
+            case unapply ast of
+            (ConT name, as) -> childrenTypesFromTypeName name as
+            (x@VarT{}, as) -> pure mempty { tcEmbeds = Set.singleton (foldl AppT x as) }
+            _ -> pure mempty
         add (Tof _ pat) = add pat
         add Other{} = pure mempty
+
+unapply :: Type -> (Type, [Type])
+unapply =
+    go []
+    where
+        go as (AppT f a) = go (a:as) f
+        go as x = (x, as)
 
 matchType :: Name -> Type -> CtrTypePattern
 matchType var (ConT runKnot `AppT` VarT k `AppT` (PromotedT knot `AppT` ast))
