@@ -121,6 +121,7 @@ instance (c Typ, c Row) => Recursive (InferredChildConstraints (Recursive c)) La
 newtype ScopeTypes v = ScopeTypes (Map Name (Generalized Typ v))
     deriving (Semigroup, Monoid)
 Lens.makePrisms ''ScopeTypes
+makeChildren ''ScopeTypes
 
 data InferScope v = InferScope
     { _varSchemes :: Tree ScopeTypes v
@@ -131,15 +132,6 @@ Lens.makeLenses ''InferScope
 
 emptyInferScope :: InferScope v
 emptyInferScope = InferScope mempty (ScopeLevel 0) mempty
-
--- TODO: `AST.Class.Children.TH.makeChildren` should be able to generate this.
--- (whereas it currently generate empty `ChildrenConstraint`).
--- The problem is that simply referring to the `ChildrenConstraint`s
--- of embedded types can explode in case of mutually recursive types,
--- and this requires some thoughtful solution..
-instance Children ScopeTypes where
-    type ChildrenConstraint ScopeTypes c = Recursive c Typ
-    children p f (ScopeTypes x) = traverse (children p f) x <&> ScopeTypes
 
 newtype PureInferB a =
     PureInferB
