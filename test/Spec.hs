@@ -75,9 +75,12 @@ extendGood = closedRec [("b", bLit 7), ("a", bLit 5)]
 getAField :: Tree Pure LangB
 getAField = lam "x" \x -> getField x "a"
 
-badVecApp :: Tree Pure LangB
-badVecApp =
+vecApp :: Tree Pure LangB
+vecApp =
     lam "x" \x -> lam "y" \y -> closedRec [("x", x), ("y", y)] & toNom "Vec"
+
+usePhantom :: Tree Pure LangB
+usePhantom = bLit 5 & toNom "PhantomInt"
 
 unifyRows :: Tree Pure LangB
 unifyRows =
@@ -126,13 +129,33 @@ vecNominalDecl =
         }
     }
 
+phantomIntNominalDecl :: Tree Pure (NominalDecl Typ)
+phantomIntNominalDecl =
+    Pure NominalDecl
+    { _nParams =
+        Types
+        { _tRow = bottom
+        , _tTyp = bottom & Lens.at (Name "phantom") ?~ bottom
+        }
+    , _nScheme =
+        Scheme
+        { _sForAlls = Types bottom bottom
+        , _sTyp = Pure TInt
+        }
+    }
+
 withNominals ::
     (Unify m Row, Unify m Typ, MonadReader env m) =>
     Lens.LensLike' Lens.Identity env (InferScope (UVar m)) -> m a -> m a
 withNominals l act =
     do
         vec <- loadNominalDecl vecNominalDecl
-        local (l . nominals . Lens.at (Name "Vec") ?~ vec) act
+        phantom <- loadNominalDecl phantomIntNominalDecl
+        let addNoms x =
+                x
+                & Lens.at (Name "Vec") ?~ vec
+                & Lens.at (Name "PhantomInt") ?~ phantom
+        local (l . nominals %~ addNoms) act
 
 execPureInferB :: PureInferB a -> Either (Tree TypeError Pure) a
 execPureInferB act =
@@ -207,6 +230,7 @@ main =
             , testB extendGood   "Right (b : Int :*: a : Int :*: {})"
             , testB unifyRows    "Right (((a : Int :*: b : Int :*: {}) -> Int -> Int) -> Int)"
             , testB getAField    "Right ((a : t0 :*: r0) -> t0)"
-            , testB badVecApp    "Right (t0 -> t0 -> Vec[elem: t0])"
+            , testB vecApp       "Right (t0 -> t0 -> Vec[elem: t0])"
+            , testB usePhantom   "Right PhantomInt[phantom: t0]"
             ]
 
