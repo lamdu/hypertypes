@@ -46,6 +46,7 @@ class
 
     infer :: Tree t (Ann a) -> m (Tree (UVar m) (TypeOf t), Tree t (ITerm a (UVar m)))
 
+{-# INLINE inferNode #-}
 inferNode :: Infer m t => Tree (Ann a) t -> m (Tree (ITerm a (UVar m)) t)
 inferNode (Ann a x) =
     (\s (t, xI) -> ITerm xI t s a)

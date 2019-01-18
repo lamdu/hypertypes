@@ -47,6 +47,7 @@ type instance TypeOf  (Apply expr) = TypeOf  expr
 type instance ScopeOf (Apply expr) = ScopeOf expr
 
 instance (Infer m expr, HasFuncType (TypeOf expr)) => Infer m (Apply expr) where
+    {-# INLINE infer #-}
     infer (Apply func arg) =
         do
             argI <- inferNode arg

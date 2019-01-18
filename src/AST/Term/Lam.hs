@@ -50,6 +50,7 @@ instance
     ) =>
     Infer m (Lam v t) where
 
+    {-# INLINE infer #-}
     infer (Lam p r) =
         do
             varType <- newUnbound

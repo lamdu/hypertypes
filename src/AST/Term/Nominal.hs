@@ -220,6 +220,7 @@ instance
     ) =>
     Infer m (ToNom nomId expr) where
 
+    {-# INLINE infer #-}
     infer (ToNom nomId val) =
         do
             valI <- inferNode val
@@ -254,6 +255,7 @@ instance
     ) =>
     Infer m (FromNom nomId expr) where
 
+    {-# INLINE infer #-}
     infer (FromNom nomId) =
         do
             LoadedNominalDecl params _ gen <- getNominalDecl nomId

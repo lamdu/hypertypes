@@ -28,7 +28,8 @@ makeZipMatch typeName =
         instanceD
             (pure (ctrs >>= ccContext & Set.fromList & Set.toList))
             (appT (conT ''ZipMatch) (pure dst))
-            [ funD 'zipMatch
+            [ InlineP 'zipMatch Inline FunLike AllPhases & PragmaD & pure
+            , funD 'zipMatch
                 ( (ctrs <&> pure . ccClause) ++ [pure tailClause]
                 )
             ]

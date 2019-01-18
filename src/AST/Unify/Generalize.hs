@@ -50,6 +50,7 @@ Lens.makePrisms ''Generalized
 
 instance Children ast => Children (Generalized ast) where
     type ChildrenConstraint (Generalized ast) cls = Recursive cls ast
+    {-# INLINE children #-}
     children ::
         forall f constraint n m.
         (Applicative f, Recursive constraint ast) =>
@@ -104,6 +105,7 @@ generalize v0 =
 monomorphic :: Tree v t -> Tree (Generalized t) v
 monomorphic = Generalized . GMono
 
+{-# INLINE instantiateWith #-}
 instantiateWith ::
     forall m t a.
     Recursive (Unify m) t =>
@@ -139,6 +141,7 @@ instantiateWith action (Generalized g) =
 
 -- | Instantiate a `Generalized` type with fresh unification variables
 -- for the quantified variables
+{-# INLINE instantiate #-}
 instantiate ::
     Recursive (Unify m) t =>
     Tree (Generalized t) (UVar m) -> m (Tree (UVar m) t)

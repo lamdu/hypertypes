@@ -9,6 +9,9 @@ module AST.Unify
     , applyBindings, unify
     , semiPruneLookup
     , newUnbound, newTerm, unfreeze
+
+    , -- Exported for SPECIALIZE pragmas
+      updateConstraints, updateTermConstraints
     ) where
 
 import Algebra.PartialOrd (PartialOrd(..))
@@ -31,9 +34,11 @@ import Prelude.Compat
 
 -- Names modeled after unification-fd
 
+{-# INLINE newUnbound #-}
 newUnbound :: Unify m t => m (Tree (UVar m) t)
 newUnbound = scopeConstraints >>= newVar binding . UUnbound
 
+{-# INLINE newTerm #-}
 newTerm :: Unify m t => Tree t (UVar m) -> m (Tree (UVar m) t)
 newTerm x = scopeConstraints >>= newVar binding . UTerm . (`UTermBody` x)
 
@@ -46,6 +51,7 @@ unfreeze = wrapM (Proxy :: Proxy (Unify m)) newTerm
 
 -- look up a variable, and return last variable pointing to result.
 -- prune all variable on way to last variable (path-compression ala union-find)
+{-# INLINE semiPruneLookup #-}
 semiPruneLookup ::
     Unify m t =>
     Tree (UVar m) t ->
@@ -103,6 +109,7 @@ applyBindings v0 =
     UConverted{} -> error "conversion state not expected in applyBindings"
     UInstantiated{} -> error "applyBindings during instantiation"
 
+{-# INLINE updateConstraints #-}
 updateConstraints ::
     Recursive (Unify m) t =>
     TypeConstraintsOf t -> Tree (UVar m) t -> m (Tree (UVar m) t)
@@ -121,6 +128,7 @@ updateConstraints newConstraints var =
             _ -> error "This shouldn't happen in unification stage"
         pure v1
 
+{-# INLINE updateTermConstraints #-}
 updateTermConstraints ::
     forall m t.
     Recursive (Unify m) t =>
@@ -142,6 +150,7 @@ updateTermConstraints v t newConstraints =
 --   Variables are pruned to point to other variables rather than terms,
 --   yielding comparison of (sometimes equal) variables,
 --   rather than recursively unifying the terms that they would prune to.
+{-# INLINE unify #-}
 unify ::
     forall m t.
     Recursive (Unify m) t =>

@@ -25,6 +25,7 @@ import Prelude.Compat
 -- only carries a constraint to the direct children of an AST.
 class (Children expr, constraint expr) => Recursive constraint expr where
     recursive :: RecursiveDict constraint expr
+    {-# INLINE recursive #-}
     -- | When an instance's constraints already imply
     -- `RecursiveConstraint expr constraint`, the default
     -- implementation can be used.

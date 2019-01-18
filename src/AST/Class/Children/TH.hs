@@ -65,6 +65,7 @@ makeChildrenForType info =
             instanceD (pure ctx) (appT (conT ''Children) (pure (tiInstance info)))
             [ tySynInstD ''ChildrenConstraint
                 (pure (TySynEqn [tiInstance info, VarT constraintVar] childrenConstraint))
+            , InlineP 'children Inline FunLike AllPhases & PragmaD & pure
             , funD 'children (tiCons info <&> pure . ccClause . makeChildrenCtr (tiVar info))
             ]
         mono <-
