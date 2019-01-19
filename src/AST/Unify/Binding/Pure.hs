@@ -25,6 +25,7 @@ Lens.makePrisms ''PureBinding
 emptyPureBinding :: PureBinding t
 emptyPureBinding = PureBinding mempty
 
+{-# INLINE pureBinding #-}
 pureBinding ::
     MonadState s m =>
     ALens' s (Tree PureBinding t) ->

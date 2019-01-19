@@ -58,6 +58,7 @@ instance Deps Show key val rest k => Show (RowExtend key val rest k) where
 
 -- Helpers for Unify instances of type-level RowExtends:
 
+{-# INLINE applyRowExtendConstraints #-}
 applyRowExtendConstraints ::
     ( Applicative m
     , constraint valTyp, constraint rowTyp
@@ -78,6 +79,7 @@ applyRowExtendConstraints _ c toChildC err update (RowExtend k v rest) =
         <*> update (c & forbidden . contains k .~ True) rest
     )
 
+{-# INLINE rowExtendStructureMismatch #-}
 rowExtendStructureMismatch ::
     Recursive (Unify m) rowTyp =>
     (Tree (RowExtend key valTyp rowTyp) (UVar m) -> m (Tree (UVar m) rowTyp)) ->
@@ -94,6 +96,7 @@ rowExtendStructureMismatch mkExtend (c0, RowExtend k0 v0 r0) (c1, RowExtend k1 v
 -- Helper for infering row usages of a row element,
 -- such as getting a field from a record or injecting into a sum type.
 -- Returns a unification variable for the element and for the whole row.
+{-# INLINE rowElementInfer #-}
 rowElementInfer ::
     ( Unify m valTyp
     , Unify m rowTyp

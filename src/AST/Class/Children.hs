@@ -34,6 +34,7 @@ instance Children (Const val) where
     children _ _ (Const x) = pure (Const x)
     leafExpr = Just (\(Const x) -> Const x)
 
+{-# INLINE children_ #-}
 children_ ::
     forall f expr constraint n.
     (Applicative f, ChildrenWithConstraint expr constraint) =>
@@ -43,6 +44,7 @@ children_ ::
 children_ p f e =
     () <$ (children p (\c -> Const () <$ f c) e :: f (Tree expr (Const ())))
 
+{-# INLINE overChildren #-}
 overChildren ::
     ChildrenWithConstraint expr constraint =>
     Proxy constraint ->
@@ -50,6 +52,7 @@ overChildren ::
     Tree expr n -> Tree expr m
 overChildren p f = runIdentity . children p (Identity . f)
 
+{-# INLINE foldMapChildren #-}
 foldMapChildren ::
     (ChildrenWithConstraint expr constraint, Monoid a) =>
     Proxy constraint ->

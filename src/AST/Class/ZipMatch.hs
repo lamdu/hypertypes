@@ -32,6 +32,7 @@ class Children expr => ZipMatch expr where
 instance (ZipMatch a, ZipMatch b) => ZipMatch (Both a b) where
     zipMatch (Both a0 b0) (Both a1 b1) = Both <$> zipMatch a0 a1 <*> zipMatch b0 b1
 
+{-# INLINE zipMatchWithA #-}
 zipMatchWithA ::
     forall expr f constraint a b c.
     (ZipMatch expr, Applicative f, ChildrenConstraint expr constraint) =>
@@ -44,6 +45,7 @@ zipMatchWithA p f x y =
         g :: constraint child => Tree (Both a b) child -> f (Tree c child)
         g (Both a b) = f a b
 
+{-# INLINE zipMatchWith #-}
 zipMatchWith ::
     (ZipMatch expr, ChildrenConstraint expr constraint) =>
     Proxy constraint ->
@@ -51,6 +53,7 @@ zipMatchWith ::
     Tree expr a -> Tree expr b -> Maybe (Tree expr c)
 zipMatchWith p f x y = zipMatchWithA p (fmap Identity . f) x y <&> runIdentity
 
+{-# INLINE zipMatchWith_ #-}
 zipMatchWith_ ::
     forall f expr constraint a b.
     (Applicative f, ZipMatch expr, ChildrenConstraint expr constraint) =>
@@ -62,5 +65,6 @@ zipMatchWith_ p f x y =
         :: Maybe (f (Tree expr (Const ())))
     ) <&> Lens.mapped .~ ()
 
+{-# INLINE doesMatch #-}
 doesMatch :: ZipMatch expr => Tree expr a -> Tree expr b -> Bool
 doesMatch x y = Lens.has Lens._Just (zipMatch x y)

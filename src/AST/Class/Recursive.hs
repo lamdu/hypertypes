@@ -43,6 +43,7 @@ type RecursiveDict constraint expr = Dict (RecursiveConstraint expr constraint)
 instance constraint Pure => Recursive constraint Pure
 instance constraint (Const a) => Recursive constraint (Const a)
 
+{-# INLINE wrapM #-}
 wrapM ::
     forall constraint expr f m.
     (Monad m, Recursive constraint expr) =>
@@ -54,6 +55,7 @@ wrapM p f (Pure x) =
     withDict (recursive :: RecursiveDict constraint expr) $
     children (Proxy :: Proxy (Recursive constraint)) (wrapM p f) x >>= f
 
+{-# INLINE unwrapM #-}
 unwrapM ::
     forall constraint expr f m.
     (Monad m, Recursive constraint expr) =>
@@ -65,6 +67,7 @@ unwrapM p f x =
     withDict (recursive :: RecursiveDict constraint expr) $
     f x >>= children (Proxy :: Proxy (Recursive constraint)) (unwrapM p f) <&> Pure
 
+{-# INLINE wrap #-}
 wrap ::
     Recursive constraint expr =>
     Proxy constraint ->
@@ -73,6 +76,7 @@ wrap ::
     Tree f expr
 wrap p f = runIdentity . wrapM p (Identity . f)
 
+{-# INLINE unwrap #-}
 unwrap ::
     Recursive constraint expr =>
     Proxy constraint ->
@@ -83,6 +87,7 @@ unwrap p f = runIdentity . unwrapM p (Identity . f)
 
 -- | Recursively fold up a tree to produce a result.
 -- TODO: Is this a "cata-morphism"?
+{-# INLINE fold #-}
 fold ::
     Recursive constraint expr =>
     Proxy constraint ->
@@ -93,6 +98,7 @@ fold p f = getConst . wrap p (Const . f)
 
 -- | Build/load a tree from a seed value.
 -- TODO: Is this an "ana-morphism"?
+{-# INLINE unfold #-}
 unfold ::
     Recursive constraint expr =>
     Proxy constraint ->
@@ -101,6 +107,7 @@ unfold ::
     Tree Pure expr
 unfold p f = unwrap p (f . getConst) . Const
 
+{-# INLINE foldMapRecursive #-}
 foldMapRecursive ::
     forall constraint expr a f.
     (Recursive constraint expr, Recursive Children f, Monoid a) =>

@@ -87,6 +87,7 @@ newtype QVarInstances k typ = QVarInstances (Map (QVar (RunKnot typ)) (k typ))
     deriving Generic
 Lens.makePrisms ''QVarInstances
 
+{-# INLINE makeQVarInstances #-}
 makeQVarInstances ::
     Unify m typ =>
     Tree QVars typ -> m (Tree (QVarInstances (UVar m)) typ)
@@ -95,6 +96,7 @@ makeQVarInstances (QVars foralls) =
     where
         makeSkolem c = scopeConstraints >>= newVar binding . USkolem . (c \/)
 
+{-# INLINE schemeBodyToType #-}
 schemeBodyToType ::
     (Unify m typ, HasChild varTypes typ, Ord (QVar typ)) =>
     Tree varTypes (QVarInstances (UVar m)) -> Tree typ (UVar m) -> m (Tree (UVar m) typ)
@@ -105,6 +107,7 @@ schemeBodyToType foralls x =
     where
         getForAll v = foralls ^? getChild . _QVarInstances . Lens.ix v
 
+{-# INLINE schemeAsType #-}
 schemeAsType ::
     forall m varTypes typ.
     ( Monad m
@@ -119,6 +122,7 @@ schemeAsType (Pure (Scheme vars typ)) =
             (Proxy :: Proxy (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord))
             (schemeBodyToType foralls) typ
 
+{-# INLINE loadBody #-}
 loadBody ::
     ( Unify m typ
     , HasChild varTypes typ
@@ -141,6 +145,7 @@ loadBody foralls x =
 -- | Load scheme into unification monad so that different instantiations share
 -- the scheme's monomorphic parts -
 -- their unification is O(1) as it is the same shared unification term.
+{-# INLINE loadScheme #-}
 loadScheme ::
     forall m varTypes typ.
     ( Monad m

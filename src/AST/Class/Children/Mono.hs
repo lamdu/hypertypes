@@ -11,6 +11,7 @@ import Data.Proxy (Proxy(..))
 
 type family ChildOf (expr :: Knot -> *) :: Knot -> *
 
+{-# INLINE monoChildren #-}
 monoChildren ::
     forall expr n m.
     (ChildrenWithConstraint expr ((~) (ChildOf expr))) =>

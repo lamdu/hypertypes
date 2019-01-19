@@ -80,6 +80,7 @@ occursError v (UTermBody c b) =
         bindVar binding v (UResolved (Pure r))
         Pure r <$ unifyError (Occurs (quantifiedVar # q) b)
 
+{-# INLINE applyBindings #-}
 applyBindings :: forall m t. Recursive (Unify m) t => Tree (UVar m) t -> m (Tree Pure t)
 applyBindings v0 =
     withDict (recursive :: RecursiveDict (Unify m) t) $

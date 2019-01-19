@@ -18,6 +18,7 @@ newtype STVar s t = STVar (STRef s (UTerm (STVar s) t))
     deriving Eq
 Lens.makePrisms ''STVar
 
+{-# INLINE stBinding #-}
 stBinding ::
     MonadST m =>
     Binding (STVar (World m)) m t
