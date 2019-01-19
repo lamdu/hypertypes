@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 059e220467e4c6b2dd00d79597e7b4923db910187ce7b1f6dc98e732b9873734
+-- hash: b0868c0095cdacad30b74a6eb07df56e224855bbf6701856dbf3dcb60c9dc014
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -76,6 +76,7 @@ library
   hs-source-dirs:
       src
   ghc-options: -O2 -Wall -Wnoncanonical-monad-instances -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
+  ghc-prof-options: -O2
   build-depends:
       QuickCheck
     , array

@@ -46,6 +46,8 @@ library:
   - -Wincomplete-record-updates
   - -Wincomplete-uni-patterns
   - -Wredundant-constraints
+  ghc-prof-options:
+  - -O2
 
 tests:
   syntax-tree-test:
