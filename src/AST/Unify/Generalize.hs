@@ -5,8 +5,10 @@
 module AST.Unify.Generalize
     ( Generalized(..), _Generalized
     , generalize, monomorphic, instantiate
+
     , -- TODO: should these not be exported? (Internals)
-      instantiateWith
+      -- Exported also for specialization
+      instantiateWith, instantiateH
     , GTerm(..), _GMono, _GPoly, _GBody
     ) where
 
@@ -58,11 +60,11 @@ instance Children ast => Children (Generalized ast) where
         (forall child. constraint child => Tree n child -> f (Tree m child)) ->
         Tree (Generalized ast) n -> f (Tree (Generalized ast) m)
     children p f (Generalized g) =
-        withDict (recursive :: RecursiveDict constraint ast) $
         case g of
         GMono x -> f x <&> GMono
         GPoly x -> f x <&> GPoly
         GBody x ->
+            withDict (recursive :: RecursiveDict constraint ast) $
             children (Proxy :: Proxy (Recursive constraint))
             (fmap (^. _Generalized) . children p f . Generalized) x
             <&> GBody
@@ -76,7 +78,6 @@ generalize ::
     Recursive (Unify m) t =>
     Tree (UVar m) t -> m (Tree (Generalized t) (UVar m))
 generalize v0 =
-    withDict (recursive :: RecursiveDict (Unify m) t) $
     do
         (v1, u) <- semiPruneLookup v0
         c <- scopeConstraints
@@ -90,54 +91,56 @@ generalize v0 =
                 bindVar binding v1 (USkolem (generalizeConstraints l))
             USkolem l | l `leq` c -> pure (GPoly v1)
             UTerm t ->
+                withDict (recursive :: RecursiveDict (Unify m) t) $
                 children p (fmap (^. _Generalized) . generalize) (t ^. uBody)
-                <&> onBody
-                where
-                    onBody b
-                        | foldMapChildren p (All . Lens.has _GMono) b ^. Lens._Wrapped = GMono v1
-                        | otherwise = GBody b
+                <&>
+                \b ->
+                if foldMapChildren p (All . Lens.has _GMono) b ^. Lens._Wrapped
+                then GMono v1
+                else GBody b
             _ -> pure (GMono v1)
     <&> Generalized
     where
         p = Proxy :: Proxy (Recursive (Unify m))
 
 -- | Lift a monomorphic type term into `Generalized`
+{-# INLINE monomorphic #-}
 monomorphic :: Tree v t -> Tree (Generalized t) v
 monomorphic = Generalized . GMono
 
+-- TODO: Better name?
+{-# INLINE instantiateH #-}
+instantiateH ::
+    forall m t.
+    Recursive (Unify m) t =>
+    Tree (GTerm (UVar m)) t -> WriterT [m ()] m (Tree (UVar m) t)
+instantiateH (GMono x) = pure x
+instantiateH (GBody x) =
+    withDict (recursive :: RecursiveDict (Unify m) t) $
+    children (Proxy :: Proxy (Recursive (Unify m))) instantiateH x >>= lift . newTerm
+instantiateH (GPoly x) =
+    lookupVar binding x & lift
+    >>=
+    \case
+    USkolem l ->
+        do
+            tell [bindVar binding x (USkolem l)]
+            r <- scopeConstraints <&> (\/ l) >>= newVar binding . UUnbound & lift
+            UInstantiated r & bindVar binding x & lift
+            pure r
+    UInstantiated v -> pure v
+    _ -> error "unexpected state at instantiate's forall"
+
 {-# INLINE instantiateWith #-}
 instantiateWith ::
-    forall m t a.
     Recursive (Unify m) t =>
     m a ->
     Tree (Generalized t) (UVar m) ->
     m (Tree (UVar m) t, a)
 instantiateWith action (Generalized g) =
     do
-        (r, recover) <- runWriterT (go g)
+        (r, recover) <- runWriterT (instantiateH g)
         action <* sequence_ recover <&> (r, )
-    where
-        go ::
-            forall child.
-            Recursive (Unify m) child =>
-            Tree (GTerm (UVar m)) child -> WriterT [m ()] m (Tree (UVar m) child)
-        go =
-            withDict (recursive :: RecursiveDict (Unify m) child) $
-            \case
-            GMono x -> pure x
-            GBody x -> children (Proxy :: Proxy (Recursive (Unify m))) go x >>= lift . newTerm
-            GPoly x ->
-                lookupVar binding x & lift
-                >>=
-                \case
-                USkolem l ->
-                    do
-                        tell [bindVar binding x (USkolem l)]
-                        r <- scopeConstraints <&> (\/ l) >>= newVar binding . UUnbound & lift
-                        UInstantiated r & bindVar binding x & lift
-                        pure r
-                UInstantiated v -> pure v
-                _ -> error "unexpected state at instantiate's forall"
 
 -- | Instantiate a `Generalized` type with fresh unification variables
 -- for the quantified variables

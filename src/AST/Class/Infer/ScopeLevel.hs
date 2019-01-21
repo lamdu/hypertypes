@@ -25,15 +25,19 @@ newtype ScopeLevel = ScopeLevel Int
 makePrisms ''ScopeLevel
 
 instance PartialOrd ScopeLevel where
+    {-# INLINE leq #-}
     ScopeLevel x `leq` ScopeLevel y = x >= y
 
 instance JoinSemiLattice ScopeLevel where
+    {-# INLINE (\/) #-}
     ScopeLevel x \/ ScopeLevel y = ScopeLevel (min x y)
 
 instance BoundedJoinSemiLattice ScopeLevel where
+    {-# INLINE bottom #-}
     bottom = ScopeLevel maxBound
 
 instance TypeConstraints ScopeLevel where
+    {-# INLINE generalizeConstraints #-}
     generalizeConstraints _ = bottom
 
 instance Pretty ScopeLevel where

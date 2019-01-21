@@ -83,7 +83,6 @@ occursError v (UTermBody c b) =
 {-# INLINE applyBindings #-}
 applyBindings :: forall m t. Recursive (Unify m) t => Tree (UVar m) t -> m (Tree Pure t)
 applyBindings v0 =
-    withDict (recursive :: RecursiveDict (Unify m) t) $
     semiPruneLookup v0
     >>=
     \(v1, x) ->
@@ -103,7 +102,8 @@ applyBindings v0 =
         Nothing ->
             do
                 bindVar binding v1 (UResolving b)
-                children (Proxy :: Proxy (Recursive (Unify m))) applyBindings (b ^. uBody)
+                withDict (recursive :: RecursiveDict (Unify m) t) $
+                    children (Proxy :: Proxy (Recursive (Unify m))) applyBindings (b ^. uBody)
             <&> Pure
             >>= result
     UVar{} -> error "lookup not expected to result in var"
@@ -134,18 +134,17 @@ updateTermConstraints ::
     forall m t.
     Recursive (Unify m) t =>
     Tree (UVar m) t -> Tree (UTermBody (UVar m)) t -> TypeConstraintsOf t -> m ()
-updateTermConstraints v t newConstraints =
-    withDict (recursive :: RecursiveDict (Unify m) t) $
-    if newConstraints `leq` (t ^. uConstraints)
-        then pure ()
-        else
-            do
-                bindVar binding v (UResolving t)
-                verifyConstraints (Proxy :: Proxy (Recursive (Unify m))) newConstraints
-                    (unifyError . ConstraintsViolation (t ^. uBody))
-                    updateConstraints
-                    (t ^. uBody)
-                    >>= bindVar binding v . UTerm . UTermBody newConstraints
+updateTermConstraints v t newConstraints
+    | newConstraints `leq` (t ^. uConstraints) = pure ()
+    | otherwise =
+        withDict (recursive :: RecursiveDict (Unify m) t) $
+        do
+            bindVar binding v (UResolving t)
+            verifyConstraints (Proxy :: Proxy (Recursive (Unify m))) newConstraints
+                (unifyError . ConstraintsViolation (t ^. uBody))
+                updateConstraints
+                (t ^. uBody)
+                >>= bindVar binding v . UTerm . UTermBody newConstraints
 
 -- Note on usage of `semiPruneLookup`:
 --   Variables are pruned to point to other variables rather than terms,
@@ -156,20 +155,19 @@ unify ::
     forall m t.
     Recursive (Unify m) t =>
     Tree (UVar m) t -> Tree (UVar m) t -> m (Tree (UVar m) t)
-unify x0 y0 =
-    withDict (recursive :: RecursiveDict (Unify m) t) $
-    let unifyTerms x1 xt y1 yt =
+unify x0 y0
+    | x0 == y0 = pure x0
+    | otherwise =
+        go x0 y0 (unbound y0) (\x1 xt -> go y0 x1 (bindToTerm x1 xt) (unifyTerms x1 xt))
+    where
+        unifyTerms x1 xt y1 yt =
+            withDict (recursive :: RecursiveDict (Unify m) t) $
             do
                 bindVar binding y1 (UVar x1)
                 zipMatchWithA (Proxy :: Proxy (Recursive (Unify m))) unify (xt ^. uBody) (yt ^. uBody)
                     & fromMaybe (xt ^. uBody <$ structureMismatch xt yt)
                     >>= bindVar binding x1 . UTerm . UTermBody (xt ^. uConstraints \/ yt ^. uConstraints)
                 pure x1
-    in
-    if x0 == y0
-        then pure x0
-        else go x0 y0 (unbound y0) (\x1 xt -> go y0 x1 (bindToTerm x1 xt) (unifyTerms x1 xt))
-    where
         bindToTerm dstVar dstTerm var level =
             do
                 bindVar binding var (UVar dstVar)

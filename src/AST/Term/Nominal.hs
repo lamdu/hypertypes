@@ -92,6 +92,7 @@ instance
     ) =>
     ZipMatch (NominalInst nomId varTypes) where
 
+    {-# INLINE zipMatch #-}
     zipMatch (NominalInst xId x) (NominalInst yId y)
         | xId /= yId = Nothing
         | otherwise =
@@ -145,6 +146,7 @@ data LoadedNominalDecl typ v = LoadedNominalDecl
     , _lnType :: Generalized typ v
     }
 
+{-# INLINE loadBody #-}
 loadBody ::
     ( Unify m typ
     , HasChild varTypes typ
@@ -167,6 +169,7 @@ loadBody params foralls x =
             params ^? getChild . _QVarInstances . ix v <|>
             foralls ^? getChild . _QVarInstances . ix v
 
+{-# INLINE loadNominalDecl #-}
 loadNominalDecl ::
     forall m typ.
     ( Monad m
@@ -190,6 +193,7 @@ class MonadNominals nomId typ m where
 class HasNominalInst nomId typ where
     nominalInst :: Prism' (Tree typ k) (Tree (NominalInst nomId (NomVarTypes typ)) k)
 
+{-# INLINE lookupParams #-}
 lookupParams ::
     forall m varTypes.
     ( Applicative m
