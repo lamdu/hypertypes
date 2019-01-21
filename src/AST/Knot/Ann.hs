@@ -10,14 +10,14 @@ module AST.Knot.Ann
     ) where
 
 import           AST.Class.Children (Children(..), overChildren)
-import           AST.Class.Recursive (Recursive(..), RecursiveDict)
+import           AST.Class.Recursive (Recursive(..))
 import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import           AST.Knot (Tie, Tree)
 import           AST.Knot.Pure (Pure(..))
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Traversal, makeLenses)
 import           Data.Binary (Binary)
-import           Data.Constraint (Constraint, withDict)
+import           Data.Constraint (Constraint)
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import qualified Text.PrettyPrint as PP
@@ -52,7 +52,7 @@ annotations ::
     (Tree (Ann b) e)
     a b
 annotations f (Ann pl x) =
-    withDict (recursive :: RecursiveDict Children e) $
+    recursive (Proxy :: Proxy (Children e)) $
     Ann <$> f pl <*> children (Proxy :: Proxy (Recursive Children)) (annotations f) x
 
 -- Similar to `para` from `recursion-schemes`,
@@ -69,7 +69,7 @@ para p f x =
     Ann (f r) r
     where
         r =
-            withDict (recursive :: RecursiveDict constraint expr) $
+            recursive (Proxy :: Proxy (constraint expr)) $
             overChildren (Proxy :: Proxy (Recursive constraint))
             (para p f) (getPure x)
 

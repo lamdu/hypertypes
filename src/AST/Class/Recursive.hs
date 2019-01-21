@@ -1,10 +1,10 @@
 {-# LANGUAGE NoImplicitPrelude, RankNTypes, DefaultSignatures #-}
 {-# LANGUAGE MultiParamTypeClasses, ConstraintKinds, FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts, ScopedTypeVariables, UndecidableInstances #-}
-{-# LANGUAGE UndecidableSuperClasses #-}
+{-# LANGUAGE UndecidableSuperClasses, AllowAmbiguousTypes #-}
 
 module AST.Class.Recursive
-    ( Recursive(..), RecursiveConstraint, RecursiveDict
+    ( Recursive(..), RecursiveConstraint
     , wrap, unwrap, wrapM, unwrapM, fold, unfold
     , foldMapRecursive
     ) where
@@ -13,7 +13,6 @@ import AST.Class.Children (Children(..), foldMapChildren)
 import AST.Knot (Tree)
 import AST.Knot.Pure (Pure(..))
 import Control.Lens.Operators
-import Data.Constraint (Dict(..), withDict)
 import Data.Functor.Const (Const(..))
 import Data.Functor.Identity (Identity(..))
 import Data.Proxy (Proxy(..))
@@ -24,21 +23,25 @@ import Prelude.Compat
 -- of an AST. As opposed to the `ChildrenConstraint` type family which
 -- only carries a constraint to the direct children of an AST.
 class (Children expr, constraint expr) => Recursive constraint expr where
-    recursive :: RecursiveDict constraint expr
+    recursive ::
+        Proxy (constraint expr) ->
+        (RecursiveConstraint expr constraint => a) ->
+        a
     {-# INLINE recursive #-}
     -- | When an instance's constraints already imply
     -- `RecursiveConstraint expr constraint`, the default
     -- implementation can be used.
     default recursive ::
-        RecursiveConstraint expr constraint => RecursiveDict constraint expr
-    recursive = Dict
+        RecursiveConstraint expr constraint =>
+        Proxy (constraint expr) ->
+        (RecursiveConstraint expr constraint => a) ->
+        a
+    recursive _ = id
 
 type RecursiveConstraint expr constraint =
     ( constraint expr
     , ChildrenConstraint expr (Recursive constraint)
     )
-
-type RecursiveDict constraint expr = Dict (RecursiveConstraint expr constraint)
 
 instance constraint Pure => Recursive constraint Pure
 instance constraint (Const a) => Recursive constraint (Const a)
@@ -52,7 +55,7 @@ wrapM ::
     Tree Pure expr ->
     m (Tree f expr)
 wrapM p f (Pure x) =
-    withDict (recursive :: RecursiveDict constraint expr) $
+    recursive (Proxy :: Proxy (constraint expr)) $
     children (Proxy :: Proxy (Recursive constraint)) (wrapM p f) x >>= f
 
 {-# INLINE unwrapM #-}
@@ -64,7 +67,7 @@ unwrapM ::
     Tree f expr ->
     m (Tree Pure expr)
 unwrapM p f x =
-    withDict (recursive :: RecursiveDict constraint expr) $
+    recursive (Proxy :: Proxy (constraint expr)) $
     f x >>= children (Proxy :: Proxy (Recursive constraint)) (unwrapM p f) <&> Pure
 
 {-# INLINE wrap #-}
@@ -116,8 +119,8 @@ foldMapRecursive ::
     Tree expr f ->
     a
 foldMapRecursive p f x =
-    withDict (recursive :: RecursiveDict constraint expr) $
-    withDict (recursive :: RecursiveDict Children f) $
+    recursive (Proxy :: Proxy (constraint expr)) $
+    recursive (Proxy :: Proxy (Children f)) $
     f x <>
     foldMapChildren (Proxy :: Proxy (Recursive constraint))
     (foldMapChildren (Proxy :: Proxy (Recursive Children)) (foldMapRecursive p f))

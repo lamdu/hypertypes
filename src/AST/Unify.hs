@@ -26,7 +26,6 @@ import AST.Unify.Error (UnifyError(..))
 import AST.Unify.Term (UTerm(..), UTermBody(..), uConstraints, uBody)
 import AST.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify(..), QVarHasInstance)
 import Control.Lens.Operators
-import Data.Constraint (withDict)
 import Data.Maybe (fromMaybe)
 import Data.Proxy (Proxy(..))
 
@@ -83,7 +82,7 @@ occursError v (UTermBody c b) =
 {-# INLINE applyBindings #-}
 applyBindings :: forall m t. Recursive (Unify m) t => Tree (UVar m) t -> m (Tree Pure t)
 applyBindings v0 =
-    withDict (recursive :: RecursiveDict (Unify m) t) $
+    recursive (Proxy :: Proxy (Unify m t)) $
     semiPruneLookup v0
     >>=
     \(v1, x) ->
@@ -135,7 +134,7 @@ updateTermConstraints ::
     Recursive (Unify m) t =>
     Tree (UVar m) t -> Tree (UTermBody (UVar m)) t -> TypeConstraintsOf t -> m ()
 updateTermConstraints v t newConstraints =
-    withDict (recursive :: RecursiveDict (Unify m) t) $
+    recursive (Proxy :: Proxy (Unify m t)) $
     if newConstraints `leq` (t ^. uConstraints)
         then pure ()
         else
@@ -157,7 +156,7 @@ unify ::
     Recursive (Unify m) t =>
     Tree (UVar m) t -> Tree (UVar m) t -> m (Tree (UVar m) t)
 unify x0 y0 =
-    withDict (recursive :: RecursiveDict (Unify m) t) $
+    recursive (Proxy :: Proxy (Unify m t)) $
     let unifyTerms x1 xt y1 yt =
             do
                 bindVar binding y1 (UVar x1)

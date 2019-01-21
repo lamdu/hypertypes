@@ -22,7 +22,6 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.Writer (WriterT(..), tell)
-import           Data.Constraint (withDict)
 import           Data.Monoid (All(..))
 import           Data.Proxy (Proxy(..))
 
@@ -58,7 +57,7 @@ instance Children ast => Children (Generalized ast) where
         (forall child. constraint child => Tree n child -> f (Tree m child)) ->
         Tree (Generalized ast) n -> f (Tree (Generalized ast) m)
     children p f (Generalized g) =
-        withDict (recursive :: RecursiveDict constraint ast) $
+        recursive (Proxy :: Proxy (constraint ast)) $
         case g of
         GMono x -> f x <&> GMono
         GPoly x -> f x <&> GPoly
@@ -76,7 +75,7 @@ generalize ::
     Recursive (Unify m) t =>
     Tree (UVar m) t -> m (Tree (Generalized t) (UVar m))
 generalize v0 =
-    withDict (recursive :: RecursiveDict (Unify m) t) $
+    recursive (Proxy :: Proxy (Unify m t)) $
     do
         (v1, u) <- semiPruneLookup v0
         c <- scopeConstraints
@@ -122,7 +121,7 @@ instantiateWith action (Generalized g) =
             Recursive (Unify m) child =>
             Tree (GTerm (UVar m)) child -> WriterT [m ()] m (Tree (UVar m) child)
         go =
-            withDict (recursive :: RecursiveDict (Unify m) child) $
+            recursive (Proxy :: Proxy (Unify m child)) $
             \case
             GMono x -> pure x
             GBody x -> children (Proxy :: Proxy (Recursive (Unify m))) go x >>= lift . newTerm

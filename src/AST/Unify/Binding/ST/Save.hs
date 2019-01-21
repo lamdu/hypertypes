@@ -13,7 +13,6 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.ST.Class (MonadST(..))
 import           Control.Monad.Trans.State (StateT(..))
-import           Data.Constraint (withDict)
 import           Data.Functor.Const (Const(..))
 import           Data.Proxy (Proxy(..))
 import qualified Data.Sequence as Sequence
@@ -32,7 +31,7 @@ saveUTerm (UUnbound c) = UUnbound c & pure
 saveUTerm (USkolem c) = USkolem c & pure
 saveUTerm (UVar v) = saveVar v <&> UVar
 saveUTerm (UTerm u) =
-    withDict (recursive :: RecursiveDict (HasChild typeVars) t) $
+    recursive (Proxy :: Proxy (HasChild typeVars t)) $
     uBody saveBody u <&> UTerm
 saveUTerm UInstantiated{} = error "converting bindings during instantiation"
 saveUTerm UResolving{} = error "converting bindings after resolution"

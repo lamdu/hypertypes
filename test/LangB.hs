@@ -32,7 +32,6 @@ import           Control.Monad.RWS
 import           Control.Monad.Reader
 import           Control.Monad.ST
 import           Control.Monad.ST.Class (MonadST(..))
-import           Data.Constraint
 import           Data.Map (Map)
 import           Data.Proxy
 import           Text.PrettyPrint ((<+>))
@@ -93,7 +92,7 @@ instance
     infer (BLit x) = newTerm TInt <&> (, BLit x)
     infer (BToNom x) = infer x <&> _2 %~ BToNom
     infer (BRecExtend (RowExtend k v r)) =
-        withDict (recursive :: RecursiveDict (Unify m) Typ) $
+        recursive (Proxy :: Proxy (Unify m Typ)) $
         do
             vI <- inferNode v
             rI <- inferNode r
@@ -105,7 +104,7 @@ instance
                 >>= newTerm . TRec
                 <&> (, BRecExtend (RowExtend k vI rI))
     infer BRecEmpty =
-        withDict (recursive :: RecursiveDict (Unify m) Typ) $
+        recursive (Proxy :: Proxy (Unify m Typ)) $
         newTerm REmpty >>= newTerm . TRec <&> (, BRecEmpty)
     infer (BGetField w k) =
         do

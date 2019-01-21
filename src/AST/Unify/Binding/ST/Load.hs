@@ -19,7 +19,6 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.ST.Class (MonadST(..))
 import           Data.Array.ST (STArray, newArray, readArray, writeArray)
-import           Data.Constraint (withDict)
 import           Data.Functor.Const (Const(..))
 import           Data.Proxy (Proxy(..))
 import qualified Data.Sequence as Sequence
@@ -45,7 +44,7 @@ loadUTerm _ _ (UUnbound c) = UUnbound c & pure
 loadUTerm _ _ (USkolem c) = USkolem c & pure
 loadUTerm src conv (UVar v) = loadVar src conv v <&> UVar
 loadUTerm src conv (UTerm u) =
-    withDict (recursive :: RecursiveDict (HasChild typeVars `And` Unify m) t) $
+    recursive (Proxy :: Proxy ((HasChild typeVars `And` Unify m) t)) $
     uBody (loadBody src conv) u <&> UTerm
 loadUTerm _ _ UResolving{} = error "converting bindings after resolution"
 loadUTerm _ _ UResolved{} = error "converting bindings after resolution"
