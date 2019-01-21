@@ -26,6 +26,7 @@ instance (c (TypeOf ast), ChildrenWithConstraint (ScopeOf ast) c) => InferredChi
 
 instance Children (Inferred ast a) where
     type ChildrenConstraint (Inferred ast a) c = Recursive (InferredChildConstraints c) ast
+    {-# INLINE children #-}
     children ::
         forall f c n m.
         (Applicative f, Recursive (InferredChildConstraints c) ast) =>

@@ -80,6 +80,7 @@ makeChildren ''FromNom
 
 instance Children varTypes => Children (NominalInst nomId varTypes) where
     type ChildrenConstraint (NominalInst nomId varTypes) c = ChildrenConstraint varTypes c
+    {-# INLINE children #-}
     children p f (NominalInst nomId args) =
         children p ((_QVarInstances . traverse) f) args
         <&> NominalInst nomId
