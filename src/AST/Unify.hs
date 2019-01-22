@@ -158,7 +158,7 @@ unify ::
 unify x0 y0
     | x0 == y0 = pure x0
     | otherwise =
-        go x0 y0 (unbound y0) (\x1 xt -> go y0 x1 (bindToTerm x1 xt) (unifyTerms x1 xt))
+        go x0 y0 unbound (\x1 xt -> go y0 x1 (bindToTerm x1 xt) (unifyTerms x1 xt))
     where
         unifyTerms x1 xt y1 yt =
             withDict (recursive :: RecursiveDict (Unify m) t) $
@@ -173,9 +173,9 @@ unify x0 y0
                 bindVar binding var (UVar dstVar)
                 updateTermConstraints var dstTerm level
                 pure dstVar
-        unbound other var level =
+        unbound var level =
             do
-                r <- updateConstraints level other
+                r <- updateConstraints level y0
                 r <$ bindVar binding var (UVar r)
         go var other onUnbound onTerm =
             semiPruneLookup var
