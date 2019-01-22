@@ -171,7 +171,7 @@ unify x0 y0
         bindToTerm dstVar dstTerm var level =
             do
                 bindVar binding var (UVar dstVar)
-                updateTermConstraints dstVar dstTerm level
+                updateTermConstraints var dstTerm level
                 pure dstVar
         unbound other var level =
             do
