@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, TypeFamilies, LambdaCase #-}
-{-# LANGUAGE ScopedTypeVariables, FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables, FlexibleContexts, BangPatterns #-}
 
 module AST.Unify
     ( module AST.Class.Unify
@@ -114,7 +114,7 @@ applyBindings v0 =
 updateConstraints ::
     Recursive (Unify m) t =>
     TypeConstraintsOf t -> Tree (UVar m) t -> m (Tree (UVar m) t)
-updateConstraints newConstraints var =
+updateConstraints !newConstraints var =
     do
         (v1, x) <- semiPruneLookup var
         case x of
@@ -158,7 +158,7 @@ unify ::
 unify x0 y0
     | x0 == y0 = pure x0
     | otherwise =
-        go x0 y0 unbound (\x1 xt -> go y0 x1 (bindToTerm x1 xt) (unifyTerms x1 xt))
+        go x0 y0 unbound (\x1 !xt -> go y0 x1 (bindToTerm x1 xt) (unifyTerms x1 xt))
     where
         unifyTerms x1 xt y1 yt =
             withDict (recursive :: RecursiveDict (Unify m) t) $
@@ -177,7 +177,7 @@ unify x0 y0
             do
                 r <- updateConstraints level y0
                 r <$ bindVar binding var (UVar r)
-        go var other onUnbound onTerm =
+        go var !other onUnbound onTerm =
             semiPruneLookup var
             >>=
             \case
