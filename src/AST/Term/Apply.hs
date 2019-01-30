@@ -7,8 +7,8 @@ module AST.Term.Apply
     , applyChildren
     ) where
 
-import AST.Class.Infer (Infer(..), inferNode, iType, TypeOf, ScopeOf)
 import AST
+import AST.Infer (Infer(..), inferNode, iType, TypeOf, ScopeOf)
 import AST.Term.FuncType
 import AST.Unify (unify, newUnbound, newTerm)
 import Control.DeepSeq (NFData)

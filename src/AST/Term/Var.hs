@@ -9,7 +9,7 @@ module AST.Term.Var
     ) where
 
 import           AST
-import           AST.Class.Infer (Infer(..), HasScope(..), TypeOf, ScopeOf)
+import           AST.Infer (Infer(..), HasScope(..), TypeOf, ScopeOf)
 import           AST.Unify (Unify, UVar)
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens

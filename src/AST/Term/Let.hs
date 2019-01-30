@@ -7,9 +7,8 @@ module AST.Term.Let
     ) where
 
 import           AST
-import           AST.Class.Infer
-import           AST.Class.Infer.ScopeLevel (MonadScopeLevel(..))
 import           AST.Class.Unify (UVar)
+import           AST.Infer
 import           AST.Unify.Generalize (Generalized, generalize)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)

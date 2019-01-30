@@ -12,8 +12,8 @@ module AST.Term.NamelessScope
     ) where
 
 import           AST
-import           AST.Class.Infer (Infer(..), HasScope, inferNode, iType, TypeOf, ScopeOf)
 import           AST.Class.Infer.Infer1 (Infer1(..), HasTypeOf1(..))
+import           AST.Infer (Infer(..), HasScope, inferNode, iType, TypeOf, ScopeOf)
 import           AST.Term.FuncType
 import           AST.Unify (Unify(..), UVar, newUnbound, newTerm)
 import           Control.Lens (Lens', Prism')

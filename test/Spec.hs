@@ -1,11 +1,9 @@
 {-# LANGUAGE FlexibleContexts, TypeFamilies, BlockArguments, ScopedTypeVariables #-}
 
 import           AST
-import           AST.Class.Infer
-import           AST.Class.Infer.Inferred
-import           AST.Class.Infer.ScopeLevel
 import           AST.Class.Recursive
 import           AST.Class.Unify
+import           AST.Infer
 import           AST.Term.NamelessScope
 import           AST.Term.Nominal
 import           AST.Term.Scheme

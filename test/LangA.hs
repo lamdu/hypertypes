@@ -10,11 +10,9 @@ module LangA where
 import           TypeLang
 
 import           AST
-import           AST.Class.Infer
 import           AST.Class.Infer.Infer1
-import           AST.Class.Infer.Inferred
-import           AST.Class.Infer.ScopeLevel
 import           AST.Class.Unify
+import           AST.Infer
 import           AST.Term.Apply
 import           AST.Term.NamelessScope
 import           AST.Term.NamelessScope.InvDeBruijn

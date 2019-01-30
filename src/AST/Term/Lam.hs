@@ -8,7 +8,7 @@ module AST.Term.Lam
     ) where
 
 import           AST
-import           AST.Class.Infer
+import           AST.Infer
 import           AST.Term.FuncType
 import           AST.Unify (UVar, newUnbound, newTerm)
 import           Control.DeepSeq (NFData)

@@ -2,14 +2,14 @@
 {-# LANGUAGE UndecidableInstances, ScopedTypeVariables, FlexibleInstances, RankNTypes #-}
 {-# LANGUAGE ConstraintKinds, UndecidableSuperClasses, InstanceSigs, FlexibleContexts #-}
 
-module AST.Class.Infer.Inferred
+module AST.Infer.Inferred
     ( Inferred(..), _Inferred
     , InferredChildConstraints
     ) where
 
 import AST.Class.Children (Children(..), ChildrenWithConstraint)
-import AST.Class.Infer (ITerm(..), TypeOf, ScopeOf)
 import AST.Class.Recursive (Recursive(..), RecursiveDict)
+import AST.Infer.Term (ITerm(..), TypeOf, ScopeOf)
 import AST.Knot (Tree, RunKnot)
 import Control.Lens (makePrisms)
 import Control.Lens.Operators

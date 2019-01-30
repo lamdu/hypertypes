@@ -6,8 +6,8 @@ module TypeLang where
 
 import           AST
 import           AST.Class.HasChild
-import           AST.Class.Infer.ScopeLevel
 import           AST.Class.Unify
+import           AST.Infer
 import           AST.Term.FuncType
 import           AST.Term.NamelessScope
 import           AST.Term.Nominal

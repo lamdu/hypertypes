@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric #-}
 
-module AST.Class.Infer.ScopeLevel
+module AST.Infer.ScopeLevel
     ( MonadScopeLevel(..)
     , ScopeLevel(..), _ScopeLevel
     ) where

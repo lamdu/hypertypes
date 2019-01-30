@@ -19,9 +19,9 @@ import           Algebra.Lattice (JoinSemiLattice(..))
 import           AST
 import           AST.Class.Combinators
 import           AST.Class.HasChild (HasChild(..))
-import           AST.Class.Infer (Infer(..), TypeOf, ScopeOf, inferNode, iType)
 import           AST.Class.Recursive (wrapM)
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
+import           AST.Infer (Infer(..), TypeOf, ScopeOf, inferNode, iType)
 import           AST.Term.FuncType (HasFuncType(..), FuncType(..))
 import           AST.Term.Map (TermMap(..), _TermMap)
 import           AST.Term.Scheme

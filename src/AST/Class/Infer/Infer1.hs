@@ -7,7 +7,7 @@ module AST.Class.Infer.Infer1
     ( HasTypeOf1(..), Infer1(..)
     ) where
 
-import AST.Class.Infer (Infer, TypeOf)
+import AST.Infer (Infer, TypeOf)
 import AST.Knot (Knot)
 import Data.Constraint (Constraint, Dict, (:-))
 import Data.Proxy (Proxy(..))

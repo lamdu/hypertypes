@@ -9,8 +9,7 @@ module AST.Term.TypeSig
 import           AST
 import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
-import           AST.Class.Infer (Infer(..), TypeOf, ScopeOf, inferNode, iType)
-import           AST.Class.Infer.ScopeLevel (MonadScopeLevel(..))
+import           AST.Infer (Infer(..), TypeOf, ScopeOf, MonadScopeLevel(..), inferNode, iType)
 import           AST.Term.Scheme (Scheme, schemeAsType)
 import           AST.Unify (Unify, unify, QVarHasInstance)
 import           Control.DeepSeq (NFData)
