@@ -5,17 +5,18 @@
 
 module AST.Knot.Ann
     ( Ann(..), ann, val
-    , annotations
+    , annotations, strip
     , para
     ) where
 
 import           AST.Class.Children (Children(..), overChildren)
-import           AST.Class.Recursive (Recursive(..), RecursiveDict)
+import           AST.Class.Recursive (Recursive(..), RecursiveDict, unwrap)
 import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import           AST.Knot (Tie, Tree)
 import           AST.Knot.Pure (Pure(..))
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Traversal, makeLenses)
+import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           Data.Constraint (Constraint, withDict)
 import           Data.Proxy (Proxy(..))
@@ -72,6 +73,9 @@ para p f x =
             withDict (recursive :: RecursiveDict constraint expr) $
             overChildren (Proxy :: Proxy (Recursive constraint))
             (para p f) (getPure x)
+
+strip :: Recursive Children expr => Tree (Ann a) expr -> Tree Pure expr
+strip = unwrap (Proxy :: Proxy Children) (^. val)
 
 type Deps c a t = ((c a, c (Tie t (Ann a))) :: Constraint)
 deriving instance Deps Eq   a t => Eq   (Ann a t)
