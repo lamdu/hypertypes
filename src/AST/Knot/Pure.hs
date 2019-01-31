@@ -6,6 +6,7 @@ module AST.Knot.Pure
     ) where
 
 import AST.Class.Children.TH (makeChildren)
+import AST.Class.ZipMatch (ZipMatch(..), Both(..))
 import AST.Knot (Tie)
 import Control.DeepSeq (NFData)
 import Control.Lens (makePrisms)
@@ -20,6 +21,9 @@ newtype Pure k = Pure { getPure :: Tie k Pure }
     deriving Generic
 makePrisms ''Pure
 makeChildren ''Pure
+
+instance ZipMatch Pure where
+    zipMatch (Pure x) (Pure y) = Just (Pure (Both x y))
 
 instance Show (Tie k Pure) => Show (Pure k) where
     showsPrec p (Pure x) = (showCon "Pure" @| x) p

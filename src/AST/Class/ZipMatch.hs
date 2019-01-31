@@ -12,6 +12,7 @@ import           AST.Class.Children.TH (makeChildren)
 import           AST.Knot (Knot, Tree)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
+import           Control.Monad (guard)
 import           Data.Functor.Const (Const(..))
 import           Data.Functor.Identity (Identity(..))
 import           Data.Proxy (Proxy(..))
@@ -30,7 +31,12 @@ class Children expr => ZipMatch expr where
     zipMatch :: Tree expr a -> Tree expr b -> Maybe (Tree expr (Both a b))
 
 instance (ZipMatch a, ZipMatch b) => ZipMatch (Both a b) where
+    {-# INLINE zipMatch #-}
     zipMatch (Both a0 b0) (Both a1 b1) = Both <$> zipMatch a0 a1 <*> zipMatch b0 b1
+
+instance Eq a => ZipMatch (Const a) where
+    {-# INLINE zipMatch #-}
+    zipMatch (Const x) (Const y) = Const x <$ guard (x == y)
 
 {-# INLINE zipMatchWithA #-}
 zipMatchWithA ::
