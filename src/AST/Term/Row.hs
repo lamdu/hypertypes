@@ -1,32 +1,39 @@
 {-# LANGUAGE NoImplicitPrelude, DeriveGeneric, TemplateHaskell, TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
 {-# LANGUAGE StandaloneDeriving, ConstraintKinds, FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE LambdaCase #-}
 
 module AST.Term.Row
     ( RowConstraints(..), RowKey
     , RowExtend(..), eKey, eVal, eRest
+    , FlatRowExtends(..), freExtends, freRest
+    , flatten
     , applyRowExtendConstraints, rowExtendStructureMismatch
     , rowElementInfer
     ) where
 
-import AST
-import AST.Class.Unify (Unify(..), UVar)
-import AST.Unify (TypeConstraints(..), HasTypeConstraints(..), MonadScopeConstraints(..), unify, newTerm, newUnbound)
-import AST.Unify.Binding (Binding(..))
-import AST.Unify.Term (UTerm(..))
-import Algebra.Lattice (JoinSemiLattice(..))
-import Control.DeepSeq (NFData)
-import Control.Lens (Lens', makeLenses, contains)
-import Control.Lens.Operators
-import Control.Monad (when)
-import Data.Binary (Binary)
-import Data.Constraint (Constraint)
-import Data.Proxy (Proxy(..))
-import Data.Set (Set)
-import GHC.Generics (Generic)
-import Text.Show.Combinators ((@|), showCon)
+import           AST
+import           AST.Class.Unify (Unify(..), UVar)
+import           AST.Unify (TypeConstraints(..), HasTypeConstraints(..), MonadScopeConstraints(..), unify, newTerm, newUnbound, semiPruneLookup)
+import           AST.Unify.Binding (Binding(..))
+import           AST.Unify.Term (UTerm(..), _UTerm, uBody)
+import           Algebra.Lattice (JoinSemiLattice(..))
+import           Control.DeepSeq (NFData)
+import           Control.Lens (Prism', Lens', makeLenses, contains)
+import qualified Control.Lens as Lens
+import           Control.Lens.Operators
+import           Control.Monad (when, foldM)
+import           Data.Binary (Binary)
+import           Data.Constraint (Constraint)
+import           Data.Foldable (sequenceA_)
+import           Data.Map (Map)
+import qualified Data.Map as Map
+import           Data.Proxy (Proxy(..))
+import           Data.Set (Set)
+import           GHC.Generics (Generic)
+import           Text.Show.Combinators ((@|), showCon)
 
-import Prelude.Compat
+import           Prelude.Compat
 
 class
     (Ord (RowConstraintsKey constraints), TypeConstraints constraints) =>
@@ -44,8 +51,15 @@ data RowExtend key val rest k = RowExtend
     , _eRest :: Tie k rest
     } deriving Generic
 
+data FlatRowExtends key val rest k = FlatRowExtends
+    { _freExtends :: Map key (Tie k val)
+    , _freRest :: Tie k rest
+    } deriving Generic
+
 makeLenses ''RowExtend
+makeLenses ''FlatRowExtends
 makeChildrenAndZipMatch ''RowExtend
+makeChildren ''FlatRowExtends
 
 instance
     RecursiveConstraint (RowExtend key val rest) constraint =>
@@ -55,6 +69,32 @@ type Deps c key val rest k = ((c key, c (Tie k val), c (Tie k rest)) :: Constrai
 
 instance Deps Show key val rest k => Show (RowExtend key val rest k) where
     showsPrec p (RowExtend k v r) = (showCon "RowExtend" @| k @| v @| r) p
+
+{-# INLINE flatten #-}
+flatten ::
+    (Ord key, Monad m) =>
+    (Tree v rest -> m (Maybe (Tree (RowExtend key val rest) v))) ->
+    Tree (RowExtend key val rest) v ->
+    m (Tree (FlatRowExtends key val rest) v)
+flatten nextExtend (RowExtend k v rest) =
+    nextExtend rest
+    >>=
+    \case
+    Nothing -> pure (FlatRowExtends m rest)
+    Just r ->
+        flatten nextExtend r
+        <&> freExtends %~ Map.unionWith (error "Colliding keys") m
+    where
+        m = Map.singleton k v
+
+unflatten ::
+    Monad m =>
+    (Tree (RowExtend key val rest) v -> m (Tree v rest)) ->
+    Tree (FlatRowExtends key val rest) v -> m (Tree v rest)
+unflatten mkExtend (FlatRowExtends fields rest) =
+    Map.toList fields & foldM f rest
+    where
+        f acc (key, val) = RowExtend key val acc & mkExtend
 
 -- Helpers for Unify instances of type-level RowExtends:
 
@@ -81,17 +121,34 @@ applyRowExtendConstraints _ c toChildC err update (RowExtend k v rest) =
 
 {-# INLINE rowExtendStructureMismatch #-}
 rowExtendStructureMismatch ::
-    Recursive (Unify m) rowTyp =>
-    (Tree (RowExtend key valTyp rowTyp) (UVar m) -> m (Tree (UVar m) rowTyp)) ->
+    Ord key =>
+    ( Recursive (Unify m) rowTyp
+    , Recursive (Unify m) valTyp
+    ) =>
+    Prism' (Tree rowTyp (UVar m))
+        (Tree (RowExtend key valTyp rowTyp) (UVar m)) ->
     (TypeConstraintsOf rowTyp, Tree (RowExtend key valTyp rowTyp) (UVar m)) ->
     (TypeConstraintsOf rowTyp, Tree (RowExtend key valTyp rowTyp) (UVar m)) ->
     m ()
-rowExtendStructureMismatch mkExtend (c0, RowExtend k0 v0 r0) (c1, RowExtend k1 v1 r1) =
+rowExtendStructureMismatch extend (c0, r0) (c1, r1) =
     do
+        flat0 <- flatten nextExtend r0
+        flat1 <- flatten nextExtend r1
+        Map.intersectionWith unify (flat0 ^. freExtends) (flat1 ^. freExtends)
+            & sequenceA_
         restVar <- c0 \/ c1 & UUnbound & newVar binding
-        _ <- RowExtend k0 v0 restVar & mkExtend >>= unify r1
-        _ <- RowExtend k1 v1 restVar & mkExtend >>= unify r0
+        let side x y =
+                unflatten mkExtend FlatRowExtends
+                { _freExtends =
+                  (x ^. freExtends) `Map.difference` (y ^. freExtends)
+                , _freRest = restVar
+                } >>= unify (y ^. freRest)
+        _ <- side flat0 flat1
+        _ <- side flat1 flat0
         pure ()
+    where
+        mkExtend ext = extend # ext & newTerm
+        nextExtend v = semiPruneLookup v <&> (^? Lens._2 . _UTerm . uBody . extend)
 
 -- Helper for infering row usages of a row element,
 -- such as getting a field from a record or injecting into a sum type.
@@ -118,3 +175,8 @@ deriving instance Deps Eq   key val rest k => Eq   (RowExtend key val rest k)
 deriving instance Deps Ord  key val rest k => Ord  (RowExtend key val rest k)
 instance Deps Binary key val rest k => Binary (RowExtend key val rest k)
 instance Deps NFData key val rest k => NFData (RowExtend key val rest k)
+
+deriving instance Deps Eq   key val rest k => Eq   (FlatRowExtends key val rest k)
+deriving instance Deps Ord  key val rest k => Ord  (FlatRowExtends key val rest k)
+instance Deps Binary key val rest k => Binary (FlatRowExtends key val rest k)
+instance Deps NFData key val rest k => NFData (FlatRowExtends key val rest k)
