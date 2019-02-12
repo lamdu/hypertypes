@@ -12,9 +12,9 @@ import           AST.Infer
 import           AST.Term.Apply
 import           AST.Term.Lam
 import           AST.Term.Let
+import           AST.Term.Nominal
 import           AST.Term.Row
 import           AST.Term.Var
-import           AST.Term.Nominal
 import           AST.Unify
 import           AST.Unify.Binding
 import           AST.Unify.Binding.Pure
@@ -33,6 +33,7 @@ import           Control.Monad.ST.Class (MonadST(..))
 import           Data.Constraint
 import           Data.Map (Map)
 import           Data.Proxy
+import           Data.STRef
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
@@ -145,6 +146,11 @@ newtype PureInferB a =
 
 Lens.makePrisms ''PureInferB
 
+execPureInferB :: PureInferB a -> Either (Tree TypeError Pure) a
+execPureInferB act =
+    runRWST (act ^. _PureInferB) emptyInferScope emptyPureInferState
+    <&> (^. Lens._1)
+
 type instance UVar PureInferB = Const Int
 
 instance MonadNominals Name Typ PureInferB where
@@ -200,6 +206,12 @@ newtype STInferB s a =
     )
 
 Lens.makePrisms ''STInferB
+
+execSTInferB :: STInferB s a -> ST s (Either (Tree TypeError Pure) a)
+execSTInferB act =
+    do
+        qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
+        runReaderT (act ^. _STInferB) (emptyInferScope, qvarGen) & runExceptT
 
 type instance UVar (STInferB s) = STVar s
 

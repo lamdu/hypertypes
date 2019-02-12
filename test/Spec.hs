@@ -13,11 +13,8 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Except
 import           Control.Monad.RWS
-import           Control.Monad.Reader
 import           Control.Monad.ST
-import           Data.Functor.Const
 import           Data.Proxy
-import           Data.STRef
 import           LangA.Pure
 import           LangB.Pure
 import           System.Exit (exitFailure)
@@ -102,16 +99,6 @@ inferExpr x =
     >>= children (Proxy :: Proxy (Recursive (Unify m))) applyBindings
     <&> (^. _Inferred . iType)
 
-execPureInferA :: PureInferA a -> Either (Tree TypeError Pure) a
-execPureInferA (PureInferA act) =
-    runRWST act (mempty, ScopeLevel 0) emptyPureInferState <&> (^. Lens._1)
-
-execSTInferA :: STInferA s a -> ST s (Either (Tree TypeError Pure) a)
-execSTInferA (STInferA act) =
-    do
-        qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
-        runReaderT act (mempty, ScopeLevel 0, qvarGen) & runExceptT
-
 vecNominalDecl :: Tree Pure (NominalDecl Typ)
 vecNominalDecl =
     Pure NominalDecl
@@ -155,17 +142,6 @@ withNominals l act =
                 & Lens.at (Name "PhantomInt") ?~ phantom
         local (l . nominals %~ addNoms) act
 
-execPureInferB :: PureInferB a -> Either (Tree TypeError Pure) a
-execPureInferB act =
-    runRWST (withNominals id act ^. _PureInferB) emptyInferScope emptyPureInferState
-    <&> (^. Lens._1)
-
-execSTInferB :: STInferB s a -> ST s (Either (Tree TypeError Pure) a)
-execSTInferB act =
-    do
-        qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
-        runReaderT (withNominals Lens._1 act ^. _STInferB) (emptyInferScope, qvarGen) & runExceptT
-
 prettyPrint :: Pretty a => a -> IO ()
 prettyPrint = print . pPrint
 
@@ -201,8 +177,8 @@ testB :: Tree Pure LangB -> String -> IO Bool
 testB expr expect =
     testCommon expr expect pureRes stRes
     where
-        pureRes = execPureInferB (inferExpr expr)
-        stRes = runST (execSTInferB (inferExpr expr))
+        pureRes = execPureInferB (withNominals id (inferExpr expr))
+        stRes = runST (execSTInferB (withNominals Lens._1 (inferExpr expr)))
 
 main :: IO ()
 main =

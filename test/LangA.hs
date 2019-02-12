@@ -31,6 +31,7 @@ import           Control.Monad.ST
 import           Control.Monad.ST.Class (MonadST(..))
 import           Data.Constraint
 import           Data.Proxy (Proxy(..))
+import           Data.STRef
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
@@ -102,6 +103,10 @@ newtype PureInferA a =
     , MonadState PureInferState
     )
 
+execPureInferA :: PureInferA a -> Either (Tree TypeError Pure) a
+execPureInferA (PureInferA act) =
+    runRWST act (mempty, ScopeLevel 0) emptyPureInferState <&> (^. Lens._1)
+
 type instance UVar PureInferA = Const Int
 
 instance HasScope PureInferA (ScopeTypes Typ) where
@@ -147,6 +152,12 @@ newtype STInferA s a =
     , MonadError (Tree TypeError Pure)
     , MonadReader (Tree (ScopeTypes Typ) (STVar s), ScopeLevel, STNameGen s)
     )
+
+execSTInferA :: STInferA s a -> ST s (Either (Tree TypeError Pure) a)
+execSTInferA (STInferA act) =
+    do
+        qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
+        runReaderT act (mempty, ScopeLevel 0, qvarGen) & runExceptT
 
 type instance UVar (STInferA s) = STVar s
 
