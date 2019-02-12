@@ -2,7 +2,8 @@
 
 module AST.Infer.Term
     ( TypeOf, ScopeOf
-    , ITerm(..), iVal, iType, iScope, iAnn
+    , IPayload(..), iplType, iplScope, iplAnn
+    , ITerm(..), iVal, iPayload
     ) where
 
 import AST
@@ -10,6 +11,12 @@ import Control.Lens (makeLenses)
 
 type family TypeOf (t :: Knot -> *) :: Knot -> *
 type family ScopeOf (t :: Knot -> *) :: Knot -> *
+
+data IPayload a v e = IPayload
+    { _iplType :: Tree v (TypeOf (RunKnot e))
+    , _iplScope :: Tree (ScopeOf (RunKnot e)) v
+    , _iplAnn :: a
+    }
 
 -- | Knot for terms, annotating them with inference results
 --
@@ -20,8 +27,8 @@ type family ScopeOf (t :: Knot -> *) :: Knot -> *
 -- knotted by `v` whose children are the types.
 data ITerm a v e = ITerm
     { _iVal :: Tie e (ITerm a v)
-    , _iType :: Tree v (TypeOf (RunKnot e))
-    , _iScope :: Tree (ScopeOf (RunKnot e)) v
-    , _iAnn :: a
+    , _iPayload :: {-# UNPACK #-} !(IPayload a v e)
     }
+
+makeLenses ''IPayload
 makeLenses ''ITerm

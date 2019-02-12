@@ -21,7 +21,7 @@ import           AST.Class.Combinators
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Recursive (wrapM)
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
-import           AST.Infer (Infer(..), TypeOf, ScopeOf, inferNode, iType)
+import           AST.Infer (Infer(..), TypeOf, ScopeOf, inferNode, iPayload, iplType)
 import           AST.Term.FuncType (HasFuncType(..), FuncType(..))
 import           AST.Term.Map (TermMap(..), _TermMap)
 import           AST.Term.Scheme
@@ -237,7 +237,7 @@ instance
                             foralls
                         lookupParams params
             (typ, paramsT) <- instantiateWith initNom gen
-            _ <- unify typ (valI ^. iType)
+            _ <- unify typ (valI ^. iPayload . iplType)
             nominalInst # NominalInst nomId paramsT & newTerm
                 <&> (, ToNom nomId valI)
         where

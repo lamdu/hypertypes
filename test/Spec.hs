@@ -100,7 +100,7 @@ inferExpr x =
     inferNode (wrap (Proxy :: Proxy Children) (Ann ()) x)
     <&> Inferred
     >>= children (Proxy :: Proxy (Recursive (Unify m))) applyBindings
-    <&> (^. _Inferred . iType)
+    <&> (^. _Inferred . iPayload . iplType)
 
 execPureInferA :: PureInferA a -> Either (Tree TypeError Pure) a
 execPureInferA (PureInferA act) =

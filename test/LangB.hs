@@ -98,8 +98,8 @@ instance
             restR <-
                 scopeConstraints <&> rForbiddenFields . Lens.contains k .~ True
                 >>= newVar binding . UUnbound
-            _ <- TRec restR & newTerm >>= unify (rI ^. iType)
-            RowExtend k (vI ^. iType) restR & RExtend & newTerm
+            _ <- TRec restR & newTerm >>= unify (rI ^. iPayload . iplType)
+            RowExtend k (vI ^. iPayload . iplType) restR & RExtend & newTerm
                 >>= newTerm . TRec
                 <&> (, BRecExtend (RowExtend k vI rI))
     infer BRecEmpty =
@@ -109,7 +109,7 @@ instance
         do
             (rT, wR) <- rowElementInfer RExtend k
             wI <- inferNode w
-            _ <- TRec wR & newTerm >>= unify (wI ^. iType)
+            _ <- TRec wR & newTerm >>= unify (wI ^. iPayload . iplType)
             pure (rT, BGetField wI k)
 
 instance (c Typ, c Row) => Recursive (InferredChildConstraints (Recursive c)) LangB

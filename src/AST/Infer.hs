@@ -20,6 +20,6 @@ import Prelude.Compat
 {-# INLINE inferNode #-}
 inferNode :: Infer m t => Tree (Ann a) t -> m (Tree (ITerm a (UVar m)) t)
 inferNode (Ann a x) =
-    (\s (t, xI) -> ITerm xI t s a)
+    (\s (t, xI) -> ITerm xI (IPayload t s a))
     <$> getScope
     <*> infer x

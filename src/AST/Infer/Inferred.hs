@@ -9,7 +9,7 @@ module AST.Infer.Inferred
 
 import AST.Class.Children (Children(..), ChildrenWithConstraint)
 import AST.Class.Recursive (Recursive(..), RecursiveDict)
-import AST.Infer.Term (ITerm(..), TypeOf, ScopeOf)
+import AST.Infer.Term (IPayload(..), ITerm(..), TypeOf, ScopeOf)
 import AST.Knot (Tree, RunKnot)
 import Control.Lens (makePrisms)
 import Control.Lens.Operators
@@ -33,13 +33,15 @@ instance Children (Inferred ast a) where
         Proxy c ->
         (forall child. c child => Tree n child -> f (Tree m child)) ->
         Tree (Inferred ast a) n -> f (Tree (Inferred ast a) m)
-    children p f (Inferred (ITerm b t s a)) =
+    children p f (Inferred (ITerm b (IPayload t s a))) =
         withDict (recursive :: RecursiveDict (InferredChildConstraints c) ast) $
         ITerm
         <$> children (Proxy :: Proxy (Recursive (InferredChildConstraints c)))
             (fmap (^. _Inferred) . children p f . Inferred)
             b
-        <*> f t
-        <*> children p f s
-        <*> pure a
+        <*> (IPayload
+                <$> f t
+                <*> children p f s
+                <*> pure a
+            )
         <&> Inferred

@@ -57,7 +57,7 @@ instance
             rI <- localScopeType p varType (inferNode r)
             funcType # FuncType
                 { _funcIn = varType
-                , _funcOut = rI ^. iType
+                , _funcOut = rI ^. iPayload . iplType
                 } & newTerm
                 <&> (, Lam p rI)
 

@@ -8,7 +8,7 @@ module AST.Term.Apply
     ) where
 
 import AST
-import AST.Infer (Infer(..), inferNode, iType, TypeOf, ScopeOf)
+import AST.Infer (Infer(..), inferNode, iPayload, iplType, TypeOf, ScopeOf)
 import AST.Term.FuncType
 import AST.Unify (unify, newUnbound, newTerm)
 import Control.DeepSeq (NFData)
@@ -55,10 +55,10 @@ instance (Infer m expr, HasFuncType (TypeOf expr)) => Infer m (Apply expr) where
             funcRes <- newUnbound
             funcT <-
                 funcType # FuncType
-                { _funcIn = argI ^. iType
+                { _funcIn = argI ^. iPayload . iplType
                 , _funcOut = funcRes
                 } & newTerm
-            funcRes <$ unify funcT (funcI ^. iType)
+            funcRes <$ unify funcT (funcI ^. iPayload . iplType)
                 <&> (, Apply funcI argI)
 
 deriving instance Eq   (Tie k expr) => Eq   (Apply expr k)
