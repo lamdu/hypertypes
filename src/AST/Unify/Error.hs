@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, UndecidableInstances #-}
-{-# LANGUAGE ConstraintKinds, StandaloneDeriving #-}
+{-# LANGUAGE ConstraintKinds, StandaloneDeriving, LambdaCase #-}
 
 module AST.Unify.Error
     ( UnifyError(..)
@@ -13,7 +13,7 @@ import           Control.Lens (makePrisms)
 import           Data.Constraint (Constraint)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
-import           Text.PrettyPrint.HughesPJClass (Pretty(..))
+import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 import           Prelude.Compat
 
@@ -36,11 +36,19 @@ makeChildren ''UnifyError
 type Deps c t k = ((c (Tie k t), c (t k), c (TypeConstraintsOf t)) :: Constraint)
 
 instance Deps Pretty t k => Pretty (UnifyError t k) where
-    pPrint (SkolemUnified x y) = Pretty.text "SkolemUnified" <+> pPrint x <+> pPrint y
-    pPrint (SkolemEscape x) = Pretty.text "SkolemEscape" <+> pPrint x
-    pPrint (ConstraintsViolation x y) = Pretty.text "ConstraintsViolation" <+> pPrint x <+> pPrint y
-    pPrint (Mismatch x y) = Pretty.text "Mismatch" <+> pPrint x <+> pPrint y
-    pPrint (Occurs x y) =
-        pPrint x <+> Pretty.text "occurs in itself, expands to:" <+> pPrint y
+    pPrintPrec lvl p =
+        maybeParens haveParens . \case
+        SkolemUnified x y        -> Pretty.text "SkolemUnified" <+> r x <+> r y
+        SkolemEscape x           -> Pretty.text "SkolemEscape:" <+> r x
+        Mismatch x y             -> Pretty.text "Mismatch" <+> r x <+> r y
+        Occurs x y               -> r x <+> Pretty.text "occurs in itself, expands to:" <+> right y
+        ConstraintsViolation x y -> Pretty.text "ConstraintsViolation" <+> r x <+> r y
+        where
+            haveParens = p > 10
+            right
+                | haveParens = pPrintPrec lvl 0
+                | otherwise = pPrintPrec lvl p
+            r :: Pretty a => a -> Pretty.Doc
+            r = pPrintPrec lvl 11
 
 deriving instance Deps Eq t k => Eq (UnifyError t k)
