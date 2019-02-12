@@ -13,7 +13,7 @@ module AST.Term.NamelessScope
 
 import           AST
 import           AST.Class.Infer.Infer1 (Infer1(..), HasTypeOf1(..))
-import           AST.Infer (Infer(..), HasScope, inferNode, iPayload, iplType, TypeOf, ScopeOf)
+import           AST.Infer (Infer(..), HasScope, inferNode, iType, TypeOf, ScopeOf)
 import           AST.Term.FuncType
 import           AST.Unify (Unify(..), UVar, newUnbound, newTerm)
 import           Control.Lens (Lens', Prism')
@@ -104,7 +104,7 @@ instance
                 (inferNode x)
             funcType # FuncType
                 { _funcIn = varType
-                , _funcOut = xI ^. iPayload . iplType
+                , _funcOut = xI ^. iType
                 } & newTerm
                 <&> (, Scope xI)
         \\ (inferMonad :: DeBruijnIndex (Maybe k) :- Infer m (t (Maybe k)))

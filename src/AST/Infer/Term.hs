@@ -4,10 +4,13 @@ module AST.Infer.Term
     ( TypeOf, ScopeOf
     , IPayload(..), iplType, iplScope, iplAnn
     , ITerm(..), iVal, iPayload
+    , iType, iScope, iAnn
     ) where
 
 import AST
-import Control.Lens (makeLenses)
+import Control.Lens (Lens', makeLenses)
+
+import Prelude.Compat
 
 type family TypeOf (t :: Knot -> *) :: Knot -> *
 type family ScopeOf (t :: Knot -> *) :: Knot -> *
@@ -32,3 +35,12 @@ data ITerm a v e = ITerm
 
 makeLenses ''IPayload
 makeLenses ''ITerm
+
+iType :: Lens' (ITerm a v e) (Tree v (TypeOf (RunKnot e)))
+iType = iPayload . iplType
+
+iScope :: Lens' (ITerm a v e) (Tree (ScopeOf (RunKnot e)) v)
+iScope = iPayload . iplScope
+
+iAnn :: Lens' (ITerm a v e) a
+iAnn = iPayload . iplAnn

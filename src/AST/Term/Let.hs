@@ -56,10 +56,10 @@ instance
             (eI, eG) <-
                 do
                     eI <- inferNode e
-                    generalize (eI ^. iPayload . iplType) <&> (eI ,)
+                    generalize (eI ^. iType) <&> (eI ,)
                 & localLevel
             iI <- localScopeType v eG (inferNode i)
-            pure (iI ^. iPayload . iplType, Let v eI iI)
+            pure (iI ^. iType, Let v eI iI)
 
 deriving instance Deps v expr k Eq   => Eq   (Let v expr k)
 deriving instance Deps v expr k Ord  => Ord  (Let v expr k)

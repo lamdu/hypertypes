@@ -9,7 +9,7 @@ module AST.Term.TypeSig
 import           AST
 import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
-import           AST.Infer (Infer(..), TypeOf, ScopeOf, MonadScopeLevel(..), inferNode, iplType, iPayload)
+import           AST.Infer (Infer(..), TypeOf, ScopeOf, MonadScopeLevel(..), inferNode, iType)
 import           AST.Term.Scheme (Scheme, schemeAsType)
 import           AST.Unify (Unify, unify, QVarHasInstance)
 import           Control.DeepSeq (NFData)
@@ -56,7 +56,7 @@ instance
         do
             xI <- inferNode x
             schemeAsType s
-                >>= unify (xI ^. iPayload . iplType)
+                >>= unify (xI ^. iType)
                 <&> (, TypeSig xI s)
         & localLevel
 
