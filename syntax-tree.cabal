@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 21251c559ac0e12274f98cc9e91c7688f9a2dc214ca6b6844b51a3e3f50d3cb6
+-- hash: bd5ae002b30d9322ec2dec75dd1be540715ee48c7ab094985c91efcb9b877f8c
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -109,7 +109,6 @@ test-suite syntax-tree-test
       LangB.Pure
       TypeLang
       TypeLang.Pure
-      Paths_syntax_tree
   hs-source-dirs:
       test
   ghc-options: -Wall -Wcompat -threaded -rtsopts -with-rtsopts=-N
@@ -117,6 +116,30 @@ test-suite syntax-tree-test
       base
     , constraints
     , containers
+    , lattices
+    , lens
+    , monad-st
+    , mtl
+    , pretty
+    , syntax-tree
+    , transformers
+  default-language: Haskell2010
+
+benchmark syntax-tree-bench
+  type: exitcode-stdio-1.0
+  main-is: Benchmark.hs
+  other-modules:
+      LangB
+      TypeLang
+      TypeLang.Pure
+  hs-source-dirs:
+      test
+  ghc-options: -O2 -Wall -Wnoncanonical-monad-instances -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
+  build-depends:
+      base
+    , constraints
+    , containers
+    , criterion
     , lattices
     , lens
     , monad-st

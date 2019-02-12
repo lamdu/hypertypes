@@ -53,6 +53,13 @@ tests:
   syntax-tree-test:
     main: Spec.hs
     source-dirs: test
+    other-modules:
+    - LangA
+    - LangA.Pure
+    - LangB
+    - LangB.Pure
+    - TypeLang
+    - TypeLang.Pure
     ghc-options:
     - -Wall
     - -Wcompat
@@ -60,4 +67,24 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - syntax-tree
+
+benchmarks:
+  syntax-tree-bench:
+    main: Benchmark.hs
+    source-dirs: test
+    other-modules:
+    - LangB
+    - TypeLang
+    - TypeLang.Pure
+    ghc-options:
+    - -O2
+    - -Wall
+    - -Wnoncanonical-monad-instances
+    - -Wcompat
+    - -Wincomplete-record-updates
+    - -Wincomplete-uni-patterns
+    - -Wredundant-constraints
+    dependencies:
+    - criterion
     - syntax-tree
