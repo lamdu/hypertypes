@@ -30,6 +30,7 @@ import           Control.Monad.RWS
 import           Control.Monad.Reader
 import           Control.Monad.ST
 import           Control.Monad.ST.Class (MonadST(..))
+import           Control.Monad.Writer (WriterT)
 import           Data.Constraint
 import           Data.Map (Map)
 import           Data.Proxy
@@ -254,3 +255,24 @@ instance Unify (STInferB s) Row where
     unifyError e =
         children (Proxy :: Proxy (Recursive (Unify (STInferB s)))) applyBindings e
         >>= throwError . RowError
+
+{-# SPECIALIZE semiPruneLookup :: Tree (Const Int) Typ -> PureInferB (Tree (Const Int) Typ, Tree (UTerm (Const Int)) Typ) #-}
+{-# SPECIALIZE semiPruneLookup :: Tree (Const Int) Row -> PureInferB (Tree (Const Int) Row, Tree (UTerm (Const Int)) Row) #-}
+{-# SPECIALIZE semiPruneLookup :: Tree (STVar s) Typ -> STInferB s (Tree (STVar s) Typ, Tree (UTerm (STVar s)) Typ) #-}
+{-# SPECIALIZE semiPruneLookup :: Tree (STVar s) Row -> STInferB s (Tree (STVar s) Row, Tree (UTerm (STVar s)) Row) #-}
+{-# SPECIALIZE updateConstraints :: ScopeLevel -> Tree (Const Int) Typ -> PureInferB (Tree (Const Int) Typ) #-}
+{-# SPECIALIZE updateConstraints :: RConstraints -> Tree (Const Int) Row -> PureInferB (Tree (Const Int) Row) #-}
+{-# SPECIALIZE updateConstraints :: ScopeLevel -> Tree (STVar s) Typ -> STInferB s (Tree (STVar s) Typ) #-}
+{-# SPECIALIZE updateConstraints :: RConstraints -> Tree (STVar s) Row -> STInferB s (Tree (STVar s) Row) #-}
+{-# SPECIALIZE unify :: Tree (Const Int) Typ -> Tree (Const Int) Typ -> PureInferB (Tree (Const Int) Typ) #-}
+{-# SPECIALIZE unify :: Tree (Const Int) Row -> Tree (Const Int) Row -> PureInferB (Tree (Const Int) Row) #-}
+{-# SPECIALIZE unify :: Tree (STVar s) Typ -> Tree (STVar s) Typ -> STInferB s (Tree (STVar s) Typ) #-}
+{-# SPECIALIZE unify :: Tree (STVar s) Row -> Tree (STVar s) Row -> STInferB s (Tree (STVar s) Row) #-}
+{-# SPECIALIZE applyBindings :: Tree (Const Int) Typ -> PureInferB (Tree Pure Typ) #-}
+{-# SPECIALIZE applyBindings :: Tree (Const Int) Row -> PureInferB (Tree Pure Row) #-}
+{-# SPECIALIZE applyBindings :: Tree (STVar s) Typ -> STInferB s (Tree Pure Typ) #-}
+{-# SPECIALIZE applyBindings :: Tree (STVar s) Row -> STInferB s (Tree Pure Row) #-}
+{-# SPECIALIZE instantiateH :: Tree (GTerm (Const Int)) Typ -> WriterT [PureInferB ()] PureInferB (Tree (Const Int) Typ) #-}
+{-# SPECIALIZE instantiateH :: Tree (GTerm (Const Int)) Row -> WriterT [PureInferB ()] PureInferB (Tree (Const Int) Row) #-}
+{-# SPECIALIZE instantiateH :: Tree (GTerm (STVar s)) Typ -> WriterT [STInferB s ()] (STInferB s) (Tree (STVar s) Typ) #-}
+{-# SPECIALIZE instantiateH :: Tree (GTerm (STVar s)) Row -> WriterT [STInferB s ()] (STInferB s) (Tree (STVar s) Row) #-}
