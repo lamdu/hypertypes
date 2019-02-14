@@ -4,6 +4,7 @@ import           AST
 import           AST.Class.Recursive
 import           AST.Class.Unify
 import           AST.Infer
+import           AST.Knot.Flip
 import           AST.Term.NamelessScope
 import           AST.Term.Nominal
 import           AST.Term.Scheme
@@ -89,13 +90,13 @@ inferExpr ::
     forall m t.
     ( Infer m t
     , Recursive Children t
-    , Recursive (InferredChildConstraints (Recursive (Unify m))) t
+    , Recursive (InferChildConstraints (Recursive (Unify m))) t
     ) =>
     Tree Pure t ->
     m (Tree Pure (TypeOf t))
 inferExpr x =
     inferNode (wrap (Proxy :: Proxy Children) (Ann ()) x)
-    >>= Lens.from _Inferred (children (Proxy :: Proxy (Recursive (Unify m))) applyBindings)
+    >>= Lens.from _Flip (children (Proxy :: Proxy (Recursive (Unify m))) applyBindings)
     <&> (^. iType)
 
 vecNominalDecl :: Tree Pure (NominalDecl Typ)

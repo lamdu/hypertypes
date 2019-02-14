@@ -1,14 +1,22 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DataKinds, TypeFamilies #-}
+{-# LANGUAGE MultiParamTypeClasses, ConstraintKinds, FlexibleContexts #-}
+{-# LANGUAGE UndecidableInstances, UndecidableSuperClasses, FlexibleInstances #-}
+{-# LANGUAGE InstanceSigs, ScopedTypeVariables, RankNTypes #-}
 
 module AST.Infer.Term
     ( TypeOf, ScopeOf
     , IPayload(..), iplType, iplScope, iplAnn
     , ITerm(..), iVal, iPayload
+    , InferChildConstraints
     , iType, iScope, iAnn
     ) where
 
 import AST
+import AST.Knot.Flip (Flip(..), _Flip)
 import Control.Lens (Lens', makeLenses)
+import Control.Lens.Operators
+import Data.Constraint (withDict)
+import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
@@ -35,6 +43,31 @@ data ITerm a v e = ITerm
 
 makeLenses ''IPayload
 makeLenses ''ITerm
+
+class    (c (TypeOf ast), ChildrenWithConstraint (ScopeOf ast) c) => InferChildConstraints c ast
+instance (c (TypeOf ast), ChildrenWithConstraint (ScopeOf ast) c) => InferChildConstraints c ast
+
+instance Children (Flip (ITerm a) e) where
+    type ChildrenConstraint (Flip (ITerm a) e) c = Recursive (InferChildConstraints c) e
+    {-# INLINE children #-}
+    children ::
+        forall f c n m.
+        (Applicative f, Recursive (InferChildConstraints c) e) =>
+        Proxy c ->
+        (forall child. c child => Tree n child -> f (Tree m child)) ->
+        Tree (Flip (ITerm a) e) n -> f (Tree (Flip (ITerm a) e) m)
+    children p f (Flip (ITerm b (IPayload t s a))) =
+        withDict (recursive :: RecursiveDict (InferChildConstraints c) e) $
+        ITerm
+        <$> children (Proxy :: Proxy (Recursive (InferChildConstraints c)))
+            (fmap (^. _Flip) . children p f . Flip)
+            b
+        <*> (IPayload
+                <$> f t
+                <*> children p f s
+                <*> pure a
+            )
+        <&> Flip
 
 iType :: Lens' (ITerm a v e) (Tree v (TypeOf (RunKnot e)))
 iType = iPayload . iplType

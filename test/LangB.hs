@@ -113,7 +113,7 @@ instance
             _ <- TRec wR & newTerm >>= unify (wI ^. iType)
             pure (rT, BGetField wI k)
 
-instance (c Typ, c Row) => Recursive (InferredChildConstraints (Recursive c)) LangB
+instance (c Typ, c Row) => Recursive (InferChildConstraints (Recursive c)) LangB
 
 -- Monads for inferring `LangB`:
 

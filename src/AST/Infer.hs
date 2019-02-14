@@ -2,7 +2,6 @@
 
 module AST.Infer
     ( module AST.Class.Infer
-    , module AST.Infer.Inferred
     , module AST.Infer.ScopeLevel
     , module AST.Infer.Term
     , inferNode
@@ -10,7 +9,6 @@ module AST.Infer
 
 import AST
 import AST.Class.Infer
-import AST.Infer.Inferred
 import AST.Infer.ScopeLevel
 import AST.Infer.Term
 import AST.Unify

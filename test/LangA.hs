@@ -87,7 +87,7 @@ instance (DeBruijnIndex k, TermInfer1Deps env m) => Infer m (LangA k) where
     infer (AApp     x) = infer x <&> _2 %~ AApp
     infer (ATypeSig x) = infer x <&> _2 %~ ATypeSig
 
-instance (c Typ, c Row) => Recursive (InferredChildConstraints (Recursive c)) (LangA k)
+instance (c Typ, c Row) => Recursive (InferChildConstraints (Recursive c)) (LangA k)
 
 -- Monads for inferring `LangA`:
 
