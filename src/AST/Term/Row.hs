@@ -7,7 +7,7 @@ module AST.Term.Row
     ( RowConstraints(..), RowKey
     , RowExtend(..), eKey, eVal, eRest
     , FlatRowExtends(..), freExtends, freRest
-    , flatten
+    , flatten, unflatten
     , applyRowExtendConstraints, rowExtendStructureMismatch
     , rowElementInfer
     ) where
