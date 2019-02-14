@@ -16,8 +16,8 @@ type family TypeOf (t :: Knot -> *) :: Knot -> *
 type family ScopeOf (t :: Knot -> *) :: Knot -> *
 
 data IPayload a v e = IPayload
-    { _iplType :: Tree v (TypeOf (RunKnot e))
-    , _iplScope :: Tree (ScopeOf (RunKnot e)) v
+    { _iplType :: Tree v (TypeOf e)
+    , _iplScope :: Tree (ScopeOf e) v
     , _iplAnn :: a
     }
 
@@ -30,7 +30,7 @@ data IPayload a v e = IPayload
 -- knotted by `v` whose children are the types.
 data ITerm a v e = ITerm
     { _iVal :: Tie e (ITerm a v)
-    , _iPayload :: {-# UNPACK #-} !(IPayload a v e)
+    , _iPayload :: {-# UNPACK #-} !(IPayload a v (RunKnot e))
     }
 
 makeLenses ''IPayload

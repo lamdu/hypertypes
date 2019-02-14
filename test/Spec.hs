@@ -95,9 +95,8 @@ inferExpr ::
     m (Tree Pure (TypeOf t))
 inferExpr x =
     inferNode (wrap (Proxy :: Proxy Children) (Ann ()) x)
-    <&> Inferred
-    >>= children (Proxy :: Proxy (Recursive (Unify m))) applyBindings
-    <&> (^. _Inferred . iType)
+    >>= Lens.from _Inferred (children (Proxy :: Proxy (Recursive (Unify m))) applyBindings)
+    <&> (^. iType)
 
 vecNominalDecl :: Tree Pure (NominalDecl Typ)
 vecNominalDecl =
