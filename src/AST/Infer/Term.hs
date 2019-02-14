@@ -37,9 +37,9 @@ makeLenses ''IResult
 -- See also `AST.Class.Infer.Inferred.Inferred`, a newtype wrapper
 -- knotted by `v` whose children are the types.
 data ITerm a v e = ITerm
-    { _iVal :: Tie e (ITerm a v)
+    { _iAnn :: a
     , _iRes :: {-# UNPACK #-} !(IResult v (RunKnot e))
-    , _iAnn :: a
+    , _iVal :: Tie e (ITerm a v)
     }
 makeLenses ''ITerm
 
@@ -55,14 +55,13 @@ instance Children (Flip (ITerm a) e) where
         Proxy c ->
         (forall child. c child => Tree n child -> f (Tree m child)) ->
         Tree (Flip (ITerm a) e) n -> f (Tree (Flip (ITerm a) e) m)
-    children p f (Flip (ITerm b (IResult t s) a)) =
+    children p f (Flip (ITerm a (IResult t s) b)) =
         withDict (recursive :: RecursiveDict (InferChildConstraints c) e) $
-        ITerm
-        <$> children (Proxy :: Proxy (Recursive (InferChildConstraints c)))
+        ITerm a
+        <$> (IResult <$> f t <*> children p f s)
+        <*> children (Proxy :: Proxy (Recursive (InferChildConstraints c)))
             (fmap (^. _Flip) . children p f . Flip)
             b
-        <*> (IResult <$> f t <*> children p f s)
-        <*> pure a
         <&> Flip
 
 iType :: Lens' (ITerm a v e) (Tree v (TypeOf (RunKnot e)))
