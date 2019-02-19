@@ -1,7 +1,6 @@
-{-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables, TemplateHaskell #-}
-{-# LANGUAGE DeriveGeneric, FlexibleContexts, RankNTypes, TypeFamilies #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, StandaloneDeriving, RankNTypes #-}
+{-# LANGUAGE DeriveGeneric, FlexibleContexts, TypeFamilies, FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses, UndecidableInstances, ConstraintKinds #-}
-{-# LANGUAGE StandaloneDeriving, FlexibleInstances #-}
 
 module AST.Knot.Ann
     ( Ann(..), ann, val
@@ -9,8 +8,8 @@ module AST.Knot.Ann
     , para
     ) where
 
-import           AST.Class.Children (Children(..), overChildren)
-import           AST.Class.Recursive (Recursive(..), RecursiveDict, unwrap, recursiveChildren)
+import           AST.Class.Children (Children(..))
+import           AST.Class.Recursive (Recursive, unwrap, recursiveChildren, recursiveOverChildren)
 import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import           AST.Knot (Tie, Tree)
 import           AST.Knot.Pure (Pure(..))
@@ -18,7 +17,7 @@ import           Control.DeepSeq (NFData)
 import           Control.Lens (Traversal, makeLenses)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
-import           Data.Constraint (Constraint, withDict)
+import           Data.Constraint (Constraint)
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import qualified Text.PrettyPrint as PP
@@ -46,7 +45,6 @@ instance Deps Pretty a t => Pretty (Ann a t) where
             plDoc = pPrintPrec lvl 0 pl
 
 annotations ::
-    forall e a b.
     Recursive Children e =>
     Traversal
     (Tree (Ann a) e)
@@ -59,7 +57,6 @@ annotations f (Ann pl x) =
 -- except it's int term of full annotated trees rather than just the final result.
 -- TODO: What does the name `para` mean?
 para ::
-    forall constraint expr a.
     Recursive constraint expr =>
     Proxy constraint ->
     (forall child. Recursive constraint child => Tree child (Ann a) -> a) ->
@@ -68,10 +65,7 @@ para ::
 para p f x =
     Ann (f r) r
     where
-        r =
-            withDict (recursive :: RecursiveDict constraint expr) $
-            overChildren (Proxy :: Proxy (Recursive constraint))
-            (para p f) (getPure x)
+        r = recursiveOverChildren p (para p f) (getPure x)
 
 strip :: Recursive Children expr => Tree (Ann a) expr -> Tree Pure expr
 strip = unwrap (Proxy :: Proxy Children) (^. val)

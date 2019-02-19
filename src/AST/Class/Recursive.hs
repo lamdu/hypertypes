@@ -6,10 +6,11 @@
 module AST.Class.Recursive
     ( Recursive(..), RecursiveConstraint, RecursiveDict
     , wrap, unwrap, wrapM, unwrapM, fold, unfold
-    , foldMapRecursive, recursiveChildren
+    , foldMapRecursive
+    , recursiveChildren, recursiveOverChildren
     ) where
 
-import AST.Class.Children (Children(..), foldMapChildren)
+import AST.Class.Children (Children(..), foldMapChildren, overChildren)
 import AST.Knot (Tree)
 import AST.Knot.Pure (Pure(..))
 import Control.Lens.Operators
@@ -129,3 +130,14 @@ recursiveChildren ::
 recursiveChildren _ f x =
     withDict (recursive :: RecursiveDict constraint expr) $
     children (Proxy :: Proxy (Recursive constraint)) f x
+
+{-# INLINE recursiveOverChildren #-}
+recursiveOverChildren ::
+    forall constraint expr n m.
+    Recursive constraint expr =>
+    Proxy constraint ->
+    (forall child. Recursive constraint child => Tree n child -> Tree m child) ->
+    Tree expr n -> Tree expr m
+recursiveOverChildren _ f x =
+    withDict (recursive :: RecursiveDict constraint expr) $
+    overChildren (Proxy :: Proxy (Recursive constraint)) f x
