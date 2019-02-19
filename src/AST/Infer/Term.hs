@@ -15,7 +15,6 @@ import AST
 import AST.Knot.Flip (Flip(..), _Flip)
 import Control.Lens (Lens', makeLenses)
 import Control.Lens.Operators
-import Data.Constraint (withDict)
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
@@ -56,10 +55,9 @@ instance Children (Flip (ITerm a) e) where
         (forall child. c child => Tree n child -> f (Tree m child)) ->
         Tree (Flip (ITerm a) e) n -> f (Tree (Flip (ITerm a) e) m)
     children p f (Flip (ITerm a (IResult t s) b)) =
-        withDict (recursive :: RecursiveDict (InferChildConstraints c) e) $
         ITerm a
         <$> (IResult <$> f t <*> children p f s)
-        <*> children (Proxy :: Proxy (Recursive (InferChildConstraints c)))
+        <*> recursiveChildren (Proxy :: Proxy (InferChildConstraints c))
             (fmap (^. _Flip) . children p f . Flip)
             b
         <&> Flip

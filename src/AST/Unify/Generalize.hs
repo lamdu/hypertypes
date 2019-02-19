@@ -64,8 +64,7 @@ instance Children ast => Children (Generalized ast) where
         GMono x -> f x <&> GMono
         GPoly x -> f x <&> GPoly
         GBody x ->
-            withDict (recursive :: RecursiveDict constraint ast) $
-            children (Proxy :: Proxy (Recursive constraint))
+            recursiveChildren p
             (fmap (^. _Generalized) . children p f . Generalized) x
             <&> GBody
         <&> Generalized
@@ -116,8 +115,7 @@ instantiateH ::
     Tree (GTerm (UVar m)) t -> WriterT [m ()] m (Tree (UVar m) t)
 instantiateH (GMono x) = pure x
 instantiateH (GBody x) =
-    withDict (recursive :: RecursiveDict (Unify m) t) $
-    children (Proxy :: Proxy (Recursive (Unify m))) instantiateH x >>= lift . newTerm
+    recursiveChildren (Proxy :: Proxy (Unify m)) instantiateH x >>= lift . newTerm
 instantiateH (GPoly x) =
     lookupVar binding x & lift
     >>=

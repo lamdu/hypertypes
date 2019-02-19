@@ -6,7 +6,7 @@
 module AST.Class.Recursive
     ( Recursive(..), RecursiveConstraint, RecursiveDict
     , wrap, unwrap, wrapM, unwrapM, fold, unfold
-    , foldMapRecursive
+    , foldMapRecursive, recursiveChildren
     ) where
 
 import AST.Class.Children (Children(..), foldMapChildren)
@@ -45,27 +45,23 @@ instance constraint (Const a) => Recursive constraint (Const a)
 
 {-# INLINE wrapM #-}
 wrapM ::
-    forall constraint expr f m.
     (Monad m, Recursive constraint expr) =>
     Proxy constraint ->
     (forall child. constraint child => Tree child f -> m (Tree f child)) ->
     Tree Pure expr ->
     m (Tree f expr)
 wrapM p f (Pure x) =
-    withDict (recursive :: RecursiveDict constraint expr) $
-    children (Proxy :: Proxy (Recursive constraint)) (wrapM p f) x >>= f
+    recursiveChildren p (wrapM p f) x >>= f
 
 {-# INLINE unwrapM #-}
 unwrapM ::
-    forall constraint expr f m.
     (Monad m, Recursive constraint expr) =>
     Proxy constraint ->
     (forall child. constraint child => Tree f child -> m (Tree child f)) ->
     Tree f expr ->
     m (Tree Pure expr)
 unwrapM p f x =
-    withDict (recursive :: RecursiveDict constraint expr) $
-    f x >>= children (Proxy :: Proxy (Recursive constraint)) (unwrapM p f) <&> Pure
+    f x >>= recursiveChildren p (unwrapM p f) <&> Pure
 
 {-# INLINE wrap #-}
 wrap ::
@@ -122,3 +118,14 @@ foldMapRecursive p f x =
     foldMapChildren (Proxy :: Proxy (Recursive constraint))
     (foldMapChildren (Proxy :: Proxy (Recursive Children)) (foldMapRecursive p f))
     x
+
+{-# INLINE recursiveChildren #-}
+recursiveChildren ::
+    forall constraint expr n m f.
+    (Applicative f, Recursive constraint expr) =>
+    Proxy constraint ->
+    (forall child. Recursive constraint child => Tree n child -> f (Tree m child)) ->
+    Tree expr n -> f (Tree expr m)
+recursiveChildren _ f x =
+    withDict (recursive :: RecursiveDict constraint expr) $
+    children (Proxy :: Proxy (Recursive constraint)) f x
