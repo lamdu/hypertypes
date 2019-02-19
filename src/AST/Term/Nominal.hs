@@ -88,7 +88,7 @@ instance Children varTypes => Children (NominalInst nomId varTypes) where
 instance
     ( Eq nomId
     , ZipMatch varTypes
-    , ChildrenConstraint varTypes (ZipMatch `And` HasQuantifiedVar `And` QVarHasInstance Ord)
+    , ChildrenConstraint varTypes (ZipMatch `And` QVarHasInstance Ord)
     ) =>
     ZipMatch (NominalInst nomId varTypes) where
 
@@ -97,7 +97,7 @@ instance
         | xId /= yId = Nothing
         | otherwise =
             zipMatch x y
-            >>= children (Proxy :: Proxy (ZipMatch `And` HasQuantifiedVar `And` QVarHasInstance Ord))
+            >>= children (Proxy :: Proxy (ZipMatch `And` QVarHasInstance Ord))
                 (\(Both (QVarInstances c0) (QVarInstances c1)) ->
                     zipMatch (TermMap c0) (TermMap c1)
                     <&> (^. _TermMap)
