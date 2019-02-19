@@ -13,13 +13,14 @@ module AST.Term.Nominal
     , NomVarTypes
     , MonadNominals(..)
     , LoadedNominalDecl, loadNominalDecl
+    , typeInNominal
     ) where
 
 import           Algebra.Lattice (JoinSemiLattice(..))
 import           AST
 import           AST.Class.Combinators
 import           AST.Class.HasChild (HasChild(..))
-import           AST.Class.Recursive (wrapM)
+import           AST.Class.Recursive (wrapM, recursiveOverChildren)
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
 import           AST.Infer (Infer(..), TypeOf, ScopeOf, inferNode, iType)
 import           AST.Term.FuncType (HasFuncType(..), FuncType(..))
@@ -31,13 +32,15 @@ import           AST.Unify.Generalize (Generalized(..), GTerm(..), _GMono, insta
 import           AST.Unify.Term (UTerm(..))
 import           Control.Applicative (Alternative(..))
 import           Control.DeepSeq (NFData)
-import           Control.Lens (Prism', makeLenses, makePrisms, ix)
+import           Control.Lens (Prism', makeLenses, makePrisms)
+import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           Data.Constraint (Constraint)
 import           Data.Foldable (traverse_)
 import           Data.Proxy (Proxy(..))
 import qualified Data.Map as Map
+import           Data.Maybe (fromMaybe)
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
@@ -166,8 +169,8 @@ loadBody params foralls x =
         Nothing -> GBody x & pure
     where
         get v =
-            params ^? getChild . _QVarInstances . ix v <|>
-            foralls ^? getChild . _QVarInstances . ix v
+            params ^? getChild . _QVarInstances . Lens.ix v <|>
+            foralls ^? getChild . _QVarInstances . Lens.ix v
 
 {-# INLINE loadNominalDecl #-}
 loadNominalDecl ::
@@ -269,7 +272,30 @@ instance
             funcType # FuncType nomT typ & newTerm
         <&> (, FromNom nomId)
 
--- Standalone deriving boilerplate
+-- | Get the scheme in a nominal given the parameters of a specific nominal instance.
+typeInNominal ::
+    Recursive (HasChild (NomVarTypes typ) `And` QVarHasInstance Ord) typ =>
+    Tree Pure (NominalDecl typ) ->
+    Tree (NomVarTypes typ) (QVarInstances Pure) ->
+    Tree Pure (Scheme (NomVarTypes typ) typ)
+typeInNominal (Pure (NominalDecl _paramsDecl scheme)) params =
+    scheme & sTyp %~ subst params
+    & Pure
+
+subst ::
+    forall varTypes typ.
+    Recursive (HasChild varTypes `And` QVarHasInstance Ord) typ =>
+    Tree varTypes (QVarInstances Pure) -> Tree Pure typ -> Tree Pure typ
+subst params (Pure x) =
+    case x ^? quantifiedVar of
+    Just q ->
+        params ^?
+        getChild . _QVarInstances . Lens.ix q
+        & fromMaybe (Pure (quantifiedVar # q))
+    Nothing ->
+        recursiveOverChildren (Proxy :: Proxy (HasChild varTypes `And` QVarHasInstance Ord))
+        (subst params) x
+        & Pure
 
 type DepsD c t k = ((c (Tree (NomVarTypes t) QVars), c (Tie k t)) :: Constraint)
 deriving instance DepsD Eq   t k => Eq   (NominalDecl t k)

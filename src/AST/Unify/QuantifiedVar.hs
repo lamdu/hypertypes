@@ -15,8 +15,8 @@ class HasQuantifiedVar (t :: Knot -> *) where
     type family QVar t
     quantifiedVar :: Prism' (t f) (QVar t)
 
-class cls (QVar t) => QVarHasInstance cls t
-instance cls (QVar t) => QVarHasInstance cls t
+class    (HasQuantifiedVar t, cls (QVar t)) => QVarHasInstance cls t
+instance (HasQuantifiedVar t, cls (QVar t)) => QVarHasInstance cls t
 
 class MonadQuantify typeConstraints q m where
     newQuantifiedVariable :: typeConstraints -> m q
