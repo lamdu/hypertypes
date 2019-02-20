@@ -61,6 +61,7 @@ library
       AST.Term.Nominal
       AST.Term.Row
       AST.Term.Scheme
+      AST.Term.Scheme.AlphaEq
       AST.Term.TypeSig
       AST.Term.Var
       AST.Unify
