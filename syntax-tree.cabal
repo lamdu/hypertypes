@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 37319be616b8791d2fcc789909f0257b3d035fe790840c438cdc83b5bf76cd32
+-- hash: ba38a57d81f5049fc2e2eafdd7a4c5425f5fc904d44f8f6ccb963a2b582f9d90
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -34,6 +34,7 @@ library
       AST.Class.Children.Mono
       AST.Class.Children.TH
       AST.Class.Combinators
+      AST.Class.FromChildren
       AST.Class.HasChild
       AST.Class.Infer
       AST.Class.Infer.Infer1
