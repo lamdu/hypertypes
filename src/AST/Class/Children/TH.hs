@@ -82,7 +82,7 @@ makeChildrenForType info =
         childrenConstraint =
             (Set.toList (tcChildren contents) <&> (VarT constraintVar `AppT`))
             <> (Set.toList (tcEmbeds contents) <&>
-                (\x -> ConT ''ChildrenConstraint `AppT` x `AppT` VarT constraintVar))
+                \x -> ConT ''ChildrenConstraint `AppT` x `AppT` VarT constraintVar)
             <> Set.toList (tcOthers contents)
             & toTuple
 
