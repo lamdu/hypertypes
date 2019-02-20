@@ -7,7 +7,7 @@ module AST.Term.Row
     ( RowConstraints(..), RowKey
     , RowExtend(..), eKey, eVal, eRest
     , FlatRowExtends(..), freExtends, freRest
-    , flatten, unflatten
+    , flattenRow, flattenRowExtend, unflattenRow
     , applyRowExtendConstraints, rowExtendStructureMismatch
     , rowElementInfer
     ) where
@@ -70,28 +70,32 @@ type Deps c key val rest k = ((c key, c (Tie k val), c (Tie k rest)) :: Constrai
 instance Deps Show key val rest k => Show (RowExtend key val rest k) where
     showsPrec p (RowExtend k v r) = (showCon "RowExtend" @| k @| v @| r) p
 
-{-# INLINE flatten #-}
-flatten ::
+{-# INLINE flattenRowExtend #-}
+flattenRowExtend ::
     (Ord key, Monad m) =>
     (Tree v rest -> m (Maybe (Tree (RowExtend key val rest) v))) ->
     Tree (RowExtend key val rest) v ->
     m (Tree (FlatRowExtends key val rest) v)
-flatten nextExtend (RowExtend k v rest) =
-    nextExtend rest
-    >>=
-    \case
-    Nothing -> pure (FlatRowExtends m rest)
-    Just r ->
-        flatten nextExtend r
-        <&> freExtends %~ Map.unionWith (error "Colliding keys") m
-    where
-        m = Map.singleton k v
+flattenRowExtend nextExtend (RowExtend k v rest) =
+    flattenRow nextExtend rest
+    <&> freExtends %~ Map.unionWith (error "Colliding keys") (Map.singleton k v)
 
-unflatten ::
+{-# INLINE flattenRow #-}
+flattenRow ::
+    (Ord key, Monad m) =>
+    (Tree v rest -> m (Maybe (Tree (RowExtend key val rest) v))) ->
+    Tree v rest ->
+    m (Tree (FlatRowExtends key val rest) v)
+flattenRow nextExtend x =
+    nextExtend x
+    >>= maybe (pure (FlatRowExtends mempty x)) (flattenRowExtend nextExtend)
+
+{-# INLINE unflattenRow #-}
+unflattenRow ::
     Monad m =>
     (Tree (RowExtend key val rest) v -> m (Tree v rest)) ->
     Tree (FlatRowExtends key val rest) v -> m (Tree v rest)
-unflatten mkExtend (FlatRowExtends fields rest) =
+unflattenRow mkExtend (FlatRowExtends fields rest) =
     Map.toList fields & foldM f rest
     where
         f acc (key, val) = RowExtend key val acc & mkExtend
@@ -132,13 +136,13 @@ rowExtendStructureMismatch ::
     m ()
 rowExtendStructureMismatch extend (c0, r0) (c1, r1) =
     do
-        flat0 <- flatten nextExtend r0
-        flat1 <- flatten nextExtend r1
+        flat0 <- flattenRowExtend nextExtend r0
+        flat1 <- flattenRowExtend nextExtend r1
         Map.intersectionWith unify (flat0 ^. freExtends) (flat1 ^. freExtends)
             & sequenceA_
         restVar <- c0 \/ c1 & UUnbound & newVar binding
         let side x y =
-                unflatten mkExtend FlatRowExtends
+                unflattenRow mkExtend FlatRowExtends
                 { _freExtends =
                   (x ^. freExtends) `Map.difference` (y ^. freExtends)
                 , _freRest = restVar
