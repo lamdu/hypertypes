@@ -20,8 +20,10 @@ import           Prelude.Compat
 class Monad m => MonadScopeLevel m where
     localLevel :: m a -> m a
 
+-- | NOTE: The `Ord` instance is only for use as a `Map` key, not a
+-- logical ordering
 newtype ScopeLevel = ScopeLevel Int
-    deriving (Eq, Show, Generic)
+    deriving (Eq, Ord, Show, Generic)
 makePrisms ''ScopeLevel
 
 instance PartialOrd ScopeLevel where
