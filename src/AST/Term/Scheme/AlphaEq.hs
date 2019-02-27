@@ -23,6 +23,7 @@ import           Data.Constraint (withDict)
 import           Data.Functor.Identity (Identity(..))
 import           Data.Map (Map)
 import qualified Data.Map as Map
+import           Data.Maybe (fromMaybe)
 import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
@@ -65,7 +66,7 @@ alphaEqTypes (Pure x) (Pure y) =
         zipMatchWith_
         (Proxy :: Proxy (Recursive (AlphaEqConstraint varTypes)))
         alphaEqTypes x y
-        & maybe empty id
+        & fromMaybe empty
     _ -> empty
     where
         getQVarMap :: Lens' (Tree varTypes QVarMap) (Tree QVarMap typ)
@@ -93,7 +94,7 @@ alphaEq (Pure (Scheme xForAll xTyp)) (Pure (Scheme yForAll yTyp)) =
     Just varMapping ->
         children (Proxy :: Proxy (HasChild varTypes `And` QVarHasInstance Ord))
         substForAlls xForAll
-        & maybe False (== yForAll)
+        == Just yForAll
         where
             substForAlls ::
                 forall child.
