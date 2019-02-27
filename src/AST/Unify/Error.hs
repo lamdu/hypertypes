@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, UndecidableInstances #-}
-{-# LANGUAGE ConstraintKinds, StandaloneDeriving, LambdaCase #-}
+{-# LANGUAGE ConstraintKinds, StandaloneDeriving, LambdaCase, DeriveGeneric #-}
 
 module AST.Unify.Error
     ( UnifyError(..)
@@ -9,8 +9,11 @@ module AST.Unify.Error
 
 import           AST
 import           AST.Unify.Constraints (HasTypeConstraints(..))
+import           Control.DeepSeq (NFData)
 import           Control.Lens (makePrisms)
+import           Data.Binary (Binary)
 import           Data.Constraint (Constraint)
+import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
@@ -30,6 +33,7 @@ data UnifyError t k
       -- ^ Infinite type encountered. A type occurs within itself
     | Mismatch (t k) (t k)
       -- ^ Unification between two mismatching type structures
+    deriving Generic
 makePrisms ''UnifyError
 makeChildren ''UnifyError
 
@@ -51,4 +55,8 @@ instance Deps Pretty t k => Pretty (UnifyError t k) where
             r :: Pretty a => a -> Pretty.Doc
             r = pPrintPrec lvl 11
 
-deriving instance Deps Eq t k => Eq (UnifyError t k)
+deriving instance Deps Eq   t k => Eq   (UnifyError t k)
+deriving instance Deps Ord  t k => Ord  (UnifyError t k)
+deriving instance Deps Show t k => Show (UnifyError t k)
+instance Deps Binary t k => Binary (UnifyError t k)
+instance Deps NFData t k => NFData (UnifyError t k)
