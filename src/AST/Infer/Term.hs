@@ -8,12 +8,12 @@ module AST.Infer.Term
     , IResult(..), irType, irScope
     , ITerm(..), iVal, iRes, iAnn
     , InferChildConstraints
-    , iType, iScope
+    , iType, iScope, iAnnotations
     ) where
 
 import AST
 import AST.Knot.Flip (Flip(..), _Flip)
-import Control.Lens (Lens', makeLenses, from)
+import Control.Lens (Traversal, Lens', makeLenses, from)
 import Control.Lens.Operators
 import Data.Proxy (Proxy(..))
 
@@ -66,3 +66,15 @@ iType = iRes . irType
 
 iScope :: Lens' (ITerm a v e) (Tree (ScopeOf (RunKnot e)) v)
 iScope = iRes . irScope
+
+iAnnotations ::
+    Recursive Children e =>
+    Traversal
+    (Tree (ITerm a v) e)
+    (Tree (ITerm b v) e)
+    a b
+iAnnotations f (ITerm pl r x) =
+    ITerm
+    <$> f pl
+    <*> pure r
+    <*> recursiveChildren (Proxy :: Proxy Children) (iAnnotations f) x
