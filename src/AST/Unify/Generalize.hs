@@ -1,10 +1,9 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts, ScopedTypeVariables, LambdaCase, InstanceSigs #-}
-{-# LANGUAGE RankNTypes, TupleSections #-}
+{-# LANGUAGE RankNTypes, TupleSections, FlexibleInstances #-}
 
 module AST.Unify.Generalize
-    ( Generalized(..), _Generalized
-    , generalize, monomorphic, instantiate
+    ( generalize, instantiate
 
     , -- TODO: should these not be exported? (Internals)
       -- Exported also for specialization
@@ -16,6 +15,7 @@ import           Algebra.Lattice (JoinSemiLattice(..))
 import           Algebra.PartialOrd (PartialOrd(..))
 import           AST
 import           AST.Class.Unify (Unify(..), UVar)
+import           AST.Knot.Flip (Flip(..), _Flip)
 import           AST.Unify (newTerm, semiPruneLookup)
 import           AST.Unify.Binding (Binding(..))
 import           AST.Unify.Constraints (TypeConstraints(..), MonadScopeConstraints(..))
@@ -44,29 +44,23 @@ data GTerm v ast
 Lens.makePrisms ''GTerm
 makeChildren ''GTerm
 
--- | Wrapper for `GTerm` whose children are all the pointed
--- unification terms in the entire GTerm ast (all monomorphic terms
--- and the quantified variables).
-newtype Generalized ast v = Generalized (Tree (GTerm (RunKnot v)) ast)
-Lens.makePrisms ''Generalized
-
-instance Children (Generalized ast) where
-    type ChildrenConstraint (Generalized ast) cls = Recursive cls ast
+instance Children (Flip GTerm ast) where
+    type ChildrenConstraint (Flip GTerm ast) cls = Recursive cls ast
     {-# INLINE children #-}
     children ::
         forall f constraint n m.
         (Applicative f, Recursive constraint ast) =>
         Proxy constraint ->
         (forall child. constraint child => Tree n child -> f (Tree m child)) ->
-        Tree (Generalized ast) n -> f (Tree (Generalized ast) m)
-    children p f (Generalized g) =
+        Tree (Flip GTerm ast) n -> f (Tree (Flip GTerm ast) m)
+    children p f (Flip g) =
         case g of
         GMono x -> f x <&> GMono
         GPoly x -> f x <&> GPoly
         GBody x ->
-            recursiveChildren p (Lens.from _Generalized (children p f)) x
+            recursiveChildren p (Lens.from _Flip (children p f)) x
             <&> GBody
-        <&> Generalized
+        <&> Flip
 
 -- | Generalize a unification term pointed by the given variable to a
 -- `Generalized` term. Unification variables that are scoped within
@@ -74,7 +68,7 @@ instance Children (Generalized ast) where
 generalize ::
     forall m t.
     Recursive (Unify m) t =>
-    Tree (UVar m) t -> m (Tree (Generalized t) (UVar m))
+    Tree (UVar m) t -> m (Tree (GTerm (UVar m)) t)
 generalize v0 =
     do
         (v1, u) <- semiPruneLookup v0
@@ -90,21 +84,15 @@ generalize v0 =
             USkolem l | l `leq` c -> pure (GPoly v1)
             UTerm t ->
                 withDict (recursive :: RecursiveDict (Unify m) t) $
-                children p (fmap (^. _Generalized) . generalize) (t ^. uBody)
+                children p generalize (t ^. uBody)
                 <&>
                 \b ->
                 if foldMapChildren p (All . Lens.has _GMono) b ^. Lens._Wrapped
                 then GMono v1
                 else GBody b
             _ -> pure (GMono v1)
-    <&> Generalized
     where
         p = Proxy :: Proxy (Recursive (Unify m))
-
--- | Lift a monomorphic type term into `Generalized`
-{-# INLINE monomorphic #-}
-monomorphic :: Tree v t -> Tree (Generalized t) v
-monomorphic = Generalized . GMono
 
 -- TODO: Better name?
 {-# INLINE instantiateH #-}
@@ -132,9 +120,9 @@ instantiateH (GPoly x) =
 instantiateWith ::
     Recursive (Unify m) t =>
     m a ->
-    Tree (Generalized t) (UVar m) ->
+    Tree (GTerm (UVar m)) t ->
     m (Tree (UVar m) t, a)
-instantiateWith action (Generalized g) =
+instantiateWith action g =
     do
         (r, recover) <- runWriterT (instantiateH g)
         action <* sequence_ recover <&> (r, )
@@ -144,5 +132,5 @@ instantiateWith action (Generalized g) =
 {-# INLINE instantiate #-}
 instantiate ::
     Recursive (Unify m) t =>
-    Tree (Generalized t) (UVar m) -> m (Tree (UVar m) t)
+    Tree (GTerm (UVar m)) t -> m (Tree (UVar m) t)
 instantiate g = instantiateWith (pure ()) g <&> (^. Lens._1)

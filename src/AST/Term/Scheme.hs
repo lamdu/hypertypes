@@ -20,7 +20,7 @@ import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Recursive (wrapM)
 import           AST.Unify
 import           AST.Unify.Binding (Binding(..))
-import           AST.Unify.Generalize (Generalized(..), GTerm(..), _GMono)
+import           AST.Unify.Generalize (GTerm(..), _GMono)
 import           AST.Unify.Term (UTerm(..))
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
@@ -153,13 +153,12 @@ loadScheme ::
     , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord `And` HasChildrenConstraint NoConstraint) typ
     ) =>
     Tree Pure (Scheme varTypes typ) ->
-    m (Tree (Generalized typ) (UVar m))
+    m (Tree (GTerm (UVar m)) typ)
 loadScheme (Pure (Scheme vars typ)) =
     do
         foralls <- children (Proxy :: Proxy (Unify m)) makeQVarInstances vars
         wrapM (Proxy :: Proxy (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord `And` HasChildrenConstraint NoConstraint))
             (loadBody foralls) typ
-            <&> Generalized
 
 type DepsS c v t k = ((c (Tree v QVars), c (Tie k t)) :: Constraint)
 deriving instance DepsS Eq   v t k => Eq   (Scheme v t k)

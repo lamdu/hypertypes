@@ -28,7 +28,7 @@ import           AST.Term.Map (TermMap(..), _TermMap)
 import           AST.Term.Scheme
 import           AST.Unify
 import           AST.Unify.Binding (Binding(..))
-import           AST.Unify.Generalize (Generalized(..), GTerm(..), _GMono, instantiateWith)
+import           AST.Unify.Generalize (GTerm(..), _GMono, instantiateWith)
 import           AST.Unify.Term (UTerm(..))
 import           Control.Applicative (Alternative(..))
 import           Control.DeepSeq (NFData)
@@ -146,7 +146,7 @@ instance
 data LoadedNominalDecl typ v = LoadedNominalDecl
     { _lnParams :: Tree (NomVarTypes typ) (QVarInstances (RunKnot v))
     , _lnForalls :: Tree (NomVarTypes typ) (QVarInstances (RunKnot v))
-    , _lnType :: Generalized typ v
+    , _lnType :: Tree (GTerm (RunKnot v)) typ
     }
 
 {-# INLINE loadBody #-}
@@ -187,7 +187,6 @@ loadNominalDecl (Pure (NominalDecl params (Scheme foralls typ))) =
         forallsL <- children (Proxy :: Proxy (Unify m)) makeQVarInstances foralls
         wrapM (Proxy :: Proxy (Unify m `And` HasChild (NomVarTypes typ) `And` QVarHasInstance Ord `And` HasChildrenConstraint NoConstraint))
             (loadBody paramsL forallsL) typ
-            <&> Generalized
             <&> LoadedNominalDecl paramsL forallsL
 
 class MonadNominals nomId typ m where

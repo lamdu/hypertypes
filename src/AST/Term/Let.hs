@@ -9,7 +9,7 @@ module AST.Term.Let
 import           AST
 import           AST.Class.Unify (UVar)
 import           AST.Infer
-import           AST.Unify.Generalize (Generalized, generalize)
+import           AST.Unify.Generalize (GTerm, generalize)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
@@ -47,7 +47,7 @@ type instance ScopeOf (Let v t) = ScopeOf t
 instance
     ( MonadScopeLevel m
     , Infer m expr
-    , LocalScopeType v (Tree (Generalized (TypeOf expr)) (UVar m)) m
+    , LocalScopeType v (Tree (GTerm (UVar m)) (TypeOf expr)) m
     ) =>
     Infer m (Let v expr) where
 

@@ -8,6 +8,7 @@ import           TypeLang
 
 import           AST
 import           AST.Class.Unify
+import           AST.Knot.Flip
 import           AST.Infer
 import           AST.Term.Apply
 import           AST.Term.Lam
@@ -78,7 +79,7 @@ instance VarType Name LangB where
 instance
     ( MonadScopeLevel m
     , LocalScopeType Name (Tree (UVar m) Typ) m
-    , LocalScopeType Name (Tree (Generalized Typ) (UVar m)) m
+    , LocalScopeType Name (Tree (GTerm (UVar m)) Typ) m
     , Unify m Typ, Unify m Row
     , HasScope m ScopeTypes
     , MonadNominals Name Typ m
@@ -117,10 +118,17 @@ instance (c Typ, c Row) => Recursive (InferChildConstraints (Recursive c)) LangB
 
 -- Monads for inferring `LangB`:
 
-newtype ScopeTypes v = ScopeTypes (Map Name (Generalized Typ v))
+newtype ScopeTypes v = ScopeTypes (Map Name (Tree (GTerm (RunKnot v)) Typ))
     deriving (Semigroup, Monoid)
 Lens.makePrisms ''ScopeTypes
-makeChildren ''ScopeTypes
+
+instance Children ScopeTypes where
+    type ChildrenConstraint ScopeTypes c = (c Typ, c Row)
+    children p f =
+        children p f
+        & Lens.from _Flip
+        & traverse
+        & _ScopeTypes
 
 data InferScope v = InferScope
     { _varSchemes :: Tree ScopeTypes v
@@ -160,9 +168,9 @@ instance HasScope PureInferB ScopeTypes where
     getScope = Lens.view varSchemes
 
 instance LocalScopeType Name (Tree (Const Int) Typ) PureInferB where
-    localScopeType k v = local (varSchemes . _ScopeTypes . Lens.at k ?~ monomorphic v)
+    localScopeType k v = local (varSchemes . _ScopeTypes . Lens.at k ?~ GMono v)
 
-instance LocalScopeType Name (Tree (Generalized Typ) (Const Int)) PureInferB where
+instance LocalScopeType Name (Tree (GTerm (Const Int)) Typ) PureInferB where
     localScopeType k v = local (varSchemes . _ScopeTypes . Lens.at k ?~ v)
 
 instance MonadScopeLevel PureInferB where
@@ -222,9 +230,9 @@ instance HasScope (STInferB s) ScopeTypes where
     getScope = Lens.view (Lens._1 . varSchemes)
 
 instance LocalScopeType Name (Tree (STVar s) Typ) (STInferB s) where
-    localScopeType k v = local (Lens._1 . varSchemes . _ScopeTypes . Lens.at k ?~ monomorphic v)
+    localScopeType k v = local (Lens._1 . varSchemes . _ScopeTypes . Lens.at k ?~ GMono v)
 
-instance LocalScopeType Name (Tree (Generalized Typ) (STVar s)) (STInferB s) where
+instance LocalScopeType Name (Tree (GTerm (STVar s)) Typ) (STInferB s) where
     localScopeType k v = local (Lens._1 . varSchemes . _ScopeTypes . Lens.at k ?~ v)
 
 instance MonadScopeLevel (STInferB s) where
