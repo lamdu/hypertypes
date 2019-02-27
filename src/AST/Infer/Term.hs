@@ -13,7 +13,7 @@ module AST.Infer.Term
 
 import AST
 import AST.Knot.Flip (Flip(..), _Flip)
-import Control.Lens (Lens', makeLenses)
+import Control.Lens (Lens', makeLenses, from)
 import Control.Lens.Operators
 import Data.Proxy (Proxy(..))
 
@@ -58,8 +58,7 @@ instance Children (Flip (ITerm a) e) where
         ITerm a
         <$> (IResult <$> f t <*> children p f s)
         <*> recursiveChildren (Proxy :: Proxy (InferChildConstraints c))
-            (fmap (^. _Flip) . children p f . Flip)
-            b
+            (from _Flip (children p f)) b
         <&> Flip
 
 iType :: Lens' (ITerm a v e) (Tree v (TypeOf (RunKnot e)))
