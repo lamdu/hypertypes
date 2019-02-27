@@ -64,8 +64,7 @@ instance Children ast => Children (Generalized ast) where
         GMono x -> f x <&> GMono
         GPoly x -> f x <&> GPoly
         GBody x ->
-            recursiveChildren p
-            (fmap (^. _Generalized) . children p f . Generalized) x
+            recursiveChildren p (Lens.from _Generalized (children p f)) x
             <&> GBody
         <&> Generalized
 

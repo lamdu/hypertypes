@@ -102,7 +102,8 @@ applyBindings v0 =
         Nothing ->
             do
                 bindVar binding v1 (UResolving b)
-                recursiveChildren (Proxy :: Proxy (Unify m)) applyBindings (b ^. uBody)
+                recursiveChildren (Proxy :: Proxy (Unify m)) applyBindings
+                    (b ^. uBody)
             <&> Pure
             >>= result
     UVar{} -> error "lookup not expected to result in var"

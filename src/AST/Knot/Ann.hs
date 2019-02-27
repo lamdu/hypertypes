@@ -51,7 +51,9 @@ annotations ::
     (Tree (Ann b) e)
     a b
 annotations f (Ann pl x) =
-    Ann <$> f pl <*> recursiveChildren (Proxy :: Proxy Children) (annotations f) x
+    Ann
+    <$> f pl
+    <*> recursiveChildren (Proxy :: Proxy Children) (annotations f) x
 
 -- Similar to `para` from `recursion-schemes`,
 -- except it's int term of full annotated trees rather than just the final result.
