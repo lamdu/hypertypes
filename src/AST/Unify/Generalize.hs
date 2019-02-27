@@ -50,7 +50,7 @@ makeChildren ''GTerm
 newtype Generalized ast v = Generalized (Tree (GTerm (RunKnot v)) ast)
 Lens.makePrisms ''Generalized
 
-instance Children ast => Children (Generalized ast) where
+instance Children (Generalized ast) where
     type ChildrenConstraint (Generalized ast) cls = Recursive cls ast
     {-# INLINE children #-}
     children ::
