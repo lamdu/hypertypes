@@ -81,7 +81,8 @@ occursError v (UTermBody c b) =
         Pure r <$ unifyError (Occurs (quantifiedVar # q) b)
 
 {-# INLINE applyBindings #-}
-applyBindings :: forall m t. Recursive (Unify m) t => Tree (UVar m) t -> m (Tree Pure t)
+applyBindings ::
+    forall m t. Recursive (Unify m) t => Tree (UVar m) t -> m (Tree Pure t)
 applyBindings v0 =
     semiPruneLookup v0
     >>=
