@@ -1,13 +1,13 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, DataKinds #-}
 {-# LANGUAGE ScopedTypeVariables, FlexibleInstances, UndecidableInstances #-}
-{-# LANGUAGE DeriveGeneric, StandaloneDeriving, FlexibleContexts #-}
+{-# LANGUAGE DeriveGeneric, StandaloneDeriving, FlexibleContexts, LambdaCase #-}
 {-# LANGUAGE ConstraintKinds, TypeOperators, GeneralizedNewtypeDeriving #-}
 
 module AST.Term.Scheme
     ( Scheme(..), sForAlls, sTyp
     , QVars(..), _QVars
     , schemeAsType
-    , loadScheme
+    , loadScheme, saveScheme
 
     , QVarInstances(..), _QVarInstances
     , makeQVarInstances
@@ -16,17 +16,21 @@ module AST.Term.Scheme
 import           Algebra.Lattice (JoinSemiLattice(..), BoundedJoinSemiLattice)
 import           AST
 import           AST.Class.Combinators (And, NoConstraint, HasChildrenConstraint, proxyNoConstraint)
+import           AST.Class.FromChildren (FromChildren(..))
 import           AST.Class.HasChild (HasChild(..))
-import           AST.Class.Recursive (wrapM)
+import           AST.Class.Recursive (wrapM, unwrapM)
 import           AST.Unify
 import           AST.Unify.Binding (Binding(..))
 import           AST.Unify.Generalize (GTerm(..), _GMono)
-import           AST.Unify.Term (UTerm(..))
+import           AST.Unify.Term (UTerm(..), uBody)
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
+import           Control.Monad.Trans.Class (MonadTrans(..))
+import           Control.Monad.Trans.State (StateT(..))
 import           Data.Binary (Binary)
 import           Data.Constraint (Constraint)
+import           Data.Functor.Identity (Identity(..))
 import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Data.Proxy (Proxy(..))
@@ -159,6 +163,59 @@ loadScheme (Pure (Scheme vars typ)) =
         foralls <- children (Proxy :: Proxy (Unify m)) makeQVarInstances vars
         wrapM (Proxy :: Proxy (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord `And` HasChildrenConstraint NoConstraint))
             (loadBody foralls) typ
+
+saveH ::
+    forall m varTypes typ.
+    Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ =>
+    Tree (GTerm (UVar m)) typ ->
+    StateT (Tree varTypes QVars, [m ()]) m (Tree Pure typ)
+saveH (GBody x) =
+    recursiveChildren
+    (Proxy :: Proxy (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord))
+    saveH x <&> Pure
+saveH (GMono x) =
+    unwrapM
+    (Proxy :: Proxy (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord))
+    f x & lift
+    where
+        f v =
+            lookupVar binding v
+            <&>
+            \case
+            UTerm t -> t ^. uBody
+            _ -> error "unexpected state at saveScheme of monomorphic part"
+saveH (GPoly x) =
+    lookupVar binding x & lift
+    >>=
+    \case
+    USkolem l ->
+        do
+            r <- scopeConstraints <&> (\/ l) >>= newQuantifiedVariable & lift
+            Lens._1 . getChild %=
+                (\v -> v & _QVars . Lens.at r ?~ l :: Tree QVars typ)
+            Lens._2 %= (bindVar binding x (USkolem l) :)
+            let result = quantifiedVar # r & Pure
+            UResolved result & bindVar binding x & lift
+            pure result
+    UResolved v -> pure v
+    _ -> error "unexpected state at saveScheme's forall"
+
+saveScheme ::
+    ( ChildrenWithConstraint varTypes (QVarHasInstance Ord)
+    , FromChildren varTypes
+    , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
+    ) =>
+    Tree (GTerm (UVar m)) typ ->
+    m (Tree Pure (Scheme varTypes typ))
+saveScheme x =
+    do
+        (t, (v, recover)) <-
+            runStateT (saveH x)
+            ( fromChildren (Proxy :: Proxy (QVarHasInstance Ord)) (Identity (QVars mempty))
+                & runIdentity
+            , []
+            )
+        Pure (Scheme v t) <$ sequence_ recover
 
 type DepsS c v t k = ((c (Tree v QVars), c (Tie k t)) :: Constraint)
 deriving instance DepsS Eq   v t k => Eq   (Scheme v t k)
