@@ -1,4 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, DataKinds #-}
+{-# LANGUAGE StandaloneDeriving, ConstraintKinds, FlexibleContexts #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module AST.Unify.Binding.Pure
     ( PureBinding(..), _PureBinding
@@ -9,8 +11,8 @@ module AST.Unify.Binding.Pure
 import           AST.Knot (Tree)
 import           AST.Unify.Binding (Binding(..))
 import           AST.Unify.Term
-import qualified Control.Lens as Lens
 import           Control.Lens (ALens')
+import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.State (MonadState(..))
 import           Data.Functor.Const (Const(..))
@@ -44,3 +46,7 @@ pureBinding l =
         \k v ->
         Lens.cloneLens l . _PureBinding . Lens.ix (k ^. Lens._Wrapped) .= v
     }
+
+deriving instance UTermDeps Eq (Const Int) t => Eq (PureBinding t)
+deriving instance UTermDeps Ord (Const Int) t => Ord (PureBinding t)
+deriving instance UTermDeps Show (Const Int) t => Show (PureBinding t)

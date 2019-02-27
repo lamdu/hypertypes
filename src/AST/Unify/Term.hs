@@ -1,15 +1,19 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, StandaloneDeriving #-}
+{-# LANGUAGE KindSignatures, ConstraintKinds, FlexibleContexts #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module AST.Unify.Term
     ( UTerm(..)
         , _UUnbound, _USkolem, _UVar, _UTerm, _UInstantiated
         , _UResolving, _UResolved, _UConverted
+    , UTermDeps
     , UTermBody(..), uBody, uConstraints
     ) where
 
 import AST
 import AST.Unify.Constraints (TypeConstraintsOf)
 import Control.Lens (makeLenses, makePrisms)
+import Data.Constraint (Constraint)
 
 import Prelude.Compat
 
@@ -44,3 +48,22 @@ data UTerm v ast
       -- ^ Temporary state used in "AST.Unify.Binding.ST.Save" while
       -- converting to a pure binding
 makePrisms ''UTerm
+
+type UTermDeps c v ast =
+    (( BodyDeps c v ast
+     , c (v ast)
+     , c (Tie ast Pure)
+     ) :: Constraint)
+
+deriving instance UTermDeps Eq v ast => Eq (UTerm v ast)
+deriving instance UTermDeps Ord v ast => Ord (UTerm v ast)
+deriving instance UTermDeps Show v ast => Show (UTerm v ast)
+
+type BodyDeps c v ast =
+    ( ( c (TypeConstraintsOf (RunKnot ast))
+      , c (Tie ast v)
+      ) :: Constraint
+    )
+deriving instance BodyDeps Eq v ast => Eq (UTermBody v ast)
+deriving instance BodyDeps Ord v ast => Ord (UTermBody v ast)
+deriving instance BodyDeps Show v ast => Show (UTermBody v ast)
