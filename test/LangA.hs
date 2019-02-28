@@ -18,7 +18,7 @@ import           AST.Term.NamelessScope
 import           AST.Term.NamelessScope.InvDeBruijn
 import           AST.Term.TypeSig
 import           AST.Unify
-import           AST.Unify.Binding.Pure
+import           AST.Unify.Binding
 import           AST.Unify.Binding.ST
 import           Control.Applicative
 import qualified Control.Lens as Lens
@@ -130,13 +130,13 @@ instance MonadQuantify RConstraints Name PureInferA where
         Lens._2 . tRow . Lens._Wrapped <<+= 1 <&> Name . ('r':) . show
 
 instance Unify PureInferA Typ where
-    binding = pureBinding (Lens._1 . tTyp)
+    binding = bindingDict (Lens._1 . tTyp)
     unifyError e =
         children (Proxy :: Proxy (Recursive (Unify PureInferA))) applyBindings e
         >>= throwError . TypError
 
 instance Unify PureInferA Row where
-    binding = pureBinding (Lens._1 . tRow)
+    binding = bindingDict (Lens._1 . tRow)
     structureMismatch = rStructureMismatch
     unifyError e =
         children (Proxy :: Proxy (Recursive (Unify PureInferA))) applyBindings e

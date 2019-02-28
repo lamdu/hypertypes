@@ -9,7 +9,7 @@ import           AST
 import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Unify (Unify(..), UVar, BindingDict(..))
-import           AST.Unify.Binding.Pure (PureBinding, _PureBinding)
+import           AST.Unify.Binding (Binding, _Binding)
 import           AST.Unify.Term (UTerm(..), uBody)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -28,7 +28,7 @@ saveUTerm ::
     forall m typeVars t.
     Recursive (Deps m typeVars) t =>
     Tree (UTerm (UVar m)) t ->
-    StateT (Tree typeVars PureBinding, [m ()]) m (Tree (UTerm (Const Int)) t)
+    StateT (Tree typeVars Binding, [m ()]) m (Tree (UTerm (Const Int)) t)
 saveUTerm (UUnbound c) = UUnbound c & pure
 saveUTerm (USkolem c) = USkolem c & pure
 saveUTerm (UVar v) = saveVar v <&> UVar
@@ -43,7 +43,7 @@ saveUTerm UConverted{} = error "converting variable again"
 saveVar ::
     Recursive (Deps m typeVars) t =>
     Tree (UVar m) t ->
-    StateT (Tree typeVars PureBinding, [m ()]) m (Tree (Const Int) t)
+    StateT (Tree typeVars Binding, [m ()]) m (Tree (Const Int) t)
 saveVar v =
     lookupVar binding v & lift
     >>=
@@ -52,11 +52,11 @@ saveVar v =
     srcBody ->
         do
             pb <- Lens.use (Lens._1 . getChild)
-            let r = pb ^. _PureBinding & Sequence.length
+            let r = pb ^. _Binding & Sequence.length
             UConverted r & bindVar binding v & lift
             Lens._2 %= (<> [bindVar binding v srcBody])
             dstBody <- saveUTerm srcBody
-            Lens._1 . getChild .= (pb & _PureBinding %~ (Sequence.|> dstBody))
+            Lens._1 . getChild .= (pb & _Binding %~ (Sequence.|> dstBody))
             Const r & pure
 
 saveBody ::
@@ -65,7 +65,7 @@ saveBody ::
     , ChildrenWithConstraint t (Recursive (Deps m typeVars))
     ) =>
     Tree t (UVar m) ->
-    StateT (Tree typeVars PureBinding, [m ()]) m (Tree t (Const Int))
+    StateT (Tree typeVars Binding, [m ()]) m (Tree t (Const Int))
 saveBody =
     children (Proxy :: Proxy (Recursive (Deps m typeVars))) saveVar
 
@@ -74,7 +74,7 @@ save ::
     , ChildrenWithConstraint t (Recursive (Deps m typeVars))
     ) =>
     Tree t (UVar m) ->
-    StateT (Tree typeVars PureBinding) m (Tree t (Const Int))
+    StateT (Tree typeVars Binding) m (Tree t (Const Int))
 save collection =
     StateT $
     \dstState ->

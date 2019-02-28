@@ -14,7 +14,7 @@ import           AST.Term.Nominal
 import           AST.Term.Row
 import           AST.Term.Scheme
 import           AST.Unify
-import           AST.Unify.Binding.Pure
+import           AST.Unify.Binding
 import           AST.Unify.Term
 import           Algebra.Lattice
 import           Algebra.PartialOrd
@@ -146,11 +146,11 @@ instance HasTypeConstraints Row where
     verifyConstraints p c e u (RExtend x) =
         applyRowExtendConstraints p c (^. rScope) (e . (`RowConstraints` bottom) . singleton) u x <&> RExtend
 
-type PureInferState = (Tree Types PureBinding, Tree Types (Const Int))
+type PureInferState = (Tree Types Binding, Tree Types (Const Int))
 
 emptyPureInferState :: PureInferState
 emptyPureInferState =
-    ( Types emptyPureBinding emptyPureBinding
+    ( Types emptyBinding emptyBinding
     , Types (Const 0) (Const 0)
     )
 

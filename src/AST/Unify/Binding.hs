@@ -2,10 +2,10 @@
 {-# LANGUAGE StandaloneDeriving, ConstraintKinds, FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module AST.Unify.Binding.Pure
-    ( PureBinding(..), _PureBinding
-    , emptyPureBinding
-    , pureBinding
+module AST.Unify.Binding
+    ( Binding(..), _Binding
+    , emptyBinding
+    , bindingDict
     ) where
 
 import           AST.Class.Unify (BindingDict(..))
@@ -21,32 +21,32 @@ import qualified Data.Sequence as Sequence
 
 import           Prelude.Compat
 
-newtype PureBinding t = PureBinding (Seq (UTerm (Const Int) t))
-Lens.makePrisms ''PureBinding
+newtype Binding t = Binding (Seq (UTerm (Const Int) t))
+Lens.makePrisms ''Binding
 
-emptyPureBinding :: PureBinding t
-emptyPureBinding = PureBinding mempty
+emptyBinding :: Binding t
+emptyBinding = Binding mempty
 
-{-# INLINE pureBinding #-}
-pureBinding ::
+{-# INLINE bindingDict #-}
+bindingDict ::
     MonadState s m =>
-    ALens' s (Tree PureBinding t) ->
+    ALens' s (Tree Binding t) ->
     BindingDict (Const Int) m t
-pureBinding l =
+bindingDict l =
     BindingDict
     { lookupVar =
         \k ->
-        Lens.use (Lens.cloneLens l . _PureBinding)
+        Lens.use (Lens.cloneLens l . _Binding)
         <&> (^?! Lens.ix (k ^. Lens._Wrapped))
     , newVar =
         \x ->
-        Lens.cloneLens l . _PureBinding <<%= (Sequence.|> x)
+        Lens.cloneLens l . _Binding <<%= (Sequence.|> x)
         <&> Sequence.length <&> Const
     , bindVar =
         \k v ->
-        Lens.cloneLens l . _PureBinding . Lens.ix (k ^. Lens._Wrapped) .= v
+        Lens.cloneLens l . _Binding . Lens.ix (k ^. Lens._Wrapped) .= v
     }
 
-deriving instance UTermDeps Eq (Const Int) t => Eq (PureBinding t)
-deriving instance UTermDeps Ord (Const Int) t => Ord (PureBinding t)
-deriving instance UTermDeps Show (Const Int) t => Show (PureBinding t)
+deriving instance UTermDeps Eq   (Const Int) t => Eq   (Binding t)
+deriving instance UTermDeps Ord  (Const Int) t => Ord  (Binding t)
+deriving instance UTermDeps Show (Const Int) t => Show (Binding t)
