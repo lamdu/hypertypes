@@ -3,25 +3,29 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module AST.Unify.Binding
-    ( Binding(..), _Binding
+    ( UVar(..), _UVar
+    , Binding(..), _Binding
     , emptyBinding
     , bindingDict
     ) where
 
 import           AST.Class.Unify (BindingDict(..))
-import           AST.Knot (Tree)
+import           AST.Knot (Tree, Knot)
 import           AST.Unify.Term
 import           Control.Lens (ALens')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.State (MonadState(..))
-import           Data.Functor.Const (Const(..))
 import           Data.Sequence
 import qualified Data.Sequence as Sequence
 
 import           Prelude.Compat
 
-newtype Binding t = Binding (Seq (UTerm (Const Int) t))
+newtype UVar (t :: Knot) = UVar Int
+    deriving (Eq, Ord, Show)
+Lens.makePrisms ''UVar
+
+newtype Binding t = Binding (Seq (UTerm UVar t))
 Lens.makePrisms ''Binding
 
 emptyBinding :: Binding t
@@ -31,22 +35,22 @@ emptyBinding = Binding mempty
 bindingDict ::
     MonadState s m =>
     ALens' s (Tree Binding t) ->
-    BindingDict (Const Int) m t
+    BindingDict UVar m t
 bindingDict l =
     BindingDict
     { lookupVar =
-        \k ->
+        \(UVar k) ->
         Lens.use (Lens.cloneLens l . _Binding)
-        <&> (^?! Lens.ix (k ^. Lens._Wrapped))
+        <&> (^?! Lens.ix k)
     , newVar =
         \x ->
         Lens.cloneLens l . _Binding <<%= (Sequence.|> x)
-        <&> Sequence.length <&> Const
+        <&> Sequence.length <&> UVar
     , bindVar =
-        \k v ->
-        Lens.cloneLens l . _Binding . Lens.ix (k ^. Lens._Wrapped) .= v
+        \(UVar k) v ->
+        Lens.cloneLens l . _Binding . Lens.ix k .= v
     }
 
-deriving instance UTermDeps Eq   (Const Int) t => Eq   (Binding t)
-deriving instance UTermDeps Ord  (Const Int) t => Ord  (Binding t)
-deriving instance UTermDeps Show (Const Int) t => Show (Binding t)
+deriving instance UTermDeps Eq   UVar t => Eq   (Binding t)
+deriving instance UTermDeps Ord  UVar t => Ord  (Binding t)
+deriving instance UTermDeps Show UVar t => Show (Binding t)

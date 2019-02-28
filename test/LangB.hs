@@ -141,13 +141,13 @@ emptyInferScope = InferScope mempty (ScopeLevel 0) mempty
 
 newtype PureInferB a =
     PureInferB
-    ( RWST (InferScope (Const Int)) () PureInferState
+    ( RWST (InferScope UVar) () PureInferState
         (Either (Tree TypeError Pure)) a
     )
     deriving
     ( Functor, Applicative, Monad
     , MonadError (Tree TypeError Pure)
-    , MonadReader (InferScope (Const Int))
+    , MonadReader (InferScope UVar)
     , MonadState PureInferState
     )
 
@@ -158,7 +158,7 @@ execPureInferB act =
     runRWST (act ^. _PureInferB) emptyInferScope emptyPureInferState
     <&> (^. Lens._1)
 
-type instance UVarOf PureInferB = Const Int
+type instance UVarOf PureInferB = UVar
 
 instance MonadNominals Name Typ PureInferB where
     getNominalDecl name = Lens.view nominals <&> (^?! Lens.ix name)
@@ -166,10 +166,10 @@ instance MonadNominals Name Typ PureInferB where
 instance HasScope PureInferB ScopeTypes where
     getScope = Lens.view varSchemes
 
-instance LocalScopeType Name (Tree (Const Int) Typ) PureInferB where
+instance LocalScopeType Name (Tree UVar Typ) PureInferB where
     localScopeType k v = local (varSchemes . _ScopeTypes . Lens.at k ?~ GMono v)
 
-instance LocalScopeType Name (Tree (GTerm (Const Int)) Typ) PureInferB where
+instance LocalScopeType Name (Tree (GTerm UVar) Typ) PureInferB where
     localScopeType k v = local (varSchemes . _ScopeTypes . Lens.at k ?~ v)
 
 instance MonadScopeLevel PureInferB where
@@ -183,11 +183,11 @@ instance MonadScopeConstraints RConstraints PureInferB where
 
 instance MonadQuantify ScopeLevel Name PureInferB where
     newQuantifiedVariable _ =
-        Lens._2 . tTyp . Lens._Wrapped <<+= 1 <&> Name . ('t':) . show
+        Lens._2 . tTyp . _UVar <<+= 1 <&> Name . ('t':) . show
 
 instance MonadQuantify RConstraints Name PureInferB where
     newQuantifiedVariable _ =
-        Lens._2 . tRow . Lens._Wrapped <<+= 1 <&> Name . ('r':) . show
+        Lens._2 . tRow . _UVar <<+= 1 <&> Name . ('r':) . show
 
 instance Unify PureInferB Typ where
     binding = bindingDict (Lens._1 . tTyp)

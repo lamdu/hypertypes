@@ -146,12 +146,12 @@ instance HasTypeConstraints Row where
     verifyConstraints p c e u (RExtend x) =
         applyRowExtendConstraints p c (^. rScope) (e . (`RowConstraints` bottom) . singleton) u x <&> RExtend
 
-type PureInferState = (Tree Types Binding, Tree Types (Const Int))
+type PureInferState = (Tree Types Binding, Tree Types UVar)
 
 emptyPureInferState :: PureInferState
 emptyPureInferState =
     ( Types emptyBinding emptyBinding
-    , Types (Const 0) (Const 0)
+    , Types (UVar 0) (UVar 0)
     )
 
 type STNameGen s = Tree Types (Const (STRef s Int))

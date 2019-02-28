@@ -11,7 +11,7 @@ import           AST
 import           AST.Class.Combinators (And, NoConstraint)
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
-import           AST.Unify.Binding (Binding(..), _Binding)
+import           AST.Unify.Binding (Binding(..), _Binding, UVar(..))
 import           AST.Unify.Binding.ST (STVar)
 import           AST.Unify.Term (UTerm(..), uBody)
 import qualified Control.Lens as Lens
@@ -19,7 +19,6 @@ import           Control.Lens.Operators
 import           Control.Monad.ST.Class (MonadST(..))
 import           Data.Array.ST (STArray, newArray, readArray, writeArray)
 import           Data.Constraint (withDict)
-import           Data.Functor.Const (Const(..))
 import           Data.Proxy (Proxy(..))
 import qualified Data.Sequence as Sequence
 
@@ -39,7 +38,7 @@ loadUTerm ::
     , Recursive (HasChild typeVars `And` Unify m) t
     ) =>
     Tree typeVars Binding -> Tree typeVars (ConvertState (World m)) ->
-    Tree (UTerm (Const Int)) t -> m (Tree (UTerm (STVar (World m))) t)
+    Tree (UTerm UVar) t -> m (Tree (UTerm (STVar (World m))) t)
 loadUTerm _ _ (UUnbound c) = UUnbound c & pure
 loadUTerm _ _ (USkolem c) = USkolem c & pure
 loadUTerm src conv (UToVar v) = loadVar src conv v <&> UToVar
@@ -57,8 +56,8 @@ loadVar ::
     , Recursive (HasChild typeVars `And` Unify m) t
     ) =>
     Tree typeVars Binding -> Tree typeVars (ConvertState (World m)) ->
-    Tree (Const Int) t -> m (Tree (STVar (World m)) t)
-loadVar src conv (Const v) =
+    Tree UVar t -> m (Tree (STVar (World m)) t)
+loadVar src conv (UVar v) =
     readArray tConv v & liftST
     >>=
     \case
@@ -80,7 +79,7 @@ loadBody ::
     , ChildrenWithConstraint t (Recursive (HasChild typeVars `And` Unify m))
     ) =>
     Tree typeVars Binding -> Tree typeVars (ConvertState (World m)) ->
-    Tree t (Const Int) -> m (Tree t (STVar (World m)))
+    Tree t UVar -> m (Tree t (STVar (World m)))
 loadBody src conv =
     children
     (Proxy :: Proxy (Recursive (HasChild typeVars `And` Unify m)))
@@ -92,7 +91,7 @@ load ::
     , ChildrenWithConstraint typeVars NoConstraint
     , ChildrenWithConstraint t (Recursive (HasChild typeVars `And` Unify m))
     ) =>
-    Tree typeVars Binding -> Tree t (Const Int) -> m (Tree t (STVar (World m)))
+    Tree typeVars Binding -> Tree t UVar -> m (Tree t (STVar (World m)))
 load src collection =
     do
         conv <- children (Proxy :: Proxy NoConstraint) makeConvertState src

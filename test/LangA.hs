@@ -93,13 +93,13 @@ instance (c Typ, c Row) => Recursive (InferChildConstraints (Recursive c)) (Lang
 
 newtype PureInferA a =
     PureInferA
-    ( RWST (Tree (ScopeTypes Typ) (Const Int), ScopeLevel) () PureInferState
+    ( RWST (Tree (ScopeTypes Typ) UVar, ScopeLevel) () PureInferState
         (Either (Tree TypeError Pure)) a
     )
     deriving
     ( Functor, Applicative, Monad
     , MonadError (Tree TypeError Pure)
-    , MonadReader (Tree (ScopeTypes Typ) (Const Int), ScopeLevel)
+    , MonadReader (Tree (ScopeTypes Typ) UVar, ScopeLevel)
     , MonadState PureInferState
     )
 
@@ -107,7 +107,7 @@ execPureInferA :: PureInferA a -> Either (Tree TypeError Pure) a
 execPureInferA (PureInferA act) =
     runRWST act (mempty, ScopeLevel 0) emptyPureInferState <&> (^. Lens._1)
 
-type instance UVarOf PureInferA = Const Int
+type instance UVarOf PureInferA = UVar
 
 instance HasScope PureInferA (ScopeTypes Typ) where
     getScope = Lens.view Lens._1
@@ -123,11 +123,11 @@ instance MonadScopeConstraints RConstraints PureInferA where
 
 instance MonadQuantify ScopeLevel Name PureInferA where
     newQuantifiedVariable _ =
-        Lens._2 . tTyp . Lens._Wrapped <<+= 1 <&> Name . ('t':) . show
+        Lens._2 . tTyp . _UVar <<+= 1 <&> Name . ('t':) . show
 
 instance MonadQuantify RConstraints Name PureInferA where
     newQuantifiedVariable _ =
-        Lens._2 . tRow . Lens._Wrapped <<+= 1 <&> Name . ('r':) . show
+        Lens._2 . tRow . _UVar <<+= 1 <&> Name . ('r':) . show
 
 instance Unify PureInferA Typ where
     binding = bindingDict (Lens._1 . tTyp)
