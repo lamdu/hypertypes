@@ -8,8 +8,7 @@ module AST.Unify.Binding.Save
 import           AST
 import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
-import           AST.Class.Unify (Unify(..), UVar)
-import           AST.Unify.Binding (Binding(..))
+import           AST.Class.Unify (Unify(..), UVar, BindingDict(..))
 import           AST.Unify.Binding.Pure (PureBinding, _PureBinding)
 import           AST.Unify.Term (UTerm(..), uBody)
 import qualified Control.Lens as Lens

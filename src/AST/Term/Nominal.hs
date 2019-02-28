@@ -27,7 +27,6 @@ import           AST.Term.FuncType (HasFuncType(..), FuncType(..))
 import           AST.Term.Map (TermMap(..), _TermMap)
 import           AST.Term.Scheme
 import           AST.Unify
-import           AST.Unify.Binding (Binding(..))
 import           AST.Unify.Generalize (GTerm(..), _GMono, instantiateWith)
 import           AST.Unify.Term (UTerm(..))
 import           Control.Applicative (Alternative(..))

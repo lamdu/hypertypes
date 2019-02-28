@@ -17,7 +17,6 @@ import           AST.Term.Nominal
 import           AST.Term.Row
 import           AST.Term.Var
 import           AST.Unify
-import           AST.Unify.Binding
 import           AST.Unify.Binding.Pure
 import           AST.Unify.Binding.ST
 import           AST.Unify.Generalize

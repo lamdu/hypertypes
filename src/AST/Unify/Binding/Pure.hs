@@ -8,8 +8,8 @@ module AST.Unify.Binding.Pure
     , pureBinding
     ) where
 
+import           AST.Class.Unify (BindingDict(..))
 import           AST.Knot (Tree)
-import           AST.Unify.Binding (Binding(..))
 import           AST.Unify.Term
 import           Control.Lens (ALens')
 import qualified Control.Lens as Lens
@@ -31,9 +31,9 @@ emptyPureBinding = PureBinding mempty
 pureBinding ::
     MonadState s m =>
     ALens' s (Tree PureBinding t) ->
-    Binding (Const Int) m t
+    BindingDict (Const Int) m t
 pureBinding l =
-    Binding
+    BindingDict
     { lookupVar =
         \k ->
         Lens.use (Lens.cloneLens l . _PureBinding)

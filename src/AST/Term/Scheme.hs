@@ -20,7 +20,6 @@ import           AST.Class.FromChildren (FromChildren(..))
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Recursive (wrapM, unwrapM)
 import           AST.Unify
-import           AST.Unify.Binding (Binding(..))
 import           AST.Unify.Generalize (GTerm(..), _GMono)
 import           AST.Unify.Term (UTerm(..), uBody)
 import           Control.DeepSeq (NFData)

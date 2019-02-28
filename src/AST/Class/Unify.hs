@@ -3,21 +3,37 @@
 
 module AST.Class.Unify
     ( Unify(..), UVar
+    , BindingDict(..)
     ) where
 
 import AST.Class.ZipMatch (ZipMatch)
 import AST.Knot (Tree, Knot)
-import AST.Unify.Binding (Binding)
 import AST.Unify.Error (UnifyError(..))
 import AST.Unify.Constraints (HasTypeConstraints(..), MonadScopeConstraints)
 import AST.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify)
-import AST.Unify.Term (UTermBody, uBody)
+import AST.Unify.Term (UTerm, UTermBody, uBody)
 import Control.Lens.Operators
 
 import Prelude.Compat
 
 -- Unification variable type for a unification monad
 type family UVar (m :: * -> *) :: Knot -> *
+
+-- | BindingDict, parameterized on:
+--
+-- * `v`: unification variable type
+-- * `m`: monad to bind in
+-- * `t`: term type
+--
+-- Has 2 implementations in syntax-tree:
+--
+-- * "AST.Unify.Binding.Pure"
+-- * "AST.Unify.Binding.ST"
+data BindingDict v m t = BindingDict
+    { lookupVar :: Tree v t -> m (Tree (UTerm v) t)
+    , newVar :: Tree (UTerm v) t -> m (Tree v t)
+    , bindVar :: Tree v t -> Tree (UTerm v) t -> m ()
+    }
 
 class
     ( Eq (Tree (UVar m) t)
@@ -28,7 +44,7 @@ class
     , MonadQuantify (TypeConstraintsOf t) (QVar t) m
     ) => Unify m t where
 
-    binding :: Binding (UVar m) m t
+    binding :: BindingDict (UVar m) m t
 
     unifyError :: Tree (UnifyError t) (UVar m) -> m ()
 

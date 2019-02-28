@@ -14,10 +14,9 @@ module AST.Unify.Generalize
 import           Algebra.Lattice (JoinSemiLattice(..))
 import           Algebra.PartialOrd (PartialOrd(..))
 import           AST
-import           AST.Class.Unify (Unify(..), UVar)
+import           AST.Class.Unify (Unify(..), UVar, BindingDict(..))
 import           AST.Knot.Flip (Flip(..), _Flip)
 import           AST.Unify (newTerm, semiPruneLookup)
-import           AST.Unify.Binding (Binding(..))
 import           AST.Unify.Constraints (TypeConstraints(..), MonadScopeConstraints(..))
 import           AST.Unify.Term (UTerm(..), uBody)
 import qualified Control.Lens as Lens

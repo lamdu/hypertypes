@@ -10,8 +10,7 @@ module AST.Unify.Binding.ST.Load
 import           AST
 import           AST.Class.Combinators (And, NoConstraint)
 import           AST.Class.HasChild (HasChild(..))
-import           AST.Class.Unify (Unify(..), UVar)
-import           AST.Unify.Binding (Binding(..))
+import           AST.Class.Unify (Unify(..), UVar, BindingDict(..))
 import           AST.Unify.Binding.Pure (PureBinding(..), _PureBinding)
 import           AST.Unify.Binding.ST (STVar)
 import           AST.Unify.Term (UTerm(..), uBody)

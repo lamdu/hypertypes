@@ -5,7 +5,7 @@ module AST.Unify.Binding.ST
     , stBinding
     ) where
 
-import           AST.Unify.Binding (Binding(..))
+import           AST.Class.Unify (BindingDict(..))
 import           AST.Unify.Term (UTerm(..))
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -21,9 +21,9 @@ Lens.makePrisms ''STVar
 {-# INLINE stBinding #-}
 stBinding ::
     MonadST m =>
-    Binding (STVar (World m)) m t
+    BindingDict (STVar (World m)) m t
 stBinding =
-    Binding
+    BindingDict
     { lookupVar = liftST . readSTRef . (^. _STVar)
     , newVar = \t -> newSTRef t & liftST <&> STVar
     , bindVar = \v t -> writeSTRef (v ^. _STVar) t & liftST
