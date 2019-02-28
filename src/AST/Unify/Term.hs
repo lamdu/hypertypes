@@ -4,7 +4,7 @@
 
 module AST.Unify.Term
     ( UTerm(..)
-        , _UUnbound, _USkolem, _UVar, _UTerm, _UInstantiated
+        , _UUnbound, _USkolem, _UToVar, _UTerm, _UInstantiated
         , _UResolving, _UResolved, _UConverted
     , UTermDeps
     , UTermBody(..), uBody, uConstraints
@@ -30,7 +30,7 @@ data UTerm v ast
     | USkolem (TypeConstraintsOf (RunKnot ast))
       -- ^ A variable bound by a rigid quantified variable with
       -- *exactly* the given constraints
-    | UVar (v ast)
+    | UToVar (v ast)
       -- ^ Unified with another variable (union-find)
     | UTerm (UTermBody v ast)
       -- ^ Known type term with unification variables as children

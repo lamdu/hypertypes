@@ -59,10 +59,10 @@ semiPruneLookup v0 =
     lookupVar binding v0
     >>=
     \case
-    UVar v1 ->
+    UToVar v1 ->
         do
             (v, r) <- semiPruneLookup v1
-            bindVar binding v0 (UVar v)
+            bindVar binding v0 (UToVar v)
             pure (v, r)
     t -> pure (v0, t)
 
@@ -106,7 +106,7 @@ applyBindings v0 =
                     (b ^. uBody)
             <&> Pure
             >>= result
-    UVar{} -> error "lookup not expected to result in var"
+    UToVar{} -> error "lookup not expected to result in var"
     UConverted{} -> error "conversion state not expected in applyBindings"
     UInstantiated{} -> error "applyBindings during instantiation"
 
@@ -163,20 +163,20 @@ unify x0 y0
         unifyTerms x1 xt y1 yt =
             withDict (recursive :: RecursiveDict (Unify m) t) $
             do
-                bindVar binding y1 (UVar x1)
+                bindVar binding y1 (UToVar x1)
                 zipMatchWithA (Proxy :: Proxy (Recursive (Unify m))) unify (xt ^. uBody) (yt ^. uBody)
                     & fromMaybe (xt ^. uBody <$ structureMismatch xt yt)
                     >>= bindVar binding x1 . UTerm . UTermBody (xt ^. uConstraints \/ yt ^. uConstraints)
                 pure x1
         bindToTerm dstVar dstTerm var level =
             do
-                bindVar binding var (UVar dstVar)
+                bindVar binding var (UToVar dstVar)
                 updateTermConstraints var dstTerm level
                 pure dstVar
         unbound var level =
             do
                 r <- updateConstraints level y0
-                r <$ bindVar binding var (UVar r)
+                r <$ bindVar binding var (UToVar r)
         go var !other onUnbound onTerm =
             semiPruneLookup var
             >>=

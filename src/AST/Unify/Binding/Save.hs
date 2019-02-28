@@ -31,7 +31,7 @@ saveUTerm ::
     StateT (Tree typeVars Binding, [m ()]) m (Tree (UTerm (Const Int)) t)
 saveUTerm (UUnbound c) = UUnbound c & pure
 saveUTerm (USkolem c) = USkolem c & pure
-saveUTerm (UVar v) = saveVar v <&> UVar
+saveUTerm (UToVar v) = saveVar v <&> UToVar
 saveUTerm (UTerm u) =
     withDict (recursive :: RecursiveDict (Deps m typeVars) t) $
     uBody saveBody u <&> UTerm

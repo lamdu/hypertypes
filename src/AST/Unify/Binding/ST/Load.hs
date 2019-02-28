@@ -42,7 +42,7 @@ loadUTerm ::
     Tree (UTerm (Const Int)) t -> m (Tree (UTerm (STVar (World m))) t)
 loadUTerm _ _ (UUnbound c) = UUnbound c & pure
 loadUTerm _ _ (USkolem c) = USkolem c & pure
-loadUTerm src conv (UVar v) = loadVar src conv v <&> UVar
+loadUTerm src conv (UToVar v) = loadVar src conv v <&> UToVar
 loadUTerm src conv (UTerm u) =
     withDict (recursive :: RecursiveDict (HasChild typeVars `And` Unify m) t) $
     uBody (loadBody src conv) u <&> UTerm
