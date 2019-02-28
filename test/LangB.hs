@@ -204,12 +204,12 @@ instance Unify PureInferB Row where
 
 newtype STInferB s a =
     STInferB
-    (ReaderT (InferScope (STVar s), STNameGen s)
+    (ReaderT (InferScope (STUVar s), STNameGen s)
         (ExceptT (Tree TypeError Pure) (ST s)) a)
     deriving
     ( Functor, Applicative, Monad, MonadST
     , MonadError (Tree TypeError Pure)
-    , MonadReader (InferScope (STVar s), STNameGen s)
+    , MonadReader (InferScope (STUVar s), STNameGen s)
     )
 
 Lens.makePrisms ''STInferB
@@ -220,7 +220,7 @@ execSTInferB act =
         qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
         runReaderT (act ^. _STInferB) (emptyInferScope, qvarGen) & runExceptT
 
-type instance UVarOf (STInferB s) = STVar s
+type instance UVarOf (STInferB s) = STUVar s
 
 instance MonadNominals Name Typ (STInferB s) where
     getNominalDecl name = Lens.view (Lens._1 . nominals) <&> (^?! Lens.ix name)
@@ -228,10 +228,10 @@ instance MonadNominals Name Typ (STInferB s) where
 instance HasScope (STInferB s) ScopeTypes where
     getScope = Lens.view (Lens._1 . varSchemes)
 
-instance LocalScopeType Name (Tree (STVar s) Typ) (STInferB s) where
+instance LocalScopeType Name (Tree (STUVar s) Typ) (STInferB s) where
     localScopeType k v = local (Lens._1 . varSchemes . _ScopeTypes . Lens.at k ?~ GMono v)
 
-instance LocalScopeType Name (Tree (GTerm (STVar s)) Typ) (STInferB s) where
+instance LocalScopeType Name (Tree (GTerm (STUVar s)) Typ) (STInferB s) where
     localScopeType k v = local (Lens._1 . varSchemes . _ScopeTypes . Lens.at k ?~ v)
 
 instance MonadScopeLevel (STInferB s) where

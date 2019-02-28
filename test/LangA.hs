@@ -144,13 +144,13 @@ instance Unify PureInferA Row where
 
 newtype STInferA s a =
     STInferA
-    ( ReaderT (Tree (ScopeTypes Typ) (STVar s), ScopeLevel, STNameGen s)
+    ( ReaderT (Tree (ScopeTypes Typ) (STUVar s), ScopeLevel, STNameGen s)
         (ExceptT (Tree TypeError Pure) (ST s)) a
     )
     deriving
     ( Functor, Applicative, Monad, MonadST
     , MonadError (Tree TypeError Pure)
-    , MonadReader (Tree (ScopeTypes Typ) (STVar s), ScopeLevel, STNameGen s)
+    , MonadReader (Tree (ScopeTypes Typ) (STUVar s), ScopeLevel, STNameGen s)
     )
 
 execSTInferA :: STInferA s a -> ST s (Either (Tree TypeError Pure) a)
@@ -159,7 +159,7 @@ execSTInferA (STInferA act) =
         qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
         runReaderT act (mempty, ScopeLevel 0, qvarGen) & runExceptT
 
-type instance UVarOf (STInferA s) = STVar s
+type instance UVarOf (STInferA s) = STUVar s
 
 instance HasScope (STInferA s) (ScopeTypes Typ) where
     getScope = Lens.view Lens._1

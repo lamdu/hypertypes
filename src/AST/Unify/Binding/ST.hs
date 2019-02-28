@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell #-}
 
 module AST.Unify.Binding.ST
-    ( STVar(..), _STVar
+    ( STUVar(..), _STUVar
     , stBinding
     ) where
 
@@ -14,17 +14,17 @@ import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
 import           Prelude.Compat
 
-newtype STVar s t = STVar (STRef s (UTerm (STVar s) t))
+newtype STUVar s t = STUVar (STRef s (UTerm (STUVar s) t))
     deriving Eq
-Lens.makePrisms ''STVar
+Lens.makePrisms ''STUVar
 
 {-# INLINE stBinding #-}
 stBinding ::
     MonadST m =>
-    BindingDict (STVar (World m)) m t
+    BindingDict (STUVar (World m)) m t
 stBinding =
     BindingDict
-    { lookupVar = liftST . readSTRef . (^. _STVar)
-    , newVar = \t -> newSTRef t & liftST <&> STVar
-    , bindVar = \v t -> writeSTRef (v ^. _STVar) t & liftST
+    { lookupVar = liftST . readSTRef . (^. _STUVar)
+    , newVar = \t -> newSTRef t & liftST <&> STUVar
+    , bindVar = \v t -> writeSTRef (v ^. _STUVar) t & liftST
     }
