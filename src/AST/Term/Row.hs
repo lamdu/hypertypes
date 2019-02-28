@@ -13,7 +13,7 @@ module AST.Term.Row
     ) where
 
 import           AST
-import           AST.Class.Unify (Unify(..), UVar, BindingDict(..))
+import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Unify (TypeConstraints(..), HasTypeConstraints(..), MonadScopeConstraints(..), unify, newTerm, newUnbound, semiPruneLookup)
 import           AST.Unify.Term (UTerm(..), _UTerm, uBody)
 import           Algebra.Lattice (JoinSemiLattice(..))
@@ -128,10 +128,10 @@ rowExtendStructureMismatch ::
     ( Recursive (Unify m) rowTyp
     , Recursive (Unify m) valTyp
     ) =>
-    Prism' (Tree rowTyp (UVar m))
-        (Tree (RowExtend key valTyp rowTyp) (UVar m)) ->
-    (TypeConstraintsOf rowTyp, Tree (RowExtend key valTyp rowTyp) (UVar m)) ->
-    (TypeConstraintsOf rowTyp, Tree (RowExtend key valTyp rowTyp) (UVar m)) ->
+    Prism' (Tree rowTyp (UVarOf m))
+        (Tree (RowExtend key valTyp rowTyp) (UVarOf m)) ->
+    (TypeConstraintsOf rowTyp, Tree (RowExtend key valTyp rowTyp) (UVarOf m)) ->
+    (TypeConstraintsOf rowTyp, Tree (RowExtend key valTyp rowTyp) (UVarOf m)) ->
     m ()
 rowExtendStructureMismatch extend (c0, r0) (c1, r1) =
     do
@@ -162,9 +162,9 @@ rowElementInfer ::
     , Unify m rowTyp
     , RowConstraints (TypeConstraintsOf rowTyp)
     ) =>
-    (Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) (UVar m) -> Tree rowTyp (UVar m)) ->
+    (Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) (UVarOf m) -> Tree rowTyp (UVarOf m)) ->
     RowKey rowTyp ->
-    m (Tree (UVar m) valTyp, Tree (UVar m) rowTyp)
+    m (Tree (UVarOf m) valTyp, Tree (UVarOf m) rowTyp)
 rowElementInfer extendToRow k =
     do
         restVar <-

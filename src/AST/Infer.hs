@@ -16,7 +16,7 @@ import AST.Unify
 import Prelude.Compat
 
 {-# INLINE inferNode #-}
-inferNode :: Infer m t => Tree (Ann a) t -> m (Tree (ITerm a (UVar m)) t)
+inferNode :: Infer m t => Tree (Ann a) t -> m (Tree (ITerm a (UVarOf m)) t)
 inferNode (Ann a x) =
     (\s (t, xI) -> ITerm a (IResult t s) xI)
     <$> getScope

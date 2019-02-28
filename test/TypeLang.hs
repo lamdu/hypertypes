@@ -178,7 +178,7 @@ instance HasScopeTypes v Typ a => HasScopeTypes v Typ (a, x, y) where
 
 rStructureMismatch ::
     (Unify m Typ, Unify m Row) =>
-    Tree (UTermBody (UVar m)) Row -> Tree (UTermBody (UVar m)) Row -> m ()
+    Tree (UTermBody (UVarOf m)) Row -> Tree (UTermBody (UVarOf m)) Row -> m ()
 rStructureMismatch (UTermBody c0 (RExtend r0)) (UTermBody c1 (RExtend r1)) =
     rowExtendStructureMismatch _RExtend (c0, r0) (c1, r1)
 rStructureMismatch x y = unifyError (Mismatch (x ^. uBody) (y ^. uBody))

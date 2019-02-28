@@ -10,7 +10,7 @@ module AST.Term.Var
 
 import           AST
 import           AST.Infer (Infer(..), HasScope(..), TypeOf, ScopeOf)
-import           AST.Unify (Unify, UVar)
+import           AST.Unify (Unify, UVarOf)
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -25,8 +25,8 @@ class VarType var expr where
     -- | Instantiate a type for a variable in a given scope
     varType ::
         Recursive (Unify m) (TypeOf expr) =>
-        Proxy expr -> var -> Tree (ScopeOf expr) (UVar m) ->
-        m (Tree (UVar m) (TypeOf expr))
+        Proxy expr -> var -> Tree (ScopeOf expr) (UVarOf m) ->
+        m (Tree (UVarOf m) (TypeOf expr))
 
 -- | Parameterized by term AST and not by its type AST
 -- (which currently is its only part used),

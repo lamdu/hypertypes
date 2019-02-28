@@ -93,7 +93,7 @@ Lens.makePrisms ''QVarInstances
 {-# INLINE makeQVarInstances #-}
 makeQVarInstances ::
     Unify m typ =>
-    Tree QVars typ -> m (Tree (QVarInstances (UVar m)) typ)
+    Tree QVars typ -> m (Tree (QVarInstances (UVarOf m)) typ)
 makeQVarInstances (QVars foralls) =
     traverse makeSkolem foralls <&> QVarInstances
     where
@@ -102,7 +102,7 @@ makeQVarInstances (QVars foralls) =
 {-# INLINE schemeBodyToType #-}
 schemeBodyToType ::
     (Unify m typ, HasChild varTypes typ, Ord (QVar typ)) =>
-    Tree varTypes (QVarInstances (UVar m)) -> Tree typ (UVar m) -> m (Tree (UVar m) typ)
+    Tree varTypes (QVarInstances (UVarOf m)) -> Tree typ (UVarOf m) -> m (Tree (UVarOf m) typ)
 schemeBodyToType foralls x =
     case x ^? quantifiedVar >>= getForAll of
     Nothing -> newTerm x
@@ -117,7 +117,7 @@ schemeAsType ::
     , ChildrenWithConstraint varTypes (Unify m)
     , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
     ) =>
-    Tree Pure (Scheme varTypes typ) -> m (Tree (UVar m) typ)
+    Tree Pure (Scheme varTypes typ) -> m (Tree (UVarOf m) typ)
 schemeAsType (Pure (Scheme vars typ)) =
     do
         foralls <- children (Proxy :: Proxy (Unify m)) makeQVarInstances vars
@@ -132,9 +132,9 @@ loadBody ::
     , ChildrenConstraint typ NoConstraint
     , Ord (QVar typ)
     ) =>
-    Tree varTypes (QVarInstances (UVar m)) ->
-    Tree typ (GTerm (UVar m)) ->
-    m (Tree (GTerm (UVar m)) typ)
+    Tree varTypes (QVarInstances (UVarOf m)) ->
+    Tree typ (GTerm (UVarOf m)) ->
+    m (Tree (GTerm (UVarOf m)) typ)
 loadBody foralls x =
     case x ^? quantifiedVar >>= getForAll of
     Just r -> GPoly r & pure
@@ -156,7 +156,7 @@ loadScheme ::
     , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord `And` HasChildrenConstraint NoConstraint) typ
     ) =>
     Tree Pure (Scheme varTypes typ) ->
-    m (Tree (GTerm (UVar m)) typ)
+    m (Tree (GTerm (UVarOf m)) typ)
 loadScheme (Pure (Scheme vars typ)) =
     do
         foralls <- children (Proxy :: Proxy (Unify m)) makeQVarInstances vars
@@ -166,7 +166,7 @@ loadScheme (Pure (Scheme vars typ)) =
 saveH ::
     forall m varTypes typ.
     Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ =>
-    Tree (GTerm (UVar m)) typ ->
+    Tree (GTerm (UVarOf m)) typ ->
     StateT (Tree varTypes QVars, [m ()]) m (Tree Pure typ)
 saveH (GBody x) =
     recursiveChildren
@@ -204,7 +204,7 @@ saveScheme ::
     , FromChildren varTypes
     , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
     ) =>
-    Tree (GTerm (UVar m)) typ ->
+    Tree (GTerm (UVarOf m)) typ ->
     m (Tree Pure (Scheme varTypes typ))
 saveScheme x =
     do

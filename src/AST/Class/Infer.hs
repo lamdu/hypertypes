@@ -5,11 +5,11 @@ module AST.Class.Infer
     ) where
 
 import AST
-import AST.Class.Unify (Unify(..), UVar)
+import AST.Class.Unify (Unify(..), UVarOf)
 import AST.Infer.Term
 
 class HasScope m s where
-    getScope :: m (Tree s (UVar m))
+    getScope :: m (Tree s (UVarOf m))
 
 class LocalScopeType var scheme m where
     localScopeType :: var -> scheme -> m a -> m a
@@ -18,4 +18,4 @@ class
     (HasScope m (ScopeOf t), Recursive (Unify m) (TypeOf t)) =>
     Infer m t where
 
-    infer :: Tree t (Ann a) -> m (Tree (UVar m) (TypeOf t), Tree t (ITerm a (UVar m)))
+    infer :: Tree t (Ann a) -> m (Tree (UVarOf m) (TypeOf t), Tree t (ITerm a (UVarOf m)))

@@ -77,8 +77,8 @@ instance VarType Name LangB where
 
 instance
     ( MonadScopeLevel m
-    , LocalScopeType Name (Tree (UVar m) Typ) m
-    , LocalScopeType Name (Tree (GTerm (UVar m)) Typ) m
+    , LocalScopeType Name (Tree (UVarOf m) Typ) m
+    , LocalScopeType Name (Tree (GTerm (UVarOf m)) Typ) m
     , Unify m Typ, Unify m Row
     , HasScope m ScopeTypes
     , MonadNominals Name Typ m
@@ -158,7 +158,7 @@ execPureInferB act =
     runRWST (act ^. _PureInferB) emptyInferScope emptyPureInferState
     <&> (^. Lens._1)
 
-type instance UVar PureInferB = Const Int
+type instance UVarOf PureInferB = Const Int
 
 instance MonadNominals Name Typ PureInferB where
     getNominalDecl name = Lens.view nominals <&> (^?! Lens.ix name)
@@ -220,7 +220,7 @@ execSTInferB act =
         qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
         runReaderT (act ^. _STInferB) (emptyInferScope, qvarGen) & runExceptT
 
-type instance UVar (STInferB s) = STVar s
+type instance UVarOf (STInferB s) = STVar s
 
 instance MonadNominals Name Typ (STInferB s) where
     getNominalDecl name = Lens.view (Lens._1 . nominals) <&> (^?! Lens.ix name)

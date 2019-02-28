@@ -18,7 +18,7 @@ import Algebra.PartialOrd (PartialOrd(..))
 import Algebra.Lattice (JoinSemiLattice(..))
 import AST
 import AST.Class.Recursive (wrapM)
-import AST.Class.Unify (Unify(..), UVar, BindingDict(..))
+import AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import AST.Class.ZipMatch (zipMatchWithA)
 import AST.Unify.Constraints (TypeConstraints(..), HasTypeConstraints(..), MonadScopeConstraints(..))
 import AST.Unify.Error (UnifyError(..))
@@ -34,18 +34,18 @@ import Prelude.Compat
 -- Names modeled after unification-fd
 
 {-# INLINE newUnbound #-}
-newUnbound :: Unify m t => m (Tree (UVar m) t)
+newUnbound :: Unify m t => m (Tree (UVarOf m) t)
 newUnbound = scopeConstraints >>= newVar binding . UUnbound
 
 {-# INLINE newTerm #-}
-newTerm :: Unify m t => Tree t (UVar m) -> m (Tree (UVar m) t)
+newTerm :: Unify m t => Tree t (UVarOf m) -> m (Tree (UVarOf m) t)
 newTerm x = scopeConstraints >>= newVar binding . UTerm . (`UTermBody` x)
 
 -- | Embed a pure term as a unification term.
 unfreeze ::
     forall m t.
     Recursive (Unify m) t =>
-    Tree Pure t -> m (Tree (UVar m) t)
+    Tree Pure t -> m (Tree (UVarOf m) t)
 unfreeze = wrapM (Proxy :: Proxy (Unify m)) newTerm
 
 -- look up a variable, and return last variable pointing to result.
@@ -53,8 +53,8 @@ unfreeze = wrapM (Proxy :: Proxy (Unify m)) newTerm
 {-# INLINE semiPruneLookup #-}
 semiPruneLookup ::
     Unify m t =>
-    Tree (UVar m) t ->
-    m (Tree (UVar m) t, Tree (UTerm (UVar m)) t)
+    Tree (UVarOf m) t ->
+    m (Tree (UVarOf m) t, Tree (UTerm (UVarOf m)) t)
 semiPruneLookup v0 =
     lookupVar binding v0
     >>=
@@ -71,7 +71,7 @@ semiPruneLookup v0 =
 
 occursError ::
     Unify m t =>
-    Tree (UVar m) t -> Tree (UTermBody (UVar m)) t -> m (Tree Pure t)
+    Tree (UVarOf m) t -> Tree (UTermBody (UVarOf m)) t -> m (Tree Pure t)
 occursError v (UTermBody c b) =
     do
         q <- newQuantifiedVariable c
@@ -81,7 +81,7 @@ occursError v (UTermBody c b) =
 
 {-# INLINE applyBindings #-}
 applyBindings ::
-    forall m t. Recursive (Unify m) t => Tree (UVar m) t -> m (Tree Pure t)
+    forall m t. Recursive (Unify m) t => Tree (UVarOf m) t -> m (Tree Pure t)
 applyBindings v0 =
     semiPruneLookup v0
     >>=
@@ -113,7 +113,7 @@ applyBindings v0 =
 {-# INLINE updateConstraints #-}
 updateConstraints ::
     Recursive (Unify m) t =>
-    TypeConstraintsOf t -> Tree (UVar m) t -> m (Tree (UVar m) t)
+    TypeConstraintsOf t -> Tree (UVarOf m) t -> m (Tree (UVarOf m) t)
 updateConstraints !newConstraints var =
     do
         (v1, x) <- semiPruneLookup var
@@ -133,7 +133,7 @@ updateConstraints !newConstraints var =
 updateTermConstraints ::
     forall m t.
     Recursive (Unify m) t =>
-    Tree (UVar m) t -> Tree (UTermBody (UVar m)) t -> TypeConstraintsOf t -> m ()
+    Tree (UVarOf m) t -> Tree (UTermBody (UVarOf m)) t -> TypeConstraintsOf t -> m ()
 updateTermConstraints v t newConstraints
     | newConstraints `leq` (t ^. uConstraints) = pure ()
     | otherwise =
@@ -154,7 +154,7 @@ updateTermConstraints v t newConstraints
 unify ::
     forall m t.
     Recursive (Unify m) t =>
-    Tree (UVar m) t -> Tree (UVar m) t -> m (Tree (UVar m) t)
+    Tree (UVarOf m) t -> Tree (UVarOf m) t -> m (Tree (UVarOf m) t)
 unify x0 y0
     | x0 == y0 = pure x0
     | otherwise =

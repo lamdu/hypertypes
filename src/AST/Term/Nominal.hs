@@ -155,10 +155,10 @@ loadBody ::
     , ChildrenConstraint typ NoConstraint
     , Ord (QVar typ)
     ) =>
-    Tree varTypes (QVarInstances (UVar m)) ->
-    Tree varTypes (QVarInstances (UVar m)) ->
-    Tree typ (GTerm (UVar m)) ->
-    m (Tree (GTerm (UVar m)) typ)
+    Tree varTypes (QVarInstances (UVarOf m)) ->
+    Tree varTypes (QVarInstances (UVarOf m)) ->
+    Tree typ (GTerm (UVarOf m)) ->
+    m (Tree (GTerm (UVarOf m)) typ)
 loadBody params foralls x =
     case x ^? quantifiedVar >>= get of
     Just r -> GPoly r & pure
@@ -179,7 +179,7 @@ loadNominalDecl ::
     , Recursive (Unify m `And` HasChild (NomVarTypes typ) `And` QVarHasInstance Ord `And` HasChildrenConstraint NoConstraint) typ
     ) =>
     Tree Pure (NominalDecl typ) ->
-    m (Tree (LoadedNominalDecl typ) (UVar m))
+    m (Tree (LoadedNominalDecl typ) (UVarOf m))
 loadNominalDecl (Pure (NominalDecl params (Scheme foralls typ))) =
     do
         paramsL <- children (Proxy :: Proxy (Unify m)) makeQVarInstances params
@@ -189,7 +189,7 @@ loadNominalDecl (Pure (NominalDecl params (Scheme foralls typ))) =
             <&> LoadedNominalDecl paramsL forallsL
 
 class MonadNominals nomId typ m where
-    getNominalDecl :: nomId -> m (Tree (LoadedNominalDecl typ) (UVar m))
+    getNominalDecl :: nomId -> m (Tree (LoadedNominalDecl typ) (UVarOf m))
 
 class HasNominalInst nomId typ where
     nominalInst :: Prism' (Tree typ k) (Tree (NominalInst nomId (NomVarTypes typ)) k)
@@ -200,8 +200,8 @@ lookupParams ::
     ( Applicative m
     , ChildrenWithConstraint varTypes (Unify m)
     ) =>
-    Tree varTypes (QVarInstances (UVar m)) ->
-    m (Tree varTypes (QVarInstances (UVar m)))
+    Tree varTypes (QVarInstances (UVarOf m)) ->
+    m (Tree varTypes (QVarInstances (UVarOf m)))
 lookupParams =
     children (Proxy :: Proxy (Unify m)) ((_QVarInstances . traverse) lookupParam)
     where

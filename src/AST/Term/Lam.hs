@@ -10,7 +10,7 @@ module AST.Term.Lam
 import           AST
 import           AST.Infer
 import           AST.Term.FuncType
-import           AST.Unify (UVar, newUnbound, newTerm)
+import           AST.Unify (UVarOf, newUnbound, newTerm)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
@@ -46,7 +46,7 @@ type instance ScopeOf (Lam v t) = ScopeOf t
 instance
     ( Infer m t
     , HasFuncType (TypeOf t)
-    , LocalScopeType v (Tree (UVar m) (TypeOf t)) m
+    , LocalScopeType v (Tree (UVarOf m) (TypeOf t)) m
     ) =>
     Infer m (Lam v t) where
 

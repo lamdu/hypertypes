@@ -131,7 +131,7 @@ phantomIntNominalDecl =
 
 withNominals ::
     (Unify m Row, Unify m Typ, MonadReader env m) =>
-    Lens.LensLike' Lens.Identity env (InferScope (UVar m)) -> m a -> m a
+    Lens.LensLike' Lens.Identity env (InferScope (UVarOf m)) -> m a -> m a
 withNominals l act =
     do
         vec <- loadNominalDecl vecNominalDecl

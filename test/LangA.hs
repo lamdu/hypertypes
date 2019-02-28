@@ -72,7 +72,7 @@ instance HasTypeOf1 LangA where
 type TermInfer1Deps env m =
     ( MonadScopeLevel m
     , MonadReader env m
-    , HasScopeTypes (UVar m) Typ env
+    , HasScopeTypes (UVarOf m) Typ env
     , HasScope m (ScopeTypes Typ)
     , Unify m Typ, Unify m Row
     )
@@ -107,7 +107,7 @@ execPureInferA :: PureInferA a -> Either (Tree TypeError Pure) a
 execPureInferA (PureInferA act) =
     runRWST act (mempty, ScopeLevel 0) emptyPureInferState <&> (^. Lens._1)
 
-type instance UVar PureInferA = Const Int
+type instance UVarOf PureInferA = Const Int
 
 instance HasScope PureInferA (ScopeTypes Typ) where
     getScope = Lens.view Lens._1
@@ -159,7 +159,7 @@ execSTInferA (STInferA act) =
         qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
         runReaderT act (mempty, ScopeLevel 0, qvarGen) & runExceptT
 
-type instance UVar (STInferA s) = STVar s
+type instance UVarOf (STInferA s) = STVar s
 
 instance HasScope (STInferA s) (ScopeTypes Typ) where
     getScope = Lens.view Lens._1

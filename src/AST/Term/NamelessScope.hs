@@ -15,7 +15,7 @@ import           AST
 import           AST.Class.Infer.Infer1 (Infer1(..), HasTypeOf1(..))
 import           AST.Infer (Infer(..), HasScope, inferNode, iType, TypeOf, ScopeOf)
 import           AST.Term.FuncType
-import           AST.Unify (Unify(..), UVar, newUnbound, newTerm)
+import           AST.Unify (Unify(..), UVarOf, newUnbound, newTerm)
 import           Control.Lens (Lens', Prism')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -88,7 +88,7 @@ instance
     , TypeOfIndexConstraint t ~ DeBruijnIndex
     , DeBruijnIndex k
     , MonadReader env m
-    , HasScopeTypes (UVar m) (TypeOf1 t) env
+    , HasScopeTypes (UVarOf m) (TypeOf1 t) env
     , HasScope m (ScopeTypes (TypeOf (t k)))
     ) =>
     Infer m (Scope t k) where
@@ -112,7 +112,7 @@ instance
 instance
     ( Recursive (Unify m) (TypeOf (t k))
     , MonadReader env m
-    , HasScopeTypes (UVar m) (TypeOf (t k)) env
+    , HasScopeTypes (UVarOf m) (TypeOf (t k)) env
     , DeBruijnIndex k
     , HasScope m (ScopeTypes (TypeOf (t k)))
     ) =>

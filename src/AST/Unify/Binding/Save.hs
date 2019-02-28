@@ -8,7 +8,7 @@ module AST.Unify.Binding.Save
 import           AST
 import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
-import           AST.Class.Unify (Unify(..), UVar, BindingDict(..))
+import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Unify.Binding (Binding, _Binding)
 import           AST.Unify.Term (UTerm(..), uBody)
 import qualified Control.Lens as Lens
@@ -27,7 +27,7 @@ type Deps m typeVars = Unify m `And` HasChild typeVars
 saveUTerm ::
     forall m typeVars t.
     Recursive (Deps m typeVars) t =>
-    Tree (UTerm (UVar m)) t ->
+    Tree (UTerm (UVarOf m)) t ->
     StateT (Tree typeVars Binding, [m ()]) m (Tree (UTerm (Const Int)) t)
 saveUTerm (UUnbound c) = UUnbound c & pure
 saveUTerm (USkolem c) = USkolem c & pure
@@ -42,7 +42,7 @@ saveUTerm UConverted{} = error "converting variable again"
 
 saveVar ::
     Recursive (Deps m typeVars) t =>
-    Tree (UVar m) t ->
+    Tree (UVarOf m) t ->
     StateT (Tree typeVars Binding, [m ()]) m (Tree (Const Int) t)
 saveVar v =
     lookupVar binding v & lift
@@ -64,7 +64,7 @@ saveBody ::
     ( Monad m
     , ChildrenWithConstraint t (Recursive (Deps m typeVars))
     ) =>
-    Tree t (UVar m) ->
+    Tree t (UVarOf m) ->
     StateT (Tree typeVars Binding, [m ()]) m (Tree t (Const Int))
 saveBody =
     children (Proxy :: Proxy (Recursive (Deps m typeVars))) saveVar
@@ -73,7 +73,7 @@ save ::
     ( Monad m
     , ChildrenWithConstraint t (Recursive (Deps m typeVars))
     ) =>
-    Tree t (UVar m) ->
+    Tree t (UVarOf m) ->
     StateT (Tree typeVars Binding) m (Tree t (Const Int))
 save collection =
     StateT $

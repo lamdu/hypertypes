@@ -10,7 +10,7 @@ module AST.Unify.Binding.ST.Load
 import           AST
 import           AST.Class.Combinators (And, NoConstraint)
 import           AST.Class.HasChild (HasChild(..))
-import           AST.Class.Unify (Unify(..), UVar, BindingDict(..))
+import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Unify.Binding (Binding(..), _Binding)
 import           AST.Unify.Binding.ST (STVar)
 import           AST.Unify.Term (UTerm(..), uBody)
@@ -35,7 +35,7 @@ makeConvertState (Binding x) =
 loadUTerm ::
     forall m typeVars t.
     ( MonadST m
-    , UVar m ~ STVar (World m)
+    , UVarOf m ~ STVar (World m)
     , Recursive (HasChild typeVars `And` Unify m) t
     ) =>
     Tree typeVars Binding -> Tree typeVars (ConvertState (World m)) ->
@@ -53,7 +53,7 @@ loadUTerm _ _ UInstantiated{} = error "loading during instantiation"
 
 loadVar ::
     ( MonadST m
-    , UVar m ~ STVar (World m)
+    , UVarOf m ~ STVar (World m)
     , Recursive (HasChild typeVars `And` Unify m) t
     ) =>
     Tree typeVars Binding -> Tree typeVars (ConvertState (World m)) ->
@@ -76,7 +76,7 @@ loadVar src conv (Const v) =
 loadBody ::
     forall m typeVars t.
     ( MonadST m
-    , UVar m ~ STVar (World m)
+    , UVarOf m ~ STVar (World m)
     , ChildrenWithConstraint t (Recursive (HasChild typeVars `And` Unify m))
     ) =>
     Tree typeVars Binding -> Tree typeVars (ConvertState (World m)) ->
@@ -88,7 +88,7 @@ loadBody src conv =
 
 load ::
     ( MonadST m
-    , UVar m ~ STVar (World m)
+    , UVarOf m ~ STVar (World m)
     , ChildrenWithConstraint typeVars NoConstraint
     , ChildrenWithConstraint t (Recursive (HasChild typeVars `And` Unify m))
     ) =>

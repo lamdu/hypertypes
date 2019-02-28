@@ -14,7 +14,7 @@ module AST.Unify.Generalize
 import           Algebra.Lattice (JoinSemiLattice(..))
 import           Algebra.PartialOrd (PartialOrd(..))
 import           AST
-import           AST.Class.Unify (Unify(..), UVar, BindingDict(..))
+import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Knot.Flip (Flip(..), _Flip)
 import           AST.Unify (newTerm, semiPruneLookup)
 import           AST.Unify.Constraints (TypeConstraints(..), MonadScopeConstraints(..))
@@ -67,7 +67,7 @@ instance Children (Flip GTerm ast) where
 generalize ::
     forall m t.
     Recursive (Unify m) t =>
-    Tree (UVar m) t -> m (Tree (GTerm (UVar m)) t)
+    Tree (UVarOf m) t -> m (Tree (GTerm (UVarOf m)) t)
 generalize v0 =
     do
         (v1, u) <- semiPruneLookup v0
@@ -98,7 +98,7 @@ generalize v0 =
 instantiateH ::
     forall m t.
     Recursive (Unify m) t =>
-    Tree (GTerm (UVar m)) t -> WriterT [m ()] m (Tree (UVar m) t)
+    Tree (GTerm (UVarOf m)) t -> WriterT [m ()] m (Tree (UVarOf m) t)
 instantiateH (GMono x) = pure x
 instantiateH (GBody x) =
     recursiveChildren (Proxy :: Proxy (Unify m)) instantiateH x >>= lift . newTerm
@@ -119,8 +119,8 @@ instantiateH (GPoly x) =
 instantiateWith ::
     Recursive (Unify m) t =>
     m a ->
-    Tree (GTerm (UVar m)) t ->
-    m (Tree (UVar m) t, a)
+    Tree (GTerm (UVarOf m)) t ->
+    m (Tree (UVarOf m) t, a)
 instantiateWith action g =
     do
         (r, recover) <- runWriterT (instantiateH g)
@@ -131,5 +131,5 @@ instantiateWith action g =
 {-# INLINE instantiate #-}
 instantiate ::
     Recursive (Unify m) t =>
-    Tree (GTerm (UVar m)) t -> m (Tree (UVar m) t)
+    Tree (GTerm (UVarOf m)) t -> m (Tree (UVarOf m) t)
 instantiate g = instantiateWith (pure ()) g <&> (^. Lens._1)
