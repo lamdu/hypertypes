@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ba38a57d81f5049fc2e2eafdd7a4c5425f5fc904d44f8f6ccb963a2b582f9d90
+-- hash: 2db0e87d92aa0ef8d74237aeff83b19baedd0d358173121d80f77fcc5b7dcd42
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -67,9 +67,9 @@ library
       AST.Unify
       AST.Unify.Binding
       AST.Unify.Binding.Pure
+      AST.Unify.Binding.Save
       AST.Unify.Binding.ST
       AST.Unify.Binding.ST.Load
-      AST.Unify.Binding.ST.Save
       AST.Unify.Constraints
       AST.Unify.Error
       AST.Unify.Generalize
