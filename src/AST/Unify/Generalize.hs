@@ -1,6 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts, ScopedTypeVariables, LambdaCase, InstanceSigs #-}
-{-# LANGUAGE RankNTypes, TupleSections, FlexibleInstances #-}
+{-# LANGUAGE RankNTypes, TupleSections, FlexibleInstances, DeriveGeneric #-}
+{-# LANGUAGE StandaloneDeriving, UndecidableInstances #-}
 
 module AST.Unify.Generalize
     ( generalize, instantiate
@@ -19,13 +20,16 @@ import           AST.Knot.Flip (Flip(..), _Flip)
 import           AST.Unify (newTerm, semiPruneLookup)
 import           AST.Unify.Constraints (TypeConstraints(..), MonadScopeConstraints(..))
 import           AST.Unify.Term (UTerm(..), uBody)
+import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.Writer (WriterT(..), tell)
-import           Data.Constraint (withDict)
+import           Data.Binary (Binary)
+import           Data.Constraint (Constraint, withDict)
 import           Data.Monoid (All(..))
 import           Data.Proxy (Proxy(..))
+import           GHC.Generics (Generic)
 
 import           Prelude.Compat
 
@@ -40,6 +44,7 @@ data GTerm v ast
         -- create fresh unification terms) (`AST.Unify.Term.USkolem`
         -- or `AST.Unify.Term.UResolved`)
     | GBody (Tie ast (GTerm v)) -- ^ Term with some polymorphic parts
+    deriving Generic
 Lens.makePrisms ''GTerm
 makeChildren ''GTerm
 
@@ -133,3 +138,10 @@ instantiate ::
     Recursive (Unify m) t =>
     Tree (GTerm (UVarOf m)) t -> m (Tree (UVarOf m) t)
 instantiate g = instantiateWith (pure ()) g <&> (^. Lens._1)
+
+type Deps c v t = ((c (v t), c (Tie t (GTerm v))) :: Constraint)
+deriving instance Deps Eq   v t => Eq   (GTerm v t)
+deriving instance Deps Ord  v t => Ord  (GTerm v t)
+deriving instance Deps Show v t => Show (GTerm v t)
+instance Deps Binary v t => Binary (GTerm v t)
+instance Deps NFData v t => NFData (GTerm v t)

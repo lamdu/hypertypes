@@ -146,7 +146,7 @@ data LoadedNominalDecl typ v = LoadedNominalDecl
     { _lnParams :: Tree (NomVarTypes typ) (QVarInstances (RunKnot v))
     , _lnForalls :: Tree (NomVarTypes typ) (QVarInstances (RunKnot v))
     , _lnType :: Tree (GTerm (RunKnot v)) typ
-    }
+    } deriving Generic
 
 {-# INLINE loadBody #-}
 loadBody ::
@@ -315,3 +315,14 @@ deriving instance DepsT Ord  n t k => Ord  (ToNom n t k)
 deriving instance DepsT Show n t k => Show (ToNom n t k)
 instance DepsT Binary n t k => Binary (ToNom n t k)
 instance DepsT NFData n t k => NFData (ToNom n t k)
+
+type DepsL c t k =
+    ( ( c (Tree (NomVarTypes t) (QVarInstances (RunKnot k)))
+      , c (Tree (GTerm (RunKnot k)) t)
+      ) :: Constraint
+    )
+deriving instance DepsL Eq   t k => Eq   (LoadedNominalDecl t k)
+deriving instance DepsL Ord  t k => Ord  (LoadedNominalDecl t k)
+deriving instance DepsL Show t k => Show (LoadedNominalDecl t k)
+instance DepsL Binary t k => Binary (LoadedNominalDecl t k)
+instance DepsL NFData t k => NFData (LoadedNominalDecl t k)
