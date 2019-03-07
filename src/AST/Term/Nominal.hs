@@ -213,7 +213,7 @@ lookupParams =
             USkolem l ->
                 -- This is a phantom-type, wasn't instantiated by `instantiate`.
                 scopeConstraints <&> (\/ l) >>= newVar binding . UUnbound
-            _ -> error "unexpected state at instantiate's forall"
+            _ -> error "unexpected state at nominal's parameter"
 
 type instance TypeOf  (ToNom nomId expr) = TypeOf expr
 type instance ScopeOf (ToNom nomId expr) = ScopeOf expr
@@ -247,7 +247,7 @@ instance
                 >>=
                 \case
                 (v1, UUnbound x) -> bindVar binding v1 (USkolem x)
-                _ -> error "unexpected state at instantiate's forall"
+                _ -> error "unexpected state at when instantiating nominal's skolem"
 
 type instance TypeOf  (FromNom nomId expr) = TypeOf expr
 type instance ScopeOf (FromNom nomId expr) = ScopeOf expr
