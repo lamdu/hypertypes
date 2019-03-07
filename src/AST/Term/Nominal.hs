@@ -36,7 +36,6 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           Data.Constraint (Constraint)
-import           Data.Foldable (traverse_)
 import           Data.Proxy (Proxy(..))
 import qualified Data.Map as Map
 import           Data.Maybe (fromMaybe)
@@ -230,24 +229,12 @@ instance
     infer (ToNom nomId val) =
         do
             valI <- inferNode val
-            LoadedNominalDecl params foralls gen <- getNominalDecl nomId
-            let initNom =
-                    do
-                        children_ (Proxy :: Proxy (Unify m))
-                            (traverse_ setToSkolem . (^. _QVarInstances))
-                            foralls
-                        lookupParams params
+            LoadedNominalDecl params _foralls gen <- getNominalDecl nomId
+            let initNom = lookupParams params
             (typ, paramsT) <- instantiateWith initNom gen
             _ <- unify typ (valI ^. iType)
             nominalInst # NominalInst nomId paramsT & newTerm
                 <&> (, ToNom nomId valI)
-        where
-            setToSkolem v0 =
-                semiPruneLookup v0
-                >>=
-                \case
-                (v1, UUnbound x) -> bindVar binding v1 (USkolem x)
-                _ -> error "unexpected state at when instantiating nominal's skolem"
 
 type instance TypeOf  (FromNom nomId expr) = TypeOf expr
 type instance ScopeOf (FromNom nomId expr) = ScopeOf expr
