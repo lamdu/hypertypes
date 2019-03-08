@@ -28,8 +28,8 @@ data Apply expr k = Apply
 
 instance Pretty (Tie k expr) => Pretty (Apply expr k) where
     pPrintPrec lvl p (Apply f x) =
-        pPrintPrec lvl 11 f <+>
-        pPrintPrec lvl 10 x
+        pPrintPrec lvl 10 f <+>
+        pPrintPrec lvl 11 x
         & maybeParens (p > 10)
 
 makeLenses ''Apply

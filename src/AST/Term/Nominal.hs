@@ -114,8 +114,8 @@ instance
 
 instance DepsT Pretty nomId term k => Pretty (ToNom nomId term k) where
     pPrintPrec lvl p (ToNom nomId term) =
-        (pPrint nomId <> Pretty.text "#") <+> pPrintPrec lvl 9 term
-        & maybeParens (p > 9)
+        (pPrint nomId <> Pretty.text "#") <+> pPrintPrec lvl 11 term
+        & maybeParens (p > 10)
 
 instance
     ( Pretty nomId
