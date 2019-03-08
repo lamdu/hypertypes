@@ -5,7 +5,7 @@ import           AST.Class.Recursive
 import           AST.Class.Unify
 import           AST.Infer
 import           AST.Knot.Flip
-import           AST.Term.NamelessScope
+import           AST.Term.NamelessScope (EmptyScope)
 import           AST.Term.Nominal
 import           AST.Term.Scheme
 import           AST.Unify
@@ -86,6 +86,26 @@ unifyRows =
     $$
     ((f $$ closedRec [("b", bLit 5), ("a", bLit 7)]) $$ bLit 12)
 
+return5 :: Tree Pure LangB
+return5 =
+    -- return 5
+    bVar "return" $$ bLit 5
+
+returnOk :: Tree Pure LangB
+returnOk =
+    -- LocalMut[ return 5 ]
+    toNom "LocalMut" return5
+
+nomSkolem0 :: Tree Pure LangB
+nomSkolem0 =
+    -- (\x -> LocalMut[ x ])
+    lam "x" (\x -> toNom "LocalMut" x)
+
+nomSkolem1 :: Tree Pure LangB
+nomSkolem1 =
+    -- (\x -> LocalMut[ x ]) (return 5)
+    nomSkolem0 $$ return5
+
 inferExpr ::
     forall m t.
     ( Infer m t
@@ -129,18 +149,53 @@ phantomIntNominalDecl =
         }
     }
 
-withNominals ::
+mutType :: Tree Pure Typ
+mutType =
+    NominalInst (Name "Mut")
+    Types
+    { _tRow = mempty & Lens.at (Name "effects") ?~ rVar "effects" & QVarInstances
+    , _tTyp = mempty & Lens.at (Name "value") ?~ tVar "value" & QVarInstances
+    }
+    & TNom & Pure
+
+-- A nominal type with foralls:
+-- "newtype LocalMut a = forall s. Mut s a"
+localMutNominalDecl :: Tree Pure (NominalDecl Typ)
+localMutNominalDecl =
+    Pure NominalDecl
+    { _nParams =
+        Types
+        { _tRow = bottom
+        , _tTyp = bottom & Lens.at (Name "value") ?~ bottom
+        }
+    , _nScheme =
+        forAll (Lens.Const ()) (Lens.Identity "effects") (\_ _ -> mutType) ^. _Pure
+    }
+
+returnScheme :: Tree Pure (Scheme Types Typ)
+returnScheme =
+    forAll (Lens.Identity "value") (Lens.Identity "effects") $
+    \(Lens.Identity val) _ -> val ~> mutType
+
+withEnv ::
     (Unify m Row, Unify m Typ, MonadReader env m) =>
     Lens.LensLike' Lens.Identity env (InferScope (UVarOf m)) -> m a -> m a
-withNominals l act =
+withEnv l act =
     do
         vec <- loadNominalDecl vecNominalDecl
         phantom <- loadNominalDecl phantomIntNominalDecl
+        localMut <- loadNominalDecl localMutNominalDecl
         let addNoms x =
                 x
                 & Lens.at (Name "Vec") ?~ vec
                 & Lens.at (Name "PhantomInt") ?~ phantom
-        local (l . nominals %~ addNoms) act
+                & Lens.at (Name "LocalMut") ?~ localMut
+        ret <- loadScheme returnScheme
+        let addEnv x =
+                x
+                & nominals %~ addNoms
+                & varSchemes . _ScopeTypes . Lens.at (Name "return") ?~ ret
+        local (l %~ addEnv) act
 
 prettyPrint :: Pretty a => a -> IO ()
 prettyPrint = print . pPrint
@@ -177,8 +232,8 @@ testB :: Tree Pure LangB -> String -> IO Bool
 testB expr expect =
     testCommon expr expect pureRes stRes
     where
-        pureRes = execPureInferB (withNominals id (inferExpr expr))
-        stRes = runST (execSTInferB (withNominals Lens._1 (inferExpr expr)))
+        pureRes = execPureInferB (withEnv id (inferExpr expr))
+        stRes = runST (execSTInferB (withEnv Lens._1 (inferExpr expr)))
 
 main :: IO ()
 main =
@@ -206,5 +261,8 @@ main =
             , testB getAField    "Right ((a : t0 :*: r0) -> t0)"
             , testB vecApp       "Right (t0 -> t0 -> Vec[elem: t0])"
             , testB usePhantom   "Right PhantomInt[phantom: t0]"
+            , testB return5      "Right Mut[value: Int, effects: r0]"
+            , testB returnOk     "Right LocalMut[value: Int]"
+            , testB nomSkolem0   "Left (SkolemEscape: r0)"
+            , testB nomSkolem1   "Left (SkolemEscape: r0)"
             ]
-

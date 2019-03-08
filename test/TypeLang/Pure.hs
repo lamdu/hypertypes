@@ -30,6 +30,9 @@ intA = Pure TInt & uniType
 tVar :: String -> Tree Pure Typ
 tVar = Pure . TVar . Name
 
+rVar :: String -> Tree Pure Row
+rVar = Pure . RVar . Name
+
 uniType :: Tree Pure Typ -> Tree Pure (Scheme Types Typ)
 uniType typ =
     Pure Scheme
@@ -40,10 +43,10 @@ uniType typ =
 forAll ::
     (Traversable t, Traversable u) =>
     t String -> u String ->
-    (t (Tree Pure Typ) -> u (Tree Pure Typ) -> Tree Pure typ) ->
+    (t (Tree Pure Typ) -> u (Tree Pure Row) -> Tree Pure typ) ->
     Tree Pure (Scheme Types typ)
 forAll tvs rvs body =
-    body (tvs <&> tVar) (rvs <&> tVar)
+    body (tvs <&> tVar) (rvs <&> rVar)
     & Scheme (Types (foralls tvs) (foralls rvs))
     & Pure
     where
