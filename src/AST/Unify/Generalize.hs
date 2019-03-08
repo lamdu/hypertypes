@@ -8,7 +8,7 @@ module AST.Unify.Generalize
 
     , -- TODO: should these not be exported? (Internals)
       -- Exported also for specialization
-      instantiateWith, instantiateH
+      instantiateWith, instantiateForAll, instantiateH
     , GTerm(..), _GMono, _GPoly, _GBody
     ) where
 
@@ -17,8 +17,7 @@ import           Algebra.PartialOrd (PartialOrd(..))
 import           AST
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Knot.Flip (Flip(..), _Flip)
-import           AST.Unify (newTerm, semiPruneLookup)
-import           AST.Unify.Constraints (TypeConstraints(..), MonadScopeConstraints(..))
+import           AST.Unify
 import           AST.Unify.Term (UTerm(..), uBody)
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
@@ -98,16 +97,11 @@ generalize v0 =
     where
         p = Proxy :: Proxy (Recursive (Unify m))
 
--- TODO: Better name?
-{-# INLINE instantiateH #-}
-instantiateH ::
-    forall m t.
-    Recursive (Unify m) t =>
-    Tree (GTerm (UVarOf m)) t -> WriterT [m ()] m (Tree (UVarOf m) t)
-instantiateH (GMono x) = pure x
-instantiateH (GBody x) =
-    recursiveChildren (Proxy :: Proxy (Unify m)) instantiateH x >>= lift . newTerm
-instantiateH (GPoly x) =
+{-# INLINE instantiateForAll #-}
+instantiateForAll ::
+    Unify m t =>
+    Tree (UVarOf m) t -> WriterT [m ()] m (Tree (UVarOf m) t)
+instantiateForAll x =
     lookupVar binding x & lift
     >>=
     \case
@@ -119,6 +113,17 @@ instantiateH (GPoly x) =
             pure r
     UInstantiated v -> pure v
     _ -> error "unexpected state at instantiate's forall"
+
+-- TODO: Better name?
+{-# INLINE instantiateH #-}
+instantiateH ::
+    forall m t.
+    Recursive (Unify m) t =>
+    Tree (GTerm (UVarOf m)) t -> WriterT [m ()] m (Tree (UVarOf m) t)
+instantiateH (GMono x) = pure x
+instantiateH (GBody x) =
+    recursiveChildren (Proxy :: Proxy (Unify m)) instantiateH x >>= lift . newTerm
+instantiateH (GPoly x) = instantiateForAll x
 
 {-# INLINE instantiateWith #-}
 instantiateWith ::
