@@ -158,31 +158,32 @@ unify ::
 unify x0 y0
     | x0 == y0 = pure x0
     | otherwise =
-        go x0 y0 unbound (\x1 !xt -> go y0 x1 (bindToTerm x1 xt) (unifyTerms x1 xt))
-    where
-        unifyTerms x1 xt y1 yt =
-            withDict (recursive :: RecursiveDict (Unify m) t) $
-            do
-                bindVar binding y1 (UToVar x1)
-                zipMatchWithA (Proxy :: Proxy (Recursive (Unify m))) unify (xt ^. uBody) (yt ^. uBody)
-                    & fromMaybe (xt ^. uBody <$ structureMismatch xt yt)
-                    >>= bindVar binding x1 . UTerm . UTermBody (xt ^. uConstraints \/ yt ^. uConstraints)
-                pure x1
-        bindToTerm dstVar dstTerm var level =
-            do
-                bindVar binding var (UToVar dstVar)
-                updateTermConstraints var dstTerm level
-                pure dstVar
-        unbound var level =
+        semiPruneLookup x0
+        >>=
+        \case
+        (x1, _) | x1 == y0 -> pure x1
+        (x1, USkolem{}) -> y0 <$ unifyError (SkolemUnified x1 y0)
+        (x1, UUnbound level) ->
             do
                 r <- updateConstraints level y0
-                r <$ bindVar binding var (UToVar r)
-        go var !other onUnbound onTerm =
-            semiPruneLookup var
+                r <$ bindVar binding x1 (UToVar r)
+        (x1, UTerm xt) ->
+            semiPruneLookup y0
             >>=
             \case
-            (v1, _) | v1 == other -> pure other
-            (v1, USkolem{}) -> other <$ unifyError (SkolemUnified v1 other)
-            (v1, UUnbound level) -> onUnbound v1 level
-            (v1, UTerm t) -> onTerm v1 t
+            (y1, _) | x1 == y1 -> pure x1
+            (y1, USkolem{}) -> x1 <$ unifyError (SkolemUnified x1 y1)
+            (y1, UUnbound level) ->
+                do
+                    bindVar binding y1 (UToVar x1)
+                    x1 <$ updateTermConstraints y1 xt level
+            (y1, UTerm yt) ->
+                withDict (recursive :: RecursiveDict (Unify m) t) $
+                do
+                    bindVar binding y1 (UToVar x1)
+                    zipMatchWithA (Proxy :: Proxy (Recursive (Unify m))) unify (xt ^. uBody) (yt ^. uBody)
+                        & fromMaybe (xt ^. uBody <$ structureMismatch xt yt)
+                        >>= bindVar binding x1 . UTerm . UTermBody (xt ^. uConstraints \/ yt ^. uConstraints)
+                    pure x1
             (_, _) -> error "This shouldn't happen in unification stage"
+        (_, _) -> error "This shouldn't happen in unification stage"
