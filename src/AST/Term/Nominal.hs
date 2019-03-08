@@ -22,20 +22,22 @@ import           AST.Class.Combinators
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Recursive (wrapM, recursiveOverChildren)
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
-import           AST.Infer (Infer(..), TypeOf, ScopeOf, inferNode, iType)
+import           AST.Infer (Infer(..), TypeOf, ScopeOf, MonadScopeLevel(..), inferNode, iType)
 import           AST.Term.FuncType (HasFuncType(..), FuncType(..))
 import           AST.Term.Map (TermMap(..), _TermMap)
 import           AST.Term.Scheme
 import           AST.Unify
-import           AST.Unify.Generalize (GTerm(..), _GMono, instantiateWith)
+import           AST.Unify.Generalize (GTerm(..), _GMono, instantiateWith, instantiateForAll)
 import           AST.Unify.Term (UTerm(..))
 import           Control.Applicative (Alternative(..))
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Prism', makeLenses, makePrisms)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
+import           Control.Monad.Trans.Writer (execWriterT)
 import           Data.Binary (Binary)
 import           Data.Constraint (Constraint)
+import           Data.Foldable (traverse_)
 import           Data.Proxy (Proxy(..))
 import qualified Data.Map as Map
 import           Data.Maybe (fromMaybe)
@@ -219,6 +221,7 @@ type instance ScopeOf (ToNom nomId expr) = ScopeOf expr
 
 instance
     ( Infer m expr
+    , MonadScopeLevel m
     , HasNominalInst nomId (TypeOf expr)
     , MonadNominals nomId (TypeOf expr) m
     , ChildrenWithConstraint (NomVarTypes (TypeOf expr)) (Unify m)
@@ -228,11 +231,20 @@ instance
     {-# INLINE infer #-}
     infer (ToNom nomId val) =
         do
-            valI <- inferNode val
-            LoadedNominalDecl params _foralls gen <- getNominalDecl nomId
-            let initNom = lookupParams params
-            (typ, paramsT) <- instantiateWith initNom gen
-            _ <- unify typ (valI ^. iType)
+            (valI, paramsT) <-
+                do
+                    valI <- inferNode val
+                    LoadedNominalDecl params foralls gen <- getNominalDecl nomId
+                    recover <-
+                        children_ (Proxy :: Proxy (Unify m))
+                        (traverse_ (instantiateForAll USkolem) . (^. _QVarInstances))
+                        foralls
+                        & execWriterT
+                    (typ, paramsT) <- instantiateWith (lookupParams params) gen
+                    sequence_ recover
+                    _ <- unify typ (valI ^. iType)
+                    pure (valI, paramsT)
+                & localLevel
             nominalInst # NominalInst nomId paramsT & newTerm
                 <&> (, ToNom nomId valI)
 

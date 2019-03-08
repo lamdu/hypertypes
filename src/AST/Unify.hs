@@ -162,7 +162,6 @@ unify x0 y0
         >>=
         \case
         (x1, _) | x1 == y0 -> pure x1
-        (x1, USkolem{}) -> y0 <$ unifyError (SkolemUnified x1 y0)
         (x1, UUnbound level) ->
             do
                 r <- updateConstraints level y0
@@ -172,7 +171,6 @@ unify x0 y0
             >>=
             \case
             (y1, _) | x1 == y1 -> pure x1
-            (y1, USkolem{}) -> x1 <$ unifyError (SkolemUnified x1 y1)
             (y1, UUnbound level) ->
                 do
                     bindVar binding y1 (UToVar x1)
@@ -185,5 +183,15 @@ unify x0 y0
                         & fromMaybe (xt ^. uBody <$ structureMismatch xt yt)
                         >>= bindVar binding x1 . UTerm . UTermBody (xt ^. uConstraints \/ yt ^. uConstraints)
                     pure x1
+            (y1, USkolem{}) -> x1 <$ unifyError (SkolemUnified x1 y1)
             (_, _) -> error "This shouldn't happen in unification stage"
+        (x1, USkolem xLevel) ->
+            semiPruneLookup y0
+            >>=
+            \case
+            (y1, _) | x1 == y1 -> pure x1
+            (y1, UUnbound yLevel)
+                | yLevel `leq` xLevel -> x1 <$ bindVar binding y1 (UToVar x1)
+                | otherwise -> x1 <$ unifyError (SkolemEscape x1)
+            (y1, _) -> x1 <$ unifyError (SkolemUnified x1 y1)
         (_, _) -> error "This shouldn't happen in unification stage"

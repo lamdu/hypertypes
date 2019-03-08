@@ -100,15 +100,16 @@ generalize v0 =
 {-# INLINE instantiateForAll #-}
 instantiateForAll ::
     Unify m t =>
+    (TypeConstraintsOf t -> Tree (UTerm (UVarOf m)) t) ->
     Tree (UVarOf m) t -> WriterT [m ()] m (Tree (UVarOf m) t)
-instantiateForAll x =
+instantiateForAll cons x =
     lookupVar binding x & lift
     >>=
     \case
     USkolem l ->
         do
             tell [bindVar binding x (USkolem l)]
-            r <- scopeConstraints <&> (\/ l) >>= newVar binding . UUnbound & lift
+            r <- scopeConstraints <&> (\/ l) >>= newVar binding . cons & lift
             UInstantiated r & bindVar binding x & lift
             pure r
     UInstantiated v -> pure v
@@ -123,7 +124,7 @@ instantiateH ::
 instantiateH (GMono x) = pure x
 instantiateH (GBody x) =
     recursiveChildren (Proxy :: Proxy (Unify m)) instantiateH x >>= lift . newTerm
-instantiateH (GPoly x) = instantiateForAll x
+instantiateH (GPoly x) = instantiateForAll UUnbound x
 
 {-# INLINE instantiateWith #-}
 instantiateWith ::

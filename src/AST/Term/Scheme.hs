@@ -90,14 +90,21 @@ newtype QVarInstances k typ = QVarInstances (Map (QVar (RunKnot typ)) (k typ))
     deriving Generic
 Lens.makePrisms ''QVarInstances
 
+{-# INLINE makeQVarInstancesInScope #-}
+makeQVarInstancesInScope ::
+    Unify m typ =>
+    Tree QVars typ -> m (Tree (QVarInstances (UVarOf m)) typ)
+makeQVarInstancesInScope (QVars foralls) =
+    traverse makeSkolem foralls <&> QVarInstances
+    where
+        makeSkolem c = scopeConstraints >>= newVar binding . USkolem . (c \/)
+
 {-# INLINE makeQVarInstances #-}
 makeQVarInstances ::
     Unify m typ =>
     Tree QVars typ -> m (Tree (QVarInstances (UVarOf m)) typ)
 makeQVarInstances (QVars foralls) =
-    traverse makeSkolem foralls <&> QVarInstances
-    where
-        makeSkolem c = scopeConstraints >>= newVar binding . USkolem . (c \/)
+    traverse (newVar binding . USkolem) foralls <&> QVarInstances
 
 {-# INLINE schemeBodyToType #-}
 schemeBodyToType ::
@@ -120,7 +127,7 @@ schemeAsType ::
     Tree Pure (Scheme varTypes typ) -> m (Tree (UVarOf m) typ)
 schemeAsType (Pure (Scheme vars typ)) =
     do
-        foralls <- children (Proxy :: Proxy (Unify m)) makeQVarInstances vars
+        foralls <- children (Proxy :: Proxy (Unify m)) makeQVarInstancesInScope vars
         wrapM
             (Proxy :: Proxy (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord))
             (schemeBodyToType foralls) typ
