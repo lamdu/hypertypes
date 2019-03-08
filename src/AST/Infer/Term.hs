@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DataKinds, TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses, ConstraintKinds, FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances, UndecidableSuperClasses, FlexibleInstances #-}
-{-# LANGUAGE InstanceSigs, ScopedTypeVariables, RankNTypes #-}
+{-# LANGUAGE InstanceSigs, ScopedTypeVariables, RankNTypes, StandaloneDeriving #-}
 
 module AST.Infer.Term
     ( TypeOf, ScopeOf
@@ -78,3 +78,6 @@ iAnnotations f (ITerm pl r x) =
     <$> f pl
     <*> pure r
     <*> recursiveChildren (Proxy :: Proxy Children) (iAnnotations f) x
+
+deriving instance (Show (Tree v (TypeOf e)), Show (Tree (ScopeOf e) v)) => Show (IResult v e)
+deriving instance (Show a, Show (Tie e (ITerm a v)), Show (IResult v (RunKnot e))) => Show (ITerm a v e)

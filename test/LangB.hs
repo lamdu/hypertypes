@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeFamilies, LambdaCase #-}
 {-# LANGUAGE FlexibleInstances, UndecidableInstances, TupleSections, DataKinds #-}
 {-# LANGUAGE ScopedTypeVariables, GeneralizedNewtypeDeriving, ConstraintKinds #-}
+{-# LANGUAGE StandaloneDeriving #-}
 
 module LangB where
 
@@ -261,3 +262,6 @@ instance Unify (STInferB s) Row where
     unifyError e =
         children (Proxy :: Proxy (Recursive (Unify (STInferB s)))) applyBindings e
         >>= throwError . RowError
+
+deriving instance Show (Tie k LangB) => Show (LangB k)
+deriving instance (Show (Tie k Typ), Show (Tie k Row)) => Show (ScopeTypes k)
