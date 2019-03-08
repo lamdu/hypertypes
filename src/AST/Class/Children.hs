@@ -3,7 +3,7 @@
 
 module AST.Class.Children
     ( Children(..), ChildrenWithConstraint
-    , children_, overChildren, foldMapChildren
+    , children_, overChildren, foldMapChildren, foldMapAChildren
     ) where
 
 import AST.Knot (Knot, Tree)
@@ -60,3 +60,14 @@ foldMapChildren ::
     Tree expr n -> a
 foldMapChildren p f x =
     children_ p (\c -> (f c, ())) x & fst
+
+{-# INLINE foldMapAChildren #-}
+foldMapAChildren ::
+    forall f expr constraint a n.
+    (Applicative f, ChildrenWithConstraint expr constraint, Monoid a) =>
+    Proxy constraint ->
+    (forall child. constraint child => Tree n child -> f a) ->
+    Tree expr n -> f a
+foldMapAChildren p f x =
+    (children p (\c -> f c <&> Const) x :: f (Tree expr (Const a)))
+    <&> foldMapChildren p getConst
