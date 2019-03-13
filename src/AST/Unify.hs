@@ -114,18 +114,19 @@ applyBindings v0 =
 updateConstraints ::
     Recursive (Unify m) t =>
     TypeConstraintsOf t ->
-    (Tree (UVarOf m) t, Tree (UTerm (UVarOf m)) t) ->
+    Tree (UVarOf m) t ->
+    Tree (UTerm (UVarOf m)) t ->
     m ()
-updateConstraints !newConstraints (v1, x) =
+updateConstraints !newConstraints v x =
     case x of
     UUnbound l
         | newConstraints `leq` l -> pure ()
-        | otherwise -> bindVar binding v1 (UUnbound newConstraints)
+        | otherwise -> bindVar binding v (UUnbound newConstraints)
     USkolem l
         | newConstraints `leq` l -> pure ()
-        | otherwise -> SkolemEscape v1 & unifyError
-    UTerm t -> updateTermConstraints v1 t newConstraints
-    UResolving t -> () <$ occursError v1 t
+        | otherwise -> SkolemEscape v & unifyError
+    UTerm t -> updateTermConstraints v t newConstraints
+    UResolving t -> () <$ occursError v t
     _ -> error "This shouldn't happen in unification stage"
 
 {-# INLINE updateTermConstraints #-}
@@ -145,10 +146,11 @@ updateTermConstraints v t newConstraints
                 (t ^. uBody)
                 >>= bindVar binding v . UTerm . UTermBody newConstraints
     where
+        {-# INLINE f #-}
         f !c var =
             do
                 (v1, x) <- semiPruneLookup var
-                v1 <$ updateConstraints c (v1, x)
+                v1 <$ updateConstraints c v1 x
 
 -- Note on usage of `semiPruneLookup`:
 --   Variables are pruned to point to other variables rather than terms,
@@ -162,40 +164,40 @@ unify ::
 unify x0 y0
     | x0 == y0 = pure x0
     | otherwise =
-        semiPruneLookup x0
-        >>=
-        \case
-        (x1, _) | x1 == y0 -> pure x1
-        (x1, xu) ->
-            semiPruneLookup y0
-            >>=
-            \case
-            (y1, _) | x1 == y1 -> pure x1
-            y -> unifyUTerms (x1, xu) y
+        do
+            (x1, xu) <- semiPruneLookup x0
+            if x1 == y0
+                then pure x1
+                else
+                    do
+                        (y1, yu) <- semiPruneLookup y0
+                        if x1 == y1
+                            then pure x1
+                            else unifyUTerms x1 xu y1 yu
 
 {-# INLINE unifyUnbound #-}
 unifyUnbound ::
     Recursive (Unify m) t =>
-    (Tree (UVarOf m) t, TypeConstraintsOf t) ->
-    (Tree (UVarOf m) t, Tree (UTerm (UVarOf m)) t) ->
+    Tree (UVarOf m) t -> TypeConstraintsOf t ->
+    Tree (UVarOf m) t -> Tree (UTerm (UVarOf m)) t ->
     m (Tree (UVarOf m) t)
-unifyUnbound (xv, level) (yv, yt) =
+unifyUnbound xv level yv yt =
     do
-        updateConstraints level (yv, yt)
+        updateConstraints level yv yt
         yv <$ bindVar binding xv (UToVar yv)
 
 {-# INLINE unifyUTerms #-}
 unifyUTerms ::
     forall m t.
     Recursive (Unify m) t =>
-    (Tree (UVarOf m) t, Tree (UTerm (UVarOf m)) t) ->
-    (Tree (UVarOf m) t, Tree (UTerm (UVarOf m)) t) ->
+    Tree (UVarOf m) t -> Tree (UTerm (UVarOf m)) t ->
+    Tree (UVarOf m) t -> Tree (UTerm (UVarOf m)) t ->
     m (Tree (UVarOf m) t)
-unifyUTerms (xv, UUnbound level) y = unifyUnbound (xv, level) y
-unifyUTerms x (yv, UUnbound level) = unifyUnbound (yv, level) x
-unifyUTerms (xv, USkolem{}) (yv, _) = xv <$ unifyError (SkolemUnified xv yv)
-unifyUTerms (xv, _) (yv, USkolem{}) = yv <$ unifyError (SkolemUnified yv xv)
-unifyUTerms (xv, UTerm xt) (yv, UTerm yt) =
+unifyUTerms xv (UUnbound level) yv yt = unifyUnbound xv level yv yt
+unifyUTerms xv xt yv (UUnbound level) = unifyUnbound yv level xv xt
+unifyUTerms xv USkolem{} yv _ = xv <$ unifyError (SkolemUnified xv yv)
+unifyUTerms xv _ yv USkolem{} = yv <$ unifyError (SkolemUnified yv xv)
+unifyUTerms xv (UTerm xt) yv (UTerm yt) =
     withDict (recursive :: RecursiveDict (Unify m) t) $
     do
         bindVar binding yv (UToVar xv)
@@ -203,4 +205,4 @@ unifyUTerms (xv, UTerm xt) (yv, UTerm yt) =
             & fromMaybe (xt ^. uBody <$ structureMismatch xt yt)
             >>= bindVar binding xv . UTerm . UTermBody (xt ^. uConstraints \/ yt ^. uConstraints)
         pure xv
-unifyUTerms _ _ = error "This shouldn't happen in unification stage"
+unifyUTerms _ _ _ _ = error "This shouldn't happen in unification stage"
