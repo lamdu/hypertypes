@@ -53,6 +53,9 @@ nomLam =
 letGen :: Tree Pure LangB
 letGen = bLet "id" (lam "x" id) \i -> i $$ i $$ bLit 5
 
+genInf :: Tree Pure LangB
+genInf = bLet "f" (lam "x" $ \x -> x $$ x) id
+
 shouldNotGen :: Tree Pure LangB
 shouldNotGen = lam "x" \x -> bLet "y" x id
 
@@ -252,6 +255,7 @@ main =
             , testA validForAll  "Right (t0 -> t0)"
             , testA nomLam       "Right (Map[key: Int, value: Int] -> Map[key: Int, value: Int])"
             , testB letGen       "Right Int"
+            , testB genInf       "Left (t0 occurs in itself, expands to: t0 -> t1)"
             , testB shouldNotGen "Right (t0 -> t0)"
             , testB simpleRec    "Right (a : Int :*: {})"
             , testB extendLit    "Left (Mismatch Int r0)"

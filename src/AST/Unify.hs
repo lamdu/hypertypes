@@ -8,7 +8,7 @@ module AST.Unify
     , module AST.Unify.QuantifiedVar
     , applyBindings, unify
     , semiPruneLookup
-    , newUnbound, newTerm, unfreeze
+    , newUnbound, newTerm, unfreeze, occursError
 
     , -- Exported for SPECIALIZE pragmas
       updateConstraints, updateTermConstraints
