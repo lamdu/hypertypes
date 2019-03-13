@@ -11,7 +11,7 @@ module AST.Unify
     , newUnbound, newTerm, unfreeze, occursError
 
     , -- Exported for SPECIALIZE pragmas
-      updateConstraints, updateTermConstraints
+      updateConstraints, updateTermConstraints, unifyUTerms, unifyUnbound
     ) where
 
 import Algebra.PartialOrd (PartialOrd(..))
@@ -113,21 +113,20 @@ applyBindings v0 =
 {-# INLINE updateConstraints #-}
 updateConstraints ::
     Recursive (Unify m) t =>
-    TypeConstraintsOf t -> Tree (UVarOf m) t -> m (Tree (UVarOf m) t)
-updateConstraints !newConstraints var =
-    do
-        (v1, x) <- semiPruneLookup var
-        case x of
-            UUnbound l
-                | newConstraints `leq` l -> pure ()
-                | otherwise -> bindVar binding v1 (UUnbound newConstraints)
-            USkolem l
-                | newConstraints `leq` l -> pure ()
-                | otherwise -> SkolemEscape v1 & unifyError
-            UTerm t -> updateTermConstraints v1 t newConstraints
-            UResolving t -> () <$ occursError var t
-            _ -> error "This shouldn't happen in unification stage"
-        pure v1
+    TypeConstraintsOf t ->
+    (Tree (UVarOf m) t, Tree (UTerm (UVarOf m)) t) ->
+    m ()
+updateConstraints !newConstraints (v1, x) =
+    case x of
+    UUnbound l
+        | newConstraints `leq` l -> pure ()
+        | otherwise -> bindVar binding v1 (UUnbound newConstraints)
+    USkolem l
+        | newConstraints `leq` l -> pure ()
+        | otherwise -> SkolemEscape v1 & unifyError
+    UTerm t -> updateTermConstraints v1 t newConstraints
+    UResolving t -> () <$ occursError v1 t
+    _ -> error "This shouldn't happen in unification stage"
 
 {-# INLINE updateTermConstraints #-}
 updateTermConstraints ::
@@ -142,9 +141,14 @@ updateTermConstraints v t newConstraints
             bindVar binding v (UResolving t)
             verifyConstraints (Proxy :: Proxy (Recursive (Unify m))) newConstraints
                 (unifyError . ConstraintsViolation (t ^. uBody))
-                updateConstraints
+                f
                 (t ^. uBody)
                 >>= bindVar binding v . UTerm . UTermBody newConstraints
+    where
+        f !c var =
+            do
+                (v1, x) <- semiPruneLookup var
+                v1 <$ updateConstraints c (v1, x)
 
 -- Note on usage of `semiPruneLookup`:
 --   Variables are pruned to point to other variables rather than terms,
@@ -162,36 +166,41 @@ unify x0 y0
         >>=
         \case
         (x1, _) | x1 == y0 -> pure x1
-        (x1, UUnbound level) ->
-            do
-                r <- updateConstraints level y0
-                r <$ bindVar binding x1 (UToVar r)
-        (x1, UTerm xt) ->
+        (x1, xu) ->
             semiPruneLookup y0
             >>=
             \case
             (y1, _) | x1 == y1 -> pure x1
-            (y1, UUnbound level) ->
-                do
-                    bindVar binding y1 (UToVar x1)
-                    x1 <$ updateTermConstraints y1 xt level
-            (y1, UTerm yt) ->
-                withDict (recursive :: RecursiveDict (Unify m) t) $
-                do
-                    bindVar binding y1 (UToVar x1)
-                    zipMatchWithA (Proxy :: Proxy (Recursive (Unify m))) unify (xt ^. uBody) (yt ^. uBody)
-                        & fromMaybe (xt ^. uBody <$ structureMismatch xt yt)
-                        >>= bindVar binding x1 . UTerm . UTermBody (xt ^. uConstraints \/ yt ^. uConstraints)
-                    pure x1
-            (y1, USkolem{}) -> x1 <$ unifyError (SkolemUnified x1 y1)
-            (_, _) -> error "This shouldn't happen in unification stage"
-        (x1, USkolem xLevel) ->
-            semiPruneLookup y0
-            >>=
-            \case
-            (y1, _) | x1 == y1 -> pure x1
-            (y1, UUnbound yLevel)
-                | yLevel `leq` xLevel -> x1 <$ bindVar binding y1 (UToVar x1)
-                | otherwise -> x1 <$ unifyError (SkolemEscape x1)
-            (y1, _) -> x1 <$ unifyError (SkolemUnified x1 y1)
-        (_, _) -> error "This shouldn't happen in unification stage"
+            y -> unifyUTerms (x1, xu) y
+
+{-# INLINE unifyUnbound #-}
+unifyUnbound ::
+    Recursive (Unify m) t =>
+    (Tree (UVarOf m) t, TypeConstraintsOf t) ->
+    (Tree (UVarOf m) t, Tree (UTerm (UVarOf m)) t) ->
+    m (Tree (UVarOf m) t)
+unifyUnbound (xv, level) (yv, yt) =
+    do
+        updateConstraints level (yv, yt)
+        yv <$ bindVar binding xv (UToVar yv)
+
+{-# INLINE unifyUTerms #-}
+unifyUTerms ::
+    forall m t.
+    Recursive (Unify m) t =>
+    (Tree (UVarOf m) t, Tree (UTerm (UVarOf m)) t) ->
+    (Tree (UVarOf m) t, Tree (UTerm (UVarOf m)) t) ->
+    m (Tree (UVarOf m) t)
+unifyUTerms (xv, UUnbound level) y = unifyUnbound (xv, level) y
+unifyUTerms x (yv, UUnbound level) = unifyUnbound (yv, level) x
+unifyUTerms (xv, USkolem{}) (yv, _) = xv <$ unifyError (SkolemUnified xv yv)
+unifyUTerms (xv, _) (yv, USkolem{}) = yv <$ unifyError (SkolemUnified yv xv)
+unifyUTerms (xv, UTerm xt) (yv, UTerm yt) =
+    withDict (recursive :: RecursiveDict (Unify m) t) $
+    do
+        bindVar binding yv (UToVar xv)
+        zipMatchWithA (Proxy :: Proxy (Recursive (Unify m))) unify (xt ^. uBody) (yt ^. uBody)
+            & fromMaybe (xt ^. uBody <$ structureMismatch xt yt)
+            >>= bindVar binding xv . UTerm . UTermBody (xt ^. uConstraints \/ yt ^. uConstraints)
+        pure xv
+unifyUTerms _ _ = error "This shouldn't happen in unification stage"
