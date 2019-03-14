@@ -50,11 +50,16 @@ nomLam =
             & Pure
             & uniType
 
-letGen :: Tree Pure LangB
-letGen = bLet "id" (lam "x" id) \i -> i $$ i $$ bLit 5
+letGen0 :: Tree Pure LangB
+letGen0 = bLet "id" (lam "x" id) \i -> i $$ i $$ bLit 5
+
+letGen1 :: Tree Pure LangB
+letGen1 =
+    bLet "five" (bLit 5) \five ->
+    bLet "f" (lam "x" \x -> x $$ five $$ five) id
 
 genInf :: Tree Pure LangB
-genInf = bLet "f" (lam "x" $ \x -> x $$ x) id
+genInf = bLet "f" (lam "x" \x -> x $$ x) id
 
 shouldNotGen :: Tree Pure LangB
 shouldNotGen = lam "x" \x -> bLet "y" x id
@@ -254,7 +259,8 @@ main =
             , testA skolem       "Left (SkolemEscape: t0)"
             , testA validForAll  "Right (t0 -> t0)"
             , testA nomLam       "Right (Map[key: Int, value: Int] -> Map[key: Int, value: Int])"
-            , testB letGen       "Right Int"
+            , testB letGen0      "Right Int"
+            , testB letGen1      "Right ((Int -> Int -> t0) -> t0)"
             , testB genInf       "Left (t0 occurs in itself, expands to: t0 -> t1)"
             , testB shouldNotGen "Right (t0 -> t0)"
             , testB simpleRec    "Right (a : Int :*: {})"

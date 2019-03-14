@@ -65,14 +65,17 @@ instance Children (Flip GTerm ast) where
             <&> GBody
         <&> Flip
 
-generalizeH ::
+-- | Generalize a unification term pointed by the given variable to a `GTerm`.
+-- Unification variables that are scoped within the term
+-- become universally quantified skolems.
+generalize ::
     forall m t.
     Recursive (Unify m) t =>
-    Tree (UVarOf m) t -> WriterT [m ()] m (Tree (GTerm (UVarOf m)) t)
-generalizeH v0 =
+    Tree (UVarOf m) t -> m (Tree (GTerm (UVarOf m)) t)
+generalize v0 =
     do
-        (v1, u) <- semiPruneLookup v0 & lift
-        c <- lift scopeConstraints
+        (v1, u) <- semiPruneLookup v0
+        c <- scopeConstraints
         case u of
             UUnbound l | l `leq` c ->
                 GPoly v1 <$
@@ -80,34 +83,23 @@ generalizeH v0 =
                 -- so additional unifications after generalization
                 -- (for example hole resumptions where supported)
                 -- cannot unify it with anything.
-                lift (bindVar binding v1 (USkolem (generalizeConstraints l)))
+                bindVar binding v1 (USkolem (generalizeConstraints l))
             USkolem l | l `leq` c -> pure (GPoly v1)
             UTerm t ->
                 withDict (recursive :: RecursiveDict (Unify m) t) $
                 do
-                    tell [bindVar binding v1 (UTerm t)]
-                    bindVar binding v1 (UResolving t) & lift
-                    children p generalizeH (t ^. uBody)
+                    bindVar binding v1 (UResolving t)
+                    r <- children p generalize (t ^. uBody)
+                    r <$ bindVar binding v1 (UTerm t)
                 <&>
                 \b ->
                 if foldMapChildren p (All . Lens.has _GMono) b ^. Lens._Wrapped
                 then GMono v1
                 else GBody b
-            UResolving t -> GMono v1 <$ lift (occursError v1 t)
+            UResolving t -> GMono v1 <$ occursError v1 t
             _ -> pure (GMono v1)
     where
         p = Proxy :: Proxy (Recursive (Unify m))
-
--- | Generalize a unification term pointed by the given variable to a `GTerm`.
--- Unification variables that are scoped within the term
--- become universally quantified skolems.
-generalize ::
-    Recursive (Unify m) t =>
-    Tree (UVarOf m) t -> m (Tree (GTerm (UVarOf m)) t)
-generalize v =
-    do
-        (r, recover) <- runWriterT (generalizeH v)
-        r <$ sequence_ recover
 
 {-# INLINE instantiateForAll #-}
 instantiateForAll ::
