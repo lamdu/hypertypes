@@ -58,6 +58,11 @@ letGen1 =
     bLet "five" (bLit 5) \five ->
     bLet "f" (lam "x" \x -> x $$ five $$ five) id
 
+letGen2 :: Tree Pure LangB
+letGen2 =
+    bLet "f" (lam "x" (getField ?? "a")) \f ->
+    lam "x" \x -> f $$ (f $$ x)
+
 genInf :: Tree Pure LangB
 genInf = bLet "f" (lam "x" \x -> x $$ x) id
 
@@ -261,6 +266,7 @@ main =
             , testA nomLam       "Right (Map[key: Int, value: Int] -> Map[key: Int, value: Int])"
             , testB letGen0      "Right Int"
             , testB letGen1      "Right ((Int -> Int -> t0) -> t0)"
+            , testB letGen2      "Right ((a : (a : t0 :*: r0) :*: r1) -> t0)"
             , testB genInf       "Left (t0 occurs in itself, expands to: t0 -> t1)"
             , testB shouldNotGen "Right (t0 -> t0)"
             , testB simpleRec    "Right (a : Int :*: {})"
