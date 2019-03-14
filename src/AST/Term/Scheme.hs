@@ -185,11 +185,11 @@ saveH (GMono x) =
     f x & lift
     where
         f v =
-            lookupVar binding v
+            semiPruneLookup v
             <&>
             \case
-            UTerm t -> t ^. uBody
-            UUnbound{} -> error "saveScheme of non-toplevel scheme!"
+            (_, UTerm t) -> t ^. uBody
+            (_, UUnbound{}) -> error "saveScheme of non-toplevel scheme!"
             _ -> error "unexpected state at saveScheme of monomorphic part"
 saveH (GPoly x) =
     lookupVar binding x & lift
