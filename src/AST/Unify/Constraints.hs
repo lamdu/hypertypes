@@ -26,6 +26,8 @@ class (PartialOrd c, JoinSemiLattice c) => TypeConstraints c where
     -- and the "scope" constraints need to be erased.
     generalizeConstraints :: c -> c
 
+    toScopeConstraints :: c -> c
+
 class
     TypeConstraints (TypeConstraintsOf ast) =>
     HasTypeConstraints (ast :: Knot -> *) where

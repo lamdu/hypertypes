@@ -122,6 +122,7 @@ instance BoundedJoinSemiLattice RConstraints where
 
 instance TypeConstraints RConstraints where
     generalizeConstraints = rScope .~ bottom
+    toScopeConstraints = rForbiddenFields .~ bottom
 
 instance RowConstraints RConstraints where
     type RowConstraintsKey RConstraints = Name

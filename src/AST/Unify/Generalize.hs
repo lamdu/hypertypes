@@ -77,14 +77,14 @@ generalize v0 =
         (v1, u) <- semiPruneLookup v0
         c <- scopeConstraints
         case u of
-            UUnbound l | l `leq` c ->
+            UUnbound l | toScopeConstraints l `leq` c ->
                 GPoly v1 <$
                 -- We set the variable to a skolem,
                 -- so additional unifications after generalization
                 -- (for example hole resumptions where supported)
                 -- cannot unify it with anything.
                 bindVar binding v1 (USkolem (generalizeConstraints l))
-            USkolem l | l `leq` c -> pure (GPoly v1)
+            USkolem l | toScopeConstraints l `leq` c -> pure (GPoly v1)
             UTerm t ->
                 withDict (recursive :: RecursiveDict (Unify m) t) $
                 do

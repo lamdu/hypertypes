@@ -41,6 +41,7 @@ instance BoundedJoinSemiLattice ScopeLevel where
 instance TypeConstraints ScopeLevel where
     {-# INLINE generalizeConstraints #-}
     generalizeConstraints _ = bottom
+    toScopeConstraints = id
 
 instance Pretty ScopeLevel where
     pPrint (ScopeLevel x) = Pretty.text "scope#" <> pPrint x
