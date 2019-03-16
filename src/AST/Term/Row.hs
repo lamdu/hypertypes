@@ -181,5 +181,6 @@ instance Deps NFData key val rest k => NFData (RowExtend key val rest k)
 
 deriving instance Deps Eq   key val rest k => Eq   (FlatRowExtends key val rest k)
 deriving instance Deps Ord  key val rest k => Ord  (FlatRowExtends key val rest k)
+deriving instance Deps Show key val rest k => Show (FlatRowExtends key val rest k)
 instance Deps Binary key val rest k => Binary (FlatRowExtends key val rest k)
 instance Deps NFData key val rest k => NFData (FlatRowExtends key val rest k)
