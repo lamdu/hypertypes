@@ -4,12 +4,13 @@
 
 module AST.Knot.Ann
     ( Ann(..), ann, val
-    , annotations, strip
+    , annotations
+    , strip, addAnnotations
     , para
     ) where
 
 import           AST.Class.Children (Children(..))
-import           AST.Class.Recursive (Recursive, unwrap, recursiveChildren, recursiveOverChildren)
+import           AST.Class.Recursive (Recursive, wrap, unwrap, recursiveChildren, recursiveOverChildren)
 import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
 import           AST.Knot (Tie, Tree)
 import           AST.Knot.Pure (Pure(..))
@@ -71,6 +72,13 @@ para p f x =
 
 strip :: Recursive Children expr => Tree (Ann a) expr -> Tree Pure expr
 strip = unwrap (Proxy :: Proxy Children) (^. val)
+
+addAnnotations ::
+    Recursive constraint expr =>
+    Proxy constraint ->
+    (forall child. constraint child => Tree child (Ann a) -> a) ->
+    Tree Pure expr -> Tree (Ann a) expr
+addAnnotations p f = wrap p (\x -> Ann (f x) x)
 
 type Deps c a t = ((c a, c (Tie t (Ann a))) :: Constraint)
 deriving instance Deps Eq   a t => Eq   (Ann a t)
