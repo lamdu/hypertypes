@@ -2,6 +2,7 @@
 {-# LANGUAGE ScopedTypeVariables, FlexibleInstances, UndecidableInstances #-}
 {-# LANGUAGE DeriveGeneric, StandaloneDeriving, FlexibleContexts, LambdaCase #-}
 {-# LANGUAGE ConstraintKinds, TypeOperators, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module AST.Term.Scheme
     ( Scheme(..), sForAlls, sTyp
@@ -73,6 +74,8 @@ instance
                 | otherwise = pPrint q <> Pretty.text "(" <> cP <> Pretty.text ")"
                 where
                     cP = pPrint c
+
+instance (c (Scheme v t), Recursive c t) => Recursive c (Scheme v t)
 
 Lens.makeLenses ''Scheme
 Lens.makePrisms ''QVars
