@@ -2,6 +2,7 @@
 {-# LANGUAGE ConstraintKinds, UndecidableInstances, TypeFamilies, ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeOperators, FlexibleContexts, DataKinds, LambdaCase, TupleSections #-}
+{-# LANGUAGE RankNTypes #-}
 
 module AST.Term.Nominal
     ( NominalDecl(..), nParams, nScheme
@@ -13,14 +14,14 @@ module AST.Term.Nominal
     , NomVarTypes
     , MonadNominals(..)
     , LoadedNominalDecl, loadNominalDecl
-    , typeInNominal
+    , applyNominal
     ) where
 
 import           Algebra.Lattice (JoinSemiLattice(..))
 import           AST
 import           AST.Class.Combinators
 import           AST.Class.HasChild (HasChild(..))
-import           AST.Class.Recursive (wrapM, recursiveOverChildren)
+import           AST.Class.Recursive (wrapM)
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
 import           AST.Infer (Infer(..), TypeOf, ScopeOf, MonadScopeLevel(..), inferNode, iType)
 import           AST.Term.FuncType (HasFuncType(..), FuncType(..))
@@ -36,11 +37,10 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Writer (execWriterT)
 import           Data.Binary (Binary)
-import           Data.Constraint (Constraint)
+import           Data.Constraint (Constraint, withDict)
 import           Data.Foldable (traverse_)
 import           Data.Proxy (Proxy(..))
 import qualified Data.Map as Map
-import           Data.Maybe (fromMaybe)
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
@@ -270,29 +270,33 @@ instance
         <&> (, FromNom nomId)
 
 -- | Get the scheme in a nominal given the parameters of a specific nominal instance.
-typeInNominal ::
-    Recursive (HasChild (NomVarTypes typ) `And` QVarHasInstance Ord) typ =>
+applyNominal ::
+    (Monad m, Recursive (HasChild (NomVarTypes typ) `And` QVarHasInstance Ord `And` constraint) typ) =>
+    Proxy constraint ->
+    (forall child. constraint child => Tree child k -> m (Tree k child)) ->
     Tree Pure (NominalDecl typ) ->
-    Tree (NomVarTypes typ) (QVarInstances Pure) ->
-    Tree Pure (Scheme (NomVarTypes typ) typ)
-typeInNominal (Pure (NominalDecl _paramsDecl scheme)) params =
-    scheme & sTyp %~ subst params
-    & Pure
+    Tree (NomVarTypes typ) (QVarInstances k) ->
+    m (Tree (Scheme (NomVarTypes typ) typ) k)
+applyNominal p mkType (Pure (NominalDecl _paramsDecl scheme)) params =
+    sTyp (subst p mkType params) scheme
 
 subst ::
-    forall varTypes typ.
-    Recursive (HasChild varTypes `And` QVarHasInstance Ord) typ =>
-    Tree varTypes (QVarInstances Pure) -> Tree Pure typ -> Tree Pure typ
-subst params (Pure x) =
+    forall varTypes typ k constraint m.
+    (Monad m, Recursive (HasChild varTypes `And` QVarHasInstance Ord `And` constraint) typ) =>
+    Proxy constraint ->
+    (forall child. constraint child => Tree child k -> m (Tree k child)) ->
+    Tree varTypes (QVarInstances k) -> Tree Pure typ -> m (Tree k typ)
+subst p mkType params (Pure x) =
     case x ^? quantifiedVar of
     Just q ->
         params ^?
         getChild . _QVarInstances . Lens.ix q
-        & fromMaybe (Pure (quantifiedVar # q))
+        & maybe (mkType (quantifiedVar # q)) pure
     Nothing ->
-        recursiveOverChildren (Proxy :: Proxy (HasChild varTypes `And` QVarHasInstance Ord))
-        (subst params) x
-        & Pure
+        withDict (recursive :: (RecursiveDict (HasChild varTypes `And` QVarHasInstance Ord `And` constraint) typ)) $
+        children (Proxy :: Proxy (Recursive (HasChild varTypes `And` QVarHasInstance Ord `And` constraint)))
+        (subst p mkType params) x
+        >>= mkType
 
 type DepsD c t k = ((c (Tree (NomVarTypes t) QVars), c (Tie k t)) :: Constraint)
 deriving instance DepsD Eq   t k => Eq   (NominalDecl t k)
