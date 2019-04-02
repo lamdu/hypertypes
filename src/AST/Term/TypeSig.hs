@@ -10,7 +10,7 @@ import           AST
 import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Infer (Infer(..), TypeOf, ScopeOf, MonadScopeLevel(..), inferNode, iType)
-import           AST.Term.Scheme (Scheme, schemeAsType)
+import           AST.Term.Scheme (Scheme, schemeToRestrictedType)
 import           AST.Unify (Unify, unify, QVarHasInstance)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)
@@ -55,7 +55,7 @@ instance
     infer (TypeSig x s) =
         do
             xI <- inferNode x
-            schemeAsType s
+            schemeToRestrictedType s
                 >>= unify (xI ^. iType)
                 <&> (, TypeSig xI s)
         & localLevel

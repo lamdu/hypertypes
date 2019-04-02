@@ -7,7 +7,7 @@
 module AST.Term.Scheme
     ( Scheme(..), sForAlls, sTyp
     , QVars(..), _QVars
-    , schemeAsType
+    , schemeToRestrictedType
     , loadScheme, saveScheme
 
     , QVarInstances(..), _QVarInstances
@@ -120,15 +120,15 @@ schemeBodyToType foralls x =
     where
         getForAll v = foralls ^? getChild . _QVarInstances . Lens.ix v
 
-{-# INLINE schemeAsType #-}
-schemeAsType ::
+{-# INLINE schemeToRestrictedType #-}
+schemeToRestrictedType ::
     forall m varTypes typ.
     ( Monad m
     , ChildrenWithConstraint varTypes (Unify m)
     , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
     ) =>
     Tree Pure (Scheme varTypes typ) -> m (Tree (UVarOf m) typ)
-schemeAsType (Pure (Scheme vars typ)) =
+schemeToRestrictedType (Pure (Scheme vars typ)) =
     do
         foralls <- children (Proxy :: Proxy (Unify m)) makeQVarInstancesInScope vars
         wrapM
