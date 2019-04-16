@@ -16,7 +16,7 @@ import           Algebra.Lattice (JoinSemiLattice(..))
 import           Algebra.PartialOrd (PartialOrd(..))
 import           AST
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
-import           AST.Knot.Flip (Flip(..), _Flip)
+import           AST.Knot.Flip (Flip, _Flip)
 import           AST.Unify
 import           AST.Unify.Term (UTerm(..), uBody)
 import           Control.DeepSeq (NFData)
@@ -56,14 +56,14 @@ instance Children (Flip GTerm ast) where
         Proxy constraint ->
         (forall child. constraint child => Tree n child -> f (Tree m child)) ->
         Tree (Flip GTerm ast) n -> f (Tree (Flip GTerm ast) m)
-    children p f (Flip g) =
-        case g of
+    children p f g =
+        case g ^. _Flip of
         GMono x -> f x <&> GMono
         GPoly x -> f x <&> GPoly
         GBody x ->
             recursiveChildren p (Lens.from _Flip (children p f)) x
             <&> GBody
-        <&> Flip
+        <&> (_Flip #)
 
 -- | Generalize a unification term pointed by the given variable to a `GTerm`.
 -- Unification variables that are scoped within the term

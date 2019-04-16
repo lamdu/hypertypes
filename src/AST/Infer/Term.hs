@@ -54,12 +54,12 @@ instance Children (Flip (ITerm a) e) where
         Proxy c ->
         (forall child. c child => Tree n child -> f (Tree m child)) ->
         Tree (Flip (ITerm a) e) n -> f (Tree (Flip (ITerm a) e) m)
-    children p f (Flip (ITerm a (IResult t s) b)) =
+    children p f (MkFlip (ITerm a (IResult t s) b)) =
         ITerm a
         <$> (IResult <$> f t <*> children p f s)
         <*> recursiveChildren (Proxy :: Proxy (InferChildConstraints c))
             (from _Flip (children p f)) b
-        <&> Flip
+        <&> (_Flip #)
 
 iType :: Lens' (ITerm a v e) (Tree v (TypeOf (RunKnot e)))
 iType = iRes . irType
