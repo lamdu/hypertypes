@@ -41,13 +41,13 @@ nomLam =
     where
         s =
             mempty
-            & Lens.at (Name "key") ?~ Pure TInt
-            & Lens.at (Name "value") ?~ Pure TInt
+            & Lens.at (Name "key") ?~ _Pure # TInt
+            & Lens.at (Name "value") ?~ _Pure # TInt
             & QVarInstances
             & (`Types` QVarInstances mempty)
             & NominalInst (Name "Map")
             & TNom
-            & Pure
+            & MkPure
             & uniType
 
 letGen0 :: Tree Pure LangB
@@ -134,7 +134,7 @@ inferExpr x =
 
 vecNominalDecl :: Tree Pure (NominalDecl Typ)
 vecNominalDecl =
-    Pure NominalDecl
+    _Pure # NominalDecl
     { _nParams =
         Types
         { _tRow = bottom
@@ -149,7 +149,7 @@ vecNominalDecl =
 
 phantomIntNominalDecl :: Tree Pure (NominalDecl Typ)
 phantomIntNominalDecl =
-    Pure NominalDecl
+    _Pure # NominalDecl
     { _nParams =
         Types
         { _tRow = bottom
@@ -158,7 +158,7 @@ phantomIntNominalDecl =
     , _nScheme =
         Scheme
         { _sForAlls = Types bottom bottom
-        , _sTyp = Pure TInt
+        , _sTyp = _Pure # TInt
         }
     }
 
@@ -169,13 +169,13 @@ mutType =
     { _tRow = mempty & Lens.at (Name "effects") ?~ rVar "effects" & QVarInstances
     , _tTyp = mempty & Lens.at (Name "value") ?~ tVar "value" & QVarInstances
     }
-    & TNom & Pure
+    & TNom & MkPure
 
 -- A nominal type with foralls:
 -- "newtype LocalMut a = forall s. Mut s a"
 localMutNominalDecl :: Tree Pure (NominalDecl Typ)
 localMutNominalDecl =
-    Pure NominalDecl
+    _Pure # NominalDecl
     { _nParams =
         Types
         { _tRow = bottom

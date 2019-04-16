@@ -181,7 +181,7 @@ loadNominalDecl ::
     ) =>
     Tree Pure (NominalDecl typ) ->
     m (Tree (LoadedNominalDecl typ) (UVarOf m))
-loadNominalDecl (Pure (NominalDecl params (Scheme foralls typ))) =
+loadNominalDecl (MkPure (NominalDecl params (Scheme foralls typ))) =
     do
         paramsL <- children (Proxy :: Proxy (Unify m)) makeQVarInstances params
         forallsL <- children (Proxy :: Proxy (Unify m)) makeQVarInstances foralls
@@ -277,7 +277,7 @@ applyNominal ::
     Tree Pure (NominalDecl typ) ->
     Tree (NomVarTypes typ) (QVarInstances k) ->
     m (Tree (Scheme (NomVarTypes typ) typ) k)
-applyNominal p mkType (Pure (NominalDecl _paramsDecl scheme)) params =
+applyNominal p mkType (MkPure (NominalDecl _paramsDecl scheme)) params =
     sTyp (subst p mkType params) scheme
 
 subst ::
@@ -286,7 +286,7 @@ subst ::
     Proxy constraint ->
     (forall child. constraint child => Tree child k -> m (Tree k child)) ->
     Tree varTypes (QVarInstances k) -> Tree Pure typ -> m (Tree k typ)
-subst p mkType params (Pure x) =
+subst p mkType params (MkPure x) =
     case x ^? quantifiedVar of
     Just q ->
         params ^?

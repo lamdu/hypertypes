@@ -21,18 +21,18 @@ aLam ::
         Tree Pure (LangA n)) -> Tree Pure (LangA (Maybe t))) ->
     Tree Pure (LangA t)
 aLam f =
-    scope body & ALam & Pure
+    _Pure # ALam (scope body)
     where
         body x = f (var x)
 
 ($::) :: Tree Pure (LangA n) -> Tree Pure (Scheme Types Typ) -> Tree Pure (LangA n)
-v $:: t = v `TypeSig` t & ATypeSig & Pure
+v $:: t = _Pure # ATypeSig (v `TypeSig` t)
 
 aLit :: Int -> Tree Pure (LangA t)
-aLit = Pure . ALit
+aLit i = _Pure # ALit i
 
 aApp :: Tree Pure (LangA n) -> Tree Pure (LangA n) -> Tree Pure (LangA n)
-f `aApp` x = Apply f x & AApp & Pure
+f `aApp` x = _Pure # AApp (Apply f x)
 
 var :: InvDeBruijnIndex k => Int -> Tree Pure (LangA k)
-var = Pure . AVar . scopeVar
+var i = _Pure # AVar (scopeVar i)

@@ -12,7 +12,7 @@ module AST.Class.Recursive
 
 import AST.Class.Children (Children(..), foldMapChildren, overChildren)
 import AST.Knot (Tree)
-import AST.Knot.Pure (Pure(..))
+import AST.Knot.Pure (Pure, _Pure)
 import Control.Lens.Operators
 import Data.Constraint (Dict(..), withDict)
 import Data.Functor.Const (Const(..))
@@ -51,8 +51,8 @@ wrapM ::
     (forall child. constraint child => Tree child f -> m (Tree f child)) ->
     Tree Pure expr ->
     m (Tree f expr)
-wrapM p f (Pure x) =
-    recursiveChildren p (wrapM p f) x >>= f
+wrapM p f x =
+    x ^. _Pure & recursiveChildren p (wrapM p f) >>= f
 
 {-# INLINE unwrapM #-}
 unwrapM ::
@@ -62,7 +62,7 @@ unwrapM ::
     Tree f expr ->
     m (Tree Pure expr)
 unwrapM p f x =
-    f x >>= recursiveChildren p (unwrapM p f) <&> Pure
+    f x >>= recursiveChildren p (unwrapM p f) <&> (_Pure #)
 
 {-# INLINE wrap #-}
 wrap ::

@@ -76,8 +76,8 @@ occursError v (UTermBody c b) =
     do
         q <- newQuantifiedVariable c
         let r = quantifiedVar # q
-        bindVar binding v (UResolved (Pure r))
-        Pure r <$ unifyError (Occurs (quantifiedVar # q) b)
+        bindVar binding v (UResolved (_Pure # r))
+        _Pure # r <$ unifyError (Occurs (quantifiedVar # q) b)
 
 {-# INLINE applyBindings #-}
 applyBindings ::
@@ -88,7 +88,7 @@ applyBindings v0 =
     \(v1, x) ->
     let result r = r <$ bindVar binding v1 (UResolved r)
         quantify c =
-            newQuantifiedVariable c <&> (quantifiedVar #) <&> Pure
+            newQuantifiedVariable c <&> (quantifiedVar #) <&> (_Pure #)
             >>= result
     in
     case x of
@@ -98,13 +98,13 @@ applyBindings v0 =
     USkolem c -> quantify c
     UTerm b ->
         case leafExpr of
-        Just f -> b ^. uBody & f & Pure & pure
+        Just f -> _Pure # f (b ^. uBody) & pure
         Nothing ->
             do
                 bindVar binding v1 (UResolving b)
                 recursiveChildren (Proxy :: Proxy (Unify m)) applyBindings
                     (b ^. uBody)
-            <&> Pure
+            <&> (_Pure #)
             >>= result
     UToVar{} -> error "lookup not expected to result in var"
     UConverted{} -> error "conversion state not expected in applyBindings"

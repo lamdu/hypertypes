@@ -1,37 +1,43 @@
 {-# LANGUAGE NoImplicitPrelude, StandaloneDeriving, UndecidableInstances #-}
 {-# LANGUAGE TypeFamilies, TemplateHaskell, DeriveGeneric #-}
-
 module AST.Knot.Pure
     ( Pure(..), _Pure
     ) where
 
-import AST.Class.Children.TH (makeChildren)
-import AST.Class.ZipMatch (ZipMatch(..), Both(..))
-import AST.Knot (Tie)
-import Control.DeepSeq (NFData)
-import Control.Lens (makePrisms)
-import Data.Binary (Binary)
-import GHC.Generics (Generic)
-import Text.PrettyPrint.HughesPJClass (Pretty(..))
-import Text.Show.Combinators ((@|), showCon)
+import           AST.Class.Children.TH (makeChildren)
+import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
+import           AST.Knot (Tie, Tree)
+import           Control.DeepSeq (NFData)
+import qualified Control.Lens as Lens
+import           Data.Binary (Binary)
+import           GHC.Generics (Generic)
+import           Text.PrettyPrint.HughesPJClass (Pretty(..))
+import           Text.Show.Combinators ((@|), showCon)
 
-import Prelude.Compat
+import           Prelude.Compat
 
-newtype Pure k = Pure { getPure :: Tie k Pure }
+-- Prefer using the _Pure Iso to the MkPure data constructor, because "MkPure"
+-- cannot tell the type checker that "k" is of the form "Knot j", which makes
+-- type inference brittle. The Iso tells the type-checker that.
+newtype Pure k = MkPure { getPure :: Tie k Pure }
     deriving Generic
-makePrisms ''Pure
 makeChildren ''Pure
 
+{-# INLINE _Pure #-}
+_Pure :: Lens.Iso (Tree Pure k) (Tree Pure j) (Tree k Pure) (Tree j Pure)
+_Pure = Lens.iso getPure MkPure
+
 instance ZipMatch Pure where
-    zipMatch (Pure x) (Pure y) = Just (Pure (Both x y))
+    zipMatch (MkPure x) (MkPure y) = Just (MkPure (Both x y))
 
 instance Show (Tie k Pure) => Show (Pure k) where
-    showsPrec p (Pure x) = (showCon "Pure" @| x) p
+    showsPrec p (MkPure x) = (showCon "Pure" @| x) p
 
 instance Pretty (Tie k Pure) => Pretty (Pure k) where
-    pPrintPrec lvl p (Pure x) = pPrintPrec lvl p x
+    pPrintPrec lvl p (MkPure x) = pPrintPrec lvl p x
 
 deriving instance Eq  (Tie k Pure) => Eq  (Pure k)
 deriving instance Ord (Tie k Pure) => Ord (Pure k)
 instance Binary (Tie k Pure) => Binary (Pure k)
 instance NFData (Tie k Pure) => NFData (Pure k)
+

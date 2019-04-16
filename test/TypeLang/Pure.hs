@@ -19,23 +19,24 @@ rowExtends :: Tree Pure Row -> [(String, Tree Pure Typ)] -> Tree Pure Row
 rowExtends =
     foldr extend
     where
-        extend (name, typ) = Pure . RExtend . RowExtend (Name name) typ
+        extend (name, typ) rest =
+            _Pure # RExtend (RowExtend (Name name) typ rest)
 
 record :: [(String, Tree Pure Typ)] -> Tree Pure Typ
-record = Pure . TRec . rowExtends (Pure REmpty)
+record fields = _Pure # TRec (rowExtends (_Pure # REmpty) fields)
 
 intA :: Tree Pure (Scheme Types Typ)
-intA = Pure TInt & uniType
+intA = _Pure # TInt & uniType
 
 tVar :: String -> Tree Pure Typ
-tVar = Pure . TVar . Name
+tVar n = _Pure # TVar (Name n)
 
 rVar :: String -> Tree Pure Row
-rVar = Pure . RVar . Name
+rVar n = _Pure # RVar (Name n)
 
 uniType :: Tree Pure Typ -> Tree Pure (Scheme Types Typ)
 uniType typ =
-    Pure Scheme
+    _Pure # Scheme
     { _sForAlls = Types (QVars mempty) (QVars mempty)
     , _sTyp = typ
     }
@@ -46,9 +47,9 @@ forAll ::
     (t (Tree Pure Typ) -> u (Tree Pure Row) -> Tree Pure typ) ->
     Tree Pure (Scheme Types typ)
 forAll tvs rvs body =
-    body (tvs <&> tVar) (rvs <&> rVar)
-    & Scheme (Types (foralls tvs) (foralls rvs))
-    & Pure
+    _Pure #
+    Scheme (Types (foralls tvs) (foralls rvs))
+    (body (tvs <&> tVar) (rvs <&> rVar))
     where
         foralls ::
             ( Foldable f
@@ -68,4 +69,4 @@ forAll1 t body =
 
 infixr 2 ~>
 (~>) :: Tree Pure Typ -> Tree Pure Typ -> Tree Pure Typ
-a ~> b = FuncType a b & TFun & Pure
+a ~> b = _Pure # TFun (FuncType a b)

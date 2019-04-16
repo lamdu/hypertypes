@@ -4,7 +4,7 @@ module AST.Class.FromChildren
     ( FromChildren(..)
     ) where
 
-import AST (Tree, ChildrenConstraint, Pure(..))
+import AST (Tree, ChildrenConstraint, Pure, _Pure)
 import AST.Knot.Functor (ToKnot(..))
 import Control.Lens.Operators
 import Data.Proxy (Proxy)
@@ -19,7 +19,7 @@ class FromChildren parent where
         f (Tree parent k)
 
 instance FromChildren Pure where
-    fromChildren _ mk = mk <&> Pure
+    fromChildren _ mk = mk <&> (_Pure #)
 
 instance Applicative f => FromChildren (ToKnot f) where
     fromChildren _ mk = mk <&> pure <&> ToKnot

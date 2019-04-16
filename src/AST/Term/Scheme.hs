@@ -128,7 +128,7 @@ schemeToRestrictedType ::
     , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
     ) =>
     Tree Pure (Scheme varTypes typ) -> m (Tree (UVarOf m) typ)
-schemeToRestrictedType (Pure (Scheme vars typ)) =
+schemeToRestrictedType (MkPure (Scheme vars typ)) =
     do
         foralls <- children (Proxy :: Proxy (Unify m)) makeQVarInstancesInScope vars
         wrapM
@@ -167,7 +167,7 @@ loadScheme ::
     ) =>
     Tree Pure (Scheme varTypes typ) ->
     m (Tree (GTerm (UVarOf m)) typ)
-loadScheme (Pure (Scheme vars typ)) =
+loadScheme (MkPure (Scheme vars typ)) =
     do
         foralls <- children (Proxy :: Proxy (Unify m)) makeQVarInstances vars
         wrapM (Proxy :: Proxy (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord `And` HasChildrenConstraint NoConstraint))
@@ -181,7 +181,7 @@ saveH ::
 saveH (GBody x) =
     recursiveChildren
     (Proxy :: Proxy (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord))
-    saveH x <&> Pure
+    saveH x <&> (_Pure #)
 saveH (GMono x) =
     unwrapM
     (Proxy :: Proxy (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord))
@@ -204,7 +204,7 @@ saveH (GPoly x) =
             Lens._1 . getChild %=
                 (\v -> v & _QVars . Lens.at r ?~ l :: Tree QVars typ)
             Lens._2 %= (bindVar binding x (USkolem l) :)
-            let result = quantifiedVar # r & Pure
+            let result = _Pure . quantifiedVar # r
             UResolved result & bindVar binding x & lift
             pure result
     UResolved v -> pure v
@@ -225,7 +225,7 @@ saveScheme x =
                 & runIdentity
             , []
             )
-        Pure (Scheme v t) <$ sequence_ recover
+        _Pure # Scheme v t <$ sequence_ recover
 
 type DepsS c v t k = ((c (Tree v QVars), c (Tie k t)) :: Constraint)
 deriving instance DepsS Eq   v t k => Eq   (Scheme v t k)

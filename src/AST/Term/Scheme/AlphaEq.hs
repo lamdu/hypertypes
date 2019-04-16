@@ -53,7 +53,7 @@ alphaEqTypes ::
     Tree Pure typ ->
     Tree Pure typ ->
     StateT (Tree varTypes QVarMap) Maybe ()
-alphaEqTypes (Pure x) (Pure y) =
+alphaEqTypes (MkPure x) (MkPure y) =
     case (x ^? quantifiedVar, y ^? quantifiedVar) of
     (Just xVar, Just yVar) ->
         Lens.zoom (getQVarMap . _QVarMap . Lens.at xVar) $
@@ -88,7 +88,7 @@ alphaEq ::
     Tree Pure (Scheme varTypes typ) ->
     Tree Pure (Scheme varTypes typ) ->
     Bool
-alphaEq (Pure (Scheme xForAll xTyp)) (Pure (Scheme yForAll yTyp)) =
+alphaEq (MkPure (Scheme xForAll xTyp)) (MkPure (Scheme yForAll yTyp)) =
     case mVarMapping of
     Nothing -> False
     Just varMapping ->
