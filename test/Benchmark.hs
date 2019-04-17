@@ -9,7 +9,7 @@ import Text.PrettyPrint.HughesPJClass (prettyShow)
 import TypeLang.Pure
 
 fields :: [(String, Tree Pure Typ)]
-fields = [ ("a" ++ show i, Pure TInt) | i <- [0 :: Int .. 100] ]
+fields = [ ("a" ++ show i, _Pure # TInt) | i <- [0 :: Int .. 100] ]
 
 recordFwd :: Tree Pure Typ
 recordFwd = record fields
