@@ -8,7 +8,7 @@ module AST.Term.Apply
     ) where
 
 import AST
-import AST.Infer (Infer(..), inferNode, iType, TypeOf, ScopeOf)
+import AST.Infer (Infer(..), infer, iType, TypeOf, ScopeOf)
 import AST.Term.FuncType
 import AST.Unify (unify, newUnbound, newTerm)
 import Control.DeepSeq (NFData)
@@ -47,11 +47,11 @@ type instance TypeOf  (Apply expr) = TypeOf  expr
 type instance ScopeOf (Apply expr) = ScopeOf expr
 
 instance (Infer m expr, HasFuncType (TypeOf expr)) => Infer m (Apply expr) where
-    {-# INLINE infer #-}
-    infer (Apply func arg) =
+    {-# INLINE inferBody #-}
+    inferBody (Apply func arg) =
         do
-            argI <- inferNode arg
-            funcI <- inferNode func
+            argI <- infer arg
+            funcI <- infer func
             funcRes <- newUnbound
             funcT <-
                 funcType # FuncType

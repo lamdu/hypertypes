@@ -86,17 +86,17 @@ instance
     ) =>
     Infer m LangB where
 
-    infer (BApp x) = infer x <&> _2 %~ BApp
-    infer (BVar x) = infer x <&> _2 %~ BVar
-    infer (BLam x) = infer x <&> _2 %~ BLam
-    infer (BLet x) = infer x <&> _2 %~ BLet
-    infer (BLit x) = newTerm TInt <&> (, BLit x)
-    infer (BToNom x) = infer x <&> _2 %~ BToNom
-    infer (BRecExtend (RowExtend k v r)) =
+    inferBody (BApp x) = inferBody x <&> _2 %~ BApp
+    inferBody (BVar x) = inferBody x <&> _2 %~ BVar
+    inferBody (BLam x) = inferBody x <&> _2 %~ BLam
+    inferBody (BLet x) = inferBody x <&> _2 %~ BLet
+    inferBody (BLit x) = newTerm TInt <&> (, BLit x)
+    inferBody (BToNom x) = inferBody x <&> _2 %~ BToNom
+    inferBody (BRecExtend (RowExtend k v r)) =
         withDict (recursive :: RecursiveDict (Unify m) Typ) $
         do
-            vI <- inferNode v
-            rI <- inferNode r
+            vI <- infer v
+            rI <- infer r
             restR <-
                 scopeConstraints <&> rForbiddenFields . Lens.contains k .~ True
                 >>= newVar binding . UUnbound
@@ -104,13 +104,13 @@ instance
             RowExtend k (vI ^. iType) restR & RExtend & newTerm
                 >>= newTerm . TRec
                 <&> (, BRecExtend (RowExtend k vI rI))
-    infer BRecEmpty =
+    inferBody BRecEmpty =
         withDict (recursive :: RecursiveDict (Unify m) Typ) $
         newTerm REmpty >>= newTerm . TRec <&> (, BRecEmpty)
-    infer (BGetField w k) =
+    inferBody (BGetField w k) =
         do
             (rT, wR) <- rowElementInfer RExtend k
-            wI <- inferNode w
+            wI <- infer w
             _ <- TRec wR & newTerm >>= unify (wI ^. iType)
             pure (rT, BGetField wI k)
 

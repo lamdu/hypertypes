@@ -52,6 +52,6 @@ instance
     ) =>
     Infer m (Var v expr) where
 
-    {-# INLINE infer #-}
-    infer (Var x) =
+    {-# INLINE inferBody #-}
+    inferBody (Var x) =
         getScope >>= varType (Proxy :: Proxy expr) x <&> (, Var x)

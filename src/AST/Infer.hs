@@ -4,7 +4,7 @@ module AST.Infer
     ( module AST.Class.Infer
     , module AST.Infer.ScopeLevel
     , module AST.Infer.Term
-    , inferNode
+    , infer
     ) where
 
 import AST
@@ -15,9 +15,9 @@ import AST.Unify
 
 import Prelude.Compat
 
-{-# INLINE inferNode #-}
-inferNode :: Infer m t => Tree (Ann a) t -> m (Tree (ITerm a (UVarOf m)) t)
-inferNode (Ann a x) =
+{-# INLINE infer #-}
+infer :: Infer m t => Tree (Ann a) t -> m (Tree (ITerm a (UVarOf m)) t)
+infer (Ann a x) =
     (\s (t, xI) -> ITerm a (IResult t s) xI)
     <$> getScope
-    <*> infer x
+    <*> inferBody x

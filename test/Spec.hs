@@ -128,7 +128,7 @@ inferExpr ::
     Tree Pure t ->
     m (Tree Pure (TypeOf t))
 inferExpr x =
-    inferNode (wrap (Proxy :: Proxy Children) (Ann ()) x)
+    infer (wrap (Proxy :: Proxy Children) (Ann ()) x)
     >>= Lens.from _Flip (children (Proxy :: Proxy (Recursive (Unify m))) applyBindings)
     <&> (^. iType)
 

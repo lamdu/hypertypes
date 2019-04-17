@@ -51,14 +51,14 @@ instance
     ) =>
     Infer m (Let v expr) where
 
-    infer (Let v e i) =
+    inferBody (Let v e i) =
         do
             (eI, eG) <-
                 do
-                    eI <- inferNode e
+                    eI <- infer e
                     generalize (eI ^. iType) <&> (eI ,)
                 & localLevel
-            iI <- localScopeType v eG (inferNode i)
+            iI <- localScopeType v eG (infer i)
             pure (iI ^. iType, Let v eI iI)
 
 deriving instance Deps v expr k Eq   => Eq   (Let v expr k)

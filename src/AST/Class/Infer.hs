@@ -18,4 +18,4 @@ class
     (HasScope m (ScopeOf t), Recursive (Unify m) (TypeOf t)) =>
     Infer m t where
 
-    infer :: Tree t (Ann a) -> m (Tree (UVarOf m) (TypeOf t), Tree t (ITerm a (UVarOf m)))
+    inferBody :: Tree t (Ann a) -> m (Tree (UVarOf m) (TypeOf t), Tree t (ITerm a (UVarOf m)))

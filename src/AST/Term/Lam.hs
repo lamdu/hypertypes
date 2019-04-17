@@ -50,11 +50,11 @@ instance
     ) =>
     Infer m (Lam v t) where
 
-    {-# INLINE infer #-}
-    infer (Lam p r) =
+    {-# INLINE inferBody #-}
+    inferBody (Lam p r) =
         do
             varType <- newUnbound
-            rI <- localScopeType p varType (inferNode r)
+            rI <- localScopeType p varType (infer r)
             funcType # FuncType
                 { _funcIn = varType
                 , _funcOut = rI ^. iType
