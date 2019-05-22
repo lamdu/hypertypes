@@ -14,7 +14,7 @@ module AST.Term.Row
 
 import           AST
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
-import           AST.Unify (TypeConstraints(..), HasTypeConstraints(..), MonadScopeConstraints(..), unify, newTerm, newUnbound, semiPruneLookup)
+import           AST.Unify (TypeConstraints(..), HasTypeConstraints(..), MonadScopeConstraints(..), newTerm, newUnbound, semiPruneLookup)
 import           AST.Unify.Term (UTerm(..), _UTerm, uBody)
 import           Algebra.Lattice (JoinSemiLattice(..))
 import           Control.DeepSeq (NFData)
@@ -128,16 +128,17 @@ rowExtendStructureMismatch ::
     ( Recursive (Unify m) rowTyp
     , Recursive (Unify m) valTyp
     ) =>
+    (forall c. Recursive (Unify m) c => Tree (UVarOf m) c -> Tree (UVarOf m) c -> m (Tree (UVarOf m) c)) ->
     Prism' (Tree rowTyp (UVarOf m))
         (Tree (RowExtend key valTyp rowTyp) (UVarOf m)) ->
     (TypeConstraintsOf rowTyp, Tree (RowExtend key valTyp rowTyp) (UVarOf m)) ->
     (TypeConstraintsOf rowTyp, Tree (RowExtend key valTyp rowTyp) (UVarOf m)) ->
     m ()
-rowExtendStructureMismatch extend (c0, r0) (c1, r1) =
+rowExtendStructureMismatch match extend (c0, r0) (c1, r1) =
     do
         flat0 <- flattenRowExtend nextExtend r0
         flat1 <- flattenRowExtend nextExtend r1
-        Map.intersectionWith unify (flat0 ^. freExtends) (flat1 ^. freExtends)
+        Map.intersectionWith match (flat0 ^. freExtends) (flat1 ^. freExtends)
             & sequenceA_
         restVar <- c0 \/ c1 & UUnbound & newVar binding
         let side x y =
@@ -145,7 +146,7 @@ rowExtendStructureMismatch extend (c0, r0) (c1, r1) =
                 { _freExtends =
                   (x ^. freExtends) `Map.difference` (y ^. freExtends)
                 , _freRest = restVar
-                } >>= unify (y ^. freRest)
+                } >>= match (y ^. freRest)
         _ <- side flat0 flat1
         _ <- side flat1 flat0
         pure ()

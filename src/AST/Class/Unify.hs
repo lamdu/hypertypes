@@ -1,11 +1,12 @@
 {-# LANGUAGE NoImplicitPrelude, TypeFamilies, DataKinds, MultiParamTypeClasses #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes #-}
 
 module AST.Class.Unify
     ( Unify(..), UVarOf
     , BindingDict(..)
     ) where
 
+import AST.Class.Recursive (Recursive)
 import AST.Class.ZipMatch (ZipMatch)
 import AST.Knot (Tree, Knot)
 import AST.Unify.Error (UnifyError(..))
@@ -53,5 +54,7 @@ class
     -- but some AST terms could be equivalent despite not matching,
     -- like record extends with fields ordered differently,
     -- and these could still match.
-    structureMismatch :: Tree (UTermBody (UVarOf m)) t -> Tree (UTermBody (UVarOf m)) t -> m ()
-    structureMismatch x y = unifyError (Mismatch (x ^. uBody) (y ^. uBody))
+    structureMismatch ::
+        (forall c. Recursive (Unify m) c => Tree (UVarOf m) c -> Tree (UVarOf m) c -> m (Tree (UVarOf m) c)) ->
+        Tree (UTermBody (UVarOf m)) t -> Tree (UTermBody (UVarOf m)) t -> m ()
+    structureMismatch _ x y = unifyError (Mismatch (x ^. uBody) (y ^. uBody))

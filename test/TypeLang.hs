@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses, StandaloneDeriving, UndecidableInstances #-}
 {-# LANGUAGE TemplateHaskell, TypeFamilies, FlexibleInstances, FlexibleContexts #-}
-{-# LANGUAGE ConstraintKinds, TypeOperators, DataKinds #-}
+{-# LANGUAGE ConstraintKinds, TypeOperators, DataKinds, RankNTypes #-}
 
 module TypeLang where
 
@@ -179,10 +179,11 @@ instance HasScopeTypes v Typ a => HasScopeTypes v Typ (a, x, y) where
 
 rStructureMismatch ::
     (Unify m Typ, Unify m Row) =>
+    (forall c. Recursive (Unify m) c => Tree (UVarOf m) c -> Tree (UVarOf m) c -> m (Tree (UVarOf m) c)) ->
     Tree (UTermBody (UVarOf m)) Row -> Tree (UTermBody (UVarOf m)) Row -> m ()
-rStructureMismatch (UTermBody c0 (RExtend r0)) (UTermBody c1 (RExtend r1)) =
-    rowExtendStructureMismatch _RExtend (c0, r0) (c1, r1)
-rStructureMismatch x y = unifyError (Mismatch (x ^. uBody) (y ^. uBody))
+rStructureMismatch match (UTermBody c0 (RExtend r0)) (UTermBody c1 (RExtend r1)) =
+    rowExtendStructureMismatch match _RExtend (c0, r0) (c1, r1)
+rStructureMismatch _ x y = unifyError (Mismatch (x ^. uBody) (y ^. uBody))
 
 readModifySTRef :: MonadST m => STRef (World m) a -> (a -> a) -> m a
 readModifySTRef ref func =
