@@ -254,11 +254,14 @@ testAlphaEq x y expect =
     do
         putStrLn ""
         prettyPrint (x, y)
-        putStrLn ("Alpha Eq: " ++ show res)
-        when (res /= expect) (putStrLn "WRONG!")
-        return (res == expect)
+        putStrLn ("Alpha Eq: " ++ show pureRes)
+        when (pureRes /= expect) (putStrLn "WRONG!")
+        putStrLn ("Alpha Eq: " ++ show stRes)
+        when (stRes /= expect) (putStrLn "WRONG!")
+        return (pureRes == expect && stRes == expect)
     where
-        res = alphaEq x y
+        pureRes = Lens.has Lens._Right (execPureInferB (alphaEq x y))
+        stRes = Lens.has Lens._Right (runST (execSTInferB (alphaEq x y)))
 
 main :: IO ()
 main =

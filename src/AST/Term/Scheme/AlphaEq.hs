@@ -1,111 +1,67 @@
 -- | Alpha-equality for schemes
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, FlexibleContexts #-}
-{-# LANGUAGE TypeFamilies, ScopedTypeVariables, TypeOperators #-}
-{-# LANGUAGE ConstraintKinds, LambdaCase #-}
+{-# LANGUAGE NoImplicitPrelude, TypeOperators, FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module AST.Term.Scheme.AlphaEq
     ( alphaEq
     ) where
 
 import           AST
 import           AST.Class.Combinators (And)
-import           AST.Class.FromChildren
 import           AST.Class.HasChild (HasChild(..))
-import           AST.Class.ZipMatch
-import           AST.Term.Scheme
-import           AST.Unify.QuantifiedVar
-import           Control.Applicative (empty)
-import           Control.Lens (Lens')
-import qualified Control.Lens as Lens
+import           AST.Class.ZipMatch (zipMatchWith_)
+import           AST.Term.Scheme (Scheme, schemeToRestrictedType)
+import           AST.Unify (Unify(..), UVarOf, QVarHasInstance, BindingDict(..), UnifyError(..))
+import           AST.Unify.Term (UTerm(..), uBody)
 import           Control.Lens.Operators
-import           Control.Monad (guard)
-import           Control.Monad.State (StateT(..), execStateT)
 import           Data.Constraint (withDict)
-import           Data.Functor.Identity (Identity(..))
-import           Data.Map (Map)
-import qualified Data.Map as Map
 import           Data.Maybe (fromMaybe)
 import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
 
--- | For each kind of type variable, a map of variables of this kind
--- to corresponding variables in an alpha-equal type
-newtype QVarMap typ = QVarMap (Map (QVar (RunKnot typ)) (QVar (RunKnot typ)))
-Lens.makePrisms ''QVarMap
+goUTerm ::
+    forall m t.
+    Recursive (Unify m) t =>
+    Tree (UVarOf m) t -> Tree (UTerm (UVarOf m)) t ->
+    Tree (UVarOf m) t -> Tree (UTerm (UVarOf m)) t ->
+    m ()
+goUTerm xv USkolem{} yv USkolem{} =
+    do
+        bindVar binding xv (UToVar yv)
+        bindVar binding yv (UToVar xv)
+goUTerm xv (UToVar xt) yv (UToVar yt)
+    | xv == yt && yv == xt = pure ()
+    | otherwise = unifyError (SkolemEscape xv)
+goUTerm xv USkolem{} yv _ = unifyError (SkolemUnified xv yv)
+goUTerm xv _ yv USkolem{} = unifyError (SkolemUnified yv xv)
+goUTerm _ (UTerm xt) _ (UTerm yt) =
+    withDict (recursive :: RecursiveDict (Unify m) t) $
+    zipMatchWith_ (Proxy :: Proxy (Recursive (Unify m))) goUVar (xt ^. uBody) (yt ^. uBody)
+    & fromMaybe (structureMismatch (\x y -> x <$ goUVar x y) xt yt)
+goUTerm xv UUnbound{} yv yu = goUTerm xv yu yv yu -- Term created in structure mismatch
+goUTerm xv xu yv UUnbound{} = goUTerm xv xu yv xu -- Term created in structure mismatch
+goUTerm _ _ _ _ = error "unexpected state at alpha-eq"
 
-emptyMapping ::
-    forall varTypes.
-    ( FromChildren varTypes
-    , ChildrenConstraint varTypes (HasChild varTypes `And` QVarHasInstance Ord)
-    ) =>
-    Tree varTypes QVarMap
-emptyMapping =
-    fromChildren (Proxy :: Proxy (HasChild varTypes `And` QVarHasInstance Ord))
-    (Identity (QVarMap mempty))
-    & runIdentity
+goUVar ::
+    Recursive (Unify m) t =>
+    Tree (UVarOf m) t -> Tree (UVarOf m) t -> m ()
+goUVar xv yv =
+    do
+        xu <- lookupVar binding xv
+        yu <- lookupVar binding yv
+        goUTerm xv xu yv yu
 
-type AlphaEqConstraint varTypes =
-    ZipMatch `And` QVarHasInstance Ord `And` HasChild varTypes
-
-alphaEqTypes ::
-    forall varTypes typ.
-    Recursive (AlphaEqConstraint varTypes) typ =>
-    Tree Pure typ ->
-    Tree Pure typ ->
-    StateT (Tree varTypes QVarMap) Maybe ()
-alphaEqTypes (MkPure x) (MkPure y) =
-    case (x ^? quantifiedVar, y ^? quantifiedVar) of
-    (Just xVar, Just yVar) ->
-        Lens.zoom (getQVarMap . _QVarMap . Lens.at xVar) $
-        Lens.use id >>=
-        \case
-        Nothing -> id ?= yVar
-        Just oldYVar -> guard (oldYVar == yVar)
-    (Nothing, Nothing) ->
-        withDict (recursive :: RecursiveDict (AlphaEqConstraint varTypes) typ) $
-        zipMatchWith_
-        (Proxy :: Proxy (Recursive (AlphaEqConstraint varTypes)))
-        alphaEqTypes x y
-        & fromMaybe empty
-    _ -> empty
-    where
-        getQVarMap :: Lens' (Tree varTypes QVarMap) (Tree QVarMap typ)
-        getQVarMap = getChild
-
-substMap :: (Ord k0, Ord k1) => Map k0 k1 -> Map k0 v -> Maybe (Map k1 v)
-substMap s m =
-    Map.toList m
-    & traverse . Lens._1 %%~ (`Map.lookup` s)
-    <&> Map.fromList
-
+-- Check for alpha equality. Raises a `unifyError` when mismatches.
 alphaEq ::
-    forall varTypes typ.
-    ( Recursive (AlphaEqConstraint varTypes) typ
-    , FromChildren varTypes
-    , ChildrenWithConstraint varTypes (HasChild varTypes `And` QVarHasInstance Ord)
-    , Eq (Tree varTypes QVars)
+    ( ChildrenWithConstraint varTypes (Unify m)
+    , Recursive (Unify m) typ
+    , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
     ) =>
     Tree Pure (Scheme varTypes typ) ->
     Tree Pure (Scheme varTypes typ) ->
-    Bool
-alphaEq (MkPure (Scheme xForAll xTyp)) (MkPure (Scheme yForAll yTyp)) =
-    case mVarMapping of
-    Nothing -> False
-    Just varMapping ->
-        children (Proxy :: Proxy (HasChild varTypes `And` QVarHasInstance Ord))
-        substForAlls xForAll
-        == Just yForAll
-        where
-            substForAlls ::
-                forall child.
-                (HasChild varTypes child, Ord (QVar child)) =>
-                Tree QVars child -> Maybe (Tree QVars child)
-            substForAlls =
-                _QVars (substMap (mapping ^. _QVarMap))
-                where
-                    mapping :: Tree QVarMap child
-                    mapping = varMapping ^. getChild
-    where
-        mVarMapping =
-            execStateT (alphaEqTypes xTyp yTyp)
-            (emptyMapping :: Tree varTypes QVarMap)
+    m ()
+alphaEq s0 s1 =
+    do
+        t0 <- schemeToRestrictedType s0
+        t1 <- schemeToRestrictedType s1
+        goUVar t0 t1
