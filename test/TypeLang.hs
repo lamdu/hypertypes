@@ -5,6 +5,7 @@
 module TypeLang where
 
 import           AST
+import           AST.Class.FromChildren
 import           AST.Class.HasChild
 import           AST.Class.Unify
 import           AST.Infer
@@ -70,6 +71,9 @@ makeChildren ''TypeError
 type TypDeps cls k = ((cls (Tie k Typ), cls (Tie k Row)) :: Constraint)
 
 type instance NomVarTypes Typ = Types
+
+instance FromChildren Types where
+    fromChildren _ c = Types <$> c <*> c
 
 instance HasNominalInst Name Typ where nominalInst = _TNom
 

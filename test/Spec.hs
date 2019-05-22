@@ -8,6 +8,7 @@ import           AST.Knot.Flip
 import           AST.Term.NamelessScope (EmptyScope)
 import           AST.Term.Nominal
 import           AST.Term.Scheme
+import           AST.Term.Scheme.AlphaEq
 import           AST.Unify
 import           Algebra.Lattice
 import qualified Control.Lens as Lens
@@ -248,6 +249,17 @@ testB expr expect =
         pureRes = execPureInferB (withEnv id (inferExpr expr))
         stRes = runST (execSTInferB (withEnv Lens._1 (inferExpr expr)))
 
+testAlphaEq :: Tree Pure (Scheme Types Typ) -> Tree Pure (Scheme Types Typ) -> Bool -> IO Bool
+testAlphaEq x y expect =
+    do
+        putStrLn ""
+        prettyPrint (x, y)
+        putStrLn ("Alpha Eq: " ++ show res)
+        when (res /= expect) (putStrLn "WRONG!")
+        return (res == expect)
+    where
+        res = alphaEq x y
+
 main :: IO ()
 main =
     do
@@ -281,4 +293,10 @@ main =
             , testB returnOk     "Right LocalMut[value: Int]"
             , testB nomSkolem0   "Left (SkolemEscape: r0)"
             , testB nomSkolem1   "Left (SkolemEscape: r0)"
+            , testAlphaEq intA intA True
+            , testAlphaEq intA ((_Pure # TInt) ~> (_Pure # TInt) & uniType) False
+            , testAlphaEq
+                (record [("a", _Pure # TInt), ("b", _Pure # TInt)] & uniType)
+                (record [("b", _Pure # TInt), ("a", _Pure # TInt)] & uniType)
+                True
             ]
