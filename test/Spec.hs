@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts, TypeFamilies, BlockArguments, ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections #-}
 
 import           AST
 import           AST.Class.Recursive
@@ -263,6 +264,9 @@ testAlphaEq x y expect =
         pureRes = Lens.has Lens._Right (execPureInferB (alphaEq x y))
         stRes = Lens.has Lens._Right (runST (execSTInferB (alphaEq x y)))
 
+intsRecord :: [String] -> Tree Pure (Scheme Types Typ)
+intsRecord = uniType . record . map (, _Pure # TInt)
+
 main :: IO ()
 main =
     do
@@ -298,8 +302,10 @@ main =
             , testB nomSkolem1   "Left (SkolemEscape: r0)"
             , testAlphaEq intA intA True
             , testAlphaEq intA ((_Pure # TInt) ~> (_Pure # TInt) & uniType) False
-            , testAlphaEq
-                (record [("a", _Pure # TInt), ("b", _Pure # TInt)] & uniType)
-                (record [("b", _Pure # TInt), ("a", _Pure # TInt)] & uniType)
-                True
+            , testAlphaEq (intsRecord ["a", "b"]) (intsRecord ["b", "a"]) True
+            , testAlphaEq (intsRecord ["a", "b"]) (intsRecord ["b"]) False
+            , testAlphaEq (intsRecord ["a", "b", "c"]) (intsRecord ["c", "b", "a"]) True
+            , testAlphaEq (intsRecord ["a", "b", "c"]) (intsRecord ["b", "c", "a"]) True
+            , testAlphaEq (forAll1 "a" id) (forAll1 "b" id) True
+            , testAlphaEq (forAll1 "a" id) intA False
             ]
