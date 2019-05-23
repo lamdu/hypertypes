@@ -27,19 +27,29 @@ goUTerm ::
     m ()
 goUTerm xv USkolem{} yv USkolem{} =
     do
-        bindVar binding xv (UToVar yv)
-        bindVar binding yv (UToVar xv)
-goUTerm xv (UToVar xt) yv (UToVar yt)
+        bindVar binding xv (UInstantiated yv)
+        bindVar binding yv (UInstantiated xv)
+goUTerm xv (UInstantiated xt) yv (UInstantiated yt)
     | xv == yt && yv == xt = pure ()
     | otherwise = unifyError (SkolemEscape xv)
+goUTerm xv USkolem{} yv UUnbound{} = bindVar binding yv (UToVar xv)
+goUTerm xv UUnbound{} yv USkolem{} = bindVar binding xv (UToVar yv)
+goUTerm _ (UToVar xv) yv yu =
+    do
+        xu <- lookupVar binding xv
+        goUTerm xv xu yv yu
+goUTerm xv xu _ (UToVar yv) =
+    do
+        yu <- lookupVar binding yv
+        goUTerm xv xu yv yu
 goUTerm xv USkolem{} yv _ = unifyError (SkolemUnified xv yv)
 goUTerm xv _ yv USkolem{} = unifyError (SkolemUnified yv xv)
+goUTerm xv UUnbound{} yv yu = goUTerm xv yu yv yu -- Term created in structure mismatch
+goUTerm xv xu yv UUnbound{} = goUTerm xv xu yv xu -- Term created in structure mismatch
 goUTerm _ (UTerm xt) _ (UTerm yt) =
     withDict (recursive :: RecursiveDict (Unify m) t) $
     zipMatchWith_ (Proxy :: Proxy (Recursive (Unify m))) goUVar (xt ^. uBody) (yt ^. uBody)
     & fromMaybe (structureMismatch (\x y -> x <$ goUVar x y) xt yt)
-goUTerm xv UUnbound{} yv yu = goUTerm xv yu yv yu -- Term created in structure mismatch
-goUTerm xv xu yv UUnbound{} = goUTerm xv xu yv xu -- Term created in structure mismatch
 goUTerm _ _ _ _ = error "unexpected state at alpha-eq"
 
 goUVar ::
