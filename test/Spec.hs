@@ -17,7 +17,9 @@ import           Control.Lens.Operators
 import           Control.Monad.Except
 import           Control.Monad.RWS
 import           Control.Monad.ST
+import qualified Data.Map as Map
 import           Data.Proxy
+import qualified Data.Set as Set
 import           LangA.Pure
 import           LangB.Pure
 import           System.Exit (exitFailure)
@@ -267,6 +269,9 @@ testAlphaEq x y expect =
 intsRecord :: [String] -> Tree Pure (Scheme Types Typ)
 intsRecord = uniType . record . map (, _Pure # TInt)
 
+intToInt :: Tree Pure (Scheme Types Typ)
+intToInt = (_Pure # TInt) ~> (_Pure # TInt) & uniType
+
 main :: IO ()
 main =
     do
@@ -301,11 +306,21 @@ main =
             , testB nomSkolem0   "Left (SkolemEscape: r0)"
             , testB nomSkolem1   "Left (SkolemEscape: r0)"
             , testAlphaEq intA intA True
-            , testAlphaEq intA ((_Pure # TInt) ~> (_Pure # TInt) & uniType) False
+            , testAlphaEq intA intToInt False
+            , testAlphaEq intToInt intToInt True
             , testAlphaEq (intsRecord ["a", "b"]) (intsRecord ["b", "a"]) True
             , testAlphaEq (intsRecord ["a", "b"]) (intsRecord ["b"]) False
             , testAlphaEq (intsRecord ["a", "b", "c"]) (intsRecord ["c", "b", "a"]) True
             , testAlphaEq (intsRecord ["a", "b", "c"]) (intsRecord ["b", "c", "a"]) True
             , testAlphaEq (forAll1 "a" id) (forAll1 "b" id) True
             , testAlphaEq (forAll1 "a" id) intA False
+            , testAlphaEq (forAll1r "a" (MkPure . TRec)) intA False
+            , testAlphaEq (forAll1r "a" (MkPure . TRec)) (forAll1r "b" (MkPure . TRec)) True
+            , testAlphaEq (mkOpenRec "a" "x" "y") (mkOpenRec "b" "y" "x") True
             ]
+        mkOpenRec a x y =
+            _Pure #
+            Scheme
+            (Types (QVars mempty)
+                (QVars (Map.fromList [(Name a, RowConstraints (Set.fromList [Name x, Name y]) bottom)])))
+            (_Pure # TRec (rowExtends (rVar a) [(x, _Pure # TInt), (y, _Pure # TInt)]))

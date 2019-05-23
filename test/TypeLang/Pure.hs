@@ -67,6 +67,12 @@ forAll1 ::
 forAll1 t body =
     forAll (Lens.Identity t) (Lens.Const ()) $ \(Lens.Identity tv) _ -> body tv
 
+forAll1r ::
+    String -> (Tree Pure Row -> Tree Pure typ) ->
+    Tree Pure (Scheme Types typ)
+forAll1r t body =
+    forAll (Lens.Const ()) (Lens.Identity t) $ \_ (Lens.Identity tv) -> body tv
+
 infixr 2 ~>
 (~>) :: Tree Pure Typ -> Tree Pure Typ -> Tree Pure Typ
 a ~> b = _Pure # TFun (FuncType a b)
