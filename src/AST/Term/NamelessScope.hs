@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, UndecidableInstances, GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TemplateHaskell, TypeFamilies, LambdaCase, EmptyCase #-}
 {-# LANGUAGE ScopedTypeVariables, TypeOperators, FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses, TupleSections, DataKinds #-}
+{-# LANGUAGE MultiParamTypeClasses, TupleSections, DataKinds, DerivingStrategies #-}
 
 module AST.Term.NamelessScope
     ( Scope(..), _Scope
@@ -56,7 +56,7 @@ instance DeBruijnIndex a => DeBruijnIndex (Maybe a) where
                 | otherwise = (x - 1) ^? deBruijnIndex <&> Just
 
 newtype ScopeTypes t v = ScopeTypes (Seq (Tie v t))
-    deriving (Semigroup, Monoid)
+    deriving newtype (Semigroup, Monoid)
 Lens.makePrisms ''ScopeTypes
 makeChildren ''ScopeTypes
 

@@ -2,7 +2,7 @@
 {-# LANGUAGE ConstraintKinds, UndecidableInstances, TypeFamilies, ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeOperators, FlexibleContexts, DataKinds, LambdaCase, TupleSections #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes, DerivingStrategies #-}
 
 module AST.Term.Nominal
     ( NominalDecl(..), nParams, nScheme
@@ -71,7 +71,8 @@ data ToNom nomId term k = ToNom
     } deriving Generic
 
 newtype FromNom nomId (term :: Knot -> *) (k :: Knot) = FromNom nomId
-    deriving (Eq, Ord, Show, Generic, Binary, NFData)
+    deriving newtype (Eq, Ord, Binary, NFData)
+    deriving stock (Show, Generic)
 
 makeLenses ''NominalDecl
 makeLenses ''NominalInst

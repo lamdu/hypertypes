@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, StandaloneDeriving, UndecidableInstances #-}
-{-# LANGUAGE TypeFamilies, TemplateHaskell, DeriveGeneric #-}
+{-# LANGUAGE TypeFamilies, TemplateHaskell, DeriveGeneric, DerivingStrategies #-}
 module AST.Knot.Pure
     ( Pure(..), _Pure
     ) where
@@ -20,7 +20,7 @@ import           Prelude.Compat
 -- cannot tell the type checker that "k" is of the form "Knot j", which makes
 -- type inference brittle. The Iso tells the type-checker that.
 newtype Pure k = MkPure { getPure :: Tie k Pure }
-    deriving Generic
+    deriving stock Generic
 makeChildren ''Pure
 
 {-# INLINE _Pure #-}

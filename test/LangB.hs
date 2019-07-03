@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeFamilies, LambdaCase #-}
 {-# LANGUAGE FlexibleInstances, UndecidableInstances, TupleSections, DataKinds #-}
 {-# LANGUAGE ScopedTypeVariables, GeneralizedNewtypeDeriving, ConstraintKinds #-}
-{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE StandaloneDeriving, DerivingStrategies #-}
 
 module LangB where
 
@@ -119,7 +119,7 @@ instance (c Typ, c Row) => Recursive (InferChildConstraints (Recursive c)) LangB
 -- Monads for inferring `LangB`:
 
 newtype ScopeTypes v = ScopeTypes (Map Name (Tree (GTerm (RunKnot v)) Typ))
-    deriving (Semigroup, Monoid)
+    deriving newtype (Semigroup, Monoid)
 Lens.makePrisms ''ScopeTypes
 
 instance Children ScopeTypes where
@@ -145,7 +145,7 @@ newtype PureInferB a =
     ( RWST (InferScope UVar) () PureInferState
         (Either (Tree TypeError Pure)) a
     )
-    deriving
+    deriving newtype
     ( Functor, Applicative, Monad
     , MonadError (Tree TypeError Pure)
     , MonadReader (InferScope UVar)
@@ -207,7 +207,7 @@ newtype STInferB s a =
     STInferB
     (ReaderT (InferScope (STUVar s), STNameGen s)
         (ExceptT (Tree TypeError Pure) (ST s)) a)
-    deriving
+    deriving newtype
     ( Functor, Applicative, Monad, MonadST
     , MonadError (Tree TypeError Pure)
     , MonadReader (InferScope (STUVar s), STNameGen s)

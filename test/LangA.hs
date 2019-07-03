@@ -1,5 +1,5 @@
 {-# LANGUAGE StandaloneDeriving, UndecidableInstances, TemplateHaskell #-}
-{-# LANGUAGE TypeFamilies, LambdaCase, MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies, LambdaCase, MultiParamTypeClasses, DerivingStrategies #-}
 {-# LANGUAGE FlexibleInstances, DataKinds, TupleSections, ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts, GeneralizedNewtypeDeriving, ScopedTypeVariables #-}
 
@@ -96,7 +96,7 @@ newtype PureInferA a =
     ( RWST (Tree (ScopeTypes Typ) UVar, ScopeLevel) () PureInferState
         (Either (Tree TypeError Pure)) a
     )
-    deriving
+    deriving newtype
     ( Functor, Applicative, Monad
     , MonadError (Tree TypeError Pure)
     , MonadReader (Tree (ScopeTypes Typ) UVar, ScopeLevel)
@@ -147,7 +147,7 @@ newtype STInferA s a =
     ( ReaderT (Tree (ScopeTypes Typ) (STUVar s), ScopeLevel, STNameGen s)
         (ExceptT (Tree TypeError Pure) (ST s)) a
     )
-    deriving
+    deriving newtype
     ( Functor, Applicative, Monad, MonadST
     , MonadError (Tree TypeError Pure)
     , MonadReader (Tree (ScopeTypes Typ) (STUVar s), ScopeLevel, STNameGen s)

@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DataKinds, DeriveGeneric #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving, TypeFamilies, UndecidableInstances #-}
 {-# LANGUAGE MultiParamTypeClasses, TupleSections, FlexibleInstances #-}
-{-# LANGUAGE ScopedTypeVariables, ConstraintKinds, FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables, ConstraintKinds, FlexibleContexts, DerivingStrategies #-}
 
 module AST.Term.Var
     ( Var(..), _Var
@@ -32,7 +32,8 @@ class VarType var expr where
 -- (which currently is its only part used),
 -- for future evaluation/complilation support.
 newtype Var v (expr :: Knot -> *) (k :: Knot) = Var v
-    deriving (Eq, Ord, Show, Generic, Binary, NFData)
+    deriving newtype (Eq, Ord, Binary, NFData)
+    deriving stock (Show, Generic)
 
 Lens.makePrisms ''Var
 makeChildren ''Var

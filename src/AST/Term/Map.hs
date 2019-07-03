@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, StandaloneDeriving #-}
-{-# LANGUAGE UndecidableInstances, DeriveGeneric, TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances, DeriveGeneric, TypeFamilies, DerivingStrategies #-}
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, ConstraintKinds #-}
 
 module AST.Term.Map
@@ -20,7 +20,7 @@ import           GHC.Generics (Generic)
 import           Prelude.Compat
 
 newtype TermMap k expr f = TermMap (Map k (Tie f expr))
-    deriving Generic
+    deriving stock Generic
 
 Lens.makePrisms ''TermMap
 makeChildren ''TermMap

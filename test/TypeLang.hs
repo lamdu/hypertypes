@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses, StandaloneDeriving, UndecidableInstances #-}
 {-# LANGUAGE TemplateHaskell, TypeFamilies, FlexibleInstances, FlexibleContexts #-}
-{-# LANGUAGE ConstraintKinds, TypeOperators, DataKinds, RankNTypes #-}
+{-# LANGUAGE ConstraintKinds, TypeOperators, DataKinds, RankNTypes, DerivingStrategies #-}
 
 module TypeLang where
 
@@ -32,7 +32,7 @@ import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
-newtype Name = Name String deriving (Eq, Ord, Show)
+newtype Name = Name String deriving stock (Eq, Ord, Show)
 
 data Typ k
     = TInt

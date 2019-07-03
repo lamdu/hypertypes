@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, DataKinds #-}
 {-# LANGUAGE StandaloneDeriving, ConstraintKinds, FlexibleContexts #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE UndecidableInstances, DerivingStrategies #-}
 
 module AST.Unify.Binding
     ( UVar(..), _UVar
@@ -22,7 +22,7 @@ import qualified Data.Sequence as Sequence
 import           Prelude.Compat
 
 newtype UVar (t :: Knot) = UVar Int
-    deriving (Eq, Ord, Show)
+    deriving stock (Eq, Ord, Show)
 Lens.makePrisms ''UVar
 
 newtype Binding t = Binding (Seq (UTerm UVar t))

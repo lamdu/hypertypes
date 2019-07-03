@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DerivingStrategies #-}
 
 module AST.Unify.Binding.ST
     ( STUVar(..), _STUVar
@@ -15,7 +15,7 @@ import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 import           Prelude.Compat
 
 newtype STUVar s t = STUVar (STRef s (UTerm (STUVar s) t))
-    deriving Eq
+    deriving stock Eq
 Lens.makePrisms ''STUVar
 
 {-# INLINE stBinding #-}

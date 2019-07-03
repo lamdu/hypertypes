@@ -2,7 +2,7 @@
 {-# LANGUAGE ScopedTypeVariables, FlexibleInstances, UndecidableInstances #-}
 {-# LANGUAGE DeriveGeneric, StandaloneDeriving, FlexibleContexts, LambdaCase #-}
 {-# LANGUAGE ConstraintKinds, TypeOperators, GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE MultiParamTypeClasses, DerivingStrategies #-}
 
 module AST.Term.Scheme
     ( Scheme(..), sForAlls, sTyp
@@ -49,7 +49,7 @@ data Scheme varTypes typ k = Scheme
 
 newtype QVars typ = QVars
     (Map (QVar (RunKnot typ)) (TypeConstraintsOf (RunKnot typ)))
-    deriving (Generic)
+    deriving stock Generic
 
 instance
     (Pretty (Tree varTypes QVars), Pretty (Tie k typ)) =>
@@ -90,7 +90,7 @@ instance Ord (QVar (RunKnot typ)) => Lens.At (QVars typ) where
     at k = _QVars . Lens.at k
 
 newtype QVarInstances k typ = QVarInstances (Map (QVar (RunKnot typ)) (k typ))
-    deriving Generic
+    deriving stock Generic
 Lens.makePrisms ''QVarInstances
 
 {-# INLINE makeQVarInstancesInScope #-}

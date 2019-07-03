@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric, DerivingStrategies #-}
 
 module AST.Infer.ScopeLevel
     ( MonadScopeLevel(..)
@@ -23,7 +23,7 @@ class Monad m => MonadScopeLevel m where
 -- | NOTE: The `Ord` instance is only for use as a `Map` key, not a
 -- logical ordering
 newtype ScopeLevel = ScopeLevel Int
-    deriving (Eq, Ord, Show, Generic)
+    deriving stock (Eq, Ord, Show, Generic)
 makePrisms ''ScopeLevel
 
 instance PartialOrd ScopeLevel where
