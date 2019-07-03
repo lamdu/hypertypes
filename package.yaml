@@ -19,6 +19,7 @@ dependencies:
 - base
 - constraints
 - containers
+- generic-data
 - lattices
 - lens
 - monad-st

@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, LambdaCase #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, LambdaCase, DeriveGeneric, DerivingVia #-}
 
 module AST.Class.Children.TH
     ( makeChildren
@@ -17,6 +17,8 @@ import           Control.Monad.Trans.State (StateT(..), evalStateT, gets, modify
 import qualified Data.Map as Map
 import           Data.Set (Set)
 import qualified Data.Set as Set
+import           Generic.Data (Generically(..))
+import           GHC.Generics (Generic)
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
 
@@ -36,14 +38,8 @@ data TypeContents = TypeContents
     { tcChildren :: Set Type
     , tcEmbeds :: Set Type
     , tcOthers :: Set Type
-    } deriving Show
-
-instance Semigroup TypeContents where
-    TypeContents x0 x1 x2 <> TypeContents y0 y1 y2 =
-        TypeContents (x0 <> y0) (x1 <> y1) (x2 <> y2)
-
-instance Monoid TypeContents where
-    mempty = TypeContents mempty mempty mempty
+    } deriving (Show, Generic)
+    deriving (Semigroup, Monoid) via Generically TypeContents
 
 makeTypeInfo :: Name -> Q TypeInfo
 makeTypeInfo name =

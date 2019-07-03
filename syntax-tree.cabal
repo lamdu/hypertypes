@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.31.0.
+-- This file has been generated from package.yaml by hpack version 0.31.1.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: da52838734f398ebc87f8c62db7d0d7b547d775fede0f70d4079d8135b594d34
+-- hash: 5660eec8e06688f42054cce5d87f98964ecda0f868a2ee2b93f08fe022e5d1bd
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -89,6 +89,7 @@ library
     , constraints
     , containers
     , deepseq
+    , generic-data
     , lattices
     , lens
     , monad-st
@@ -117,6 +118,7 @@ test-suite syntax-tree-test
       base
     , constraints
     , containers
+    , generic-data
     , lattices
     , lens
     , monad-st
@@ -141,6 +143,7 @@ benchmark syntax-tree-bench
     , constraints
     , containers
     , criterion
+    , generic-data
     , lattices
     , lens
     , monad-st
