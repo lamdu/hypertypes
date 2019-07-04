@@ -51,7 +51,7 @@ data LangB k
     | BToNom (ToNom Name LangB k)
 
 makeChildren ''LangB
-instance Recursive Children LangB
+instance c LangB => Recursive c LangB
 
 type instance TypeOf LangB = Typ
 type instance ScopeOf LangB = ScopeTypes
@@ -113,8 +113,6 @@ instance
             wI <- infer w
             _ <- TRec wR & newTerm >>= unify (wI ^. iType)
             pure (rT, BGetField wI k)
-
-instance (c Typ, c Row) => Recursive (InferChildConstraints (Recursive c)) LangB
 
 -- Monads for inferring `LangB`:
 
