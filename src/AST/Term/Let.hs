@@ -10,6 +10,7 @@ import           AST
 import           AST.Class.Unify (UVarOf)
 import           AST.Infer
 import           AST.Unify.Generalize (GTerm, generalize)
+import qualified Control.Lens as Lens
 import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
@@ -51,15 +52,14 @@ instance
     ) =>
     Infer m (Let v expr) where
 
-    inferBody (Let v e i) =
+    inferBody (Let v (InferIn e) (InferIn i)) =
         do
             (eI, eG) <-
                 do
-                    eI <- infer e
-                    generalize (eI ^. iType) <&> (eI ,)
+                    (eT, eI) <- e
+                    generalize eT <&> (eI ,)
                 & localLevel
-            iI <- localScopeType v eG (infer i)
-            pure (iI ^. iType, Let v eI iI)
+            localScopeType v eG i <&> Lens._2 %~ Let v eI
 
 deriving instance Deps v expr k Eq   => Eq   (Let v expr k)
 deriving instance Deps v expr k Ord  => Ord  (Let v expr k)

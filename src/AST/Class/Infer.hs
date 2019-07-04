@@ -2,11 +2,14 @@
 
 module AST.Class.Infer
     ( Infer(..), HasScope(..), LocalScopeType(..)
+    , InferIn(..)
     ) where
 
 import AST
 import AST.Class.Unify (Unify(..), UVarOf)
 import AST.Infer.Term
+
+newtype InferIn m k t = InferIn (m (Tree (UVarOf m) (TypeOf (RunKnot t)), k t))
 
 class HasScope m s where
     getScope :: m (Tree s (UVarOf m))
@@ -18,4 +21,4 @@ class
     (HasScope m (ScopeOf t), Recursive (Unify m) (TypeOf t)) =>
     Infer m t where
 
-    inferBody :: Tree t (Ann a) -> m (Tree (UVarOf m) (TypeOf t), Tree t (ITerm a (UVarOf m)))
+    inferBody :: Tree t (InferIn m k) -> m (Tree (UVarOf m) (TypeOf t), Tree t k)

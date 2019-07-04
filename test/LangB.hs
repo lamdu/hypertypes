@@ -92,27 +92,26 @@ instance
     inferBody (BLet x) = inferBody x <&> _2 %~ BLet
     inferBody (BLit x) = newTerm TInt <&> (, BLit x)
     inferBody (BToNom x) = inferBody x <&> _2 %~ BToNom
-    inferBody (BRecExtend (RowExtend k v r)) =
+    inferBody (BRecExtend (RowExtend k (InferIn v) (InferIn r))) =
         withDict (recursive :: RecursiveDict (Unify m) Typ) $
         do
-            vI <- infer v
-            rI <- infer r
+            (vT, vI) <- v
+            (rT, rI) <- r
             restR <-
                 scopeConstraints <&> rForbiddenFields . Lens.contains k .~ True
                 >>= newVar binding . UUnbound
-            _ <- TRec restR & newTerm >>= unify (rI ^. iType)
-            RowExtend k (vI ^. iType) restR & RExtend & newTerm
+            _ <- TRec restR & newTerm >>= unify rT
+            RowExtend k vT restR & RExtend & newTerm
                 >>= newTerm . TRec
                 <&> (, BRecExtend (RowExtend k vI rI))
     inferBody BRecEmpty =
         withDict (recursive :: RecursiveDict (Unify m) Typ) $
         newTerm REmpty >>= newTerm . TRec <&> (, BRecEmpty)
-    inferBody (BGetField w k) =
+    inferBody (BGetField (InferIn w) k) =
         do
             (rT, wR) <- rowElementInfer RExtend k
-            wI <- infer w
-            _ <- TRec wR & newTerm >>= unify (wI ^. iType)
-            pure (rT, BGetField wI k)
+            (wT, wI) <- w
+            (rT, BGetField wI k) <$ (newTerm (TRec wR) >>= unify wT)
 
 -- Monads for inferring `LangB`:
 

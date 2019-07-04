@@ -23,7 +23,7 @@ import           AST.Class.Combinators
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Recursive (wrapM)
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
-import           AST.Infer (Infer(..), TypeOf, ScopeOf, MonadScopeLevel(..), infer, iType)
+import           AST.Infer (Infer(..), InferIn(..), TypeOf, ScopeOf, MonadScopeLevel(..))
 import           AST.Term.FuncType (HasFuncType(..), FuncType(..))
 import           AST.Term.Map (TermMap(..), _TermMap)
 import           AST.Term.Scheme
@@ -230,11 +230,11 @@ instance
     Infer m (ToNom nomId expr) where
 
     {-# INLINE inferBody #-}
-    inferBody (ToNom nomId val) =
+    inferBody (ToNom nomId (InferIn val)) =
         do
             (valI, paramsT) <-
                 do
-                    valI <- infer val
+                    (valT, valI) <- val
                     LoadedNominalDecl params foralls gen <- getNominalDecl nomId
                     recover <-
                         children_ (Proxy :: Proxy (Unify m))
@@ -243,8 +243,7 @@ instance
                         & execWriterT
                     (typ, paramsT) <- instantiateWith (lookupParams params) gen
                     sequence_ recover
-                    _ <- unify typ (valI ^. iType)
-                    pure (valI, paramsT)
+                    (valI, paramsT) <$ unify typ valT
                 & localLevel
             nominalInst # NominalInst nomId paramsT & newTerm
                 <&> (, ToNom nomId valI)

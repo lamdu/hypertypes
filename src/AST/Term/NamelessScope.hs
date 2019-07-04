@@ -13,7 +13,7 @@ module AST.Term.NamelessScope
 
 import           AST
 import           AST.Class.Infer.Infer1 (Infer1(..), HasTypeOf1(..))
-import           AST.Infer (Infer(..), HasScope, infer, iType, TypeOf, ScopeOf)
+import           AST.Infer (Infer(..), InferIn(..), HasScope, TypeOf, ScopeOf)
 import           AST.Term.FuncType
 import           AST.Unify (Unify(..), UVarOf, newUnbound, newTerm)
 import           Control.Lens (Lens', Prism')
@@ -93,16 +93,16 @@ instance
     ) =>
     Infer m (Scope t k) where
 
-    inferBody (Scope x) =
+    inferBody (Scope (InferIn x)) =
         withDict (typeAst (Proxy :: Proxy (t k))) $
         withDict (typeAst (Proxy :: Proxy (t (Maybe k)))) $
         do
             varType <- newUnbound
-            xI <-
+            (xT, xI) <-
                 local
                 (scopeTypes . _ScopeTypes %~ (varType Sequence.<|))
-                (infer x)
-            funcType # FuncType varType (xI ^. iType) & newTerm <&> (, Scope xI)
+                x
+            funcType # FuncType varType xT & newTerm <&> (, Scope xI)
         \\ (inferMonad :: DeBruijnIndex (Maybe k) :- Infer m (t (Maybe k)))
 
 instance

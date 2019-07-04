@@ -51,11 +51,11 @@ instance
     Infer m (Lam v t) where
 
     {-# INLINE inferBody #-}
-    inferBody (Lam p r) =
+    inferBody (Lam p (InferIn r)) =
         do
             varType <- newUnbound
-            rI <- localScopeType p varType (infer r)
-            funcType # FuncType varType (rI ^. iType) & newTerm <&> (, Lam p rI)
+            (rT, rI) <- localScopeType p varType r
+            funcType # FuncType varType rT & newTerm <&> (, Lam p rI)
 
 deriving instance Deps v expr k Eq   => Eq   (Lam v expr k)
 deriving instance Deps v expr k Ord  => Ord  (Lam v expr k)

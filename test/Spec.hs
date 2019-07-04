@@ -125,14 +125,13 @@ nomSkolem1 =
 
 inferExpr ::
     forall m t.
-    ( Infer m t
-    , Recursive Children t
+    ( Recursive (Infer m) t
     , Recursive (InferChildConstraints (Recursive (Unify m))) t
     ) =>
     Tree Pure t ->
     m (Tree Pure (TypeOf t))
 inferExpr x =
-    infer (wrap (Proxy :: Proxy Children) (Ann ()) x)
+    infer (wrap (Proxy :: Proxy (Infer m)) (Ann ()) x)
     >>= Lens.from _Flip (children (Proxy :: Proxy (Recursive (Unify m))) applyBindings)
     <&> (^. iType)
 

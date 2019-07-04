@@ -9,7 +9,7 @@ module AST.Term.TypeSig
 import           AST
 import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
-import           AST.Infer (Infer(..), TypeOf, ScopeOf, MonadScopeLevel(..), infer, iType)
+import           AST.Infer (Infer(..), InferIn(..), TypeOf, ScopeOf, MonadScopeLevel(..))
 import           AST.Term.Scheme (Scheme, schemeToRestrictedType)
 import           AST.Unify (Unify, unify, QVarHasInstance)
 import           Control.DeepSeq (NFData)
@@ -52,11 +52,11 @@ instance
     ) =>
     Infer m (TypeSig vars term) where
 
-    inferBody (TypeSig x s) =
+    inferBody (TypeSig (InferIn x) s) =
         do
-            xI <- infer x
+            (xT, xI) <- x
             schemeToRestrictedType s
-                >>= unify (xI ^. iType)
+                >>= unify xT
                 <&> (, TypeSig xI s)
         & localLevel
 
