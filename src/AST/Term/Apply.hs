@@ -55,7 +55,7 @@ instance (Infer m expr, HasFuncType (TypeOf expr)) => Infer m (Apply expr) where
             funcRes <- newUnbound
             (funcRes, Apply funcI argI) <$
                 (newTerm (funcType # FuncType (argI ^. iType) funcRes) >>=
-                (`unify` (funcI ^. iType)))
+                    unify (funcI ^. iType))
 
 deriving instance Eq   (Tie k expr) => Eq   (Apply expr k)
 deriving instance Ord  (Tie k expr) => Ord  (Apply expr k)

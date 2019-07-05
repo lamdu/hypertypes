@@ -297,7 +297,7 @@ main =
             , testB extendLit    "Left (Mismatch Int r0)"
             , testB extendDup    "Left (ConstraintsViolation (a : Int :*: {}) (Forbidden fields: [a]))"
             , testB extendGood   "Right (b : Int :*: a : Int :*: {})"
-            , testB unifyRows    "Right (((a : Int :*: b : Int :*: {}) -> Int -> Int) -> Int)"
+            , testB unifyRows    "Right (((b : Int :*: a : Int :*: {}) -> Int -> Int) -> Int)"
             , testB getAField    "Right ((a : t0 :*: r0) -> t0)"
             , testB vecApp       "Right (t0 -> t0 -> Vec[elem: t0])"
             , testB usePhantom   "Right PhantomInt[phantom: t0]"
