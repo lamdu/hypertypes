@@ -12,7 +12,7 @@ module AST.Trans.Prune
     ) where
 
 import           AST
-import           AST.Class.Combinators
+import           AST.Class.Combinators (NoConstraint, proxyNoConstraint)
 import           AST.Infer
 import           AST.Unify (newUnbound)
 import           Control.DeepSeq (NFData)
