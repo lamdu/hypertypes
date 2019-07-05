@@ -55,11 +55,7 @@ instance
         do
             varType <- newUnbound
             rI <- localScopeType p varType (infer r)
-            funcType # FuncType
-                { _funcIn = varType
-                , _funcOut = rI ^. iType
-                } & newTerm
-                <&> (, Lam p rI)
+            funcType # FuncType varType (rI ^. iType) & newTerm <&> (, Lam p rI)
 
 deriving instance Deps v expr k Eq   => Eq   (Lam v expr k)
 deriving instance Deps v expr k Ord  => Ord  (Lam v expr k)

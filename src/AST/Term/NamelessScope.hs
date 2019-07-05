@@ -102,11 +102,7 @@ instance
                 local
                 (scopeTypes . _ScopeTypes %~ (varType Sequence.<|))
                 (infer x)
-            funcType # FuncType
-                { _funcIn = varType
-                , _funcOut = xI ^. iType
-                } & newTerm
-                <&> (, Scope xI)
+            funcType # FuncType varType (xI ^. iType) & newTerm <&> (, Scope xI)
         \\ (inferMonad :: DeBruijnIndex (Maybe k) :- Infer m (t (Maybe k)))
 
 instance

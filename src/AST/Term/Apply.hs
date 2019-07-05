@@ -53,13 +53,9 @@ instance (Infer m expr, HasFuncType (TypeOf expr)) => Infer m (Apply expr) where
             argI <- infer arg
             funcI <- infer func
             funcRes <- newUnbound
-            funcT <-
-                funcType # FuncType
-                { _funcIn = argI ^. iType
-                , _funcOut = funcRes
-                } & newTerm
-            funcRes <$ unify funcT (funcI ^. iType)
-                <&> (, Apply funcI argI)
+            (funcRes, Apply funcI argI) <$
+                (newTerm (funcType # FuncType (argI ^. iType) funcRes) >>=
+                (`unify` (funcI ^. iType)))
 
 deriving instance Eq   (Tie k expr) => Eq   (Apply expr k)
 deriving instance Ord  (Tie k expr) => Ord  (Apply expr k)
