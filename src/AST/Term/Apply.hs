@@ -8,7 +8,7 @@ module AST.Term.Apply
     ) where
 
 import AST
-import AST.Infer (Infer(..), InferIn(..), TypeOf, ScopeOf)
+import AST.Infer
 import AST.Term.FuncType
 import AST.Unify (unify, newUnbound, newTerm)
 import Control.DeepSeq (NFData)
@@ -50,8 +50,8 @@ instance (Infer m expr, HasFuncType (TypeOf expr)) => Infer m (Apply expr) where
     {-# INLINE inferBody #-}
     inferBody (Apply func arg) =
         do
-            (argT, argI) <- runInferIn arg
-            (funcT, funcI) <- runInferIn func
+            InferredChild argT argI <- inferChild arg
+            InferredChild funcT funcI <- inferChild func
             funcRes <- newUnbound
             (funcRes, Apply funcI argI) <$ (newTerm (funcType # FuncType argT funcRes) >>= unify funcT)
 

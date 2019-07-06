@@ -23,7 +23,7 @@ import           AST.Class.Combinators
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Recursive (wrapM)
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
-import           AST.Infer (Infer(..), InferIn(..), TypeOf, ScopeOf, MonadScopeLevel(..))
+import           AST.Infer
 import           AST.Term.FuncType (HasFuncType(..), FuncType(..))
 import           AST.Term.Map (TermMap(..), _TermMap)
 import           AST.Term.Scheme
@@ -234,7 +234,7 @@ instance
         do
             (valI, paramsT) <-
                 do
-                    (valT, valI) <- runInferIn val
+                    InferredChild valT valI <- inferChild val
                     LoadedNominalDecl params foralls gen <- getNominalDecl nomId
                     recover <-
                         children_ (Proxy :: Proxy (Unify m))

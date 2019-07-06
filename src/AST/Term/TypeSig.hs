@@ -9,7 +9,7 @@ module AST.Term.TypeSig
 import           AST
 import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
-import           AST.Infer (Infer(..), InferIn(..), TypeOf, ScopeOf, MonadScopeLevel(..))
+import           AST.Infer
 import           AST.Term.Scheme (Scheme, schemeToRestrictedType)
 import           AST.Unify (Unify, unify, QVarHasInstance)
 import           Control.DeepSeq (NFData)
@@ -54,7 +54,7 @@ instance
 
     inferBody (TypeSig x s) =
         do
-            (xT, xI) <- runInferIn x
+            InferredChild xT xI <- inferChild x
             schemeToRestrictedType s
                 >>= unify xT
                 <&> (, TypeSig xI s)

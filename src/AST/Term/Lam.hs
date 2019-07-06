@@ -42,6 +42,7 @@ instance RecursiveConstraint (Lam v expr) constraint => Recursive constraint (La
 
 type instance TypeOf  (Lam v t) = TypeOf  t
 type instance ScopeOf (Lam v t) = ScopeOf t
+type instance ScopeOf (Lam v t) = ScopeOf t
 
 instance
     ( Infer m t
@@ -54,7 +55,7 @@ instance
     inferBody (Lam p r) =
         do
             varType <- newUnbound
-            (rT, rI) <- runInferIn r & localScopeType p varType
+            InferredChild rT rI <- inferChild r & localScopeType p varType
             funcType # FuncType varType rT & newTerm <&> (, Lam p rI)
 
 deriving instance Deps v expr k Eq   => Eq   (Lam v expr k)

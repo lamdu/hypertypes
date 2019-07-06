@@ -10,7 +10,6 @@ import           AST
 import           AST.Class.Unify (UVarOf)
 import           AST.Infer
 import           AST.Unify.Generalize (GTerm, generalize)
-import qualified Control.Lens as Lens
 import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
@@ -56,10 +55,12 @@ instance
         do
             (eI, eG) <-
                 do
-                    (eT, eI) <- runInferIn e
+                    InferredChild eT eI <- inferChild e
                     generalize eT <&> (eI ,)
                 & localLevel
-            runInferIn i & localScopeType v eG <&> Lens._2 %~ Let v eI
+            inferChild i
+                & localScopeType v eG
+                <&> \(InferredChild iT iI) -> (iT, Let v eI iI)
 
 deriving instance Deps v expr k Eq   => Eq   (Let v expr k)
 deriving instance Deps v expr k Ord  => Ord  (Let v expr k)

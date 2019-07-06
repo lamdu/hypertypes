@@ -95,8 +95,8 @@ instance
     inferBody (BRecExtend (RowExtend k v r)) =
         withDict (recursive :: RecursiveDict (Unify m) Typ) $
         do
-            (vT, vI) <- runInferIn v
-            (rT, rI) <- runInferIn r
+            InferredChild vT vI <- inferChild v
+            InferredChild rT rI <- inferChild r
             restR <-
                 scopeConstraints <&> rForbiddenFields . Lens.contains k .~ True
                 >>= newVar binding . UUnbound
@@ -110,7 +110,7 @@ instance
     inferBody (BGetField w k) =
         do
             (rT, wR) <- rowElementInfer RExtend k
-            (wT, wI) <- runInferIn w
+            InferredChild wT wI <- inferChild w
             (rT, BGetField wI k) <$ (newTerm (TRec wR) >>= unify wT)
 
 -- Monads for inferring `LangB`:

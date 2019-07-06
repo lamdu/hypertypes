@@ -28,5 +28,5 @@ infer (Ann a x) =
     <$> getScope
     <*> inferBody
         (recursiveOverChildren (Proxy :: Proxy (Infer m))
-            (\c -> infer c <&> (\i -> (i ^. iType, i)) & InferIn)
+            (\c -> infer c <&> (\i -> InferredChild (i ^. iType) i) & InferChild)
             x)
