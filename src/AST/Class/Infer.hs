@@ -9,7 +9,8 @@ import AST
 import AST.Class.Unify (Unify(..), UVarOf)
 import AST.Infer.Term
 
-newtype InferIn m k t = InferIn (m (Tree (UVarOf m) (TypeOf (RunKnot t)), k t))
+newtype InferIn m k t =
+    InferIn { runInferIn :: m (Tree (UVarOf m) (TypeOf (RunKnot t)), k t) }
 
 class HasScope m s where
     getScope :: m (Tree s (UVarOf m))

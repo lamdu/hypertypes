@@ -52,9 +52,9 @@ instance
     ) =>
     Infer m (TypeSig vars term) where
 
-    inferBody (TypeSig (InferIn x) s) =
+    inferBody (TypeSig x s) =
         do
-            (xT, xI) <- x
+            (xT, xI) <- runInferIn x
             schemeToRestrictedType s
                 >>= unify xT
                 <&> (, TypeSig xI s)

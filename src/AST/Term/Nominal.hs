@@ -230,11 +230,11 @@ instance
     Infer m (ToNom nomId expr) where
 
     {-# INLINE inferBody #-}
-    inferBody (ToNom nomId (InferIn val)) =
+    inferBody (ToNom nomId val) =
         do
             (valI, paramsT) <-
                 do
-                    (valT, valI) <- val
+                    (valT, valI) <- runInferIn val
                     LoadedNominalDecl params foralls gen <- getNominalDecl nomId
                     recover <-
                         children_ (Proxy :: Proxy (Unify m))

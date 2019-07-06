@@ -93,15 +93,14 @@ instance
     ) =>
     Infer m (Scope t k) where
 
-    inferBody (Scope (InferIn x)) =
+    inferBody (Scope x) =
         withDict (typeAst (Proxy :: Proxy (t k))) $
         withDict (typeAst (Proxy :: Proxy (t (Maybe k)))) $
         do
             varType <- newUnbound
             (xT, xI) <-
-                local
-                (scopeTypes . _ScopeTypes %~ (varType Sequence.<|))
-                x
+                runInferIn x
+                & local (scopeTypes . _ScopeTypes %~ (varType Sequence.<|))
             funcType # FuncType varType xT & newTerm <&> (, Scope xI)
         \\ (inferMonad :: DeBruijnIndex (Maybe k) :- Infer m (t (Maybe k)))
 

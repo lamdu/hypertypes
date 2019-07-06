@@ -48,10 +48,10 @@ type instance ScopeOf (Apply expr) = ScopeOf expr
 
 instance (Infer m expr, HasFuncType (TypeOf expr)) => Infer m (Apply expr) where
     {-# INLINE inferBody #-}
-    inferBody (Apply (InferIn func) (InferIn arg)) =
+    inferBody (Apply func arg) =
         do
-            (argT, argI) <- arg
-            (funcT, funcI) <- func
+            (argT, argI) <- runInferIn arg
+            (funcT, funcI) <- runInferIn func
             funcRes <- newUnbound
             (funcRes, Apply funcI argI) <$ (newTerm (funcType # FuncType argT funcRes) >>= unify funcT)
 

@@ -52,14 +52,14 @@ instance
     ) =>
     Infer m (Let v expr) where
 
-    inferBody (Let v (InferIn e) (InferIn i)) =
+    inferBody (Let v e i) =
         do
             (eI, eG) <-
                 do
-                    (eT, eI) <- e
+                    (eT, eI) <- runInferIn e
                     generalize eT <&> (eI ,)
                 & localLevel
-            localScopeType v eG i <&> Lens._2 %~ Let v eI
+            runInferIn i & localScopeType v eG <&> Lens._2 %~ Let v eI
 
 deriving instance Deps v expr k Eq   => Eq   (Let v expr k)
 deriving instance Deps v expr k Ord  => Ord  (Let v expr k)

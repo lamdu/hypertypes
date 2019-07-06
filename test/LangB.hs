@@ -92,11 +92,11 @@ instance
     inferBody (BLet x) = inferBody x <&> _2 %~ BLet
     inferBody (BLit x) = newTerm TInt <&> (, BLit x)
     inferBody (BToNom x) = inferBody x <&> _2 %~ BToNom
-    inferBody (BRecExtend (RowExtend k (InferIn v) (InferIn r))) =
+    inferBody (BRecExtend (RowExtend k v r)) =
         withDict (recursive :: RecursiveDict (Unify m) Typ) $
         do
-            (vT, vI) <- v
-            (rT, rI) <- r
+            (vT, vI) <- runInferIn v
+            (rT, rI) <- runInferIn r
             restR <-
                 scopeConstraints <&> rForbiddenFields . Lens.contains k .~ True
                 >>= newVar binding . UUnbound
@@ -107,10 +107,10 @@ instance
     inferBody BRecEmpty =
         withDict (recursive :: RecursiveDict (Unify m) Typ) $
         newTerm REmpty >>= newTerm . TRec <&> (, BRecEmpty)
-    inferBody (BGetField (InferIn w) k) =
+    inferBody (BGetField w k) =
         do
             (rT, wR) <- rowElementInfer RExtend k
-            (wT, wI) <- w
+            (wT, wI) <- runInferIn w
             (rT, BGetField wI k) <$ (newTerm (TRec wR) >>= unify wT)
 
 -- Monads for inferring `LangB`:
