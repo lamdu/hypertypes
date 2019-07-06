@@ -59,12 +59,17 @@ instance Children expr => Children (PruneTerm expr) where
 type instance TypeOf  (PruneTerm t) = TypeOf  t
 type instance ScopeOf (PruneTerm t) = ScopeOf t
 
+sequencePruneKnotInferIn ::
+    Functor m =>
+    PruneKnot (InferIn m k) e -> InferIn m (PruneKnot k) e
+sequencePruneKnotInferIn (MkPruneKnot (InferIn i)) =
+    i <&> Lens._2 %~ MkPruneKnot & InferIn
+
 instance (ChildrenWithConstraint t NoConstraint, Infer m t) => Infer m (PruneTerm t) where
     inferBody Pruned = newUnbound <&> (, Pruned)
     inferBody (Unpruned x) =
-        overChildren proxyNoConstraint
-        (\(MkPruneKnot (InferIn i)) -> i <&> Lens._2 %~ MkPruneKnot & InferIn)
-        x & inferBody
+        overChildren proxyNoConstraint sequencePruneKnotInferIn x
+        & inferBody
         <&> Lens._2 %~ Unpruned
 
 instance (Children e, RecursiveConstraint (PruneTerm e) c) => Recursive c (PruneTerm e)
