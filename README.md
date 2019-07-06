@@ -5,7 +5,7 @@ A Haskell library for representing and processing syntax trees.
 Like [`recursion-schemes`](https://github.com/ekmett/recursion-schemes/),
 `syntax-tree` allows parameterizing the "fix-point" of the tree. Parameterized fix-points allow various useful things, like adding annotations on all nodes, conviniently "folding" the tree, pruning trees, and more.
 
-But unlike `recursion-schemes`, the AST represented using `syntax-tree` can be heterogeneous,
+But unlike `recursion-schemes`, ASTs represented using `syntax-tree` can be heterogeneous,
 meaning that there could be "statement" nodes containing "expression" nodes etc.
 
 Not only that, the fix-points may also be heterogeneous,
@@ -53,8 +53,8 @@ Differences:
 * Allow representing ASTs in a type-safe and versatile manner
 * Helpers for recursive processing and transformation of ASTs
 * Provides existing structures for common terms and fix-points
-* An generic implementation for unification of terms
-* An generic, fast implementation of a Hindley-Milner type inference algorithm (["Efficient generalization with levels"](http://okmij.org/ftp/ML/generalization.html#levels))
+* A generic implementation for unification of terms
+* A generic, fast implementation of a Hindley-Milner type inference algorithm (["Efficient generalization with levels"](http://okmij.org/ftp/ML/generalization.html#levels))
 
 ## The underlying principle: `Knot`s
 
