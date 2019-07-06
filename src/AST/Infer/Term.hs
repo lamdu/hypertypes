@@ -7,7 +7,7 @@ module AST.Infer.Term
     ( TypeOf, ScopeOf
     , IResult(..), irType, irScope
     , ITerm(..), iVal, iRes, iAnn
-    , InferChildConstraints
+    , InferChildConstraints, InferChildDeps
     , iType, iScope, iAnnotations
     ) where
 
@@ -42,8 +42,9 @@ data ITerm a v e = ITerm
     }
 makeLenses ''ITerm
 
-class    (c (TypeOf ast), ChildrenWithConstraint (ScopeOf ast) c) => InferChildConstraints c ast
-instance (c (TypeOf ast), ChildrenWithConstraint (ScopeOf ast) c) => InferChildConstraints c ast
+type InferChildDeps c ast = (c (TypeOf ast), ChildrenWithConstraint (ScopeOf ast) c)
+class    InferChildDeps c ast => InferChildConstraints c ast
+instance InferChildDeps c ast => InferChildConstraints c ast
 
 instance Children (Flip (ITerm a) e) where
     type ChildrenConstraint (Flip (ITerm a) e) c = Recursive (InferChildConstraints c) e
