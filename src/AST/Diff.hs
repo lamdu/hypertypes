@@ -1,18 +1,36 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, FlexibleContexts #-}
 
 module AST.Diff
-    ( diff
-    , module AST.Diff.Term
+    ( Diff(..), _CommonBody, _CommonSubTree, _Different
+    , CommonBody(..), annPrev, annNew, val
+    , diff
     ) where
 
 import AST
 import AST.Class.Recursive (Recursive,  recursiveOverChildren)
 import AST.Class.ZipMatch (ZipMatch(..), Both(..))
-import AST.Diff.Term
+import Control.Lens (makeLenses, makePrisms)
 import Control.Lens.Operators
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
+
+-- | Diff of two annotated ASTs.
+-- The annotation types also function as tokens to describe which of the two ASTs a term comes from.
+
+data Diff a b e
+    = CommonSubTree (Ann (a, b) e)
+    | CommonBody (CommonBody a b e)
+    | Different (Both (Ann a) (Ann b) e)
+
+data CommonBody a b e = MkCommonBody
+    { _annPrev :: a
+    , _annNew :: b
+    , _val :: Tie e (Diff a b)
+    }
+
+makePrisms ''Diff
+makeLenses ''CommonBody
 
 diff ::
     Recursive ZipMatch t =>
