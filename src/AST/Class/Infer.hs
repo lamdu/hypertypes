@@ -3,21 +3,22 @@
 
 module AST.Class.Infer
     ( Infer(..), HasScope(..), LocalScopeType(..)
-    , InferredChild(..), inRep
+    , InferredChild(..), inType, inRep
     , InferChild(..), _InferChild
     ) where
 
 import AST
 import AST.Class.Unify (Unify(..), UVarOf)
 import AST.Infer.Term
-import Control.Lens (Lens, makePrisms)
+import Control.Lens (Lens, makeLenses, makePrisms)
 import Control.Lens.Operators
 
 data InferredChild v k t = InferredChild
-    { inType :: !(Tree v (TypeOf (RunKnot t)))
+    { _inType :: !(Tree v (TypeOf (RunKnot t)))
     , -- Representing the inferred child in the resulting node
-      _inRep :: !(k t)
+      __inRep :: !(k t)
     }
+makeLenses ''InferredChild
 
 inRep ::
     TypeOf (RunKnot t0) ~ TypeOf (RunKnot t1) =>
