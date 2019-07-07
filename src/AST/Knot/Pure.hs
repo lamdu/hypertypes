@@ -5,7 +5,7 @@ module AST.Knot.Pure
     ) where
 
 import           AST.Class.Children.TH (makeChildren)
-import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
+import           AST.Class.ZipMatch.TH (makeZipMatch)
 import           AST.Knot (Tie, Tree)
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
@@ -22,13 +22,11 @@ import           Prelude.Compat
 newtype Pure k = MkPure { getPure :: Tie k Pure }
     deriving stock Generic
 makeChildren ''Pure
+makeZipMatch ''Pure
 
 {-# INLINE _Pure #-}
 _Pure :: Lens.Iso (Tree Pure k) (Tree Pure j) (Tree k Pure) (Tree j Pure)
 _Pure = Lens.iso getPure MkPure
-
-instance ZipMatch Pure where
-    zipMatch (MkPure x) (MkPure y) = Just (MkPure (Both x y))
 
 instance Show (Tie k Pure) => Show (Pure k) where
     showsPrec p (MkPure x) = (showCon "Pure" @| x) p
@@ -40,4 +38,3 @@ deriving instance Eq  (Tie k Pure) => Eq  (Pure k)
 deriving instance Ord (Tie k Pure) => Ord (Pure k)
 instance Binary (Tie k Pure) => Binary (Pure k)
 instance NFData (Tie k Pure) => NFData (Pure k)
-

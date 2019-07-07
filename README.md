@@ -54,7 +54,7 @@ Differences:
 * Helpers for recursive processing and transformation of ASTs
 * Provides existing structures for common terms and fix-points
 * A generic implementation for unification of terms
-* A generic, fast implementation of a Hindley-Milner type inference algorithm (["Efficient generalization with levels"](http://okmij.org/ftp/ML/generalization.html#levels))
+* A generic and fast implementation of a Hindley-Milner type inference algorithm (["Efficient generalization with levels"](http://okmij.org/ftp/ML/generalization.html#levels))
 
 ## The underlying principle: `Knot`s
 

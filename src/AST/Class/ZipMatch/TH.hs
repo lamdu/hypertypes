@@ -5,7 +5,8 @@ module AST.Class.ZipMatch.TH
     ) where
 
 import           AST.Class.Children.TH
-import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
+import           AST.Class.ZipMatch (ZipMatch(..))
+import           AST.Knot.Both (Both(..))
 import           Control.Lens.Operators
 import qualified Data.Set as Set
 import           Language.Haskell.TH

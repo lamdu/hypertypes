@@ -1,15 +1,15 @@
-{-# LANGUAGE NoImplicitPrelude, RankNTypes, ConstraintKinds, TypeFamilies #-}
-{-# LANGUAGE ScopedTypeVariables, DataKinds, TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude, RankNTypes, ConstraintKinds, ScopedTypeVariables #-}
 
 module AST.Class.ZipMatch
-    ( ZipMatch(..), Both(..), bothA, bothB
+    ( ZipMatch(..)
     , zipMatchWith, zipMatchWithA, zipMatchWith_
     , doesMatch
+    , Both(..)
     ) where
 
 import           AST.Class.Children (Children(..))
-import           AST.Class.Children.TH (makeChildren)
-import           AST.Knot (Knot, Tree)
+import           AST.Knot (Tree)
+import           AST.Knot.Both (Both(..))
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad (guard)
@@ -18,14 +18,6 @@ import           Data.Functor.Identity (Identity(..))
 import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
-
-data Both a b (k :: Knot) = Both
-    { _bothA :: a k
-    , _bothB :: b k
-    } deriving (Eq, Ord, Show)
-Lens.makeLenses ''Both
-
-makeChildren ''Both
 
 class Children expr => ZipMatch expr where
     zipMatch :: Tree expr a -> Tree expr b -> Maybe (Tree expr (Both a b))
