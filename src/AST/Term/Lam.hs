@@ -1,7 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric #-}
 {-# LANGUAGE StandaloneDeriving, ConstraintKinds, UndecidableInstances #-}
-{-# LANGUAGE TupleSections, TypeFamilies, FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE MultiParamTypeClasses, TypeFamilies, FlexibleInstances #-}
 
 module AST.Term.Lam
     ( Lam(..), lamIn, lamOut
@@ -56,7 +55,7 @@ instance
         do
             varType <- newUnbound
             InferredChild rT rI <- inferChild r & localScopeType p varType
-            funcType # FuncType varType rT & newTerm <&> (, Lam p rI)
+            funcType # FuncType varType rT & newTerm <&> InferRes (Lam p rI)
 
 deriving instance Deps v expr k Eq   => Eq   (Lam v expr k)
 deriving instance Deps v expr k Ord  => Ord  (Lam v expr k)

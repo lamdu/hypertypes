@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
-{-# LANGUAGE TupleSections, StandaloneDeriving, DeriveGeneric #-}
+{-# LANGUAGE StandaloneDeriving, DeriveGeneric #-}
 
 module AST.Term.Apply
     ( Apply(..), applyFunc, applyArg
@@ -53,7 +53,8 @@ instance (Infer m expr, HasFuncType (TypeOf expr)) => Infer m (Apply expr) where
             InferredChild argT argI <- inferChild arg
             InferredChild funcT funcI <- inferChild func
             funcRes <- newUnbound
-            (funcRes, Apply funcI argI) <$ (newTerm (funcType # FuncType argT funcRes) >>= unify funcT)
+            InferRes (Apply funcI argI) funcRes <$
+                (newTerm (funcType # FuncType argT funcRes) >>= unify funcT)
 
 deriving instance Eq   (Tie k expr) => Eq   (Apply expr k)
 deriving instance Ord  (Tie k expr) => Ord  (Apply expr k)

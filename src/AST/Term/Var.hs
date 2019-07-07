@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DataKinds, DeriveGeneric #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving, TypeFamilies, UndecidableInstances #-}
-{-# LANGUAGE MultiParamTypeClasses, TupleSections, FlexibleInstances #-}
-{-# LANGUAGE ScopedTypeVariables, ConstraintKinds, FlexibleContexts, DerivingStrategies #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, DerivingStrategies #-}
+{-# LANGUAGE ScopedTypeVariables, ConstraintKinds, FlexibleContexts #-}
 
 module AST.Term.Var
     ( Var(..), _Var
@@ -9,7 +9,7 @@ module AST.Term.Var
     ) where
 
 import           AST
-import           AST.Infer (Infer(..), HasScope(..), TypeOf, ScopeOf)
+import           AST.Infer
 import           AST.Unify (Unify, UVarOf)
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
@@ -55,4 +55,4 @@ instance
 
     {-# INLINE inferBody #-}
     inferBody (Var x) =
-        getScope >>= varType (Proxy :: Proxy expr) x <&> (, Var x)
+        getScope >>= varType (Proxy :: Proxy expr) x <&> InferRes (Var x)

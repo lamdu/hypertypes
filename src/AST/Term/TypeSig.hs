@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, DeriveGeneric, TemplateHaskell, TupleSections #-}
+{-# LANGUAGE NoImplicitPrelude, DeriveGeneric, TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies, FlexibleInstances, MultiParamTypeClasses, TypeOperators #-}
 {-# LANGUAGE UndecidableInstances, StandaloneDeriving, ConstraintKinds #-}
 
@@ -57,7 +57,7 @@ instance
             InferredChild xT xI <- inferChild x
             schemeToRestrictedType s
                 >>= unify xT
-                <&> (, TypeSig xI s)
+                <&> InferRes (TypeSig xI s)
         & localLevel
 
 deriving instance Deps vars term k Eq   => Eq   (TypeSig vars term k)

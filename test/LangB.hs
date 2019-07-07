@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeFamilies, LambdaCase #-}
-{-# LANGUAGE FlexibleInstances, UndecidableInstances, TupleSections, DataKinds #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances, DataKinds #-}
 {-# LANGUAGE ScopedTypeVariables, GeneralizedNewtypeDeriving, ConstraintKinds #-}
 {-# LANGUAGE StandaloneDeriving, DerivingStrategies #-}
 
@@ -25,7 +25,6 @@ import           AST.Unify.Term
 import           Control.Applicative
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Control.Lens.Tuple
 import           Control.Monad.Except
 import           Control.Monad.RWS
 import           Control.Monad.Reader
@@ -86,12 +85,12 @@ instance
     ) =>
     Infer m LangB where
 
-    inferBody (BApp x) = inferBody x <&> _2 %~ BApp
-    inferBody (BVar x) = inferBody x <&> _2 %~ BVar
-    inferBody (BLam x) = inferBody x <&> _2 %~ BLam
-    inferBody (BLet x) = inferBody x <&> _2 %~ BLet
-    inferBody (BLit x) = newTerm TInt <&> (, BLit x)
-    inferBody (BToNom x) = inferBody x <&> _2 %~ BToNom
+    inferBody (BApp x) = inferBody x <&> inferResBody %~ BApp
+    inferBody (BVar x) = inferBody x <&> inferResBody %~ BVar
+    inferBody (BLam x) = inferBody x <&> inferResBody %~ BLam
+    inferBody (BLet x) = inferBody x <&> inferResBody %~ BLet
+    inferBody (BLit x) = newTerm TInt <&> InferRes (BLit x)
+    inferBody (BToNom x) = inferBody x <&> inferResBody %~ BToNom
     inferBody (BRecExtend (RowExtend k v r)) =
         withDict (recursive :: RecursiveDict (Unify m) Typ) $
         do
@@ -103,15 +102,15 @@ instance
             _ <- TRec restR & newTerm >>= unify rT
             RowExtend k vT restR & RExtend & newTerm
                 >>= newTerm . TRec
-                <&> (, BRecExtend (RowExtend k vI rI))
+                <&> InferRes (BRecExtend (RowExtend k vI rI))
     inferBody BRecEmpty =
         withDict (recursive :: RecursiveDict (Unify m) Typ) $
-        newTerm REmpty >>= newTerm . TRec <&> (, BRecEmpty)
+        newTerm REmpty >>= newTerm . TRec <&> InferRes BRecEmpty
     inferBody (BGetField w k) =
         do
             (rT, wR) <- rowElementInfer RExtend k
             InferredChild wT wI <- inferChild w
-            (rT, BGetField wI k) <$ (newTerm (TRec wR) >>= unify wT)
+            InferRes (BGetField wI k) rT <$ (newTerm (TRec wR) >>= unify wT)
 
 -- Monads for inferring `LangB`:
 

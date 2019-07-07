@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric, StandaloneDeriving #-}
 {-# LANGUAGE ConstraintKinds, UndecidableInstances, TypeFamilies, ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TypeOperators, FlexibleContexts, DataKinds, LambdaCase, TupleSections #-}
+{-# LANGUAGE TypeOperators, FlexibleContexts, DataKinds, LambdaCase #-}
 {-# LANGUAGE RankNTypes, DerivingStrategies #-}
 
 module AST.Term.Nominal
@@ -246,7 +246,7 @@ instance
                     (valI, paramsT) <$ unify typ valT
                 & localLevel
             nominalInst # NominalInst nomId paramsT & newTerm
-                <&> (, ToNom nomId valI)
+                <&> InferRes (ToNom nomId valI)
 
 type instance TypeOf  (FromNom nomId expr) = TypeOf expr
 type instance ScopeOf (FromNom nomId expr) = ScopeOf expr
@@ -267,7 +267,7 @@ instance
             (typ, paramsT) <- instantiateWith (lookupParams params) gen
             nomT <- nominalInst # NominalInst nomId paramsT & newTerm
             funcType # FuncType nomT typ & newTerm
-        <&> (, FromNom nomId)
+        <&> InferRes (FromNom nomId)
 
 -- | Get the scheme in a nominal given the parameters of a specific nominal instance.
 applyNominal ::

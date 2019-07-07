@@ -60,7 +60,7 @@ instance
                 & localLevel
             inferChild i
                 & localScopeType v eG
-                <&> \(InferredChild iT iI) -> (iT, Let v eI iI)
+                <&> \(InferredChild iT iI) -> InferRes (Let v eI iI) iT
 
 deriving instance Deps v expr k Eq   => Eq   (Let v expr k)
 deriving instance Deps v expr k Ord  => Ord  (Let v expr k)

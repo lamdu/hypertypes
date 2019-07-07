@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, UndecidableInstances, GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TemplateHaskell, TypeFamilies, LambdaCase, EmptyCase #-}
 {-# LANGUAGE ScopedTypeVariables, TypeOperators, FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses, TupleSections, DataKinds, DerivingStrategies #-}
+{-# LANGUAGE MultiParamTypeClasses, DataKinds, DerivingStrategies #-}
 
 module AST.Term.NamelessScope
     ( Scope(..), _Scope
@@ -101,7 +101,7 @@ instance
             InferredChild xT xI <-
                 inferChild x
                 & local (scopeTypes . _ScopeTypes %~ (varType Sequence.<|))
-            funcType # FuncType varType xT & newTerm <&> (, Scope xI)
+            funcType # FuncType varType xT & newTerm <&> InferRes (Scope xI)
         \\ (inferMonad :: DeBruijnIndex (Maybe k) :- Infer m (t (Maybe k)))
 
 instance
@@ -116,4 +116,4 @@ instance
     inferBody (ScopeVar v) =
         Lens.view (scopeTypes . _ScopeTypes)
         <&> (^?! Lens.ix (deBruijnIndex # v))
-        <&> (, ScopeVar v)
+        <&> InferRes (ScopeVar v)

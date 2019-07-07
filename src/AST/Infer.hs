@@ -24,7 +24,7 @@ infer ::
     Recursive (Infer m) t =>
     Tree (Ann a) t -> m (Tree (ITerm a (UVarOf m)) t)
 infer (Ann a x) =
-    (\s (t, xI) -> ITerm a (IResult t s) xI)
+    (\s (InferRes xI t) -> ITerm a (IResult t s) xI)
     <$> getScope
     <*> inferBody
         (recursiveOverChildren (Proxy :: Proxy (Infer m))

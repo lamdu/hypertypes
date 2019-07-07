@@ -1,6 +1,6 @@
 {-# LANGUAGE StandaloneDeriving, UndecidableInstances, TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies, LambdaCase, MultiParamTypeClasses, DerivingStrategies #-}
-{-# LANGUAGE FlexibleInstances, DataKinds, TupleSections, ConstraintKinds #-}
+{-# LANGUAGE FlexibleInstances, DataKinds, ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts, GeneralizedNewtypeDeriving, ScopedTypeVariables #-}
 
 -- | A test language with locally-nameless variable scoping and type signatures with for-alls
@@ -23,7 +23,6 @@ import           AST.Unify.Binding.ST
 import           Control.Applicative
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Control.Lens.Tuple
 import           Control.Monad.Except
 import           Control.Monad.RWS
 import           Control.Monad.Reader
@@ -81,11 +80,11 @@ instance TermInfer1Deps env m => Infer1 m LangA where
     inferMonad = Sub Dict
 
 instance (DeBruijnIndex k, TermInfer1Deps env m) => Infer m (LangA k) where
-    inferBody (ALit     x) = newTerm TInt <&> (, ALit x)
-    inferBody (AVar     x) = inferBody x <&> _2 %~ AVar
-    inferBody (ALam     x) = inferBody x <&> _2 %~ ALam
-    inferBody (AApp     x) = inferBody x <&> _2 %~ AApp
-    inferBody (ATypeSig x) = inferBody x <&> _2 %~ ATypeSig
+    inferBody (ALit     x) = newTerm TInt <&> InferRes (ALit x)
+    inferBody (AVar     x) = inferBody x <&> inferResBody %~ AVar
+    inferBody (ALam     x) = inferBody x <&> inferResBody %~ ALam
+    inferBody (AApp     x) = inferBody x <&> inferResBody %~ AApp
+    inferBody (ATypeSig x) = inferBody x <&> inferResBody %~ ATypeSig
 
 instance (DeBruijnIndex k, TermInfer1Deps env m) => Recursive (Infer m) (LangA k)
 

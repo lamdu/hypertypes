@@ -5,25 +5,24 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, ConstraintKinds #-}
 {-# LANGUAGE DataKinds, MultiParamTypeClasses, FlexibleInstances, DeriveGeneric #-}
 {-# LANGUAGE UndecidableInstances, UndecidableSuperClasses, StandaloneDeriving #-}
-{-# LANGUAGE DerivingStrategies, TupleSections #-}
+{-# LANGUAGE DerivingStrategies #-}
 
 module AST.Trans.Prune
     ( PruneTerm(..), PruneKnot(..)
     ) where
 
-import           AST
-import           AST.Class.Combinators (NoConstraint, proxyNoConstraint)
-import           AST.Infer
-import           AST.Unify (newUnbound)
-import           Control.DeepSeq (NFData)
-import qualified Control.Lens as Lens
-import           Control.Lens (makePrisms)
-import           Control.Lens.Operators
-import           Data.Binary (Binary)
-import           Data.Proxy (Proxy(..))
-import           GHC.Generics (Generic)
+import AST
+import AST.Class.Combinators (NoConstraint, proxyNoConstraint)
+import AST.Infer
+import AST.Unify (newUnbound)
+import Control.DeepSeq (NFData)
+import Control.Lens (makePrisms)
+import Control.Lens.Operators
+import Data.Binary (Binary)
+import Data.Proxy (Proxy(..))
+import GHC.Generics (Generic)
 
-import           Prelude.Compat
+import Prelude.Compat
 
 data PruneTerm expr k =
     Pruned | Unpruned (Tree expr (PruneKnot (RunKnot k)))
@@ -66,11 +65,11 @@ sequencePruneKnotInferChild (MkPruneKnot (InferChild i)) =
     i <&> inRep %~ MkPruneKnot & InferChild
 
 instance (ChildrenWithConstraint t NoConstraint, Infer m t) => Infer m (PruneTerm t) where
-    inferBody Pruned = newUnbound <&> (, Pruned)
+    inferBody Pruned = newUnbound <&> InferRes Pruned
     inferBody (Unpruned x) =
         overChildren proxyNoConstraint sequencePruneKnotInferChild x
         & inferBody
-        <&> Lens._2 %~ Unpruned
+        <&> \(InferRes b t) -> InferRes (Unpruned b) t --iresBody %~ Unpruned
 
 instance (Children e, RecursiveConstraint (PruneTerm e) c) => Recursive c (PruneTerm e)
 instance (Children k, RecursiveConstraint (PruneKnot k) c) => Recursive c (PruneKnot k)

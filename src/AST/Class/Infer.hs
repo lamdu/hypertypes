@@ -5,6 +5,7 @@ module AST.Class.Infer
     ( Infer(..), HasScope(..), LocalScopeType(..)
     , InferredChild(..), inType, inRep
     , InferChild(..), _InferChild
+    , InferRes(..), inferResType, inferResBody
     ) where
 
 import AST
@@ -30,6 +31,18 @@ newtype InferChild m k t =
     InferChild { inferChild :: m (InferredChild (UVarOf m) k t) }
 makePrisms ''InferChild
 
+data InferRes v k t = InferRes
+    { __inferResBody :: !(Tree t k)
+    , _inferResType :: !(Tree v (TypeOf t))
+    }
+makeLenses ''InferRes
+
+inferResBody ::
+    TypeOf t0 ~ TypeOf t1 =>
+    Lens (InferRes v k0 t0) (InferRes v k1 t1) (Tree t0 k0) (Tree t1 k1)
+inferResBody f (InferRes b t) =
+    f b <&> (`InferRes` t)
+
 class HasScope m s where
     getScope :: m (Tree s (UVarOf m))
 
@@ -42,4 +55,4 @@ class
 
     inferBody ::
         Tree t (InferChild m k) ->
-        m (Tree (UVarOf m) (TypeOf t), Tree t k)
+        m (InferRes (UVarOf m) k t)
