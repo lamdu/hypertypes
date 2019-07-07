@@ -1,22 +1,29 @@
-{-# LANGUAGE NoImplicitPrelude, MultiParamTypeClasses, FlexibleContexts, TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude, MultiParamTypeClasses, FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 
 module AST.Class.Infer
     ( Infer(..), HasScope(..), LocalScopeType(..)
-    , InferredChild(..), inType, inRep
+    , InferredChild(..), inRep
     , InferChild(..), _InferChild
     ) where
 
 import AST
 import AST.Class.Unify (Unify(..), UVarOf)
 import AST.Infer.Term
-import Control.Lens (makeLenses, makePrisms)
+import Control.Lens (Lens, makePrisms)
+import Control.Lens.Operators
 
 data InferredChild v k t = InferredChild
-    { _inType :: !(Tree v (TypeOf (RunKnot t)))
+    { inType :: !(Tree v (TypeOf (RunKnot t)))
     , -- Representing the inferred child in the resulting node
       _inRep :: !(k t)
     }
-makeLenses ''InferredChild
+
+inRep ::
+    TypeOf (RunKnot t0) ~ TypeOf (RunKnot t1) =>
+    Lens (InferredChild v k0 t0) (InferredChild v k1 t1) (k0 t0) (k1 t1)
+inRep f (InferredChild t r) =
+    f r <&> InferredChild t
 
 newtype InferChild m k t =
     InferChild { inferChild :: m (InferredChild (UVarOf m) k t) }

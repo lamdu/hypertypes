@@ -63,9 +63,7 @@ sequencePruneKnotInferChild ::
     Functor m =>
     PruneKnot (InferChild m k) e -> InferChild m (PruneKnot k) e
 sequencePruneKnotInferChild (MkPruneKnot (InferChild i)) =
-    i
-    <&> (\(InferredChild t r) -> InferredChild t (MkPruneKnot r))
-    & InferChild
+    i <&> inRep %~ MkPruneKnot & InferChild
 
 instance (ChildrenWithConstraint t NoConstraint, Infer m t) => Infer m (PruneTerm t) where
     inferBody Pruned = newUnbound <&> (, Pruned)
