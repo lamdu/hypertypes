@@ -69,7 +69,7 @@ instance (ChildrenWithConstraint t NoConstraint, Infer m t) => Infer m (PruneTer
     inferBody (Unpruned x) =
         overChildren proxyNoConstraint sequencePruneKnotInferChild x
         & inferBody
-        <&> \(InferRes b t) -> InferRes (Unpruned b) t --iresBody %~ Unpruned
+        <&> inferResBody %~ Unpruned
 
 instance (Children e, RecursiveConstraint (PruneTerm e) c) => Recursive c (PruneTerm e)
 instance (Children k, RecursiveConstraint (PruneKnot k) c) => Recursive c (PruneKnot k)
