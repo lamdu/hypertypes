@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, MultiParamTypeClasses, FlexibleContexts #-}
-{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies, RecordWildCards #-}
 
 module AST.Class.Infer
     ( Infer(..), HasScope(..), LocalScopeType(..)
@@ -24,8 +24,8 @@ makeLenses ''InferredChild
 inRep ::
     TypeOf (RunKnot t0) ~ TypeOf (RunKnot t1) =>
     Lens (InferredChild v k0 t0) (InferredChild v k1 t1) (k0 t0) (k1 t1)
-inRep f (InferredChild t r) =
-    f r <&> InferredChild t
+inRep f InferredChild{..} =
+    f __inRep <&> \__inRep -> InferredChild{..}
 
 newtype InferChild m k t =
     InferChild { inferChild :: m (InferredChild (UVarOf m) k t) }
@@ -40,8 +40,8 @@ makeLenses ''InferRes
 inferResBody ::
     TypeOf t0 ~ TypeOf t1 =>
     Lens (InferRes v k0 t0) (InferRes v k1 t1) (Tree t0 k0) (Tree t1 k1)
-inferResBody f (InferRes b t) =
-    f b <&> (`InferRes` t)
+inferResBody f InferRes{..} =
+    f __inferResBody <&> \__inferResBody -> InferRes{..}
 
 class HasScope m s where
     getScope :: m (Tree s (UVarOf m))
