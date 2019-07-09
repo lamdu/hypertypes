@@ -234,7 +234,7 @@ instance
         do
             (valI, paramsT) <-
                 do
-                    InferredChild valT valI <- inferChild val
+                    InferredChild valI valT <- inferChild val
                     LoadedNominalDecl params foralls gen <- getNominalDecl nomId
                     recover <-
                         children_ (Proxy :: Proxy (Unify m))

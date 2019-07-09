@@ -55,12 +55,12 @@ instance
         do
             (eI, eG) <-
                 do
-                    InferredChild eT eI <- inferChild e
+                    InferredChild eI eT <- inferChild e
                     generalize eT <&> (eI ,)
                 & localLevel
             inferChild i
                 & localScopeType v eG
-                <&> \(InferredChild iT iI) -> InferRes (Let v eI iI) iT
+                <&> \(InferredChild iI iT) -> InferRes (Let v eI iI) iT
 
 deriving instance Deps v expr k Eq   => Eq   (Let v expr k)
 deriving instance Deps v expr k Ord  => Ord  (Let v expr k)

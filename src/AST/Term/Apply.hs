@@ -50,8 +50,8 @@ instance (Infer m expr, HasFuncType (TypeOf expr)) => Infer m (Apply expr) where
     {-# INLINE inferBody #-}
     inferBody (Apply func arg) =
         do
-            InferredChild argT argI <- inferChild arg
-            InferredChild funcT funcI <- inferChild func
+            InferredChild argI argT <- inferChild arg
+            InferredChild funcI funcT <- inferChild func
             funcRes <- newUnbound
             InferRes (Apply funcI argI) funcRes <$
                 (newTerm (funcType # FuncType argT funcRes) >>= unify funcT)

@@ -54,7 +54,7 @@ instance
     inferBody (Lam p r) =
         do
             varType <- newUnbound
-            InferredChild rT rI <- inferChild r & localScopeType p varType
+            InferredChild rI rT <- inferChild r & localScopeType p varType
             funcType # FuncType varType rT & newTerm <&> InferRes (Lam p rI)
 
 deriving instance Deps v expr k Eq   => Eq   (Lam v expr k)

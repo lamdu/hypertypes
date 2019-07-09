@@ -15,9 +15,9 @@ import Control.Lens (Lens, makeLenses, makePrisms)
 import Control.Lens.Operators
 
 data InferredChild v k t = InferredChild
-    { _inType :: !(Tree v (TypeOf (RunKnot t)))
-    , -- Representing the inferred child in the resulting node
+    { -- Representing the inferred child in the resulting node
       __inRep :: !(k t)
+    , _inType :: !(Tree v (TypeOf (RunKnot t)))
     }
 makeLenses ''InferredChild
 

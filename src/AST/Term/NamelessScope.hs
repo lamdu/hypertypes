@@ -98,7 +98,7 @@ instance
         withDict (typeAst (Proxy :: Proxy (t (Maybe k)))) $
         do
             varType <- newUnbound
-            InferredChild xT xI <-
+            InferredChild xI xT <-
                 inferChild x
                 & local (scopeTypes . _ScopeTypes %~ (varType Sequence.<|))
             funcType # FuncType varType xT & newTerm <&> InferRes (Scope xI)

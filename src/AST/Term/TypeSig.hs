@@ -54,7 +54,7 @@ instance
 
     inferBody (TypeSig x s) =
         do
-            InferredChild xT xI <- inferChild x
+            InferredChild xI xT <- inferChild x
             schemeToRestrictedType s
                 >>= unify xT
                 <&> InferRes (TypeSig xI s)
