@@ -5,11 +5,10 @@ A Haskell library for representing and processing syntax trees.
 Like [`recursion-schemes`](https://github.com/ekmett/recursion-schemes/),
 `syntax-tree` allows parameterizing the "fix-point" of the tree. Parameterized fix-points allow various useful things, like adding annotations on all nodes, conviniently "folding" the tree, pruning trees, and more.
 
-But unlike `recursion-schemes`, ASTs represented using `syntax-tree` can be heterogeneous,
-meaning that there could be "statement" nodes containing "expression" nodes etc.
+But unlike `recursion-schemes`, heterogeneous ASTs represented using `syntax-tree` can share a single fix-point type,
+meaning that there could be "statement" nodes containing "expression" nodes, etc. all sharing the same fix-point.
 
-Not only that, the fix-points may also be heterogeneous,
-allowing for fix-points representing code diffs, and more.
+The fix-points for ASTs may also be heterogeneous, allowing for fix-points representing code diffs, and more.
 
 ## Heterogeneous AST examples
 
@@ -59,20 +58,19 @@ Differences:
 ## The underlying principle: `Knot`s
 
 * We want ASTs to be parameterized by fix-points
-* We also want fix-points to be parameterized by ASTs (to specify the AST types of child nodes)
-* Therefore, ASTs should be parameterized by something which is parameterized by them! This results in infinite types!
+* We want fix-points to be parameterized by ASTs, too
+* Therefore, ASTs and fix-points need to be mutually parameterized by each other
+* The AST parameterized by a fix-point which may be parameterized by the same AST results in infinite types
 
-To work around the infinite types we break the cycle with a `newtype`:
+To represent these infinite types we break the cycle with a `newtype`:
 
 ```Haskell
 newtype Knot = Knot (Knot -> Type)
 ```
 
-Instead of being parameterized by fix-points directly, ASTs are parameterized by them wrapped with `Knot`
+This allows representing the mutual parameterization:
 
-How does it work:
-
-* ASTs (and their fix-points too) are types parameterized by `Knot`s
+* ASTs and fix-points are types parameterized by `Knot`s
 * Their kind is therefore `Knot -> Type`
-* `Knot -> Type` is also the kind of the value inside `Knot`
-* The type constructors of ASTs and of fix-points can be thus wrapped with `'Knot` (the `Knot` data constructor lifted to types with `DataKinds`)
+* `Knot -> Type` is also the kind of the type inside `Knot`, which is lifted to the type-level using `DataKinds`
+* Wrapping the AST and fix-point type parameters with `Knot`s thus enables the mutual parameterization / recursion
