@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, UndecidableInstances, GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TemplateHaskell, TypeFamilies, LambdaCase, EmptyCase #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies, LambdaCase, EmptyCase, ConstraintKinds #-}
 {-# LANGUAGE ScopedTypeVariables, TypeOperators, FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses, DataKinds, DerivingStrategies #-}
 
@@ -38,7 +38,7 @@ Lens.makePrisms ''ScopeVar
 
 makeChildrenAndZipMatch ''Scope
 makeChildrenAndZipMatch ''ScopeVar
-instance Recursive Children (expr (Maybe a)) => Recursive Children (Scope expr a)
+instance (c (Scope expr a), Recursive c (expr (Maybe a))) => Recursive c (Scope expr a)
 
 class DeBruijnIndex a where
     deBruijnIndex :: Prism' Int a

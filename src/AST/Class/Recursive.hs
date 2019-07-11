@@ -106,18 +106,19 @@ unfold p f = unwrap p (f . getConst) . Const
 
 {-# INLINE foldMapRecursive #-}
 foldMapRecursive ::
-    forall constraint expr a f.
-    (Recursive constraint expr, Recursive Children f, Monoid a) =>
-    Proxy constraint ->
-    (forall child g. (constraint child, Recursive Children g) => Tree child g -> a) ->
+    forall c0 c1 expr a f.
+    (Recursive c0 expr, Recursive c1 f, Monoid a) =>
+    Proxy c0 ->
+    Proxy c1 ->
+    (forall child g. (c0 child, Recursive c1 g) => Tree child g -> a) ->
     Tree expr f ->
     a
-foldMapRecursive p f x =
-    withDict (recursive :: RecursiveDict constraint expr) $
-    withDict (recursive :: RecursiveDict Children f) $
+foldMapRecursive p0 p1 f x =
+    withDict (recursive :: RecursiveDict c0 expr) $
+    withDict (recursive :: RecursiveDict c1 f) $
     f x <>
-    foldMapChildren (Proxy :: Proxy (Recursive constraint))
-    (foldMapChildren (Proxy :: Proxy (Recursive Children)) (foldMapRecursive p f))
+    foldMapChildren (Proxy :: Proxy (Recursive c0))
+    (foldMapChildren (Proxy :: Proxy (Recursive c1)) (foldMapRecursive p0 p1 f))
     x
 
 {-# INLINE recursiveChildren #-}

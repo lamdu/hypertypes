@@ -6,6 +6,7 @@ module AST.Infer.Blame
 
 import AST
 import AST.Class.Recursive
+import AST.Knot.Ann (annotationsWith)
 import AST.Infer
 import AST.Unify
 import AST.Unify.Lookup
@@ -66,7 +67,8 @@ prepare typeFromAbove (Ann a x) =
 -- The expected `MonadError` behavior is that catching errors rolls back their state changes
 -- (i.e `StateT s (Either e)` is ok but `EitherT e (State s)` is not)
 blame ::
-    (Ord priority, MonadError err m, Recursive (Infer m) exp, Recursive Children exp) =>
+    forall priority err m exp a.
+    (Ord priority, MonadError err m, Recursive (Infer m) exp) =>
     (a -> priority) ->
     Tree (UVarOf m) (TypeOf exp) ->
     Tree (Ann a) exp ->
@@ -74,5 +76,8 @@ blame ::
 blame order topLevelType e =
     do
         p <- prepare topLevelType e
-        p ^.. annotations & sortOn (order . pAnn) & traverse_ pTryUnify
-        annotations (\x -> pFinalize x <&> (, pAnn x)) p
+        p ^.. annotationsWith prox & sortOn (order . pAnn) & traverse_ pTryUnify
+        annotationsWith prox (\x -> pFinalize x <&> (, pAnn x)) p
+    where
+        prox :: Proxy (Infer m)
+        prox = Proxy

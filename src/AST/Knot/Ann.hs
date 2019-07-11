@@ -4,7 +4,7 @@
 
 module AST.Knot.Ann
     ( Ann(..), ann, val
-    , annotations
+    , annotations, annotationsWith
     , strip, addAnnotations
     , para
     ) where
@@ -45,16 +45,25 @@ instance Deps Pretty a t => Pretty (Ann a t) where
         where
             plDoc = pPrintPrec lvl 0 pl
 
+annotationsWith ::
+    Recursive constraint e =>
+    Proxy constraint ->
+    Traversal
+    (Tree (Ann a) e)
+    (Tree (Ann b) e)
+    a b
+annotationsWith p f (Ann pl x) =
+    Ann
+    <$> f pl
+    <*> recursiveChildren p (annotationsWith p f) x
+
 annotations ::
     Recursive Children e =>
     Traversal
     (Tree (Ann a) e)
     (Tree (Ann b) e)
     a b
-annotations f (Ann pl x) =
-    Ann
-    <$> f pl
-    <*> recursiveChildren (Proxy :: Proxy Children) (annotations f) x
+annotations = annotationsWith (Proxy :: Proxy Children)
 
 -- Similar to `para` from `recursion-schemes`,
 -- except it's int term of full annotated trees rather than just the final result.
