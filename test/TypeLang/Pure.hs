@@ -10,7 +10,6 @@ import           AST.Term.Row
 import           AST.Term.Scheme
 import           AST.Unify
 import           AST.Unify.QuantifiedVar
-import           Algebra.Lattice
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import qualified Data.Map as Map
@@ -55,11 +54,11 @@ forAll tvs rvs body =
         foralls ::
             ( Foldable f
             , QVar typ ~ Name
-            , BoundedJoinSemiLattice (TypeConstraintsOf typ)
+            , Monoid (TypeConstraintsOf typ)
             ) =>
             f String -> Tree QVars typ
         foralls xs =
-            xs ^.. Lens.folded <&> Name <&> (, bottom)
+            xs ^.. Lens.folded <&> Name <&> (, mempty)
             & Map.fromList & QVars
 
 forAll1 ::

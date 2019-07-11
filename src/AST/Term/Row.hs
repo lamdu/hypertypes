@@ -18,7 +18,6 @@ import           AST.Unify (TypeConstraints(..), HasTypeConstraints(..), MonadSc
 import           AST.Unify.Lookup (semiPruneLookup)
 import           AST.Unify.New (newTerm, newUnbound)
 import           AST.Unify.Term (UTerm(..), _UTerm, uBody)
-import           Algebra.Lattice (JoinSemiLattice(..))
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Prism', Lens', makeLenses, contains)
 import qualified Control.Lens as Lens
@@ -142,7 +141,7 @@ rowExtendStructureMismatch match extend (c0, r0) (c1, r1) =
         flat1 <- flattenRowExtend nextExtend r1
         Map.intersectionWith match (flat0 ^. freExtends) (flat1 ^. freExtends)
             & sequenceA_
-        restVar <- c0 \/ c1 & UUnbound & newVar binding
+        restVar <- c0 <> c1 & UUnbound & newVar binding
         let side x y =
                 unflattenRow mkExtend FlatRowExtends
                 { _freExtends =

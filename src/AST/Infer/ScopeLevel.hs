@@ -5,7 +5,6 @@ module AST.Infer.ScopeLevel
     , ScopeLevel(..), _ScopeLevel
     ) where
 
-import           Algebra.Lattice (JoinSemiLattice(..), BoundedJoinSemiLattice(..))
 import           Algebra.PartialOrd (PartialOrd(..))
 import           AST.Unify.Constraints (TypeConstraints(..))
 import           Control.DeepSeq (NFData)
@@ -30,17 +29,17 @@ instance PartialOrd ScopeLevel where
     {-# INLINE leq #-}
     ScopeLevel x `leq` ScopeLevel y = x >= y
 
-instance JoinSemiLattice ScopeLevel where
-    {-# INLINE (\/) #-}
-    ScopeLevel x \/ ScopeLevel y = ScopeLevel (min x y)
+instance Semigroup ScopeLevel where
+    {-# INLINE (<>) #-}
+    ScopeLevel x <> ScopeLevel y = ScopeLevel (min x y)
 
-instance BoundedJoinSemiLattice ScopeLevel where
-    {-# INLINE bottom #-}
-    bottom = ScopeLevel maxBound
+instance Monoid ScopeLevel where
+    {-# INLINE mempty #-}
+    mempty = ScopeLevel maxBound
 
 instance TypeConstraints ScopeLevel where
     {-# INLINE generalizeConstraints #-}
-    generalizeConstraints _ = bottom
+    generalizeConstraints _ = mempty
     toScopeConstraints = id
 
 instance Pretty ScopeLevel where

@@ -9,7 +9,6 @@ module AST.Unify.Constraints
     , MonadScopeConstraints(..)
     ) where
 
-import Algebra.Lattice (JoinSemiLattice(..))
 import Algebra.PartialOrd (PartialOrd(..))
 import AST
 import AST.Class.Combinators (And)
@@ -17,7 +16,7 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
-class (PartialOrd c, JoinSemiLattice c) => TypeConstraints c where
+class (PartialOrd c, Semigroup c) => TypeConstraints c where
     -- | Remove scope constraints
     --
     -- When generalizing unification variables into universally

@@ -11,7 +11,6 @@ import           AST.Term.Nominal
 import           AST.Term.Scheme
 import           AST.Term.Scheme.AlphaEq
 import           AST.Unify.Apply
-import           Algebra.Lattice
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Except
@@ -140,12 +139,12 @@ vecNominalDecl =
     _Pure # NominalDecl
     { _nParams =
         Types
-        { _tRow = bottom
-        , _tTyp = bottom & Lens.at (Name "elem") ?~ bottom
+        { _tRow = mempty
+        , _tTyp = mempty & Lens.at (Name "elem") ?~ mempty
         }
     , _nScheme =
         Scheme
-        { _sForAlls = Types bottom bottom
+        { _sForAlls = Types mempty mempty
         , _sTyp = record [("x", tVar "elem"), ("y", tVar "elem")]
         }
     }
@@ -155,12 +154,12 @@ phantomIntNominalDecl =
     _Pure # NominalDecl
     { _nParams =
         Types
-        { _tRow = bottom
-        , _tTyp = bottom & Lens.at (Name "phantom") ?~ bottom
+        { _tRow = mempty
+        , _tTyp = mempty & Lens.at (Name "phantom") ?~ mempty
         }
     , _nScheme =
         Scheme
-        { _sForAlls = Types bottom bottom
+        { _sForAlls = Types mempty mempty
         , _sTyp = _Pure # TInt
         }
     }
@@ -181,8 +180,8 @@ localMutNominalDecl =
     _Pure # NominalDecl
     { _nParams =
         Types
-        { _tRow = bottom
-        , _tTyp = bottom & Lens.at (Name "value") ?~ bottom
+        { _tRow = mempty
+        , _tTyp = mempty & Lens.at (Name "value") ?~ mempty
         }
     , _nScheme =
         forAll (Lens.Const ()) (Lens.Identity "effects") (\_ _ -> mutType) ^. _Pure
@@ -321,5 +320,5 @@ main =
             _Pure #
             Scheme
             (Types (QVars mempty)
-                (QVars (Map.fromList [(Name a, RowConstraints (Set.fromList [Name x, Name y]) bottom)])))
+                (QVars (Map.fromList [(Name a, RowConstraints (Set.fromList [Name x, Name y]) mempty)])))
             (_Pure # TRec (rowExtends (rVar a) [(x, _Pure # TInt), (y, _Pure # TInt)]))

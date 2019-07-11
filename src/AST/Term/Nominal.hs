@@ -17,7 +17,6 @@ module AST.Term.Nominal
     , applyNominal
     ) where
 
-import           Algebra.Lattice (JoinSemiLattice(..))
 import           AST
 import           AST.Class.Combinators
 import           AST.Class.HasChild (HasChild(..))
@@ -216,7 +215,7 @@ lookupParams =
             UInstantiated r -> pure r
             USkolem l ->
                 -- This is a phantom-type, wasn't instantiated by `instantiate`.
-                scopeConstraints <&> (\/ l) >>= newVar binding . UUnbound
+                scopeConstraints <&> (<> l) >>= newVar binding . UUnbound
             _ -> error "unexpected state at nominal's parameter"
 
 type instance TypeOf  (ToNom nomId expr) = TypeOf expr

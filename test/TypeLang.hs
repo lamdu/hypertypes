@@ -1,6 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses, StandaloneDeriving, UndecidableInstances #-}
 {-# LANGUAGE TemplateHaskell, TypeFamilies, FlexibleInstances, FlexibleContexts #-}
-{-# LANGUAGE ConstraintKinds, TypeOperators, DataKinds, RankNTypes, DerivingStrategies #-}
+{-# LANGUAGE ConstraintKinds, TypeOperators, DataKinds, RankNTypes #-}
+{-# LANGUAGE DeriveGeneric, DerivingVia #-}
 
 module TypeLang where
 
@@ -18,7 +19,6 @@ import           AST.Unify
 import           AST.Unify.Binding
 import           AST.Unify.QuantifiedVar
 import           AST.Unify.Term
-import           Algebra.Lattice
 import           Algebra.PartialOrd
 import           Control.Applicative
 import           Control.Lens (ALens')
@@ -29,6 +29,8 @@ import           Control.Monad.ST.Class (MonadST(..))
 import           Data.Constraint (Constraint)
 import           Data.STRef
 import           Data.Set (Set, singleton)
+import           Generic.Data
+import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
@@ -50,7 +52,8 @@ data Row k
 data RConstraints = RowConstraints
     { _rForbiddenFields :: Set Name
     , _rScope :: ScopeLevel
-    } deriving (Eq, Show)
+    } deriving stock (Eq, Show, Generic)
+    deriving (Semigroup, Monoid) via Generically RConstraints
 
 data Types k = Types
     { _tTyp :: Tie k Typ
@@ -119,15 +122,9 @@ instance HasChild Types Row where getChild = tRow
 instance PartialOrd RConstraints where
     RowConstraints f0 s0 `leq` RowConstraints f1 s1 = f0 `leq` f1 && s0 `leq` s1
 
-instance JoinSemiLattice RConstraints where
-    RowConstraints f0 s0 \/ RowConstraints f1 s1 = RowConstraints (f0 \/ f1) (s0 \/ s1)
-
-instance BoundedJoinSemiLattice RConstraints where
-    bottom = RowConstraints bottom bottom
-
 instance TypeConstraints RConstraints where
-    generalizeConstraints = rScope .~ bottom
-    toScopeConstraints = rForbiddenFields .~ bottom
+    generalizeConstraints = rScope .~ mempty
+    toScopeConstraints = rForbiddenFields .~ mempty
 
 instance RowConstraints RConstraints where
     type RowConstraintsKey RConstraints = Name
@@ -150,7 +147,7 @@ instance HasTypeConstraints Row where
     verifyConstraints _ _ _ _ REmpty = pure REmpty
     verifyConstraints _ _ _ _ (RVar x) = RVar x & pure
     verifyConstraints p c e u (RExtend x) =
-        applyRowExtendConstraints p c (^. rScope) (e . (`RowConstraints` bottom) . singleton) u x <&> RExtend
+        applyRowExtendConstraints p c (^. rScope) (e . (`RowConstraints` mempty) . singleton) u x <&> RExtend
 
 type PureInferState = (Tree Types Binding, Tree Types UVar)
 

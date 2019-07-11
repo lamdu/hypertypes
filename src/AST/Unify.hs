@@ -11,7 +11,6 @@ module AST.Unify
     ) where
 
 import Algebra.PartialOrd (PartialOrd(..))
-import Algebra.Lattice (JoinSemiLattice(..))
 import AST
 import AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import AST.Class.ZipMatch (zipMatchWithA)
@@ -124,6 +123,6 @@ unifyUTerms xv (UTerm xt) yv (UTerm yt) =
         bindVar binding yv (UToVar xv)
         zipMatchWithA (Proxy :: Proxy (Recursive (Unify m))) unify (xt ^. uBody) (yt ^. uBody)
             & fromMaybe (xt ^. uBody <$ structureMismatch unify xt yt)
-            >>= bindVar binding xv . UTerm . UTermBody (xt ^. uConstraints \/ yt ^. uConstraints)
+            >>= bindVar binding xv . UTerm . UTermBody (xt ^. uConstraints <> yt ^. uConstraints)
         pure xv
 unifyUTerms _ _ _ _ = error "This shouldn't happen in unification stage"

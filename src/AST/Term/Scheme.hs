@@ -14,7 +14,6 @@ module AST.Term.Scheme
     , makeQVarInstances
     ) where
 
-import           Algebra.Lattice (JoinSemiLattice(..), BoundedJoinSemiLattice)
 import           AST
 import           AST.Class.Combinators (And, NoConstraint, HasChildrenConstraint, proxyNoConstraint)
 import           AST.Class.FromChildren (FromChildren(..))
@@ -53,6 +52,20 @@ data Scheme varTypes typ k = Scheme
 newtype QVars typ = QVars
     (Map (QVar (RunKnot typ)) (TypeConstraintsOf (RunKnot typ)))
     deriving stock Generic
+
+instance
+    ( Ord (QVar (RunKnot typ))
+    , Semigroup (TypeConstraintsOf (RunKnot typ))
+    ) =>
+    Semigroup (QVars typ) where
+    QVars m <> QVars n = QVars (Map.unionWith (<>) m n)
+
+instance
+    ( Ord (QVar (RunKnot typ))
+    , Semigroup (TypeConstraintsOf (RunKnot typ))
+    ) =>
+    Monoid (QVars typ) where
+    mempty = QVars Map.empty
 
 instance
     (Pretty (Tree varTypes QVars), Pretty (Tie k typ)) =>
@@ -103,7 +116,7 @@ makeQVarInstancesInScope ::
 makeQVarInstancesInScope (QVars foralls) =
     traverse makeSkolem foralls <&> QVarInstances
     where
-        makeSkolem c = scopeConstraints >>= newVar binding . USkolem . (c \/)
+        makeSkolem c = scopeConstraints >>= newVar binding . USkolem . (c <>)
 
 {-# INLINE makeQVarInstances #-}
 makeQVarInstances ::
@@ -203,7 +216,7 @@ saveH (GPoly x) =
     \case
     USkolem l ->
         do
-            r <- scopeConstraints <&> (\/ l) >>= newQuantifiedVariable & lift
+            r <- scopeConstraints <&> (<> l) >>= newQuantifiedVariable & lift
             Lens._1 . getChild %=
                 (\v -> v & _QVars . Lens.at r ?~ l :: Tree QVars typ)
             Lens._2 %= (bindVar binding x (USkolem l) :)
@@ -250,14 +263,3 @@ deriving instance DepsQ Ord  k t => Ord  (QVarInstances k t)
 deriving instance DepsQ Show k t => Show (QVarInstances k t)
 instance DepsQ Binary k t => Binary (QVarInstances k t)
 instance DepsQ NFData k t => NFData (QVarInstances k t)
-
-deriving instance
-    ( Ord (QVar (RunKnot typ))
-    , JoinSemiLattice (TypeConstraintsOf (RunKnot typ))
-    ) =>
-    JoinSemiLattice (QVars typ)
-deriving instance
-    ( Ord (QVar (RunKnot typ))
-    , JoinSemiLattice (TypeConstraintsOf (RunKnot typ))
-    ) =>
-    BoundedJoinSemiLattice (QVars typ)

@@ -12,7 +12,6 @@ module AST.Unify.Generalize
     , GTerm(..), _GMono, _GPoly, _GBody
     ) where
 
-import           Algebra.Lattice (JoinSemiLattice(..))
 import           Algebra.PartialOrd (PartialOrd(..))
 import           AST
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
@@ -116,7 +115,7 @@ instantiateForAll cons x =
     USkolem l ->
         do
             tell [bindVar binding x (USkolem l)]
-            r <- scopeConstraints <&> (\/ l) >>= newVar binding . cons & lift
+            r <- scopeConstraints <&> (<> l) >>= newVar binding . cons & lift
             UInstantiated r & bindVar binding x & lift
             pure r
     UInstantiated v -> pure v
