@@ -47,7 +47,7 @@ class
 
     binding :: BindingDict (UVarOf m) m t
 
-    unifyError :: Tree (UnifyError t) (UVarOf m) -> m ()
+    unifyError :: Tree (UnifyError t) (UVarOf m) -> m a
 
     -- | What to do when top-levels of terms being unified do not match.
     -- Usually this will throw a failure,
