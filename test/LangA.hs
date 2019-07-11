@@ -18,8 +18,11 @@ import           AST.Term.NamelessScope
 import           AST.Term.NamelessScope.InvDeBruijn
 import           AST.Term.TypeSig
 import           AST.Unify
+import           AST.Unify.Apply
 import           AST.Unify.Binding
 import           AST.Unify.Binding.ST
+import           AST.Unify.New
+import           AST.Unify.QuantifiedVar
 import           Control.Applicative
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators

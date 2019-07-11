@@ -9,7 +9,8 @@ module AST.Term.Lam
 import           AST
 import           AST.Infer
 import           AST.Term.FuncType
-import           AST.Unify (UVarOf, newUnbound, newTerm)
+import           AST.Unify (UVarOf)
+import           AST.Unify.New (newTerm, newUnbound)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators

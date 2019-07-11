@@ -14,7 +14,7 @@ module AST.Trans.Prune
 import AST
 import AST.Class.Combinators (NoConstraint, proxyNoConstraint)
 import AST.Infer
-import AST.Unify (newUnbound)
+import AST.Unify.New (newUnbound)
 import Control.DeepSeq (NFData)
 import Control.Lens (makePrisms)
 import Control.Lens.Operators

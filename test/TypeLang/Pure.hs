@@ -9,6 +9,7 @@ import           AST.Term.FuncType
 import           AST.Term.Row
 import           AST.Term.Scheme
 import           AST.Unify
+import           AST.Unify.QuantifiedVar
 import           Algebra.Lattice
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators

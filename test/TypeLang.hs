@@ -16,6 +16,7 @@ import           AST.Term.Row
 import           AST.Term.Scheme
 import           AST.Unify
 import           AST.Unify.Binding
+import           AST.Unify.QuantifiedVar
 import           AST.Unify.Term
 import           Algebra.Lattice
 import           Algebra.PartialOrd

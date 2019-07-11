@@ -10,7 +10,7 @@ import           AST.Term.NamelessScope (EmptyScope)
 import           AST.Term.Nominal
 import           AST.Term.Scheme
 import           AST.Term.Scheme.AlphaEq
-import           AST.Unify
+import           AST.Unify.Apply
 import           Algebra.Lattice
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators

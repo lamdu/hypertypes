@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, LambdaCase #-}
 
-module AST.Unify.Binding.Lookup
+module AST.Unify.Lookup
     ( semiPruneLookup
     ) where
 

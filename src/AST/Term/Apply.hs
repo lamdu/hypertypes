@@ -10,7 +10,8 @@ module AST.Term.Apply
 import AST
 import AST.Infer
 import AST.Term.FuncType
-import AST.Unify (unify, newUnbound, newTerm)
+import AST.Unify (unify)
+import AST.Unify.New (newTerm, newUnbound)
 import Control.DeepSeq (NFData)
 import Control.Lens (Traversal, makeLenses)
 import Control.Lens.Operators

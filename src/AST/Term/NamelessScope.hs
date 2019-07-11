@@ -15,7 +15,8 @@ import           AST
 import           AST.Class.Infer.Infer1 (Infer1(..), HasTypeOf1(..))
 import           AST.Infer
 import           AST.Term.FuncType
-import           AST.Unify (Unify(..), UVarOf, newUnbound, newTerm)
+import           AST.Unify (Unify(..), UVarOf)
+import           AST.Unify.New (newTerm, newUnbound)
 import           Control.Lens (Lens', Prism')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators

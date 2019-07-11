@@ -11,7 +11,8 @@ import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Infer
 import           AST.Term.Scheme (Scheme, schemeToRestrictedType)
-import           AST.Unify (Unify, unify, QVarHasInstance)
+import           AST.Unify (Unify, unify)
+import           AST.Unify.QuantifiedVar (QVarHasInstance)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators

@@ -29,6 +29,8 @@ import           AST.Term.Map (TermMap(..), _TermMap)
 import           AST.Term.Scheme
 import           AST.Unify
 import           AST.Unify.Generalize (GTerm(..), _GMono, instantiateWith, instantiateForAll)
+import           AST.Unify.New (newTerm)
+import           AST.Unify.QuantifiedVar (HasQuantifiedVar(..), QVarHasInstance)
 import           AST.Unify.Term (UTerm(..))
 import           Control.Applicative (Alternative(..))
 import           Control.DeepSeq (NFData)

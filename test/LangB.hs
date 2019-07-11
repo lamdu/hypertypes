@@ -18,9 +18,12 @@ import           AST.Term.Nominal
 import           AST.Term.Row
 import           AST.Term.Var
 import           AST.Unify
+import           AST.Unify.Apply
 import           AST.Unify.Binding
 import           AST.Unify.Binding.ST
 import           AST.Unify.Generalize
+import           AST.Unify.New
+import           AST.Unify.QuantifiedVar
 import           AST.Unify.Term
 import           Control.Applicative
 import qualified Control.Lens as Lens
