@@ -7,7 +7,7 @@ module AST.Unify
     , module AST.Unify.Error
     , module AST.Unify.QuantifiedVar
     , applyBindings, unify
-    , newUnbound, newTerm, unfreeze, occursError
+    , newUnbound, newTerm, unfreeze
 
     , -- Exported for SPECIALIZE pragmas
       updateConstraints, updateTermConstraints, unifyUTerms, unifyUnbound
@@ -22,8 +22,9 @@ import AST.Class.ZipMatch (zipMatchWithA)
 import AST.Unify.Binding.Lookup (semiPruneLookup)
 import AST.Unify.Constraints (TypeConstraints(..), HasTypeConstraints(..), MonadScopeConstraints(..))
 import AST.Unify.Error (UnifyError(..))
-import AST.Unify.Term (UTerm(..), UTermBody(..), uConstraints, uBody)
+import AST.Unify.Occurs (occursError)
 import AST.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify(..), QVarHasInstance)
+import AST.Unify.Term (UTerm(..), UTermBody(..), uConstraints, uBody)
 import Control.Lens.Operators
 import Data.Constraint (withDict)
 import Data.Maybe (fromMaybe)
@@ -50,16 +51,6 @@ unfreeze = wrapM (Proxy :: Proxy (Unify m)) newTerm
 
 -- TODO: implement when need / better understand motivations for -
 -- occursIn, seenAs, getFreeVars, freshen, equals, equiv
-
-occursError ::
-    Unify m t =>
-    Tree (UVarOf m) t -> Tree (UTermBody (UVarOf m)) t -> m (Tree Pure t)
-occursError v (UTermBody c b) =
-    do
-        q <- newQuantifiedVariable c
-        let r = quantifiedVar # q
-        bindVar binding v (UResolved (_Pure # r))
-        _Pure # r <$ unifyError (Occurs (quantifiedVar # q) b)
 
 {-# INLINE applyBindings #-}
 applyBindings ::
