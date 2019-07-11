@@ -18,6 +18,7 @@ import           AST
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Knot.Flip (Flip, _Flip)
 import           AST.Unify
+import           AST.Unify.Binding.Lookup (semiPruneLookup)
 import           AST.Unify.Term (UTerm(..), uBody)
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens

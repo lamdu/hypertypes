@@ -14,7 +14,8 @@ module AST.Term.Row
 
 import           AST
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
-import           AST.Unify (TypeConstraints(..), HasTypeConstraints(..), MonadScopeConstraints(..), newTerm, newUnbound, semiPruneLookup)
+import           AST.Unify (TypeConstraints(..), HasTypeConstraints(..), MonadScopeConstraints(..), newTerm, newUnbound)
+import           AST.Unify.Binding.Lookup (semiPruneLookup)
 import           AST.Unify.Term (UTerm(..), _UTerm, uBody)
 import           Algebra.Lattice (JoinSemiLattice(..))
 import           Control.DeepSeq (NFData)

@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TypeFamilies, LambdaCase #-}
+{-# LANGUAGE NoImplicitPrelude, TypeFamilies #-}
 {-# LANGUAGE ScopedTypeVariables, FlexibleContexts, BangPatterns #-}
 
 module AST.Unify
@@ -7,7 +7,6 @@ module AST.Unify
     , module AST.Unify.Error
     , module AST.Unify.QuantifiedVar
     , applyBindings, unify
-    , semiPruneLookup
     , newUnbound, newTerm, unfreeze, occursError
 
     , -- Exported for SPECIALIZE pragmas
@@ -20,6 +19,7 @@ import AST
 import AST.Class.Recursive (wrapM)
 import AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import AST.Class.ZipMatch (zipMatchWithA)
+import AST.Unify.Binding.Lookup (semiPruneLookup)
 import AST.Unify.Constraints (TypeConstraints(..), HasTypeConstraints(..), MonadScopeConstraints(..))
 import AST.Unify.Error (UnifyError(..))
 import AST.Unify.Term (UTerm(..), UTermBody(..), uConstraints, uBody)
@@ -47,24 +47,6 @@ unfreeze ::
     Recursive (Unify m) t =>
     Tree Pure t -> m (Tree (UVarOf m) t)
 unfreeze = wrapM (Proxy :: Proxy (Unify m)) newTerm
-
--- look up a variable, and return last variable pointing to result.
--- prune all variable on way to last variable (path-compression ala union-find)
-{-# INLINE semiPruneLookup #-}
-semiPruneLookup ::
-    Unify m t =>
-    Tree (UVarOf m) t ->
-    m (Tree (UVarOf m) t, Tree (UTerm (UVarOf m)) t)
-semiPruneLookup v0 =
-    lookupVar binding v0
-    >>=
-    \case
-    UToVar v1 ->
-        do
-            (v, r) <- semiPruneLookup v1
-            bindVar binding v0 (UToVar v)
-            pure (v, r)
-    t -> pure (v0, t)
 
 -- TODO: implement when need / better understand motivations for -
 -- occursIn, seenAs, getFreeVars, freshen, equals, equiv
