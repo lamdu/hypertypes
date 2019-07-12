@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module AST.Knot.Flip
+module AST.Combinator.Flip
     ( Flip(..), _Flip
     ) where
 

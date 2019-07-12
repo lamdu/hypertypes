@@ -8,8 +8,8 @@ module AST.Class.ZipMatch
     ) where
 
 import           AST.Class.Children (Children(..))
+import           AST.Combinator.Both (Both(..))
 import           AST.Knot (Tree)
-import           AST.Knot.Both (Both(..))
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad (guard)

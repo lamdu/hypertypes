@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TypeFamilies, DataKinds, TemplateHaskell, DeriveGeneric #-}
 
-module AST.Knot.Both
+module AST.Combinator.Both
     ( Both(..), bothA, bothB
     ) where
 

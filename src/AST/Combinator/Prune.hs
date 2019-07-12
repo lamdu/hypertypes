@@ -7,7 +7,7 @@
 {-# LANGUAGE UndecidableInstances, UndecidableSuperClasses, StandaloneDeriving #-}
 {-# LANGUAGE DerivingStrategies #-}
 
-module AST.Trans.Prune
+module AST.Combinator.Prune
     ( PruneTerm(..), PruneKnot(..)
     ) where
 

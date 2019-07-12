@@ -12,7 +12,7 @@ module AST.Infer.Term
     ) where
 
 import AST
-import AST.Knot.Flip (Flip(..), _Flip)
+import AST.Combinator.Flip (Flip(..), _Flip)
 import Control.Lens (Traversal, Lens', makeLenses, from)
 import Control.Lens.Operators
 import Data.Proxy (Proxy(..))

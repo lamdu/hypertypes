@@ -15,7 +15,7 @@ module AST.Unify.Generalize
 import           Algebra.PartialOrd (PartialOrd(..))
 import           AST
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
-import           AST.Knot.Flip (Flip, _Flip)
+import           AST.Combinator.Flip (Flip, _Flip)
 import           AST.Unify
 import           AST.Unify.Lookup (semiPruneLookup)
 import           AST.Unify.New

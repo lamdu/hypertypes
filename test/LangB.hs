@@ -9,7 +9,7 @@ import           TypeLang
 
 import           AST
 import           AST.Class.Unify
-import           AST.Knot.Flip
+import           AST.Combinator.Flip
 import           AST.Infer
 import           AST.Term.Apply
 import           AST.Term.Lam
