@@ -1,9 +1,9 @@
 # syntax-tree
 
-A Haskell library for representing and processing syntax trees.
+A Haskell library for representing syntax trees using type-level interleaved continuations, and processing these trees.
 
 Like [`recursion-schemes`](https://github.com/ekmett/recursion-schemes/),
-`syntax-tree` allows parameterizing the "fix-point" of the tree. Parameterized fix-points allow various useful things, like adding annotations on all nodes, conviniently "folding" the tree, pruning trees, and more.
+`syntax-tree` allows parameterizing the "fix-point" of a syntax tree. Parameterized fix-points allow various useful things, like adding annotations on all nodes, conviniently "folding" the tree, pruning trees, and more.
 
 But unlike `recursion-schemes`, heterogeneous ASTs represented using `syntax-tree` can share a single fix-point type,
 meaning that there could be "statement" nodes containing "expression" nodes, etc. all sharing the same fix-point.
@@ -74,3 +74,18 @@ This allows representing the mutual parameterization:
 * Their kind is therefore `Knot -> Type`
 * `Knot -> Type` is also the kind of the type inside `Knot`, which is lifted to the type-level using `DataKinds`
 * Wrapping the AST and fix-point type parameters with `Knot`s thus enables the mutual parameterization / recursion
+
+### Relation to "Hyperfunctions"
+
+S. Krstic et al [KLP2001] have described the following type which they call a "Hyperfunction":
+
+    newtype H a b = Phi (H b a -> b)
+
+`Knot`s are simply isomorphic to `H Type Type` (assuming a `PolyKinds` variant of `H`), so they can be seen as type-level "hyperfunctions".
+
+For more info on hyperfunctions and their use cases in the value level see [LKS2013].
+
+#### References
+
+* [KLP2001] S. Krstic, J. Launchbury, and D. Pavlovic. Hyperfunctions. In Proceeding of Fixed Points in Computer Science, FICS 2001
+* [LKS2013] J. Launchbury, S. Krstic, T. E. Sauerwein. [Coroutining Folds with Hyperfunctions](https://arxiv.org/abs/1309.5135). In In Proceedings Festschrift for Dave Schmidt, EPTCS 2013
