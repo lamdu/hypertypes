@@ -77,15 +77,18 @@ This allows representing the mutual parameterization:
 
 ### Relation to "Hyperfunctions"
 
-S. Krstic et al [KLP2001] have described the following type which they call a "Hyperfunction":
+S. Krstic et al [KLP2001] have described the a type which they call a "Hyperfunction". Here is it's definition from the [`hyperfunctions`](http://hackage.haskell.org/package/hyperfunctions) package on Hackage:
 
-    newtype H a b = Phi (H b a -> b)
+```Haskell
+newtype Hyper a b = Hyper { invoke :: Hyper b a -> b }
+```
 
-`Knot`s are simply isomorphic to `H Type Type` (assuming a `PolyKinds` variant of `H`), so they can be seen as type-level "hyperfunctions".
+`Knot`s are isomorphic to `Hyper Type Type` (assuming a `PolyKinds` variant of `Hyper`), so they can be seen as type-level "hyperfunctions".
 
-For more info on hyperfunctions and their use cases in the value level see [LKS2013].
+For more info on hyperfunctions and their use cases in the value level see [LKS2013]
 
 #### References
 
 * [KLP2001] S. Krstic, J. Launchbury, and D. Pavlovic. Hyperfunctions. In Proceeding of Fixed Points in Computer Science, FICS 2001
 * [LKS2013] J. Launchbury, S. Krstic, T. E. Sauerwein. [Coroutining Folds with Hyperfunctions](https://arxiv.org/abs/1309.5135). In In Proceedings Festschrift for Dave Schmidt, EPTCS 2013
+* [`hyperfunctions`](http://hackage.haskell.org/package/hyperfunctions) package. E. A. Kmett. Hackage 2015
