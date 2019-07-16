@@ -1,14 +1,17 @@
 {-# LANGUAGE NoImplicitPrelude, StandaloneDeriving, UndecidableInstances, DeriveGeneric #-}
 {-# LANGUAGE TypeFamilies, MultiParamTypeClasses, ConstraintKinds, UndecidableSuperClasses #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances, DerivingStrategies #-}
 
 module AST.Combinator.Compose
     ( Compose(..)
     ) where
 
 import           AST
+import           AST.Class.Combinators (NoConstraint)
+import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
+import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
@@ -16,7 +19,7 @@ import           GHC.Generics (Generic)
 import           Prelude.Compat
 
 newtype Compose a b k = MkCompose { getCompose :: Tree a (Compose b (RunKnot k)) }
-    deriving Generic
+    deriving stock Generic
 
 class    ChildrenConstraint k (ComposeConstraint1 c o) => ComposeConstraint0 c k o
 instance ChildrenConstraint k (ComposeConstraint1 c o) => ComposeConstraint0 c k o
@@ -36,6 +39,26 @@ instance (Children k0, Children k1) => Children (Compose k0 k1) where
             p0 _ _ = Proxy
             p1 :: Proxy c -> Tree (Compose k0 n) k1 -> Proxy (ComposeConstraint1 c k1)
             p1 _ _ = Proxy
+
+instance
+    ( ZipMatch k0, ZipMatch k1
+    , ChildrenConstraint k0 NoConstraint
+    , ChildrenConstraint k1 NoConstraint
+    ) =>
+    ZipMatch (Compose k0 k1) where
+    zipMatch (MkCompose x) (MkCompose y) =
+        zipMatch x y
+        >>= children p
+            (\(Both (MkCompose cx) (MkCompose cy)) ->
+                zipMatch cx cy
+                <&> overChildren p
+                    (\(Both (MkCompose bx) (MkCompose by)) -> Both bx by & MkCompose)
+                <&> MkCompose
+            )
+        <&> MkCompose
+        where
+            p :: Proxy NoConstraint
+            p = Proxy
 
 {-# INLINE _Compose #-}
 _Compose ::
