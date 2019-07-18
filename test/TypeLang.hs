@@ -80,6 +80,7 @@ type instance ChildrenTypesOf Types = Types
 
 instance KPointed Types where
     type KLiftConstraint Types c = ChildrenConstraint Types c
+    pureC = id
     pureK c = Types c c
     pureKWith _ c = Types c c
 

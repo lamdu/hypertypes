@@ -45,19 +45,19 @@ makeKPointedForType typeName info =
             [x] -> pure x
             _ -> fail "makeKPointed only supports single constructor types"
         let pureCDecl
-                | childrenTypes == tiInstance info = []
-                | otherwise =
-                    [ InlineP 'pureC Inline FunLike AllPhases & PragmaD & pure
-                    , funD 'pureC [makePureCCtr childrenTypes (tiVar info) cons]
-                    ]
-        [ tySynInstD ''KLiftConstraint
+                | childrenTypes == tiInstance info =
+                    Clause [] (NormalB (VarE 'id)) [] & pure
+                | otherwise = makePureCCtr childrenTypes (tiVar info) cons
+        instanceD (pure (makeContext info)) (appT (conT ''KPointed) (pure (tiInstance info)))
+            [ tySynInstD ''KLiftConstraint
                 (pure (TySynEqn [tiInstance info, VarT constraintVar] liftedConstraint))
+            , InlineP 'pureC Inline FunLike AllPhases & PragmaD & pure
+            , funD 'pureC [pureCDecl]
             , InlineP 'pureK Inline FunLike AllPhases & PragmaD & pure
             , funD 'pureK [makePureKCtr (tiVar info) cons]
             , InlineP 'pureKWith Inline FunLike AllPhases & PragmaD & pure
             , funD 'pureKWith [makePureKWithCtr (tiVar info) cons]
-            ] <> pureCDecl
-            & instanceD (pure (makeContext info)) (appT (conT ''KPointed) (pure (tiInstance info)))
+            ]
     <&> (:[])
     where
         contents = tiContents info

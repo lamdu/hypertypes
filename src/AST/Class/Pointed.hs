@@ -10,23 +10,16 @@ import Data.Constraint (Constraint)
 import Data.Kind (Type)
 import Data.Proxy (Proxy)
 
-import Prelude.Compat
-
 class KPointed k where
-    -- | Construct a value from a higher ranked child value
-    pureK ::
-        (forall child. Tree n child) ->
-        Tree k n
-
     -- | Construct a value from given child values
     pureC ::
         Tree (ChildrenTypesOf k) n ->
         Tree k n
-    {-# INLINE pureC #-}
-    default pureC ::
-        ChildrenTypesOf k ~ k =>
-        Tree (ChildrenTypesOf k) n -> Tree k n
-    pureC = id
+
+    -- | Construct a value from a higher ranked child value
+    pureK ::
+        (forall child. Tree n child) ->
+        Tree k n
 
     type KLiftConstraint k (c :: (Knot -> Type) -> Constraint) :: Constraint
 
