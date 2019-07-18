@@ -9,6 +9,7 @@ module AST.Combinator.Compose
 import           AST
 import           AST.Class.HasChildrenTypes
 import           AST.Class.Combinators (NoConstraint)
+import           AST.Class.Functor
 import           AST.Class.Pointed
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
 import           Control.DeepSeq (NFData)
@@ -59,6 +60,18 @@ instance (HasChildrenTypes a, KPointed a, KPointed b) => KPointed (Compose a b) 
                 (Proxy (ComposeConstraint1 c k1) -> Tree k0 k1) ->
                 Tree k0 k1
             makeP1 = undefined
+
+instance (HasChildrenTypes a, HasChildrenTypes b, KFunctor a, KFunctor b) => KFunctor (Compose a b) where
+    mapC (MkCompose f) =
+        withDict (hasChildrenTypes (Proxy :: Proxy a)) $
+        withDict (hasChildrenTypes (Proxy :: Proxy b)) $
+        _Compose %~
+        mapC
+        ( mapK
+            (\(MkCompose bT) ->
+                MkMapK (_Compose %~ mapC (mapK ((_MapK %~ (_Compose %~)) . getCompose) bT))
+            ) f
+        )
 
 instance (Children k0, Children k1) => Children (Compose k0 k1) where
     type ChildrenConstraint (Compose k0 k1) c = ChildrenConstraint k0 (ComposeConstraint0 c k1)
