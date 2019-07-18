@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, ConstraintKinds, TypeFamilies, RankNTypes #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, DefaultSignatures #-}
 
 module AST.Class.HasChildrenTypes
     ( HasChildrenTypes(..)
@@ -12,7 +12,7 @@ import AST.Class.Functor (KFunctor(..), MapK(..))
 import AST.Class.Pointed (KPointed(..))
 import AST.Class.Traversable (KTraversable(..), ContainedK(..))
 import AST.Knot (Tree, ChildrenTypesOf)
-import Data.Constraint (Dict, withDict)
+import Data.Constraint (Dict(..), withDict)
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
@@ -27,6 +27,12 @@ class HasChildrenTypes k where
     hasChildrenTypes ::
         Proxy k ->
         Dict (ChildrenTypesConstraints (ChildrenTypesOf k))
+    {-# INLINE hasChildrenTypes #-}
+    default hasChildrenTypes ::
+        ChildrenTypesConstraints (ChildrenTypesOf k) =>
+        Proxy k ->
+        Dict (ChildrenTypesConstraints (ChildrenTypesOf k))
+    hasChildrenTypes _ = Dict
 
 withChildrenTypes ::
     HasChildrenTypes k =>
