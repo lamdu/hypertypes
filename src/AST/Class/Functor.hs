@@ -24,4 +24,5 @@ class KFunctor k where
     -- | Map child values given a mapping function per child type
     mapC ::
         Tree (ChildrenTypesOf k) (MapK m n) ->
-        Tree k m -> Tree k n
+        Tree k m ->
+        Tree k n

@@ -24,6 +24,8 @@ _LiftK2 f = fmap MkLiftK2 . f . runLiftK2
 
 class (KPointed k, KFunctor k) => KApplicative k where
     -- | Combine child values given a combining function per child type
-    liftK2C ::
+    liftC2 ::
         Tree (ChildrenTypesOf k) (LiftK2 l m n) ->
-        Tree k l -> Tree k m -> Tree k n
+        Tree k l ->
+        Tree k m ->
+        Tree k n
