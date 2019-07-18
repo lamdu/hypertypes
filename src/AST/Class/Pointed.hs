@@ -4,7 +4,7 @@ module AST.Class.Pointed
     ( KPointed(..)
     ) where
 
-import AST.Knot
+import AST.Knot (Knot, Tree)
 import Data.Constraint (Constraint)
 import Data.Proxy (Proxy)
 
