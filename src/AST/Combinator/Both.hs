@@ -5,7 +5,8 @@ module AST.Combinator.Both
     ) where
 
 import AST.Class.Children.TH (makeChildren)
-import AST.Knot (Knot)
+import AST.Class.Pointed.TH (makeKPointed)
+import AST.Knot (Knot, ChildrenTypesOf)
 import Control.DeepSeq (NFData)
 import Control.Lens (makeLenses)
 import Data.Binary (Binary)
@@ -18,7 +19,11 @@ data Both a b (k :: Knot) = Both
     , _bothB :: b k
     } deriving (Eq, Ord, Show, Generic)
 makeLenses ''Both
+
+type instance ChildrenTypesOf (Both a b) = Both (ChildrenTypesOf a) (ChildrenTypesOf b)
+
 makeChildren ''Both
+makeKPointed ''Both
 
 instance (Binary (a k), Binary (b k)) => Binary (Both a b k)
 instance (NFData (a k), NFData (b k)) => NFData (Both a b k)

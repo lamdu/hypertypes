@@ -141,17 +141,30 @@ makePureCCtr childrenTypes knot info =
         let directChildVars =
                 do
                     (typ, name) <- cVars
-                    ConT tie `AppT` _ `AppT` c <- [typ]
+                    ConT tie `AppT` VarT _knot `AppT` c <- [typ]
                     [(D.applySubstitution childrenSubst c, name) | tie == ''Tie]
                 & Map.fromList
-        let bodyForPat (NodeFofX typ) =
-                Map.lookup typ directChildVars
-                & maybe (fail err) (pure . VarE)
-                where
-                    err =
-                        "Failed producing pureC for child of type:\n        " <> show typ <>
-                        "\n    not in:\n        " <> show directChildVars
-            bodyForPat XofF{} = VarE 'pureC `AppE` LitE (StringL "TODO:makePureCCtr XofF") & pure
+        let embedChildVars =
+                do
+                    (typ, name) <- cVars
+                    x `AppT` VarT _knot <- [typ]
+                    ConT cto `AppT` c <- [D.applySubstitution childrenSubst x]
+                    [(c, name) | cto == ''ChildrenTypesOf]
+                & Map.fromList
+        let bodyForPat (NodeFofX t) =
+                case Map.lookup t directChildVars of
+                Nothing ->
+                    "Failed producing pureC for child of type:\n        " <> show t <>
+                    "\n    not in:\n        " <> show directChildVars
+                    & fail
+                Just x -> VarE x & pure
+            bodyForPat (XofF t) =
+                case Map.lookup t embedChildVars of
+                Nothing ->
+                    "Failed producing pureC for embedded type:\n        " <> show t <>
+                    "\n    not in:\n        " <> show embedChildVars
+                    & fail
+                Just x -> VarE 'pureC `AppE` VarE x & pure
             bodyForPat (Tof _ pat) = bodyForPat pat <&> AppE (VarE 'pure)
             bodyForPat (Other x) = fail ("KPointed can't produce value of type " <> show x)
         D.constructorFields info
