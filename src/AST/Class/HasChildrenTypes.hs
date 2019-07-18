@@ -5,7 +5,7 @@ module AST.Class.HasChildrenTypes
     ) where
 
 import AST.Class.Applicative (KApplicative)
-import AST.Class.Foldable (KFoldable)
+import AST.Class.Traversable (KTraversable)
 import AST.Knot (ChildrenTypesOf)
 import Data.Constraint (Dict)
 import Data.Proxy (Proxy)
@@ -13,7 +13,7 @@ import Data.Proxy (Proxy)
 type ChildrenTypesConstraints k =
     ( ChildrenTypesOf k ~ k
     , KApplicative k
-    , KFoldable k
+    , KTraversable k
     )
 
 class HasChildrenTypes k where
