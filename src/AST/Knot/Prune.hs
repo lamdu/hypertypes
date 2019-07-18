@@ -33,9 +33,9 @@ makeZipMatch ''Prune
 
 instance KPointed Prune where
     type KLiftConstraint Prune c = c Prune
-    pureK x = Unpruned x
     pureC (MkSingle x) = Unpruned x
-    pureKWith _ x = Unpruned x
+    pureK = Unpruned
+    pureKWith _ = Unpruned
 
 instance c Prune => Recursive c Prune
 
