@@ -7,23 +7,27 @@ module AST.Knot.Functor
     ) where
 
 import AST.Class.Children.TH (makeChildren)
+import AST.Class.Pointed.TH (makeKPointed)
 import AST.Class.Recursive (Recursive)
-import AST.Knot (Tie, Tree)
+import AST.Combinator.Single (Single)
+import AST.Knot (Tree, Tie, ChildrenTypesOf)
 import Control.Lens (Iso, iso)
 import Data.Binary
 
 newtype ToKnot f k = MkToKnot (f (Tie k (ToKnot f)))
 
-makeChildren ''ToKnot
-instance (Traversable f, c (ToKnot f)) => Recursive c (ToKnot f)
-
 _ToKnot ::
-    Iso
-    (Tree (ToKnot f0) k0)
-    (Tree (ToKnot f1) k1)
-    (f0 (Tree k0 (ToKnot f0)))
-    (f1 (Tree k1 (ToKnot f1)))
+    Iso (Tree (ToKnot f0) k0)
+        (Tree (ToKnot f1) k1)
+        (f0 (Tree k0 (ToKnot f0)))
+        (f1 (Tree k1 (ToKnot f1)))
 _ToKnot = iso (\(MkToKnot x) -> x) MkToKnot
+
+type instance ChildrenTypesOf (ToKnot f) = Single (ToKnot f)
+
+makeChildren ''ToKnot
+makeKPointed ''ToKnot
+instance (Traversable f, c (ToKnot f)) => Recursive c (ToKnot f)
 
 type InToKnot f k = f (Tie k (ToKnot f))
 deriving instance Eq     (InToKnot f k) => Eq     (ToKnot f k)

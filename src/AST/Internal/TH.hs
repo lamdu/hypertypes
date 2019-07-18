@@ -156,6 +156,7 @@ childrenTypesFromTypeName fam name args =
 
 getVar :: Type -> Maybe Name
 getVar (VarT x) = Just x
+getVar (SigT x _) = getVar x
 getVar _ = Nothing
 
 constraintVar :: Name

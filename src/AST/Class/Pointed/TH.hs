@@ -16,10 +16,10 @@ import qualified Language.Haskell.TH.Datatype as D
 import           Prelude.Compat
 
 makeKPointed :: Name -> DecsQ
-makeKPointed typeName = makeTypeInfo typeName >>= makeKPointedForType
+makeKPointed typeName = makeTypeInfo typeName >>= makeKPointedForType typeName
 
-makeKPointedForType :: TypeInfo -> DecsQ
-makeKPointedForType info =
+makeKPointedForType :: Name -> TypeInfo -> DecsQ
+makeKPointedForType typeName info =
     do
         childrenTypes <-
             reifyInstances ''ChildrenTypesOf [tiInstance info]
@@ -48,7 +48,7 @@ makeKPointedForType info =
                 | childrenTypes == tiInstance info = []
                 | otherwise =
                     [ InlineP 'pureC Inline FunLike AllPhases & PragmaD & pure
-                    , funD 'pureC [makePureCCtr (tiVar info) cons & pure]
+                    , funD 'pureC [makePureCCtr childrenTypes (tiVar info) cons]
                     ]
         [ tySynInstD ''KLiftConstraint
                 (pure (TySynEqn [tiInstance info, VarT constraintVar] liftedConstraint))
@@ -67,11 +67,7 @@ makeKPointedForType info =
                 \x -> ConT ''KLiftConstraint `AppT` x `AppT` VarT constraintVar)
             <> Set.toList (tcOthers contents)
             & toTuple
-        (typeNameFun, args) = unapply (tiInstance info)
-        typeName =
-            case typeNameFun of
-            ConT x -> x
-            _ -> error "unexpected type name"
+        (_, args) = unapply (tiInstance info)
 
 constraintVar :: Name
 constraintVar = mkName "constraint"
@@ -119,5 +115,50 @@ makePureKWithCtr knot info =
         bodyForPat (Tof _ pat) = bodyForPat pat <&> AppE (VarE 'pure)
         bodyForPat (Other x) = fail ("KPointed can't produce value of type " <> show x)
 
-makePureCCtr :: Name -> D.ConstructorInfo -> Clause
-makePureCCtr _ _ = Clause [] (NormalB (LitE (StringL "TODO:makePureCCtr"))) []
+makePureCCtr :: Type -> Name -> D.ConstructorInfo -> Q Clause
+makePureCCtr childrenTypes knot info =
+    do
+        childrenTypeName <-
+            case childrenCon of
+            ConT x -> pure x
+            _ -> fail ("unsupported ChildrenTypesOf: " <> show childrenTypes)
+        childrenInfo <- D.reifyDatatype childrenTypeName
+        childrenVars <-
+            D.datatypeVars childrenInfo
+            <&> getVar
+            & sequenceA
+            & maybe
+                (fail ("pureC: unexpected type parameters for children types: " <> show (D.datatypeVars childrenInfo)))
+                pure
+        let childrenSubst = zip childrenVars childrenArgs & Map.fromList
+        cons <-
+            case D.datatypeCons childrenInfo of
+            [x] -> pure x
+            _ -> fail ("ChildrenTypesOf with more than one constructor: " <> show childrenTypeName)
+        let cVars =
+                [0::Int ..] <&> show <&> ('x':) <&> mkName
+                & zip (D.constructorFields cons)
+        let directChildVars =
+                do
+                    (typ, name) <- cVars
+                    ConT tie `AppT` _ `AppT` c <- [typ]
+                    [(D.applySubstitution childrenSubst c, name) | tie == ''Tie]
+                & Map.fromList
+        let bodyForPat (NodeFofX typ) =
+                Map.lookup typ directChildVars
+                & maybe (fail err) (pure . VarE)
+                where
+                    err =
+                        "Failed producing pureC for child of type:\n        " <> show typ <>
+                        "\n    not in:\n        " <> show directChildVars
+            bodyForPat XofF{} = VarE 'pureC `AppE` LitE (StringL "TODO:makePureCCtr XofF") & pure
+            bodyForPat (Tof _ pat) = bodyForPat pat <&> AppE (VarE 'pure)
+            bodyForPat (Other x) = fail ("KPointed can't produce value of type " <> show x)
+        D.constructorFields info
+            <&> matchType knot
+            & traverse bodyForPat
+            <&> foldl AppE (ConE (D.constructorName info))
+            <&> NormalB
+            <&> \x -> Clause [ConP (D.constructorName cons) (cVars <&> snd <&> VarP)] x []
+    where
+        (childrenCon, childrenArgs) = unapply childrenTypes

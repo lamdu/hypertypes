@@ -8,7 +8,9 @@ module AST.Knot.Prune
 
 import AST
 import AST.Class.Combinators (NoConstraint, proxyNoConstraint)
+import AST.Class.Pointed (KPointed(..))
 import AST.Combinator.Compose (Compose(..))
+import AST.Combinator.Single (Single(..))
 import AST.Infer
 import AST.Unify.New (newUnbound)
 import Control.DeepSeq (NFData)
@@ -23,9 +25,17 @@ data Prune k =
     Pruned | Unpruned (Tie k Prune)
     deriving Generic
 
+type instance ChildrenTypesOf Prune = Single Prune
+
 makePrisms ''Prune
 makeChildren ''Prune
 makeZipMatch ''Prune
+
+instance KPointed Prune where
+    type KLiftConstraint Prune c = c Prune
+    pureK x = Unpruned x
+    pureC (MkSingle x) = Unpruned x
+    pureKWith _ x = Unpruned x
 
 instance c Prune => Recursive c Prune
 
