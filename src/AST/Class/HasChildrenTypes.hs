@@ -19,6 +19,7 @@ import Prelude.Compat
 
 type ChildrenTypesConstraints k =
     ( ChildrenTypesOf k ~ k
+    , HasChildrenTypes k
     , KApplicative k
     , KTraversable k
     )

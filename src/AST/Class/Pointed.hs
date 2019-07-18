@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, DataKinds, TypeFamilies, RankNTypes #-}
-{-# LANGUAGE ConstraintKinds, DefaultSignatures #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module AST.Class.Pointed
     ( KPointed(..)
