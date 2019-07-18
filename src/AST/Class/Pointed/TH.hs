@@ -1,10 +1,9 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskellQuotes, LambdaCase #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskellQuotes #-}
 
 module AST.Class.Pointed.TH
     ( makeKPointed
     ) where
 
-import           AST.Knot
 import           AST.Class.Pointed
 import           AST.Internal.TH
 import           Control.Lens.Operators
@@ -16,30 +15,12 @@ import qualified Language.Haskell.TH.Datatype as D
 import           Prelude.Compat
 
 makeKPointed :: Name -> DecsQ
-makeKPointed typeName = makeTypeInfo typeName >>= makeKPointedForType typeName
+makeKPointed typeName = makeTypeInfo typeName >>= makeKPointedForType
 
-makeKPointedForType :: Name -> TypeInfo -> DecsQ
-makeKPointedForType typeName info =
+makeKPointedForType :: TypeInfo -> DecsQ
+makeKPointedForType info =
     do
-        childrenTypes <-
-            reifyInstances ''ChildrenTypesOf [tiInstance info]
-            >>=
-            \case
-            [] -> fail ("Expecting a ChildrenTypesOf instance for " <> show (tiInstance info))
-            [TySynInstD ccI (TySynEqn [typI] x)]
-                | ccI == ''ChildrenTypesOf ->
-                    case unapply typI of
-                    (ConT n1, argsI) | n1 == typeName ->
-                        case traverse getVar argsI of
-                        Nothing ->
-                            fail ("TODO: Support ChildrenTypesOf of flexible instances: " <> show typeName)
-                        Just argNames ->
-                            pure (D.applySubstitution substs x)
-                            where
-                                substs = zip argNames args & Map.fromList
-                    _ -> fail ("ReifyInstances brought wrong typ: " <> show typeName)
-            [_] -> fail ("Unsupported ChildrenTypesOf form for " <> show (tiInstance info))
-            _ -> fail ("Impossible! Several ChildrenTypesOf instances for " <> show (tiInstance info))
+        childrenTypes <- getChildrenTypes info
         cons <-
             case tiCons info of
             [x] -> pure x
@@ -67,7 +48,6 @@ makeKPointedForType typeName info =
                 \x -> ConT ''KLiftConstraint `AppT` x `AppT` VarT constraintVar)
             <> Set.toList (tcOthers contents)
             & toTuple
-        (_, args) = unapply (tiInstance info)
 
 constraintVar :: Name
 constraintVar = mkName "constraint"
@@ -118,39 +98,9 @@ makePureKWithCtr knot info =
 makePureCCtr :: Type -> Name -> D.ConstructorInfo -> Q Clause
 makePureCCtr childrenTypes knot info =
     do
-        childrenTypeName <-
-            case childrenCon of
-            ConT x -> pure x
-            _ -> fail ("unsupported ChildrenTypesOf: " <> show childrenTypes)
-        childrenInfo <- D.reifyDatatype childrenTypeName
-        childrenVars <-
-            D.datatypeVars childrenInfo
-            <&> getVar
-            & sequenceA
-            & maybe
-                (fail ("pureC: unexpected type parameters for children types: " <> show (D.datatypeVars childrenInfo)))
-                pure
-        let childrenSubst = zip childrenVars childrenArgs & Map.fromList
-        cons <-
-            case D.datatypeCons childrenInfo of
-            [x] -> pure x
-            _ -> fail ("ChildrenTypesOf with more than one constructor: " <> show childrenTypeName)
-        let cVars =
-                [0::Int ..] <&> show <&> ('x':) <&> mkName
-                & zip (D.constructorFields cons)
-        let directChildVars =
-                do
-                    (typ, name) <- cVars
-                    ConT tie `AppT` VarT _knot `AppT` c <- [typ]
-                    [(D.applySubstitution childrenSubst c, name) | tie == ''Tie]
-                & Map.fromList
-        let embedChildVars =
-                do
-                    (typ, name) <- cVars
-                    x `AppT` VarT _knot <- [typ]
-                    ConT cto `AppT` c <- [D.applySubstitution childrenSubst x]
-                    [(c, name) | cto == ''ChildrenTypesOf]
-                & Map.fromList
+        (cons, childrenSubst) <- getChildrenTypesInfo childrenTypes
+        let cVars = makeConstructorVars "c" cons
+        let (directChildVars, embedChildVars) = getChildTypeVars cVars childrenSubst
         let bodyForPat (NodeFofX t) =
                 case Map.lookup t directChildVars of
                 Nothing ->
@@ -172,6 +122,4 @@ makePureCCtr childrenTypes knot info =
             & traverse bodyForPat
             <&> foldl AppE (ConE (D.constructorName info))
             <&> NormalB
-            <&> \x -> Clause [ConP (D.constructorName cons) (cVars <&> snd <&> VarP)] x []
-    where
-        (childrenCon, childrenArgs) = unapply childrenTypes
+            <&> \x -> Clause [consPat cons cVars] x []

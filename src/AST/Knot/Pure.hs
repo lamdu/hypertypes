@@ -5,6 +5,7 @@ module AST.Knot.Pure
     ) where
 
 import           AST.Class.Children.TH (makeChildren)
+import           AST.Class.Functor.TH (makeKFunctor)
 import           AST.Class.Pointed.TH (makeKPointed)
 import           AST.Class.ZipMatch.TH (makeZipMatch)
 import           AST.Knot (Tree, Tie, ChildrenTypesOf)
@@ -25,6 +26,7 @@ newtype Pure k = MkPure { getPure :: Tie k Pure }
 type instance ChildrenTypesOf Pure = Pure
 makeChildren ''Pure
 makeKPointed ''Pure
+makeKFunctor ''Pure
 makeZipMatch ''Pure
 
 {-# INLINE _Pure #-}

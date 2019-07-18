@@ -5,6 +5,7 @@ module AST.Combinator.Both
     ) where
 
 import AST.Class.Children.TH (makeChildren)
+import AST.Class.Functor.TH (makeKFunctor)
 import AST.Class.Pointed.TH (makeKPointed)
 import AST.Knot (Knot, ChildrenTypesOf)
 import Control.DeepSeq (NFData)
@@ -24,6 +25,7 @@ type instance ChildrenTypesOf (Both a b) = Both (ChildrenTypesOf a) (ChildrenTyp
 
 makeChildren ''Both
 makeKPointed ''Both
+makeKFunctor ''Both
 
 instance (Binary (a k), Binary (b k)) => Binary (Both a b k)
 instance (NFData (a k), NFData (b k)) => NFData (Both a b k)

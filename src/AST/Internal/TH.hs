@@ -7,15 +7,18 @@ module AST.Internal.TH
     ( -- Internals for use in TH for sub-classes
       TypeInfo(..), TypeContents(..), CtrTypePattern(..)
     , makeTypeInfo, parts, toTuple, matchType, isPolymorphic
-    , applicativeStyle, unapply, getVar
+    , applicativeStyle, unapply, getVar, makeConstructorVars
+    , getChildrenTypes, getChildrenTypesInfo, consPat
+    , getChildTypeVars
     ) where
 
 import           AST.Class.Pointed
-import           AST.Knot (Knot(..), RunKnot, Tie)
+import           AST.Knot (Knot(..), RunKnot, Tie, ChildrenTypesOf)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.State (StateT(..), evalStateT, gets, modify)
+import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Data.Set (Set)
 import qualified Data.Set as Set
@@ -201,3 +204,75 @@ applicativeStyle f =
     foldl ap (AppE (VarE 'pure) f)
     where
         ap x y = InfixE (Just x) (VarE '(<*>)) (Just y)
+
+makeConstructorVars :: String -> D.ConstructorInfo -> [(Type, Name)]
+makeConstructorVars prefix cons =
+    [0::Int ..] <&> show <&> (('_':prefix) <>) <&> mkName
+    & zip (D.constructorFields cons)
+
+getChildrenTypes :: TypeInfo -> Q Type
+getChildrenTypes info =
+    reifyInstances ''ChildrenTypesOf [typ]
+    >>=
+    \case
+    [] -> fail ("Expecting a ChildrenTypesOf instance for " <> show typ)
+    [TySynInstD ccI (TySynEqn [typI] x)]
+        | ccI == ''ChildrenTypesOf ->
+            case unapply typI of
+            (ConT n1, argsI) | ConT n1 == typeFun ->
+                case traverse getVar argsI of
+                Nothing ->
+                    fail ("TODO: Support ChildrenTypesOf of flexible instances: " <> show typ)
+                Just argNames ->
+                    pure (D.applySubstitution substs x)
+                    where
+                        substs = zip argNames args & Map.fromList
+            _ -> fail ("ReifyInstances brought wrong typ: " <> show typ)
+    [_] -> fail ("Unsupported ChildrenTypesOf form for " <> show typ)
+    _ -> fail ("Impossible! Several ChildrenTypesOf instances for " <> show typ)
+    where
+        typ = tiInstance info
+        (typeFun, args) = unapply typ
+
+getChildrenTypesInfo :: Type -> Q (D.ConstructorInfo, Map Name Type)
+getChildrenTypesInfo typ =
+    do
+        typeName <-
+            case con of
+            ConT x -> pure x
+            _ -> fail ("unsupported ChildrenTypesOf: " <> show typ)
+        info <- D.reifyDatatype typeName
+        vars <-
+            case D.datatypeVars info <&> getVar & sequenceA of
+            Nothing -> fail ("Unexpected type parameters for children types: " <> show (D.datatypeVars info))
+            Just x -> pure x
+        cons <-
+            case D.datatypeCons info of
+            [x] -> pure x
+            _ -> fail ("ChildrenTypesOf with more than one constructor: " <> show typ)
+        pure (cons, zip vars args & Map.fromList)
+    where
+        (con, args) = unapply typ
+
+consPat :: D.ConstructorInfo -> [(Type, Name)] -> Pat
+consPat cons vars =
+    ConP (D.constructorName cons) (vars <&> snd <&> VarP)
+
+getChildTypeVars :: [(Type, a)] -> Map Name Type -> (Map Type a, Map Type a)
+getChildTypeVars cVars childrenSubst =
+    (directVars, embedVars)
+    where
+        directVars =
+            do
+                (typ, name) <- cVars
+                ConT tie `AppT` VarT _knot `AppT` c <- [typ]
+                [(D.applySubstitution childrenSubst c, name) | tie == ''Tie]
+            & Map.fromList
+        embedVars =
+            do
+                (typ, name) <- cVars
+                x `AppT` VarT _knot <- [typ]
+                ConT cto `AppT` c <- [D.applySubstitution childrenSubst x]
+                [(c, name) | cto == ''ChildrenTypesOf]
+            & Map.fromList
+

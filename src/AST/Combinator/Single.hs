@@ -5,6 +5,7 @@ module AST.Combinator.Single
     ( Single(..)
     ) where
 
+import AST.Class.Functor.TH (makeKFunctor)
 import AST.Class.Pointed.TH (makeKPointed)
 import AST.Knot (Tree, Tie, ChildrenTypesOf)
 import Control.DeepSeq (NFData)
@@ -23,6 +24,7 @@ _Single = iso getSingle MkSingle
 
 type instance ChildrenTypesOf (Single c) = Single c
 makeKPointed ''Single
+makeKFunctor ''Single
 
 deriving instance Eq   (Tie k c) => Eq   (Single c k)
 deriving instance Ord  (Tie k c) => Ord  (Single c k)

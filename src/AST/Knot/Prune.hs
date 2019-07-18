@@ -8,6 +8,7 @@ module AST.Knot.Prune
 
 import AST
 import AST.Class.Combinators (NoConstraint, proxyNoConstraint)
+import AST.Class.Functor.TH (makeKFunctor)
 import AST.Class.Pointed (KPointed(..))
 import AST.Combinator.Compose (Compose(..))
 import AST.Combinator.Single (Single(..))
@@ -29,6 +30,7 @@ type instance ChildrenTypesOf Prune = Single Prune
 
 makePrisms ''Prune
 makeChildren ''Prune
+makeKFunctor ''Prune
 makeZipMatch ''Prune
 
 instance KPointed Prune where
