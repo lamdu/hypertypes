@@ -5,8 +5,9 @@ module AST.Knot.Pure
     ) where
 
 import           AST.Class.Children.TH (makeChildren)
+import           AST.Class.Pointed.TH (makeKPointed)
 import           AST.Class.ZipMatch.TH (makeZipMatch)
-import           AST.Knot (Tie, Tree)
+import           AST.Knot (Tree, Tie, ChildrenTypesOf)
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Data.Binary (Binary)
@@ -21,7 +22,9 @@ import           Prelude.Compat
 -- type inference brittle. The Iso tells the type-checker that.
 newtype Pure k = MkPure { getPure :: Tie k Pure }
     deriving stock Generic
+type instance ChildrenTypesOf Pure = Pure
 makeChildren ''Pure
+makeKPointed ''Pure
 makeZipMatch ''Pure
 
 {-# INLINE _Pure #-}

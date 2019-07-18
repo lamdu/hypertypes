@@ -12,7 +12,8 @@ module AST.Knot.Ann
 import           AST.Class.Children (Children(..))
 import           AST.Class.Recursive (Recursive, wrap, unwrap, recursiveChildren, recursiveOverChildren)
 import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
-import           AST.Knot (Tie, Tree)
+import           AST.Combinator.Single (Single)
+import           AST.Knot (Tree, Tie, ChildrenTypesOf)
 import           AST.Knot.Pure (Pure(..))
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Traversal, makeLenses)
@@ -32,6 +33,8 @@ data Ann a knot = Ann
     , _val :: Tie knot (Ann a)
     } deriving Generic
 makeLenses ''Ann
+
+type instance ChildrenTypesOf (Ann a) = Single (Ann a)
 
 makeChildrenAndZipMatch ''Ann
 instance c (Ann a) => Recursive c (Ann a)

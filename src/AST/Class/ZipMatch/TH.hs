@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskellQuotes #-}
 
 module AST.Class.ZipMatch.TH
     ( makeZipMatch, makeChildrenAndZipMatch
@@ -7,6 +7,7 @@ module AST.Class.ZipMatch.TH
 import           AST.Class.Children.TH
 import           AST.Class.ZipMatch (ZipMatch(..))
 import           AST.Combinator.Both (Both(..))
+import           AST.Internal.TH
 import           Control.Lens.Operators
 import qualified Data.Set as Set
 import           Language.Haskell.TH
