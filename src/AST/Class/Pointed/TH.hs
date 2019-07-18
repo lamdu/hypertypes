@@ -20,11 +20,11 @@ makeKPointed typeName = makeTypeInfo typeName >>= makeKPointedForType
 makeKPointedForType :: TypeInfo -> DecsQ
 makeKPointedForType info =
     do
-        childrenTypes <- getChildrenTypes info
         cons <-
             case tiCons info of
             [x] -> pure x
-            _ -> fail "makeKPointed only supports single constructor types"
+            _ -> fail "makeKPointed only supports types with a single constructor"
+        childrenTypes <- getChildrenTypes info
         let pureCDecl
                 | childrenTypes == tiInstance info =
                     Clause [] (NormalB (VarE 'id)) [] & pure
