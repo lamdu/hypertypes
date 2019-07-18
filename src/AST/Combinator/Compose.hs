@@ -7,6 +7,7 @@ module AST.Combinator.Compose
     ) where
 
 import           AST
+import           AST.Class.Applicative
 import           AST.Class.HasChildrenTypes
 import           AST.Class.Combinators (NoConstraint)
 import           AST.Class.Functor
@@ -61,17 +62,42 @@ instance (HasChildrenTypes a, KPointed a, KPointed b) => KPointed (Compose a b) 
                 Tree k0 k1
             makeP1 = undefined
 
-instance (HasChildrenTypes a, HasChildrenTypes b, KFunctor a, KFunctor b) => KFunctor (Compose a b) where
+instance
+    (HasChildrenTypes a, HasChildrenTypes b, KFunctor a, KFunctor b) =>
+    KFunctor (Compose a b) where
     mapC (MkCompose f) =
         withDict (hasChildrenTypes (Proxy :: Proxy a)) $
         withDict (hasChildrenTypes (Proxy :: Proxy b)) $
         _Compose %~
         mapC
         ( mapK
-            (\(MkCompose bT) ->
+            ( \(MkCompose bT) ->
                 MkMapK (_Compose %~ mapC (mapK ((_MapK %~ (_Compose %~)) . getCompose) bT))
             ) f
         )
+
+instance
+    (HasChildrenTypes a, HasChildrenTypes b, KApplicative a, KApplicative b) =>
+    KApplicative (Compose a b) where
+    liftC2 (MkCompose f) (MkCompose x) =
+        withDict (hasChildrenTypes (Proxy :: Proxy a)) $
+        withDict (hasChildrenTypes (Proxy :: Proxy b)) $
+        _Compose %~
+        liftC2
+        ( mapK
+            ( \(MkCompose bT) ->
+                MkLiftK2
+                ( \(MkCompose b) ->
+                    _Compose %~
+                    liftC2
+                    ( mapK
+                        ( \(MkCompose z) ->
+                            MkLiftK2 (\(MkCompose c) -> _Compose %~ runLiftK2 z c)
+                        ) bT
+                    ) b
+                )
+            ) f
+        ) x
 
 instance (Children k0, Children k1) => Children (Compose k0 k1) where
     type ChildrenConstraint (Compose k0 k1) c = ChildrenConstraint k0 (ComposeConstraint0 c k1)
