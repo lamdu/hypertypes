@@ -1,5 +1,7 @@
 # syntax-tree
 
+**Note:** Currently the library is in the process of shifting from the `Children` class to classes like `KTraversable`. Documentation and example may currently reflect to-be-obsoleted practices.
+
 A Haskell library for representing syntax trees using type-level interleaved continuations, and processing these trees.
 
 Like [`recursion-schemes`](https://github.com/ekmett/recursion-schemes/),
