@@ -6,19 +6,18 @@ module AST.Class.Foldable
     ) where
 
 import AST.Knot
-import Control.Lens (Lens)
+import Control.Lens (Iso, iso)
 
 import Prelude.Compat
 
 newtype ConvertK a l (k :: Knot) = MkConvertK { runConvertK :: l k -> a }
 
 _ConvertK ::
-    Lens
-        (Tree (ConvertK a0 l0) k0)
+    Iso (Tree (ConvertK a0 l0) k0)
         (Tree (ConvertK a1 l1) k1)
         (Tree l0 k0 -> a0)
         (Tree l1 k1 -> a1)
-_ConvertK f = fmap MkConvertK . f . runConvertK
+_ConvertK = iso runConvertK MkConvertK
 
 class KFoldable k where
     sumC ::

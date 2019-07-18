@@ -8,19 +8,18 @@ module AST.Class.Traversable
 import AST.Class.Foldable (KFoldable)
 import AST.Class.Functor (KFunctor)
 import AST.Knot (Knot, Tree)
-import Control.Lens (Lens)
+import Control.Lens (Iso, iso)
 
 import Prelude.Compat
 
 newtype ContainedK f l (k :: Knot) = MkContainedK { runContainedK :: f (l k) }
 
 _ContainedK ::
-    Lens
-        (Tree (ContainedK f0 l0) k0)
+    Iso (Tree (ContainedK f0 l0) k0)
         (Tree (ContainedK f1 l1) k1)
         (f0 (Tree l0 k0))
         (f1 (Tree l1 k1))
-_ContainedK f = fmap MkContainedK . f . runContainedK
+_ContainedK = iso runContainedK MkContainedK
 
 class (KFunctor k, KFoldable k) => KTraversable k where
     sequenceC ::

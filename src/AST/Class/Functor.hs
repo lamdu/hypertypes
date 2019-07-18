@@ -6,19 +6,16 @@ module AST.Class.Functor
     ) where
 
 import AST.Knot (Knot, Tree, ChildrenTypesOf)
-import Control.Lens (Lens)
-
-import Prelude.Compat
+import Control.Lens (Iso, iso)
 
 newtype MapK m n (k :: Knot) = MkMapK { runMapK :: m k -> n k }
 
 _MapK ::
-    Lens
-        (Tree (MapK m0 n0) k0)
+    Iso (Tree (MapK m0 n0) k0)
         (Tree (MapK m1 n1) k1)
         (Tree m0 k0 -> Tree n0 k0)
         (Tree m1 k1 -> Tree n1 k1)
-_MapK f = fmap MkMapK . f . runMapK
+_MapK = iso runMapK MkMapK
 
 class KFunctor k where
     -- | Map child values given a mapping function per child type
