@@ -6,8 +6,8 @@
 module TypeLang where
 
 import           AST
-import           AST.Class.FromChildren
 import           AST.Class.HasChild
+import           AST.Class.Pointed
 import           AST.Class.Unify
 import           AST.Infer
 import           AST.Term.FuncType
@@ -76,8 +76,10 @@ type TypDeps cls k = ((cls (Tie k Typ), cls (Tie k Row)) :: Constraint)
 
 type instance NomVarTypes Typ = Types
 
-instance FromChildren Types where
-    fromChildren _ c = Types <$> c <*> c
+instance KPointed Types where
+    type KLiftConstraint Types c = ChildrenConstraint Types c
+    pureK c = Types c c
+    pureKWith _ c = Types c c
 
 instance HasNominalInst Name Typ where nominalInst = _TNom
 

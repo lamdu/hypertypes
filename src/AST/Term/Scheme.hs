@@ -16,8 +16,8 @@ module AST.Term.Scheme
 
 import           AST
 import           AST.Class.Combinators (And, NoConstraint, HasChildrenConstraint, proxyNoConstraint)
-import           AST.Class.FromChildren (FromChildren(..))
 import           AST.Class.HasChild (HasChild(..))
+import           AST.Class.Pointed (KPointed(..))
 import           AST.Class.Recursive (wrapM, unwrapM)
 import           AST.Unify
 import           AST.Unify.Lookup (semiPruneLookup)
@@ -32,7 +32,6 @@ import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.State (StateT(..))
 import           Data.Binary (Binary)
 import           Data.Constraint (Constraint)
-import           Data.Functor.Identity (Identity(..))
 import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Data.Proxy (Proxy(..))
@@ -227,8 +226,8 @@ saveH (GPoly x) =
     _ -> error "unexpected state at saveScheme's forall"
 
 saveScheme ::
-    ( ChildrenWithConstraint varTypes (QVarHasInstance Ord)
-    , FromChildren varTypes
+    ( KLiftConstraint varTypes (QVarHasInstance Ord)
+    , KPointed varTypes
     , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
     ) =>
     Tree (GTerm (UVarOf m)) typ ->
@@ -237,8 +236,7 @@ saveScheme x =
     do
         (t, (v, recover)) <-
             runStateT (saveH x)
-            ( fromChildren (Proxy :: Proxy (QVarHasInstance Ord)) (Identity (QVars mempty))
-                & runIdentity
+            ( pureKWith (Proxy :: Proxy (QVarHasInstance Ord)) (QVars mempty)
             , []
             )
         _Pure # Scheme v t <$ sequence_ recover
