@@ -1,12 +1,14 @@
 {-# LANGUAGE NoImplicitPrelude, KindSignatures, DataKinds #-}
 
 module AST.Class.Functor
-    ( KFunctor(..), MapK(..), _MapK
+    ( KFunctor(..)
+    , MapK(..), _MapK
     ) where
 
 import AST.Knot (Knot, Tree, ChildrenTypesOf)
 import Control.Lens (Lens)
-import Control.Lens.Operators ((<&>))
+
+import Prelude.Compat
 
 newtype MapK m n (k :: Knot) = MkMapK { runMapK :: m k -> n k }
 
@@ -16,7 +18,7 @@ _MapK ::
         (Tree (MapK m1 n1) k1)
         (Tree m0 k0 -> Tree n0 k0)
         (Tree m1 k1 -> Tree n1 k1)
-_MapK f (MkMapK x) = f x <&> MkMapK
+_MapK f = fmap MkMapK . f . runMapK
 
 class KFunctor k where
     -- | Map child values given a mapping function per child type
