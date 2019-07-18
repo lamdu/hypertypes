@@ -76,6 +76,8 @@ type TypDeps cls k = ((cls (Tie k Typ), cls (Tie k Row)) :: Constraint)
 
 type instance NomVarTypes Typ = Types
 
+type instance ChildrenTypesOf Types = Types
+
 instance KPointed Types where
     type KLiftConstraint Types c = ChildrenConstraint Types c
     pureK c = Types c c
