@@ -8,10 +8,10 @@ module AST.Class.Children
 
 import AST.Knot (Knot, Tree)
 import Control.Lens.Operators
+import Data.Constraint (Constraint)
 import Data.Functor.Const (Const(..))
 import Data.Functor.Identity (Identity(..))
 import Data.Proxy (Proxy(..))
-import GHC.Exts (Constraint)
 
 import Prelude.Compat
 
