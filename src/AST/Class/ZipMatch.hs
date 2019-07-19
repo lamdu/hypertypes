@@ -7,7 +7,7 @@ module AST.Class.ZipMatch
     , Both(..)
     ) where
 
-import           AST.Class.Children (Children(..))
+import           AST.Class.Children (Children(..), ChildrenWithConstraint)
 import           AST.Combinator.Both (Both(..))
 import           AST.Knot (Tree)
 import qualified Control.Lens as Lens
@@ -19,7 +19,7 @@ import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
 
-class Children expr => ZipMatch expr where
+class ZipMatch expr where
     zipMatch :: Tree expr a -> Tree expr b -> Maybe (Tree expr (Both a b))
 
 instance (ZipMatch a, ZipMatch b) => ZipMatch (Both a b) where
@@ -33,7 +33,7 @@ instance Eq a => ZipMatch (Const a) where
 {-# INLINE zipMatchWithA #-}
 zipMatchWithA ::
     forall expr f constraint a b c.
-    (ZipMatch expr, Applicative f, ChildrenConstraint expr constraint) =>
+    (ZipMatch expr, Applicative f, ChildrenWithConstraint expr constraint) =>
     Proxy constraint ->
     (forall child. constraint child => Tree a child -> Tree b child -> f (Tree c child)) ->
     Tree expr a -> Tree expr b -> Maybe (f (Tree expr c))
@@ -45,7 +45,7 @@ zipMatchWithA p f x y =
 
 {-# INLINE zipMatchWith #-}
 zipMatchWith ::
-    (ZipMatch expr, ChildrenConstraint expr constraint) =>
+    (ZipMatch expr, ChildrenWithConstraint expr constraint) =>
     Proxy constraint ->
     (forall child. constraint child => Tree a child -> Tree b child -> Tree c child) ->
     Tree expr a -> Tree expr b -> Maybe (Tree expr c)
@@ -54,7 +54,7 @@ zipMatchWith p f x y = zipMatchWithA p (fmap Identity . f) x y <&> runIdentity
 {-# INLINE zipMatchWith_ #-}
 zipMatchWith_ ::
     forall f expr constraint a b.
-    (Applicative f, ZipMatch expr, ChildrenConstraint expr constraint) =>
+    (Applicative f, ZipMatch expr, ChildrenWithConstraint expr constraint) =>
     Proxy constraint ->
     (forall child. constraint child => Tree a child -> Tree b child -> f ()) ->
     Tree expr a -> Tree expr b -> Maybe (f ())

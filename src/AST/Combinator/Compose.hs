@@ -140,8 +140,8 @@ instance (Children k0, Children k1) => Children (Compose k0 k1) where
 
 instance
     ( ZipMatch k0, ZipMatch k1
-    , ChildrenConstraint k0 NoConstraint
-    , ChildrenConstraint k1 NoConstraint
+    , ChildrenWithConstraint k0 NoConstraint
+    , ChildrenWithConstraint k1 NoConstraint
     ) =>
     ZipMatch (Compose k0 k1) where
     zipMatch (MkCompose x) (MkCompose y) =

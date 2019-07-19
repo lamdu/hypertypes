@@ -6,6 +6,7 @@ module AST.Class.Unify
     , BindingDict(..)
     ) where
 
+import AST.Class.Children (Children)
 import AST.Class.Recursive (Recursive)
 import AST.Class.ZipMatch (ZipMatch)
 import AST.Knot (Tree, Knot)
@@ -38,6 +39,7 @@ data BindingDict v m t = BindingDict
 
 class
     ( Eq (Tree (UVarOf m) t)
+    , Children t
     , ZipMatch t
     , HasTypeConstraints t
     , HasQuantifiedVar t

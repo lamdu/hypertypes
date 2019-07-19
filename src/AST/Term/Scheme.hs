@@ -154,7 +154,7 @@ schemeToRestrictedType (MkPure (Scheme vars typ)) =
 loadBody ::
     ( Unify m typ
     , HasChild varTypes typ
-    , ChildrenConstraint typ NoConstraint
+    , ChildrenWithConstraint typ NoConstraint
     , Ord (QVar typ)
     ) =>
     Tree varTypes (QVarInstances (UVarOf m)) ->

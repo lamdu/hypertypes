@@ -93,7 +93,7 @@ instance Children varTypes => Children (NominalInst nomId varTypes) where
 instance
     ( Eq nomId
     , ZipMatch varTypes
-    , ChildrenConstraint varTypes (ZipMatch `And` QVarHasInstance Ord)
+    , ChildrenWithConstraint varTypes (ZipMatch `And` QVarHasInstance Ord)
     ) =>
     ZipMatch (NominalInst nomId varTypes) where
 
