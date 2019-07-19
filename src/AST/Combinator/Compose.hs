@@ -10,6 +10,7 @@ import           AST
 import           AST.Class.Applicative
 import           AST.Class.HasChildrenTypes
 import           AST.Class.Combinators (NoConstraint)
+import           AST.Class.Foldable
 import           AST.Class.Functor
 import           AST.Class.Pointed
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
@@ -44,7 +45,9 @@ instance KLiftConstraint k (ComposeConstraint1 c o) => ComposeConstraint0K c k o
 class    c (Compose k0 k1) => ComposeConstraint1 c k0 k1
 instance c (Compose k0 k1) => ComposeConstraint1 c k0 k1
 
-instance (HasChildrenTypes a, KPointed a, KPointed b) => KPointed (Compose a b) where
+instance
+    (HasChildrenTypes a, KPointed a, KPointed b) =>
+    KPointed (Compose a b) where
     type KLiftConstraint (Compose a b) c = KLiftConstraint a (ComposeConstraint0K c b)
     pureC =
         withDict (hasChildrenTypes (Proxy :: Proxy a)) $
@@ -79,25 +82,38 @@ instance
 instance
     (HasChildrenTypes a, HasChildrenTypes b, KApplicative a, KApplicative b) =>
     KApplicative (Compose a b) where
-    liftC2 (MkCompose f) (MkCompose x) =
+    liftC2 (MkCompose f) =
         withDict (hasChildrenTypes (Proxy :: Proxy a)) $
         withDict (hasChildrenTypes (Proxy :: Proxy b)) $
-        _Compose %~
+        (_Compose %~) .
         liftC2
         ( mapK
             ( \(MkCompose bT) ->
                 MkLiftK2
-                ( \(MkCompose b) ->
-                    _Compose %~
+                ( (_Compose %~) .
                     liftC2
-                    ( mapK
-                        ( \(MkCompose z) ->
-                            MkLiftK2 (\(MkCompose c) -> _Compose %~ runLiftK2 z c)
-                        ) bT
-                    ) b
+                    ( mapK (\(MkCompose z) -> MkLiftK2 ((_Compose %~) . runLiftK2 z . getCompose)) bT
+                    ) . getCompose
                 )
             ) f
-        ) x
+        ) . getCompose
+
+instance
+    (HasChildrenTypes a, HasChildrenTypes b, KFoldable a, KFoldable b) =>
+    KFoldable (Compose a b) where
+    sumC (MkCompose f) =
+        withDict (hasChildrenTypes (Proxy :: Proxy a)) $
+        withDict (hasChildrenTypes (Proxy :: Proxy b)) $
+        sumC
+        ( mapK
+            ( \(MkCompose bf) ->
+                MkConvertK
+                ( sumC
+                    ( mapK ((_ConvertK %~ (. getCompose)) . getCompose) bf
+                    ) . getCompose
+                )
+            ) f
+        ) . getCompose
 
 instance (Children k0, Children k1) => Children (Compose k0 k1) where
     type ChildrenConstraint (Compose k0 k1) c = ChildrenConstraint k0 (ComposeConstraint0 c k1)
