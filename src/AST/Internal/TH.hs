@@ -338,6 +338,10 @@ makeChildrenTypesInfo typeInfo =
         let subst = zip vars args & Map.fromList
         pure ChildrenTypesInfo
             { childrenTypesType = typ
-            , childrenTypesPat = consPat cons consVars
-            , childrenTypesVars = getChildTypeVars consVars subst
+            , childrenTypesPat = AsP wholeVar (consPat cons consVars)
+            , childrenTypesVars =
+                getChildTypeVars ((typ `AppT` VarT dummyKnot, wholeVar) : consVars) subst
             }
+    where
+        wholeVar = mkName "_cs"
+        dummyKnot = mkName "_dummy"

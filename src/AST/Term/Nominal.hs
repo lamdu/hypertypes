@@ -22,6 +22,7 @@ import           AST.Class.Combinators
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Recursive (wrapM)
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
+import           AST.Combinator.Single (Single)
 import           AST.Infer
 import           AST.Term.FuncType (HasFuncType(..), FuncType(..))
 import           AST.Term.Map (TermMap(..), _TermMap)
@@ -75,6 +76,8 @@ newtype FromNom nomId (term :: Knot -> *) (k :: Knot) = FromNom nomId
     deriving newtype (Eq, Ord, Binary, NFData)
     deriving stock (Show, Generic)
 
+type instance ChildrenTypesOf (NominalDecl typ) = Single typ
+
 makeLenses ''NominalDecl
 makeLenses ''NominalInst
 makeLenses ''ToNom
@@ -82,6 +85,7 @@ makePrisms ''FromNom
 makeChildren ''NominalDecl
 makeChildren ''ToNom
 makeChildren ''FromNom
+makeKFunctor ''NominalDecl
 
 instance Children varTypes => Children (NominalInst nomId varTypes) where
     type ChildrenConstraint (NominalInst nomId varTypes) c = ChildrenConstraint varTypes c
