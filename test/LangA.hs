@@ -1,7 +1,8 @@
 {-# LANGUAGE StandaloneDeriving, UndecidableInstances, TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies, LambdaCase, MultiParamTypeClasses, DerivingStrategies #-}
-{-# LANGUAGE FlexibleInstances, DataKinds, ConstraintKinds #-}
+{-# LANGUAGE FlexibleInstances, DataKinds, ConstraintKinds, RankNTypes #-}
 {-# LANGUAGE FlexibleContexts, GeneralizedNewtypeDeriving, ScopedTypeVariables #-}
+{-# LANGUAGE QuantifiedConstraints #-}
 
 -- | A test language with locally-nameless variable scoping and type signatures with for-alls
 
@@ -10,8 +11,12 @@ module LangA where
 import           TypeLang
 
 import           AST
+import           AST.Class.Applicative (LiftK2(..))
+import           AST.Class.Has
+import           AST.Class.Functor (MapK(..))
 import           AST.Class.Infer.Infer1
 import           AST.Class.Unify
+import           AST.Combinator.Single
 import           AST.Infer
 import           AST.Term.Apply
 import           AST.Term.NamelessScope
@@ -45,6 +50,33 @@ data LangA v k
     | ATypeSig (TypeSig Types (LangA v) k)
     | ALit Int
 
+newtype LangAChildrenTypes k = MkLangAChildrenTypes
+    { runLangAChildrenTypes :: forall v. Tie k (LangA v)
+    }
+
+type instance ChildrenTypesOf LangAChildrenTypes = LangAChildrenTypes
+type instance ChildrenTypesOf (LangA v) = LangAChildrenTypes
+
+instance KHas (Single (LangA v)) LangAChildrenTypes where
+    hasK = MkSingle . runLangAChildrenTypes
+
+class    (forall v. c (LangA v)) => LangAConstraint c
+instance (forall v. c (LangA v)) => LangAConstraint c
+
+instance KPointed LangAChildrenTypes where
+    type KLiftConstraint LangAChildrenTypes c = LangAConstraint c
+    pureC = id
+    pureK = MkLangAChildrenTypes
+    pureKWith _ = MkLangAChildrenTypes
+
+instance KFunctor LangAChildrenTypes where
+    mapC f (MkLangAChildrenTypes x) = MkLangAChildrenTypes (runMapK (runLangAChildrenTypes f) x)
+
+instance KApplicative LangAChildrenTypes where
+    liftC2 f x0 (MkLangAChildrenTypes x1) =
+        MkLangAChildrenTypes (runLiftK2 (runLangAChildrenTypes f) (runLangAChildrenTypes x0) x1)
+
+makeKTraversableAndBases ''LangA
 makeChildren ''LangA
 instance Recursive Children (LangA v)
 
