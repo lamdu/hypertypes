@@ -6,10 +6,10 @@ module AST.Knot.Functor
     ( ToKnot(..), _ToKnot
     ) where
 
-import AST.Class.Applicative.TH (makeKApplicativeAndBase)
+import AST.Class.Applicative.TH (makeKApplicativeAndBases)
 import AST.Class.Children.TH (makeChildren)
-import AST.Class.Foldable.TH (makeKFoldable)
 import AST.Class.Recursive (Recursive)
+import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import AST.Combinator.Single (Single(..))
 import AST.Knot (Tree, Tie, ChildrenTypesOf)
 import Control.DeepSeq (NFData)
@@ -29,8 +29,8 @@ _ToKnot = iso (\(MkToKnot x) -> x) MkToKnot
 
 type instance ChildrenTypesOf (ToKnot f) = Single (ToKnot f)
 
-makeKApplicativeAndBase ''ToKnot
-makeKFoldable ''ToKnot
+makeKApplicativeAndBases ''ToKnot
+makeKTraversableAndFoldable ''ToKnot
 makeChildren ''ToKnot
 
 instance (Traversable f, c (ToKnot f)) => Recursive c (ToKnot f)

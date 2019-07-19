@@ -1,7 +1,8 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskellQuotes #-}
 
 module AST.Class.Applicative.TH
-    ( makeKApplicative, makeKApplicativeAndBase
+    ( makeKApplicative
+    , makeKApplicativeAndBases
     ) where
 
 import           AST.Class.Applicative
@@ -16,8 +17,8 @@ import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
 
-makeKApplicativeAndBase :: Name -> DecsQ
-makeKApplicativeAndBase x =
+makeKApplicativeAndBases :: Name -> DecsQ
+makeKApplicativeAndBases x =
     sequenceA
     [ makeKPointed x
     , makeKFunctor x
