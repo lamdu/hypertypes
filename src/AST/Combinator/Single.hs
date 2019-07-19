@@ -2,7 +2,7 @@
 {-# LANGUAGE UndecidableInstances, TypeFamilies, TemplateHaskell #-}
 
 module AST.Combinator.Single
-    ( Single(..)
+    ( Single(..), _Single
     ) where
 
 import AST.Class.Applicative.TH (makeKApplicativeAndBases)

@@ -9,6 +9,7 @@ module AST.Term.TypeSig
 import           AST
 import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
+import           AST.Combinator.Single (Single)
 import           AST.Infer
 import           AST.Term.Scheme (Scheme, schemeToRestrictedType)
 import           AST.Unify (Unify, unify)
@@ -31,7 +32,10 @@ data TypeSig vars term k = TypeSig
     } deriving Generic
 makeLenses ''TypeSig
 
+type instance ChildrenTypesOf (TypeSig v t) = Single t
+
 makeChildren ''TypeSig
+makeKTraversableAndBases ''TypeSig
 
 instance RecursiveConstraint (TypeSig vars term) constraint => Recursive constraint (TypeSig vars term)
 

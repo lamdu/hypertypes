@@ -41,6 +41,7 @@ import           Control.Monad.Trans.Writer (execWriterT)
 import           Data.Binary (Binary)
 import           Data.Constraint (Constraint, withDict)
 import           Data.Foldable (traverse_)
+import           Data.Functor.Const (Const)
 import           Data.Proxy (Proxy(..))
 import qualified Data.Map as Map
 import           GHC.Generics (Generic)
@@ -76,7 +77,9 @@ newtype FromNom nomId (term :: Knot -> *) (k :: Knot) = FromNom nomId
     deriving newtype (Eq, Ord, Binary, NFData)
     deriving stock (Show, Generic)
 
-type instance ChildrenTypesOf (NominalDecl typ) = Single typ
+type instance ChildrenTypesOf (NominalDecl t) = Single t
+type instance ChildrenTypesOf (ToNom n t) = Single t
+type instance ChildrenTypesOf (FromNom n t) = Const ()
 
 makeLenses ''NominalDecl
 makeLenses ''NominalInst
@@ -85,7 +88,9 @@ makePrisms ''FromNom
 makeChildren ''NominalDecl
 makeChildren ''ToNom
 makeChildren ''FromNom
-makeKFunctor ''NominalDecl
+makeKTraversableAndBases ''NominalDecl
+makeKTraversableAndBases ''ToNom
+makeKTraversableAndBases ''FromNom
 
 instance Children varTypes => Children (NominalInst nomId varTypes) where
     type ChildrenConstraint (NominalInst nomId varTypes) c = ChildrenConstraint varTypes c

@@ -14,6 +14,7 @@ module AST.Term.Row
 
 import           AST
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
+import           AST.Combinator.Pair (Pair)
 import           AST.Unify (TypeConstraints(..), HasTypeConstraints(..), MonadScopeConstraints(..))
 import           AST.Unify.Lookup (semiPruneLookup)
 import           AST.Unify.New (newTerm, newUnbound)
@@ -56,10 +57,15 @@ data FlatRowExtends key val rest k = FlatRowExtends
     , _freRest :: Tie k rest
     } deriving Generic
 
+type instance ChildrenTypesOf (RowExtend k v r) = Pair v r
+type instance ChildrenTypesOf (FlatRowExtends k v r) = Pair v r
+
 makeLenses ''RowExtend
 makeLenses ''FlatRowExtends
 makeChildrenAndZipMatch ''RowExtend
 makeChildren ''FlatRowExtends
+makeKTraversableAndBases ''RowExtend
+makeKTraversableAndBases ''FlatRowExtends
 
 instance
     RecursiveConstraint (RowExtend key val rest) constraint =>

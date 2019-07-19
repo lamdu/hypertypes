@@ -15,6 +15,7 @@ import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
+import           Data.Functor.Const (Const)
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
@@ -35,8 +36,11 @@ newtype Var v (expr :: Knot -> *) (k :: Knot) = Var v
     deriving newtype (Eq, Ord, Binary, NFData)
     deriving stock (Show, Generic)
 
+type instance ChildrenTypesOf (Var v e) = Const ()
+
 Lens.makePrisms ''Var
 makeChildren ''Var
+makeKTraversableAndBases ''Var
 
 instance c (Var v expr) => Recursive c (Var v expr)
 
