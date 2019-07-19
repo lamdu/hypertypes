@@ -7,7 +7,6 @@ module AST.Class.Foldable.TH
 import           AST.Class.Foldable
 import           AST.Internal.TH
 import           Control.Lens.Operators
-import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
@@ -20,18 +19,16 @@ makeKFoldable typeName = makeTypeInfo typeName >>= makeKFoldableForType
 makeKFoldableForType :: TypeInfo -> DecsQ
 makeKFoldableForType info =
     do
-        childrenTypes <- getChildrenTypes info
-        (childrenCons, childrenSubst) <- getChildrenTypesInfo childrenTypes
-        let childrenConsVars = makeConstructorVars "c" childrenCons
+        childrenInfo <- makeChildrenTypesInfo info
         body <-
             tiCons info
-            & traverse (makeCons childrenCons childrenSubst childrenConsVars (tiVar info))
+            & traverse (makeCons childrenInfo (tiVar info))
             <&> CaseE (VarE varX)
         instanceD (pure (makeContext info)) (appT (conT ''KFoldable) (pure (tiInstance info)))
             [ InlineP 'sumC Inline FunLike AllPhases & PragmaD & pure
             , funD 'sumC
                 [ Clause
-                    [ consPat childrenCons childrenConsVars
+                    [ childrenTypesPat childrenInfo
                     , VarP varX
                     ] (NormalB body) []
                     & pure
@@ -53,26 +50,19 @@ makeContext info =
         ctxForPat (XofF t) = [ConT ''KFoldable `AppT` t | isPolymorphic t]
         ctxForPat _ = []
 
-makeCons ::
-    D.ConstructorInfo -> Map Name Type -> [(Type, Name)] ->
-    Name -> D.ConstructorInfo ->
-    Q Match
-makeCons _childrenCons childrenSubst childrenConsVars knot cons =
+makeCons :: ChildrenTypesInfo -> Name -> D.ConstructorInfo -> Q Match
+makeCons childrenInfo knot cons =
     do
         let bodyForPat (NodeFofX t) =
-                case Map.lookup t directChildVars of
+                case Map.lookup t (varsForChildTypes (childrenTypesVars childrenInfo)) of
                 Nothing ->
                     "Failed producing sumC for child of type:\n        " <> show t <>
-                    "\n    not in:\n        " <> show directChildVars
+                    "\n    not in:\n        " <> show (varsForChildTypes (childrenTypesVars childrenInfo))
                     & fail
                 Just x -> VarE 'runConvertK `AppE` VarE x & pure
             bodyForPat (XofF t) =
-                case Map.lookup t embedChildVars of
-                Nothing ->
-                    "Failed producing sumS for embedded type:\n        " <> show t <>
-                    "\n    not in:\n        " <> show embedChildVars
-                    & fail
-                Just x -> VarE 'sumC `AppE` VarE x & pure
+                getEmbedTypeVar (childrenTypesVars childrenInfo) t
+                <&> \x -> VarE 'sumC `AppE` VarE x
             bodyForPat (Tof _ pat) = bodyForPat pat <&> AppE (VarE 'foldMap)
             bodyForPat Other{} = VarE 'const `AppE` VarE 'mempty & pure
         let f (typ, name) = bodyForPat (matchType knot typ) <&> (`AppE` VarE name)
@@ -82,4 +72,3 @@ makeCons _childrenCons childrenSubst childrenConsVars knot cons =
             & pure
     where
         consVars = makeConstructorVars "x" cons
-        (directChildVars, embedChildVars) = getChildTypeVars childrenConsVars childrenSubst

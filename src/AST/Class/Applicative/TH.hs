@@ -35,26 +35,19 @@ makeKApplicativeForType info =
             case tiCons info of
             [x] -> pure x
             _ -> fail "makeKApplicativeForType only supports types with a single constructor"
-        childrenTypes <- getChildrenTypes info
-        (childrenCons, childrenSubst) <- getChildrenTypesInfo childrenTypes
-        let childrenConsVars = makeConstructorVars "c" childrenCons
-        let (directChildVars, embedChildVars) = getChildTypeVars childrenConsVars childrenSubst
+        childrenInfo <- makeChildrenTypesInfo info
         let xVars = makeConstructorVars "x" cons
         let yVars = makeConstructorVars "y" cons
         let bodyForPat (NodeFofX t) =
-                case Map.lookup t directChildVars of
+                case Map.lookup t (varsForChildTypes (childrenTypesVars childrenInfo)) of
                 Nothing ->
                     "Failed producing mapC for child of type:\n        " <> show t <>
-                    "\n    not in:\n        " <> show directChildVars
+                    "\n    not in:\n        " <> show (varsForChildTypes (childrenTypesVars childrenInfo))
                     & fail
                 Just x -> VarE 'runLiftK2 `AppE` VarE x & pure
             bodyForPat (XofF t) =
-                case Map.lookup t embedChildVars of
-                Nothing ->
-                    "Failed producing mapC for embedded type:\n        " <> show t <>
-                    "\n    not in:\n        " <> show embedChildVars
-                    & fail
-                Just x -> VarE 'liftC2 `AppE` VarE x & pure
+                getEmbedTypeVar (childrenTypesVars childrenInfo) t
+                <&> \x -> VarE 'liftC2 `AppE` VarE x
             bodyForPat (Tof _ pat) = bodyForPat pat <&> AppE (VarE 'liftA2)
             bodyForPat Other{} = VarE 'id & pure
         let f (typ, x) (_, y) =
@@ -65,7 +58,7 @@ makeKApplicativeForType info =
             [ InlineP 'liftC2 Inline FunLike AllPhases & PragmaD & pure
             , funD 'liftC2
                 [ Clause
-                    [ consPat childrenCons childrenConsVars
+                    [ childrenTypesPat childrenInfo
                     , consPat cons xVars
                     , consPat cons yVars
                     ] (NormalB (foldl AppE (ConE (D.constructorName cons)) fields)) []

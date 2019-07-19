@@ -19,6 +19,7 @@ import           AST.Class.Combinators (And, NoConstraint, HasChildrenConstraint
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Pointed (KPointed(..))
 import           AST.Class.Recursive (wrapM, unwrapM)
+import           AST.Combinator.Single (Single)
 import           AST.Unify
 import           AST.Unify.Lookup (semiPruneLookup)
 import           AST.Unify.New (newTerm)
@@ -51,6 +52,15 @@ data Scheme varTypes typ k = Scheme
 newtype QVars typ = QVars
     (Map (QVar (RunKnot typ)) (TypeConstraintsOf (RunKnot typ)))
     deriving stock Generic
+
+type instance ChildrenTypesOf (Scheme v t) = Single t
+
+Lens.makeLenses ''Scheme
+Lens.makePrisms ''QVars
+makeChildren ''Scheme
+makeKTraversableAndBases ''Scheme
+
+instance (c (Scheme v t), Recursive c t) => Recursive c (Scheme v t)
 
 instance
     ( Ord (QVar (RunKnot typ))
@@ -89,12 +99,6 @@ instance
                 | otherwise = pPrint q <> Pretty.text "(" <> cP <> Pretty.text ")"
                 where
                     cP = pPrint c
-
-instance (c (Scheme v t), Recursive c t) => Recursive c (Scheme v t)
-
-Lens.makeLenses ''Scheme
-Lens.makePrisms ''QVars
-makeChildren ''Scheme
 
 type instance Lens.Index (QVars typ) = QVar (RunKnot typ)
 type instance Lens.IxValue (QVars typ) = TypeConstraintsOf (RunKnot typ)

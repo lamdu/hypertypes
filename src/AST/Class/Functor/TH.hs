@@ -7,7 +7,6 @@ module AST.Class.Functor.TH
 import           AST.Class.Functor
 import           AST.Internal.TH
 import           Control.Lens.Operators
-import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
@@ -20,18 +19,16 @@ makeKFunctor typeName = makeTypeInfo typeName >>= makeKFunctorForType
 makeKFunctorForType :: TypeInfo -> DecsQ
 makeKFunctorForType info =
     do
-        childrenTypes <- getChildrenTypes info
-        (childrenCons, childrenSubst) <- getChildrenTypesInfo childrenTypes
-        let childrenConsVars = makeConstructorVars "c" childrenCons
+        childrenTypesInfo <- makeChildrenTypesInfo info
         body <-
             tiCons info
-            & traverse (makeCons childrenCons childrenSubst childrenConsVars (tiVar info))
+            & traverse (makeCons childrenTypesInfo (tiVar info))
             <&> CaseE (VarE varX)
         instanceD (pure (makeContext info)) (appT (conT ''KFunctor) (pure (tiInstance info)))
             [ InlineP 'mapC Inline FunLike AllPhases & PragmaD & pure
             , funD 'mapC
                 [ Clause
-                    [ consPat childrenCons childrenConsVars
+                    [ childrenTypesPat childrenTypesInfo
                     , VarP varX
                     ] (NormalB body) []
                     & pure
@@ -53,26 +50,19 @@ makeContext info =
         ctxForPat (XofF t) = [ConT ''KFunctor `AppT` t | isPolymorphic t]
         ctxForPat _ = []
 
-makeCons ::
-    D.ConstructorInfo -> Map Name Type -> [(Type, Name)] ->
-    Name -> D.ConstructorInfo ->
-    Q Match
-makeCons _childrenCons childrenSubst childrenConsVars knot cons =
+makeCons :: ChildrenTypesInfo -> Name -> D.ConstructorInfo -> Q Match
+makeCons childrenInfo knot cons =
     do
         let bodyForPat (NodeFofX t) =
-                case Map.lookup t directChildVars of
+                case Map.lookup t (varsForChildTypes (childrenTypesVars childrenInfo)) of
                 Nothing ->
                     "Failed producing mapC for child of type:\n        " <> show t <>
-                    "\n    not in:\n        " <> show directChildVars
+                    "\n    not in:\n        " <> show (varsForChildTypes (childrenTypesVars childrenInfo))
                     & fail
                 Just x -> VarE 'runMapK `AppE` VarE x & pure
             bodyForPat (XofF t) =
-                case Map.lookup t embedChildVars of
-                Nothing ->
-                    "Failed producing mapC for embedded type:\n        " <> show t <>
-                    "\n    not in:\n        " <> show embedChildVars
-                    & fail
-                Just x -> VarE 'mapC `AppE` VarE x & pure
+                getEmbedTypeVar (childrenTypesVars childrenInfo) t
+                <&> \x -> VarE 'mapC `AppE` VarE x
             bodyForPat (Tof _ pat) = bodyForPat pat <&> AppE (VarE 'fmap)
             bodyForPat Other{} = VarE 'id & pure
         let f (typ, name) = bodyForPat (matchType knot typ) <&> (`AppE` VarE name)
@@ -82,4 +72,3 @@ makeCons _childrenCons childrenSubst childrenConsVars knot cons =
             & pure
     where
         consVars = makeConstructorVars "x" cons
-        (directChildVars, embedChildVars) = getChildTypeVars childrenConsVars childrenSubst

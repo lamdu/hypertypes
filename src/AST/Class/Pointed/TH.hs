@@ -24,11 +24,11 @@ makeKPointedForType info =
             case tiCons info of
             [x] -> pure x
             _ -> fail "makeKPointed only supports types with a single constructor"
-        childrenTypes <- getChildrenTypes info
+        childrenInfo <- makeChildrenTypesInfo info
         let pureCDecl
-                | childrenTypes == tiInstance info =
+                | childrenTypesType childrenInfo == tiInstance info =
                     Clause [] (NormalB (VarE 'id)) [] & pure
-                | otherwise = makePureCCtr childrenTypes (tiVar info) cons
+                | otherwise = makePureCCtr childrenInfo (tiVar info) cons
         instanceD (pure (makeContext info)) (appT (conT ''KPointed) (pure (tiInstance info)))
             [ tySynInstD ''KLiftConstraint
                 (pure (TySynEqn [tiInstance info, VarT constraintVar] liftedConstraint))
@@ -95,26 +95,19 @@ makePureKWithCtr knot info =
         bodyForPat (Tof _ pat) = bodyForPat pat <&> AppE (VarE 'pure)
         bodyForPat (Other x) = fail ("KPointed can't produce value of type " <> show x)
 
-makePureCCtr :: Type -> Name -> D.ConstructorInfo -> Q Clause
-makePureCCtr childrenTypes knot info =
+makePureCCtr :: ChildrenTypesInfo -> Name -> D.ConstructorInfo -> Q Clause
+makePureCCtr childrenInfo knot info =
     do
-        (cons, childrenSubst) <- getChildrenTypesInfo childrenTypes
-        let cVars = makeConstructorVars "c" cons
-        let (directChildVars, embedChildVars) = getChildTypeVars cVars childrenSubst
         let bodyForPat (NodeFofX t) =
-                case Map.lookup t directChildVars of
+                case Map.lookup t (varsForChildTypes (childrenTypesVars childrenInfo)) of
                 Nothing ->
                     "Failed producing pureC for child of type:\n        " <> show t <>
-                    "\n    not in:\n        " <> show directChildVars
+                    "\n    not in:\n        " <> show (varsForChildTypes (childrenTypesVars childrenInfo))
                     & fail
                 Just x -> VarE x & pure
             bodyForPat (XofF t) =
-                case Map.lookup t embedChildVars of
-                Nothing ->
-                    "Failed producing pureC for embedded type:\n        " <> show t <>
-                    "\n    not in:\n        " <> show embedChildVars
-                    & fail
-                Just x -> VarE 'pureC `AppE` VarE x & pure
+                getEmbedTypeVar (childrenTypesVars childrenInfo) t
+                <&> \x -> VarE 'pureC `AppE` VarE x
             bodyForPat (Tof _ pat) = bodyForPat pat <&> AppE (VarE 'pure)
             bodyForPat (Other x) = fail ("KPointed can't produce value of type " <> show x)
         D.constructorFields info
@@ -122,4 +115,4 @@ makePureCCtr childrenTypes knot info =
             & traverse bodyForPat
             <&> foldl AppE (ConE (D.constructorName info))
             <&> NormalB
-            <&> \x -> Clause [consPat cons cVars] x []
+            <&> \x -> Clause [childrenTypesPat childrenInfo] x []
