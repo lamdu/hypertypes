@@ -6,6 +6,7 @@ module AST.Knot.Pure
 
 import           AST.Class.Applicative.TH (makeKApplicativeAndBase)
 import           AST.Class.Children.TH (makeChildren)
+import           AST.Class.Foldable.TH (makeKFoldable)
 import           AST.Class.ZipMatch.TH (makeZipMatch)
 import           AST.Knot (Tree, Tie, ChildrenTypesOf)
 import           Control.DeepSeq (NFData)
@@ -24,6 +25,7 @@ newtype Pure k = MkPure { getPure :: Tie k Pure }
     deriving stock Generic
 type instance ChildrenTypesOf Pure = Pure
 makeKApplicativeAndBase ''Pure
+makeKFoldable ''Pure
 makeChildren ''Pure
 makeZipMatch ''Pure
 

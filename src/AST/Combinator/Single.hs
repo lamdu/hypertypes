@@ -6,6 +6,7 @@ module AST.Combinator.Single
     ) where
 
 import AST.Class.Applicative.TH (makeKApplicativeAndBase)
+import AST.Class.Foldable.TH (makeKFoldable)
 import AST.Knot (Tree, Tie, ChildrenTypesOf)
 import Control.DeepSeq (NFData)
 import Control.Lens (Iso, iso)
@@ -23,6 +24,7 @@ _Single = iso getSingle MkSingle
 
 type instance ChildrenTypesOf (Single c) = Single c
 makeKApplicativeAndBase ''Single
+makeKFoldable ''Single
 
 deriving instance Eq   (Tie k c) => Eq   (Single c k)
 deriving instance Ord  (Tie k c) => Ord  (Single c k)

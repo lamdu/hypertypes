@@ -6,6 +6,7 @@ module AST.Combinator.Both
 
 import AST.Class.Children.TH (makeChildren)
 import AST.Class.Applicative.TH (makeKApplicativeAndBase)
+import AST.Class.Foldable.TH (makeKFoldable)
 import AST.Knot (Knot, ChildrenTypesOf)
 import Control.DeepSeq (NFData)
 import Control.Lens (makeLenses)
@@ -23,6 +24,7 @@ makeLenses ''Both
 type instance ChildrenTypesOf (Both a b) = Both (ChildrenTypesOf a) (ChildrenTypesOf b)
 
 makeKApplicativeAndBase ''Both
+makeKFoldable ''Both
 makeChildren ''Both
 
 instance (Binary (a k), Binary (b k)) => Binary (Both a b k)

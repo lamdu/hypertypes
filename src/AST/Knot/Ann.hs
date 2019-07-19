@@ -10,6 +10,7 @@ module AST.Knot.Ann
     ) where
 
 import           AST.Class.Children (Children(..))
+import           AST.Class.Foldable.TH (makeKFoldable)
 import           AST.Class.Functor.TH (makeKFunctor)
 import           AST.Class.Recursive (Recursive, wrap, unwrap, recursiveChildren, recursiveOverChildren)
 import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
@@ -38,6 +39,7 @@ makeLenses ''Ann
 type instance ChildrenTypesOf (Ann a) = Single (Ann a)
 
 makeKFunctor ''Ann
+makeKFoldable ''Ann
 
 makeChildrenAndZipMatch ''Ann
 instance c (Ann a) => Recursive c (Ann a)
