@@ -7,8 +7,9 @@ module TypeLang where
 
 import           AST
 import           AST.Class.HasChild
-import           AST.Class.Pointed
 import           AST.Class.Unify
+import           AST.Combinator.Single
+import           AST.Combinator.Pair
 import           AST.Infer
 import           AST.Term.FuncType
 import           AST.Term.NamelessScope
@@ -27,6 +28,7 @@ import           Control.Lens.Operators
 import           Control.Monad.Reader (MonadReader)
 import           Control.Monad.ST.Class (MonadST(..))
 import           Data.Constraint (Constraint)
+import           Data.Has (Has(..))
 import           Data.STRef
 import           Data.Set (Set, singleton)
 import           Generic.Data
@@ -62,27 +64,36 @@ data Types k = Types
 
 data TypeError k = TypError (UnifyError Typ k) | RowError (UnifyError Row k)
 
+type instance ChildrenTypesOf Typ = Types
+type instance ChildrenTypesOf Row = Types
+type instance ChildrenTypesOf Types = Types
+
 Lens.makePrisms ''Typ
 Lens.makePrisms ''Row
 Lens.makePrisms ''TypeError
 Lens.makeLenses ''RConstraints
 Lens.makeLenses ''Types
+
+instance Has (Tree (Single Typ) k) (Tree Types k) where
+    hasLens = tTyp . Lens.from _Single
+
+instance Has (Tree (Pair Typ Row) k) (Tree Types k) where
+    hasLens f (Types t0 r0) = f (MkPair t0 r0) <&> \(MkPair t1 r1) -> Types t1 r1
+
 makeChildrenAndZipMatch ''Typ
 makeChildrenAndZipMatch ''Row
 makeChildrenAndZipMatch ''Types
 makeChildren ''TypeError
+makeKTraversableAndBases ''Typ
+makeKTraversableAndBases ''Row
+makeKApplicativeAndBases ''Types
+makeKTraversableAndFoldable ''Types
 
 type TypDeps cls k = ((cls (Tie k Typ), cls (Tie k Row)) :: Constraint)
 
 type instance NomVarTypes Typ = Types
 
 type instance ChildrenTypesOf Types = Types
-
-instance KPointed Types where
-    type KLiftConstraint Types c = ChildrenConstraint Types c
-    pureC = id
-    pureK c = Types c c
-    pureKWith _ c = Types c c
 
 instance HasNominalInst Name Typ where nominalInst = _TNom
 

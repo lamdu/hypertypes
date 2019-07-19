@@ -106,8 +106,7 @@ makePureCCtr childrenInfo knot info =
                     & fail
                 Just x -> VarE x & pure
             bodyForPat (XofF t) =
-                getEmbedVar childrenInfo t
-                <&> \x -> VarE 'pureC `AppE` VarE x
+                getEmbedTypes childrenInfo t <&> AppE (VarE 'pureC)
             bodyForPat (Tof _ pat) = bodyForPat pat <&> AppE (VarE 'pure)
             bodyForPat (Other x) = fail ("KPointed can't produce value of type " <> show x)
         D.constructorFields info

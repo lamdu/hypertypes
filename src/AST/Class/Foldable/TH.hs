@@ -60,9 +60,7 @@ makeCons childrenInfo knot cons =
                     "\n    not in:\n        " <> show (varsForChildTypes childrenInfo)
                     & fail
                 Just x -> VarE 'runConvertK `AppE` VarE x & pure
-            bodyForPat (XofF t) =
-                getEmbedVar childrenInfo t
-                <&> \x -> VarE 'sumC `AppE` VarE x
+            bodyForPat (XofF t) = getEmbedTypes childrenInfo t <&> AppE (VarE 'sumC)
             bodyForPat (Tof _ pat) = bodyForPat pat <&> AppE (VarE 'foldMap)
             bodyForPat Other{} = VarE 'const `AppE` VarE 'mempty & pure
         let f (typ, name) = bodyForPat (matchType knot typ) <&> (`AppE` VarE name)

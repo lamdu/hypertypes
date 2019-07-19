@@ -20,7 +20,10 @@ module AST.Term.Nominal
 import           AST
 import           AST.Class.Combinators
 import           AST.Class.HasChild (HasChild(..))
+import           AST.Class.Foldable (_ConvertK)
+import           AST.Class.Functor (_MapK)
 import           AST.Class.Recursive (wrapM)
+import           AST.Class.Traversable (ContainedK(..))
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
 import           AST.Combinator.Single (Single)
 import           AST.Infer
@@ -78,6 +81,7 @@ newtype FromNom nomId (term :: Knot -> *) (k :: Knot) = FromNom nomId
     deriving stock (Show, Generic)
 
 type instance ChildrenTypesOf (NominalDecl t) = Single t
+type instance ChildrenTypesOf (NominalInst n v) = ChildrenTypesOf v
 type instance ChildrenTypesOf (ToNom n t) = Single t
 type instance ChildrenTypesOf (FromNom n t) = Const ()
 
@@ -91,6 +95,21 @@ makeChildren ''FromNom
 makeKTraversableAndBases ''NominalDecl
 makeKTraversableAndBases ''ToNom
 makeKTraversableAndBases ''FromNom
+
+instance (KFunctor v, HasChildrenTypes v) => KFunctor (NominalInst n v) where
+    mapC f (NominalInst n v) =
+        withDict (hasChildrenTypes (Proxy :: Proxy v)) $
+        mapC (mapK (_MapK %~ (_QVarInstances . Lens.mapped %~)) f) v & NominalInst n
+
+instance (KFoldable v, HasChildrenTypes v) => KFoldable (NominalInst n v) where
+    sumC f (NominalInst _ v) =
+        withDict (hasChildrenTypes (Proxy :: Proxy v)) $
+        sumC (mapK (_ConvertK %~ \fq -> foldMap fq . (^. _QVarInstances)) f) v
+
+instance (KTraversable v, HasChildrenTypes v) => KTraversable (NominalInst n v) where
+    sequenceC (NominalInst n v) =
+        traverseK (_QVarInstances (traverse runContainedK)) v
+        <&> NominalInst n
 
 instance Children varTypes => Children (NominalInst nomId varTypes) where
     type ChildrenConstraint (NominalInst nomId varTypes) c = ChildrenConstraint varTypes c

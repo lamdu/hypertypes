@@ -20,6 +20,7 @@ import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.State (StateT(..), evalStateT, execStateT, gets, modify)
 import           Data.Foldable (traverse_)
+import qualified Data.Has as Has
 import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Data.Set (Set)
@@ -229,7 +230,7 @@ data ChildrenTypesInfo = ChildrenTypesInfo
     { childrenTypesType :: Type
     , childrenTypesPat :: Pat
     , varsForChildTypes :: Map Type Name
-    , getEmbedVar :: Type -> Q Name
+    , getEmbedTypes :: Type -> Q Exp
     }
 
 makeChildrenTypesInfo :: TypeInfo -> Q ChildrenTypesInfo
@@ -279,17 +280,11 @@ makeChildrenTypesInfo typeInfo =
                 & Map.fromList
         let getEmbed embedType =
                 case Map.lookup embedType varsForEmbedTypes of
-                Just x -> pure x
+                Just x -> VarE x & pure
                 Nothing ->
-                    do
-                        ct <- getChildrenTypes embedType
-                        case Map.lookup ct varsForOtherEmbeds of
-                            Just x -> pure x
-                            Nothing ->
-                                "Failed finding item for child type for embedded type:\n        " <> show embedType <>
-                                "\n    With child type of:\n        " <> show ct <>
-                                "\n    Not in:\n        " <> show vars
-                                & fail
+                    getChildrenTypes embedType
+                    <&> (`Map.lookup` varsForOtherEmbeds)
+                    <&> maybe (VarE 'Has.getter `AppE` VarE wholeVar) VarE
         pure ChildrenTypesInfo
             { childrenTypesType = typ
             , childrenTypesPat = AsP wholeVar (consPat cons consVars)
@@ -299,7 +294,7 @@ makeChildrenTypesInfo typeInfo =
                     ConT tie `AppT` VarT _knot `AppT` c <- [t]
                     [(D.applySubstitution subst c, name) | tie == ''Tie]
                 & Map.fromList
-            , getEmbedVar = getEmbed
+            , getEmbedTypes = getEmbed
             }
     where
         wholeVar = mkName "_cs"

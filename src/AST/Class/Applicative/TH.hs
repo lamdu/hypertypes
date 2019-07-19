@@ -45,9 +45,7 @@ makeKApplicativeForType info =
                     "\n    not in:\n        " <> show (varsForChildTypes childrenInfo)
                     & fail
                 Just x -> VarE 'runLiftK2 `AppE` VarE x & pure
-            bodyForPat (XofF t) =
-                getEmbedVar childrenInfo t
-                <&> \x -> VarE 'liftC2 `AppE` VarE x
+            bodyForPat (XofF t) = getEmbedTypes childrenInfo t <&> AppE (VarE 'liftC2)
             bodyForPat (Tof _ pat) = bodyForPat pat <&> AppE (VarE 'liftA2)
             bodyForPat Other{} = VarE 'id & pure
         let f (typ, x) (_, y) =

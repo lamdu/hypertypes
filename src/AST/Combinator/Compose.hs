@@ -8,10 +8,8 @@ module AST.Combinator.Compose
 
 import           AST
 import           AST.Class.Applicative
-import           AST.Class.HasChildrenTypes
 import           AST.Class.Foldable
 import           AST.Class.Functor
-import           AST.Class.Pointed
 import           AST.Class.Traversable
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
 import           Control.DeepSeq (NFData)
