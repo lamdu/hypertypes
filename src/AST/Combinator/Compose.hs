@@ -9,7 +9,6 @@ module AST.Combinator.Compose
 import           AST
 import           AST.Class.Applicative
 import           AST.Class.HasChildrenTypes
-import           AST.Class.Combinators (NoConstraint)
 import           AST.Class.Foldable
 import           AST.Class.Functor
 import           AST.Class.Pointed
@@ -140,23 +139,19 @@ instance (Children k0, Children k1) => Children (Compose k0 k1) where
 
 instance
     ( ZipMatch k0, ZipMatch k1
-    , ChildrenWithConstraint k0 NoConstraint
-    , ChildrenWithConstraint k1 NoConstraint
+    , HasChildrenTypes k0, HasChildrenTypes k1, KTraversable k0, KFunctor k1
     ) =>
     ZipMatch (Compose k0 k1) where
     zipMatch (MkCompose x) (MkCompose y) =
         zipMatch x y
-        >>= children p
+        >>= traverseK
             (\(Both (MkCompose cx) (MkCompose cy)) ->
                 zipMatch cx cy
-                <&> overChildren p
+                <&> mapK
                     (\(Both (MkCompose bx) (MkCompose by)) -> Both bx by & MkCompose)
                 <&> MkCompose
             )
         <&> MkCompose
-        where
-            p :: Proxy NoConstraint
-            p = Proxy
 
 type InCompose a b k = Tree a (Compose b (RunKnot k))
 deriving instance Eq   (InCompose a b k) => Eq   (Compose a b k)
