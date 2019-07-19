@@ -99,14 +99,14 @@ makePureCCtr :: ChildrenTypesInfo -> Name -> D.ConstructorInfo -> Q Clause
 makePureCCtr childrenInfo knot info =
     do
         let bodyForPat (NodeFofX t) =
-                case Map.lookup t (varsForChildTypes (childrenTypesVars childrenInfo)) of
+                case Map.lookup t (varsForChildTypes childrenInfo) of
                 Nothing ->
                     "Failed producing pureC for child of type:\n        " <> show t <>
-                    "\n    not in:\n        " <> show (varsForChildTypes (childrenTypesVars childrenInfo))
+                    "\n    not in:\n        " <> show (varsForChildTypes childrenInfo)
                     & fail
                 Just x -> VarE x & pure
             bodyForPat (XofF t) =
-                getEmbedTypeVar (childrenTypesVars childrenInfo) t
+                getEmbedVar childrenInfo t
                 <&> \x -> VarE 'pureC `AppE` VarE x
             bodyForPat (Tof _ pat) = bodyForPat pat <&> AppE (VarE 'pure)
             bodyForPat (Other x) = fail ("KPointed can't produce value of type " <> show x)

@@ -6,9 +6,9 @@
 module AST.Internal.TH
     ( -- Internals for use in TH for sub-classes
       TypeInfo(..), TypeContents(..), CtrTypePattern(..)
-    , ChildrenTypesInfo(..), VarForChildType(..)
+    , ChildrenTypesInfo(..)
     , makeTypeInfo, makeChildrenTypesInfo
-    , getEmbedTypeVar, parts, toTuple, matchType
+    , parts, toTuple, matchType
     , applicativeStyle, unapply, getVar, makeConstructorVars
     , consPat, simplifyContext
     ) where
@@ -225,66 +225,11 @@ consPat :: D.ConstructorInfo -> [(Type, Name)] -> Pat
 consPat cons vars =
     ConP (D.constructorName cons) (vars <&> snd <&> VarP)
 
-data VarForChildType a = VarForChildType
-    { varsForChildTypes :: Map Type a
-    , varsForEmbedTypes :: Map Type a
-    , varsForOtherEmbeds :: Map Type a
-    } deriving Show
-
-getChildTypeVars :: [(Type, a)] -> Map Name Type -> VarForChildType a
-getChildTypeVars cVars childrenSubst =
-    VarForChildType
-    { varsForChildTypes =
-        do
-            (typ, name) <- cVars
-            ConT tie `AppT` VarT _knot `AppT` c <- [typ]
-            [(D.applySubstitution childrenSubst c, name) | tie == ''Tie]
-        & Map.fromList
-    , varsForEmbedTypes =
-        do
-            (typ, name) <- cVars
-            x `AppT` VarT _knot <- [typ]
-            ConT cto `AppT` c <- [D.applySubstitution childrenSubst x]
-            [(c, name) | cto == ''ChildrenTypesOf]
-        & Map.fromList
-    , varsForOtherEmbeds =
-        do
-            (typ, name) <- cVars
-            [] <-
-                do
-                    ConT tie `AppT` VarT _ `AppT` _ <- [typ]
-                    [() | tie == ''Tie]
-                & pure
-            x `AppT` VarT _knot <- [typ]
-            let xSub = D.applySubstitution childrenSubst x
-            [] <-
-                do
-                    ConT cto `AppT` _ <- [xSub]
-                    [() | cto == ''ChildrenTypesOf]
-                & pure
-            [(xSub, name)]
-        & Map.fromList
-    }
-
-getEmbedTypeVar :: Show a => VarForChildType a -> Type -> Q a
-getEmbedTypeVar vars embedType =
-    case Map.lookup embedType (varsForEmbedTypes vars) of
-    Just x -> pure x
-    Nothing ->
-        do
-            ct <- getChildrenTypes embedType
-            case Map.lookup ct (varsForOtherEmbeds vars) of
-                Just x -> pure x
-                Nothing ->
-                    "Failed finding item for child type for embedded type:\n        " <> show embedType <>
-                    "\n    With child type of:\n        " <> show ct <>
-                    "\n    Not in:\n        " <> show vars
-                    & fail
-
 data ChildrenTypesInfo = ChildrenTypesInfo
     { childrenTypesType :: Type
     , childrenTypesPat :: Pat
-    , childrenTypesVars :: VarForChildType Name
+    , varsForChildTypes :: Map Type Name
+    , getEmbedVar :: Type -> Q Name
     }
 
 makeChildrenTypesInfo :: TypeInfo -> Q ChildrenTypesInfo
@@ -307,15 +252,57 @@ makeChildrenTypesInfo typeInfo =
             _ -> fail ("ChildrenTypesOf with more than one constructor: " <> show typ)
         let consVars = makeConstructorVars "c" cons
         let subst = zip vars args & Map.fromList
+        let varsForEmbedTypes =
+                do
+                    (t, name) <- consVars
+                    x `AppT` VarT _knot <- [t]
+                    ConT cto `AppT` c <- [D.applySubstitution subst x]
+                    [(c, name) | cto == ''ChildrenTypesOf]
+                & Map.fromList
+        let varsForOtherEmbeds =
+                (D.applySubstitution subst typ, wholeVar) :
+                do
+                    (t, name) <- consVars
+                    [] <-
+                        do
+                            ConT tie `AppT` VarT _ `AppT` _ <- [t]
+                            [() | tie == ''Tie]
+                        & pure
+                    x `AppT` VarT _knot <- [t]
+                    let xSub = D.applySubstitution subst x
+                    [] <-
+                        do
+                            ConT cto `AppT` _ <- [xSub]
+                            [() | cto == ''ChildrenTypesOf]
+                        & pure
+                    [(xSub, name)]
+                & Map.fromList
+        let getEmbed embedType =
+                case Map.lookup embedType varsForEmbedTypes of
+                Just x -> pure x
+                Nothing ->
+                    do
+                        ct <- getChildrenTypes embedType
+                        case Map.lookup ct varsForOtherEmbeds of
+                            Just x -> pure x
+                            Nothing ->
+                                "Failed finding item for child type for embedded type:\n        " <> show embedType <>
+                                "\n    With child type of:\n        " <> show ct <>
+                                "\n    Not in:\n        " <> show vars
+                                & fail
         pure ChildrenTypesInfo
             { childrenTypesType = typ
             , childrenTypesPat = AsP wholeVar (consPat cons consVars)
-            , childrenTypesVars =
-                getChildTypeVars ((typ `AppT` VarT dummyKnot, wholeVar) : consVars) subst
+            , varsForChildTypes =
+                do
+                    (t, name) <- consVars
+                    ConT tie `AppT` VarT _knot `AppT` c <- [t]
+                    [(D.applySubstitution subst c, name) | tie == ''Tie]
+                & Map.fromList
+            , getEmbedVar = getEmbed
             }
     where
         wholeVar = mkName "_cs"
-        dummyKnot = mkName "_dummy"
 
 simplifyContext :: [Pred] -> CxtQ
 simplifyContext preds =

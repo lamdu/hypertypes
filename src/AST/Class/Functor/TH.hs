@@ -54,14 +54,14 @@ makeCons :: ChildrenTypesInfo -> Name -> D.ConstructorInfo -> Q Match
 makeCons childrenInfo knot cons =
     do
         let bodyForPat (NodeFofX t) =
-                case Map.lookup t (varsForChildTypes (childrenTypesVars childrenInfo)) of
+                case Map.lookup t (varsForChildTypes childrenInfo) of
                 Nothing ->
                     "Failed producing mapC for child of type:\n        " <> show t <>
-                    "\n    not in:\n        " <> show (varsForChildTypes (childrenTypesVars childrenInfo))
+                    "\n    not in:\n        " <> show (varsForChildTypes childrenInfo)
                     & fail
                 Just x -> VarE 'runMapK `AppE` VarE x & pure
             bodyForPat (XofF t) =
-                getEmbedTypeVar (childrenTypesVars childrenInfo) t
+                getEmbedVar childrenInfo t
                 <&> \x -> VarE 'mapC `AppE` VarE x
             bodyForPat (Tof _ pat) = bodyForPat pat <&> AppE (VarE 'fmap)
             bodyForPat Other{} = VarE 'id & pure

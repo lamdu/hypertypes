@@ -39,14 +39,14 @@ makeKApplicativeForType info =
         let xVars = makeConstructorVars "x" cons
         let yVars = makeConstructorVars "y" cons
         let bodyForPat (NodeFofX t) =
-                case Map.lookup t (varsForChildTypes (childrenTypesVars childrenInfo)) of
+                case Map.lookup t (varsForChildTypes childrenInfo) of
                 Nothing ->
                     "Failed producing mapC for child of type:\n        " <> show t <>
-                    "\n    not in:\n        " <> show (varsForChildTypes (childrenTypesVars childrenInfo))
+                    "\n    not in:\n        " <> show (varsForChildTypes childrenInfo)
                     & fail
                 Just x -> VarE 'runLiftK2 `AppE` VarE x & pure
             bodyForPat (XofF t) =
-                getEmbedTypeVar (childrenTypesVars childrenInfo) t
+                getEmbedVar childrenInfo t
                 <&> \x -> VarE 'liftC2 `AppE` VarE x
             bodyForPat (Tof _ pat) = bodyForPat pat <&> AppE (VarE 'liftA2)
             bodyForPat Other{} = VarE 'id & pure
