@@ -13,6 +13,7 @@ module AST.Internal.TH
     , consPat, simplifyContext
     ) where
 
+import           AST.Class.Has
 import           AST.Class.Pointed
 import           AST.Knot (Knot(..), RunKnot, Tie, ChildrenTypesOf)
 import qualified Control.Lens as Lens
@@ -20,7 +21,7 @@ import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.State (StateT(..), evalStateT, execStateT, gets, modify)
 import           Data.Foldable (traverse_)
-import qualified Data.Has as Has
+import           Data.Functor.Const (Const(..))
 import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Data.Set (Set)
@@ -70,9 +71,10 @@ parts info =
         _ -> fail "expected last argument to be a knot variable"
         where
             res = foldl AppT (ConT (D.datatypeName info)) (init xs <&> stripSigT)
-    where
-        stripSigT (SigT x _) = x
-        stripSigT x = x
+
+stripSigT :: Type -> Type
+stripSigT (SigT x _) = x
+stripSigT x = x
 
 childrenTypes ::
     Name -> Name -> Type -> StateT (Set Type) Q TypeContents
@@ -213,7 +215,7 @@ getChildrenTypes typ =
                 Nothing ->
                     fail ("TODO: Support ChildrenTypesOf of flexible instances: " <> show typ)
                 Just argNames ->
-                    pure (D.applySubstitution substs x)
+                    D.applySubstitution substs x & stripSigT & pure
                     where
                         substs = zip argNames args & Map.fromList
             _ -> fail ("ReifyInstances brought wrong typ: " <> show typ)
@@ -283,8 +285,16 @@ makeChildrenTypesInfo typeInfo =
                 Just x -> VarE x & pure
                 Nothing ->
                     getChildrenTypes embedType
-                    <&> (`Map.lookup` varsForOtherEmbeds)
-                    <&> maybe (VarE 'Has.getter `AppE` VarE wholeVar) VarE
+                    <&>
+                    \ct ->
+                    Map.lookup ct varsForOtherEmbeds
+                    & maybe (
+                        case ct of
+                        ConT constT `AppT` TupleT 0
+                            | constT == ''Const ->
+                                ConE 'Const `AppE` TupE []
+                        _ -> VarE 'hasK `AppE` VarE wholeVar
+                        ) VarE
         pure ChildrenTypesInfo
             { childrenTypesType = typ
             , childrenTypesPat = AsP wholeVar (consPat cons consVars)

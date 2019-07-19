@@ -10,6 +10,7 @@ import           TypeLang
 import           AST
 import           AST.Class.Unify
 import           AST.Combinator.Flip
+import           AST.Combinator.Single
 import           AST.Infer
 import           AST.Term.Apply
 import           AST.Term.Lam
@@ -52,6 +53,9 @@ data LangB k
     | BGetField (Tie k LangB) Name
     | BToNom (ToNom Name LangB k)
 
+type instance ChildrenTypesOf LangB = Single LangB
+
+makeKTraversableAndBases ''LangB
 makeChildren ''LangB
 instance c LangB => Recursive c LangB
 

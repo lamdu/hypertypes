@@ -19,7 +19,6 @@ dependencies:
 - base
 - constraints
 - containers
-- data-has
 - generic-data
 - lattices
 - lens

@@ -1,5 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, DerivingStrategies, DeriveGeneric, StandaloneDeriving #-}
 {-# LANGUAGE UndecidableInstances, TypeFamilies, TemplateHaskell, ConstraintKinds #-}
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 
 module AST.Combinator.Pair
     ( Pair(..), pairFst, pairSnd
@@ -7,6 +8,8 @@ module AST.Combinator.Pair
 
 import AST.Class.Applicative.TH (makeKApplicativeAndBases)
 import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
+import AST.Class.Has (KHas(..))
+import AST.Combinator.Single (Single(..))
 import AST.Knot (Tie, ChildrenTypesOf)
 import Control.DeepSeq (NFData)
 import Control.Lens (makeLenses)
@@ -25,6 +28,11 @@ type instance ChildrenTypesOf (Pair a b) = Pair a b
 makeLenses ''Pair
 makeKApplicativeAndBases ''Pair
 makeKTraversableAndFoldable ''Pair
+
+-- Useful instance for when a type has a single child type,
+-- but uses a parameterized AST term which may have two different types.
+instance KHas (Pair a a) (Single a) where
+    hasK (MkSingle x) = MkPair x x
 
 type Deps a b k c = ((c (Tie k a), c (Tie k b)) :: Constraint)
 

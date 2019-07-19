@@ -6,6 +6,7 @@
 module TypeLang where
 
 import           AST
+import           AST.Class.Has
 import           AST.Class.HasChild
 import           AST.Class.Unify
 import           AST.Combinator.Single
@@ -28,7 +29,6 @@ import           Control.Lens.Operators
 import           Control.Monad.Reader (MonadReader)
 import           Control.Monad.ST.Class (MonadST(..))
 import           Data.Constraint (Constraint)
-import           Data.Has (Has(..))
 import           Data.STRef
 import           Data.Set (Set, singleton)
 import           Generic.Data
@@ -74,11 +74,11 @@ Lens.makePrisms ''TypeError
 Lens.makeLenses ''RConstraints
 Lens.makeLenses ''Types
 
-instance Has (Tree (Single Typ) k) (Tree Types k) where
-    hasLens = tTyp . Lens.from _Single
+instance KHas (Single Typ) Types where
+    hasK = MkSingle . (^. tTyp)
 
-instance Has (Tree (Pair Typ Row) k) (Tree Types k) where
-    hasLens f (Types t0 r0) = f (MkPair t0 r0) <&> \(MkPair t1 r1) -> Types t1 r1
+instance KHas (Pair Typ Row) Types where
+    hasK (Types t0 r0) = MkPair t0 r0
 
 makeChildrenAndZipMatch ''Typ
 makeChildrenAndZipMatch ''Row

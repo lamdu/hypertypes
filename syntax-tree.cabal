@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 44ea678a9a09952e6063a7b2a0bbce904b5472e8df9b41cac45199e01c80835c
+-- hash: 32ffe78c3e30bd01dac96ae0bed58a2108beb74e85fe16a92512adfbbb824216
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -40,6 +40,7 @@ library
       AST.Class.Foldable.TH
       AST.Class.Functor
       AST.Class.Functor.TH
+      AST.Class.Has
       AST.Class.HasChild
       AST.Class.HasChildrenTypes
       AST.Class.Infer
@@ -110,7 +111,6 @@ library
     , binary
     , constraints
     , containers
-    , data-has
     , deepseq
     , generic-data
     , lattices
@@ -141,7 +141,6 @@ test-suite syntax-tree-test
       base
     , constraints
     , containers
-    , data-has
     , generic-data
     , lattices
     , lens
@@ -167,7 +166,6 @@ benchmark syntax-tree-bench
     , constraints
     , containers
     , criterion
-    , data-has
     , generic-data
     , lattices
     , lens
