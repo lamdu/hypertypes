@@ -13,6 +13,7 @@ import           AST.Class.Combinators (NoConstraint)
 import           AST.Class.Foldable
 import           AST.Class.Functor
 import           AST.Class.Pointed
+import           AST.Class.Traversable
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
@@ -114,6 +115,15 @@ instance
                 )
             ) f
         ) . getCompose
+
+instance
+    (HasChildrenTypes a, HasChildrenTypes b, KTraversable a, KTraversable b) =>
+    KTraversable (Compose a b) where
+    sequenceC =
+        _Compose
+        ( sequenceC .
+            mapK (MkContainedK . _Compose (traverseK (_Compose runContainedK)))
+        )
 
 instance (Children k0, Children k1) => Children (Compose k0 k1) where
     type ChildrenConstraint (Compose k0 k1) c = ChildrenConstraint k0 (ComposeConstraint0 c k1)
