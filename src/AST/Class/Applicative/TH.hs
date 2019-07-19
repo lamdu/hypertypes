@@ -81,6 +81,6 @@ makeContext info =
     <&> matchType (tiVar info)
     >>= ctxForPat
     where
-        ctxForPat (Tof t pat) = [ConT ''Applicative `AppT` t | isPolymorphic t] <> ctxForPat pat
+        ctxForPat (Tof t pat) = [ConT ''Applicative `AppT` t | isPolymorphicContainer t] <> ctxForPat pat
         ctxForPat (XofF t) = [ConT ''KApplicative `AppT` t | isPolymorphic t]
         ctxForPat _ = []

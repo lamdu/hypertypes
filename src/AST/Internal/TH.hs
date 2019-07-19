@@ -6,10 +6,10 @@
 module AST.Internal.TH
     ( -- Internals for use in TH for sub-classes
       TypeInfo(..), TypeContents(..), CtrTypePattern(..)
-    , makeTypeInfo, parts, toTuple, matchType, isPolymorphic
+    , makeTypeInfo, parts, toTuple, matchType
     , applicativeStyle, unapply, getVar, makeConstructorVars
     , getChildrenTypes, getChildrenTypesInfo, consPat
-    , getChildTypeVars
+    , getChildTypeVars, isPolymorphicContainer, isPolymorphic
     ) where
 
 import           AST.Class.Pointed
@@ -93,6 +93,7 @@ unapply :: Type -> (Type, [Type])
 unapply =
     go []
     where
+        go as (SigT x _) = go as x
         go as (AppT f a) = go (a:as) f
         go as x = (x, as)
 
@@ -183,6 +184,21 @@ childrenTypesFromChildrenConstraint fam c0 constraints =
 
 toTuple :: Foldable t => t Type -> Type
 toTuple xs = foldl AppT (TupleT (length xs)) xs
+
+isPolymorphicContainer :: Type -> Bool
+isPolymorphicContainer VarT{} = True
+isPolymorphicContainer (AppT x _) = isPolymorphicContainer x
+isPolymorphicContainer (ParensT x) = isPolymorphicContainer x
+isPolymorphicContainer ConT{} = False
+isPolymorphicContainer ArrowT{} = False
+isPolymorphicContainer ListT{} = False
+isPolymorphicContainer EqualityT{} = False
+isPolymorphicContainer TupleT{} = False
+isPolymorphicContainer UnboxedTupleT{} = False
+isPolymorphicContainer UnboxedSumT{} = False
+isPolymorphicContainer _ =
+    -- TODO: Cover all cases
+    True
 
 isPolymorphic :: Type -> Bool
 isPolymorphic VarT{} = True

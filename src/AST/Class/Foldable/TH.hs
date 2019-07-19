@@ -49,7 +49,7 @@ makeContext info =
     <&> matchType (tiVar info)
     >>= ctxForPat
     where
-        ctxForPat (Tof t pat) = [ConT ''Foldable `AppT` t | isPolymorphic t] <> ctxForPat pat
+        ctxForPat (Tof t pat) = [ConT ''Foldable `AppT` t | isPolymorphicContainer t] <> ctxForPat pat
         ctxForPat (XofF t) = [ConT ''KFoldable `AppT` t | isPolymorphic t]
         ctxForPat _ = []
 

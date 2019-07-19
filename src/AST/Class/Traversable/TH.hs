@@ -48,7 +48,7 @@ makeContext info =
     <&> matchType (tiVar info)
     >>= ctxForPat
     where
-        ctxForPat (Tof t pat) = [ConT ''Traversable `AppT` t | isPolymorphic t] <> ctxForPat pat
+        ctxForPat (Tof t pat) = [ConT ''Traversable `AppT` t | isPolymorphicContainer t] <> ctxForPat pat
         ctxForPat (XofF t) = [ConT ''KTraversable `AppT` t | isPolymorphic t]
         ctxForPat _ = []
 

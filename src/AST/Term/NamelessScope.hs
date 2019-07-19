@@ -46,6 +46,7 @@ makeChildrenAndZipMatch ''Scope
 makeKApplicativeAndBases ''Scope
 makeKTraversableAndFoldable ''Scope
 makeChildrenAndZipMatch ''ScopeVar
+makeKTraversableAndBases ''ScopeVar
 instance (c (Scope expr a), Recursive c (expr (Maybe a))) => Recursive c (Scope expr a)
 
 class DeBruijnIndex a where

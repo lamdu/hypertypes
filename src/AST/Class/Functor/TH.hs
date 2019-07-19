@@ -49,7 +49,7 @@ makeContext info =
     <&> matchType (tiVar info)
     >>= ctxForPat
     where
-        ctxForPat (Tof t pat) = [ConT ''Functor `AppT` t | isPolymorphic t] <> ctxForPat pat
+        ctxForPat (Tof t pat) = [ConT ''Functor `AppT` t | isPolymorphicContainer t] <> ctxForPat pat
         ctxForPat (XofF t) = [ConT ''KFunctor `AppT` t | isPolymorphic t]
         ctxForPat _ = []
 
