@@ -66,4 +66,4 @@ makeCons knot cons =
         bodyForPat NodeFofX{} = VarE 'runContainedK
         bodyForPat XofF{} = VarE 'sequenceC
         bodyForPat (Tof _ pat) = VarE 'traverse `AppE` bodyForPat pat
-        bodyForPat Other{} = VarE 'id
+        bodyForPat Other{} = VarE 'pure

@@ -8,6 +8,7 @@ module AST.Term.FuncType
     ) where
 
 import           AST
+import           AST.Combinator.Single (Single)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Prism', makeLenses)
 import           Control.Lens.Operators
@@ -25,13 +26,17 @@ data FuncType typ k = FuncType
     , _funcOut :: Tie k typ
     } deriving Generic
 
+type instance ChildrenTypesOf (FuncType t) = Single t
+
+makeLenses ''FuncType
+makeChildrenAndZipMatch ''FuncType
+makeKApplicativeAndBases ''FuncType
+makeKTraversableAndFoldable ''FuncType
+
 instance Pretty (Tie k typ) => Pretty (FuncType typ k) where
     pPrintPrec lvl p (FuncType i o) =
         pPrintPrec lvl 11 i <+> Pretty.text "->" <+> pPrintPrec lvl 10 o
         & maybeParens (p > 10)
-
-makeLenses ''FuncType
-makeChildrenAndZipMatch ''FuncType
 
 instance RecursiveConstraint (FuncType typ) constraint => Recursive constraint (FuncType typ)
 

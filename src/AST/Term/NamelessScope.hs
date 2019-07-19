@@ -13,6 +13,7 @@ module AST.Term.NamelessScope
 
 import           AST
 import           AST.Class.Infer.Infer1 (Infer1(..), HasTypeOf1(..))
+import           AST.Combinator.Single (Single)
 import           AST.Infer
 import           AST.Term.FuncType
 import           AST.Unify (Unify(..), UVarOf)
@@ -22,6 +23,7 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Reader (MonadReader, local)
 import           Data.Constraint (Dict(..), withDict, (:-), (\\))
+import           Data.Functor.Const (Const)
 import           Data.Sequence (Seq)
 import qualified Data.Sequence as Sequence
 import           Data.Proxy (Proxy(..))
@@ -33,10 +35,16 @@ data EmptyScope
 newtype Scope expr a k = Scope (Tie k (expr (Maybe a)))
 Lens.makePrisms ''Scope
 
+type instance ChildrenTypesOf (Scope e a) = Single (e (Maybe a))
+
 newtype ScopeVar (expr :: * -> Knot -> *) a (k :: Knot) = ScopeVar a
 Lens.makePrisms ''ScopeVar
 
+type instance ChildrenTypesOf (ScopeVar e a) = Const ()
+
 makeChildrenAndZipMatch ''Scope
+makeKApplicativeAndBases ''Scope
+makeKTraversableAndFoldable ''Scope
 makeChildrenAndZipMatch ''ScopeVar
 instance (c (Scope expr a), Recursive c (expr (Maybe a))) => Recursive c (Scope expr a)
 

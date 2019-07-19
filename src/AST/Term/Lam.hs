@@ -7,6 +7,7 @@ module AST.Term.Lam
     ) where
 
 import           AST
+import           AST.Combinator.Single (Single)
 import           AST.Infer
 import           AST.Term.FuncType
 import           AST.Unify (UVarOf)
@@ -29,6 +30,11 @@ data Lam v expr k = Lam
     } deriving Generic
 makeLenses ''Lam
 
+type instance ChildrenTypesOf (Lam v e) = Single e
+
+makeChildren ''Lam
+makeKTraversableAndBases ''Lam
+
 type Deps v expr k cls = ((cls v, cls (Tie k expr)) :: Constraint)
 
 instance Deps v expr k Pretty => Pretty (Lam v expr k) where
@@ -37,7 +43,6 @@ instance Deps v expr k Pretty => Pretty (Lam v expr k) where
         <+> Pretty.text "->" <+> pPrintPrec lvl 0 o
         & maybeParens (p > 0)
 
-makeChildren ''Lam
 instance RecursiveConstraint (Lam v expr) constraint => Recursive constraint (Lam v expr)
 
 type instance TypeOf  (Lam v t) = TypeOf  t

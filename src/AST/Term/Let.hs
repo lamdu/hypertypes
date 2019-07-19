@@ -8,6 +8,7 @@ module AST.Term.Let
 
 import           AST
 import           AST.Class.Unify (UVarOf)
+import           AST.Combinator.Single (Single)
 import           AST.Infer
 import           AST.Unify.Generalize (GTerm, generalize)
 import           Control.DeepSeq (NFData)
@@ -29,6 +30,11 @@ data Let v expr k = Let
     } deriving (Generic)
 makeLenses ''Let
 
+type instance ChildrenTypesOf (Let v e) = Single e
+
+makeChildren ''Let
+makeKTraversableAndBases ''Let
+
 type Deps v expr k cls = ((cls v, cls (Tie k expr)) :: Constraint)
 
 instance Deps v expr k Pretty => Pretty (Let v expr k) where
@@ -38,7 +44,6 @@ instance Deps v expr k Pretty => Pretty (Let v expr k) where
         $+$ pPrintPrec lvl 0 i
         & maybeParens (p > 0)
 
-makeChildren ''Let
 instance RecursiveConstraint (Let v expr) constraint => Recursive constraint (Let v expr)
 
 type instance TypeOf  (Let v t) = TypeOf  t

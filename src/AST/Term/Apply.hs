@@ -8,6 +8,7 @@ module AST.Term.Apply
     ) where
 
 import AST
+import AST.Combinator.Single (Single)
 import AST.Infer
 import AST.Term.FuncType
 import AST.Unify (unify)
@@ -27,14 +28,18 @@ data Apply expr k = Apply
     , _applyArg :: Tie k expr
     } deriving Generic
 
+type instance ChildrenTypesOf (Apply e) = Single e
+
+makeLenses ''Apply
+makeChildrenAndZipMatch ''Apply
+makeKApplicativeAndBases ''Apply
+makeKTraversableAndFoldable ''Apply
+
 instance Pretty (Tie k expr) => Pretty (Apply expr k) where
     pPrintPrec lvl p (Apply f x) =
         pPrintPrec lvl 10 f <+>
         pPrintPrec lvl 11 x
         & maybeParens (p > 10)
-
-makeLenses ''Apply
-makeChildrenAndZipMatch ''Apply
 
 instance RecursiveConstraint (Apply expr) constraint => Recursive constraint (Apply expr)
 

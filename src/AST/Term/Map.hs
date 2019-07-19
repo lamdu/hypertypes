@@ -6,7 +6,8 @@ module AST.Term.Map
     ( TermMap(..), _TermMap
     ) where
 
-import           AST (Tie, Recursive(..), RecursiveConstraint, makeChildren)
+import           AST
+import           AST.Combinator.Single (Single)
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
@@ -22,8 +23,11 @@ import           Prelude.Compat
 newtype TermMap k expr f = TermMap (Map k (Tie f expr))
     deriving stock Generic
 
+type instance ChildrenTypesOf (TermMap k e) = Single e
+
 Lens.makePrisms ''TermMap
 makeChildren ''TermMap
+makeKTraversableAndBases ''TermMap
 
 instance RecursiveConstraint (TermMap k expr) constraint => Recursive constraint (TermMap k expr)
 
