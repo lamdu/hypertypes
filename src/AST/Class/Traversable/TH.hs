@@ -35,7 +35,7 @@ makeKTraversable typeName = makeTypeInfo typeName >>= makeKTraversableForType
 
 makeKTraversableForType :: TypeInfo -> DecsQ
 makeKTraversableForType info =
-    instanceD (pure (makeContext info)) (appT (conT ''KTraversable) (pure (tiInstance info)))
+    instanceD (simplifyContext (makeContext info)) (appT (conT ''KTraversable) (pure (tiInstance info)))
     [ InlineP 'sequenceC Inline FunLike AllPhases & PragmaD & pure
     , funD 'sequenceC (tiCons info <&> pure . makeCons (tiVar info))
     ]
@@ -48,8 +48,8 @@ makeContext info =
     <&> matchType (tiVar info)
     >>= ctxForPat
     where
-        ctxForPat (Tof t pat) = [ConT ''Traversable `AppT` t | isPolymorphicContainer t] <> ctxForPat pat
-        ctxForPat (XofF t) = [ConT ''KTraversable `AppT` t | isPolymorphic t]
+        ctxForPat (Tof t pat) = (ConT ''Traversable `AppT` t) : ctxForPat pat
+        ctxForPat (XofF t) = [ConT ''KTraversable `AppT` t]
         ctxForPat _ = []
 
 makeCons ::

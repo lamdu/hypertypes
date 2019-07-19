@@ -24,7 +24,7 @@ makeKFoldableForType info =
             tiCons info
             & traverse (makeCons childrenInfo (tiVar info))
             <&> CaseE (VarE varX)
-        instanceD (pure (makeContext info)) (appT (conT ''KFoldable) (pure (tiInstance info)))
+        instanceD (simplifyContext (makeContext info)) (appT (conT ''KFoldable) (pure (tiInstance info)))
             [ InlineP 'sumC Inline FunLike AllPhases & PragmaD & pure
             , funD 'sumC
                 [ Clause
@@ -46,8 +46,8 @@ makeContext info =
     <&> matchType (tiVar info)
     >>= ctxForPat
     where
-        ctxForPat (Tof t pat) = [ConT ''Foldable `AppT` t | isPolymorphicContainer t] <> ctxForPat pat
-        ctxForPat (XofF t) = [ConT ''KFoldable `AppT` t | isPolymorphic t]
+        ctxForPat (Tof t pat) = (ConT ''Foldable `AppT` t) : ctxForPat pat
+        ctxForPat (XofF t) = [ConT ''KFoldable `AppT` t]
         ctxForPat _ = []
 
 makeCons :: ChildrenTypesInfo -> Name -> D.ConstructorInfo -> Q Match

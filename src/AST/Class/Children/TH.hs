@@ -23,7 +23,7 @@ makeChildrenForType :: TypeInfo -> DecsQ
 makeChildrenForType info =
     do
         inst <-
-            instanceD (pure ctx) (appT (conT ''Children) (pure (tiInstance info)))
+            instanceD (simplifyContext ctx) (appT (conT ''Children) (pure (tiInstance info)))
             [ tySynInstD ''ChildrenConstraint
                 (pure (TySynEqn [tiInstance info, VarT constraintVar] childrenConstraint))
             , InlineP 'children Inline FunLike AllPhases & PragmaD & pure
@@ -52,7 +52,7 @@ constraintVar = mkName "constraint"
 
 childrenContext :: TypeInfo -> [Pred]
 childrenContext info =
-    tiCons info <&> makeChildrenCtr (tiVar info) >>= ccContext & Set.fromList & Set.toList
+    tiCons info <&> makeChildrenCtr (tiVar info) >>= ccContext
 
 makeChildrenCtr :: Name -> D.ConstructorInfo -> CtrCase
 makeChildrenCtr var info =
@@ -79,8 +79,8 @@ makeChildrenCtr var info =
         bodyForPat XofF{} = VarE 'children `AppE` VarE proxy `AppE` VarE func
         bodyForPat (Tof _ pat) = VarE 'traverse `AppE` bodyForPat pat
         bodyForPat Other{} = VarE 'pure
-        ctxForPat (Tof t pat) = [ConT ''Traversable `AppT` t | isPolymorphic t] ++ ctxForPat pat
-        ctxForPat (XofF t) = [ConT ''Children `AppT` t | isPolymorphic t]
+        ctxForPat (Tof t pat) = (ConT ''Traversable `AppT` t) : ctxForPat pat
+        ctxForPat (XofF t) = [ConT ''Children `AppT` t]
         ctxForPat _ = []
 
 data CtrCase =

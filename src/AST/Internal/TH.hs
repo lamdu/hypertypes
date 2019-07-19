@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, LambdaCase, DerivingVia, TemplateHaskellQuotes #-}
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric, TypeFamilies #-}
 
 -- Helpers for TemplateHaskell instance generators
 
@@ -10,7 +10,7 @@ module AST.Internal.TH
     , makeTypeInfo, makeChildrenTypesInfo
     , getEmbedTypeVar, parts, toTuple, matchType
     , applicativeStyle, unapply, getVar, makeConstructorVars
-    , consPat, isPolymorphicContainer, isPolymorphic
+    , consPat, simplifyContext
     ) where
 
 import           AST.Class.Pointed
@@ -18,7 +18,8 @@ import           AST.Knot (Knot(..), RunKnot, Tie, ChildrenTypesOf)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
-import           Control.Monad.Trans.State (StateT(..), evalStateT, gets, modify)
+import           Control.Monad.Trans.State (StateT(..), evalStateT, execStateT, gets, modify)
+import           Data.Foldable (traverse_)
 import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Data.Set (Set)
@@ -186,36 +187,6 @@ childrenTypesFromChildrenConstraint fam c0 constraints =
 toTuple :: Foldable t => t Type -> Type
 toTuple xs = foldl AppT (TupleT (length xs)) xs
 
-isPolymorphicContainer :: Type -> Bool
-isPolymorphicContainer VarT{} = True
-isPolymorphicContainer (AppT x _) = isPolymorphicContainer x
-isPolymorphicContainer (ParensT x) = isPolymorphicContainer x
-isPolymorphicContainer ConT{} = False
-isPolymorphicContainer ArrowT{} = False
-isPolymorphicContainer ListT{} = False
-isPolymorphicContainer EqualityT{} = False
-isPolymorphicContainer TupleT{} = False
-isPolymorphicContainer UnboxedTupleT{} = False
-isPolymorphicContainer UnboxedSumT{} = False
-isPolymorphicContainer _ =
-    -- TODO: Cover all cases
-    True
-
-isPolymorphic :: Type -> Bool
-isPolymorphic VarT{} = True
-isPolymorphic (AppT x y) = isPolymorphic x || isPolymorphic y
-isPolymorphic (ParensT x) = isPolymorphic x
-isPolymorphic ConT{} = False
-isPolymorphic ArrowT{} = False
-isPolymorphic ListT{} = False
-isPolymorphic EqualityT{} = False
-isPolymorphic TupleT{} = False
-isPolymorphic UnboxedTupleT{} = False
-isPolymorphic UnboxedSumT{} = False
-isPolymorphic _ =
-    -- TODO: Cover all cases
-    True
-
 applicativeStyle :: Exp -> [Exp] -> Exp
 applicativeStyle f =
     foldl ap (AppE (VarE 'pure) f)
@@ -345,3 +316,36 @@ makeChildrenTypesInfo typeInfo =
     where
         wholeVar = mkName "_cs"
         dummyKnot = mkName "_dummy"
+
+simplifyContext :: [Pred] -> CxtQ
+simplifyContext preds =
+    goPreds preds
+    & (`execStateT` (mempty :: Set (Name, [Type]), mempty :: Set Pred))
+    <&> snd
+    <&> Set.toList
+    where
+        goPreds ps = ps <&> unapply & traverse_ go
+        go (c, [VarT v]) =
+            -- Work-around reifyInstances returning instances for type variables
+            -- by not checking.
+            yep c [VarT v]
+        go (ConT c, xs) =
+            Lens.use (Lens._1 . Lens.contains key)
+            >>=
+            \case
+            True -> pure () -- already checked
+            False ->
+                do
+                    Lens._1 . Lens.contains key .= True
+                    reifyInstances c xs & lift
+                        >>=
+                        \case
+                        [InstanceD _ context other _] ->
+                            D.unifyTypes [foldl AppT (ConT c) xs, other] & lift
+                            <&> (`D.applySubstitution` context)
+                            >>= goPreds
+                        _ -> yep (ConT c) xs
+            where
+                key = (c, xs)
+        go (c, xs) = yep c xs
+        yep c xs = Lens._2 . Lens.contains (foldl AppT c xs) .= True

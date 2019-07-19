@@ -29,7 +29,7 @@ makeKPointedForType info =
                 | childrenTypesType childrenInfo == tiInstance info =
                     Clause [] (NormalB (VarE 'id)) [] & pure
                 | otherwise = makePureCCtr childrenInfo (tiVar info) cons
-        instanceD (pure (makeContext info)) (appT (conT ''KPointed) (pure (tiInstance info)))
+        instanceD (simplifyContext (makeContext info)) (appT (conT ''KPointed) (pure (tiInstance info)))
             [ tySynInstD ''KLiftConstraint
                 (pure (TySynEqn [tiInstance info, VarT constraintVar] liftedConstraint))
             , InlineP 'pureC Inline FunLike AllPhases & PragmaD & pure
@@ -59,8 +59,8 @@ makeContext info =
     <&> matchType (tiVar info)
     >>= ctxForPat
     where
-        ctxForPat (Tof t pat) = [ConT ''Applicative `AppT` t | isPolymorphicContainer t] <> ctxForPat pat
-        ctxForPat (XofF t) = [ConT ''KPointed `AppT` t | isPolymorphic t]
+        ctxForPat (Tof t pat) = (ConT ''Applicative `AppT` t) : ctxForPat pat
+        ctxForPat (XofF t) = [ConT ''KPointed `AppT` t]
         ctxForPat _ = []
 
 varF :: Name

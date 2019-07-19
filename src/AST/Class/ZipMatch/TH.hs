@@ -9,7 +9,6 @@ import           AST.Class.ZipMatch (ZipMatch(..))
 import           AST.Combinator.Both (Both(..))
 import           AST.Internal.TH
 import           Control.Lens.Operators
-import qualified Data.Set as Set
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
 
@@ -28,7 +27,7 @@ makeZipMatch typeName =
         (dst, var) <- parts info
         let ctrs = D.datatypeCons info <&> makeZipMatchCtr var
         instanceD
-            (pure (ctrs >>= ccContext & Set.fromList & Set.toList))
+            (simplifyContext (ctrs >>= ccContext))
             (appT (conT ''ZipMatch) (pure dst))
             [ InlineP 'zipMatch Inline FunLike AllPhases & PragmaD & pure
             , funD 'zipMatch
@@ -67,14 +66,14 @@ makeZipMatchCtr var info =
             ZipMatchField
             { zmfResult = VarE 'zipMatch `AppE` VarE x `AppE` VarE y
             , zmfConds = []
-            , zmfContext = [ConT ''ZipMatch `AppT` t | isPolymorphic t]
+            , zmfContext = [ConT ''ZipMatch `AppT` t]
             }
         field _ Tof{} = error "TODO"
         field (x, y) (Other t) =
             ZipMatchField
             { zmfResult = ConE 'Just `AppE` VarE x
             , zmfConds = [InfixE (Just (VarE x)) (VarE '(==)) (Just (VarE y))]
-            , zmfContext = [ConT ''Eq `AppT` t | isPolymorphic t]
+            , zmfContext = [ConT ''Eq `AppT` t]
             }
 
 data ZipMatchField = ZipMatchField

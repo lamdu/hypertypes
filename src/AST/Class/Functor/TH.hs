@@ -24,7 +24,7 @@ makeKFunctorForType info =
             tiCons info
             & traverse (makeCons childrenTypesInfo (tiVar info))
             <&> CaseE (VarE varX)
-        instanceD (pure (makeContext info)) (appT (conT ''KFunctor) (pure (tiInstance info)))
+        instanceD (simplifyContext (makeContext info)) (appT (conT ''KFunctor) (pure (tiInstance info)))
             [ InlineP 'mapC Inline FunLike AllPhases & PragmaD & pure
             , funD 'mapC
                 [ Clause
@@ -46,8 +46,8 @@ makeContext info =
     <&> matchType (tiVar info)
     >>= ctxForPat
     where
-        ctxForPat (Tof t pat) = [ConT ''Functor `AppT` t | isPolymorphicContainer t] <> ctxForPat pat
-        ctxForPat (XofF t) = [ConT ''KFunctor `AppT` t | isPolymorphic t]
+        ctxForPat (Tof t pat) = (ConT ''Functor `AppT` t) : ctxForPat pat
+        ctxForPat (XofF t) = [ConT ''KFunctor `AppT` t]
         ctxForPat _ = []
 
 makeCons :: ChildrenTypesInfo -> Name -> D.ConstructorInfo -> Q Match
