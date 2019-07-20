@@ -34,6 +34,12 @@ makeKTraversableAndFoldable ''Pair
 instance KHas (Pair a a) (Single a) where
     hasK (MkSingle x) = MkPair x x
 
+instance KHas (Single a) (Pair a b) where
+    hasK (MkPair x _) = MkSingle x
+
+instance KHas (Single b) (Pair a b) where
+    hasK (MkPair _ x) = MkSingle x
+
 type Deps a b k c = ((c (Tie k a), c (Tie k b)) :: Constraint)
 
 deriving instance Deps a b k Eq   => Eq   (Pair a b k)
