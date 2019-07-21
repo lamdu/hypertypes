@@ -15,7 +15,7 @@ module AST.Term.Scheme
     ) where
 
 import           AST
-import           AST.Class.Combinators (And, NoConstraint, HasChildrenConstraint, proxyNoConstraint)
+import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Pointed (KPointed(..))
 import           AST.Class.Recursive (wrapM, unwrapM)
@@ -158,7 +158,6 @@ schemeToRestrictedType (MkPure (Scheme vars typ)) =
 loadBody ::
     ( Unify m typ
     , HasChild varTypes typ
-    , ChildrenWithConstraint typ NoConstraint
     , Ord (QVar typ)
     ) =>
     Tree varTypes (QVarInstances (UVarOf m)) ->
@@ -168,7 +167,7 @@ loadBody foralls x =
     case x ^? quantifiedVar >>= getForAll of
     Just r -> GPoly r & pure
     Nothing ->
-        case children proxyNoConstraint (^? _GMono) x of
+        case traverseK (^? _GMono) x of
         Just xm -> newTerm xm <&> GMono
         Nothing -> GBody x & pure
     where
@@ -182,14 +181,14 @@ loadScheme ::
     forall m varTypes typ.
     ( Monad m
     , ChildrenWithConstraint varTypes (Unify m)
-    , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord `And` HasChildrenConstraint NoConstraint) typ
+    , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
     ) =>
     Tree Pure (Scheme varTypes typ) ->
     m (Tree (GTerm (UVarOf m)) typ)
 loadScheme (MkPure (Scheme vars typ)) =
     do
         foralls <- children (Proxy :: Proxy (Unify m)) makeQVarInstances vars
-        wrapM (Proxy :: Proxy (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord `And` HasChildrenConstraint NoConstraint))
+        wrapM (Proxy :: Proxy (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord))
             (loadBody foralls) typ
 
 saveH ::

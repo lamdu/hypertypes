@@ -183,7 +183,6 @@ data LoadedNominalDecl typ v = LoadedNominalDecl
 loadBody ::
     ( Unify m typ
     , HasChild varTypes typ
-    , ChildrenConstraint typ NoConstraint
     , Ord (QVar typ)
     ) =>
     Tree varTypes (QVarInstances (UVarOf m)) ->
@@ -194,7 +193,7 @@ loadBody params foralls x =
     case x ^? quantifiedVar >>= get of
     Just r -> GPoly r & pure
     Nothing ->
-        case children proxyNoConstraint (^? _GMono) x of
+        case traverseK (^? _GMono) x of
         Just xm -> newTerm xm <&> GMono
         Nothing -> GBody x & pure
     where
@@ -207,7 +206,7 @@ loadNominalDecl ::
     forall m typ.
     ( Monad m
     , ChildrenWithConstraint (NomVarTypes typ) (Unify m)
-    , Recursive (Unify m `And` HasChild (NomVarTypes typ) `And` QVarHasInstance Ord `And` HasChildrenConstraint NoConstraint) typ
+    , Recursive (Unify m `And` HasChild (NomVarTypes typ) `And` QVarHasInstance Ord) typ
     ) =>
     Tree Pure (NominalDecl typ) ->
     m (Tree (LoadedNominalDecl typ) (UVarOf m))
@@ -215,7 +214,7 @@ loadNominalDecl (MkPure (NominalDecl params (Scheme foralls typ))) =
     do
         paramsL <- children (Proxy :: Proxy (Unify m)) makeQVarInstances params
         forallsL <- children (Proxy :: Proxy (Unify m)) makeQVarInstances foralls
-        wrapM (Proxy :: Proxy (Unify m `And` HasChild (NomVarTypes typ) `And` QVarHasInstance Ord `And` HasChildrenConstraint NoConstraint))
+        wrapM (Proxy :: Proxy (Unify m `And` HasChild (NomVarTypes typ) `And` QVarHasInstance Ord))
             (loadBody paramsL forallsL) typ
             <&> LoadedNominalDecl paramsL forallsL
 

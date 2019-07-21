@@ -7,7 +7,6 @@ module AST.Knot.Prune
     ) where
 
 import AST
-import AST.Class.Combinators (NoConstraint, proxyNoConstraint)
 import AST.Class.Functor.TH (makeKFunctor)
 import AST.Class.Pointed (KPointed(..))
 import AST.Combinator.Compose (Compose(..))
@@ -46,12 +45,12 @@ type instance ScopeOf (Compose Prune t) = ScopeOf t
 
 instance
     ( Infer m t
-    , ChildrenWithConstraint t NoConstraint
+    , KFunctor t, HasChildrenTypes t
     ) =>
     Infer m (Compose Prune t) where
     inferBody (MkCompose Pruned) = newUnbound <&> InferRes (MkCompose Pruned)
     inferBody (MkCompose (Unpruned (MkCompose x))) =
-        overChildren proxyNoConstraint
+        mapK
         (\(MkCompose (InferChild i)) -> i <&> inRep %~ MkCompose & InferChild)
         x
         & inferBody

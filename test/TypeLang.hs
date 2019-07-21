@@ -80,6 +80,10 @@ instance KHas (Single Typ) Types where
 instance KHas (Pair Typ Row) Types where
     hasK (Types t0 r0) = MkPair t0 r0
 
+instance HasChildrenTypes Types
+instance HasChildrenTypes Typ
+instance HasChildrenTypes Row
+
 makeChildrenAndZipMatch ''Typ
 makeChildrenAndZipMatch ''Row
 makeChildrenAndZipMatch ''Types

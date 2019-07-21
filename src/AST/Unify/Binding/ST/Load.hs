@@ -8,7 +8,7 @@ module AST.Unify.Binding.ST.Load
     ) where
 
 import           AST
-import           AST.Class.Combinators (And, NoConstraint)
+import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Unify.Binding (Binding(..), _Binding, UVar(..))
@@ -88,11 +88,11 @@ loadBody src conv =
 load ::
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
-    , ChildrenWithConstraint typeVars NoConstraint
+    , KTraversable typeVars, HasChildrenTypes typeVars
     , ChildrenWithConstraint t (Recursive (HasChild typeVars `And` Unify m))
     ) =>
     Tree typeVars Binding -> Tree t UVar -> m (Tree t (STUVar (World m)))
 load src collection =
     do
-        conv <- children (Proxy :: Proxy NoConstraint) makeConvertState src
+        conv <- traverseK makeConvertState src
         loadBody src conv collection
