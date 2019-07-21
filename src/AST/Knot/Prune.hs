@@ -41,7 +41,7 @@ instance KPointed Prune where
     type KLiftConstraint Prune c = c Prune
     pureC (MkSingle x) = Unpruned x
     pureK = Unpruned
-    pureKWith _ = Unpruned
+    pureKWithConstraint _ = Unpruned
 
 instance KApplicative Prune where
     liftC2 _ Pruned _ = Pruned

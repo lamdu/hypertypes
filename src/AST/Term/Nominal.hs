@@ -149,6 +149,8 @@ instance
     ( c (NominalInst nomId varTypes)
     , ChildrenWithConstraint varTypes (Recursive c)
     , HasChildrenTypes varTypes
+    , KTraversable varTypes
+    , KLiftConstraint (ChildrenTypesOf varTypes) (Recursive c)
     ) =>
     Recursive c (NominalInst nomId varTypes)
 
@@ -159,17 +161,17 @@ instance DepsT Pretty nomId term k => Pretty (ToNom nomId term k) where
 
 instance
     ( Pretty nomId
-    , ChildrenWithConstraint varTypes
-        (QVarHasInstance Pretty `And` TieHasConstraint Pretty k)
+    , KApplicative varTypes, KFoldable varTypes, HasChildrenTypes varTypes
+    , KLiftConstraint (ChildrenTypesOf varTypes) (QVarHasInstance Pretty)
+    , KLiftConstraint (ChildrenTypesOf varTypes) (TieHasConstraint Pretty k)
     ) =>
     Pretty (NominalInst nomId varTypes k) where
 
     pPrint (NominalInst n vars) =
+        withDict (hasChildrenTypes (Proxy :: Proxy varTypes)) $
         pPrint n <>
         joinArgs
-        (foldMapChildren
-            (Proxy :: Proxy (QVarHasInstance Pretty `And` TieHasConstraint Pretty k))
-            mkArgs vars)
+        (foldMapKWith (Proxy :: Proxy [QVarHasInstance Pretty, TieHasConstraint Pretty k]) mkArgs vars)
         where
             joinArgs [] = mempty
             joinArgs xs =

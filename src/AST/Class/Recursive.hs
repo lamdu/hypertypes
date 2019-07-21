@@ -11,7 +11,9 @@ module AST.Class.Recursive
     ) where
 
 import AST.Class.Children (Children(..), foldMapChildren, overChildren, children_)
-import AST.Knot (Tree)
+import AST.Class.Pointed (KPointed(..))
+import AST.Class.Traversable (KTraversable)
+import AST.Knot (Tree, ChildrenTypesOf)
 import AST.Knot.Pure (Pure, _Pure)
 import Control.Lens.Operators
 import Data.Constraint (Dict(..), withDict)
@@ -24,7 +26,7 @@ import Prelude.Compat
 -- | `Recursive` carries a constraint to all of the descendant types
 -- of an AST. As opposed to the `ChildrenConstraint` type family which
 -- only carries a constraint to the direct children of an AST.
-class (Children expr, constraint expr) => Recursive constraint expr where
+class (KTraversable expr, Children expr, constraint expr) => Recursive constraint expr where
     recursive :: RecursiveDict constraint expr
     {-# INLINE recursive #-}
     -- | When an instance's constraints already imply
@@ -37,6 +39,7 @@ class (Children expr, constraint expr) => Recursive constraint expr where
 type RecursiveConstraint expr constraint =
     ( constraint expr
     , ChildrenConstraint expr (Recursive constraint)
+    , KLiftConstraint (ChildrenTypesOf expr) (Recursive constraint)
     )
 
 type RecursiveDict constraint expr = Dict (RecursiveConstraint expr constraint)

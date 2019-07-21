@@ -27,7 +27,7 @@ class KPointed k where
     type KLiftConstraint k (c :: (Knot -> Type) -> Constraint) :: Constraint
 
     -- | Construct a value from a higher ranked child value with a constraint
-    pureKWith ::
+    pureKWithConstraint ::
         KLiftConstraint k constraint =>
         Proxy constraint ->
         (forall child. constraint child => Tree n child) ->
@@ -37,4 +37,4 @@ instance KPointed (Const ()) where
     type KLiftConstraint (Const ()) c = ()
     pureC = id
     pureK _ = Const ()
-    pureKWith _ _ = Const ()
+    pureKWithConstraint _ _ = Const ()

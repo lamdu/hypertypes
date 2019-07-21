@@ -241,7 +241,7 @@ saveScheme x =
     do
         (t, (v, recover)) <-
             runStateT (saveH x)
-            ( pureKWith (Proxy :: Proxy (QVarHasInstance Ord)) (QVars mempty)
+            ( pureKWithConstraint (Proxy :: Proxy (QVarHasInstance Ord)) (QVars mempty)
             , []
             )
         _Pure # Scheme v t <$ sequence_ recover

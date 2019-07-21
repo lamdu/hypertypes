@@ -36,8 +36,8 @@ makeKPointedForType info =
             , funD 'pureC [pureCDecl]
             , InlineP 'pureK Inline FunLike AllPhases & PragmaD & pure
             , funD 'pureK [makePureKCtr (tiVar info) cons]
-            , InlineP 'pureKWith Inline FunLike AllPhases & PragmaD & pure
-            , funD 'pureKWith [makePureKWithCtr (tiVar info) cons]
+            , InlineP 'pureKWithConstraint Inline FunLike AllPhases & PragmaD & pure
+            , funD 'pureKWithConstraint [makePureKWithCtr (tiVar info) cons]
             ]
     <&> (:[])
     where
@@ -91,7 +91,7 @@ makePureKWithCtr knot info =
     where
         proxy = mkName "_p"
         bodyForPat NodeFofX{} = VarE varF & pure
-        bodyForPat XofF{} = VarE 'pureKWith `AppE` VarE proxy `AppE` VarE varF & pure
+        bodyForPat XofF{} = VarE 'pureKWithConstraint `AppE` VarE proxy `AppE` VarE varF & pure
         bodyForPat (Tof _ pat) = bodyForPat pat <&> AppE (VarE 'pure)
         bodyForPat (Other x) = fail ("KPointed can't produce value of type " <> show x)
 

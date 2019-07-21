@@ -23,6 +23,7 @@ type ChildrenTypesConstraints k =
     , HasChildrenTypes k
     , KApplicative k
     , KTraversable k
+    , KApplicative (ChildrenTypesOf k)
     )
 
 class HasChildrenTypes k where

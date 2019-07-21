@@ -11,7 +11,8 @@ module AST.Unify.Constraints
 
 import Algebra.PartialOrd (PartialOrd(..))
 import AST
-import AST.Class.Combinators (And)
+import AST.Class.Combinators (traverseKWith)
+import Data.Constraint (withDict)
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
@@ -36,7 +37,10 @@ class
     -- | Verify constraints on the ast and apply the given child
     -- verifier on children
     verifyConstraints ::
-        (Applicative m, ChildrenWithConstraint ast childOp) =>
+        ( Applicative m
+        , KTraversable ast, HasChildrenTypes ast
+        , KLiftConstraint (ChildrenTypesOf ast) childOp
+        ) =>
         Proxy childOp ->
         TypeConstraintsOf ast ->
         (TypeConstraintsOf ast -> m ()) ->
@@ -48,8 +52,10 @@ class
     {-# INLINE verifyConstraints #-}
     default verifyConstraints ::
         forall m childOp p q.
-        ( ChildrenWithConstraint ast (childOp `And` TypeConstraintsAre (TypeConstraintsOf ast))
+        ( KLiftConstraint (ChildrenTypesOf ast) (TypeConstraintsAre (TypeConstraintsOf ast))
         , Applicative m
+        , KTraversable ast, HasChildrenTypes ast
+        , KLiftConstraint (ChildrenTypesOf ast) childOp
         ) =>
         Proxy childOp ->
         TypeConstraintsOf ast ->
@@ -57,7 +63,8 @@ class
         (forall child. childOp child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
         Tree ast p -> m (Tree ast q)
     verifyConstraints _ constraints _ update =
-        children (Proxy :: Proxy (childOp `And` TypeConstraintsAre (TypeConstraintsOf ast)))
+        withDict (hasChildrenTypes (Proxy :: Proxy ast)) $
+        traverseKWith (Proxy :: Proxy [childOp, TypeConstraintsAre (TypeConstraintsOf ast)])
         (update constraints)
 
 class TypeConstraintsOf ast ~ constraints => TypeConstraintsAre constraints ast

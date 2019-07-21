@@ -49,11 +49,11 @@ instance
     type KLiftConstraint (Compose a b) c = KLiftConstraint a (ComposeConstraint0K c b)
     pureC =
         withDict (hasChildrenTypes (Proxy :: Proxy a)) $
-        withDict (hasChildrenTypes (Proxy :: Proxy (ChildrenTypesOf a))) $
         _Compose %~ pureC . mapK (_Compose %~ pureC)
     pureK x = pureK (pureK (MkCompose x) & MkCompose) & MkCompose
-    pureKWith p x =
-        pureKWith (p0 p) (makeP1 p (\p1 -> pureKWith p1 (MkCompose x) & MkCompose)) & MkCompose
+    pureKWithConstraint p x =
+        pureKWithConstraint (p0 p) (makeP1 p (\p1 -> pureKWithConstraint p1 (MkCompose x) & MkCompose))
+        & MkCompose
         where
             p0 :: Proxy c -> Proxy (ComposeConstraint0K c b)
             p0 _ = Proxy
