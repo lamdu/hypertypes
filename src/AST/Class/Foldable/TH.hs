@@ -25,8 +25,8 @@ makeKFoldableForType info =
             & traverse (makeCons childrenInfo (tiVar info))
             <&> CaseE (VarE varX)
         instanceD (simplifyContext (makeContext info)) (appT (conT ''KFoldable) (pure (tiInstance info)))
-            [ InlineP 'sumC Inline FunLike AllPhases & PragmaD & pure
-            , funD 'sumC
+            [ InlineP 'foldMapC Inline FunLike AllPhases & PragmaD & pure
+            , funD 'foldMapC
                 [ Clause
                     [ childrenTypesPat childrenInfo
                     , VarP varX
@@ -56,11 +56,11 @@ makeCons childrenInfo knot cons =
         let bodyForPat (NodeFofX t) =
                 case Map.lookup t (varsForChildTypes childrenInfo) of
                 Nothing ->
-                    "Failed producing sumC for child of type:\n        " <> show t <>
+                    "Failed producing foldMapC for child of type:\n        " <> show t <>
                     "\n    not in:\n        " <> show (varsForChildTypes childrenInfo)
                     & fail
                 Just x -> VarE 'runConvertK `AppE` VarE x & pure
-            bodyForPat (XofF t) = getEmbedTypes childrenInfo t <&> AppE (VarE 'sumC)
+            bodyForPat (XofF t) = getEmbedTypes childrenInfo t <&> AppE (VarE 'foldMapC)
             bodyForPat (Tof _ pat) = bodyForPat pat <&> AppE (VarE 'foldMap)
             bodyForPat Other{} = VarE 'const `AppE` VarE 'mempty & pure
         let f (typ, name) = bodyForPat (matchType knot typ) <&> (`AppE` VarE name)

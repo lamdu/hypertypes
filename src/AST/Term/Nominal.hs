@@ -109,9 +109,9 @@ instance (KFunctor v, HasChildrenTypes v) => KFunctor (NominalInst n v) where
         mapC (mapK (_MapK %~ (_QVarInstances . Lens.mapped %~)) f) v & NominalInst n
 
 instance (KFoldable v, HasChildrenTypes v) => KFoldable (NominalInst n v) where
-    sumC f (NominalInst _ v) =
+    foldMapC f (NominalInst _ v) =
         withDict (hasChildrenTypes (Proxy :: Proxy v)) $
-        sumC (mapK (_ConvertK %~ \fq -> foldMap fq . (^. _QVarInstances)) f) v
+        foldMapC (mapK (_ConvertK %~ \fq -> foldMap fq . (^. _QVarInstances)) f) v
 
 instance (KTraversable v, HasChildrenTypes v) => KTraversable (NominalInst n v) where
     sequenceC (NominalInst n v) =

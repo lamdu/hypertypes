@@ -99,14 +99,14 @@ instance
 instance
     (HasChildrenTypes a, HasChildrenTypes b, KFoldable a, KFoldable b) =>
     KFoldable (Compose a b) where
-    sumC (MkCompose f) =
+    foldMapC (MkCompose f) =
         withDict (hasChildrenTypes (Proxy :: Proxy a)) $
         withDict (hasChildrenTypes (Proxy :: Proxy b)) $
-        sumC
+        foldMapC
         ( mapK
             ( \(MkCompose bf) ->
                 MkConvertK
-                ( sumC
+                ( foldMapC
                     ( mapK ((_ConvertK %~ (. getCompose)) . getCompose) bf
                     ) . getCompose
                 )

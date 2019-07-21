@@ -21,10 +21,10 @@ _ConvertK ::
 _ConvertK = iso runConvertK MkConvertK
 
 class KFoldable k where
-    sumC ::
+    foldMapC ::
         Monoid a =>
         Tree (ChildrenTypesOf k) (ConvertK a l) ->
         Tree k l -> a
 
 instance KFoldable (Const a) where
-    sumC _ _ = mempty
+    foldMapC _ _ = mempty

@@ -3,7 +3,7 @@
 
 module AST.Class.HasChildrenTypes
     ( HasChildrenTypes(..)
-    , mapK, liftK2, sumK, traverseK
+    , mapK, liftK2, foldMapK, traverseK
     ) where
 
 import AST.Class.Applicative (KApplicative(..), LiftK2(..))
@@ -38,6 +38,7 @@ class HasChildrenTypes k where
 
 instance HasChildrenTypes (Const a)
 
+{-# INLINE withChildrenTypes #-}
 withChildrenTypes ::
     HasChildrenTypes k =>
     (ChildrenTypesConstraints (ChildrenTypesOf k) => Tree k l -> a) ->
@@ -49,6 +50,7 @@ withChildrenTypes f x =
         p :: Tree k l -> Proxy k
         p _ = Proxy
 
+{-# INLINE mapK #-}
 mapK ::
     (KFunctor k, HasChildrenTypes k) =>
     (forall c. Tree m c -> Tree n c) ->
@@ -56,6 +58,7 @@ mapK ::
     Tree k n
 mapK f = withChildrenTypes (mapC (pureK (MkMapK f)))
 
+{-# INLINE liftK2 #-}
 liftK2 ::
     (KApplicative k, HasChildrenTypes k) =>
     (forall c. Tree l c -> Tree m c -> Tree n c) ->
@@ -64,13 +67,15 @@ liftK2 ::
     Tree k n
 liftK2 f = withChildrenTypes (liftC2 (pureK (MkLiftK2 f)))
 
-sumK ::
+{-# INLINE foldMapK #-}
+foldMapK ::
     (Monoid a, KFoldable k, HasChildrenTypes k) =>
     (forall c. Tree l c -> a) ->
     Tree k l ->
     a
-sumK f = withChildrenTypes (sumC (pureK (MkConvertK f)))
+foldMapK f = withChildrenTypes (foldMapC (pureK (MkConvertK f)))
 
+{-# INLINE traverseK #-}
 traverseK ::
     (Applicative f, KTraversable k, HasChildrenTypes k) =>
     (forall c. Tree m c -> f (Tree n c)) ->
