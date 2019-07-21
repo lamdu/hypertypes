@@ -31,6 +31,7 @@ data Let v expr k = Let
 makeLenses ''Let
 
 type instance ChildrenTypesOf (Let v e) = Single e
+instance HasChildrenTypes (Let v e)
 
 makeChildren ''Let
 makeKTraversableAndBases ''Let

@@ -8,6 +8,7 @@ module AST.Knot.Functor
 
 import AST.Class.Applicative.TH (makeKApplicativeAndBases)
 import AST.Class.Children.TH (makeChildren)
+import AST.Class.HasChildrenTypes (HasChildrenTypes)
 import AST.Class.Recursive (Recursive)
 import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import AST.Combinator.Single (Single(..))
@@ -28,6 +29,7 @@ _ToKnot ::
 _ToKnot = iso (\(MkToKnot x) -> x) MkToKnot
 
 type instance ChildrenTypesOf (ToKnot f) = Single (ToKnot f)
+instance HasChildrenTypes (ToKnot f)
 
 makeKApplicativeAndBases ''ToKnot
 makeKTraversableAndFoldable ''ToKnot

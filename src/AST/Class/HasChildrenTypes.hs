@@ -13,6 +13,7 @@ import AST.Class.Pointed (KPointed(..))
 import AST.Class.Traversable (KTraversable(..), ContainedK(..))
 import AST.Knot (Tree, ChildrenTypesOf)
 import Data.Constraint (Dict(..), withDict)
+import Data.Functor.Const (Const(..))
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
@@ -34,6 +35,8 @@ class HasChildrenTypes k where
         Proxy k ->
         Dict (ChildrenTypesConstraints (ChildrenTypesOf k))
     hasChildrenTypes _ = Dict
+
+instance HasChildrenTypes (Const a)
 
 withChildrenTypes ::
     HasChildrenTypes k =>

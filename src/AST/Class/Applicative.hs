@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, KindSignatures, DataKinds #-}
+{-# LANGUAGE NoImplicitPrelude, KindSignatures, DataKinds, FlexibleInstances #-}
 
 module AST.Class.Applicative
     ( KApplicative(..)
@@ -9,6 +9,7 @@ import AST.Class.Functor (KFunctor)
 import AST.Class.Pointed (KPointed)
 import AST.Knot (Knot, Tree, ChildrenTypesOf)
 import Control.Lens (Iso, iso)
+import Data.Functor.Const (Const(..))
 
 newtype LiftK2 l m n (k :: Knot) = MkLiftK2 { runLiftK2 :: l k -> m k -> n k }
 
@@ -26,3 +27,6 @@ class (KPointed k, KFunctor k) => KApplicative k where
         Tree k l ->
         Tree k m ->
         Tree k n
+
+instance KApplicative (Const ()) where
+    liftC2 _ _ _ = Const ()

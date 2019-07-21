@@ -31,6 +31,7 @@ data Lam v expr k = Lam
 makeLenses ''Lam
 
 type instance ChildrenTypesOf (Lam v e) = Single e
+instance HasChildrenTypes (Lam v e)
 
 makeChildren ''Lam
 makeKTraversableAndBases ''Lam

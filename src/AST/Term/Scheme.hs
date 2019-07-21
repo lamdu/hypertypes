@@ -17,6 +17,7 @@ module AST.Term.Scheme
 import           AST
 import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
+import           AST.Class.HasChildrenTypes (HasChildrenTypes)
 import           AST.Class.Pointed (KPointed(..))
 import           AST.Class.Recursive (wrapM, unwrapM)
 import           AST.Combinator.Single (Single)
@@ -54,6 +55,7 @@ newtype QVars typ = QVars
     deriving stock Generic
 
 type instance ChildrenTypesOf (Scheme v t) = Single t
+instance HasChildrenTypes (Scheme v t)
 
 Lens.makeLenses ''Scheme
 Lens.makePrisms ''QVars

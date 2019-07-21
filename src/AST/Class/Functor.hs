@@ -7,6 +7,7 @@ module AST.Class.Functor
 
 import AST.Knot (Knot, Tree, ChildrenTypesOf)
 import Control.Lens (Iso, iso)
+import Data.Functor.Const (Const(..))
 
 newtype MapK m n (k :: Knot) = MkMapK { runMapK :: m k -> n k }
 
@@ -23,3 +24,6 @@ class KFunctor k where
         Tree (ChildrenTypesOf k) (MapK m n) ->
         Tree k m ->
         Tree k n
+
+instance KFunctor (Const a) where
+    mapC _ (Const x) = Const x

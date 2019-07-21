@@ -42,7 +42,7 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Writer (execWriterT)
 import           Data.Binary (Binary)
-import           Data.Constraint (Constraint, withDict)
+import           Data.Constraint (Constraint, Dict(..), withDict)
 import           Data.Foldable (traverse_)
 import           Data.Functor.Const (Const)
 import           Data.Proxy (Proxy(..))
@@ -84,6 +84,13 @@ type instance ChildrenTypesOf (NominalDecl t) = Single t
 type instance ChildrenTypesOf (NominalInst n v) = ChildrenTypesOf v
 type instance ChildrenTypesOf (ToNom n t) = Single t
 type instance ChildrenTypesOf (FromNom n t) = Const ()
+
+instance HasChildrenTypes (NominalDecl t)
+instance HasChildrenTypes (ToNom n t)
+instance HasChildrenTypes (FromNom n t)
+
+instance HasChildrenTypes v => HasChildrenTypes (NominalInst n v) where
+    hasChildrenTypes _ = withDict (hasChildrenTypes (Proxy :: Proxy v)) Dict
 
 makeLenses ''NominalDecl
 makeLenses ''NominalInst
@@ -141,6 +148,7 @@ instance
 instance
     ( c (NominalInst nomId varTypes)
     , ChildrenWithConstraint varTypes (Recursive c)
+    , HasChildrenTypes varTypes
     ) =>
     Recursive c (NominalInst nomId varTypes)
 

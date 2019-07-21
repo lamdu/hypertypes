@@ -9,6 +9,7 @@ module AST.Term.TypeSig
 import           AST
 import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
+import           AST.Class.HasChildrenTypes (HasChildrenTypes)
 import           AST.Combinator.Single (Single)
 import           AST.Infer
 import           AST.Term.Scheme (Scheme, schemeToRestrictedType)
@@ -33,6 +34,7 @@ data TypeSig vars term k = TypeSig
 makeLenses ''TypeSig
 
 type instance ChildrenTypesOf (TypeSig v t) = Single t
+instance HasChildrenTypes (TypeSig v t)
 
 makeChildren ''TypeSig
 makeKTraversableAndBases ''TypeSig

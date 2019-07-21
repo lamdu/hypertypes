@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, DataKinds, TypeFamilies, RankNTypes #-}
-{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE ConstraintKinds, FlexibleInstances #-}
 
 module AST.Class.Pointed
     ( KPointed(..)
@@ -7,8 +7,11 @@ module AST.Class.Pointed
 
 import AST.Knot (Knot, Tree, ChildrenTypesOf)
 import Data.Constraint (Constraint)
+import Data.Functor.Const (Const(..))
 import Data.Kind (Type)
 import Data.Proxy (Proxy)
+
+import Prelude.Compat
 
 class KPointed k where
     -- | Construct a value from given child values
@@ -29,3 +32,9 @@ class KPointed k where
         Proxy constraint ->
         (forall child. constraint child => Tree n child) ->
         Tree k n
+
+instance KPointed (Const ()) where
+    type KLiftConstraint (Const ()) c = ()
+    pureC = id
+    pureK _ = Const ()
+    pureKWith _ _ = Const ()

@@ -9,6 +9,7 @@ import AST.Class.Foldable (KFoldable)
 import AST.Class.Functor (KFunctor)
 import AST.Knot (Knot, Tree)
 import Control.Lens (Iso, iso)
+import Data.Functor.Const (Const(..))
 
 import Prelude.Compat
 
@@ -25,3 +26,6 @@ class (KFunctor k, KFoldable k) => KTraversable k where
     sequenceC ::
         Applicative f =>
         Tree k (ContainedK f l) -> f (Tree k l)
+
+instance KTraversable (Const a) where
+    sequenceC (Const x) = pure (Const x)

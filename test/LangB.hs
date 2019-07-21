@@ -54,6 +54,7 @@ data LangB k
     | BToNom (ToNom Name LangB k)
 
 type instance ChildrenTypesOf LangB = Single LangB
+instance HasChildrenTypes LangB
 
 makeKTraversableAndBases ''LangB
 makeChildren ''LangB

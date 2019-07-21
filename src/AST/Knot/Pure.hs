@@ -6,6 +6,7 @@ module AST.Knot.Pure
 
 import           AST.Class.Applicative.TH (makeKApplicativeAndBases)
 import           AST.Class.Children.TH (makeChildren)
+import           AST.Class.HasChildrenTypes (HasChildrenTypes)
 import           AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import           AST.Class.ZipMatch.TH (makeZipMatch)
 import           AST.Knot (Tree, Tie, ChildrenTypesOf)
@@ -23,7 +24,10 @@ import           Prelude.Compat
 -- type inference brittle. The Iso tells the type-checker that.
 newtype Pure k = MkPure { getPure :: Tie k Pure }
     deriving stock Generic
+
 type instance ChildrenTypesOf Pure = Pure
+instance HasChildrenTypes Pure
+
 makeKApplicativeAndBases ''Pure
 makeKTraversableAndFoldable ''Pure
 makeChildren ''Pure

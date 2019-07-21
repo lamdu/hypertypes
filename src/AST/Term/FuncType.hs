@@ -27,6 +27,7 @@ data FuncType typ k = FuncType
     } deriving Generic
 
 type instance ChildrenTypesOf (FuncType t) = Single t
+instance HasChildrenTypes (FuncType t)
 
 makeLenses ''FuncType
 makeChildrenAndZipMatch ''FuncType

@@ -36,6 +36,7 @@ newtype Scope expr a k = Scope (Tie k (expr (Maybe a)))
 Lens.makePrisms ''Scope
 
 type instance ChildrenTypesOf (Scope e a) = Single (e (Maybe a))
+instance HasChildrenTypes (Scope e a)
 
 newtype ScopeVar (expr :: * -> Knot -> *) a (k :: Knot) = ScopeVar a
 Lens.makePrisms ''ScopeVar

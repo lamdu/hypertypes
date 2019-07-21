@@ -7,6 +7,7 @@ module AST.Class.Foldable
 
 import AST.Knot
 import Control.Lens (Iso, iso)
+import Data.Functor.Const (Const(..))
 
 import Prelude.Compat
 
@@ -24,3 +25,6 @@ class KFoldable k where
         Monoid a =>
         Tree (ChildrenTypesOf k) (ConvertK a l) ->
         Tree k l -> a
+
+instance KFoldable (Const a) where
+    sumC _ _ = mempty

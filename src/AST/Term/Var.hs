@@ -9,6 +9,7 @@ module AST.Term.Var
     ) where
 
 import           AST
+import           AST.Class.HasChildrenTypes (HasChildrenTypes)
 import           AST.Infer
 import           AST.Unify (Unify, UVarOf)
 import           Control.DeepSeq (NFData)
@@ -37,6 +38,7 @@ newtype Var v (expr :: Knot -> *) (k :: Knot) = Var v
     deriving stock (Show, Generic)
 
 type instance ChildrenTypesOf (Var v e) = Const ()
+instance HasChildrenTypes (Var v e)
 
 Lens.makePrisms ''Var
 makeChildren ''Var

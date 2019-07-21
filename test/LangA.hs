@@ -47,6 +47,7 @@ data LangA v k
     | ALit Int
 
 type instance ChildrenTypesOf (LangA v) = Pair (LangA v) (LangA (Maybe v))
+instance HasChildrenTypes (LangA v)
 
 makeKTraversableAndBases ''LangA
 makeChildren ''LangA

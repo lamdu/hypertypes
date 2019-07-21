@@ -7,6 +7,7 @@ module AST.Combinator.Pair
     ) where
 
 import AST.Class.Applicative.TH (makeKApplicativeAndBases)
+import AST.Class.HasChildrenTypes (HasChildrenTypes)
 import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import AST.Class.Has (KHas(..))
 import AST.Combinator.Single (Single(..))
@@ -25,6 +26,8 @@ data Pair a b k = MkPair
     } deriving stock Generic
 
 type instance ChildrenTypesOf (Pair a b) = Pair a b
+instance HasChildrenTypes (Pair a b)
+
 makeLenses ''Pair
 makeKApplicativeAndBases ''Pair
 makeKTraversableAndFoldable ''Pair

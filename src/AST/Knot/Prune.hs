@@ -7,8 +7,10 @@ module AST.Knot.Prune
     ) where
 
 import AST
-import AST.Class.Functor.TH (makeKFunctor)
+import AST.Class.Applicative (LiftK2(..))
+import AST.Class.HasChildrenTypes (HasChildrenTypes)
 import AST.Class.Pointed (KPointed(..))
+import AST.Class.Traversable.TH (makeKTraversableAndBases)
 import AST.Combinator.Compose (Compose(..))
 import AST.Combinator.Single (Single(..))
 import AST.Infer
@@ -26,17 +28,25 @@ data Prune k =
     deriving Generic
 
 type instance ChildrenTypesOf Prune = Single Prune
+instance HasChildrenTypes Prune
 
 makePrisms ''Prune
 makeChildren ''Prune
-makeKFunctor ''Prune
+makeKTraversableAndBases ''Prune
 makeZipMatch ''Prune
+
+-- `KPointed` and `KApplicative` instances in the spirit of `Maybe`
 
 instance KPointed Prune where
     type KLiftConstraint Prune c = c Prune
     pureC (MkSingle x) = Unpruned x
     pureK = Unpruned
     pureKWith _ = Unpruned
+
+instance KApplicative Prune where
+    liftC2 _ Pruned _ = Pruned
+    liftC2 _ _ Pruned = Pruned
+    liftC2 (MkSingle (MkLiftK2 f)) (Unpruned x) (Unpruned y) = f x y & Unpruned
 
 instance c Prune => Recursive c Prune
 

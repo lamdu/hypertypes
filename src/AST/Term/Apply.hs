@@ -29,6 +29,7 @@ data Apply expr k = Apply
     } deriving Generic
 
 type instance ChildrenTypesOf (Apply e) = Single e
+instance HasChildrenTypes (Apply e)
 
 makeLenses ''Apply
 makeChildrenAndZipMatch ''Apply
