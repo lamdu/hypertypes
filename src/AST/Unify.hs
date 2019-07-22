@@ -1,4 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables, FlexibleContexts, BangPatterns #-}
+{-# LANGUAGE DataKinds #-}
 
 module AST.Unify
     ( module AST.Class.Unify
@@ -119,9 +120,10 @@ unifyUTerms xv USkolem{} yv _ = xv <$ unifyError (SkolemUnified xv yv)
 unifyUTerms xv _ yv USkolem{} = yv <$ unifyError (SkolemUnified yv xv)
 unifyUTerms xv (UTerm xt) yv (UTerm yt) =
     withDict (recursive :: RecursiveDict (Unify m) t) $
+    withDict (hasChildrenTypes (Proxy :: Proxy t)) $
     do
         bindVar binding yv (UToVar xv)
-        zipMatchWithA (Proxy :: Proxy (Recursive (Unify m))) unify (xt ^. uBody) (yt ^. uBody)
+        zipMatchWithA (Proxy :: Proxy '[Recursive (Unify m)]) unify (xt ^. uBody) (yt ^. uBody)
             & fromMaybe (xt ^. uBody <$ structureMismatch unify xt yt)
             >>= bindVar binding xv . UTerm . UTermBody (xt ^. uConstraints <> yt ^. uConstraints)
         pure xv
