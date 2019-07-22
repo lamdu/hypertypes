@@ -12,7 +12,7 @@ module AST.Class.Combinators
     , KLiftConstraints(..)
     , pureKWith, pureKWith'
     , mapKWith
-    , foldMapKWith
+    , foldMapKWith, foldMapKWith'
     , traverseKWith, traverseKWith'
     , traverseKWith_
     ) where
@@ -65,19 +65,10 @@ instance
         (pureKWithConstraint (Proxy :: Proxy c) (MkKDict Dict) :: Tree k (KDict '[c]))
         (kLiftConstraint :: Tree k (KDict cs))
 
-{-# INLINE pureKWith #-}
-pureKWith ::
-    forall constraints k n.
-    KLiftConstraints constraints k =>
-    Proxy constraints ->
-    (forall child. ApplyKConstraints constraints child => Tree n child) ->
-    Tree k n
-pureKWith _ f = mapK (\(MkKDict d) -> withDict d f) (kLiftConstraint :: Tree k (KDict constraints))
-
 -- A version of `pureKWith` with an additional proxy argument,
 -- used to work around a GHC inferrence bug (https://gitlab.haskell.org/ghc/ghc/issues/9223):
 -- For some reason GHC has problem with unifying the `n` type parameter,
--- for example if trying to use the regular `pureKWith` in `traverseKWith_`.
+-- for example if trying to use the regular `foldMapKWith` in `traverseKWith_`.
 {-# INLINE pureKWith' #-}
 pureKWith' ::
     forall constraints k n.
@@ -88,6 +79,16 @@ pureKWith' ::
     Tree k n
 pureKWith' _ _ f = mapK (\(MkKDict d) -> withDict d f) (kLiftConstraint :: Tree k (KDict constraints))
 
+
+{-# INLINE pureKWith #-}
+pureKWith ::
+    forall constraints k n.
+    KLiftConstraints constraints k =>
+    Proxy constraints ->
+    (forall child. ApplyKConstraints constraints child => Tree n child) ->
+    Tree k n
+pureKWith = pureKWith' Proxy
+
 {-# INLINE mapKWith #-}
 mapKWith ::
     (KFunctor k, KLiftConstraints constraints (ChildrenTypesOf k)) =>
@@ -97,16 +98,27 @@ mapKWith ::
     Tree k n
 mapKWith p f = mapC (pureKWith p (MkMapK f))
 
+-- A version of `traverseKWith` with an additional proxy argument,
+-- see comment for `pureKWith'`.
+{-# INLINE foldMapKWith' #-}
+foldMapKWith' ::
+    (Monoid a, KFoldable k, KLiftConstraints constraints (ChildrenTypesOf k)) =>
+    Proxy a ->
+    Proxy constraints ->
+    (forall child. ApplyKConstraints constraints child => Tree n child -> a) ->
+    Tree k n -> a
+foldMapKWith' _ p f = foldMapC (pureKWith p (_ConvertK # f))
+
 {-# INLINE foldMapKWith #-}
 foldMapKWith ::
     (Monoid a, KFoldable k, KLiftConstraints constraints (ChildrenTypesOf k)) =>
     Proxy constraints ->
     (forall child. ApplyKConstraints constraints child => Tree n child -> a) ->
     Tree k n -> a
-foldMapKWith p f = foldMapC (pureKWith p (_ConvertK # f))
+foldMapKWith = foldMapKWith' Proxy
 
 -- A version of `traverseKWith` with an additional proxy argument,
--- see reasoning for `pureKWith'`.
+-- see comment for `pureKWith'`.
 {-# INLINE traverseKWith' #-}
 traverseKWith' ::
     (Applicative f, KTraversable k, KLiftConstraints constraints (ChildrenTypesOf k)) =>
@@ -126,10 +138,10 @@ traverseKWith = traverseKWith' Proxy
 
 {-# INLINE traverseKWith_ #-}
 traverseKWith_ ::
+    forall f k constraints m.
     (Applicative f, KFoldable k, KLiftConstraints constraints (ChildrenTypesOf k)) =>
     Proxy constraints ->
     (forall c. ApplyKConstraints constraints c => Tree m c -> f ()) ->
     Tree k m -> f ()
 traverseKWith_ p f =
-    sequenceA_ .
-    foldMapC (pureKWith' (Proxy :: Proxy (ConvertK [f ()] m)) p (MkConvertK ((:[]) . f)))
+    sequenceA_ . foldMapKWith' (Proxy :: Proxy [f ()]) p ((:[]) . f)
