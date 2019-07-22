@@ -41,7 +41,7 @@ occursCheck v0 =
     UUnbound{} -> pure ()
     USkolem{} -> pure ()
     UTerm b ->
-        case (leafExpr :: Maybe (Tree t Pure -> Tree t Pure)) of
+        case (mMapLeafK :: Maybe (Tree t Pure -> Tree t Pure)) of
         Just{} -> pure () -- no children to check!
         Nothing ->
             do

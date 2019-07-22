@@ -340,7 +340,8 @@ subst p mkType params (MkPure x) =
         & maybe (mkType (quantifiedVar # q)) pure
     Nothing ->
         withDict (recursive :: (RecursiveDict (HasChild varTypes `And` QVarHasInstance Ord `And` constraint) typ)) $
-        children (Proxy :: Proxy (Recursive (HasChild varTypes `And` QVarHasInstance Ord `And` constraint)))
+        withDict (hasChildrenTypes (Proxy :: Proxy typ)) $
+        traverseKWith (Proxy :: Proxy '[Recursive (HasChild varTypes `And` QVarHasInstance Ord `And` constraint)])
         (subst p mkType params) x
         >>= mkType
 

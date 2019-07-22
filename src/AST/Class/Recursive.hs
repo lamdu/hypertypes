@@ -28,7 +28,7 @@ import Prelude.Compat
 -- | `Recursive` carries a constraint to all of the descendant types
 -- of an AST. As opposed to the `ChildrenConstraint` type family which
 -- only carries a constraint to the direct children of an AST.
-class (KTraversable expr, HasChildrenTypes expr, Children expr, constraint expr) => Recursive constraint expr where
+class (KTraversable expr, HasChildrenTypes expr, constraint expr) => Recursive constraint expr where
     recursive :: RecursiveDict constraint expr
     {-# INLINE recursive #-}
     -- | When an instance's constraints already imply
@@ -47,7 +47,6 @@ type RecursiveConstraint expr constraint =
 type RecursiveDict constraint expr = Dict (RecursiveConstraint expr constraint)
 
 instance constraint Pure => Recursive constraint Pure
-instance constraint (Const a) => Recursive constraint (Const a)
 
 {-# INLINE wrapM #-}
 wrapM ::
@@ -137,7 +136,8 @@ recursiveChildren ::
     Tree expr n -> f (Tree expr m)
 recursiveChildren _ f x =
     withDict (recursive :: RecursiveDict constraint expr) $
-    children (Proxy :: Proxy (Recursive constraint)) f x
+    withDict (hasChildrenTypes (Proxy :: Proxy expr)) $
+    traverseKWith (Proxy :: Proxy '[Recursive constraint]) f x
 
 {-# INLINE recursiveChildren_ #-}
 recursiveChildren_ ::

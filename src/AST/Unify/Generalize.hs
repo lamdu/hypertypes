@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts, ScopedTypeVariables, LambdaCase, InstanceSigs #-}
 {-# LANGUAGE RankNTypes, TupleSections, FlexibleInstances, DeriveGeneric #-}
-{-# LANGUAGE StandaloneDeriving, UndecidableInstances #-}
+{-# LANGUAGE StandaloneDeriving, UndecidableInstances, DataKinds #-}
 
 module AST.Unify.Generalize
     ( generalize, instantiate
@@ -14,6 +14,7 @@ module AST.Unify.Generalize
 
 import           Algebra.PartialOrd (PartialOrd(..))
 import           AST
+import           AST.Class.Combinators
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Combinator.Flip (Flip, _Flip)
 import           AST.Unify
@@ -89,19 +90,20 @@ generalize v0 =
             USkolem l | toScopeConstraints l `leq` c -> pure (GPoly v1)
             UTerm t ->
                 withDict (recursive :: RecursiveDict (Unify m) t) $
+                withDict (hasChildrenTypes (Proxy :: Proxy t)) $
                 do
                     bindVar binding v1 (UResolving t)
-                    r <- children p generalize (t ^. uBody)
+                    r <- traverseKWith p generalize (t ^. uBody)
                     r <$ bindVar binding v1 (UTerm t)
                 <&>
                 \b ->
-                if foldMapChildren p (All . Lens.has _GMono) b ^. Lens._Wrapped
+                if foldMapKWith p (All . Lens.has _GMono) b ^. Lens._Wrapped
                 then GMono v1
                 else GBody b
             UResolving t -> GMono v1 <$ occursError v1 t
             _ -> pure (GMono v1)
     where
-        p = Proxy :: Proxy (Recursive (Unify m))
+        p = Proxy :: Proxy '[Recursive (Unify m)]
 
 {-# INLINE instantiateForAll #-}
 instantiateForAll ::

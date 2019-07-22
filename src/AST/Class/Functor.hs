@@ -9,6 +9,8 @@ import AST.Knot (Knot, Tree, ChildrenTypesOf)
 import Control.Lens (Iso, iso)
 import Data.Functor.Const (Const(..))
 
+import Prelude.Compat
+
 newtype MapK m n (k :: Knot) = MkMapK { runMapK :: m k -> n k }
 
 _MapK ::
@@ -25,5 +27,9 @@ class KFunctor k where
         Tree k m ->
         Tree k n
 
+    mMapLeafK :: Maybe (k m -> k n)
+    mMapLeafK = Nothing
+
 instance KFunctor (Const a) where
     mapC _ (Const x) = Const x
+    mMapLeafK = Just (\(Const x) -> Const x)

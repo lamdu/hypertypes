@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables, FlexibleContexts, TemplateHaskell #-}
-{-# LANGUAGE LambdaCase, TypeFamilies, TypeOperators #-}
+{-# LANGUAGE LambdaCase, TypeFamilies, TypeOperators, DataKinds #-}
 
 -- | Load state from pure bindings to ST based bindings
 
@@ -8,7 +8,7 @@ module AST.Unify.Binding.ST.Load
     ) where
 
 import           AST
-import           AST.Class.Combinators (And)
+import           AST.Class.Combinators
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Unify.Binding (Binding(..), _Binding, UVar(..))
@@ -76,20 +76,24 @@ loadBody ::
     forall m typeVars t.
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
-    , ChildrenWithConstraint t (Recursive (HasChild typeVars `And` Unify m))
+    , KTraversable t
+    , HasChildrenTypes t
+    , KLiftConstraint (ChildrenTypesOf t) (Recursive (HasChild typeVars `And` Unify m))
     ) =>
     Tree typeVars Binding -> Tree typeVars (ConvertState (World m)) ->
     Tree t UVar -> m (Tree t (STUVar (World m)))
 loadBody src conv =
-    children
-    (Proxy :: Proxy (Recursive (HasChild typeVars `And` Unify m)))
+    withDict (hasChildrenTypes (Proxy :: Proxy t)) $
+    traverseKWith
+    (Proxy :: Proxy '[Recursive (HasChild typeVars `And` Unify m)])
     (loadVar src conv)
 
 load ::
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
     , KTraversable typeVars, HasChildrenTypes typeVars
-    , ChildrenWithConstraint t (Recursive (HasChild typeVars `And` Unify m))
+    , KTraversable t, HasChildrenTypes t
+    , KLiftConstraint (ChildrenTypesOf t) (Recursive (HasChild typeVars `And` Unify m))
     ) =>
     Tree typeVars Binding -> Tree t UVar -> m (Tree t (STUVar (World m)))
 load src collection =
