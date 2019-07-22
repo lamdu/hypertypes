@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, DataKinds, FlexibleContexts, FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses, ConstraintKinds, UndecidableSuperClasses #-}
 {-# LANGUAGE UndecidableInstances, TypeOperators, TypeFamilies, RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables, PolyKinds #-}
 
 -- | Combinators for partially applied constraints on knots
 
@@ -11,8 +11,10 @@ module AST.Class.Combinators
     , ApplyKConstraints
     , KLiftConstraints(..)
     , pureKWith
+    , mapKWith
     , foldMapKWith
-    , traverseKWith
+    , traverseKWith, traverseKWith'
+    , traverseKWith_
     ) where
 
 import AST.Class.Applicative
@@ -21,9 +23,10 @@ import AST.Class.Foldable
 import AST.Class.Functor
 import AST.Class.Pointed (KPointed(..))
 import AST.Class.Traversable
-import AST.Knot (Tree, Knot, RunKnot, Tie, ChildrenTypesOf)
+import AST.Knot
 import Control.Lens.Operators
 import Data.Constraint (Dict(..), Constraint, withDict)
+import Data.Functor.Const (Const(..))
 import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
 
@@ -49,17 +52,20 @@ class
 instance
     (KApplicative k, HasChildrenTypes k) =>
     KLiftConstraints '[] k where
+    {-# INLINE kLiftConstraint #-}
     kLiftConstraint = pureK (MkKDict Dict)
 
 instance
     (KLiftConstraints cs k, KLiftConstraint k c) =>
     KLiftConstraints (c ': cs) k where
+    {-# INLINE kLiftConstraint #-}
     kLiftConstraint =
         liftK2
         (\(MkKDict c) (MkKDict cs) -> withDict c (withDict cs (MkKDict Dict)))
         (pureKWithConstraint (Proxy :: Proxy c) (MkKDict Dict) :: Tree k (KDict '[c]))
         (kLiftConstraint :: Tree k (KDict cs))
 
+{-# INLINE pureKWith #-}
 pureKWith ::
     forall constraints k n.
     KLiftConstraints constraints k =>
@@ -68,6 +74,16 @@ pureKWith ::
     Tree k n
 pureKWith _ f = mapK (\(MkKDict d) -> withDict d f) (kLiftConstraint :: Tree k (KDict constraints))
 
+{-# INLINE mapKWith #-}
+mapKWith ::
+    (KFunctor k, KLiftConstraints constraints (ChildrenTypesOf k)) =>
+    Proxy constraints ->
+    (forall child. ApplyKConstraints constraints child => Tree m child -> Tree n child) ->
+    Tree k m ->
+    Tree k n
+mapKWith p f = mapC (pureKWith p (MkMapK f))
+
+{-# INLINE foldMapKWith #-}
 foldMapKWith ::
     (Monoid a, KFoldable k, KLiftConstraints constraints (ChildrenTypesOf k)) =>
     Proxy constraints ->
@@ -75,10 +91,32 @@ foldMapKWith ::
     Tree k n -> a
 foldMapKWith p f = foldMapC (pureKWith p (_ConvertK # f))
 
+-- A version of `traverseKWith` with an additional proxy argument,
+-- used to work around a GHC inferrence bug (https://gitlab.haskell.org/ghc/ghc/issues/9223):
+-- For some reason GHC has problem with unifying the `n` type parameter,
+-- for example if trying to use the regular `traverseKWith` in `traverseKWith_`.
+{-# INLINE traverseKWith' #-}
+traverseKWith' ::
+    (Applicative f, KTraversable k, KLiftConstraints constraints (ChildrenTypesOf k)) =>
+    Proxy n ->
+    Proxy constraints ->
+    (forall c. ApplyKConstraints constraints c => Tree m c -> f (Tree n c)) ->
+    Tree k m -> f (Tree k n)
+traverseKWith' _ p f = sequenceC . mapC (pureKWith p (MkMapK (MkContainedK . f)))
+
 {-# INLINE traverseKWith #-}
 traverseKWith ::
     (Applicative f, KTraversable k, KLiftConstraints constraints (ChildrenTypesOf k)) =>
     Proxy constraints ->
     (forall c. ApplyKConstraints constraints c => Tree m c -> f (Tree n c)) ->
     Tree k m -> f (Tree k n)
-traverseKWith p f = sequenceC . mapC (pureKWith p (MkMapK (MkContainedK . f)))
+traverseKWith = traverseKWith' Proxy
+
+{-# INLINE traverseKWith_ #-}
+traverseKWith_ ::
+    (Applicative f, KTraversable k, KLiftConstraints constraints (ChildrenTypesOf k)) =>
+    Proxy constraints ->
+    (forall c. ApplyKConstraints constraints c => Tree m c -> f ()) ->
+    Tree k m -> f ()
+traverseKWith_ p f x =
+    () <$ traverseKWith' (Proxy :: Proxy (Const ())) p (\c -> Const () <$ f c) x

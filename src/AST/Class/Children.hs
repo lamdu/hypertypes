@@ -3,14 +3,13 @@
 
 module AST.Class.Children
     ( Children(..), ChildrenWithConstraint
-    , children_, overChildren, foldMapChildren, foldMapAChildren
+    , foldMapChildren
     ) where
 
 import AST.Knot (Knot, Tree)
 import Control.Lens.Operators
 import Data.Constraint (Constraint)
 import Data.Functor.Const (Const(..))
-import Data.Functor.Identity (Identity(..))
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
@@ -44,14 +43,6 @@ children_ ::
 children_ p f e =
     () <$ (children p (\c -> Const () <$ f c) e :: f (Tree expr (Const ())))
 
-{-# INLINE overChildren #-}
-overChildren ::
-    ChildrenWithConstraint expr constraint =>
-    Proxy constraint ->
-    (forall child. constraint child => Tree n child -> Tree m child) ->
-    Tree expr n -> Tree expr m
-overChildren p f = runIdentity . children p (Identity . f)
-
 {-# INLINE foldMapChildren #-}
 foldMapChildren ::
     (ChildrenWithConstraint expr constraint, Monoid a) =>
@@ -60,14 +51,3 @@ foldMapChildren ::
     Tree expr n -> a
 foldMapChildren p f x =
     children_ p (\c -> (f c, ())) x & fst
-
-{-# INLINE foldMapAChildren #-}
-foldMapAChildren ::
-    forall f expr constraint a n.
-    (Applicative f, ChildrenWithConstraint expr constraint, Monoid a) =>
-    Proxy constraint ->
-    (forall child. constraint child => Tree n child -> f a) ->
-    Tree expr n -> f a
-foldMapAChildren p f x =
-    (children p (\c -> f c <&> Const) x :: f (Tree expr (Const a)))
-    <&> foldMapChildren p getConst

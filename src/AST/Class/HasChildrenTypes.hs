@@ -2,8 +2,8 @@
 {-# LANGUAGE FlexibleContexts, DefaultSignatures #-}
 
 module AST.Class.HasChildrenTypes
-    ( HasChildrenTypes(..)
-    , mapK, liftK2, foldMapK, traverseK
+    ( HasChildrenTypes(..), ChildrenTypesConstraints
+    , mapK, liftK2, foldMapK, traverseK, traverseK_
     ) where
 
 import AST.Class.Applicative (KApplicative(..), LiftK2(..))
@@ -82,3 +82,10 @@ traverseK ::
     (forall c. Tree m c -> f (Tree n c)) ->
     Tree k m -> f (Tree k n)
 traverseK f = sequenceC . mapK (MkContainedK . f)
+
+{-# INLINE traverseK_ #-}
+traverseK_ ::
+    (Applicative f, KTraversable k, HasChildrenTypes k) =>
+    (forall c. Tree m c -> f ()) ->
+    Tree k m -> f ()
+traverseK_ f x = () <$ traverseK (\c -> Const () <$ f c) x

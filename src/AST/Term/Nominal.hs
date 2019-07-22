@@ -238,12 +238,15 @@ class HasNominalInst nomId typ where
 lookupParams ::
     forall m varTypes.
     ( Applicative m
-    , ChildrenWithConstraint varTypes (Unify m)
+    , KTraversable varTypes
+    , HasChildrenTypes varTypes
+    , KLiftConstraint (ChildrenTypesOf varTypes) (Unify m)
     ) =>
     Tree varTypes (QVarInstances (UVarOf m)) ->
     m (Tree varTypes (QVarInstances (UVarOf m)))
 lookupParams =
-    children (Proxy :: Proxy (Unify m)) ((_QVarInstances . traverse) lookupParam)
+    withDict (hasChildrenTypes (Proxy :: Proxy varTypes)) $
+    traverseKWith (Proxy :: Proxy '[Unify m]) ((_QVarInstances . traverse) lookupParam)
     where
         lookupParam v =
             lookupVar binding v
@@ -263,19 +266,22 @@ instance
     , MonadScopeLevel m
     , HasNominalInst nomId (TypeOf expr)
     , MonadNominals nomId (TypeOf expr) m
-    , ChildrenWithConstraint (NomVarTypes (TypeOf expr)) (Unify m)
+    , KTraversable (NomVarTypes (TypeOf expr))
+    , HasChildrenTypes (NomVarTypes (TypeOf expr))
+    , KLiftConstraint (ChildrenTypesOf (NomVarTypes (TypeOf expr))) (Unify m)
     ) =>
     Infer m (ToNom nomId expr) where
 
     {-# INLINE inferBody #-}
     inferBody (ToNom nomId val) =
+        withDict (hasChildrenTypes (Proxy :: Proxy (NomVarTypes (TypeOf expr)))) $
         do
             (valI, paramsT) <-
                 do
                     InferredChild valI valT <- inferChild val
                     LoadedNominalDecl params foralls gen <- getNominalDecl nomId
                     recover <-
-                        children_ (Proxy :: Proxy (Unify m))
+                        traverseKWith_ (Proxy :: Proxy '[Unify m])
                         (traverse_ (instantiateForAll USkolem) . (^. _QVarInstances))
                         foralls
                         & execWriterT
@@ -294,7 +300,9 @@ instance
     , HasFuncType (TypeOf expr)
     , HasNominalInst nomId (TypeOf expr)
     , MonadNominals nomId (TypeOf expr) m
-    , ChildrenWithConstraint (NomVarTypes (TypeOf expr)) (Unify m)
+    , KTraversable (NomVarTypes (TypeOf expr))
+    , HasChildrenTypes (NomVarTypes (TypeOf expr))
+    , KLiftConstraint (ChildrenTypesOf (NomVarTypes (TypeOf expr))) (Unify m)
     ) =>
     Infer m (FromNom nomId expr) where
 

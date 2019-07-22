@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, RankNTypes, DefaultSignatures #-}
 {-# LANGUAGE MultiParamTypeClasses, ConstraintKinds, FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts, ScopedTypeVariables, UndecidableInstances #-}
-{-# LANGUAGE UndecidableSuperClasses #-}
+{-# LANGUAGE UndecidableSuperClasses, DataKinds, TypeFamilies #-}
 
 module AST.Class.Recursive
     ( Recursive(..), RecursiveConstraint, RecursiveDict
@@ -10,7 +10,9 @@ module AST.Class.Recursive
     , recursiveChildren, recursiveOverChildren, recursiveChildren_
     ) where
 
-import AST.Class.Children (Children(..), foldMapChildren, overChildren, children_)
+import AST.Class.Children (Children(..))
+import AST.Class.Combinators
+import AST.Class.HasChildrenTypes
 import AST.Class.Pointed (KPointed(..))
 import AST.Class.Traversable (KTraversable)
 import AST.Knot (Tree, ChildrenTypesOf)
@@ -26,7 +28,7 @@ import Prelude.Compat
 -- | `Recursive` carries a constraint to all of the descendant types
 -- of an AST. As opposed to the `ChildrenConstraint` type family which
 -- only carries a constraint to the direct children of an AST.
-class (KTraversable expr, Children expr, constraint expr) => Recursive constraint expr where
+class (KTraversable expr, HasChildrenTypes expr, Children expr, constraint expr) => Recursive constraint expr where
     recursive :: RecursiveDict constraint expr
     {-# INLINE recursive #-}
     -- | When an instance's constraints already imply
@@ -119,9 +121,11 @@ foldMapRecursive ::
 foldMapRecursive p0 p1 f x =
     withDict (recursive :: RecursiveDict c0 expr) $
     withDict (recursive :: RecursiveDict c1 f) $
+    withDict (hasChildrenTypes (Proxy :: Proxy expr)) $
+    withDict (hasChildrenTypes (Proxy :: Proxy f)) $
     f x <>
-    foldMapChildren (Proxy :: Proxy (Recursive c0))
-    (foldMapChildren (Proxy :: Proxy (Recursive c1)) (foldMapRecursive p0 p1 f))
+    foldMapKWith (Proxy :: Proxy '[Recursive c0])
+    (foldMapKWith (Proxy :: Proxy '[Recursive c1]) (foldMapRecursive p0 p1 f))
     x
 
 {-# INLINE recursiveChildren #-}
@@ -144,7 +148,8 @@ recursiveChildren_ ::
     Tree expr n -> f ()
 recursiveChildren_ _ f x =
     withDict (recursive :: RecursiveDict constraint expr) $
-    children_ (Proxy :: Proxy (Recursive constraint)) f x
+    withDict (hasChildrenTypes (Proxy :: Proxy expr)) $
+    traverseKWith_ (Proxy :: Proxy '[Recursive constraint]) f x
 
 {-# INLINE recursiveOverChildren #-}
 recursiveOverChildren ::
@@ -155,4 +160,5 @@ recursiveOverChildren ::
     Tree expr n -> Tree expr m
 recursiveOverChildren _ f x =
     withDict (recursive :: RecursiveDict constraint expr) $
-    overChildren (Proxy :: Proxy (Recursive constraint)) f x
+    withDict (hasChildrenTypes (Proxy :: Proxy expr)) $
+    mapKWith (Proxy :: Proxy '[Recursive constraint]) f x
