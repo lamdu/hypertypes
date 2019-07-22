@@ -13,6 +13,7 @@ import AST.Class.Pointed (KPointed(..))
 import AST.Class.Traversable (KTraversable(..), ContainedK(..))
 import AST.Knot (Tree, ChildrenTypesOf)
 import Data.Constraint (Dict(..), withDict)
+import Data.Foldable (sequenceA_)
 import Data.Functor.Const (Const(..))
 import Data.Proxy (Proxy(..))
 
@@ -85,7 +86,8 @@ traverseK f = sequenceC . mapK (MkContainedK . f)
 
 {-# INLINE traverseK_ #-}
 traverseK_ ::
-    (Applicative f, KTraversable k, HasChildrenTypes k) =>
+    (Applicative f, KFoldable k, HasChildrenTypes k) =>
     (forall c. Tree m c -> f ()) ->
     Tree k m -> f ()
-traverseK_ f x = () <$ traverseK (\c -> Const () <$ f c) x
+traverseK_ f =
+    withChildrenTypes (sequenceA_ . foldMapC (pureK (MkConvertK ((:[]) . f))))

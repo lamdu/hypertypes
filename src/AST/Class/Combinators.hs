@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, DataKinds, FlexibleContexts, FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses, ConstraintKinds, UndecidableSuperClasses #-}
 {-# LANGUAGE UndecidableInstances, TypeOperators, TypeFamilies, RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables, PolyKinds #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 -- | Combinators for partially applied constraints on knots
 
@@ -10,7 +10,7 @@ module AST.Class.Combinators
     , TieHasConstraint
     , ApplyKConstraints
     , KLiftConstraints(..)
-    , pureKWith
+    , pureKWith, pureKWith'
     , mapKWith
     , foldMapKWith
     , traverseKWith, traverseKWith'
@@ -26,7 +26,7 @@ import AST.Class.Traversable
 import AST.Knot
 import Control.Lens.Operators
 import Data.Constraint (Dict(..), Constraint, withDict)
-import Data.Functor.Const (Const(..))
+import Data.Foldable (sequenceA_)
 import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
 
@@ -74,6 +74,20 @@ pureKWith ::
     Tree k n
 pureKWith _ f = mapK (\(MkKDict d) -> withDict d f) (kLiftConstraint :: Tree k (KDict constraints))
 
+-- A version of `pureKWith` with an additional proxy argument,
+-- used to work around a GHC inferrence bug (https://gitlab.haskell.org/ghc/ghc/issues/9223):
+-- For some reason GHC has problem with unifying the `n` type parameter,
+-- for example if trying to use the regular `pureKWith` in `traverseKWith_`.
+{-# INLINE pureKWith' #-}
+pureKWith' ::
+    forall constraints k n.
+    KLiftConstraints constraints k =>
+    Proxy n ->
+    Proxy constraints ->
+    (forall child. ApplyKConstraints constraints child => Tree n child) ->
+    Tree k n
+pureKWith' _ _ f = mapK (\(MkKDict d) -> withDict d f) (kLiftConstraint :: Tree k (KDict constraints))
+
 {-# INLINE mapKWith #-}
 mapKWith ::
     (KFunctor k, KLiftConstraints constraints (ChildrenTypesOf k)) =>
@@ -92,9 +106,7 @@ foldMapKWith ::
 foldMapKWith p f = foldMapC (pureKWith p (_ConvertK # f))
 
 -- A version of `traverseKWith` with an additional proxy argument,
--- used to work around a GHC inferrence bug (https://gitlab.haskell.org/ghc/ghc/issues/9223):
--- For some reason GHC has problem with unifying the `n` type parameter,
--- for example if trying to use the regular `traverseKWith` in `traverseKWith_`.
+-- see reasoning for `pureKWith'`.
 {-# INLINE traverseKWith' #-}
 traverseKWith' ::
     (Applicative f, KTraversable k, KLiftConstraints constraints (ChildrenTypesOf k)) =>
@@ -114,9 +126,10 @@ traverseKWith = traverseKWith' Proxy
 
 {-# INLINE traverseKWith_ #-}
 traverseKWith_ ::
-    (Applicative f, KTraversable k, KLiftConstraints constraints (ChildrenTypesOf k)) =>
+    (Applicative f, KFoldable k, KLiftConstraints constraints (ChildrenTypesOf k)) =>
     Proxy constraints ->
     (forall c. ApplyKConstraints constraints c => Tree m c -> f ()) ->
     Tree k m -> f ()
-traverseKWith_ p f x =
-    () <$ traverseKWith' (Proxy :: Proxy (Const ())) p (\c -> Const () <$ f c) x
+traverseKWith_ p f =
+    sequenceA_ .
+    foldMapC (pureKWith' (Proxy :: Proxy (ConvertK [f ()] m)) p (MkConvertK ((:[]) . f)))
