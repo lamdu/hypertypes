@@ -38,7 +38,7 @@ library:
   - QuickCheck
   - show-combinators
   - template-haskell
-  - th-abstraction
+  - th-abstraction < 0.3
   ghc-options:
   - -O2
   - -Wall

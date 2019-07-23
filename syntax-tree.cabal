@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 32ffe78c3e30bd01dac96ae0bed58a2108beb74e85fe16a92512adfbbb824216
+-- hash: 595ad827b0dc4b85da328a2f523272eb80cc4bd851a14e7d273009652dabfbcf
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -120,7 +120,7 @@ library
     , pretty
     , show-combinators
     , template-haskell
-    , th-abstraction
+    , th-abstraction <0.3
     , transformers
   default-language: Haskell2010
 
