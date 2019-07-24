@@ -29,6 +29,10 @@ type instance ChildrenTypesOf (RecursiveChildren a) = RecursiveChildren a
 
 instance
     Recursive HasChildrenTypes a =>
+    HasChildrenTypes (RecursiveChildren a)
+
+instance
+    Recursive HasChildrenTypes a =>
     KPointed (RecursiveChildren a) where
 
     type KLiftConstraint (RecursiveChildren a) c = Recursive c a

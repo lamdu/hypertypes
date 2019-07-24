@@ -12,10 +12,12 @@ module AST.Infer.Term
     ) where
 
 import AST
+import AST.Class.Combinators
 import AST.Class.Functor
 import AST.Combinator.Both
 import AST.Combinator.Flip (Flip(..), _Flip)
-import Control.Lens (Traversal, Lens', makeLenses, from)
+import AST.Combinator.RecursiveChildren
+import Control.Lens (Traversal, Lens', makeLenses, makePrisms, from)
 import Control.Lens.Operators
 import Data.Constraint
 import Data.Proxy (Proxy(..))
@@ -99,11 +101,113 @@ makeLenses ''ITerm
 type InferChildDeps c ast =
     ( c (TypeOf ast)
     , KTraversable ast
+    , HasChildrenTypes (ScopeOf ast)
     , KLiftConstraint (ChildrenTypesOf (ScopeOf ast)) c
     , ChildrenWithConstraint (ScopeOf ast) c
     )
 class    InferChildDeps c ast => InferChildConstraints c ast
 instance InferChildDeps c ast => InferChildConstraints c ast
+
+newtype ITermTypes e k =
+    ITermTypes (Tree (RecursiveChildren e) (Flip IResultChildrenTypes (RunKnot k)))
+makePrisms ''ITermTypes
+
+type instance ChildrenTypesOf (ITermTypes e) = ITermTypes e
+type instance ChildrenTypesOf (Flip (ITerm a) e) = ITermTypes e
+
+instance
+    ( Recursive HasChildrenTypes e
+    , Recursive (InferChildConstraints HasChildrenTypes) e
+    ) =>
+    KPointed (ITermTypes e) where
+
+    type KLiftConstraint (ITermTypes e) c = Recursive (InferChildConstraints c) e
+
+    {-# INLINE pureC #-}
+    pureC = id
+
+    {-# INLINE pureK #-}
+    pureK f =
+        pureKWithConstraint (Proxy :: Proxy (InferChildConstraints HasChildrenTypes))
+        (_Flip # withScopeOfP (\p -> withDict (hasChildrenTypes p) (pureK f)))
+        & ITermTypes
+
+    {-# INLINE pureKWithConstraint #-}
+    pureKWithConstraint p f =
+        pureKWith (makeP p)
+        (_Flip # withScopeOfP (\ps -> withDict (hasChildrenTypes ps) (pureKWithConstraint p f)))
+        & ITermTypes
+        where
+            makeP ::
+                Proxy c ->
+                Proxy '[InferChildConstraints c, InferChildConstraints HasChildrenTypes]
+            makeP _ = Proxy
+
+{-# INLINE withScopeOfP #-}
+withScopeOfP ::
+    (Proxy (ScopeOf k) -> Tree (IResultChildrenTypes k) n) ->
+    Tree (IResultChildrenTypes k) n
+withScopeOfP g = g Proxy
+
+instance
+    ( Recursive HasChildrenTypes e
+    , Recursive (InferChildConstraints HasChildrenTypes) e
+    ) =>
+    KFunctor (ITermTypes e) where
+
+    {-# INLINE mapC #-}
+    mapC (ITermTypes (RecursiveChildren (MkFlip mapTop) mapSub)) =
+        _ITermTypes %~
+        \(RecursiveChildren t s) ->
+        RecursiveChildren
+        { _recSelf = t & _Flip %~ mapC mapTop
+        , _recSub =
+            withDict (hasChildrenTypes (Proxy :: Proxy e)) $
+            withDict (recursive :: RecursiveDict HasChildrenTypes e) $
+            withDict (recursive :: RecursiveDict (InferChildConstraints HasChildrenTypes) e) $
+            mapC
+            ( mapKWith
+                (Proxy ::
+                    Proxy '[Recursive HasChildrenTypes, Recursive (InferChildConstraints HasChildrenTypes)])
+                ( \(MkFlip f) ->
+                    _Flip %~
+                    mapC
+                    ( mapKWith (Proxy :: Proxy '[InferChildConstraints HasChildrenTypes])
+                        ( \(MkFlip i) ->
+                            _Flip %~ mapC i
+                            & MkMapK
+                        ) f
+                    ) & MkMapK
+                ) mapSub
+            ) s
+        }
+
+instance
+    ( Recursive HasChildrenTypes e
+    , Recursive (InferChildConstraints HasChildrenTypes) e
+    ) =>
+    KApply (ITermTypes e) where
+
+    {-# INLINE zipK #-}
+    zipK (ITermTypes x) =
+        _ITermTypes %~
+        liftK2With (Proxy :: Proxy '[InferChildConstraints HasChildrenTypes])
+        (\(MkFlip x0) -> _Flip %~ zipK x0) x
+
+instance
+    ( Recursive HasChildrenTypes e
+    , Recursive (InferChildConstraints HasChildrenTypes) e
+    ) =>
+    HasChildrenTypes (ITermTypes e) where
+
+    {-# INLINE hasChildrenTypes #-}
+    hasChildrenTypes _ = Dict
+
+instance
+    ( Recursive HasChildrenTypes e
+    , Recursive (InferChildConstraints HasChildrenTypes) e
+    ) =>
+    HasChildrenTypes (Flip (ITerm a) e)
 
 instance Children (Flip (ITerm a) e) where
     type ChildrenConstraint (Flip (ITerm a) e) c = Recursive (InferChildConstraints c) e

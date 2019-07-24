@@ -127,6 +127,7 @@ newtype ScopeTypes v = ScopeTypes (Map Name (Tree (GTerm (RunKnot v)) Typ))
     deriving newtype (Semigroup, Monoid)
 
 type instance ChildrenTypesOf ScopeTypes = ChildrenTypesOf (Flip GTerm Typ)
+instance HasChildrenTypes ScopeTypes
 
 Lens.makePrisms ''ScopeTypes
 
