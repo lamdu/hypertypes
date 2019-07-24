@@ -46,6 +46,20 @@ instance HasChildrenTypes (Const a) where
     {-# INLINE mNoChildren #-}
     mNoChildren = Just (\(Const x) -> Const x)
 
+instance
+    (HasChildrenTypes a, HasChildrenTypes b) =>
+    HasChildrenTypes (Both a b) where
+
+    {-# INLINE hasChildrenTypes #-}
+    hasChildrenTypes p =
+        withDict (hasChildrenTypes (pa p)) $
+        withDict (hasChildrenTypes (pb p)) Dict
+        where
+            pa :: Proxy (Both a b) -> Proxy a
+            pa _ = Proxy
+            pb :: Proxy (Both a b) -> Proxy b
+            pb _ = Proxy
+
 {-# INLINE withChildrenTypes #-}
 withChildrenTypes ::
     HasChildrenTypes k =>
