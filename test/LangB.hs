@@ -27,6 +27,7 @@ import           AST.Unify.New
 import           AST.Unify.QuantifiedVar
 import           AST.Unify.Term
 import           Control.Applicative
+import           Control.Lens (Traversal)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Except
@@ -124,7 +125,27 @@ instance
 
 newtype ScopeTypes v = ScopeTypes (Map Name (Tree (GTerm (RunKnot v)) Typ))
     deriving newtype (Semigroup, Monoid)
+
+type instance ChildrenTypesOf ScopeTypes = ChildrenTypesOf (Flip GTerm Typ)
+
 Lens.makePrisms ''ScopeTypes
+
+typesInScope ::
+    Traversal
+        (Tree ScopeTypes v0)
+        (Tree ScopeTypes v1)
+        (Tree (Flip GTerm Typ) v0)
+        (Tree (Flip GTerm Typ) v1)
+typesInScope = _ScopeTypes . traverse . Lens.from _Flip
+
+instance KFunctor ScopeTypes where
+    mapC f = typesInScope %~ mapC f
+
+instance KFoldable ScopeTypes where
+    foldMapC f = foldMap (foldMapC f) . (^.. typesInScope)
+
+instance KTraversable ScopeTypes where
+    sequenceC = typesInScope sequenceC
 
 instance Children ScopeTypes where
     type ChildrenConstraint ScopeTypes c = (c Typ, c Row)
