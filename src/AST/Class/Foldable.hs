@@ -13,6 +13,7 @@ import Prelude.Compat
 
 newtype ConvertK a l (k :: Knot) = MkConvertK { runConvertK :: l k -> a }
 
+{-# INLINE _ConvertK #-}
 _ConvertK ::
     Iso (Tree (ConvertK a0 l0) k0)
         (Tree (ConvertK a1 l1) k1)
@@ -24,7 +25,9 @@ class KFoldable k where
     foldMapC ::
         Monoid a =>
         Tree (ChildrenTypesOf k) (ConvertK a l) ->
-        Tree k l -> a
+        Tree k l ->
+        a
 
 instance KFoldable (Const a) where
+    {-# INLINE foldMapC #-}
     foldMapC _ _ = mempty

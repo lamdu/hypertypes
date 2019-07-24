@@ -13,6 +13,7 @@ import Prelude.Compat
 
 newtype MapK m n (k :: Knot) = MkMapK { runMapK :: m k -> n k }
 
+{-# INLINE _MapK #-}
 _MapK ::
     Iso (Tree (MapK m0 n0) k0)
         (Tree (MapK m1 n1) k1)
@@ -28,8 +29,11 @@ class KFunctor k where
         Tree k n
 
     mMapLeafK :: Maybe (k m -> k n)
+    {-# INLINE mMapLeafK #-}
     mMapLeafK = Nothing
 
 instance KFunctor (Const a) where
+    {-# INLINE mapC #-}
     mapC _ (Const x) = Const x
+    {-# INLINE mMapLeafK #-}
     mMapLeafK = Just (\(Const x) -> Const x)

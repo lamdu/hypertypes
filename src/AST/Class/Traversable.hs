@@ -15,6 +15,7 @@ import Prelude.Compat
 
 newtype ContainedK f l (k :: Knot) = MkContainedK { runContainedK :: f (l k) }
 
+{-# INLINE _ContainedK #-}
 _ContainedK ::
     Iso (Tree (ContainedK f0 l0) k0)
         (Tree (ContainedK f1 l1) k1)
@@ -25,7 +26,9 @@ _ContainedK = iso runContainedK MkContainedK
 class (KFunctor k, KFoldable k) => KTraversable k where
     sequenceC ::
         Applicative f =>
-        Tree k (ContainedK f l) -> f (Tree k l)
+        Tree k (ContainedK f l) ->
+        f (Tree k l)
 
 instance KTraversable (Const a) where
+    {-# INLINE sequenceC #-}
     sequenceC (Const x) = pure (Const x)
