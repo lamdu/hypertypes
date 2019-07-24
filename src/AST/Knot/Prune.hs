@@ -39,7 +39,6 @@ makeZipMatch ''Prune
 -- `KPointed` and `KApplicative` instances in the spirit of `Maybe`
 
 instance KPointed Prune where
-    type KLiftConstraint Prune c = c Prune
     pureC (MkSingle x) = Unpruned x
     pureK = Unpruned
     pureKWithConstraint _ = Unpruned

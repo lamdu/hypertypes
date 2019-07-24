@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, DataKinds, TypeFamilies, RankNTypes #-}
-{-# LANGUAGE ConstraintKinds, FlexibleInstances #-}
+{-# LANGUAGE ConstraintKinds, FlexibleInstances, UndecidableInstances #-}
 
 module AST.Class.Pointed
     ( KPointed(..)
@@ -33,6 +33,7 @@ class KPointed k where
     -- an unbounded set of children types, such as
     -- `Flip GTerm (LangA Nothing)` (with `LangA` from the test suite).
     type KLiftConstraint k (c :: (Knot -> Type) -> Constraint) :: Constraint
+    type KLiftConstraint k c = KLiftConstraint (ChildrenTypesOf k) c
 
     -- | Construct a value from a higher ranked child value with a constraint
     pureKWithConstraint ::
