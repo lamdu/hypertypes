@@ -7,3 +7,4 @@
 /dist/
 /ghci-out/
 /.dir-locals.el
+/.ghcid
