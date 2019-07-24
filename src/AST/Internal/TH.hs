@@ -52,7 +52,7 @@ makeTypeInfo name =
     do
         info <- D.reifyDatatype name
         (dst, var) <- parts info
-        contents <- evalStateT (childrenTypes ''KLiftConstraint var (AppT dst (VarT var))) mempty
+        contents <- evalStateT (childrenTypes var (AppT dst (VarT var))) mempty
         pure TypeInfo
             { tiInstance = dst
             , tiVar = var
@@ -74,8 +74,8 @@ parts info =
                 foldl AppT (ConT (D.datatypeName info)) (init xs <&> VarT . D.tvName)
 
 childrenTypes ::
-    Name -> Name -> Type -> StateT (Set Type) Q TypeContents
-childrenTypes fam var typ =
+    Name -> Type -> StateT (Set Type) Q TypeContents
+childrenTypes var typ =
     do
         did <- gets (^. Lens.contains typ)
         if did
@@ -85,7 +85,7 @@ childrenTypes fam var typ =
         add (NodeFofX ast) = pure mempty { tcChildren = Set.singleton ast }
         add (XofF ast) =
             case unapply ast of
-            (ConT name, as) -> childrenTypesFromTypeName fam name as
+            (ConT name, as) -> childrenTypesFromTypeName name as
             (x@VarT{}, as) -> pure mempty { tcEmbeds = Set.singleton (foldl AppT x as) }
             _ -> pure mempty
         add (Tof _ pat) = add pat
@@ -129,16 +129,16 @@ getVar (SigT x _) = getVar x
 getVar _ = Nothing
 
 childrenTypesFromTypeName ::
-    Name -> Name -> [Type] -> StateT (Set Type) Q TypeContents
-childrenTypesFromTypeName fam name args =
-    reifyInstances fam [typ, VarT constraintVar] & lift
+    Name -> [Type] -> StateT (Set Type) Q TypeContents
+childrenTypesFromTypeName name args =
+    reifyInstances ''KLiftConstraint [typ, VarT constraintVar] & lift
     >>=
     \case
     [] ->
         do
             info <-
                 D.reifyDatatype name
-                & recover (fail ("childrenTypesFromTypeName can't reify " <> show fam <> " of " <> show name))
+                & recover (fail ("childrenTypesFromTypeName can't reify KLiftConstraint of " <> show name))
                 & lift
             let substs =
                     zip (D.datatypeVars info) args
@@ -147,17 +147,17 @@ childrenTypesFromTypeName fam name args =
             (_, var) <- parts info & lift
             D.datatypeCons info >>= D.constructorFields
                 <&> D.applySubstitution substs
-                & traverse (childrenTypes fam var)
+                & traverse (childrenTypes var)
                 <&> mconcat
     [TySynInstD ccI (TySynEqn [typI, VarT cI] x)]
-        | ccI == fam ->
+        | ccI == ''KLiftConstraint ->
             case unapply typI of
             (ConT n1, argsI) | n1 == name ->
                 case traverse getVar argsI of
                 Nothing ->
                     error ("TODO: Support Children constraint of flexible instances " <> show typ)
                 Just argNames ->
-                    childrenTypesFromChildrenConstraint fam cI (D.applySubstitution substs x)
+                    childrenTypesFromChildrenConstraint cI (D.applySubstitution substs x)
                     where
                         substs = zip argNames args & Map.fromList
             _ -> error ("ReifyInstances brought wrong typ: " <> show (name, typI))
@@ -169,17 +169,17 @@ constraintVar :: Name
 constraintVar = mkName "constraint"
 
 childrenTypesFromChildrenConstraint ::
-    Name -> Name -> Type -> StateT (Set Type) Q TypeContents
-childrenTypesFromChildrenConstraint _ c0 c@(AppT (VarT c1) x)
+    Name -> Type -> StateT (Set Type) Q TypeContents
+childrenTypesFromChildrenConstraint c0 c@(AppT (VarT c1) x)
     | c0 == c1 = pure mempty { tcChildren = Set.singleton x }
     | otherwise = error ("TODO: Unsupported ChildrenContraint " <> show c)
-childrenTypesFromChildrenConstraint fam c0 constraints =
+childrenTypesFromChildrenConstraint c0 constraints =
     case unapply constraints of
     (ConT cc1, [x, VarT c1])
-        | cc1 == fam && c0 == c1 ->
+        | cc1 == ''KLiftConstraint && c0 == c1 ->
             pure mempty { tcEmbeds = Set.singleton x }
     (TupleT{}, xs) ->
-        traverse (childrenTypesFromChildrenConstraint fam c0) xs <&> mconcat
+        traverse (childrenTypesFromChildrenConstraint c0) xs <&> mconcat
     _ -> pure mempty { tcOthers = Set.singleton (D.applySubstitution subst constraints) }
     where
         subst = mempty & Lens.at c0 ?~ VarT constraintVar
