@@ -42,7 +42,12 @@ data ITerm a v e = ITerm
     }
 makeLenses ''ITerm
 
-type InferChildDeps c ast = (c (TypeOf ast), ChildrenWithConstraint (ScopeOf ast) c)
+type InferChildDeps c ast =
+    ( c (TypeOf ast)
+    , KTraversable ast
+    , KLiftConstraint (ChildrenTypesOf (ScopeOf ast)) c
+    , ChildrenWithConstraint (ScopeOf ast) c
+    )
 class    InferChildDeps c ast => InferChildConstraints c ast
 instance InferChildDeps c ast => InferChildConstraints c ast
 

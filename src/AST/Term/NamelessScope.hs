@@ -68,6 +68,10 @@ instance DeBruijnIndex a => DeBruijnIndex (Maybe a) where
 
 newtype ScopeTypes t v = ScopeTypes (Seq (Tie v t))
     deriving newtype (Semigroup, Monoid)
+
+type instance ChildrenTypesOf (ScopeTypes t) = Single t
+instance HasChildrenTypes (ScopeTypes t)
+
 Lens.makePrisms ''ScopeTypes
 makeChildren ''ScopeTypes
 
