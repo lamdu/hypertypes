@@ -22,9 +22,9 @@ import Prelude.Compat
 type family TypeOf (t :: Knot -> *) :: Knot -> *
 type family ScopeOf (t :: Knot -> *) :: Knot -> *
 
-data IResult v e = IResult
-    { _irType :: Tree v (TypeOf e)
-    , _irScope :: Tree (ScopeOf e) v
+data IResult e v = IResult
+    { _irType :: Tie v (TypeOf e)
+    , _irScope :: ScopeOf e v
     }
 makeLenses ''IResult
 
@@ -37,7 +37,7 @@ makeLenses ''IResult
 -- knotted by `v` whose children are the types.
 data ITerm a v e = ITerm
     { _iAnn :: a
-    , _iRes :: {-# UNPACK #-} !(IResult v (RunKnot e))
+    , _iRes :: {-# UNPACK #-} !(Tree (IResult (RunKnot e)) v)
     , _iVal :: Tie e (ITerm a v)
     }
 makeLenses ''ITerm
@@ -85,5 +85,5 @@ iAnnotations f (ITerm pl r x) =
     <*> pure r
     <*> recursiveChildren (Proxy :: Proxy Children) (iAnnotations f) x
 
-deriving instance (Show (Tree v (TypeOf e)), Show (Tree (ScopeOf e) v)) => Show (IResult v e)
-deriving instance (Show a, Show (Tie e (ITerm a v)), Show (IResult v (RunKnot e))) => Show (ITerm a v e)
+deriving instance (Show (Tree v (TypeOf e)), Show (Tree (ScopeOf e) v)) => Show (Tree (IResult e) v)
+deriving instance (Show a, Show (Tie e (ITerm a v)), Show (Tree (IResult (RunKnot e)) v)) => Show (ITerm a v e)
