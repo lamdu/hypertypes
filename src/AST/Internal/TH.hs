@@ -136,7 +136,10 @@ childrenTypesFromTypeName fam name args =
     \case
     [] ->
         do
-            info <- D.reifyDatatype name & lift
+            info <-
+                D.reifyDatatype name
+                & recover (fail ("childrenTypesFromTypeName can't reify " <> show fam <> " of " <> show name))
+                & lift
             let substs =
                     zip (D.datatypeVars info) args
                     <&> Lens._1 %~ D.tvName
