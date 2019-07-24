@@ -34,7 +34,7 @@ applyBindings v0 =
     UUnbound c -> quantify c
     USkolem c -> quantify c
     UTerm b ->
-        case mMapLeafK of
+        case mNoChildren of
         Just f -> _Pure # f (b ^. uBody) & pure
         Nothing ->
             do

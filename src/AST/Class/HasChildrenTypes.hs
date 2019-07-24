@@ -40,7 +40,13 @@ class HasChildrenTypes k where
         Dict (ChildrenTypesConstraints (ChildrenTypesOf k))
     hasChildrenTypes _ = Dict
 
-instance HasChildrenTypes (Const a)
+    mNoChildren :: Maybe (k m -> k n)
+    {-# INLINE mNoChildren #-}
+    mNoChildren = Nothing
+
+instance HasChildrenTypes (Const a) where
+    {-# INLINE mNoChildren #-}
+    mNoChildren = Just (\(Const x) -> Const x)
 
 {-# INLINE withChildrenTypes #-}
 withChildrenTypes ::
@@ -83,12 +89,14 @@ foldMapK f = withChildrenTypes (foldMapC (pureK (MkConvertK f)))
 traverseK ::
     (Applicative f, KTraversable k, HasChildrenTypes k) =>
     (forall c. Tree m c -> f (Tree n c)) ->
-    Tree k m -> f (Tree k n)
+    Tree k m ->
+    f (Tree k n)
 traverseK f = sequenceC . mapK (MkContainedK . f)
 
 {-# INLINE traverseK_ #-}
 traverseK_ ::
     (Applicative f, KFoldable k, HasChildrenTypes k) =>
     (forall c. Tree m c -> f ()) ->
-    Tree k m -> f ()
+    Tree k m ->
+    f ()
 traverseK_ f = sequenceA_ . foldMapK ((:[]) . f)
