@@ -69,7 +69,7 @@ liftK2 ::
     Tree k l ->
     Tree k m ->
     Tree k n
-liftK2 f x = withChildrenTypes (mapK (\(Both a b) -> f a b) . zipK x)
+liftK2 f x = mapK (\(Both a b) -> f a b) . zipK x
 
 {-# INLINE foldMapK #-}
 foldMapK ::
@@ -91,5 +91,4 @@ traverseK_ ::
     (Applicative f, KFoldable k, HasChildrenTypes k) =>
     (forall c. Tree m c -> f ()) ->
     Tree k m -> f ()
-traverseK_ f =
-    withChildrenTypes (sequenceA_ . foldMapC (pureK (MkConvertK ((:[]) . f))))
+traverseK_ f = sequenceA_ . foldMapK ((:[]) . f)
