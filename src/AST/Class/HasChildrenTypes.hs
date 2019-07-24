@@ -64,7 +64,7 @@ mapK f = withChildrenTypes (mapC (pureK (MkMapK f)))
 
 {-# INLINE liftK2 #-}
 liftK2 ::
-    (KApplicative k, HasChildrenTypes k) =>
+    (KApply k, HasChildrenTypes k) =>
     (forall c. Tree l c -> Tree m c -> Tree n c) ->
     Tree k l ->
     Tree k m ->

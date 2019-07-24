@@ -161,7 +161,7 @@ instance DepsT Pretty nomId term k => Pretty (ToNom nomId term k) where
 
 instance
     ( Pretty nomId
-    , KApplicative varTypes, KFoldable varTypes, HasChildrenTypes varTypes
+    , KApply varTypes, KFoldable varTypes, HasChildrenTypes varTypes
     , KLiftConstraint (ChildrenTypesOf varTypes) (QVarHasInstance Pretty)
     , KLiftConstraint (ChildrenTypesOf varTypes) (TieHasConstraint Pretty k)
     ) =>
