@@ -5,7 +5,7 @@ module AST.Combinator.Single
     ( Single(..), _Single
     ) where
 
-import AST.Class.Applicative.TH (makeKApplicativeAndBases)
+import AST.Class.Apply.TH (makeKApplicativeBases)
 import AST.Class.HasChildrenTypes (HasChildrenTypes)
 import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import AST.Knot (Tree, Tie, ChildrenTypesOf)
@@ -26,7 +26,7 @@ _Single = iso getSingle MkSingle
 type instance ChildrenTypesOf (Single c) = Single c
 instance HasChildrenTypes (Single c)
 
-makeKApplicativeAndBases ''Single
+makeKApplicativeBases ''Single
 makeKTraversableAndFoldable ''Single
 
 deriving instance Eq   (Tie k c) => Eq   (Single c k)

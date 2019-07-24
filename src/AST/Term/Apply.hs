@@ -33,7 +33,7 @@ instance HasChildrenTypes (Apply e)
 
 makeLenses ''Apply
 makeChildrenAndZipMatch ''Apply
-makeKApplicativeAndBases ''Apply
+makeKApplicativeBases ''Apply
 makeKTraversableAndFoldable ''Apply
 
 instance Pretty (Tie k expr) => Pretty (Apply expr k) where

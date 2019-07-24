@@ -31,7 +31,7 @@ instance HasChildrenTypes (FuncType t)
 
 makeLenses ''FuncType
 makeChildrenAndZipMatch ''FuncType
-makeKApplicativeAndBases ''FuncType
+makeKApplicativeBases ''FuncType
 makeKTraversableAndFoldable ''FuncType
 
 instance Pretty (Tie k typ) => Pretty (FuncType typ k) where

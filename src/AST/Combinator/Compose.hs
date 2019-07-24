@@ -7,7 +7,7 @@ module AST.Combinator.Compose
     ) where
 
 import           AST
-import           AST.Class.Applicative
+import           AST.Class.Apply
 import           AST.Class.Foldable
 import           AST.Class.Functor
 import           AST.Class.Traversable
@@ -47,10 +47,13 @@ instance
     (HasChildrenTypes a, KPointed a, KPointed b) =>
     KPointed (Compose a b) where
     type KLiftConstraint (Compose a b) c = KLiftConstraint a (ComposeConstraint0K c b)
+    {-# INLINE pureC #-}
     pureC =
         withDict (hasChildrenTypes (Proxy :: Proxy a)) $
         _Compose %~ pureC . mapK (_Compose %~ pureC)
+    {-# INLINE pureK #-}
     pureK x = pureK (pureK (MkCompose x) & MkCompose) & MkCompose
+    {-# INLINE pureKWithConstraint #-}
     pureKWithConstraint p x =
         pureKWithConstraint (p0 p) (makeP1 p (\p1 -> pureKWithConstraint p1 (MkCompose x) & MkCompose))
         & MkCompose
@@ -66,6 +69,7 @@ instance
 instance
     (HasChildrenTypes a, HasChildrenTypes b, KFunctor a, KFunctor b) =>
     KFunctor (Compose a b) where
+    {-# INLINE mapC #-}
     mapC (MkCompose f) =
         withDict (hasChildrenTypes (Proxy :: Proxy a)) $
         withDict (hasChildrenTypes (Proxy :: Proxy b)) $
@@ -78,27 +82,26 @@ instance
         )
 
 instance
-    (HasChildrenTypes a, HasChildrenTypes b, KApplicative a, KApplicative b) =>
-    KApplicative (Compose a b) where
-    liftC2 (MkCompose f) =
-        withDict (hasChildrenTypes (Proxy :: Proxy a)) $
-        withDict (hasChildrenTypes (Proxy :: Proxy b)) $
-        (_Compose %~) .
-        liftC2
-        ( mapK
-            ( \(MkCompose bT) ->
-                MkLiftK2
-                ( (_Compose %~) .
-                    liftC2
-                    ( mapK (\(MkCompose z) -> MkLiftK2 ((_Compose %~) . runLiftK2 z . getCompose)) bT
-                    ) . getCompose
-                )
-            ) f
-        ) . getCompose
+    (HasChildrenTypes a, HasChildrenTypes b, KApply a, KApply b) =>
+    KApply (Compose a b) where
+    {-# INLINE zipK #-}
+    zipK (MkCompose a0) =
+        _Compose %~
+        mapK
+            ( \(Both (MkCompose b0) (MkCompose b1)) ->
+                zipK b0 b1
+                & mapK
+                    ( \(Both (MkCompose i0) (MkCompose i1)) ->
+                        Both i0 i1 & MkCompose
+                    )
+                & MkCompose
+            )
+        . zipK a0
 
 instance
     (HasChildrenTypes a, HasChildrenTypes b, KFoldable a, KFoldable b) =>
     KFoldable (Compose a b) where
+    {-# INLINE foldMapC #-}
     foldMapC (MkCompose f) =
         withDict (hasChildrenTypes (Proxy :: Proxy a)) $
         withDict (hasChildrenTypes (Proxy :: Proxy b)) $
@@ -116,6 +119,7 @@ instance
 instance
     (HasChildrenTypes a, HasChildrenTypes b, KTraversable a, KTraversable b) =>
     KTraversable (Compose a b) where
+    {-# INLINE sequenceC #-}
     sequenceC =
         _Compose
         ( sequenceC .
@@ -140,6 +144,7 @@ instance
     , HasChildrenTypes k0, HasChildrenTypes k1, KTraversable k0, KFunctor k1
     ) =>
     ZipMatch (Compose k0 k1) where
+    {-# INLINE zipMatch #-}
     zipMatch (MkCompose x) (MkCompose y) =
         zipMatch x y
         >>= traverseK

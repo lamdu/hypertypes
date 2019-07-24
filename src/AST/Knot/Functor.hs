@@ -6,7 +6,7 @@ module AST.Knot.Functor
     ( ToKnot(..), _ToKnot
     ) where
 
-import AST.Class.Applicative.TH (makeKApplicativeAndBases)
+import AST.Class.Apply.TH (makeKApplicativeBases)
 import AST.Class.Children.TH (makeChildren)
 import AST.Class.HasChildrenTypes (HasChildrenTypes)
 import AST.Class.Recursive (Recursive)
@@ -31,7 +31,7 @@ _ToKnot = iso (\(MkToKnot x) -> x) MkToKnot
 type instance ChildrenTypesOf (ToKnot f) = Single (ToKnot f)
 instance HasChildrenTypes (ToKnot f)
 
-makeKApplicativeAndBases ''ToKnot
+makeKApplicativeBases ''ToKnot
 makeKTraversableAndFoldable ''ToKnot
 makeChildren ''ToKnot
 

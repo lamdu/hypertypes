@@ -6,7 +6,7 @@ module AST.Combinator.Pair
     ( Pair(..), pairFst, pairSnd
     ) where
 
-import AST.Class.Applicative.TH (makeKApplicativeAndBases)
+import AST.Class.Apply.TH (makeKApplicativeBases)
 import AST.Class.HasChildrenTypes (HasChildrenTypes)
 import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import AST.Class.Has (KHas(..))
@@ -29,7 +29,7 @@ type instance ChildrenTypesOf (Pair a b) = Pair a b
 instance HasChildrenTypes (Pair a b)
 
 makeLenses ''Pair
-makeKApplicativeAndBases ''Pair
+makeKApplicativeBases ''Pair
 makeKTraversableAndFoldable ''Pair
 
 -- Useful instance for when a type has a single child type,

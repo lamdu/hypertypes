@@ -2,8 +2,8 @@
 
 module AST (module X) where
 
-import AST.Class.Applicative as X (KApplicative(..))
-import AST.Class.Applicative.TH as X (makeKApplicative, makeKApplicativeAndBases)
+import AST.Class.Applicative as X (KApplicative)
+import AST.Class.Apply.TH as X (makeKApply, makeKApplyAndBases, makeKApplicativeBases)
 import AST.Class.Children as X
 import AST.Class.Children.Mono as X (monoChildren)
 import AST.Class.Children.TH as X (makeChildren)

@@ -1,11 +1,11 @@
-{-# LANGUAGE NoImplicitPrelude, KindSignatures, DataKinds, FlexibleInstances #-}
+{-# LANGUAGE NoImplicitPrelude, FlexibleInstances #-}
 
 module AST.Class.Apply
     ( KApply(..)
     ) where
 
 import AST.Class.Functor (KFunctor)
-import AST.Combinator.Both (Both)
+import AST.Combinator.Both (Both(..))
 import AST.Knot (Tree)
 import Data.Functor.Const (Const(..))
 
@@ -21,3 +21,7 @@ class KFunctor k => KApply k where
 instance Semigroup a => KApply (Const a) where
     {-# INLINE zipK #-}
     zipK (Const x) (Const y) = Const (x <> y)
+
+instance (KApply a, KApply b) => KApply (Both a b) where
+    {-# INLINE zipK #-}
+    zipK (Both a0 b0) (Both a1 b1) = Both (zipK a0 a1) (zipK b0 b1)

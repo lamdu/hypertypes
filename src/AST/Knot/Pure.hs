@@ -4,7 +4,7 @@ module AST.Knot.Pure
     ( Pure(..), _Pure
     ) where
 
-import           AST.Class.Applicative.TH (makeKApplicativeAndBases)
+import           AST.Class.Apply.TH (makeKApplicativeBases)
 import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.HasChildrenTypes (HasChildrenTypes)
 import           AST.Class.Traversable.TH (makeKTraversableAndFoldable)
@@ -28,7 +28,7 @@ newtype Pure k = MkPure { getPure :: Tie k Pure }
 type instance ChildrenTypesOf Pure = Pure
 instance HasChildrenTypes Pure
 
-makeKApplicativeAndBases ''Pure
+makeKApplicativeBases ''Pure
 makeKTraversableAndFoldable ''Pure
 makeChildren ''Pure
 makeZipMatch ''Pure

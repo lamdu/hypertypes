@@ -90,7 +90,7 @@ makeChildrenAndZipMatch ''Types
 makeChildren ''TypeError
 makeKTraversableAndBases ''Typ
 makeKTraversableAndBases ''Row
-makeKApplicativeAndBases ''Types
+makeKApplicativeBases ''Types
 makeKTraversableAndFoldable ''Types
 
 type TypDeps cls k = ((cls (Tie k Typ), cls (Tie k Row)) :: Constraint)

@@ -44,7 +44,7 @@ Lens.makePrisms ''ScopeVar
 type instance ChildrenTypesOf (ScopeVar e a) = Const ()
 
 makeChildrenAndZipMatch ''Scope
-makeKApplicativeAndBases ''Scope
+makeKApplicativeBases ''Scope
 makeKTraversableAndFoldable ''Scope
 makeChildrenAndZipMatch ''ScopeVar
 makeKTraversableAndBases ''ScopeVar

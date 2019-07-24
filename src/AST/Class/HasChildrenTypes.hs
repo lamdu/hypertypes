@@ -6,11 +6,13 @@ module AST.Class.HasChildrenTypes
     , mapK, liftK2, foldMapK, traverseK, traverseK_
     ) where
 
-import AST.Class.Applicative (KApplicative(..), LiftK2(..))
+import AST.Class.Applicative (KApplicative)
+import AST.Class.Apply (KApply(..))
 import AST.Class.Foldable (KFoldable(..), ConvertK(..))
 import AST.Class.Functor (KFunctor(..), MapK(..))
 import AST.Class.Pointed (KPointed(..))
 import AST.Class.Traversable (KTraversable(..), ContainedK(..))
+import AST.Combinator.Both (Both(..))
 import AST.Knot (Tree, ChildrenTypesOf)
 import Data.Constraint (Dict(..), withDict)
 import Data.Foldable (sequenceA_)
@@ -67,7 +69,7 @@ liftK2 ::
     Tree k l ->
     Tree k m ->
     Tree k n
-liftK2 f = withChildrenTypes (liftC2 (pureK (MkLiftK2 f)))
+liftK2 f x = withChildrenTypes (mapK (\(Both a b) -> f a b) . zipK x)
 
 {-# INLINE foldMapK #-}
 foldMapK ::
