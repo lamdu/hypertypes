@@ -73,6 +73,7 @@ type instance ChildrenTypesOf (ScopeTypes t) = Single t
 instance HasChildrenTypes (ScopeTypes t)
 
 Lens.makePrisms ''ScopeTypes
+makeKTraversableAndBases ''ScopeTypes
 makeChildren ''ScopeTypes
 
 -- TODO: Replace this class with ones from Infer

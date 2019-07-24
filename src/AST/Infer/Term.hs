@@ -13,6 +13,7 @@ module AST.Infer.Term
 
 import AST
 import AST.Class.Combinators
+import AST.Class.Foldable
 import AST.Class.Functor
 import AST.Combinator.Both
 import AST.Combinator.Flip (Flip(..), _Flip)
@@ -98,10 +99,12 @@ data ITerm a v e = ITerm
     }
 makeLenses ''ITerm
 
+-- TODO: This should get a list of constraints
 type InferChildDeps c ast =
     ( c (TypeOf ast)
     , KTraversable ast
     , HasChildrenTypes (ScopeOf ast)
+    , KTraversable (ScopeOf ast)
     , KLiftConstraint (ChildrenTypesOf (ScopeOf ast)) c
     , ChildrenWithConstraint (ScopeOf ast) c
     )
@@ -208,6 +211,65 @@ instance
     , Recursive (InferChildConstraints HasChildrenTypes) e
     ) =>
     HasChildrenTypes (Flip (ITerm a) e)
+
+instance
+    Recursive (InferChildConstraints HasChildrenTypes) e =>
+    KFunctor (Flip (ITerm a) e) where
+
+    {-# INLINE mapC #-}
+    mapC (ITermTypes (RecursiveChildren (MkFlip ft) fs)) =
+        withDict (hasChildrenTypes (Proxy :: Proxy e)) $
+        withDict (recursive :: RecursiveDict (InferChildConstraints HasChildrenTypes) e) $
+        _Flip %~
+        \(ITerm a r x) ->
+        ITerm a
+        (mapC ft r)
+        (mapC
+            ( mapKWith (Proxy :: Proxy '[Recursive (InferChildConstraints HasChildrenTypes)])
+                g fs
+            ) x
+        )
+        where
+            g ::
+                forall child m n.
+                Recursive (InferChildConstraints HasChildrenTypes) child =>
+                Tree (Flip RecursiveChildren (Flip IResultChildrenTypes (MapK m n))) child ->
+                Tree (MapK (ITerm a m) (ITerm a n)) child
+            g (MkFlip f) =
+                withDict (hasChildrenTypes (Proxy :: Proxy (ScopeOf child))) $
+                from _Flip %~ mapC (ITermTypes f)
+                & MkMapK
+
+instance
+    ( KFoldable e
+    , KFoldable (ScopeOf e)
+    , Recursive HasChildrenTypes e
+    , Recursive (InferChildConstraints HasChildrenTypes) e
+    ) =>
+    KFoldable (Flip (ITerm a) e) where
+    {-# INLINE foldMapC #-}
+    foldMapC (ITermTypes (RecursiveChildren (MkFlip ft) fs)) (MkFlip (ITerm _ r x)) =
+        withDict (hasChildrenTypes (Proxy :: Proxy e)) $
+        withDict (recursive :: RecursiveDict HasChildrenTypes e) $
+        withDict (recursive :: RecursiveDict (InferChildConstraints HasChildrenTypes) e) $
+        foldMapC ft r <>
+        foldMapC
+        ( mapKWith
+            (Proxy ::
+                Proxy '[Recursive HasChildrenTypes, Recursive (InferChildConstraints HasChildrenTypes)])
+            g fs
+        ) x
+        where
+            g ::
+                ( Monoid r
+                , Recursive HasChildrenTypes child
+                , Recursive (InferChildConstraints HasChildrenTypes) child
+                ) =>
+                Tree (Flip RecursiveChildren (Flip IResultChildrenTypes (ConvertK r l))) child ->
+                Tree (ConvertK r (ITerm a l)) child
+            g (MkFlip f) =
+                foldMapC (ITermTypes f) . (_Flip #)
+                & MkConvertK
 
 instance Children (Flip (ITerm a) e) where
     type ChildrenConstraint (Flip (ITerm a) e) c = Recursive (InferChildConstraints c) e
