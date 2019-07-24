@@ -135,20 +135,27 @@ childrenTypesFromTypeName name args =
     >>=
     \case
     [] ->
-        do
-            info <-
-                D.reifyDatatype name
-                & recover (fail ("childrenTypesFromTypeName can't reify KLiftConstraint of " <> show name))
-                & lift
-            let substs =
+        D.reifyDatatype name
+        <&> Just
+        & recover (pure Nothing)
+        & lift
+        >>=
+        \case
+        Just info ->
+            do
+                (_, var) <- parts info & lift
+                D.datatypeCons info >>= D.constructorFields
+                    <&> D.applySubstitution substs
+                    & traverse (childrenTypes var)
+                    <&> mconcat
+            where
+                substs =
                     zip (D.datatypeVars info) args
                     <&> Lens._1 %~ D.tvName
                     & Map.fromList
-            (_, var) <- parts info & lift
-            D.datatypeCons info >>= D.constructorFields
-                <&> D.applySubstitution substs
-                & traverse (childrenTypes var)
-                <&> mconcat
+        Nothing ->
+            -- Not a datatype, so an embedded type family
+            pure mempty { tcEmbeds = Set.singleton typ }
     [TySynInstD ccI (TySynEqn [typI, VarT cI] x)]
         | ccI == ''KLiftConstraint ->
             case unapply typI of
