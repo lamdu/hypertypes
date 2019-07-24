@@ -3,7 +3,7 @@
 module AST (module X) where
 
 import AST.Class.Applicative as X (KApplicative)
-import AST.Class.Apply as X (KApply)
+import AST.Class.Apply as X (KApply(..))
 import AST.Class.Apply.TH as X (makeKApply, makeKApplyAndBases, makeKApplicativeBases)
 import AST.Class.Children as X
 import AST.Class.Children.Mono as X (monoChildren)

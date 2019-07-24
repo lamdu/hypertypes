@@ -12,9 +12,12 @@ module AST.Infer.Term
     ) where
 
 import AST
+import AST.Class.Functor
+import AST.Combinator.Both
 import AST.Combinator.Flip (Flip(..), _Flip)
 import Control.Lens (Traversal, Lens', makeLenses, from)
 import Control.Lens.Operators
+import Data.Constraint
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
@@ -27,6 +30,57 @@ data IResult e v = IResult
     , _irScope :: ScopeOf e v
     }
 makeLenses ''IResult
+
+data IResultChildrenTypes e k = IResultChildrenTypes
+    { _ircType :: Tie k (TypeOf e)
+    , _ircScope :: ChildrenTypesOf (ScopeOf e) k
+    }
+
+type instance ChildrenTypesOf (IResult e) = IResultChildrenTypes e
+type instance ChildrenTypesOf (IResultChildrenTypes e) = IResultChildrenTypes e
+
+makeKPointed ''IResultChildrenTypes
+
+instance
+    HasChildrenTypes (ScopeOf e) =>
+    HasChildrenTypes (IResultChildrenTypes e) where
+
+    {-# INLINE hasChildrenTypes #-}
+    hasChildrenTypes _ =
+        withDict (hasChildrenTypes (Proxy :: Proxy (ScopeOf e))) Dict
+
+instance
+    HasChildrenTypes (ScopeOf e) =>
+    KFunctor (IResultChildrenTypes e) where
+
+    {-# INLINE mapC #-}
+    mapC (IResultChildrenTypes (MkMapK mapType) mapScope) (IResultChildrenTypes t s) =
+        IResultChildrenTypes
+        { _ircType = mapType t
+        , _ircScope =
+            withDict (hasChildrenTypes (Proxy :: Proxy (ScopeOf e))) $
+            mapC mapScope s
+        }
+
+instance
+    HasChildrenTypes (ScopeOf e) =>
+    KApply (IResultChildrenTypes e) where
+
+    {-# INLINE zipK #-}
+    zipK (IResultChildrenTypes t0 s0) (IResultChildrenTypes t1 s1) =
+        withDict (hasChildrenTypes (Proxy :: Proxy (ScopeOf e))) $
+        IResultChildrenTypes (Both t0 t1) (zipK s0 s1)
+
+instance
+    HasChildrenTypes (ScopeOf e) =>
+    HasChildrenTypes (IResult e) where
+
+    {-# INLINE hasChildrenTypes #-}
+    hasChildrenTypes _ =
+        withDict (hasChildrenTypes (Proxy :: Proxy (ScopeOf e))) Dict
+
+makeKApplicativeBases ''IResult
+makeKTraversableAndFoldable ''IResult
 
 -- | Knot for terms, annotating them with inference results
 --

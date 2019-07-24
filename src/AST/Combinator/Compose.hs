@@ -7,7 +7,6 @@ module AST.Combinator.Compose
     ) where
 
 import           AST
-import           AST.Class.Apply
 import           AST.Class.Foldable
 import           AST.Class.Functor
 import           AST.Class.Traversable
