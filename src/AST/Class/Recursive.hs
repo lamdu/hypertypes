@@ -10,7 +10,6 @@ module AST.Class.Recursive
     , recursiveChildren, recursiveOverChildren, recursiveChildren_
     ) where
 
-import AST.Class.Children (Children(..))
 import AST.Class.Combinators
 import AST.Class.HasChildrenTypes
 import AST.Class.Pointed (KPointed(..))
@@ -40,7 +39,6 @@ class (KTraversable expr, HasChildrenTypes expr, constraint expr) => Recursive c
 
 type RecursiveConstraint expr constraint =
     ( constraint expr
-    , ChildrenConstraint expr (Recursive constraint)
     , KLiftConstraint (ChildrenTypesOf expr) (Recursive constraint)
     )
 
