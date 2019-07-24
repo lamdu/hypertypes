@@ -12,17 +12,20 @@ module AST.Class.Combinators
     , KLiftConstraints(..)
     , pureKWith
     , mapKWith
+    , liftK2With
     , foldMapKWith
     , traverseKWith
     , traverseKWith_
     ) where
 
 import AST.Class.Applicative
+import AST.Class.Apply
 import AST.Class.HasChildrenTypes
 import AST.Class.Foldable
 import AST.Class.Functor
 import AST.Class.Pointed (KPointed(..))
 import AST.Class.Traversable
+import AST.Combinator.Both
 import AST.Knot
 import Control.Lens.Operators
 import Data.Constraint (Dict(..), Constraint, withDict)
@@ -82,6 +85,16 @@ mapKWith ::
     Tree k m ->
     Tree k n
 mapKWith p f = mapC (pureKWith p (MkMapK f))
+
+{-# INLINE liftK2With #-}
+liftK2With ::
+    (KApply k, KLiftConstraints constraints (ChildrenTypesOf k)) =>
+    Proxy constraints ->
+    (forall c. ApplyKConstraints constraints c => Tree l c -> Tree m c -> Tree n c) ->
+    Tree k l ->
+    Tree k m ->
+    Tree k n
+liftK2With p f x = mapKWith p (\(Both a b) -> f a b) . zipK x
 
 {-# INLINE foldMapKWith #-}
 foldMapKWith ::
