@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, RankNTypes, ConstraintKinds, ScopedTypeVariables #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, TypeApplications #-}
 
 module AST.Class.ZipMatch
     ( ZipMatch(..)
@@ -68,7 +68,7 @@ zipMatchWith_ ::
     Tree expr a -> Tree expr b -> Maybe (f ())
 zipMatchWith_ p f x y =
     zipMatch x y
-    <&> sequenceA_ . foldMapKWith' (Proxy :: Proxy [f ()]) p (\(Both a b) -> [f a b])
+    <&> sequenceA_ . foldMapKWith @[f ()] p (\(Both a b) -> [f a b])
 
 {-# INLINE doesMatch #-}
 doesMatch :: ZipMatch expr => Tree expr a -> Tree expr b -> Bool
