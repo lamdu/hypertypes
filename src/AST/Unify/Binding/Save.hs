@@ -1,12 +1,12 @@
 {-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables, FlexibleContexts, LambdaCase #-}
-{-# LANGUAGE TypeOperators, ConstraintKinds #-}
+{-# LANGUAGE TypeOperators, ConstraintKinds, DataKinds #-}
 
 module AST.Unify.Binding.Save
     ( save
     ) where
 
 import           AST
-import           AST.Class.Combinators (And)
+import           AST.Class.Combinators
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Unify.Binding (Binding, _Binding, UVar(..))
@@ -61,16 +61,19 @@ saveVar v =
 saveBody ::
     forall m typeVars t.
     ( Monad m
-    , ChildrenWithConstraint t (Recursive (Deps m typeVars))
+    , KTraversable t, HasChildrenTypes t
+    , KLiftConstraint (ChildrenTypesOf t) (Recursive (Deps m typeVars))
     ) =>
     Tree t (UVarOf m) ->
     StateT (Tree typeVars Binding, [m ()]) m (Tree t UVar)
 saveBody =
-    children (Proxy :: Proxy (Recursive (Deps m typeVars))) saveVar
+    withDict (hasChildrenTypes (Proxy :: Proxy t)) $
+    traverseKWith (Proxy :: Proxy '[Recursive (Deps m typeVars)]) saveVar
 
 save ::
     ( Monad m
-    , ChildrenWithConstraint t (Recursive (Deps m typeVars))
+    , KTraversable t, HasChildrenTypes t
+    , KLiftConstraint (ChildrenTypesOf t) (Recursive (Deps m typeVars))
     ) =>
     Tree t (UVarOf m) ->
     StateT (Tree typeVars Binding) m (Tree t UVar)
