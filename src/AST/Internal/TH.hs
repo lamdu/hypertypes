@@ -66,15 +66,12 @@ parts info =
     [] -> fail "expected type constructor which requires arguments"
     xs ->
         case last xs of
-        SigT (VarT var) (ConT knot) | knot == ''Knot -> pure (res, var)
-        VarT var -> pure (res, var)
+        KindedTV var (ConT knot) | knot == ''Knot -> pure (res, var)
+        PlainTV var -> pure (res, var)
         _ -> fail "expected last argument to be a knot variable"
         where
-            res = foldl AppT (ConT (D.datatypeName info)) (init xs <&> stripSigT)
-
-stripSigT :: Type -> Type
-stripSigT (SigT x _) = x
-stripSigT x = x
+            res =
+                foldl AppT (ConT (D.datatypeName info)) (init xs <&> VarT . D.tvName)
 
 childrenTypes ::
     Name -> Name -> Type -> StateT (Set Type) Q TypeContents
@@ -126,6 +123,11 @@ data CtrTypePattern
     | Other Type
     deriving Show
 
+getVar :: Type -> Maybe Name
+getVar (VarT x) = Just x
+getVar (SigT x _) = getVar x
+getVar _ = Nothing
+
 childrenTypesFromTypeName ::
     Name -> Name -> [Type] -> StateT (Set Type) Q TypeContents
 childrenTypesFromTypeName fam name args =
@@ -137,7 +139,7 @@ childrenTypesFromTypeName fam name args =
             info <- D.reifyDatatype name & lift
             let substs =
                     zip (D.datatypeVars info) args
-                    >>= filterVar
+                    <&> Lens._1 %~ D.tvName
                     & Map.fromList
             (_, var) <- parts info & lift
             D.datatypeCons info >>= D.constructorFields
@@ -158,15 +160,7 @@ childrenTypesFromTypeName fam name args =
             _ -> error ("ReifyInstances brought wrong typ: " <> show (name, typI))
     xs -> error ("Malformed ChildrenConstraint instance: " <> show xs)
     where
-        filterVar (VarT n, x) = [(n, x)]
-        filterVar (SigT t _, x) = filterVar (t, x)
-        filterVar _ = []
         typ = foldl AppT (ConT name) args
-
-getVar :: Type -> Maybe Name
-getVar (VarT x) = Just x
-getVar (SigT x _) = getVar x
-getVar _ = Nothing
 
 constraintVar :: Name
 constraintVar = mkName "constraint"
@@ -217,6 +211,8 @@ getChildrenTypes typ =
                 Just argNames ->
                     D.applySubstitution substs x & stripSigT & pure
                     where
+                        stripSigT (SigT t _) = t
+                        stripSigT t = t
                         substs = zip argNames args & Map.fromList
             _ -> fail ("ReifyInstances brought wrong typ: " <> show typ)
     [_] -> fail ("Unsupported ChildrenTypesOf form for " <> show typ)
@@ -245,10 +241,7 @@ makeChildrenTypesInfo typeInfo =
             ConT x -> pure x
             _ -> fail ("unsupported ChildrenTypesOf: " <> show typ)
         info <- D.reifyDatatype typeName
-        vars <-
-            case D.datatypeVars info <&> getVar & sequenceA of
-            Nothing -> fail ("Unexpected type parameters for children types: " <> show (D.datatypeVars info))
-            Just x -> pure x
+        let vars = D.datatypeVars info <&> D.tvName
         cons <-
             case D.datatypeCons info of
             [x] -> pure x

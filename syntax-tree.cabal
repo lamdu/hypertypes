@@ -122,7 +122,7 @@ library
     , pretty
     , show-combinators
     , template-haskell
-    , th-abstraction <0.3
+    , th-abstraction >=0.3
     , transformers
   default-language: Haskell2010
 
