@@ -7,6 +7,7 @@ module AST.Combinator.Both
 import AST.Class.Children.TH (makeChildren)
 import AST.Class.Functor.TH (makeKFunctor)
 import AST.Class.Pointed.TH (makeKPointed)
+import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import AST.Knot (Knot, ChildrenTypesOf)
 import Control.DeepSeq (NFData)
 import Control.Lens (makeLenses)
@@ -25,6 +26,7 @@ type instance ChildrenTypesOf (Both a b) = Both (ChildrenTypesOf a) (ChildrenTyp
 
 makeKFunctor ''Both
 makeKPointed ''Both
+makeKTraversableAndFoldable ''Both
 makeChildren ''Both
 
 instance (Binary (a k), Binary (b k)) => Binary (Both a b k)
