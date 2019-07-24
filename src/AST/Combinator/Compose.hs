@@ -3,7 +3,7 @@
 {-# LANGUAGE FlexibleInstances, DerivingStrategies, ScopedTypeVariables #-}
 
 module AST.Combinator.Compose
-    ( Compose(..)
+    ( Compose(..), _Compose
     ) where
 
 import           AST
