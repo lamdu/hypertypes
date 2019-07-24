@@ -15,8 +15,12 @@ module AST.Unify.Generalize
 import           Algebra.PartialOrd (PartialOrd(..))
 import           AST
 import           AST.Class.Combinators
+import           AST.Class.Foldable
+import           AST.Class.Functor
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
-import           AST.Combinator.Flip (Flip, _Flip)
+import           AST.Class.Traversable
+import           AST.Combinator.Flip
+import           AST.Combinator.RecursiveChildren
 import           AST.Unify
 import           AST.Unify.Lookup (semiPruneLookup)
 import           AST.Unify.New
@@ -47,8 +51,68 @@ data GTerm v ast
         -- or `AST.Unify.Term.UResolved`)
     | GBody (Tie ast (GTerm v)) -- ^ Term with some polymorphic parts
     deriving Generic
+
 Lens.makePrisms ''GTerm
 makeChildren ''GTerm
+
+type instance ChildrenTypesOf (Flip GTerm ast) = RecursiveChildren ast
+
+instance
+    (Recursive KFunctor ast, HasChildrenTypes ast) =>
+    KFunctor (Flip GTerm ast) where
+
+    {-# INLINE mapC #-}
+    mapC (RecursiveChildren (MkMapK mapTop) mapSub) =
+        _Flip %~
+        \case
+        GMono x -> mapTop x & GMono
+        GPoly x -> mapTop x & GPoly
+        GBody x ->
+            withDict (recursive :: RecursiveDict KFunctor ast) $
+            withDict (hasChildrenTypes (Proxy :: Proxy ast)) $
+            mapC
+            ( mapKWith (Proxy :: Proxy '[Recursive KFunctor])
+                (\(MkFlip f) -> Lens.from _Flip %~ mapC f & MkMapK)
+                mapSub
+            ) x
+            & GBody
+
+instance
+    Recursive KFoldable ast =>
+    KFoldable (Flip GTerm ast) where
+
+    {-# INLINE foldMapC #-}
+    foldMapC (RecursiveChildren (MkConvertK convTop) convSub) =
+        \case
+        GMono x -> convTop x
+        GPoly x -> convTop x
+        GBody x ->
+            withDict (recursive :: RecursiveDict KFoldable ast) $
+            withDict (hasChildrenTypes (Proxy :: Proxy ast)) $
+            foldMapC
+            ( mapKWith (Proxy :: Proxy '[Recursive KFoldable])
+                (\(MkFlip f) -> foldMapC f . (_Flip #) & MkConvertK)
+                convSub
+            ) x
+        . (^. _Flip)
+
+instance
+    (Recursive KFunctor ast, Recursive KFoldable ast) =>
+    KTraversable (Flip GTerm ast) where
+
+    sequenceC (MkFlip fx) =
+        case fx of
+        GMono x -> runContainedK x <&> GMono
+        GPoly x -> runContainedK x <&> GPoly
+        GBody x ->
+            withDict (hasChildrenTypes (Proxy :: Proxy ast)) $
+            withDict (recursive :: RecursiveDict KFunctor ast) $
+            withDict (recursive :: RecursiveDict KFoldable ast) $
+            -- KTraversable will be required when not implied by Recursive
+            traverseKWith (Proxy :: Proxy '[Recursive KFunctor, Recursive KFoldable])
+            (Lens.from _Flip sequenceC) x
+            <&> GBody
+        <&> MkFlip
 
 instance Children (Flip GTerm ast) where
     type ChildrenConstraint (Flip GTerm ast) cls = Recursive cls ast
