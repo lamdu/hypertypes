@@ -41,11 +41,11 @@ class KPointed k where
         (forall child. constraint child => Tree n child) ->
         Tree k n
 
-instance KPointed (Const ()) where
-    type KLiftConstraint (Const ()) c = ()
+instance Monoid a => KPointed (Const a) where
+    type KLiftConstraint (Const a) c = ()
     {-# INLINE pureC #-}
-    pureC = id
+    pureC _ = Const mempty
     {-# INLINE pureK #-}
-    pureK _ = Const ()
+    pureK _ = Const mempty
     {-# INLINE pureKWithConstraint #-}
-    pureKWithConstraint _ _ = Const ()
+    pureKWithConstraint _ _ = Const mempty
