@@ -22,9 +22,9 @@ import Data.Proxy (Proxy(..))
 import Prelude.Compat
 
 type NodeTypesConstraints k =
-    ( NodeTypesOf k ~ k
-    , HasNodes k
-    , KApplicative k
+    ( NodeTypesOf (NodeTypesOf k) ~ (NodeTypesOf k)
+    , HasNodes (NodeTypesOf k)
+    , KApplicative (NodeTypesOf k)
     )
 
 class HasNodes k where
@@ -34,12 +34,12 @@ class HasNodes k where
 
     hasNodeTypes ::
         Proxy k ->
-        Dict (NodeTypesConstraints (NodeTypesOf k))
+        Dict (NodeTypesConstraints k)
     {-# INLINE hasNodeTypes #-}
     default hasNodeTypes ::
-        NodeTypesConstraints (NodeTypesOf k) =>
+        NodeTypesConstraints k =>
         Proxy k ->
-        Dict (NodeTypesConstraints (NodeTypesOf k))
+        Dict (NodeTypesConstraints k)
     hasNodeTypes _ = Dict
 
     -- TODO: Remove this.
