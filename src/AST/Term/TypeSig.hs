@@ -32,8 +32,8 @@ data TypeSig vars term k = TypeSig
     } deriving Generic
 makeLenses ''TypeSig
 
-type instance NodeTypesOf (TypeSig v t) = Single t
-instance HasNodeTypes (TypeSig v t)
+instance HasNodeTypes (TypeSig v t) where
+    type NodeTypesOf (TypeSig v t) = Single t
 
 makeKTraversableAndBases ''TypeSig
 

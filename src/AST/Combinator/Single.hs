@@ -22,8 +22,8 @@ newtype Single c k = MkSingle { getSingle :: Node k c }
 _Single :: Iso (Tree (Single c0) k0) (Tree (Single c1) k1) (Tree k0 c0) (Tree k1 c1)
 _Single = iso getSingle MkSingle
 
-type instance NodeTypesOf (Single c) = Single c
-instance HasNodeTypes (Single c)
+instance HasNodeTypes (Single c) where
+    type NodeTypesOf (Single c) = Single c
 
 makeKApplicativeBases ''Single
 

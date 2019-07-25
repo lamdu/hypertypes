@@ -64,10 +64,6 @@ data Types k = Types
 
 data TypeError k = TypError (UnifyError Typ k) | RowError (UnifyError Row k)
 
-type instance NodeTypesOf Typ = Types
-type instance NodeTypesOf Row = Types
-type instance NodeTypesOf Types = Types
-
 Lens.makePrisms ''Typ
 Lens.makePrisms ''Row
 Lens.makePrisms ''TypeError
@@ -80,9 +76,12 @@ instance KHas (Single Typ) Types where
 instance KHas (Pair Typ Row) Types where
     hasK (Types t0 r0) = MkPair t0 r0
 
-instance HasNodeTypes Types
-instance HasNodeTypes Typ
-instance HasNodeTypes Row
+instance HasNodeTypes Types where
+    type NodeTypesOf Types = Types
+instance HasNodeTypes Typ where
+    type NodeTypesOf Typ = Types
+instance HasNodeTypes Row where
+    type NodeTypesOf Row = Types
 
 makeZipMatch ''Typ
 makeZipMatch ''Row
@@ -95,8 +94,6 @@ makeKTraversableAndFoldable ''Types
 type TypDeps cls k = ((cls (Node k Typ), cls (Node k Row)) :: Constraint)
 
 type instance NomVarTypes Typ = Types
-
-type instance NodeTypesOf Types = Types
 
 instance HasNominalInst Name Typ where nominalInst = _TNom
 

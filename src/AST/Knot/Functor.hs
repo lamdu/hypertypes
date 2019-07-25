@@ -27,8 +27,8 @@ _ToKnot ::
         (f1 (Tree k1 (ToKnot f1)))
 _ToKnot = iso (\(MkToKnot x) -> x) MkToKnot
 
-type instance NodeTypesOf (ToKnot f) = Single (ToKnot f)
-instance HasNodeTypes (ToKnot f)
+instance HasNodeTypes (ToKnot f) where
+    type NodeTypesOf (ToKnot f) = Single (ToKnot f)
 
 makeKApplicativeBases ''ToKnot
 makeKTraversableAndFoldable ''ToKnot

@@ -39,18 +39,17 @@ data IResultNodeTypes e k = IResultNodeTypes
     , _ircScope :: NodeTypesOf (ScopeOf e) k
     }
 
-type instance NodeTypesOf (IResult e) = IResultNodeTypes e
-type instance NodeTypesOf (IResultNodeTypes e) = IResultNodeTypes e
-
-makeKPointed ''IResultNodeTypes
-
 instance
     HasNodeTypes (ScopeOf e) =>
     HasNodeTypes (IResultNodeTypes e) where
 
+    type NodeTypesOf (IResultNodeTypes e) = IResultNodeTypes e
+
     {-# INLINE hasNodeTypes #-}
     hasNodeTypes _ =
         withDict (hasNodeTypes (Proxy :: Proxy (ScopeOf e))) Dict
+
+makeKPointed ''IResultNodeTypes
 
 instance
     HasNodeTypes (ScopeOf e) =>
@@ -77,6 +76,8 @@ instance
 instance
     HasNodeTypes (ScopeOf e) =>
     HasNodeTypes (IResult e) where
+
+    type NodeTypesOf (IResult e) = IResultNodeTypes e
 
     {-# INLINE hasNodeTypes #-}
     hasNodeTypes _ =
@@ -113,9 +114,6 @@ instance InferChildDeps c ast => InferChildConstraints c ast
 newtype ITermTypes e k =
     ITermTypes (Tree (RecursiveChildren e) (Flip IResultNodeTypes (RunKnot k)))
 makePrisms ''ITermTypes
-
-type instance NodeTypesOf (ITermTypes e) = ITermTypes e
-type instance NodeTypesOf (Flip (ITerm a) e) = ITermTypes e
 
 instance
     ( Recursive HasNodeTypes e
@@ -202,6 +200,8 @@ instance
     ) =>
     HasNodeTypes (ITermTypes e) where
 
+    type NodeTypesOf (ITermTypes e) = ITermTypes e
+
     {-# INLINE hasNodeTypes #-}
     hasNodeTypes _ = Dict
 
@@ -209,7 +209,9 @@ instance
     ( Recursive HasNodeTypes e
     , Recursive (InferChildConstraints HasNodeTypes) e
     ) =>
-    HasNodeTypes (Flip (ITerm a) e)
+    HasNodeTypes (Flip (ITerm a) e) where
+
+    type NodeTypesOf (Flip (ITerm a) e) = ITermTypes e
 
 instance
     Recursive (InferChildConstraints HasNodeTypes) e =>

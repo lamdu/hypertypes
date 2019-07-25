@@ -3,7 +3,7 @@
 {-# LANGUAGE DefaultSignatures, FlexibleContexts #-}
 
 module AST.Class
-    ( NodeTypesOf, HasNodeTypes(..), NodeTypesConstraints
+    ( HasNodeTypes(..), NodeTypesConstraints
     , KPointed(..)
     , KFunctor(..), MapK(..), _MapK
     , KApply(..)
@@ -21,12 +21,6 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
--- | A type family for the different types of children a knot has.
--- Maps to a simple knot which has a single child of each child type.
-type family NodeTypesOf (knot :: Knot -> Type) :: Knot -> Type
-
-type instance NodeTypesOf (Const k) = Const ()
-
 type NodeTypesConstraints k =
     ( NodeTypesOf k ~ k
     , HasNodeTypes k
@@ -34,6 +28,10 @@ type NodeTypesConstraints k =
     )
 
 class HasNodeTypes k where
+    -- | A type family for the different types of children a knot has.
+    -- Maps to a simple knot which has a single child of each child type.
+    type family NodeTypesOf k :: Knot -> Type
+
     hasNodeTypes ::
         Proxy k ->
         Dict (NodeTypesConstraints (NodeTypesOf k))
@@ -108,6 +106,7 @@ class    (KPointed k, KApply k) => KApplicative k
 instance (KPointed k, KApply k) => KApplicative k
 
 instance HasNodeTypes (Const a) where
+    type NodeTypesOf (Const a) = Const ()
     {-# INLINE mNoChildren #-}
     mNoChildren = Just (\(Const x) -> Const x)
 
@@ -128,11 +127,10 @@ instance Semigroup a => KApply (Const a) where
     {-# INLINE zipK #-}
     zipK (Const x) (Const y) = Const (x <> y)
 
-type instance NodeTypesOf (Both a b) = Both (NodeTypesOf a) (NodeTypesOf b)
-
 instance
     (HasNodeTypes a, HasNodeTypes b) =>
     HasNodeTypes (Both a b) where
+    type NodeTypesOf (Both a b) = Both (NodeTypesOf a) (NodeTypesOf b)
 
     {-# INLINE hasNodeTypes #-}
     hasNodeTypes p =

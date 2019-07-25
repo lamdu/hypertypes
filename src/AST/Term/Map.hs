@@ -23,8 +23,8 @@ import           Prelude.Compat
 newtype TermMap k expr f = TermMap (Map k (Node f expr))
     deriving stock Generic
 
-type instance NodeTypesOf (TermMap k e) = Single e
-instance HasNodeTypes (TermMap k e)
+instance HasNodeTypes (TermMap k e) where
+    type NodeTypesOf (TermMap k e) = Single e
 
 Lens.makePrisms ''TermMap
 makeKTraversableAndBases ''TermMap

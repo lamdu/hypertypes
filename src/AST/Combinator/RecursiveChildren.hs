@@ -22,11 +22,10 @@ data RecursiveChildren a k = RecursiveChildren
     , _recSub :: Tree (NodeTypesOf a) (Flip RecursiveChildren (RunKnot k))
     }
 
-type instance NodeTypesOf (RecursiveChildren a) = RecursiveChildren a
-
 instance
     Recursive HasNodeTypes a =>
-    HasNodeTypes (RecursiveChildren a)
+    HasNodeTypes (RecursiveChildren a) where
+    type NodeTypesOf (RecursiveChildren a) = RecursiveChildren a
 
 instance
     Recursive HasNodeTypes a =>

@@ -24,8 +24,8 @@ import           Prelude.Compat
 newtype Pure k = MkPure { getPure :: Node k Pure }
     deriving stock Generic
 
-type instance NodeTypesOf Pure = Pure
-instance HasNodeTypes Pure
+instance HasNodeTypes Pure where
+    type NodeTypesOf Pure = Pure
 
 makeKApplicativeBases ''Pure
 makeKTraversableAndFoldable ''Pure

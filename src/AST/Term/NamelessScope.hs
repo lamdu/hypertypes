@@ -35,13 +35,14 @@ data EmptyScope
 newtype Scope expr a k = Scope (Node k (expr (Maybe a)))
 Lens.makePrisms ''Scope
 
-type instance NodeTypesOf (Scope e a) = Single (e (Maybe a))
-instance HasNodeTypes (Scope e a)
+instance HasNodeTypes (Scope e a) where
+    type NodeTypesOf (Scope e a) = Single (e (Maybe a))
 
 newtype ScopeVar (expr :: * -> Knot -> *) a (k :: Knot) = ScopeVar a
 Lens.makePrisms ''ScopeVar
 
-type instance NodeTypesOf (ScopeVar e a) = Const ()
+instance HasNodeTypes (ScopeVar e a) where
+    type NodeTypesOf (ScopeVar e a) = Const ()
 
 makeZipMatch ''Scope
 makeKApplicativeBases ''Scope
@@ -69,8 +70,8 @@ instance DeBruijnIndex a => DeBruijnIndex (Maybe a) where
 newtype ScopeTypes t v = ScopeTypes (Seq (Node v t))
     deriving newtype (Semigroup, Monoid)
 
-type instance NodeTypesOf (ScopeTypes t) = Single t
-instance HasNodeTypes (ScopeTypes t)
+instance HasNodeTypes (ScopeTypes t) where
+    type NodeTypesOf (ScopeTypes t) = Single t
 
 Lens.makePrisms ''ScopeTypes
 makeKTraversableAndBases ''ScopeTypes

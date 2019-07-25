@@ -45,10 +45,26 @@ data UnifyErrorNodes t k = UnifyErrorNodes
     , _ueBody :: NodeTypesOf t k
     }
 
-type instance NodeTypesOf (UnifyError t) = UnifyErrorNodes t
-type instance NodeTypesOf (UnifyErrorNodes t) = UnifyErrorNodes t
+instance
+    HasNodeTypes t =>
+    HasNodeTypes (UnifyErrorNodes t) where
+
+    type NodeTypesOf (UnifyErrorNodes t) = UnifyErrorNodes t
+
+    {-# INLINE hasNodeTypes #-}
+    hasNodeTypes _ =
+        withDict (hasNodeTypes (Proxy :: Proxy t)) Dict
 
 makeKPointed ''UnifyErrorNodes
+
+instance
+    HasNodeTypes t =>
+    HasNodeTypes (UnifyError t) where
+
+    type NodeTypesOf (UnifyError t) = UnifyErrorNodes t
+
+    {-# INLINE hasNodeTypes #-}
+    hasNodeTypes _ = hasNodeTypes (Proxy :: Proxy (UnifyErrorNodes t))
 
 instance
     HasNodeTypes t =>
@@ -67,21 +83,6 @@ instance
     zipK (UnifyErrorNodes t0 b0) (UnifyErrorNodes t1 b1) =
         withDict (hasNodeTypes (Proxy :: Proxy t)) $
         UnifyErrorNodes (Both t0 t1) (zipK b0 b1)
-
-instance
-    HasNodeTypes t =>
-    HasNodeTypes (UnifyErrorNodes t) where
-
-    {-# INLINE hasNodeTypes #-}
-    hasNodeTypes _ =
-        withDict (hasNodeTypes (Proxy :: Proxy t)) Dict
-
-instance
-    HasNodeTypes t =>
-    HasNodeTypes (UnifyError t) where
-
-    {-# INLINE hasNodeTypes #-}
-    hasNodeTypes _ = hasNodeTypes (Proxy :: Proxy (UnifyErrorNodes t))
 
 makeKTraversableAndBases ''UnifyError
 

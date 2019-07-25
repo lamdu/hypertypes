@@ -36,8 +36,8 @@ newtype Var v (expr :: Knot -> *) (k :: Knot) = Var v
     deriving newtype (Eq, Ord, Binary, NFData)
     deriving stock (Show, Generic)
 
-type instance NodeTypesOf (Var v e) = Const ()
-instance HasNodeTypes (Var v e)
+instance HasNodeTypes (Var v e) where
+    type NodeTypesOf (Var v e) = Const ()
 
 Lens.makePrisms ''Var
 makeKTraversableAndBases ''Var

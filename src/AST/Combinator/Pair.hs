@@ -25,8 +25,8 @@ data Pair a b k = MkPair
     , _pairSnd :: Node k b
     } deriving stock Generic
 
-type instance NodeTypesOf (Pair a b) = Pair a b
-instance HasNodeTypes (Pair a b)
+instance HasNodeTypes (Pair a b) where
+    type NodeTypesOf (Pair a b) = Pair a b
 
 makeLenses ''Pair
 makeKApplicativeBases ''Pair

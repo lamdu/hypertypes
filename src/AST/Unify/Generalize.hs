@@ -53,7 +53,11 @@ data GTerm v ast
 
 Lens.makePrisms ''GTerm
 
-type instance NodeTypesOf (Flip GTerm ast) = RecursiveChildren ast
+instance
+    Recursive HasNodeTypes ast =>
+    HasNodeTypes (Flip GTerm ast) where
+
+    type NodeTypesOf (Flip GTerm ast) = RecursiveChildren ast
 
 instance
     (Recursive KFunctor ast, HasNodeTypes ast) =>

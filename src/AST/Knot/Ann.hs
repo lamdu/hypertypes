@@ -36,8 +36,8 @@ data Ann a knot = Ann
     } deriving Generic
 makeLenses ''Ann
 
-type instance NodeTypesOf (Ann a) = Single (Ann a)
-instance HasNodeTypes (Ann a)
+instance HasNodeTypes (Ann a) where
+    type NodeTypesOf (Ann a) = Single (Ann a)
 
 makeKTraversableAndBases ''Ann
 makeZipMatch ''Ann

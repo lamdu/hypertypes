@@ -79,16 +79,18 @@ newtype FromNom nomId (term :: Knot -> *) (k :: Knot) = FromNom nomId
     deriving newtype (Eq, Ord, Binary, NFData)
     deriving stock (Show, Generic)
 
-type instance NodeTypesOf (NominalDecl t) = Single t
-type instance NodeTypesOf (NominalInst n v) = NodeTypesOf v
-type instance NodeTypesOf (ToNom n t) = Single t
-type instance NodeTypesOf (FromNom n t) = Const ()
+instance HasNodeTypes (NominalDecl t) where
+    type NodeTypesOf (NominalDecl t) = Single t
 
-instance HasNodeTypes (NominalDecl t)
-instance HasNodeTypes (ToNom n t)
-instance HasNodeTypes (FromNom n t)
+instance HasNodeTypes (ToNom n t) where
+    type NodeTypesOf (ToNom n t) = Single t
+
+instance HasNodeTypes (FromNom n t) where
+    type NodeTypesOf (FromNom n t) = Const ()
 
 instance HasNodeTypes v => HasNodeTypes (NominalInst n v) where
+    type NodeTypesOf (NominalInst n v) = NodeTypesOf v
+    {-# INLINE hasNodeTypes #-}
     hasNodeTypes _ = withDict (hasNodeTypes (Proxy :: Proxy v)) Dict
 
 makeLenses ''NominalDecl

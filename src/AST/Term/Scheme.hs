@@ -52,8 +52,8 @@ newtype QVars typ = QVars
     (Map (QVar (RunKnot typ)) (TypeConstraintsOf (RunKnot typ)))
     deriving stock Generic
 
-type instance NodeTypesOf (Scheme v t) = Single t
-instance HasNodeTypes (Scheme v t)
+instance HasNodeTypes (Scheme v t) where
+    type NodeTypesOf (Scheme v t) = Single t
 
 Lens.makeLenses ''Scheme
 Lens.makePrisms ''QVars

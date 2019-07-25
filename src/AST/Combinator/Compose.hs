@@ -15,7 +15,7 @@ import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
-import           Data.Constraint (withDict)
+import           Data.Constraint
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 
@@ -31,7 +31,13 @@ _Compose ::
     (Tree a0 (Compose b0 k0)) (Tree a1 (Compose b1 k1))
 _Compose = Lens.iso getCompose MkCompose
 
-type instance NodeTypesOf (Compose a b) = Compose (NodeTypesOf a) (NodeTypesOf b)
+instance (HasNodeTypes a, HasNodeTypes b) => HasNodeTypes (Compose a b) where
+    type NodeTypesOf (Compose a b) = Compose (NodeTypesOf a) (NodeTypesOf b)
+    {-# INLINE hasNodeTypes #-}
+    hasNodeTypes _ =
+        withDict (hasNodeTypes (Proxy :: Proxy a)) $
+        withDict (hasNodeTypes (Proxy :: Proxy b))
+        Dict
 
 class    KLiftConstraint k (ComposeConstraint1 c o) => ComposeConstraint0 c k o
 instance KLiftConstraint k (ComposeConstraint1 c o) => ComposeConstraint0 c k o

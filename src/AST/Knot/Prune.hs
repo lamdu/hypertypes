@@ -25,8 +25,8 @@ data Prune k =
     Pruned | Unpruned (Node k Prune)
     deriving Generic
 
-type instance NodeTypesOf Prune = Single Prune
-instance HasNodeTypes Prune
+instance HasNodeTypes Prune where
+    type NodeTypesOf Prune = Single Prune
 
 makePrisms ''Prune
 makeKTraversableAndBases ''Prune
