@@ -33,9 +33,6 @@ instance
 
     type KLiftConstraint (RecursiveChildren a) c = Recursive c a
 
-    {-# INLINE pureC #-}
-    pureC = id
-
     {-# INLINE pureK #-}
     pureK f =
         withDict (recursive :: RecursiveDict HasNodes a) $

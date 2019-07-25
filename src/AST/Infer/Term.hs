@@ -123,9 +123,6 @@ instance
 
     type KLiftConstraint (ITermTypes e) c = Recursive (InferChildConstraints c) e
 
-    {-# INLINE pureC #-}
-    pureC = id
-
     {-# INLINE pureK #-}
     pureK f =
         pureKWithConstraint (Proxy :: Proxy (InferChildConstraints HasNodes))

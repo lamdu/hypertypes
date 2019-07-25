@@ -50,11 +50,6 @@ class HasNodes k where
     mNoChildren = Nothing
 
 class HasNodes k => KPointed k where
-    -- | Construct a value from given child values
-    pureC ::
-        Tree (NodeTypesOf k) n ->
-        Tree k n
-
     -- | Construct a value from a higher ranked child value
     pureK ::
         (forall child. Tree n child) ->
@@ -112,8 +107,6 @@ instance HasNodes (Const a) where
 
 instance Monoid a => KPointed (Const a) where
     type KLiftConstraint (Const a) c = ()
-    {-# INLINE pureC #-}
-    pureC _ = Const mempty
     {-# INLINE pureK #-}
     pureK _ = Const mempty
     {-# INLINE pureKWithConstraint #-}
@@ -144,8 +137,6 @@ instance
 
 instance (KPointed a, KPointed b) => KPointed (Both a b) where
     type KLiftConstraint (Both a b) c = (KLiftConstraint a c, KLiftConstraint b c)
-    {-# INLINE pureC #-}
-    pureC (Both x y) = Both (pureC x) (pureC y)
     {-# INLINE pureK #-}
     pureK f = Both (pureK f) (pureK f)
     {-# INLINE pureKWithConstraint #-}

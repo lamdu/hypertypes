@@ -48,10 +48,6 @@ instance
     (HasNodes a, KPointed a, KPointed b) =>
     KPointed (Compose a b) where
     type KLiftConstraint (Compose a b) c = KLiftConstraint a (ComposeConstraint0 c b)
-    {-# INLINE pureC #-}
-    pureC =
-        withDict (hasNodeTypes (Proxy :: Proxy a)) $
-        _Compose %~ pureC . mapK (_Compose %~ pureC)
     {-# INLINE pureK #-}
     pureK x = pureK (pureK (MkCompose x) & MkCompose) & MkCompose
     {-# INLINE pureKWithConstraint #-}
