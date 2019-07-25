@@ -1,15 +1,16 @@
 -- | Functors as Knots
 {-# LANGUAGE TemplateHaskell, TypeFamilies, StandaloneDeriving, FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses #-}
-{-# LANGUAGE ConstraintKinds, DerivingStrategies, DeriveGeneric #-}
+{-# LANGUAGE ConstraintKinds, DerivingStrategies, DeriveGeneric, DataKinds #-}
 module AST.Knot.Functor
     ( ToKnot(..), _ToKnot
     ) where
 
-import AST.Class (NodeTypesOf, HasNodes)
+import AST.Class (HasNodes(..))
 import AST.Class.Apply.TH (makeKApplicativeBases)
 import AST.Class.Recursive (Recursive)
 import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
+import AST.Constraint
 import AST.Combinator.Single (Single(..))
 import AST.Knot (Tree, Node)
 import Control.DeepSeq (NFData)
@@ -29,6 +30,7 @@ _ToKnot = iso (\(MkToKnot x) -> x) MkToKnot
 
 instance HasNodes (ToKnot f) where
     type NodeTypesOf (ToKnot f) = Single (ToKnot f)
+    type NodesConstraint (ToKnot f) = KnotsConstraint '[ToKnot f]
 
 makeKApplicativeBases ''ToKnot
 makeKTraversableAndFoldable ''ToKnot

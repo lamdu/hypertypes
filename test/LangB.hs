@@ -56,6 +56,7 @@ data LangB k
 
 instance HasNodes LangB where
     type NodeTypesOf LangB = Single LangB
+    type NodesConstraint LangB = KnotsConstraint '[LangB]
 
 makeKTraversableAndBases ''LangB
 instance c LangB => Recursive c LangB
@@ -127,6 +128,7 @@ newtype ScopeTypes v = ScopeTypes (Map Name (Tree (GTerm (RunKnot v)) Typ))
 
 instance HasNodes ScopeTypes where
     type NodeTypesOf ScopeTypes = NodeTypesOf (Flip GTerm Typ)
+    type NodesConstraint ScopeTypes = NodesConstraint (Flip GTerm Typ)
 
 Lens.makePrisms ''ScopeTypes
 

@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, StandaloneDeriving, UndecidableInstances #-}
 {-# LANGUAGE DeriveGeneric, TemplateHaskell, TypeFamilies #-}
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, DataKinds #-}
 
 module AST.Term.FuncType
     ( FuncType(..), funcIn, funcOut
@@ -28,6 +28,7 @@ data FuncType typ k = FuncType
 
 instance HasNodes (FuncType t) where
     type NodeTypesOf (FuncType t) = Single t
+    type NodesConstraint (FuncType t) = KnotsConstraint '[t]
 
 makeLenses ''FuncType
 makeZipMatch ''FuncType

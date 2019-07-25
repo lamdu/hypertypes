@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, StandaloneDeriving, UndecidableInstances, DeriveGeneric #-}
 {-# LANGUAGE TypeFamilies, MultiParamTypeClasses, ConstraintKinds, UndecidableSuperClasses #-}
-{-# LANGUAGE FlexibleInstances, DerivingStrategies, ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleInstances, DerivingStrategies, ScopedTypeVariables, FlexibleContexts #-}
 
 module AST.Combinator.Compose
     ( Compose(..), _Compose
@@ -33,11 +33,14 @@ _Compose = Lens.iso getCompose MkCompose
 
 instance (HasNodes a, HasNodes b) => HasNodes (Compose a b) where
     type NodeTypesOf (Compose a b) = Compose (NodeTypesOf a) (NodeTypesOf b)
+    type NodesConstraint (Compose a b) = ComposeConstraint (NodeTypesOf a) (NodeTypesOf b)
     {-# INLINE hasNodeTypes #-}
     hasNodeTypes _ =
         withDict (hasNodeTypes (Proxy :: Proxy a)) $
         withDict (hasNodeTypes (Proxy :: Proxy b))
         Dict
+
+class ComposeConstraint0 c a b => ComposeConstraint a b c
 
 class    KLiftConstraint k (ComposeConstraint1 c o) => ComposeConstraint0 c k o
 instance KLiftConstraint k (ComposeConstraint1 c o) => ComposeConstraint0 c k o

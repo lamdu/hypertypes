@@ -48,6 +48,7 @@ data LangA v k
 
 instance HasNodes (LangA v) where
     type NodeTypesOf (LangA v) = Pair (LangA v) (LangA (Maybe v))
+    type NodesConstraint (LangA v) = KnotsConstraint '[LangA v, LangA (Maybe v)]
 
 makeKTraversableAndBases ''LangA
 instance Recursive HasNodes (LangA v)

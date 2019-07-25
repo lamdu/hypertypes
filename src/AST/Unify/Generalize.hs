@@ -58,6 +58,7 @@ instance
     HasNodes (Flip GTerm ast) where
 
     type NodeTypesOf (Flip GTerm ast) = RecursiveChildren ast
+    type NodesConstraint (Flip GTerm ast) = RecursiveConstraint ast
 
 instance
     (Recursive HasNodes ast, Recursive KFunctor ast) =>

@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, UndecidableInstances #-}
 {-# LANGUAGE ConstraintKinds, StandaloneDeriving, LambdaCase, DeriveGeneric #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables, DataKinds #-}
 
 module AST.Unify.Error
     ( UnifyError(..)
@@ -50,6 +50,8 @@ instance
     HasNodes (UnifyErrorNodes t) where
 
     type NodeTypesOf (UnifyErrorNodes t) = UnifyErrorNodes t
+    type NodesConstraint (UnifyErrorNodes t) =
+        ConcatKnotConstraints '[KnotsConstraint '[t], NodesConstraint t]
 
     {-# INLINE hasNodeTypes #-}
     hasNodeTypes _ =
@@ -62,6 +64,7 @@ instance
     HasNodes (UnifyError t) where
 
     type NodeTypesOf (UnifyError t) = UnifyErrorNodes t
+    type NodesConstraint (UnifyError t) = NodesConstraint (UnifyErrorNodes t)
 
     {-# INLINE hasNodeTypes #-}
     hasNodeTypes _ = hasNodeTypes (Proxy :: Proxy (UnifyErrorNodes t))

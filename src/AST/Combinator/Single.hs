@@ -1,12 +1,13 @@
 {-# LANGUAGE NoImplicitPrelude, DerivingStrategies, DeriveGeneric, StandaloneDeriving #-}
-{-# LANGUAGE UndecidableInstances, TypeFamilies, TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances, TypeFamilies, TemplateHaskell, DataKinds #-}
 
 module AST.Combinator.Single
     ( Single(..), _Single
     ) where
 
-import AST.Class (NodeTypesOf, HasNodes)
+import AST.Class (HasNodes(..))
 import AST.Class.Apply.TH (makeKApplicativeBases)
+import AST.Constraint
 import AST.Knot (Tree, Node)
 import Control.DeepSeq (NFData)
 import Control.Lens (Iso, iso)
@@ -24,6 +25,7 @@ _Single = iso getSingle MkSingle
 
 instance HasNodes (Single c) where
     type NodeTypesOf (Single c) = Single c
+    type NodesConstraint (Single c) = KnotsConstraint '[c]
 
 makeKApplicativeBases ''Single
 

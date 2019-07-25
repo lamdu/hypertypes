@@ -1,15 +1,16 @@
 {-# LANGUAGE NoImplicitPrelude, DerivingStrategies, DeriveGeneric, StandaloneDeriving #-}
 {-# LANGUAGE UndecidableInstances, TypeFamilies, TemplateHaskell, ConstraintKinds #-}
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, DataKinds #-}
 
 module AST.Combinator.Pair
     ( Pair(..), pairFst, pairSnd
     ) where
 
-import AST.Class (NodeTypesOf, HasNodes)
+import AST.Class (HasNodes(..))
 import AST.Class.Apply.TH (makeKApplicativeBases)
 import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import AST.Class.Has (KHas(..))
+import AST.Constraint
 import AST.Combinator.Single (Single(..))
 import AST.Knot (Node)
 import Control.DeepSeq (NFData)
@@ -27,6 +28,7 @@ data Pair a b k = MkPair
 
 instance HasNodes (Pair a b) where
     type NodeTypesOf (Pair a b) = Pair a b
+    type NodesConstraint (Pair a b) = KnotsConstraint '[a, b]
 
 makeLenses ''Pair
 makeKApplicativeBases ''Pair

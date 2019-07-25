@@ -78,10 +78,13 @@ instance KHas (Pair Typ Row) Types where
 
 instance HasNodes Types where
     type NodeTypesOf Types = Types
+    type NodesConstraint Types = KnotsConstraint '[Typ, Row]
 instance HasNodes Typ where
     type NodeTypesOf Typ = Types
+    type NodesConstraint Typ = KnotsConstraint '[Typ, Row]
 instance HasNodes Row where
     type NodeTypesOf Row = Types
+    type NodesConstraint Row = KnotsConstraint '[Typ, Row]
 
 makeZipMatch ''Typ
 makeZipMatch ''Row

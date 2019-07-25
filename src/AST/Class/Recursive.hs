@@ -4,7 +4,7 @@
 {-# LANGUAGE UndecidableSuperClasses, DataKinds, TypeFamilies #-}
 
 module AST.Class.Recursive
-    ( Recursive(..), RecursiveContext, RecursiveDict
+    ( Recursive(..), RecursiveContext, RecursiveDict, RecursiveConstraint
     , wrap, unwrap, wrapM, unwrapM, fold, unfold
     , foldMapRecursive
     , recursiveChildren, recursiveOverChildren, recursiveChildren_
@@ -42,6 +42,9 @@ type RecursiveContext expr constraint =
     )
 
 type RecursiveDict constraint expr = Dict (RecursiveContext expr constraint)
+
+class    Recursive c k => RecursiveConstraint k c
+instance Recursive c k => RecursiveConstraint k c
 
 instance constraint Pure => Recursive constraint Pure
 

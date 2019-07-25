@@ -1,13 +1,15 @@
 {-# LANGUAGE NoImplicitPrelude, StandaloneDeriving, UndecidableInstances #-}
 {-# LANGUAGE TypeFamilies, TemplateHaskell, DeriveGeneric, DerivingStrategies #-}
+{-# LANGUAGE DataKinds #-}
 module AST.Knot.Pure
     ( Pure(..), _Pure
     ) where
 
-import           AST.Class (NodeTypesOf, HasNodes)
+import           AST.Class (HasNodes(..))
 import           AST.Class.Apply.TH (makeKApplicativeBases)
 import           AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import           AST.Class.ZipMatch.TH (makeZipMatch)
+import           AST.Constraint (KnotsConstraint)
 import           AST.Knot (Tree, Node)
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
@@ -26,6 +28,7 @@ newtype Pure k = MkPure { getPure :: Node k Pure }
 
 instance HasNodes Pure where
     type NodeTypesOf Pure = Pure
+    type NodesConstraint Pure = KnotsConstraint '[Pure]
 
 makeKApplicativeBases ''Pure
 makeKTraversableAndFoldable ''Pure

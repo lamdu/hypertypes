@@ -26,6 +26,7 @@ instance
     Recursive HasNodes a =>
     HasNodes (RecursiveChildren a) where
     type NodeTypesOf (RecursiveChildren a) = RecursiveChildren a
+    type NodesConstraint (RecursiveChildren a) = RecursiveConstraint a
 
 instance
     Recursive HasNodes a =>

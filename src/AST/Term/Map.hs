@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, StandaloneDeriving #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, StandaloneDeriving, DataKinds #-}
 {-# LANGUAGE UndecidableInstances, DeriveGeneric, TypeFamilies, DerivingStrategies #-}
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, ConstraintKinds #-}
 
@@ -25,6 +25,7 @@ newtype TermMap k expr f = TermMap (Map k (Node f expr))
 
 instance HasNodes (TermMap k e) where
     type NodeTypesOf (TermMap k e) = Single e
+    type NodesConstraint (TermMap k e) = KnotsConstraint '[e]
 
 Lens.makePrisms ''TermMap
 makeKTraversableAndBases ''TermMap

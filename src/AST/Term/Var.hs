@@ -38,6 +38,7 @@ newtype Var v (expr :: Knot -> *) (k :: Knot) = Var v
 
 instance HasNodes (Var v e) where
     type NodeTypesOf (Var v e) = Const ()
+    type NodesConstraint (Var v e) = KnotsConstraint '[]
 
 Lens.makePrisms ''Var
 makeKTraversableAndBases ''Var

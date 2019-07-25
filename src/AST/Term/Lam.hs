@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric, DataKinds #-}
 {-# LANGUAGE StandaloneDeriving, ConstraintKinds, UndecidableInstances #-}
 {-# LANGUAGE MultiParamTypeClasses, TypeFamilies, FlexibleInstances #-}
 
@@ -32,6 +32,7 @@ makeLenses ''Lam
 
 instance HasNodes (Lam v e) where
     type NodeTypesOf (Lam v e) = Single e
+    type NodesConstraint (Lam v e) = KnotsConstraint '[e]
 
 makeKTraversableAndBases ''Lam
 

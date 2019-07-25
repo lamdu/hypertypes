@@ -11,6 +11,7 @@ module AST.Class
     , mapK, liftK2
     ) where
 
+import AST.Constraint
 import AST.Combinator.Both (Both(..))
 import AST.Knot (Knot, Tree)
 import Control.Lens (Iso, iso)
@@ -22,7 +23,8 @@ import Data.Proxy (Proxy(..))
 import Prelude.Compat
 
 type NodeTypesConstraints k =
-    ( NodeTypesOf (NodeTypesOf k) ~ (NodeTypesOf k)
+    ( NodesConstraint k ~ NodesConstraint (NodeTypesOf k)
+    , NodeTypesOf (NodeTypesOf k) ~ (NodeTypesOf k)
     , HasNodes (NodeTypesOf k)
     , KApplicative (NodeTypesOf k)
     )
@@ -31,6 +33,8 @@ class HasNodes k where
     -- | A type family for the different types of children a knot has.
     -- Maps to a simple knot which has a single child of each child type.
     type family NodeTypesOf k :: Knot -> Type
+
+    type family NodesConstraint k :: ((Knot -> Type) -> Constraint) -> Constraint
 
     hasNodeTypes ::
         Proxy k ->
@@ -102,6 +106,7 @@ instance (KPointed k, KApply k) => KApplicative k
 
 instance HasNodes (Const a) where
     type NodeTypesOf (Const a) = Const ()
+    type NodesConstraint (Const a) = KnotsConstraint '[]
     {-# INLINE mNoChildren #-}
     mNoChildren = Just (\(Const x) -> Const x)
 
@@ -124,6 +129,7 @@ instance
     (HasNodes a, HasNodes b) =>
     HasNodes (Both a b) where
     type NodeTypesOf (Both a b) = Both (NodeTypesOf a) (NodeTypesOf b)
+    type NodesConstraint (Both a b) = ConcatKnotConstraints [NodesConstraint a, NodesConstraint b]
 
     {-# INLINE hasNodeTypes #-}
     hasNodeTypes p =

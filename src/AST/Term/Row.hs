@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, DeriveGeneric, TemplateHaskell, TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
 {-# LANGUAGE StandaloneDeriving, ConstraintKinds, FlexibleContexts, RankNTypes #-}
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase, DataKinds #-}
 
 module AST.Term.Row
     ( RowConstraints(..), RowKey
@@ -59,8 +59,10 @@ data FlatRowExtends key val rest k = FlatRowExtends
 
 instance HasNodes (RowExtend k v r) where
     type NodeTypesOf (RowExtend k v r) = Pair v r
+    type NodesConstraint (RowExtend k v r) = KnotsConstraint '[v, r]
 instance HasNodes (FlatRowExtends k v r) where
     type NodeTypesOf (FlatRowExtends k v r) = Pair v r
+    type NodesConstraint (FlatRowExtends k v r) = KnotsConstraint '[v, r]
 
 makeLenses ''RowExtend
 makeLenses ''FlatRowExtends

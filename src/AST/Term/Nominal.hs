@@ -81,15 +81,19 @@ newtype FromNom nomId (term :: Knot -> *) (k :: Knot) = FromNom nomId
 
 instance HasNodes (NominalDecl t) where
     type NodeTypesOf (NominalDecl t) = Single t
+    type NodesConstraint (NominalDecl t) = KnotsConstraint '[t]
 
 instance HasNodes (ToNom n t) where
     type NodeTypesOf (ToNom n t) = Single t
+    type NodesConstraint (ToNom n t) = KnotsConstraint '[t]
 
 instance HasNodes (FromNom n t) where
     type NodeTypesOf (FromNom n t) = Const ()
+    type NodesConstraint (FromNom n t) = KnotsConstraint '[]
 
 instance HasNodes v => HasNodes (NominalInst n v) where
     type NodeTypesOf (NominalInst n v) = NodeTypesOf v
+    type NodesConstraint (NominalInst n v) = NodesConstraint (NodeTypesOf v)
     {-# INLINE hasNodeTypes #-}
     hasNodeTypes _ = withDict (hasNodeTypes (Proxy :: Proxy v)) Dict
 

@@ -44,6 +44,8 @@ instance
     HasNodes (IResultNodeTypes e) where
 
     type NodeTypesOf (IResultNodeTypes e) = IResultNodeTypes e
+    type NodesConstraint (IResultNodeTypes e) =
+        ConcatKnotConstraints '[KnotsConstraint '[TypeOf e], NodesConstraint (ScopeOf e)]
 
     {-# INLINE hasNodeTypes #-}
     hasNodeTypes _ =
@@ -78,6 +80,7 @@ instance
     HasNodes (IResult e) where
 
     type NodeTypesOf (IResult e) = IResultNodeTypes e
+    type NodesConstraint (IResult e) = NodesConstraint (IResultNodeTypes e)
 
     {-# INLINE hasNodeTypes #-}
     hasNodeTypes _ =
@@ -198,6 +201,7 @@ instance
     HasNodes (ITermTypes e) where
 
     type NodeTypesOf (ITermTypes e) = ITermTypes e
+    type NodesConstraint (ITermTypes e) = KnotsConstraint '[] -- TODO
 
     {-# INLINE hasNodeTypes #-}
     hasNodeTypes _ = Dict
@@ -209,6 +213,7 @@ instance
     HasNodes (Flip (ITerm a) e) where
 
     type NodeTypesOf (Flip (ITerm a) e) = ITermTypes e
+    type NodesConstraint (Flip (ITerm a) e) = NodesConstraint (ITermTypes e)
 
 instance
     ( Recursive (InferChildConstraints HasNodes) e

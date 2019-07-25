@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
-{-# LANGUAGE StandaloneDeriving, DeriveGeneric #-}
+{-# LANGUAGE StandaloneDeriving, DeriveGeneric, DataKinds #-}
 
 module AST.Term.Apply
     ( Apply(..), applyFunc, applyArg
@@ -30,6 +30,7 @@ data Apply expr k = Apply
 
 instance HasNodes (Apply e) where
     type NodeTypesOf (Apply e) = Single e
+    type NodesConstraint (Apply e) = KnotsConstraint '[e]
 
 makeLenses ''Apply
 makeZipMatch ''Apply

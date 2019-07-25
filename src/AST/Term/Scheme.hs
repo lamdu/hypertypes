@@ -54,6 +54,7 @@ newtype QVars typ = QVars
 
 instance HasNodes (Scheme v t) where
     type NodeTypesOf (Scheme v t) = Single t
+    type NodesConstraint (Scheme v t) = KnotsConstraint '[t]
 
 Lens.makeLenses ''Scheme
 Lens.makePrisms ''QVars

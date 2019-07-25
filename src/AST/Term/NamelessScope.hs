@@ -37,12 +37,14 @@ Lens.makePrisms ''Scope
 
 instance HasNodes (Scope e a) where
     type NodeTypesOf (Scope e a) = Single (e (Maybe a))
+    type NodesConstraint (Scope e a) = KnotsConstraint '[e (Maybe a)]
 
 newtype ScopeVar (expr :: * -> Knot -> *) a (k :: Knot) = ScopeVar a
 Lens.makePrisms ''ScopeVar
 
 instance HasNodes (ScopeVar e a) where
     type NodeTypesOf (ScopeVar e a) = Const ()
+    type NodesConstraint (ScopeVar e a) = KnotsConstraint '[]
 
 makeZipMatch ''Scope
 makeKApplicativeBases ''Scope
@@ -72,6 +74,7 @@ newtype ScopeTypes t v = ScopeTypes (Seq (Node v t))
 
 instance HasNodes (ScopeTypes t) where
     type NodeTypesOf (ScopeTypes t) = Single t
+    type NodesConstraint (ScopeTypes t) = KnotsConstraint '[t]
 
 Lens.makePrisms ''ScopeTypes
 makeKTraversableAndBases ''ScopeTypes

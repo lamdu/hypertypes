@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric, TypeFamilies #-}
 {-# LANGUAGE StandaloneDeriving, ConstraintKinds, UndecidableInstances #-}
-{-# LANGUAGE TupleSections, FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE TupleSections, FlexibleInstances, MultiParamTypeClasses, DataKinds #-}
 
 module AST.Term.Let
     ( Let(..), letVar, letEquals, letIn
@@ -32,6 +32,7 @@ makeLenses ''Let
 
 instance HasNodes (Let v e) where
     type NodeTypesOf (Let v e) = Single e
+    type NodesConstraint (Let v e) = KnotsConstraint '[e]
 
 makeKTraversableAndBases ''Let
 

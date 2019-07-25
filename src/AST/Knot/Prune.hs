@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, DeriveGeneric, StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell, TypeFamilies, FlexibleInstances, MultiParamTypeClasses #-}
-{-# LANGUAGE ConstraintKinds, UndecidableInstances #-}
+{-# LANGUAGE ConstraintKinds, UndecidableInstances, DataKinds #-}
 
 module AST.Knot.Prune
     ( Prune(..)
@@ -27,6 +27,7 @@ data Prune k =
 
 instance HasNodes Prune where
     type NodeTypesOf Prune = Single Prune
+    type NodesConstraint Prune = KnotsConstraint '[Prune]
 
 makePrisms ''Prune
 makeKTraversableAndBases ''Prune

@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, StandaloneDeriving, RankNTypes #-}
 {-# LANGUAGE DeriveGeneric, FlexibleContexts, TypeFamilies, FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses, UndecidableInstances, ConstraintKinds #-}
+{-# LANGUAGE MultiParamTypeClasses, UndecidableInstances, ConstraintKinds, DataKinds #-}
 
 module AST.Knot.Ann
     ( Ann(..), ann, val
@@ -9,11 +9,12 @@ module AST.Knot.Ann
     , para
     ) where
 
-import           AST.Class (NodeTypesOf, HasNodes)
+import           AST.Class (HasNodes(..))
 import           AST.Class.Recursive (Recursive, wrap, unwrap, recursiveChildren, recursiveOverChildren)
 import           AST.Class.Traversable
 import           AST.Class.Traversable.TH (makeKTraversableAndBases)
 import           AST.Class.ZipMatch.TH (makeZipMatch)
+import           AST.Constraint
 import           AST.Combinator.Single (Single)
 import           AST.Knot (Tree, Node)
 import           AST.Knot.Pure (Pure(..))
@@ -38,6 +39,7 @@ makeLenses ''Ann
 
 instance HasNodes (Ann a) where
     type NodeTypesOf (Ann a) = Single (Ann a)
+    type NodesConstraint (Ann a) = KnotsConstraint '[Ann a]
 
 makeKTraversableAndBases ''Ann
 makeZipMatch ''Ann

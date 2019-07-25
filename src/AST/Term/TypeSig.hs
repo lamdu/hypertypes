@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, DeriveGeneric, TemplateHaskell #-}
+{-# LANGUAGE NoImplicitPrelude, DeriveGeneric, TemplateHaskell, DataKinds #-}
 {-# LANGUAGE TypeFamilies, FlexibleInstances, MultiParamTypeClasses, TypeOperators #-}
 {-# LANGUAGE UndecidableInstances, StandaloneDeriving, ConstraintKinds #-}
 
@@ -34,6 +34,7 @@ makeLenses ''TypeSig
 
 instance HasNodes (TypeSig v t) where
     type NodeTypesOf (TypeSig v t) = Single t
+    type NodesConstraint (TypeSig v t) = KnotsConstraint '[t]
 
 makeKTraversableAndBases ''TypeSig
 
