@@ -6,7 +6,6 @@ module AST.Combinator.RecursiveChildren
     ) where
 
 import AST.Class
-import AST.Class.Apply
 import AST.Class.Combinators
 import AST.Class.HasNodeTypes
 import AST.Class.Recursive

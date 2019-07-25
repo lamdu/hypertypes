@@ -4,6 +4,8 @@
 module AST.Class
     ( KPointed(..)
     , KFunctor(..), MapK(..), _MapK
+    , KApply(..)
+    , KApplicative
     ) where
 
 import AST.Combinator.Both (Both(..))
@@ -62,6 +64,16 @@ class KFunctor k where
         Tree k m ->
         Tree k n
 
+class KFunctor k => KApply k where
+    -- | Combine child values given a combining function per child type
+    zipK ::
+        Tree k a ->
+        Tree k b ->
+        Tree k (Both a b)
+
+class    (KPointed k, KApply k) => KApplicative k
+instance (KPointed k, KApply k) => KApplicative k
+
 instance Monoid a => KPointed (Const a) where
     type KLiftConstraint (Const a) c = ()
     {-# INLINE pureC #-}
@@ -75,6 +87,10 @@ instance KFunctor (Const a) where
     {-# INLINE mapC #-}
     mapC _ (Const x) = Const x
 
+instance Semigroup a => KApply (Const a) where
+    {-# INLINE zipK #-}
+    zipK (Const x) (Const y) = Const (x <> y)
+
 instance (KPointed a, KPointed b) => KPointed (Both a b) where
     type KLiftConstraint (Both a b) c = (KLiftConstraint a c, KLiftConstraint b c)
     {-# INLINE pureC #-}
@@ -85,4 +101,9 @@ instance (KPointed a, KPointed b) => KPointed (Both a b) where
     pureKWithConstraint p f = Both (pureKWithConstraint p f) (pureKWithConstraint p f)
 
 instance (KFunctor a, KFunctor b) => KFunctor (Both a b) where
+    {-# INLINE mapC #-}
     mapC (Both fx fy) (Both x y) = Both (mapC fx x) (mapC fy y)
+
+instance (KApply a, KApply b) => KApply (Both a b) where
+    {-# INLINE zipK #-}
+    zipK (Both a0 b0) (Both a1 b1) = Both (zipK a0 a1) (zipK b0 b1)

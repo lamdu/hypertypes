@@ -6,7 +6,7 @@ module AST.Class.Apply.TH
     , makeKApplicativeBases
     ) where
 
-import           AST.Class.Apply
+import           AST.Class
 import           AST.Class.Functor.TH (makeKFunctor)
 import           AST.Class.Pointed.TH (makeKPointed)
 import           AST.Combinator.Both
