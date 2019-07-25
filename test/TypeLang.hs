@@ -87,7 +87,6 @@ instance HasChildrenTypes Row
 makeChildrenAndZipMatch ''Typ
 makeChildrenAndZipMatch ''Row
 makeChildrenAndZipMatch ''Types
-makeChildren ''TypeError
 makeKTraversableAndBases ''Typ
 makeKTraversableAndBases ''Row
 makeKApplicativeBases ''Types

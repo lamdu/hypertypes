@@ -219,14 +219,14 @@ instance MonadQuantify RConstraints Name PureInferB where
 instance Unify PureInferB Typ where
     binding = bindingDict (Lens._1 . tTyp)
     unifyError e =
-        children (Proxy :: Proxy (Recursive (Unify PureInferB))) applyBindings e
+        traverseKWith (Proxy :: Proxy '[Recursive (Unify PureInferB)]) applyBindings e
         >>= throwError . TypError
 
 instance Unify PureInferB Row where
     binding = bindingDict (Lens._1 . tRow)
     structureMismatch = rStructureMismatch
     unifyError e =
-        children (Proxy :: Proxy (Recursive (Unify PureInferB))) applyBindings e
+        traverseKWith (Proxy :: Proxy '[Recursive (Unify PureInferB)]) applyBindings e
         >>= throwError . RowError
 
 newtype STInferB s a =
@@ -279,14 +279,14 @@ instance MonadQuantify RConstraints Name (STInferB s) where
 instance Unify (STInferB s) Typ where
     binding = stBinding
     unifyError e =
-        children (Proxy :: Proxy (Recursive (Unify (STInferB s)))) applyBindings e
+        traverseKWith (Proxy :: Proxy '[Recursive (Unify (STInferB s))]) applyBindings e
         >>= throwError . TypError
 
 instance Unify (STInferB s) Row where
     binding = stBinding
     structureMismatch = rStructureMismatch
     unifyError e =
-        children (Proxy :: Proxy (Recursive (Unify (STInferB s)))) applyBindings e
+        traverseKWith (Proxy :: Proxy '[Recursive (Unify (STInferB s))]) applyBindings e
         >>= throwError . RowError
 
 deriving instance Show (Tie k LangB) => Show (LangB k)

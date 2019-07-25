@@ -10,6 +10,7 @@ module AST.Unify.Error
 
 import           AST
 import           AST.Class.Functor
+import           AST.Combinator.Both
 import           AST.Unify.Constraints (HasTypeConstraints(..))
 import           Control.DeepSeq (NFData)
 import           Control.Lens (makePrisms)
@@ -38,7 +39,6 @@ data UnifyError t k
       -- ^ Unification between two mismatching type structures
     deriving Generic
 makePrisms ''UnifyError
-makeChildren ''UnifyError
 
 data UnifyErrorNodes t k = UnifyErrorNodes
     { _ueTerm :: Tie k t
@@ -48,21 +48,25 @@ data UnifyErrorNodes t k = UnifyErrorNodes
 type instance ChildrenTypesOf (UnifyError t) = UnifyErrorNodes t
 type instance ChildrenTypesOf (UnifyErrorNodes t) = UnifyErrorNodes t
 
+makeKPointed ''UnifyErrorNodes
+
 instance
     HasChildrenTypes t =>
     KFunctor (UnifyErrorNodes t) where
 
     {-# INLINE mapC #-}
     mapC (UnifyErrorNodes tf bf) (UnifyErrorNodes tx bx) =
-        UnifyErrorNodes
-        { _ueTerm = runMapK tf tx
-        , _ueBody =
-            withDict (hasChildrenTypes (Proxy :: Proxy t)) $
-            mapC bf bx
-        }
+        withDict (hasChildrenTypes (Proxy :: Proxy t)) $
+        UnifyErrorNodes (runMapK tf tx) (mapC bf bx)
 
-makeKPointed ''UnifyErrorNodes
-makeKApply ''UnifyErrorNodes
+instance
+    HasChildrenTypes t =>
+    KApply (UnifyErrorNodes t) where
+
+    {-# INLINE zipK #-}
+    zipK (UnifyErrorNodes t0 b0) (UnifyErrorNodes t1 b1) =
+        withDict (hasChildrenTypes (Proxy :: Proxy t)) $
+        UnifyErrorNodes (Both t0 t1) (zipK b0 b1)
 
 instance
     HasChildrenTypes t =>
