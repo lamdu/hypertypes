@@ -1,5 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, UndecidableInstances #-}
 {-# LANGUAGE ConstraintKinds, StandaloneDeriving, LambdaCase, DeriveGeneric #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module AST.Unify.Error
     ( UnifyError(..)
@@ -8,11 +9,13 @@ module AST.Unify.Error
     ) where
 
 import           AST
+import           AST.Class.Functor
 import           AST.Unify.Constraints (HasTypeConstraints(..))
 import           Control.DeepSeq (NFData)
 import           Control.Lens (makePrisms)
 import           Data.Binary (Binary)
-import           Data.Constraint (Constraint)
+import           Data.Constraint
+import           Data.Proxy
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
@@ -36,6 +39,47 @@ data UnifyError t k
     deriving Generic
 makePrisms ''UnifyError
 makeChildren ''UnifyError
+
+data UnifyErrorNodes t k = UnifyErrorNodes
+    { _ueTerm :: Tie k t
+    , _ueBody :: ChildrenTypesOf t k
+    }
+
+type instance ChildrenTypesOf (UnifyError t) = UnifyErrorNodes t
+type instance ChildrenTypesOf (UnifyErrorNodes t) = UnifyErrorNodes t
+
+instance
+    HasChildrenTypes t =>
+    KFunctor (UnifyErrorNodes t) where
+
+    {-# INLINE mapC #-}
+    mapC (UnifyErrorNodes tf bf) (UnifyErrorNodes tx bx) =
+        UnifyErrorNodes
+        { _ueTerm = runMapK tf tx
+        , _ueBody =
+            withDict (hasChildrenTypes (Proxy :: Proxy t)) $
+            mapC bf bx
+        }
+
+makeKPointed ''UnifyErrorNodes
+makeKApply ''UnifyErrorNodes
+
+instance
+    HasChildrenTypes t =>
+    HasChildrenTypes (UnifyErrorNodes t) where
+
+    {-# INLINE hasChildrenTypes #-}
+    hasChildrenTypes _ =
+        withDict (hasChildrenTypes (Proxy :: Proxy t)) Dict
+
+instance
+    HasChildrenTypes t =>
+    HasChildrenTypes (UnifyError t) where
+
+    {-# INLINE hasChildrenTypes #-}
+    hasChildrenTypes _ = hasChildrenTypes (Proxy :: Proxy (UnifyErrorNodes t))
+
+makeKTraversableAndBases ''UnifyError
 
 type Deps c t k = ((c (Tie k t), c (t k), c (TypeConstraintsOf t)) :: Constraint)
 

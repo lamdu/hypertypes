@@ -7,6 +7,7 @@ module AST.Class.Apply.TH
     ) where
 
 import           AST.Class.Apply
+import           AST.Class.Functor
 import           AST.Class.Functor.TH (makeKFunctor)
 import           AST.Class.Pointed.TH (makeKPointed)
 import           AST.Combinator.Both
@@ -66,11 +67,14 @@ makeKApplyForType info =
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
-    tiCons info
-    >>= D.constructorFields
-    <&> matchType (tiVar info)
-    >>= ctxForPat
+    inheritFunctorCtx :
+    ( tiCons info
+        >>= D.constructorFields
+        <&> matchType (tiVar info)
+        >>= ctxForPat
+    )
     where
+        inheritFunctorCtx = ConT ''KFunctor `AppT` tiInstance info
         ctxForPat (Tof t pat) = (ConT ''Applicative `AppT` t) : ctxForPat pat
         ctxForPat (XofF t) = [ConT ''KApply `AppT` t]
         ctxForPat _ = []
