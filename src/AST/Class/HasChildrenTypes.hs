@@ -3,7 +3,7 @@
 
 module AST.Class.HasChildrenTypes
     ( HasChildrenTypes(..), ChildrenTypesConstraints
-    , mapK, liftK2, foldMapK, traverseK, traverseK_
+    , mapK, liftK2, foldMapK, traverseK, traverseK1, traverseK_
     ) where
 
 import AST.Class.Applicative (KApplicative)
@@ -13,6 +13,7 @@ import AST.Class.Functor (KFunctor(..), MapK(..))
 import AST.Class.Pointed (KPointed(..))
 import AST.Class.Traversable (KTraversable(..), ContainedK(..))
 import AST.Combinator.Both (Both(..))
+import AST.Combinator.Single
 import AST.Knot (Tree, ChildrenTypesOf)
 import Data.Constraint (Dict(..), withDict)
 import Data.Foldable (sequenceA_)
@@ -38,6 +39,9 @@ class HasChildrenTypes k where
         Dict (ChildrenTypesConstraints (ChildrenTypesOf k))
     hasChildrenTypes _ = Dict
 
+    -- TODO: Remove this.
+    -- Algorithms that avoid actions for leafs can more accurately
+    -- use KTraversable to check for their presence
     mNoChildren :: Maybe (k m -> k n)
     {-# INLINE mNoChildren #-}
     mNoChildren = Nothing
@@ -45,6 +49,8 @@ class HasChildrenTypes k where
 instance HasChildrenTypes (Const a) where
     {-# INLINE mNoChildren #-}
     mNoChildren = Just (\(Const x) -> Const x)
+
+instance HasChildrenTypes (Single c)
 
 instance
     (HasChildrenTypes a, HasChildrenTypes b) =>
@@ -104,6 +110,16 @@ traverseK ::
     Tree k m ->
     f (Tree k n)
 traverseK f = sequenceC . mapK (MkContainedK . f)
+
+{-# INLINE traverseK1 #-}
+traverseK1 ::
+    ( Applicative f, KTraversable k
+    , ChildrenTypesOf k ~ (Single c)
+    ) =>
+    (Tree m c -> f (Tree n c)) ->
+    Tree k m ->
+    f (Tree k n)
+traverseK1 f = sequenceC . mapC (MkSingle (MkMapK (MkContainedK . f)))
 
 {-# INLINE traverseK_ #-}
 traverseK_ ::

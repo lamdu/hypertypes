@@ -86,7 +86,7 @@ instance HasChildrenTypes Row
 
 makeZipMatch ''Typ
 makeZipMatch ''Row
-makeChildrenAndZipMatch ''Types
+makeZipMatch ''Types
 makeKTraversableAndBases ''Typ
 makeKTraversableAndBases ''Row
 makeKApplicativeBases ''Types
@@ -153,7 +153,7 @@ instance HasTypeConstraints Typ where
     type TypeConstraintsOf Typ = ScopeLevel
     verifyConstraints _ _ _ _ TInt = pure TInt
     verifyConstraints _ _ _ _ (TVar v) = TVar v & pure
-    verifyConstraints _ c _ u (TFun f) = monoChildren (u c) f <&> TFun
+    verifyConstraints _ c _ u (TFun f) = traverseK1 (u c) f <&> TFun
     verifyConstraints _ c _ u (TRec r) = u (RowConstraints mempty c) r <&> TRec
     verifyConstraints _ c _ u (TNom (NominalInst n (Types t r))) =
         Types

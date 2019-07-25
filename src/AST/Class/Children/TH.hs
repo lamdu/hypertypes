@@ -7,7 +7,6 @@ module AST.Class.Children.TH
     ) where
 
 import           AST.Class.Children (Children(..))
-import           AST.Class.Children.Mono (ChildOf)
 import           AST.Internal.TH
 import           Control.Lens.Operators
 import qualified Data.Set as Set
@@ -21,22 +20,12 @@ makeChildren typeName = makeTypeInfo typeName >>= makeChildrenForType
 
 makeChildrenForType :: TypeInfo -> DecsQ
 makeChildrenForType info =
-    do
-        inst <-
-            instanceD (simplifyContext ctx) (appT (conT ''Children) (pure (tiInstance info)))
-            [ tySynInstD ''ChildrenConstraint
-                (pure (TySynEqn [tiInstance info, VarT constraintVar] childrenConstraint))
-            , InlineP 'children Inline FunLike AllPhases & PragmaD & pure
-            , funD 'children (tiCons info <&> pure . ccClause . makeChildrenCtr (tiVar info))
-            ]
-        mono <-
-            case Set.toList (tcChildren contents) of
-            [x] | Set.null (tcEmbeds contents) ->
-                tySynInstD ''ChildOf
-                (pure (TySynEqn [tiInstance info] x))
-                <&> (:[])
-            _ -> pure []
-        inst : mono & pure
+    instanceD (simplifyContext ctx) (appT (conT ''Children) (pure (tiInstance info)))
+    [ tySynInstD ''ChildrenConstraint
+        (pure (TySynEqn [tiInstance info, VarT constraintVar] childrenConstraint))
+    , InlineP 'children Inline FunLike AllPhases & PragmaD & pure
+    , funD 'children (tiCons info <&> pure . ccClause . makeChildrenCtr (tiVar info))
+    ] <&> (:[])
     where
         contents = tiContents info
         ctx = childrenContext info
