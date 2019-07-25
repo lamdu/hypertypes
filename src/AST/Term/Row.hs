@@ -64,8 +64,7 @@ instance HasChildrenTypes (FlatRowExtends k v r)
 
 makeLenses ''RowExtend
 makeLenses ''FlatRowExtends
-makeChildrenAndZipMatch ''RowExtend
-makeChildren ''FlatRowExtends
+makeZipMatch ''RowExtend
 makeKTraversableAndBases ''RowExtend
 makeKTraversableAndBases ''FlatRowExtends
 

@@ -33,7 +33,6 @@ makeLenses ''Lam
 type instance ChildrenTypesOf (Lam v e) = Single e
 instance HasChildrenTypes (Lam v e)
 
-makeChildren ''Lam
 makeKTraversableAndBases ''Lam
 
 type Deps v expr k cls = ((cls v, cls (Tie k expr)) :: Constraint)

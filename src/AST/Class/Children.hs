@@ -2,7 +2,7 @@
 {-# LANGUAGE DataKinds #-}
 
 module AST.Class.Children
-    ( Children(..), ChildrenWithConstraint
+    ( Children(..)
     ) where
 
 import AST.Knot (Knot, Tree)
@@ -20,8 +20,6 @@ class Children (expr :: Knot -> *) where
         Proxy constraint ->
         (forall child. constraint child => Tree n child -> f (Tree m child)) ->
         Tree expr n -> f (Tree expr m)
-
-type ChildrenWithConstraint expr constraint = (Children expr, ChildrenConstraint expr constraint)
 
 instance Children (Const val) where
     type ChildrenConstraint (Const val) constraint = ()

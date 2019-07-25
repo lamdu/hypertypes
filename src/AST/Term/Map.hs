@@ -28,7 +28,6 @@ type instance ChildrenTypesOf (TermMap k e) = Single e
 instance HasChildrenTypes (TermMap k e)
 
 Lens.makePrisms ''TermMap
-makeChildren ''TermMap
 makeKTraversableAndBases ''TermMap
 
 instance RecursiveConstraint (TermMap k expr) constraint => Recursive constraint (TermMap k expr)

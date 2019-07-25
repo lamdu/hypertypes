@@ -41,7 +41,6 @@ type instance ChildrenTypesOf (Var v e) = Const ()
 instance HasChildrenTypes (Var v e)
 
 Lens.makePrisms ''Var
-makeChildren ''Var
 makeKTraversableAndBases ''Var
 
 instance c (Var v expr) => Recursive c (Var v expr)

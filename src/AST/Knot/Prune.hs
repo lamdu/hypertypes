@@ -32,7 +32,6 @@ type instance ChildrenTypesOf Prune = Single Prune
 instance HasChildrenTypes Prune
 
 makePrisms ''Prune
-makeChildren ''Prune
 makeKTraversableAndBases ''Prune
 makeZipMatch ''Prune
 

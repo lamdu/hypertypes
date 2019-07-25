@@ -1,10 +1,9 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskellQuotes #-}
 
 module AST.Class.ZipMatch.TH
-    ( makeZipMatch, makeChildrenAndZipMatch
+    ( makeZipMatch
     ) where
 
-import           AST.Class.Children.TH
 import           AST.Class.ZipMatch (ZipMatch(..))
 import           AST.Combinator.Both (Both(..))
 import           AST.Internal.TH
@@ -13,12 +12,6 @@ import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
-
-makeChildrenAndZipMatch :: Name -> DecsQ
-makeChildrenAndZipMatch typeName =
-    (<>)
-    <$> makeChildren typeName
-    <*> makeZipMatch typeName
 
 makeZipMatch :: Name -> DecsQ
 makeZipMatch typeName =
@@ -37,6 +30,12 @@ makeZipMatch typeName =
             <&> (:[])
     where
         tailClause = Clause [WildP, WildP] (NormalB (ConE 'Nothing)) []
+
+data CtrCase =
+    CtrCase
+    { ccClause :: Clause
+    , ccContext :: [Pred]
+    }
 
 makeZipMatchCtr :: Name -> D.ConstructorInfo -> CtrCase
 makeZipMatchCtr var info =

@@ -52,7 +52,6 @@ data GTerm v ast
     deriving Generic
 
 Lens.makePrisms ''GTerm
-makeChildren ''GTerm
 
 type instance ChildrenTypesOf (Flip GTerm ast) = RecursiveChildren ast
 

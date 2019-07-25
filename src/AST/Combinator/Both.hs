@@ -4,7 +4,6 @@ module AST.Combinator.Both
     ( Both(..), bothA, bothB
     ) where
 
-import AST.Class.Children.TH (makeChildren)
 import AST.Class.Functor.TH (makeKFunctor)
 import AST.Class.Pointed.TH (makeKPointed)
 import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
@@ -24,10 +23,10 @@ makeLenses ''Both
 
 type instance ChildrenTypesOf (Both a b) = Both (ChildrenTypesOf a) (ChildrenTypesOf b)
 
+-- KApply instance declared in AST.Class.Apply
 makeKFunctor ''Both
 makeKPointed ''Both
 makeKTraversableAndFoldable ''Both
-makeChildren ''Both
 
 instance (Binary (a k), Binary (b k)) => Binary (Both a b k)
 instance (NFData (a k), NFData (b k)) => NFData (Both a b k)

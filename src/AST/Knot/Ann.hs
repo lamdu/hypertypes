@@ -13,7 +13,7 @@ import           AST.Class.Children (Children(..))
 import           AST.Class.HasChildrenTypes (HasChildrenTypes)
 import           AST.Class.Recursive (Recursive, wrap, unwrap, recursiveChildren, recursiveOverChildren)
 import           AST.Class.Traversable.TH (makeKTraversableAndBases)
-import           AST.Class.ZipMatch.TH (makeChildrenAndZipMatch)
+import           AST.Class.ZipMatch.TH (makeZipMatch)
 import           AST.Combinator.Single (Single)
 import           AST.Knot (Tree, Tie, ChildrenTypesOf)
 import           AST.Knot.Pure (Pure(..))
@@ -40,7 +40,7 @@ type instance ChildrenTypesOf (Ann a) = Single (Ann a)
 instance HasChildrenTypes (Ann a)
 
 makeKTraversableAndBases ''Ann
-makeChildrenAndZipMatch ''Ann
+makeZipMatch ''Ann
 
 instance c (Ann a) => Recursive c (Ann a)
 

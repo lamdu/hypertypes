@@ -5,7 +5,6 @@ module AST.Knot.Pure
     ) where
 
 import           AST.Class.Apply.TH (makeKApplicativeBases)
-import           AST.Class.Children.TH (makeChildren)
 import           AST.Class.HasChildrenTypes (HasChildrenTypes)
 import           AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import           AST.Class.ZipMatch.TH (makeZipMatch)
@@ -30,7 +29,6 @@ instance HasChildrenTypes Pure
 
 makeKApplicativeBases ''Pure
 makeKTraversableAndFoldable ''Pure
-makeChildren ''Pure
 makeZipMatch ''Pure
 
 {-# INLINE _Pure #-}

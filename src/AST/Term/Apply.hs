@@ -32,7 +32,7 @@ type instance ChildrenTypesOf (Apply e) = Single e
 instance HasChildrenTypes (Apply e)
 
 makeLenses ''Apply
-makeChildrenAndZipMatch ''Apply
+makeZipMatch ''Apply
 makeKApplicativeBases ''Apply
 makeKTraversableAndFoldable ''Apply
 

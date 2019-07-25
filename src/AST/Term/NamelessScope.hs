@@ -43,10 +43,10 @@ Lens.makePrisms ''ScopeVar
 
 type instance ChildrenTypesOf (ScopeVar e a) = Const ()
 
-makeChildrenAndZipMatch ''Scope
+makeZipMatch ''Scope
 makeKApplicativeBases ''Scope
 makeKTraversableAndFoldable ''Scope
-makeChildrenAndZipMatch ''ScopeVar
+makeZipMatch ''ScopeVar
 makeKTraversableAndBases ''ScopeVar
 instance (c (Scope expr a), Recursive c (expr (Maybe a))) => Recursive c (Scope expr a)
 
@@ -74,7 +74,6 @@ instance HasChildrenTypes (ScopeTypes t)
 
 Lens.makePrisms ''ScopeTypes
 makeKTraversableAndBases ''ScopeTypes
-makeChildren ''ScopeTypes
 
 -- TODO: Replace this class with ones from Infer
 class HasScopeTypes v t env where

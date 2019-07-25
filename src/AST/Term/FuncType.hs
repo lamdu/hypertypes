@@ -30,7 +30,7 @@ type instance ChildrenTypesOf (FuncType t) = Single t
 instance HasChildrenTypes (FuncType t)
 
 makeLenses ''FuncType
-makeChildrenAndZipMatch ''FuncType
+makeZipMatch ''FuncType
 makeKApplicativeBases ''FuncType
 makeKTraversableAndFoldable ''FuncType
 

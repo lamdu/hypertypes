@@ -7,7 +7,6 @@ module AST.Knot.Functor
     ) where
 
 import AST.Class.Apply.TH (makeKApplicativeBases)
-import AST.Class.Children.TH (makeChildren)
 import AST.Class.HasChildrenTypes (HasChildrenTypes)
 import AST.Class.Recursive (Recursive)
 import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
@@ -33,7 +32,6 @@ instance HasChildrenTypes (ToKnot f)
 
 makeKApplicativeBases ''ToKnot
 makeKTraversableAndFoldable ''ToKnot
-makeChildren ''ToKnot
 
 instance (Traversable f, c (ToKnot f)) => Recursive c (ToKnot f)
 

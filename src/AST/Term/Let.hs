@@ -33,7 +33,6 @@ makeLenses ''Let
 type instance ChildrenTypesOf (Let v e) = Single e
 instance HasChildrenTypes (Let v e)
 
-makeChildren ''Let
 makeKTraversableAndBases ''Let
 
 type Deps v expr k cls = ((cls v, cls (Tie k expr)) :: Constraint)
