@@ -4,7 +4,7 @@
 {-# LANGUAGE UndecidableSuperClasses, DataKinds, TypeFamilies #-}
 
 module AST.Class.Recursive
-    ( Recursive(..), RecursiveConstraint, RecursiveDict
+    ( Recursive(..), RecursiveContext, RecursiveDict
     , wrap, unwrap, wrapM, unwrapM, fold, unfold
     , foldMapRecursive
     , recursiveChildren, recursiveOverChildren, recursiveChildren_
@@ -30,18 +30,18 @@ class (KTraversable expr, HasNodes expr, constraint expr) => Recursive constrain
     recursive :: RecursiveDict constraint expr
     {-# INLINE recursive #-}
     -- | When an instance's constraints already imply
-    -- `RecursiveConstraint expr constraint`, the default
+    -- `RecursiveContext expr constraint`, the default
     -- implementation can be used.
     default recursive ::
-        RecursiveConstraint expr constraint => RecursiveDict constraint expr
+        RecursiveContext expr constraint => RecursiveDict constraint expr
     recursive = Dict
 
-type RecursiveConstraint expr constraint =
+type RecursiveContext expr constraint =
     ( constraint expr
     , KLiftConstraint (NodeTypesOf expr) (Recursive constraint)
     )
 
-type RecursiveDict constraint expr = Dict (RecursiveConstraint expr constraint)
+type RecursiveDict constraint expr = Dict (RecursiveContext expr constraint)
 
 instance constraint Pure => Recursive constraint Pure
 

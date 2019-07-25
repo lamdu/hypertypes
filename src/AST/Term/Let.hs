@@ -44,7 +44,7 @@ instance Deps v expr k Pretty => Pretty (Let v expr k) where
         $+$ pPrintPrec lvl 0 i
         & maybeParens (p > 0)
 
-instance RecursiveConstraint (Let v expr) constraint => Recursive constraint (Let v expr)
+instance RecursiveContext (Let v expr) constraint => Recursive constraint (Let v expr)
 
 type instance TypeOf  (Let v t) = TypeOf  t
 type instance ScopeOf (Let v t) = ScopeOf t

@@ -69,7 +69,7 @@ makeKTraversableAndBases ''RowExtend
 makeKTraversableAndBases ''FlatRowExtends
 
 instance
-    RecursiveConstraint (RowExtend key val rest) constraint =>
+    RecursiveContext (RowExtend key val rest) constraint =>
     Recursive constraint (RowExtend key val rest)
 
 type Deps c key val rest k = ((c key, c (Node k val), c (Node k rest)) :: Constraint)

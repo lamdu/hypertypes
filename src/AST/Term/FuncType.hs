@@ -39,7 +39,7 @@ instance Pretty (Node k typ) => Pretty (FuncType typ k) where
         pPrintPrec lvl 11 i <+> Pretty.text "->" <+> pPrintPrec lvl 10 o
         & maybeParens (p > 10)
 
-instance RecursiveConstraint (FuncType typ) constraint => Recursive constraint (FuncType typ)
+instance RecursiveContext (FuncType typ) constraint => Recursive constraint (FuncType typ)
 
 instance Show (Node k typ) => Show (FuncType typ k) where
     showsPrec p (FuncType i o) = (showCon "FuncType" @| i @| o) p

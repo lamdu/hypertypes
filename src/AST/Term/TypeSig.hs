@@ -37,7 +37,7 @@ instance HasNodes (TypeSig v t) where
 
 makeKTraversableAndBases ''TypeSig
 
-instance RecursiveConstraint (TypeSig vars term) constraint => Recursive constraint (TypeSig vars term)
+instance RecursiveContext (TypeSig vars term) constraint => Recursive constraint (TypeSig vars term)
 
 type Deps vars term k cls = ((cls (Node k term), cls (Tree Pure (Scheme vars (TypeOf term)))) :: Constraint)
 
