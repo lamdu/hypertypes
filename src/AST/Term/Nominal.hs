@@ -95,9 +95,6 @@ makeLenses ''NominalDecl
 makeLenses ''NominalInst
 makeLenses ''ToNom
 makePrisms ''FromNom
-makeChildren ''NominalDecl
-makeChildren ''ToNom
-makeChildren ''FromNom
 makeKTraversableAndBases ''NominalDecl
 makeKTraversableAndBases ''ToNom
 makeKTraversableAndBases ''FromNom
@@ -117,17 +114,13 @@ instance (KTraversable v, HasChildrenTypes v) => KTraversable (NominalInst n v) 
         traverseK (_QVarInstances (traverse runContainedK)) v
         <&> NominalInst n
 
-instance Children varTypes => Children (NominalInst nomId varTypes) where
-    type ChildrenConstraint (NominalInst nomId varTypes) c = ChildrenConstraint varTypes c
-    {-# INLINE children #-}
-    children p f (NominalInst nomId args) =
-        children p ((_QVarInstances . traverse) f) args
-        <&> NominalInst nomId
-
 instance
     ( Eq nomId
     , ZipMatch varTypes
-    , ChildrenWithConstraint varTypes (ZipMatch `And` QVarHasInstance Ord)
+    , KTraversable varTypes
+    , HasChildrenTypes varTypes
+    , KLiftConstraint (ChildrenTypesOf varTypes) ZipMatch
+    , KLiftConstraint (ChildrenTypesOf varTypes) (QVarHasInstance Ord)
     ) =>
     ZipMatch (NominalInst nomId varTypes) where
 
@@ -135,8 +128,9 @@ instance
     zipMatch (NominalInst xId x) (NominalInst yId y)
         | xId /= yId = Nothing
         | otherwise =
+            withDict (hasChildrenTypes (Proxy :: Proxy varTypes)) $
             zipMatch x y
-            >>= children (Proxy :: Proxy (ZipMatch `And` QVarHasInstance Ord))
+            >>= traverseKWith (Proxy :: Proxy '[ZipMatch, QVarHasInstance Ord])
                 (\(Both (QVarInstances c0) (QVarInstances c1)) ->
                     zipMatch (TermMap c0) (TermMap c1)
                     <&> (^. _TermMap)
@@ -146,7 +140,6 @@ instance
 
 instance
     ( c (NominalInst nomId varTypes)
-    , ChildrenWithConstraint varTypes (Recursive c)
     , HasChildrenTypes varTypes
     , KTraversable varTypes
     , KLiftConstraint (ChildrenTypesOf varTypes) (Recursive c)
@@ -214,15 +207,17 @@ loadBody params foralls x =
 loadNominalDecl ::
     forall m typ.
     ( Monad m
-    , ChildrenWithConstraint (NomVarTypes typ) (Unify m)
+    , KTraversable (NomVarTypes typ), HasChildrenTypes (NomVarTypes typ)
+    , KLiftConstraint (ChildrenTypesOf (NomVarTypes typ)) (Unify m)
     , Recursive (Unify m `And` HasChild (NomVarTypes typ) `And` QVarHasInstance Ord) typ
     ) =>
     Tree Pure (NominalDecl typ) ->
     m (Tree (LoadedNominalDecl typ) (UVarOf m))
 loadNominalDecl (MkPure (NominalDecl params (Scheme foralls typ))) =
+    withDict (hasChildrenTypes (Proxy :: Proxy (NomVarTypes typ))) $
     do
-        paramsL <- children (Proxy :: Proxy (Unify m)) makeQVarInstances params
-        forallsL <- children (Proxy :: Proxy (Unify m)) makeQVarInstances foralls
+        paramsL <- traverseKWith (Proxy :: Proxy '[Unify m]) makeQVarInstances params
+        forallsL <- traverseKWith (Proxy :: Proxy '[Unify m]) makeQVarInstances foralls
         wrapM (Proxy :: Proxy (Unify m `And` HasChild (NomVarTypes typ) `And` QVarHasInstance Ord))
             (loadBody paramsL forallsL) typ
             <&> LoadedNominalDecl paramsL forallsL
