@@ -30,8 +30,8 @@ data Lam v expr k = Lam
     } deriving Generic
 makeLenses ''Lam
 
-type instance ChildrenTypesOf (Lam v e) = Single e
-instance HasChildrenTypes (Lam v e)
+type instance NodeTypesOf (Lam v e) = Single e
+instance HasNodeTypes (Lam v e)
 
 makeKTraversableAndBases ''Lam
 

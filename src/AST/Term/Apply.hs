@@ -28,8 +28,8 @@ data Apply expr k = Apply
     , _applyArg :: Node k expr
     } deriving Generic
 
-type instance ChildrenTypesOf (Apply e) = Single e
-instance HasChildrenTypes (Apply e)
+type instance NodeTypesOf (Apply e) = Single e
+instance HasNodeTypes (Apply e)
 
 makeLenses ''Apply
 makeZipMatch ''Apply

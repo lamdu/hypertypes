@@ -9,13 +9,13 @@ module AST.Knot.Ann
     , para
     ) where
 
-import           AST.Class.HasChildrenTypes (HasChildrenTypes)
+import           AST.Class.HasNodeTypes (HasNodeTypes)
 import           AST.Class.Recursive (Recursive, wrap, unwrap, recursiveChildren, recursiveOverChildren)
 import           AST.Class.Traversable
 import           AST.Class.Traversable.TH (makeKTraversableAndBases)
 import           AST.Class.ZipMatch.TH (makeZipMatch)
 import           AST.Combinator.Single (Single)
-import           AST.Knot (Tree, Node, ChildrenTypesOf)
+import           AST.Knot (Tree, Node, NodeTypesOf)
 import           AST.Knot.Pure (Pure(..))
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Traversal, makeLenses)
@@ -36,8 +36,8 @@ data Ann a knot = Ann
     } deriving Generic
 makeLenses ''Ann
 
-type instance ChildrenTypesOf (Ann a) = Single (Ann a)
-instance HasChildrenTypes (Ann a)
+type instance NodeTypesOf (Ann a) = Single (Ann a)
+instance HasNodeTypes (Ann a)
 
 makeKTraversableAndBases ''Ann
 makeZipMatch ''Ann

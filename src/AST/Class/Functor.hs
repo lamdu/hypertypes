@@ -5,7 +5,7 @@ module AST.Class.Functor
     , MapK(..), _MapK
     ) where
 
-import AST.Knot (Knot, Tree, ChildrenTypesOf)
+import AST.Knot (Knot, Tree, NodeTypesOf)
 import Control.Lens (Iso, iso)
 import Data.Functor.Const (Const(..))
 
@@ -22,7 +22,7 @@ _MapK = iso runMapK MkMapK
 class KFunctor k where
     -- | Map child values given a mapping function per child type
     mapC ::
-        Tree (ChildrenTypesOf k) (MapK m n) ->
+        Tree (NodeTypesOf k) (MapK m n) ->
         Tree k m ->
         Tree k n
 

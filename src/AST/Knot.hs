@@ -4,7 +4,7 @@ module AST.Knot
     ( Knot(..), RunKnot
     , Node, Tree
     , asTree
-    , ChildrenTypesOf
+    , NodeTypesOf
     ) where
 
 import Data.Functor.Const (Const)
@@ -35,6 +35,6 @@ type Node knot ast = Tree (RunKnot knot) ast
 
 -- | A type family for the different types of children a knot has.
 -- Maps to a simple knot which has a single child of each child type.
-type family ChildrenTypesOf (knot :: Knot -> Type) :: Knot -> Type
+type family NodeTypesOf (knot :: Knot -> Type) :: Knot -> Type
 
-type instance ChildrenTypesOf (Const k) = Const ()
+type instance NodeTypesOf (Const k) = Const ()

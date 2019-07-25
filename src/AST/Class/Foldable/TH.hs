@@ -19,7 +19,7 @@ makeKFoldable typeName = makeTypeInfo typeName >>= makeKFoldableForType
 makeKFoldableForType :: TypeInfo -> DecsQ
 makeKFoldableForType info =
     do
-        childrenInfo <- makeChildrenTypesInfo info
+        childrenInfo <- makeNodeTypesInfo info
         body <-
             tiCons info
             & traverse (makeCons childrenInfo (tiVar info))
@@ -50,7 +50,7 @@ makeContext info =
         ctxForPat (XofF t) = [ConT ''KFoldable `AppT` t]
         ctxForPat _ = []
 
-makeCons :: ChildrenTypesInfo -> Name -> D.ConstructorInfo -> Q Match
+makeCons :: NodeTypesInfo -> Name -> D.ConstructorInfo -> Q Match
 makeCons childrenInfo knot cons =
     do
         let bodyForPat (NodeFofX t) =

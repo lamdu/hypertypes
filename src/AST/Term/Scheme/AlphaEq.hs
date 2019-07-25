@@ -49,7 +49,7 @@ goUTerm xv UUnbound{} yv yu = goUTerm xv yu yv yu -- Term created in structure m
 goUTerm xv xu yv UUnbound{} = goUTerm xv xu yv xu -- Term created in structure mismatch
 goUTerm _ (UTerm xt) _ (UTerm yt) =
     withDict (recursive :: RecursiveDict (Unify m) t) $
-    withDict (hasChildrenTypes (Proxy :: Proxy t)) $
+    withDict (hasNodeTypes (Proxy :: Proxy t)) $
     zipMatchWith_ (Proxy :: Proxy '[Recursive (Unify m)]) goUVar (xt ^. uBody) (yt ^. uBody)
     & fromMaybe (structureMismatch (\x y -> x <$ goUVar x y) xt yt)
 goUTerm _ _ _ _ = error "unexpected state at alpha-eq"
@@ -65,8 +65,8 @@ goUVar xv yv =
 
 -- Check for alpha equality. Raises a `unifyError` when mismatches.
 alphaEq ::
-    ( KTraversable varTypes, HasChildrenTypes varTypes
-    , KLiftConstraint (ChildrenTypesOf varTypes) (Unify m)
+    ( KTraversable varTypes, HasNodeTypes varTypes
+    , KLiftConstraint (NodeTypesOf varTypes) (Unify m)
     , Recursive (Unify m) typ
     , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
     ) =>

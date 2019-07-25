@@ -5,7 +5,7 @@ module AST.Class.Pointed
     ( KPointed(..)
     ) where
 
-import AST.Knot (Knot, Tree, ChildrenTypesOf)
+import AST.Knot (Knot, Tree, NodeTypesOf)
 import Data.Constraint (Constraint)
 import Data.Functor.Const (Const(..))
 import Data.Kind (Type)
@@ -16,7 +16,7 @@ import Prelude.Compat
 class KPointed k where
     -- | Construct a value from given child values
     pureC ::
-        Tree (ChildrenTypesOf k) n ->
+        Tree (NodeTypesOf k) n ->
         Tree k n
 
     -- | Construct a value from a higher ranked child value
@@ -33,7 +33,7 @@ class KPointed k where
     -- an unbounded set of children types, such as
     -- `Flip GTerm (LangA Nothing)` (with `LangA` from the test suite).
     type KLiftConstraint k (c :: (Knot -> Type) -> Constraint) :: Constraint
-    type KLiftConstraint k c = KLiftConstraint (ChildrenTypesOf k) c
+    type KLiftConstraint k c = KLiftConstraint (NodeTypesOf k) c
 
     -- | Construct a value from a higher ranked child value with a constraint
     pureKWithConstraint ::

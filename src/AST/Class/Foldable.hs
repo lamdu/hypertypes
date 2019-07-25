@@ -24,7 +24,7 @@ _ConvertK = iso runConvertK MkConvertK
 class KFoldable k where
     foldMapC ::
         Monoid a =>
-        Tree (ChildrenTypesOf k) (ConvertK a l) ->
+        Tree (NodeTypesOf k) (ConvertK a l) ->
         Tree k l ->
         a
 

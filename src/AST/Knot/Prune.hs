@@ -8,7 +8,7 @@ module AST.Knot.Prune
 
 import AST
 import AST.Class.Apply (KApply(..))
-import AST.Class.HasChildrenTypes (HasChildrenTypes)
+import AST.Class.HasNodeTypes (HasNodeTypes)
 import AST.Class.Pointed (KPointed(..))
 import AST.Class.Traversable.TH (makeKTraversableAndBases)
 import AST.Combinator.Both (Both(..))
@@ -28,8 +28,8 @@ data Prune k =
     Pruned | Unpruned (Node k Prune)
     deriving Generic
 
-type instance ChildrenTypesOf Prune = Single Prune
-instance HasChildrenTypes Prune
+type instance NodeTypesOf Prune = Single Prune
+instance HasNodeTypes Prune
 
 makePrisms ''Prune
 makeKTraversableAndBases ''Prune
@@ -54,7 +54,7 @@ type instance ScopeOf (Compose Prune t) = ScopeOf t
 
 instance
     ( Infer m t
-    , KFunctor t, HasChildrenTypes t
+    , KFunctor t, HasNodeTypes t
     ) =>
     Infer m (Compose Prune t) where
     inferBody (MkCompose Pruned) = newUnbound <&> InferRes (MkCompose Pruned)

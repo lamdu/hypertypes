@@ -7,11 +7,11 @@ module AST.Combinator.Pair
     ) where
 
 import AST.Class.Apply.TH (makeKApplicativeBases)
-import AST.Class.HasChildrenTypes (HasChildrenTypes)
+import AST.Class.HasNodeTypes (HasNodeTypes)
 import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import AST.Class.Has (KHas(..))
 import AST.Combinator.Single (Single(..))
-import AST.Knot (Node, ChildrenTypesOf)
+import AST.Knot (Node, NodeTypesOf)
 import Control.DeepSeq (NFData)
 import Control.Lens (makeLenses)
 import Data.Binary (Binary)
@@ -25,8 +25,8 @@ data Pair a b k = MkPair
     , _pairSnd :: Node k b
     } deriving stock Generic
 
-type instance ChildrenTypesOf (Pair a b) = Pair a b
-instance HasChildrenTypes (Pair a b)
+type instance NodeTypesOf (Pair a b) = Pair a b
+instance HasNodeTypes (Pair a b)
 
 makeLenses ''Pair
 makeKApplicativeBases ''Pair

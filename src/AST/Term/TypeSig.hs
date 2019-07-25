@@ -9,7 +9,7 @@ module AST.Term.TypeSig
 import           AST
 import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
-import           AST.Class.HasChildrenTypes (HasChildrenTypes)
+import           AST.Class.HasNodeTypes (HasNodeTypes)
 import           AST.Combinator.Single (Single)
 import           AST.Infer
 import           AST.Term.Scheme (Scheme, schemeToRestrictedType)
@@ -33,8 +33,8 @@ data TypeSig vars term k = TypeSig
     } deriving Generic
 makeLenses ''TypeSig
 
-type instance ChildrenTypesOf (TypeSig v t) = Single t
-instance HasChildrenTypes (TypeSig v t)
+type instance NodeTypesOf (TypeSig v t) = Single t
+instance HasNodeTypes (TypeSig v t)
 
 makeKTraversableAndBases ''TypeSig
 
@@ -53,8 +53,8 @@ type instance ScopeOf (TypeSig vars term) = ScopeOf term
 instance
     ( MonadScopeLevel m
     , Infer m term
-    , KTraversable vars, HasChildrenTypes vars
-    , KLiftConstraint (ChildrenTypesOf vars) (Unify m)
+    , KTraversable vars, HasNodeTypes vars
+    , KLiftConstraint (NodeTypesOf vars) (Unify m)
     , Recursive (Unify m `And` HasChild vars `And` QVarHasInstance Ord) (TypeOf term)
     ) =>
     Infer m (TypeSig vars term) where

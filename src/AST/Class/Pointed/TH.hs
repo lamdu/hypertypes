@@ -24,7 +24,7 @@ makeKPointedForType info =
             case tiCons info of
             [x] -> pure x
             _ -> fail "makeKPointed only supports types with a single constructor"
-        childrenInfo <- makeChildrenTypesInfo info
+        childrenInfo <- makeNodeTypesInfo info
         let pureCDecl
                 | childrenTypesType childrenInfo == tiInstance info =
                     Clause [] (NormalB (VarE 'id)) [] & pure
@@ -95,7 +95,7 @@ makePureKWithCtr knot info =
         bodyForPat (Tof _ pat) = bodyForPat pat <&> AppE (VarE 'pure)
         bodyForPat (Other x) = fail ("KPointed can't produce value of type " <> show x)
 
-makePureCCtr :: ChildrenTypesInfo -> Name -> D.ConstructorInfo -> Q Clause
+makePureCCtr :: NodeTypesInfo -> Name -> D.ConstructorInfo -> Q Clause
 makePureCCtr childrenInfo knot info =
     do
         let bodyForPat (NodeFofX t) =

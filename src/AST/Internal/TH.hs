@@ -6,8 +6,8 @@
 module AST.Internal.TH
     ( -- Internals for use in TH for sub-classes
       TypeInfo(..), TypeContents(..), CtrTypePattern(..)
-    , ChildrenTypesInfo(..)
-    , makeTypeInfo, makeChildrenTypesInfo
+    , NodeTypesInfo(..)
+    , makeTypeInfo, makeNodeTypesInfo
     , parts, toTuple, matchType
     , applicativeStyle, unapply, getVar, makeConstructorVars
     , consPat, simplifyContext
@@ -15,7 +15,7 @@ module AST.Internal.TH
 
 import           AST.Class.Has
 import           AST.Class.Pointed
-import           AST.Knot (Knot(..), RunKnot, Node, ChildrenTypesOf)
+import           AST.Knot (Knot(..), RunKnot, Node, NodeTypesOf)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
@@ -205,19 +205,19 @@ makeConstructorVars prefix cons =
     [0::Int ..] <&> show <&> (('_':prefix) <>) <&> mkName
     & zip (D.constructorFields cons)
 
-getChildrenTypes :: Type -> Q Type
-getChildrenTypes typ =
-    reifyInstances ''ChildrenTypesOf [typ]
+getNodeTypes :: Type -> Q Type
+getNodeTypes typ =
+    reifyInstances ''NodeTypesOf [typ]
     >>=
     \case
-    [] -> fail ("Expecting a ChildrenTypesOf instance for " <> show typ)
+    [] -> fail ("Expecting a NodeTypesOf instance for " <> show typ)
     [TySynInstD ccI (TySynEqn [typI] x)]
-        | ccI == ''ChildrenTypesOf ->
+        | ccI == ''NodeTypesOf ->
             case unapply typI of
             (ConT n1, argsI) | ConT n1 == typeFun ->
                 case traverse getVar argsI of
                 Nothing ->
-                    fail ("TODO: Support ChildrenTypesOf of flexible instances: " <> show typ)
+                    fail ("TODO: Support NodeTypesOf of flexible instances: " <> show typ)
                 Just argNames ->
                     D.applySubstitution substs x & stripSigT & pure
                     where
@@ -225,8 +225,8 @@ getChildrenTypes typ =
                         stripSigT t = t
                         substs = zip argNames args & Map.fromList
             _ -> fail ("ReifyInstances brought wrong typ: " <> show typ)
-    [_] -> fail ("Unsupported ChildrenTypesOf form for " <> show typ)
-    _ -> fail ("Impossible! Several ChildrenTypesOf instances for " <> show typ)
+    [_] -> fail ("Unsupported NodeTypesOf form for " <> show typ)
+    _ -> fail ("Impossible! Several NodeTypesOf instances for " <> show typ)
     where
         (typeFun, args) = unapply typ
 
@@ -234,28 +234,28 @@ consPat :: D.ConstructorInfo -> [(Type, Name)] -> Pat
 consPat cons vars =
     ConP (D.constructorName cons) (vars <&> snd <&> VarP)
 
-data ChildrenTypesInfo = ChildrenTypesInfo
+data NodeTypesInfo = NodeTypesInfo
     { childrenTypesType :: Type
     , childrenTypesPat :: Pat
     , varsForChildTypes :: Map Type Name
     , getEmbedTypes :: Type -> Q Exp
     }
 
-makeChildrenTypesInfo :: TypeInfo -> Q ChildrenTypesInfo
-makeChildrenTypesInfo typeInfo =
+makeNodeTypesInfo :: TypeInfo -> Q NodeTypesInfo
+makeNodeTypesInfo typeInfo =
     do
-        typ <- getChildrenTypes (tiInstance typeInfo)
+        typ <- getNodeTypes (tiInstance typeInfo)
         let (con, args) = unapply typ
         typeName <-
             case con of
             ConT x -> pure x
-            _ -> fail ("unsupported ChildrenTypesOf: " <> show typ)
+            _ -> fail ("unsupported NodeTypesOf: " <> show typ)
         info <- D.reifyDatatype typeName
         let vars = D.datatypeVars info <&> D.tvName
         cons <-
             case D.datatypeCons info of
             [x] -> pure x
-            _ -> fail ("ChildrenTypesOf with more than one constructor: " <> show typ)
+            _ -> fail ("NodeTypesOf with more than one constructor: " <> show typ)
         let consVars = makeConstructorVars "c" cons
         let subst = zip vars args & Map.fromList
         let varsForEmbedTypes =
@@ -263,7 +263,7 @@ makeChildrenTypesInfo typeInfo =
                     (t, name) <- consVars
                     x `AppT` VarT _knot <- [t]
                     ConT cto `AppT` c <- [D.applySubstitution subst x]
-                    [(c, name) | cto == ''ChildrenTypesOf]
+                    [(c, name) | cto == ''NodeTypesOf]
                 & Map.fromList
         let varsForOtherEmbeds =
                 (D.applySubstitution subst typ, wholeVar) :
@@ -279,7 +279,7 @@ makeChildrenTypesInfo typeInfo =
                     [] <-
                         do
                             ConT cto `AppT` _ <- [xSub]
-                            [() | cto == ''ChildrenTypesOf]
+                            [() | cto == ''NodeTypesOf]
                         & pure
                     [(xSub, name)]
                 & Map.fromList
@@ -287,7 +287,7 @@ makeChildrenTypesInfo typeInfo =
                 case Map.lookup embedType varsForEmbedTypes of
                 Just x -> VarE x & pure
                 Nothing ->
-                    getChildrenTypes embedType
+                    getNodeTypes embedType
                     <&>
                     \ct ->
                     Map.lookup ct varsForOtherEmbeds
@@ -298,7 +298,7 @@ makeChildrenTypesInfo typeInfo =
                                 ConE 'Const `AppE` TupE []
                         _ -> VarE 'hasK `AppE` VarE wholeVar
                         ) VarE
-        pure ChildrenTypesInfo
+        pure NodeTypesInfo
             { childrenTypesType = typ
             , childrenTypesPat = AsP wholeVar (consPat cons consVars)
             , varsForChildTypes =

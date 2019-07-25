@@ -30,8 +30,8 @@ data Let v expr k = Let
     } deriving (Generic)
 makeLenses ''Let
 
-type instance ChildrenTypesOf (Let v e) = Single e
-instance HasChildrenTypes (Let v e)
+type instance NodeTypesOf (Let v e) = Single e
+instance HasNodeTypes (Let v e)
 
 makeKTraversableAndBases ''Let
 

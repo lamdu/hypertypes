@@ -13,7 +13,7 @@ import           AST.Class.Foldable (KFoldable)
 import           AST.Class.Functor (KFunctor)
 import           AST.Class.Traversable (KTraversable)
 import           AST.Combinator.Both (Both(..))
-import           AST.Knot (Tree, ChildrenTypesOf)
+import           AST.Knot (Tree, NodeTypesOf)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad (guard)
@@ -39,7 +39,7 @@ zipMatchWithA ::
     forall expr f constraints a b c.
     ( Applicative f
     , ZipMatch expr, KTraversable expr
-    , KLiftConstraints constraints (ChildrenTypesOf expr)
+    , KLiftConstraints constraints (NodeTypesOf expr)
     ) =>
     Proxy constraints ->
     (forall child. ApplyKConstraints constraints child => Tree a child -> Tree b child -> f (Tree c child)) ->
@@ -49,7 +49,7 @@ zipMatchWithA p f x y = zipMatch x y <&> traverseKWith p (\(Both a b) -> f a b)
 {-# INLINE zipMatchWith #-}
 zipMatchWith ::
     ( ZipMatch expr, KFunctor expr
-    , KLiftConstraints constraints (ChildrenTypesOf expr)
+    , KLiftConstraints constraints (NodeTypesOf expr)
     ) =>
     Proxy constraints ->
     (forall child. ApplyKConstraints constraints child => Tree a child -> Tree b child -> Tree c child) ->
@@ -61,7 +61,7 @@ zipMatchWith_ ::
     forall f expr constraints a b.
     ( Applicative f
     , ZipMatch expr, KFoldable expr
-    , KLiftConstraints constraints (ChildrenTypesOf expr)
+    , KLiftConstraints constraints (NodeTypesOf expr)
     ) =>
     Proxy constraints ->
     (forall child. ApplyKConstraints constraints child => Tree a child -> Tree b child -> f ()) ->

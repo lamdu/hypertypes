@@ -7,7 +7,7 @@ module AST.Combinator.Single
 
 import AST.Class.Apply.TH (makeKApplicativeBases)
 import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
-import AST.Knot (Tree, Node, ChildrenTypesOf)
+import AST.Knot (Tree, Node, NodeTypesOf)
 import Control.DeepSeq (NFData)
 import Control.Lens (Iso, iso)
 import Data.Binary (Binary)
@@ -22,7 +22,7 @@ newtype Single c k = MkSingle { getSingle :: Node k c }
 _Single :: Iso (Tree (Single c0) k0) (Tree (Single c1) k1) (Tree k0 c0) (Tree k1 c1)
 _Single = iso getSingle MkSingle
 
-type instance ChildrenTypesOf (Single c) = Single c
+type instance NodeTypesOf (Single c) = Single c
 
 makeKApplicativeBases ''Single
 makeKTraversableAndFoldable ''Single

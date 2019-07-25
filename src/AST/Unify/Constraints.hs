@@ -38,8 +38,8 @@ class
     -- verifier on children
     verifyConstraints ::
         ( Applicative m
-        , KTraversable ast, HasChildrenTypes ast
-        , KLiftConstraint (ChildrenTypesOf ast) childOp
+        , KTraversable ast, HasNodeTypes ast
+        , KLiftConstraint (NodeTypesOf ast) childOp
         ) =>
         Proxy childOp ->
         TypeConstraintsOf ast ->
@@ -52,10 +52,10 @@ class
     {-# INLINE verifyConstraints #-}
     default verifyConstraints ::
         forall m childOp p q.
-        ( KLiftConstraint (ChildrenTypesOf ast) (TypeConstraintsAre (TypeConstraintsOf ast))
+        ( KLiftConstraint (NodeTypesOf ast) (TypeConstraintsAre (TypeConstraintsOf ast))
         , Applicative m
-        , KTraversable ast, HasChildrenTypes ast
-        , KLiftConstraint (ChildrenTypesOf ast) childOp
+        , KTraversable ast, HasNodeTypes ast
+        , KLiftConstraint (NodeTypesOf ast) childOp
         ) =>
         Proxy childOp ->
         TypeConstraintsOf ast ->
@@ -63,7 +63,7 @@ class
         (forall child. childOp child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
         Tree ast p -> m (Tree ast q)
     verifyConstraints _ constraints _ update =
-        withDict (hasChildrenTypes (Proxy :: Proxy ast)) $
+        withDict (hasNodeTypes (Proxy :: Proxy ast)) $
         traverseKWith (Proxy :: Proxy [childOp, TypeConstraintsAre (TypeConstraintsOf ast)])
         (update constraints)
 

@@ -31,7 +31,7 @@ _Compose ::
     (Tree a0 (Compose b0 k0)) (Tree a1 (Compose b1 k1))
 _Compose = Lens.iso getCompose MkCompose
 
-type instance ChildrenTypesOf (Compose a b) = Compose (ChildrenTypesOf a) (ChildrenTypesOf b)
+type instance NodeTypesOf (Compose a b) = Compose (NodeTypesOf a) (NodeTypesOf b)
 
 class    KLiftConstraint k (ComposeConstraint1 c o) => ComposeConstraint0 c k o
 instance KLiftConstraint k (ComposeConstraint1 c o) => ComposeConstraint0 c k o
@@ -39,12 +39,12 @@ class    c (Compose k0 k1) => ComposeConstraint1 c k0 k1
 instance c (Compose k0 k1) => ComposeConstraint1 c k0 k1
 
 instance
-    (HasChildrenTypes a, KPointed a, KPointed b) =>
+    (HasNodeTypes a, KPointed a, KPointed b) =>
     KPointed (Compose a b) where
     type KLiftConstraint (Compose a b) c = KLiftConstraint a (ComposeConstraint0 c b)
     {-# INLINE pureC #-}
     pureC =
-        withDict (hasChildrenTypes (Proxy :: Proxy a)) $
+        withDict (hasNodeTypes (Proxy :: Proxy a)) $
         _Compose %~ pureC . mapK (_Compose %~ pureC)
     {-# INLINE pureK #-}
     pureK x = pureK (pureK (MkCompose x) & MkCompose) & MkCompose
@@ -62,12 +62,12 @@ instance
             makeP1 = undefined
 
 instance
-    (HasChildrenTypes a, HasChildrenTypes b, KFunctor a, KFunctor b) =>
+    (HasNodeTypes a, HasNodeTypes b, KFunctor a, KFunctor b) =>
     KFunctor (Compose a b) where
     {-# INLINE mapC #-}
     mapC (MkCompose f) =
-        withDict (hasChildrenTypes (Proxy :: Proxy a)) $
-        withDict (hasChildrenTypes (Proxy :: Proxy b)) $
+        withDict (hasNodeTypes (Proxy :: Proxy a)) $
+        withDict (hasNodeTypes (Proxy :: Proxy b)) $
         _Compose %~
         mapC
         ( mapK
@@ -77,7 +77,7 @@ instance
         )
 
 instance
-    (HasChildrenTypes a, HasChildrenTypes b, KApply a, KApply b) =>
+    (HasNodeTypes a, HasNodeTypes b, KApply a, KApply b) =>
     KApply (Compose a b) where
     {-# INLINE zipK #-}
     zipK (MkCompose a0) =
@@ -94,12 +94,12 @@ instance
         . zipK a0
 
 instance
-    (HasChildrenTypes a, HasChildrenTypes b, KFoldable a, KFoldable b) =>
+    (HasNodeTypes a, HasNodeTypes b, KFoldable a, KFoldable b) =>
     KFoldable (Compose a b) where
     {-# INLINE foldMapC #-}
     foldMapC (MkCompose f) =
-        withDict (hasChildrenTypes (Proxy :: Proxy a)) $
-        withDict (hasChildrenTypes (Proxy :: Proxy b)) $
+        withDict (hasNodeTypes (Proxy :: Proxy a)) $
+        withDict (hasNodeTypes (Proxy :: Proxy b)) $
         foldMapC
         ( mapK
             ( \(MkCompose bf) ->
@@ -112,7 +112,7 @@ instance
         ) . getCompose
 
 instance
-    (HasChildrenTypes a, HasChildrenTypes b, KTraversable a, KTraversable b) =>
+    (HasNodeTypes a, HasNodeTypes b, KTraversable a, KTraversable b) =>
     KTraversable (Compose a b) where
     {-# INLINE sequenceC #-}
     sequenceC =
@@ -123,7 +123,7 @@ instance
 
 instance
     ( ZipMatch k0, ZipMatch k1
-    , HasChildrenTypes k0, HasChildrenTypes k1, KTraversable k0, KFunctor k1
+    , HasNodeTypes k0, HasNodeTypes k1, KTraversable k0, KFunctor k1
     ) =>
     ZipMatch (Compose k0 k1) where
     {-# INLINE zipMatch #-}

@@ -53,10 +53,10 @@ data GTerm v ast
 
 Lens.makePrisms ''GTerm
 
-type instance ChildrenTypesOf (Flip GTerm ast) = RecursiveChildren ast
+type instance NodeTypesOf (Flip GTerm ast) = RecursiveChildren ast
 
 instance
-    (Recursive KFunctor ast, HasChildrenTypes ast) =>
+    (Recursive KFunctor ast, HasNodeTypes ast) =>
     KFunctor (Flip GTerm ast) where
 
     {-# INLINE mapC #-}
@@ -67,7 +67,7 @@ instance
         GPoly x -> mapTop x & GPoly
         GBody x ->
             withDict (recursive :: RecursiveDict KFunctor ast) $
-            withDict (hasChildrenTypes (Proxy :: Proxy ast)) $
+            withDict (hasNodeTypes (Proxy :: Proxy ast)) $
             mapC
             ( mapKWith (Proxy :: Proxy '[Recursive KFunctor])
                 (\(MkFlip f) -> Lens.from _Flip %~ mapC f & MkMapK)
@@ -86,7 +86,7 @@ instance
         GPoly x -> convTop x
         GBody x ->
             withDict (recursive :: RecursiveDict KFoldable ast) $
-            withDict (hasChildrenTypes (Proxy :: Proxy ast)) $
+            withDict (hasNodeTypes (Proxy :: Proxy ast)) $
             foldMapC
             ( mapKWith (Proxy :: Proxy '[Recursive KFoldable])
                 (\(MkFlip f) -> foldMapC f . (_Flip #) & MkConvertK)
@@ -103,7 +103,7 @@ instance
         GMono x -> runContainedK x <&> GMono
         GPoly x -> runContainedK x <&> GPoly
         GBody x ->
-            withDict (hasChildrenTypes (Proxy :: Proxy ast)) $
+            withDict (hasNodeTypes (Proxy :: Proxy ast)) $
             withDict (recursive :: RecursiveDict KFunctor ast) $
             withDict (recursive :: RecursiveDict KFoldable ast) $
             -- KTraversable will be required when not implied by Recursive
@@ -134,7 +134,7 @@ generalize v0 =
             USkolem l | toScopeConstraints l `leq` c -> pure (GPoly v1)
             UTerm t ->
                 withDict (recursive :: RecursiveDict (Unify m) t) $
-                withDict (hasChildrenTypes (Proxy :: Proxy t)) $
+                withDict (hasNodeTypes (Proxy :: Proxy t)) $
                 do
                     bindVar binding v1 (UResolving t)
                     r <- traverseKWith p generalize (t ^. uBody)

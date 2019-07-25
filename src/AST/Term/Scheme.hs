@@ -17,7 +17,7 @@ module AST.Term.Scheme
 import           AST
 import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
-import           AST.Class.HasChildrenTypes (HasChildrenTypes)
+import           AST.Class.HasNodeTypes (HasNodeTypes)
 import           AST.Class.Pointed (KPointed(..))
 import           AST.Class.Recursive (wrapM, unwrapM)
 import           AST.Combinator.Single (Single)
@@ -54,8 +54,8 @@ newtype QVars typ = QVars
     (Map (QVar (RunKnot typ)) (TypeConstraintsOf (RunKnot typ)))
     deriving stock Generic
 
-type instance ChildrenTypesOf (Scheme v t) = Single t
-instance HasChildrenTypes (Scheme v t)
+type instance NodeTypesOf (Scheme v t) = Single t
+instance HasNodeTypes (Scheme v t)
 
 Lens.makeLenses ''Scheme
 Lens.makePrisms ''QVars
@@ -144,13 +144,13 @@ schemeBodyToType foralls x =
 schemeToRestrictedType ::
     forall m varTypes typ.
     ( Monad m
-    , KTraversable varTypes, HasChildrenTypes varTypes
-    , KLiftConstraint (ChildrenTypesOf varTypes) (Unify m)
+    , KTraversable varTypes, HasNodeTypes varTypes
+    , KLiftConstraint (NodeTypesOf varTypes) (Unify m)
     , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
     ) =>
     Tree Pure (Scheme varTypes typ) -> m (Tree (UVarOf m) typ)
 schemeToRestrictedType (MkPure (Scheme vars typ)) =
-    withDict (hasChildrenTypes (Proxy :: Proxy varTypes)) $
+    withDict (hasNodeTypes (Proxy :: Proxy varTypes)) $
     do
         foralls <- traverseKWith (Proxy :: Proxy '[Unify m]) makeQVarInstancesInScope vars
         wrapM
@@ -183,14 +183,14 @@ loadBody foralls x =
 loadScheme ::
     forall m varTypes typ.
     ( Monad m
-    , KTraversable varTypes, HasChildrenTypes varTypes
-    , KLiftConstraint (ChildrenTypesOf varTypes) (Unify m)
+    , KTraversable varTypes, HasNodeTypes varTypes
+    , KLiftConstraint (NodeTypesOf varTypes) (Unify m)
     , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
     ) =>
     Tree Pure (Scheme varTypes typ) ->
     m (Tree (GTerm (UVarOf m)) typ)
 loadScheme (MkPure (Scheme vars typ)) =
-    withDict (hasChildrenTypes (Proxy :: Proxy varTypes)) $
+    withDict (hasNodeTypes (Proxy :: Proxy varTypes)) $
     do
         foralls <- traverseKWith (Proxy :: Proxy '[Unify m]) makeQVarInstances vars
         wrapM (Proxy :: Proxy (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord))

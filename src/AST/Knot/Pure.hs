@@ -5,10 +5,10 @@ module AST.Knot.Pure
     ) where
 
 import           AST.Class.Apply.TH (makeKApplicativeBases)
-import           AST.Class.HasChildrenTypes (HasChildrenTypes)
+import           AST.Class.HasNodeTypes (HasNodeTypes)
 import           AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import           AST.Class.ZipMatch.TH (makeZipMatch)
-import           AST.Knot (Tree, Node, ChildrenTypesOf)
+import           AST.Knot (Tree, Node, NodeTypesOf)
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Data.Binary (Binary)
@@ -24,8 +24,8 @@ import           Prelude.Compat
 newtype Pure k = MkPure { getPure :: Node k Pure }
     deriving stock Generic
 
-type instance ChildrenTypesOf Pure = Pure
-instance HasChildrenTypes Pure
+type instance NodeTypesOf Pure = Pure
+instance HasNodeTypes Pure
 
 makeKApplicativeBases ''Pure
 makeKTraversableAndFoldable ''Pure

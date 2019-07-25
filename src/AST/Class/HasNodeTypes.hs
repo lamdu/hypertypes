@@ -1,8 +1,8 @@
 {-# LANGUAGE NoImplicitPrelude, ConstraintKinds, TypeFamilies, RankNTypes #-}
 {-# LANGUAGE FlexibleContexts, DefaultSignatures #-}
 
-module AST.Class.HasChildrenTypes
-    ( HasChildrenTypes(..), ChildrenTypesConstraints
+module AST.Class.HasNodeTypes
+    ( HasNodeTypes(..), NodeTypesConstraints
     , mapK, liftK2, foldMapK, traverseK, traverseK1, traverseK_
     ) where
 
@@ -14,7 +14,7 @@ import AST.Class.Pointed (KPointed(..))
 import AST.Class.Traversable (KTraversable(..), ContainedK(..))
 import AST.Combinator.Both (Both(..))
 import AST.Combinator.Single
-import AST.Knot (Tree, ChildrenTypesOf)
+import AST.Knot (Tree, NodeTypesOf)
 import Data.Constraint (Dict(..), withDict)
 import Data.Foldable (sequenceA_)
 import Data.Functor.Const (Const(..))
@@ -22,22 +22,22 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
-type ChildrenTypesConstraints k =
-    ( ChildrenTypesOf k ~ k
-    , HasChildrenTypes k
+type NodeTypesConstraints k =
+    ( NodeTypesOf k ~ k
+    , HasNodeTypes k
     , KApplicative k
     )
 
-class HasChildrenTypes k where
-    hasChildrenTypes ::
+class HasNodeTypes k where
+    hasNodeTypes ::
         Proxy k ->
-        Dict (ChildrenTypesConstraints (ChildrenTypesOf k))
-    {-# INLINE hasChildrenTypes #-}
-    default hasChildrenTypes ::
-        ChildrenTypesConstraints (ChildrenTypesOf k) =>
+        Dict (NodeTypesConstraints (NodeTypesOf k))
+    {-# INLINE hasNodeTypes #-}
+    default hasNodeTypes ::
+        NodeTypesConstraints (NodeTypesOf k) =>
         Proxy k ->
-        Dict (ChildrenTypesConstraints (ChildrenTypesOf k))
-    hasChildrenTypes _ = Dict
+        Dict (NodeTypesConstraints (NodeTypesOf k))
+    hasNodeTypes _ = Dict
 
     -- TODO: Remove this.
     -- Algorithms that avoid actions for leafs can more accurately
@@ -46,49 +46,49 @@ class HasChildrenTypes k where
     {-# INLINE mNoChildren #-}
     mNoChildren = Nothing
 
-instance HasChildrenTypes (Const a) where
+instance HasNodeTypes (Const a) where
     {-# INLINE mNoChildren #-}
     mNoChildren = Just (\(Const x) -> Const x)
 
-instance HasChildrenTypes (Single c)
+instance HasNodeTypes (Single c)
 
 instance
-    (HasChildrenTypes a, HasChildrenTypes b) =>
-    HasChildrenTypes (Both a b) where
+    (HasNodeTypes a, HasNodeTypes b) =>
+    HasNodeTypes (Both a b) where
 
-    {-# INLINE hasChildrenTypes #-}
-    hasChildrenTypes p =
-        withDict (hasChildrenTypes (pa p)) $
-        withDict (hasChildrenTypes (pb p)) Dict
+    {-# INLINE hasNodeTypes #-}
+    hasNodeTypes p =
+        withDict (hasNodeTypes (pa p)) $
+        withDict (hasNodeTypes (pb p)) Dict
         where
             pa :: Proxy (Both a b) -> Proxy a
             pa _ = Proxy
             pb :: Proxy (Both a b) -> Proxy b
             pb _ = Proxy
 
-{-# INLINE withChildrenTypes #-}
-withChildrenTypes ::
-    HasChildrenTypes k =>
-    (ChildrenTypesConstraints (ChildrenTypesOf k) => Tree k l -> a) ->
+{-# INLINE withNodeTypes #-}
+withNodeTypes ::
+    HasNodeTypes k =>
+    (NodeTypesConstraints (NodeTypesOf k) => Tree k l -> a) ->
     Tree k l ->
     a
-withChildrenTypes f x =
-    withDict (hasChildrenTypes (p x)) (f x)
+withNodeTypes f x =
+    withDict (hasNodeTypes (p x)) (f x)
     where
         p :: Tree k l -> Proxy k
         p _ = Proxy
 
 {-# INLINE mapK #-}
 mapK ::
-    (KFunctor k, HasChildrenTypes k) =>
+    (KFunctor k, HasNodeTypes k) =>
     (forall c. Tree m c -> Tree n c) ->
     Tree k m ->
     Tree k n
-mapK f = withChildrenTypes (mapC (pureK (MkMapK f)))
+mapK f = withNodeTypes (mapC (pureK (MkMapK f)))
 
 {-# INLINE liftK2 #-}
 liftK2 ::
-    (KApply k, HasChildrenTypes k) =>
+    (KApply k, HasNodeTypes k) =>
     (forall c. Tree l c -> Tree m c -> Tree n c) ->
     Tree k l ->
     Tree k m ->
@@ -97,15 +97,15 @@ liftK2 f x = mapK (\(Both a b) -> f a b) . zipK x
 
 {-# INLINE foldMapK #-}
 foldMapK ::
-    (Monoid a, KFoldable k, HasChildrenTypes k) =>
+    (Monoid a, KFoldable k, HasNodeTypes k) =>
     (forall c. Tree l c -> a) ->
     Tree k l ->
     a
-foldMapK f = withChildrenTypes (foldMapC (pureK (MkConvertK f)))
+foldMapK f = withNodeTypes (foldMapC (pureK (MkConvertK f)))
 
 {-# INLINE traverseK #-}
 traverseK ::
-    (Applicative f, KTraversable k, HasChildrenTypes k) =>
+    (Applicative f, KTraversable k, HasNodeTypes k) =>
     (forall c. Tree m c -> f (Tree n c)) ->
     Tree k m ->
     f (Tree k n)
@@ -114,7 +114,7 @@ traverseK f = sequenceC . mapK (MkContainedK . f)
 {-# INLINE traverseK1 #-}
 traverseK1 ::
     ( Applicative f, KTraversable k
-    , ChildrenTypesOf k ~ (Single c)
+    , NodeTypesOf k ~ (Single c)
     ) =>
     (Tree m c -> f (Tree n c)) ->
     Tree k m ->
@@ -123,7 +123,7 @@ traverseK1 f = sequenceC . mapC (MkSingle (MkMapK (MkContainedK . f)))
 
 {-# INLINE traverseK_ #-}
 traverseK_ ::
-    (Applicative f, KFoldable k, HasChildrenTypes k) =>
+    (Applicative f, KFoldable k, HasNodeTypes k) =>
     (forall c. Tree m c -> f ()) ->
     Tree k m ->
     f ()

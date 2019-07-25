@@ -19,7 +19,7 @@ makeKFunctor typeName = makeTypeInfo typeName >>= makeKFunctorForType
 makeKFunctorForType :: TypeInfo -> DecsQ
 makeKFunctorForType info =
     do
-        childrenTypesInfo <- makeChildrenTypesInfo info
+        childrenTypesInfo <- makeNodeTypesInfo info
         body <-
             tiCons info
             & traverse (makeCons childrenTypesInfo (tiVar info))
@@ -50,7 +50,7 @@ makeContext info =
         ctxForPat (XofF t) = [ConT ''KFunctor `AppT` t]
         ctxForPat _ = []
 
-makeCons :: ChildrenTypesInfo -> Name -> D.ConstructorInfo -> Q Match
+makeCons :: NodeTypesInfo -> Name -> D.ConstructorInfo -> Q Match
 makeCons childrenInfo knot cons =
     do
         let bodyForPat (NodeFofX t) =

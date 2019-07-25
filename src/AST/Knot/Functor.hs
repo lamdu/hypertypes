@@ -7,11 +7,11 @@ module AST.Knot.Functor
     ) where
 
 import AST.Class.Apply.TH (makeKApplicativeBases)
-import AST.Class.HasChildrenTypes (HasChildrenTypes)
+import AST.Class.HasNodeTypes (HasNodeTypes)
 import AST.Class.Recursive (Recursive)
 import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import AST.Combinator.Single (Single(..))
-import AST.Knot (Tree, Node, ChildrenTypesOf)
+import AST.Knot (Tree, Node, NodeTypesOf)
 import Control.DeepSeq (NFData)
 import Control.Lens (Iso, iso)
 import Data.Binary (Binary)
@@ -27,8 +27,8 @@ _ToKnot ::
         (f1 (Tree k1 (ToKnot f1)))
 _ToKnot = iso (\(MkToKnot x) -> x) MkToKnot
 
-type instance ChildrenTypesOf (ToKnot f) = Single (ToKnot f)
-instance HasChildrenTypes (ToKnot f)
+type instance NodeTypesOf (ToKnot f) = Single (ToKnot f)
+instance HasNodeTypes (ToKnot f)
 
 makeKApplicativeBases ''ToKnot
 makeKTraversableAndFoldable ''ToKnot

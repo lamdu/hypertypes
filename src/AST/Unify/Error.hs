@@ -42,46 +42,46 @@ makePrisms ''UnifyError
 
 data UnifyErrorNodes t k = UnifyErrorNodes
     { _ueTerm :: Node k t
-    , _ueBody :: ChildrenTypesOf t k
+    , _ueBody :: NodeTypesOf t k
     }
 
-type instance ChildrenTypesOf (UnifyError t) = UnifyErrorNodes t
-type instance ChildrenTypesOf (UnifyErrorNodes t) = UnifyErrorNodes t
+type instance NodeTypesOf (UnifyError t) = UnifyErrorNodes t
+type instance NodeTypesOf (UnifyErrorNodes t) = UnifyErrorNodes t
 
 makeKPointed ''UnifyErrorNodes
 
 instance
-    HasChildrenTypes t =>
+    HasNodeTypes t =>
     KFunctor (UnifyErrorNodes t) where
 
     {-# INLINE mapC #-}
     mapC (UnifyErrorNodes tf bf) (UnifyErrorNodes tx bx) =
-        withDict (hasChildrenTypes (Proxy :: Proxy t)) $
+        withDict (hasNodeTypes (Proxy :: Proxy t)) $
         UnifyErrorNodes (runMapK tf tx) (mapC bf bx)
 
 instance
-    HasChildrenTypes t =>
+    HasNodeTypes t =>
     KApply (UnifyErrorNodes t) where
 
     {-# INLINE zipK #-}
     zipK (UnifyErrorNodes t0 b0) (UnifyErrorNodes t1 b1) =
-        withDict (hasChildrenTypes (Proxy :: Proxy t)) $
+        withDict (hasNodeTypes (Proxy :: Proxy t)) $
         UnifyErrorNodes (Both t0 t1) (zipK b0 b1)
 
 instance
-    HasChildrenTypes t =>
-    HasChildrenTypes (UnifyErrorNodes t) where
+    HasNodeTypes t =>
+    HasNodeTypes (UnifyErrorNodes t) where
 
-    {-# INLINE hasChildrenTypes #-}
-    hasChildrenTypes _ =
-        withDict (hasChildrenTypes (Proxy :: Proxy t)) Dict
+    {-# INLINE hasNodeTypes #-}
+    hasNodeTypes _ =
+        withDict (hasNodeTypes (Proxy :: Proxy t)) Dict
 
 instance
-    HasChildrenTypes t =>
-    HasChildrenTypes (UnifyError t) where
+    HasNodeTypes t =>
+    HasNodeTypes (UnifyError t) where
 
-    {-# INLINE hasChildrenTypes #-}
-    hasChildrenTypes _ = hasChildrenTypes (Proxy :: Proxy (UnifyErrorNodes t))
+    {-# INLINE hasNodeTypes #-}
+    hasNodeTypes _ = hasNodeTypes (Proxy :: Proxy (UnifyErrorNodes t))
 
 makeKTraversableAndBases ''UnifyError
 

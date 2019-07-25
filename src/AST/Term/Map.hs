@@ -8,7 +8,7 @@ module AST.Term.Map
 
 import           AST
 import           AST.Combinator.Single (Single)
-import           AST.Class.HasChildrenTypes (HasChildrenTypes)
+import           AST.Class.HasNodeTypes (HasNodeTypes)
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
@@ -24,8 +24,8 @@ import           Prelude.Compat
 newtype TermMap k expr f = TermMap (Map k (Node f expr))
     deriving stock Generic
 
-type instance ChildrenTypesOf (TermMap k e) = Single e
-instance HasChildrenTypes (TermMap k e)
+type instance NodeTypesOf (TermMap k e) = Single e
+instance HasNodeTypes (TermMap k e)
 
 Lens.makePrisms ''TermMap
 makeKTraversableAndBases ''TermMap

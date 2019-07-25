@@ -76,13 +76,13 @@ loadBody ::
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
     , KTraversable t
-    , HasChildrenTypes t
-    , KLiftConstraint (ChildrenTypesOf t) (Recursive (HasChild typeVars `And` Unify m))
+    , HasNodeTypes t
+    , KLiftConstraint (NodeTypesOf t) (Recursive (HasChild typeVars `And` Unify m))
     ) =>
     Tree typeVars Binding -> Tree typeVars (ConvertState (World m)) ->
     Tree t UVar -> m (Tree t (STUVar (World m)))
 loadBody src conv =
-    withDict (hasChildrenTypes (Proxy :: Proxy t)) $
+    withDict (hasNodeTypes (Proxy :: Proxy t)) $
     traverseKWith
     (Proxy :: Proxy '[Recursive (HasChild typeVars `And` Unify m)])
     (loadVar src conv)
@@ -90,9 +90,9 @@ loadBody src conv =
 load ::
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
-    , KTraversable typeVars, HasChildrenTypes typeVars
-    , KTraversable t, HasChildrenTypes t
-    , KLiftConstraint (ChildrenTypesOf t) (Recursive (HasChild typeVars `And` Unify m))
+    , KTraversable typeVars, HasNodeTypes typeVars
+    , KTraversable t, HasNodeTypes t
+    , KLiftConstraint (NodeTypesOf t) (Recursive (HasChild typeVars `And` Unify m))
     ) =>
     Tree typeVars Binding -> Tree t UVar -> m (Tree t (STUVar (World m)))
 load src collection =

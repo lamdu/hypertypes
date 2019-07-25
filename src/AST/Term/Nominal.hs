@@ -79,17 +79,17 @@ newtype FromNom nomId (term :: Knot -> *) (k :: Knot) = FromNom nomId
     deriving newtype (Eq, Ord, Binary, NFData)
     deriving stock (Show, Generic)
 
-type instance ChildrenTypesOf (NominalDecl t) = Single t
-type instance ChildrenTypesOf (NominalInst n v) = ChildrenTypesOf v
-type instance ChildrenTypesOf (ToNom n t) = Single t
-type instance ChildrenTypesOf (FromNom n t) = Const ()
+type instance NodeTypesOf (NominalDecl t) = Single t
+type instance NodeTypesOf (NominalInst n v) = NodeTypesOf v
+type instance NodeTypesOf (ToNom n t) = Single t
+type instance NodeTypesOf (FromNom n t) = Const ()
 
-instance HasChildrenTypes (NominalDecl t)
-instance HasChildrenTypes (ToNom n t)
-instance HasChildrenTypes (FromNom n t)
+instance HasNodeTypes (NominalDecl t)
+instance HasNodeTypes (ToNom n t)
+instance HasNodeTypes (FromNom n t)
 
-instance HasChildrenTypes v => HasChildrenTypes (NominalInst n v) where
-    hasChildrenTypes _ = withDict (hasChildrenTypes (Proxy :: Proxy v)) Dict
+instance HasNodeTypes v => HasNodeTypes (NominalInst n v) where
+    hasNodeTypes _ = withDict (hasNodeTypes (Proxy :: Proxy v)) Dict
 
 makeLenses ''NominalDecl
 makeLenses ''NominalInst
@@ -99,17 +99,17 @@ makeKTraversableAndBases ''NominalDecl
 makeKTraversableAndBases ''ToNom
 makeKTraversableAndBases ''FromNom
 
-instance (KFunctor v, HasChildrenTypes v) => KFunctor (NominalInst n v) where
+instance (KFunctor v, HasNodeTypes v) => KFunctor (NominalInst n v) where
     mapC f (NominalInst n v) =
-        withDict (hasChildrenTypes (Proxy :: Proxy v)) $
+        withDict (hasNodeTypes (Proxy :: Proxy v)) $
         mapC (mapK (_MapK %~ (_QVarInstances . Lens.mapped %~)) f) v & NominalInst n
 
-instance (KFoldable v, HasChildrenTypes v) => KFoldable (NominalInst n v) where
+instance (KFoldable v, HasNodeTypes v) => KFoldable (NominalInst n v) where
     foldMapC f (NominalInst _ v) =
-        withDict (hasChildrenTypes (Proxy :: Proxy v)) $
+        withDict (hasNodeTypes (Proxy :: Proxy v)) $
         foldMapC (mapK (_ConvertK %~ \fq -> foldMap fq . (^. _QVarInstances)) f) v
 
-instance (KTraversable v, HasChildrenTypes v) => KTraversable (NominalInst n v) where
+instance (KTraversable v, HasNodeTypes v) => KTraversable (NominalInst n v) where
     sequenceC (NominalInst n v) =
         traverseK (_QVarInstances (traverse runContainedK)) v
         <&> NominalInst n
@@ -118,9 +118,9 @@ instance
     ( Eq nomId
     , ZipMatch varTypes
     , KTraversable varTypes
-    , HasChildrenTypes varTypes
-    , KLiftConstraint (ChildrenTypesOf varTypes) ZipMatch
-    , KLiftConstraint (ChildrenTypesOf varTypes) (QVarHasInstance Ord)
+    , HasNodeTypes varTypes
+    , KLiftConstraint (NodeTypesOf varTypes) ZipMatch
+    , KLiftConstraint (NodeTypesOf varTypes) (QVarHasInstance Ord)
     ) =>
     ZipMatch (NominalInst nomId varTypes) where
 
@@ -128,7 +128,7 @@ instance
     zipMatch (NominalInst xId x) (NominalInst yId y)
         | xId /= yId = Nothing
         | otherwise =
-            withDict (hasChildrenTypes (Proxy :: Proxy varTypes)) $
+            withDict (hasNodeTypes (Proxy :: Proxy varTypes)) $
             zipMatch x y
             >>= traverseKWith (Proxy :: Proxy '[ZipMatch, QVarHasInstance Ord])
                 (\(Both (QVarInstances c0) (QVarInstances c1)) ->
@@ -140,9 +140,9 @@ instance
 
 instance
     ( c (NominalInst nomId varTypes)
-    , HasChildrenTypes varTypes
+    , HasNodeTypes varTypes
     , KTraversable varTypes
-    , KLiftConstraint (ChildrenTypesOf varTypes) (Recursive c)
+    , KLiftConstraint (NodeTypesOf varTypes) (Recursive c)
     ) =>
     Recursive c (NominalInst nomId varTypes)
 
@@ -153,14 +153,14 @@ instance DepsT Pretty nomId term k => Pretty (ToNom nomId term k) where
 
 instance
     ( Pretty nomId
-    , KApply varTypes, KFoldable varTypes, HasChildrenTypes varTypes
-    , KLiftConstraint (ChildrenTypesOf varTypes) (QVarHasInstance Pretty)
-    , KLiftConstraint (ChildrenTypesOf varTypes) (NodeHasConstraint Pretty k)
+    , KApply varTypes, KFoldable varTypes, HasNodeTypes varTypes
+    , KLiftConstraint (NodeTypesOf varTypes) (QVarHasInstance Pretty)
+    , KLiftConstraint (NodeTypesOf varTypes) (NodeHasConstraint Pretty k)
     ) =>
     Pretty (NominalInst nomId varTypes k) where
 
     pPrint (NominalInst n vars) =
-        withDict (hasChildrenTypes (Proxy :: Proxy varTypes)) $
+        withDict (hasNodeTypes (Proxy :: Proxy varTypes)) $
         pPrint n <>
         joinArgs
         (foldMapKWith (Proxy :: Proxy [QVarHasInstance Pretty, NodeHasConstraint Pretty k]) mkArgs vars)
@@ -207,14 +207,14 @@ loadBody params foralls x =
 loadNominalDecl ::
     forall m typ.
     ( Monad m
-    , KTraversable (NomVarTypes typ), HasChildrenTypes (NomVarTypes typ)
-    , KLiftConstraint (ChildrenTypesOf (NomVarTypes typ)) (Unify m)
+    , KTraversable (NomVarTypes typ), HasNodeTypes (NomVarTypes typ)
+    , KLiftConstraint (NodeTypesOf (NomVarTypes typ)) (Unify m)
     , Recursive (Unify m `And` HasChild (NomVarTypes typ) `And` QVarHasInstance Ord) typ
     ) =>
     Tree Pure (NominalDecl typ) ->
     m (Tree (LoadedNominalDecl typ) (UVarOf m))
 loadNominalDecl (MkPure (NominalDecl params (Scheme foralls typ))) =
-    withDict (hasChildrenTypes (Proxy :: Proxy (NomVarTypes typ))) $
+    withDict (hasNodeTypes (Proxy :: Proxy (NomVarTypes typ))) $
     do
         paramsL <- traverseKWith (Proxy :: Proxy '[Unify m]) makeQVarInstances params
         forallsL <- traverseKWith (Proxy :: Proxy '[Unify m]) makeQVarInstances foralls
@@ -233,13 +233,13 @@ lookupParams ::
     forall m varTypes.
     ( Applicative m
     , KTraversable varTypes
-    , HasChildrenTypes varTypes
-    , KLiftConstraint (ChildrenTypesOf varTypes) (Unify m)
+    , HasNodeTypes varTypes
+    , KLiftConstraint (NodeTypesOf varTypes) (Unify m)
     ) =>
     Tree varTypes (QVarInstances (UVarOf m)) ->
     m (Tree varTypes (QVarInstances (UVarOf m)))
 lookupParams =
-    withDict (hasChildrenTypes (Proxy :: Proxy varTypes)) $
+    withDict (hasNodeTypes (Proxy :: Proxy varTypes)) $
     traverseKWith (Proxy :: Proxy '[Unify m]) ((_QVarInstances . traverse) lookupParam)
     where
         lookupParam v =
@@ -261,14 +261,14 @@ instance
     , HasNominalInst nomId (TypeOf expr)
     , MonadNominals nomId (TypeOf expr) m
     , KTraversable (NomVarTypes (TypeOf expr))
-    , HasChildrenTypes (NomVarTypes (TypeOf expr))
-    , KLiftConstraint (ChildrenTypesOf (NomVarTypes (TypeOf expr))) (Unify m)
+    , HasNodeTypes (NomVarTypes (TypeOf expr))
+    , KLiftConstraint (NodeTypesOf (NomVarTypes (TypeOf expr))) (Unify m)
     ) =>
     Infer m (ToNom nomId expr) where
 
     {-# INLINE inferBody #-}
     inferBody (ToNom nomId val) =
-        withDict (hasChildrenTypes (Proxy :: Proxy (NomVarTypes (TypeOf expr)))) $
+        withDict (hasNodeTypes (Proxy :: Proxy (NomVarTypes (TypeOf expr)))) $
         do
             (valI, paramsT) <-
                 do
@@ -295,8 +295,8 @@ instance
     , HasNominalInst nomId (TypeOf expr)
     , MonadNominals nomId (TypeOf expr) m
     , KTraversable (NomVarTypes (TypeOf expr))
-    , HasChildrenTypes (NomVarTypes (TypeOf expr))
-    , KLiftConstraint (ChildrenTypesOf (NomVarTypes (TypeOf expr))) (Unify m)
+    , HasNodeTypes (NomVarTypes (TypeOf expr))
+    , KLiftConstraint (NodeTypesOf (NomVarTypes (TypeOf expr))) (Unify m)
     ) =>
     Infer m (FromNom nomId expr) where
 
@@ -334,7 +334,7 @@ subst p mkType params (MkPure x) =
         & maybe (mkType (quantifiedVar # q)) pure
     Nothing ->
         withDict (recursive :: (RecursiveDict (HasChild varTypes `And` QVarHasInstance Ord `And` constraint) typ)) $
-        withDict (hasChildrenTypes (Proxy :: Proxy typ)) $
+        withDict (hasNodeTypes (Proxy :: Proxy typ)) $
         traverseKWith (Proxy :: Proxy '[Recursive (HasChild varTypes `And` QVarHasInstance Ord `And` constraint)])
         (subst p mkType params) x
         >>= mkType

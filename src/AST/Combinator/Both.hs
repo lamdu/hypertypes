@@ -7,7 +7,7 @@ module AST.Combinator.Both
 import AST.Class.Functor.TH (makeKFunctor)
 import AST.Class.Pointed.TH (makeKPointed)
 import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
-import AST.Knot (Knot, ChildrenTypesOf)
+import AST.Knot (Knot, NodeTypesOf)
 import Control.DeepSeq (NFData)
 import Control.Lens (makeLenses)
 import Data.Binary (Binary)
@@ -21,7 +21,7 @@ data Both a b (k :: Knot) = Both
     } deriving (Eq, Ord, Show, Generic)
 makeLenses ''Both
 
-type instance ChildrenTypesOf (Both a b) = Both (ChildrenTypesOf a) (ChildrenTypesOf b)
+type instance NodeTypesOf (Both a b) = Both (NodeTypesOf a) (NodeTypesOf b)
 
 -- KApply instance declared in AST.Class.Apply
 makeKFunctor ''Both

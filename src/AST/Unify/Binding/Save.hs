@@ -60,19 +60,19 @@ saveVar v =
 saveBody ::
     forall m typeVars t.
     ( Monad m
-    , KTraversable t, HasChildrenTypes t
-    , KLiftConstraint (ChildrenTypesOf t) (Recursive (Deps m typeVars))
+    , KTraversable t, HasNodeTypes t
+    , KLiftConstraint (NodeTypesOf t) (Recursive (Deps m typeVars))
     ) =>
     Tree t (UVarOf m) ->
     StateT (Tree typeVars Binding, [m ()]) m (Tree t UVar)
 saveBody =
-    withDict (hasChildrenTypes (Proxy :: Proxy t)) $
+    withDict (hasNodeTypes (Proxy :: Proxy t)) $
     traverseKWith (Proxy :: Proxy '[Recursive (Deps m typeVars)]) saveVar
 
 save ::
     ( Monad m
-    , KTraversable t, HasChildrenTypes t
-    , KLiftConstraint (ChildrenTypesOf t) (Recursive (Deps m typeVars))
+    , KTraversable t, HasNodeTypes t
+    , KLiftConstraint (NodeTypesOf t) (Recursive (Deps m typeVars))
     ) =>
     Tree t (UVarOf m) ->
     StateT (Tree typeVars Binding) m (Tree t UVar)
