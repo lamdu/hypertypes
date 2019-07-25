@@ -4,9 +4,8 @@ module AST.Knot.Pure
     ( Pure(..), _Pure
     ) where
 
-import           AST.Class (NodeTypesOf)
+import           AST.Class (NodeTypesOf, HasNodeTypes)
 import           AST.Class.Apply.TH (makeKApplicativeBases)
-import           AST.Class.HasNodeTypes (HasNodeTypes)
 import           AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import           AST.Class.ZipMatch.TH (makeZipMatch)
 import           AST.Knot (Tree, Node)

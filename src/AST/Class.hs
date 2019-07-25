@@ -1,21 +1,23 @@
 {-# LANGUAGE NoImplicitPrelude, DataKinds, TypeFamilies, RankNTypes #-}
 {-# LANGUAGE ConstraintKinds, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE DefaultSignatures, FlexibleContexts #-}
 
 module AST.Class
-    ( NodeTypesOf
+    ( NodeTypesOf, HasNodeTypes(..), NodeTypesConstraints
     , KPointed(..)
     , KFunctor(..), MapK(..), _MapK
     , KApply(..)
     , KApplicative
+    , mapK, liftK2
     ) where
 
 import AST.Combinator.Both (Both(..))
 import AST.Knot (Knot, Tree)
 import Control.Lens (Iso, iso)
-import Data.Constraint (Constraint)
+import Data.Constraint
 import Data.Functor.Const (Const(..))
 import Data.Kind (Type)
-import Data.Proxy (Proxy)
+import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
@@ -24,6 +26,30 @@ import Prelude.Compat
 type family NodeTypesOf (knot :: Knot -> Type) :: Knot -> Type
 
 type instance NodeTypesOf (Const k) = Const ()
+
+type NodeTypesConstraints k =
+    ( NodeTypesOf k ~ k
+    , HasNodeTypes k
+    , KApplicative k
+    )
+
+class HasNodeTypes k where
+    hasNodeTypes ::
+        Proxy k ->
+        Dict (NodeTypesConstraints (NodeTypesOf k))
+    {-# INLINE hasNodeTypes #-}
+    default hasNodeTypes ::
+        NodeTypesConstraints (NodeTypesOf k) =>
+        Proxy k ->
+        Dict (NodeTypesConstraints (NodeTypesOf k))
+    hasNodeTypes _ = Dict
+
+    -- TODO: Remove this.
+    -- Algorithms that avoid actions for leafs can more accurately
+    -- use KTraversable to check for their presence
+    mNoChildren :: Maybe (k m -> k n)
+    {-# INLINE mNoChildren #-}
+    mNoChildren = Nothing
 
 class KPointed k where
     -- | Construct a value from given child values
@@ -81,6 +107,10 @@ class KFunctor k => KApply k where
 class    (KPointed k, KApply k) => KApplicative k
 instance (KPointed k, KApply k) => KApplicative k
 
+instance HasNodeTypes (Const a) where
+    {-# INLINE mNoChildren #-}
+    mNoChildren = Just (\(Const x) -> Const x)
+
 instance Monoid a => KPointed (Const a) where
     type KLiftConstraint (Const a) c = ()
     {-# INLINE pureC #-}
@@ -100,6 +130,20 @@ instance Semigroup a => KApply (Const a) where
 
 type instance NodeTypesOf (Both a b) = Both (NodeTypesOf a) (NodeTypesOf b)
 
+instance
+    (HasNodeTypes a, HasNodeTypes b) =>
+    HasNodeTypes (Both a b) where
+
+    {-# INLINE hasNodeTypes #-}
+    hasNodeTypes p =
+        withDict (hasNodeTypes (pa p)) $
+        withDict (hasNodeTypes (pb p)) Dict
+        where
+            pa :: Proxy (Both a b) -> Proxy a
+            pa _ = Proxy
+            pb :: Proxy (Both a b) -> Proxy b
+            pb _ = Proxy
+
 instance (KPointed a, KPointed b) => KPointed (Both a b) where
     type KLiftConstraint (Both a b) c = (KLiftConstraint a c, KLiftConstraint b c)
     {-# INLINE pureC #-}
@@ -116,3 +160,25 @@ instance (KFunctor a, KFunctor b) => KFunctor (Both a b) where
 instance (KApply a, KApply b) => KApply (Both a b) where
     {-# INLINE zipK #-}
     zipK (Both a0 b0) (Both a1 b1) = Both (zipK a0 a1) (zipK b0 b1)
+
+{-# INLINE mapK #-}
+mapK ::
+    (KFunctor k, HasNodeTypes k) =>
+    (forall c. Tree m c -> Tree n c) ->
+    Tree k m ->
+    Tree k n
+mapK f x =
+    withDict (hasNodeTypes (p x)) $
+    mapC (pureK (MkMapK f)) x
+    where
+        p :: Tree k l -> Proxy k
+        p _ = Proxy
+
+{-# INLINE liftK2 #-}
+liftK2 ::
+    (KApply k, HasNodeTypes k) =>
+    (forall c. Tree l c -> Tree m c -> Tree n c) ->
+    Tree k l ->
+    Tree k m ->
+    Tree k n
+liftK2 f x = mapK (\(Both a b) -> f a b) . zipK x

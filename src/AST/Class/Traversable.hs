@@ -1,12 +1,15 @@
-{-# LANGUAGE NoImplicitPrelude, KindSignatures, DataKinds #-}
+{-# LANGUAGE NoImplicitPrelude, KindSignatures, DataKinds, RankNTypes #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module AST.Class.Traversable
     ( KTraversable(..)
     , ContainedK(..), _ContainedK
+    , traverseK, traverseK1
     ) where
 
-import AST.Class (KFunctor)
+import AST.Class (KFunctor(..), MapK(..), mapK, HasNodeTypes, NodeTypesOf)
 import AST.Class.Foldable (KFoldable)
+import AST.Combinator.Single (Single(..))
 import AST.Knot (Knot, Tree)
 import Control.Lens (Iso, iso)
 import Data.Functor.Const (Const(..))
@@ -32,3 +35,21 @@ class (KFunctor k, KFoldable k) => KTraversable k where
 instance KTraversable (Const a) where
     {-# INLINE sequenceC #-}
     sequenceC (Const x) = pure (Const x)
+
+{-# INLINE traverseK #-}
+traverseK ::
+    (Applicative f, KTraversable k, HasNodeTypes k) =>
+    (forall c. Tree m c -> f (Tree n c)) ->
+    Tree k m ->
+    f (Tree k n)
+traverseK f = sequenceC . mapK (MkContainedK . f)
+
+{-# INLINE traverseK1 #-}
+traverseK1 ::
+    ( Applicative f, KTraversable k
+    , NodeTypesOf k ~ (Single c)
+    ) =>
+    (Tree m c -> f (Tree n c)) ->
+    Tree k m ->
+    f (Tree k n)
+traverseK1 f = sequenceC . mapC (MkSingle (MkMapK (MkContainedK . f)))

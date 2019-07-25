@@ -6,9 +6,8 @@ module AST.Knot.Functor
     ( ToKnot(..), _ToKnot
     ) where
 
-import AST.Class (NodeTypesOf)
+import AST.Class (NodeTypesOf, HasNodeTypes)
 import AST.Class.Apply.TH (makeKApplicativeBases)
-import AST.Class.HasNodeTypes (HasNodeTypes)
 import AST.Class.Recursive (Recursive)
 import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import AST.Combinator.Single (Single(..))

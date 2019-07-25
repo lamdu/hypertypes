@@ -6,9 +6,8 @@ module AST.Combinator.Pair
     ( Pair(..), pairFst, pairSnd
     ) where
 
-import AST.Class (NodeTypesOf)
+import AST.Class (NodeTypesOf, HasNodeTypes)
 import AST.Class.Apply.TH (makeKApplicativeBases)
-import AST.Class.HasNodeTypes (HasNodeTypes)
 import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import AST.Class.Has (KHas(..))
 import AST.Combinator.Single (Single(..))

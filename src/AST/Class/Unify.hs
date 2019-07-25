@@ -6,7 +6,7 @@ module AST.Class.Unify
     , BindingDict(..)
     ) where
 
-import AST.Class.HasNodeTypes (HasNodeTypes)
+import AST.Class (HasNodeTypes)
 import AST.Class.Recursive (Recursive)
 import AST.Class.Traversable (KTraversable)
 import AST.Class.ZipMatch (ZipMatch)

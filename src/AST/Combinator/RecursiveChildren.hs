@@ -7,7 +7,6 @@ module AST.Combinator.RecursiveChildren
 
 import AST.Class
 import AST.Class.Combinators
-import AST.Class.HasNodeTypes
 import AST.Class.Recursive
 import AST.Combinator.Both
 import AST.Combinator.Flip

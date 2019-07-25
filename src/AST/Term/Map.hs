@@ -8,7 +8,6 @@ module AST.Term.Map
 
 import           AST
 import           AST.Combinator.Single (Single)
-import           AST.Class.HasNodeTypes (HasNodeTypes)
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens

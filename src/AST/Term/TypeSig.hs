@@ -9,7 +9,6 @@ module AST.Term.TypeSig
 import           AST
 import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
-import           AST.Class.HasNodeTypes (HasNodeTypes)
 import           AST.Combinator.Single (Single)
 import           AST.Infer
 import           AST.Term.Scheme (Scheme, schemeToRestrictedType)

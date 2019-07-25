@@ -9,7 +9,6 @@ module AST.Term.Var
     ) where
 
 import           AST
-import           AST.Class.HasNodeTypes (HasNodeTypes)
 import           AST.Infer
 import           AST.Unify (Unify, UVarOf)
 import           Control.DeepSeq (NFData)

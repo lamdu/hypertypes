@@ -19,7 +19,6 @@ module AST.Class.Combinators
     ) where
 
 import AST.Class
-import AST.Class.HasNodeTypes
 import AST.Class.Foldable
 import AST.Class.Traversable
 import AST.Combinator.Both

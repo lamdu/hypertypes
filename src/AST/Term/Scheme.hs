@@ -17,7 +17,6 @@ module AST.Term.Scheme
 import           AST
 import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
-import           AST.Class.HasNodeTypes (HasNodeTypes)
 import           AST.Class.Recursive (wrapM, unwrapM)
 import           AST.Combinator.Single (Single)
 import           AST.Unify

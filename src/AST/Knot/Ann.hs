@@ -9,8 +9,7 @@ module AST.Knot.Ann
     , para
     ) where
 
-import           AST.Class (NodeTypesOf)
-import           AST.Class.HasNodeTypes (HasNodeTypes)
+import           AST.Class (NodeTypesOf, HasNodeTypes)
 import           AST.Class.Recursive (Recursive, wrap, unwrap, recursiveChildren, recursiveOverChildren)
 import           AST.Class.Traversable
 import           AST.Class.Traversable.TH (makeKTraversableAndBases)
