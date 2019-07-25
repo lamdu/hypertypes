@@ -6,7 +6,6 @@ module AST.Class.Unify
     , BindingDict(..)
     ) where
 
-import AST.Class.Children (Children)
 import AST.Class.HasChildrenTypes (HasChildrenTypes)
 import AST.Class.Recursive (Recursive)
 import AST.Class.Traversable (KTraversable)
@@ -41,7 +40,6 @@ data BindingDict v m t = BindingDict
 
 class
     ( Eq (Tree (UVarOf m) t)
-    , Children t
     , HasChildrenTypes t
     , KTraversable t
     , ZipMatch t

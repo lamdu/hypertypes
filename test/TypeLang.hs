@@ -84,8 +84,8 @@ instance HasChildrenTypes Types
 instance HasChildrenTypes Typ
 instance HasChildrenTypes Row
 
-makeChildrenAndZipMatch ''Typ
-makeChildrenAndZipMatch ''Row
+makeZipMatch ''Typ
+makeZipMatch ''Row
 makeChildrenAndZipMatch ''Types
 makeKTraversableAndBases ''Typ
 makeKTraversableAndBases ''Row

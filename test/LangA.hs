@@ -50,8 +50,6 @@ type instance ChildrenTypesOf (LangA v) = Pair (LangA v) (LangA (Maybe v))
 instance HasChildrenTypes (LangA v)
 
 makeKTraversableAndBases ''LangA
-makeChildren ''LangA
-instance Recursive Children (LangA v)
 instance Recursive HasChildrenTypes (LangA v)
 
 type instance TypeOf (LangA k) = Typ

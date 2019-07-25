@@ -58,7 +58,6 @@ type instance ChildrenTypesOf LangB = Single LangB
 instance HasChildrenTypes LangB
 
 makeKTraversableAndBases ''LangB
-makeChildren ''LangB
 instance c LangB => Recursive c LangB
 
 type instance TypeOf LangB = Typ
@@ -147,14 +146,6 @@ instance KFoldable ScopeTypes where
 
 instance KTraversable ScopeTypes where
     sequenceC = typesInScope sequenceC
-
-instance Children ScopeTypes where
-    type ChildrenConstraint ScopeTypes c = (c Typ, c Row)
-    children p f =
-        children p f
-        & Lens.from _Flip
-        & traverse
-        & _ScopeTypes
 
 data InferScope v = InferScope
     { _varSchemes :: Tree ScopeTypes v
