@@ -10,9 +10,9 @@ module AST.Class.Recursive
     , recursiveChildren, recursiveOverChildren, recursiveChildren_
     ) where
 
+import AST.Class (KPointed(..))
 import AST.Class.Combinators
 import AST.Class.HasNodeTypes
-import AST.Class.Pointed (KPointed(..))
 import AST.Class.Traversable (KTraversable)
 import AST.Knot (Tree, NodeTypesOf)
 import AST.Knot.Pure (Pure, _Pure)

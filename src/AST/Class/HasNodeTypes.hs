@@ -6,11 +6,11 @@ module AST.Class.HasNodeTypes
     , mapK, liftK2, foldMapK, traverseK, traverseK1, traverseK_
     ) where
 
+import AST.Class (KPointed(..))
 import AST.Class.Applicative (KApplicative)
 import AST.Class.Apply (KApply(..))
 import AST.Class.Foldable (KFoldable(..), ConvertK(..))
 import AST.Class.Functor (KFunctor(..), MapK(..))
-import AST.Class.Pointed (KPointed(..))
 import AST.Class.Traversable (KTraversable(..), ContainedK(..))
 import AST.Combinator.Both (Both(..))
 import AST.Combinator.Single

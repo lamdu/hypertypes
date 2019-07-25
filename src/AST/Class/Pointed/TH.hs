@@ -4,7 +4,7 @@ module AST.Class.Pointed.TH
     ( makeKPointed
     ) where
 
-import           AST.Class.Pointed
+import           AST.Class
 import           AST.Internal.TH
 import           Control.Lens.Operators
 import qualified Data.Map as Map

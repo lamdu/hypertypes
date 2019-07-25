@@ -13,8 +13,8 @@ module AST.Internal.TH
     , consPat, simplifyContext
     ) where
 
+import           AST.Class
 import           AST.Class.Has
-import           AST.Class.Pointed
 import           AST.Knot (Knot(..), RunKnot, Node, NodeTypesOf)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators

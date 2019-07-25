@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, DataKinds, TypeFamilies, RankNTypes #-}
 {-# LANGUAGE ConstraintKinds, FlexibleInstances, UndecidableInstances #-}
 
-module AST.Class.Pointed
+module AST.Class
     ( KPointed(..)
     ) where
 

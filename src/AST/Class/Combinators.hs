@@ -18,12 +18,12 @@ module AST.Class.Combinators
     , traverseKWith_
     ) where
 
+import AST.Class (KPointed(..))
 import AST.Class.Applicative
 import AST.Class.Apply
 import AST.Class.HasNodeTypes
 import AST.Class.Foldable
 import AST.Class.Functor
-import AST.Class.Pointed (KPointed(..))
 import AST.Class.Traversable
 import AST.Combinator.Both
 import AST.Knot

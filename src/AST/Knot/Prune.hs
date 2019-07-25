@@ -7,9 +7,7 @@ module AST.Knot.Prune
     ) where
 
 import AST
-import AST.Class.Apply (KApply(..))
 import AST.Class.HasNodeTypes (HasNodeTypes)
-import AST.Class.Pointed (KPointed(..))
 import AST.Class.Traversable.TH (makeKTraversableAndBases)
 import AST.Combinator.Both (Both(..))
 import AST.Combinator.Compose (Compose(..))
