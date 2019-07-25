@@ -54,7 +54,7 @@ data LangB k
     | BGetField (Node k LangB) Name
     | BToNom (ToNom Name LangB k)
 
-instance HasNodeTypes LangB where
+instance HasNodes LangB where
     type NodeTypesOf LangB = Single LangB
 
 makeKTraversableAndBases ''LangB
@@ -125,7 +125,7 @@ instance
 newtype ScopeTypes v = ScopeTypes (Map Name (Tree (GTerm (RunKnot v)) Typ))
     deriving newtype (Semigroup, Monoid)
 
-instance HasNodeTypes ScopeTypes where
+instance HasNodes ScopeTypes where
     type NodeTypesOf ScopeTypes = NodeTypesOf (Flip GTerm Typ)
 
 Lens.makePrisms ''ScopeTypes

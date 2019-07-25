@@ -79,16 +79,16 @@ newtype FromNom nomId (term :: Knot -> *) (k :: Knot) = FromNom nomId
     deriving newtype (Eq, Ord, Binary, NFData)
     deriving stock (Show, Generic)
 
-instance HasNodeTypes (NominalDecl t) where
+instance HasNodes (NominalDecl t) where
     type NodeTypesOf (NominalDecl t) = Single t
 
-instance HasNodeTypes (ToNom n t) where
+instance HasNodes (ToNom n t) where
     type NodeTypesOf (ToNom n t) = Single t
 
-instance HasNodeTypes (FromNom n t) where
+instance HasNodes (FromNom n t) where
     type NodeTypesOf (FromNom n t) = Const ()
 
-instance HasNodeTypes v => HasNodeTypes (NominalInst n v) where
+instance HasNodes v => HasNodes (NominalInst n v) where
     type NodeTypesOf (NominalInst n v) = NodeTypesOf v
     {-# INLINE hasNodeTypes #-}
     hasNodeTypes _ = withDict (hasNodeTypes (Proxy :: Proxy v)) Dict
@@ -101,17 +101,17 @@ makeKTraversableAndBases ''NominalDecl
 makeKTraversableAndBases ''ToNom
 makeKTraversableAndBases ''FromNom
 
-instance (KFunctor v, HasNodeTypes v) => KFunctor (NominalInst n v) where
+instance (KFunctor v, HasNodes v) => KFunctor (NominalInst n v) where
     mapC f (NominalInst n v) =
         withDict (hasNodeTypes (Proxy :: Proxy v)) $
         mapC (mapK (_MapK %~ (_QVarInstances . Lens.mapped %~)) f) v & NominalInst n
 
-instance (KFoldable v, HasNodeTypes v) => KFoldable (NominalInst n v) where
+instance (KFoldable v, HasNodes v) => KFoldable (NominalInst n v) where
     foldMapC f (NominalInst _ v) =
         withDict (hasNodeTypes (Proxy :: Proxy v)) $
         foldMapC (mapK (_ConvertK %~ \fq -> foldMap fq . (^. _QVarInstances)) f) v
 
-instance (KTraversable v, HasNodeTypes v) => KTraversable (NominalInst n v) where
+instance (KTraversable v, HasNodes v) => KTraversable (NominalInst n v) where
     sequenceC (NominalInst n v) =
         traverseK (_QVarInstances (traverse runContainedK)) v
         <&> NominalInst n
@@ -120,7 +120,7 @@ instance
     ( Eq nomId
     , ZipMatch varTypes
     , KTraversable varTypes
-    , HasNodeTypes varTypes
+    , HasNodes varTypes
     , KLiftConstraint (NodeTypesOf varTypes) ZipMatch
     , KLiftConstraint (NodeTypesOf varTypes) (QVarHasInstance Ord)
     ) =>
@@ -142,7 +142,7 @@ instance
 
 instance
     ( c (NominalInst nomId varTypes)
-    , HasNodeTypes varTypes
+    , HasNodes varTypes
     , KTraversable varTypes
     , KLiftConstraint (NodeTypesOf varTypes) (Recursive c)
     ) =>
@@ -155,7 +155,7 @@ instance DepsT Pretty nomId term k => Pretty (ToNom nomId term k) where
 
 instance
     ( Pretty nomId
-    , KApply varTypes, KFoldable varTypes, HasNodeTypes varTypes
+    , KApply varTypes, KFoldable varTypes, HasNodes varTypes
     , KLiftConstraint (NodeTypesOf varTypes) (QVarHasInstance Pretty)
     , KLiftConstraint (NodeTypesOf varTypes) (NodeHasConstraint Pretty k)
     ) =>
@@ -209,7 +209,7 @@ loadBody params foralls x =
 loadNominalDecl ::
     forall m typ.
     ( Monad m
-    , KTraversable (NomVarTypes typ), HasNodeTypes (NomVarTypes typ)
+    , KTraversable (NomVarTypes typ), HasNodes (NomVarTypes typ)
     , KLiftConstraint (NodeTypesOf (NomVarTypes typ)) (Unify m)
     , Recursive (Unify m `And` HasChild (NomVarTypes typ) `And` QVarHasInstance Ord) typ
     ) =>
@@ -235,7 +235,7 @@ lookupParams ::
     forall m varTypes.
     ( Applicative m
     , KTraversable varTypes
-    , HasNodeTypes varTypes
+    , HasNodes varTypes
     , KLiftConstraint (NodeTypesOf varTypes) (Unify m)
     ) =>
     Tree varTypes (QVarInstances (UVarOf m)) ->
@@ -263,7 +263,7 @@ instance
     , HasNominalInst nomId (TypeOf expr)
     , MonadNominals nomId (TypeOf expr) m
     , KTraversable (NomVarTypes (TypeOf expr))
-    , HasNodeTypes (NomVarTypes (TypeOf expr))
+    , HasNodes (NomVarTypes (TypeOf expr))
     , KLiftConstraint (NodeTypesOf (NomVarTypes (TypeOf expr))) (Unify m)
     ) =>
     Infer m (ToNom nomId expr) where
@@ -297,7 +297,7 @@ instance
     , HasNominalInst nomId (TypeOf expr)
     , MonadNominals nomId (TypeOf expr) m
     , KTraversable (NomVarTypes (TypeOf expr))
-    , HasNodeTypes (NomVarTypes (TypeOf expr))
+    , HasNodes (NomVarTypes (TypeOf expr))
     , KLiftConstraint (NodeTypesOf (NomVarTypes (TypeOf expr))) (Unify m)
     ) =>
     Infer m (FromNom nomId expr) where

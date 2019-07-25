@@ -44,12 +44,12 @@ type family ApplyKConstraints cs (k :: Knot -> Type) :: Constraint where
 newtype KDict cs k = MkKDict (Dict (ApplyKConstraints cs (RunKnot k)))
 
 class
-    (KApplicative k, HasNodeTypes k) =>
+    (KApplicative k, HasNodes k) =>
     KLiftConstraints (cs :: [(Knot -> Type) -> Constraint]) k where
     kLiftConstraint :: Tree k (KDict cs)
 
 instance
-    (KApplicative k, HasNodeTypes k) =>
+    (KApplicative k, HasNodes k) =>
     KLiftConstraints '[] k where
     {-# INLINE kLiftConstraint #-}
     kLiftConstraint = pureK (MkKDict Dict)

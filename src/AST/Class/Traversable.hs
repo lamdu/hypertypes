@@ -7,7 +7,7 @@ module AST.Class.Traversable
     , traverseK, traverseK1
     ) where
 
-import AST.Class (KFunctor(..), MapK(..), mapK, HasNodeTypes, NodeTypesOf)
+import AST.Class (KFunctor(..), MapK(..), mapK, HasNodes, NodeTypesOf)
 import AST.Class.Foldable (KFoldable)
 import AST.Combinator.Single (Single(..))
 import AST.Knot (Knot, Tree)
@@ -38,7 +38,7 @@ instance KTraversable (Const a) where
 
 {-# INLINE traverseK #-}
 traverseK ::
-    (Applicative f, KTraversable k, HasNodeTypes k) =>
+    (Applicative f, KTraversable k, HasNodes k) =>
     (forall c. Tree m c -> f (Tree n c)) ->
     Tree k m ->
     f (Tree k n)

@@ -57,9 +57,9 @@ data FlatRowExtends key val rest k = FlatRowExtends
     , _freRest :: Node k rest
     } deriving Generic
 
-instance HasNodeTypes (RowExtend k v r) where
+instance HasNodes (RowExtend k v r) where
     type NodeTypesOf (RowExtend k v r) = Pair v r
-instance HasNodeTypes (FlatRowExtends k v r) where
+instance HasNodes (FlatRowExtends k v r) where
     type NodeTypesOf (FlatRowExtends k v r) = Pair v r
 
 makeLenses ''RowExtend

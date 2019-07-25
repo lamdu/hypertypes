@@ -38,7 +38,7 @@ class
     -- verifier on children
     verifyConstraints ::
         ( Applicative m
-        , KTraversable ast, HasNodeTypes ast
+        , KTraversable ast, HasNodes ast
         , KLiftConstraint (NodeTypesOf ast) childOp
         ) =>
         Proxy childOp ->
@@ -54,7 +54,7 @@ class
         forall m childOp p q.
         ( KLiftConstraint (NodeTypesOf ast) (TypeConstraintsAre (TypeConstraintsOf ast))
         , Applicative m
-        , KTraversable ast, HasNodeTypes ast
+        , KTraversable ast, HasNodes ast
         , KLiftConstraint (NodeTypesOf ast) childOp
         ) =>
         Proxy childOp ->

@@ -23,12 +23,12 @@ data RecursiveChildren a k = RecursiveChildren
     }
 
 instance
-    Recursive HasNodeTypes a =>
-    HasNodeTypes (RecursiveChildren a) where
+    Recursive HasNodes a =>
+    HasNodes (RecursiveChildren a) where
     type NodeTypesOf (RecursiveChildren a) = RecursiveChildren a
 
 instance
-    Recursive HasNodeTypes a =>
+    Recursive HasNodes a =>
     KPointed (RecursiveChildren a) where
 
     type KLiftConstraint (RecursiveChildren a) c = Recursive c a
@@ -38,17 +38,17 @@ instance
 
     {-# INLINE pureK #-}
     pureK f =
-        withDict (recursive :: RecursiveDict HasNodeTypes a) $
+        withDict (recursive :: RecursiveDict HasNodes a) $
         withDict (hasNodeTypes (Proxy :: Proxy a)) $
         RecursiveChildren
         { _recSelf = f
-        , _recSub = pureKWith (Proxy :: Proxy '[Recursive HasNodeTypes]) (_Flip # pureK f)
+        , _recSub = pureKWith (Proxy :: Proxy '[Recursive HasNodes]) (_Flip # pureK f)
         }
 
     {-# INLINE pureKWithConstraint #-}
     pureKWithConstraint p f =
         withDict (recP p) $
-        withDict (recursive :: RecursiveDict HasNodeTypes a) $
+        withDict (recursive :: RecursiveDict HasNodes a) $
         withDict (hasNodeTypes (Proxy :: Proxy a)) $
         RecursiveChildren
         { _recSelf = f
@@ -57,37 +57,37 @@ instance
         where
             recP :: Recursive c a => Proxy c -> RecursiveDict c a
             recP _ = recursive
-            mkP :: Proxy c -> Proxy '[Recursive HasNodeTypes, Recursive c]
+            mkP :: Proxy c -> Proxy '[Recursive HasNodes, Recursive c]
             mkP _ = Proxy
 
 instance
-    Recursive HasNodeTypes a =>
+    Recursive HasNodes a =>
     KFunctor (RecursiveChildren a) where
 
     {-# INLINE mapC #-}
     mapC (RecursiveChildren fSelf fSub) (RecursiveChildren xSelf xSub) =
-        withDict (recursive :: RecursiveDict HasNodeTypes a) $
+        withDict (recursive :: RecursiveDict HasNodes a) $
         withDict (hasNodeTypes (Proxy :: Proxy a)) $
         RecursiveChildren
         { _recSelf = runMapK fSelf xSelf
         , _recSub =
             mapC
-            ( mapKWith (Proxy :: Proxy '[Recursive HasNodeTypes])
+            ( mapKWith (Proxy :: Proxy '[Recursive HasNodes])
                 ((_MapK #) . (\(MkFlip sf) -> _Flip %~ mapC sf)) fSub
             ) xSub
         }
 
 instance
-    Recursive HasNodeTypes a =>
+    Recursive HasNodes a =>
     KApply (RecursiveChildren a) where
 
     {-# INLINE zipK #-}
     zipK (RecursiveChildren xSelf xSub) (RecursiveChildren ySelf ySub) =
-        withDict (recursive :: RecursiveDict HasNodeTypes a) $
+        withDict (recursive :: RecursiveDict HasNodes a) $
         withDict (hasNodeTypes (Proxy :: Proxy a)) $
         RecursiveChildren
         { _recSelf = Both xSelf ySelf
         , _recSub =
-            liftK2With (Proxy :: Proxy '[Recursive HasNodeTypes])
+            liftK2With (Proxy :: Proxy '[Recursive HasNodes])
             (\(MkFlip x) -> _Flip %~ zipK x) xSub ySub
         }

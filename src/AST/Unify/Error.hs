@@ -46,8 +46,8 @@ data UnifyErrorNodes t k = UnifyErrorNodes
     }
 
 instance
-    HasNodeTypes t =>
-    HasNodeTypes (UnifyErrorNodes t) where
+    HasNodes t =>
+    HasNodes (UnifyErrorNodes t) where
 
     type NodeTypesOf (UnifyErrorNodes t) = UnifyErrorNodes t
 
@@ -58,8 +58,8 @@ instance
 makeKPointed ''UnifyErrorNodes
 
 instance
-    HasNodeTypes t =>
-    HasNodeTypes (UnifyError t) where
+    HasNodes t =>
+    HasNodes (UnifyError t) where
 
     type NodeTypesOf (UnifyError t) = UnifyErrorNodes t
 
@@ -67,7 +67,7 @@ instance
     hasNodeTypes _ = hasNodeTypes (Proxy :: Proxy (UnifyErrorNodes t))
 
 instance
-    HasNodeTypes t =>
+    HasNodes t =>
     KFunctor (UnifyErrorNodes t) where
 
     {-# INLINE mapC #-}
@@ -76,7 +76,7 @@ instance
         UnifyErrorNodes (runMapK tf tx) (mapC bf bx)
 
 instance
-    HasNodeTypes t =>
+    HasNodes t =>
     KApply (UnifyErrorNodes t) where
 
     {-# INLINE zipK #-}

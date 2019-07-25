@@ -10,7 +10,7 @@ module AST.Class.Recursive
     , recursiveChildren, recursiveOverChildren, recursiveChildren_
     ) where
 
-import AST.Class (NodeTypesOf, HasNodeTypes(..), KPointed(..))
+import AST.Class (NodeTypesOf, HasNodes(..), KPointed(..))
 import AST.Class.Combinators
 import AST.Class.Traversable (KTraversable)
 import AST.Knot (Tree)
@@ -26,7 +26,7 @@ import Prelude.Compat
 -- | `Recursive` carries a constraint to all of the descendant types
 -- of an AST. As opposed to the `ChildrenConstraint` type family which
 -- only carries a constraint to the direct children of an AST.
-class (KTraversable expr, HasNodeTypes expr, constraint expr) => Recursive constraint expr where
+class (KTraversable expr, HasNodes expr, constraint expr) => Recursive constraint expr where
     recursive :: RecursiveDict constraint expr
     {-# INLINE recursive #-}
     -- | When an instance's constraints already imply

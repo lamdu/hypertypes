@@ -28,7 +28,7 @@ data Apply expr k = Apply
     , _applyArg :: Node k expr
     } deriving Generic
 
-instance HasNodeTypes (Apply e) where
+instance HasNodes (Apply e) where
     type NodeTypesOf (Apply e) = Single e
 
 makeLenses ''Apply

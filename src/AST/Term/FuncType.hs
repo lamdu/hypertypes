@@ -26,7 +26,7 @@ data FuncType typ k = FuncType
     , _funcOut :: Node k typ
     } deriving Generic
 
-instance HasNodeTypes (FuncType t) where
+instance HasNodes (FuncType t) where
     type NodeTypesOf (FuncType t) = Single t
 
 makeLenses ''FuncType

@@ -31,7 +31,7 @@ _Compose ::
     (Tree a0 (Compose b0 k0)) (Tree a1 (Compose b1 k1))
 _Compose = Lens.iso getCompose MkCompose
 
-instance (HasNodeTypes a, HasNodeTypes b) => HasNodeTypes (Compose a b) where
+instance (HasNodes a, HasNodes b) => HasNodes (Compose a b) where
     type NodeTypesOf (Compose a b) = Compose (NodeTypesOf a) (NodeTypesOf b)
     {-# INLINE hasNodeTypes #-}
     hasNodeTypes _ =
@@ -45,7 +45,7 @@ class    c (Compose k0 k1) => ComposeConstraint1 c k0 k1
 instance c (Compose k0 k1) => ComposeConstraint1 c k0 k1
 
 instance
-    (HasNodeTypes a, KPointed a, KPointed b) =>
+    (HasNodes a, KPointed a, KPointed b) =>
     KPointed (Compose a b) where
     type KLiftConstraint (Compose a b) c = KLiftConstraint a (ComposeConstraint0 c b)
     {-# INLINE pureC #-}
@@ -68,7 +68,7 @@ instance
             makeP1 = undefined
 
 instance
-    (HasNodeTypes a, HasNodeTypes b, KFunctor a, KFunctor b) =>
+    (HasNodes a, HasNodes b, KFunctor a, KFunctor b) =>
     KFunctor (Compose a b) where
     {-# INLINE mapC #-}
     mapC (MkCompose f) =
@@ -83,7 +83,7 @@ instance
         )
 
 instance
-    (HasNodeTypes a, HasNodeTypes b, KApply a, KApply b) =>
+    (HasNodes a, HasNodes b, KApply a, KApply b) =>
     KApply (Compose a b) where
     {-# INLINE zipK #-}
     zipK (MkCompose a0) =
@@ -100,7 +100,7 @@ instance
         . zipK a0
 
 instance
-    (HasNodeTypes a, HasNodeTypes b, KFoldable a, KFoldable b) =>
+    (HasNodes a, HasNodes b, KFoldable a, KFoldable b) =>
     KFoldable (Compose a b) where
     {-# INLINE foldMapC #-}
     foldMapC (MkCompose f) =
@@ -118,7 +118,7 @@ instance
         ) . getCompose
 
 instance
-    (HasNodeTypes a, HasNodeTypes b, KTraversable a, KTraversable b) =>
+    (HasNodes a, HasNodes b, KTraversable a, KTraversable b) =>
     KTraversable (Compose a b) where
     {-# INLINE sequenceC #-}
     sequenceC =
@@ -129,7 +129,7 @@ instance
 
 instance
     ( ZipMatch k0, ZipMatch k1
-    , HasNodeTypes k0, HasNodeTypes k1, KTraversable k0, KFunctor k1
+    , HasNodes k0, HasNodes k1, KTraversable k0, KFunctor k1
     ) =>
     ZipMatch (Compose k0 k1) where
     {-# INLINE zipMatch #-}

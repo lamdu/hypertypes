@@ -54,13 +54,13 @@ data GTerm v ast
 Lens.makePrisms ''GTerm
 
 instance
-    Recursive HasNodeTypes ast =>
-    HasNodeTypes (Flip GTerm ast) where
+    Recursive HasNodes ast =>
+    HasNodes (Flip GTerm ast) where
 
     type NodeTypesOf (Flip GTerm ast) = RecursiveChildren ast
 
 instance
-    (Recursive KFunctor ast, HasNodeTypes ast) =>
+    (Recursive KFunctor ast, HasNodes ast) =>
     KFunctor (Flip GTerm ast) where
 
     {-# INLINE mapC #-}

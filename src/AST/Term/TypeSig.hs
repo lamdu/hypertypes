@@ -32,7 +32,7 @@ data TypeSig vars term k = TypeSig
     } deriving Generic
 makeLenses ''TypeSig
 
-instance HasNodeTypes (TypeSig v t) where
+instance HasNodes (TypeSig v t) where
     type NodeTypesOf (TypeSig v t) = Single t
 
 makeKTraversableAndBases ''TypeSig
@@ -52,7 +52,7 @@ type instance ScopeOf (TypeSig vars term) = ScopeOf term
 instance
     ( MonadScopeLevel m
     , Infer m term
-    , KTraversable vars, HasNodeTypes vars
+    , KTraversable vars, HasNodes vars
     , KLiftConstraint (NodeTypesOf vars) (Unify m)
     , Recursive (Unify m `And` HasChild vars `And` QVarHasInstance Ord) (TypeOf term)
     ) =>

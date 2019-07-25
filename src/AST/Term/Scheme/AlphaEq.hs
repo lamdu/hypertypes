@@ -65,7 +65,7 @@ goUVar xv yv =
 
 -- Check for alpha equality. Raises a `unifyError` when mismatches.
 alphaEq ::
-    ( KTraversable varTypes, HasNodeTypes varTypes
+    ( KTraversable varTypes, HasNodes varTypes
     , KLiftConstraint (NodeTypesOf varTypes) (Unify m)
     , Recursive (Unify m) typ
     , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ

@@ -25,7 +25,7 @@ data Prune k =
     Pruned | Unpruned (Node k Prune)
     deriving Generic
 
-instance HasNodeTypes Prune where
+instance HasNodes Prune where
     type NodeTypesOf Prune = Single Prune
 
 makePrisms ''Prune
@@ -51,7 +51,7 @@ type instance ScopeOf (Compose Prune t) = ScopeOf t
 
 instance
     ( Infer m t
-    , KFunctor t, HasNodeTypes t
+    , KFunctor t, HasNodes t
     ) =>
     Infer m (Compose Prune t) where
     inferBody (MkCompose Pruned) = newUnbound <&> InferRes (MkCompose Pruned)

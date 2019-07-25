@@ -52,7 +52,7 @@ newtype QVars typ = QVars
     (Map (QVar (RunKnot typ)) (TypeConstraintsOf (RunKnot typ)))
     deriving stock Generic
 
-instance HasNodeTypes (Scheme v t) where
+instance HasNodes (Scheme v t) where
     type NodeTypesOf (Scheme v t) = Single t
 
 Lens.makeLenses ''Scheme
@@ -142,7 +142,7 @@ schemeBodyToType foralls x =
 schemeToRestrictedType ::
     forall m varTypes typ.
     ( Monad m
-    , KTraversable varTypes, HasNodeTypes varTypes
+    , KTraversable varTypes, HasNodes varTypes
     , KLiftConstraint (NodeTypesOf varTypes) (Unify m)
     , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
     ) =>
@@ -181,7 +181,7 @@ loadBody foralls x =
 loadScheme ::
     forall m varTypes typ.
     ( Monad m
-    , KTraversable varTypes, HasNodeTypes varTypes
+    , KTraversable varTypes, HasNodes varTypes
     , KLiftConstraint (NodeTypesOf varTypes) (Unify m)
     , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
     ) =>

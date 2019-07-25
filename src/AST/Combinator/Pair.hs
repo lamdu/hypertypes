@@ -6,7 +6,7 @@ module AST.Combinator.Pair
     ( Pair(..), pairFst, pairSnd
     ) where
 
-import AST.Class (NodeTypesOf, HasNodeTypes)
+import AST.Class (NodeTypesOf, HasNodes)
 import AST.Class.Apply.TH (makeKApplicativeBases)
 import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import AST.Class.Has (KHas(..))
@@ -25,7 +25,7 @@ data Pair a b k = MkPair
     , _pairSnd :: Node k b
     } deriving stock Generic
 
-instance HasNodeTypes (Pair a b) where
+instance HasNodes (Pair a b) where
     type NodeTypesOf (Pair a b) = Pair a b
 
 makeLenses ''Pair

@@ -76,11 +76,11 @@ instance KHas (Single Typ) Types where
 instance KHas (Pair Typ Row) Types where
     hasK (Types t0 r0) = MkPair t0 r0
 
-instance HasNodeTypes Types where
+instance HasNodes Types where
     type NodeTypesOf Types = Types
-instance HasNodeTypes Typ where
+instance HasNodes Typ where
     type NodeTypesOf Typ = Types
-instance HasNodeTypes Row where
+instance HasNodes Row where
     type NodeTypesOf Row = Types
 
 makeZipMatch ''Typ

@@ -46,11 +46,11 @@ data LangA v k
     | ATypeSig (TypeSig Types (LangA v) k)
     | ALit Int
 
-instance HasNodeTypes (LangA v) where
+instance HasNodes (LangA v) where
     type NodeTypesOf (LangA v) = Pair (LangA v) (LangA (Maybe v))
 
 makeKTraversableAndBases ''LangA
-instance Recursive HasNodeTypes (LangA v)
+instance Recursive HasNodes (LangA v)
 
 type instance TypeOf (LangA k) = Typ
 type instance ScopeOf (LangA k) = ScopeTypes Typ

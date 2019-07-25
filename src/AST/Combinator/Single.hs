@@ -5,7 +5,7 @@ module AST.Combinator.Single
     ( Single(..), _Single
     ) where
 
-import AST.Class (NodeTypesOf, HasNodeTypes)
+import AST.Class (NodeTypesOf, HasNodes)
 import AST.Class.Apply.TH (makeKApplicativeBases)
 import AST.Knot (Tree, Node)
 import Control.DeepSeq (NFData)
@@ -22,7 +22,7 @@ newtype Single c k = MkSingle { getSingle :: Node k c }
 _Single :: Iso (Tree (Single c0) k0) (Tree (Single c1) k1) (Tree k0 c0) (Tree k1 c1)
 _Single = iso getSingle MkSingle
 
-instance HasNodeTypes (Single c) where
+instance HasNodes (Single c) where
     type NodeTypesOf (Single c) = Single c
 
 makeKApplicativeBases ''Single

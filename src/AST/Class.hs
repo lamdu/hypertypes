@@ -3,7 +3,7 @@
 {-# LANGUAGE DefaultSignatures, FlexibleContexts #-}
 
 module AST.Class
-    ( HasNodeTypes(..), NodeTypesConstraints
+    ( HasNodes(..), NodeTypesConstraints
     , KPointed(..)
     , KFunctor(..), MapK(..), _MapK
     , KApply(..)
@@ -23,11 +23,11 @@ import Prelude.Compat
 
 type NodeTypesConstraints k =
     ( NodeTypesOf k ~ k
-    , HasNodeTypes k
+    , HasNodes k
     , KApplicative k
     )
 
-class HasNodeTypes k where
+class HasNodes k where
     -- | A type family for the different types of children a knot has.
     -- Maps to a simple knot which has a single child of each child type.
     type family NodeTypesOf k :: Knot -> Type
@@ -49,7 +49,7 @@ class HasNodeTypes k where
     {-# INLINE mNoChildren #-}
     mNoChildren = Nothing
 
-class HasNodeTypes k => KPointed k where
+class HasNodes k => KPointed k where
     -- | Construct a value from given child values
     pureC ::
         Tree (NodeTypesOf k) n ->
@@ -105,7 +105,7 @@ class KFunctor k => KApply k where
 class    (KPointed k, KApply k) => KApplicative k
 instance (KPointed k, KApply k) => KApplicative k
 
-instance HasNodeTypes (Const a) where
+instance HasNodes (Const a) where
     type NodeTypesOf (Const a) = Const ()
     {-# INLINE mNoChildren #-}
     mNoChildren = Just (\(Const x) -> Const x)
@@ -128,8 +128,8 @@ instance Semigroup a => KApply (Const a) where
     zipK (Const x) (Const y) = Const (x <> y)
 
 instance
-    (HasNodeTypes a, HasNodeTypes b) =>
-    HasNodeTypes (Both a b) where
+    (HasNodes a, HasNodes b) =>
+    HasNodes (Both a b) where
     type NodeTypesOf (Both a b) = Both (NodeTypesOf a) (NodeTypesOf b)
 
     {-# INLINE hasNodeTypes #-}
@@ -161,7 +161,7 @@ instance (KApply a, KApply b) => KApply (Both a b) where
 
 {-# INLINE mapK #-}
 mapK ::
-    (KFunctor k, HasNodeTypes k) =>
+    (KFunctor k, HasNodes k) =>
     (forall c. Tree m c -> Tree n c) ->
     Tree k m ->
     Tree k n
@@ -174,7 +174,7 @@ mapK f x =
 
 {-# INLINE liftK2 #-}
 liftK2 ::
-    (KApply k, HasNodeTypes k) =>
+    (KApply k, HasNodes k) =>
     (forall c. Tree l c -> Tree m c -> Tree n c) ->
     Tree k l ->
     Tree k m ->

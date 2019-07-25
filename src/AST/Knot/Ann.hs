@@ -9,7 +9,7 @@ module AST.Knot.Ann
     , para
     ) where
 
-import           AST.Class (NodeTypesOf, HasNodeTypes)
+import           AST.Class (NodeTypesOf, HasNodes)
 import           AST.Class.Recursive (Recursive, wrap, unwrap, recursiveChildren, recursiveOverChildren)
 import           AST.Class.Traversable
 import           AST.Class.Traversable.TH (makeKTraversableAndBases)
@@ -36,7 +36,7 @@ data Ann a knot = Ann
     } deriving Generic
 makeLenses ''Ann
 
-instance HasNodeTypes (Ann a) where
+instance HasNodes (Ann a) where
     type NodeTypesOf (Ann a) = Single (Ann a)
 
 makeKTraversableAndBases ''Ann

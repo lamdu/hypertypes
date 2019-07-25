@@ -6,7 +6,7 @@ module AST.Class.Foldable
     , foldMapK, traverseK_
     ) where
 
-import AST.Class (NodeTypesOf, HasNodeTypes(..), KPointed(..))
+import AST.Class (NodeTypesOf, HasNodes(..), KPointed(..))
 import AST.Knot (Tree, Knot)
 import Control.Lens (Iso, iso)
 import Data.Foldable (sequenceA_)
@@ -39,7 +39,7 @@ instance KFoldable (Const a) where
 
 {-# INLINE foldMapK #-}
 foldMapK ::
-    (Monoid a, KFoldable k, HasNodeTypes k) =>
+    (Monoid a, KFoldable k, HasNodes k) =>
     (forall c. Tree l c -> a) ->
     Tree k l ->
     a
@@ -52,7 +52,7 @@ foldMapK f x =
 
 {-# INLINE traverseK_ #-}
 traverseK_ ::
-    (Applicative f, KFoldable k, HasNodeTypes k) =>
+    (Applicative f, KFoldable k, HasNodes k) =>
     (forall c. Tree m c -> f ()) ->
     Tree k m ->
     f ()

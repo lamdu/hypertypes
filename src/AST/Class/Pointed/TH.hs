@@ -63,7 +63,7 @@ makeContext info =
         ctxForPat (XofF t) =
             case t of
             ConT nto `AppT` x | nto == ''NodeTypesOf ->
-                [ConT ''HasNodeTypes `AppT` x, ConT ''KPointed `AppT` t]
+                [ConT ''HasNodes `AppT` x, ConT ''KPointed `AppT` t]
             _ -> [ConT ''KPointed `AppT` t]
         ctxForPat _ = []
 
