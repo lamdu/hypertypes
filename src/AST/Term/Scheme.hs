@@ -33,7 +33,7 @@ import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.State (StateT(..))
 import           Data.Binary (Binary)
-import           Data.Constraint (Constraint)
+import           Data.Constraint
 import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Data.Proxy (Proxy(..))
@@ -59,7 +59,6 @@ instance HasChildrenTypes (Scheme v t)
 
 Lens.makeLenses ''Scheme
 Lens.makePrisms ''QVars
-makeChildren ''Scheme
 makeKTraversableAndBases ''Scheme
 
 instance (c (Scheme v t), Recursive c t) => Recursive c (Scheme v t)
@@ -145,13 +144,15 @@ schemeBodyToType foralls x =
 schemeToRestrictedType ::
     forall m varTypes typ.
     ( Monad m
-    , ChildrenWithConstraint varTypes (Unify m)
+    , KTraversable varTypes, HasChildrenTypes varTypes
+    , KLiftConstraint (ChildrenTypesOf varTypes) (Unify m)
     , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
     ) =>
     Tree Pure (Scheme varTypes typ) -> m (Tree (UVarOf m) typ)
 schemeToRestrictedType (MkPure (Scheme vars typ)) =
+    withDict (hasChildrenTypes (Proxy :: Proxy varTypes)) $
     do
-        foralls <- children (Proxy :: Proxy (Unify m)) makeQVarInstancesInScope vars
+        foralls <- traverseKWith (Proxy :: Proxy '[Unify m]) makeQVarInstancesInScope vars
         wrapM
             (Proxy :: Proxy (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord))
             (schemeBodyToType foralls) typ
@@ -182,14 +183,16 @@ loadBody foralls x =
 loadScheme ::
     forall m varTypes typ.
     ( Monad m
-    , ChildrenWithConstraint varTypes (Unify m)
+    , KTraversable varTypes, HasChildrenTypes varTypes
+    , KLiftConstraint (ChildrenTypesOf varTypes) (Unify m)
     , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
     ) =>
     Tree Pure (Scheme varTypes typ) ->
     m (Tree (GTerm (UVarOf m)) typ)
 loadScheme (MkPure (Scheme vars typ)) =
+    withDict (hasChildrenTypes (Proxy :: Proxy varTypes)) $
     do
-        foralls <- children (Proxy :: Proxy (Unify m)) makeQVarInstances vars
+        foralls <- traverseKWith (Proxy :: Proxy '[Unify m]) makeQVarInstances vars
         wrapM (Proxy :: Proxy (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord))
             (loadBody foralls) typ
 

@@ -36,7 +36,6 @@ makeLenses ''TypeSig
 type instance ChildrenTypesOf (TypeSig v t) = Single t
 instance HasChildrenTypes (TypeSig v t)
 
-makeChildren ''TypeSig
 makeKTraversableAndBases ''TypeSig
 
 instance RecursiveConstraint (TypeSig vars term) constraint => Recursive constraint (TypeSig vars term)
@@ -54,7 +53,8 @@ type instance ScopeOf (TypeSig vars term) = ScopeOf term
 instance
     ( MonadScopeLevel m
     , Infer m term
-    , ChildrenWithConstraint vars (Unify m)
+    , KTraversable vars, HasChildrenTypes vars
+    , KLiftConstraint (ChildrenTypesOf vars) (Unify m)
     , Recursive (Unify m `And` HasChild vars `And` QVarHasInstance Ord) (TypeOf term)
     ) =>
     Infer m (TypeSig vars term) where
