@@ -47,7 +47,7 @@ import           Prelude.Compat
 -- | A type scheme representing a polymorphic type.
 data Scheme varTypes typ k = Scheme
     { _sForAlls :: Tree varTypes QVars
-    , _sTyp :: Tie k typ
+    , _sTyp :: Node k typ
     } deriving Generic
 
 newtype QVars typ = QVars
@@ -78,7 +78,7 @@ instance
     mempty = QVars Map.empty
 
 instance
-    (Pretty (Tree varTypes QVars), Pretty (Tie k typ)) =>
+    (Pretty (Tree varTypes QVars), Pretty (Node k typ)) =>
     Pretty (Scheme varTypes typ k) where
 
     pPrintPrec lvl p (Scheme forAlls typ) =
@@ -249,7 +249,7 @@ saveScheme x =
             )
         _Pure # Scheme v t <$ sequence_ recover
 
-type DepsS c v t k = ((c (Tree v QVars), c (Tie k t)) :: Constraint)
+type DepsS c v t k = ((c (Tree v QVars), c (Node k t)) :: Constraint)
 deriving instance DepsS Eq   v t k => Eq   (Scheme v t k)
 deriving instance DepsS Ord  v t k => Ord  (Scheme v t k)
 deriving instance DepsS Show v t k => Show (Scheme v t k)

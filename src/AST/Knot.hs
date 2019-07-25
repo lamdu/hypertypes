@@ -2,7 +2,7 @@
 
 module AST.Knot
     ( Knot(..), RunKnot
-    , Tie, Tree
+    , Node, Tree
     , asTree
     , ChildrenTypesOf
     ) where
@@ -31,7 +31,7 @@ type Tree k t = k ('Knot t)
 asTree :: Tree p q -> Tree p q
 asTree = id
 
-type Tie knot ast = Tree (RunKnot knot) ast
+type Node knot ast = Tree (RunKnot knot) ast
 
 -- | A type family for the different types of children a knot has.
 -- Maps to a simple knot which has a single child of each child type.

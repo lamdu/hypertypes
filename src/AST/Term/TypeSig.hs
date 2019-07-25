@@ -28,7 +28,7 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 import           Prelude.Compat
 
 data TypeSig vars term k = TypeSig
-    { _tsTerm :: Tie k term
+    { _tsTerm :: Node k term
     , _tsType :: Tree Pure (Scheme vars (TypeOf term))
     } deriving Generic
 makeLenses ''TypeSig
@@ -40,7 +40,7 @@ makeKTraversableAndBases ''TypeSig
 
 instance RecursiveConstraint (TypeSig vars term) constraint => Recursive constraint (TypeSig vars term)
 
-type Deps vars term k cls = ((cls (Tie k term), cls (Tree Pure (Scheme vars (TypeOf term)))) :: Constraint)
+type Deps vars term k cls = ((cls (Node k term), cls (Tree Pure (Scheme vars (TypeOf term)))) :: Constraint)
 
 instance Deps vars term k Pretty => Pretty (TypeSig vars term k) where
     pPrintPrec lvl p (TypeSig term typ) =

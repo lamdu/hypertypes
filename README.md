@@ -36,18 +36,18 @@ Here's how such a tree can be represented with `syntax-tree` with parameterized 
 ```Haskell
 data Typ k
     = TInt
-    | TFun (Tie k Typ) (Tie k Typ)
+    | TFun (Node k Typ) (Node k Typ)
     | TRow (Row k)
 
 data Row k
     = REmpty
-    | RExtend String (Tie k Typ) (Tie k Row)
+    | RExtend String (Node k Typ) (Node k Row)
 ```
 
 Differences:
 
 * The types are parameterized by a type variable "k"
-* Node children are specified via the `Tie` type-synonym which "ties the knot"
+* Node children are specified via the `Node` type-synonym which "ties the knot"
 
 ## What does `syntax-tree` do for me
 

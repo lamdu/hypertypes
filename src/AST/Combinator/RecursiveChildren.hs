@@ -13,7 +13,7 @@ import AST.Class.Pointed
 import AST.Class.Recursive
 import AST.Combinator.Both
 import AST.Combinator.Flip
-import AST.Knot (Tree, Tie, RunKnot, ChildrenTypesOf)
+import AST.Knot (Tree, Node, RunKnot, ChildrenTypesOf)
 import Control.Lens.Operators
 import Data.Constraint
 import Data.Proxy
@@ -21,7 +21,7 @@ import Data.Proxy
 import Prelude.Compat
 
 data RecursiveChildren a k = RecursiveChildren
-    { _recSelf :: Tie k a
+    { _recSelf :: Node k a
     , _recSub :: Tree (ChildrenTypesOf a) (Flip RecursiveChildren (RunKnot k))
     }
 

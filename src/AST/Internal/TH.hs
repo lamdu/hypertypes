@@ -15,7 +15,7 @@ module AST.Internal.TH
 
 import           AST.Class.Has
 import           AST.Class.Pointed
-import           AST.Knot (Knot(..), RunKnot, Tie, ChildrenTypesOf)
+import           AST.Knot (Knot(..), RunKnot, Node, ChildrenTypesOf)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
@@ -104,7 +104,7 @@ matchType var (ConT runKnot `AppT` VarT k `AppT` (PromotedT knot `AppT` ast))
     | runKnot == ''RunKnot && knot == 'Knot && k == var =
         NodeFofX ast
 matchType var (ConT tie `AppT` VarT k `AppT` ast)
-    | tie == ''Tie && k == var =
+    | tie == ''Node && k == var =
         NodeFofX ast
 matchType var (ast `AppT` VarT knot)
     | knot == var && ast /= ConT ''RunKnot =
@@ -272,7 +272,7 @@ makeChildrenTypesInfo typeInfo =
                     [] <-
                         do
                             ConT tie `AppT` VarT _ `AppT` _ <- [t]
-                            [() | tie == ''Tie]
+                            [() | tie == ''Node]
                         & pure
                     x `AppT` VarT _knot <- [t]
                     let xSub = D.applySubstitution subst x
@@ -305,7 +305,7 @@ makeChildrenTypesInfo typeInfo =
                 do
                     (t, name) <- consVars
                     ConT tie `AppT` VarT _knot `AppT` c <- [t]
-                    [(D.applySubstitution subst c, name) | tie == ''Tie]
+                    [(D.applySubstitution subst c, name) | tie == ''Node]
                 & Map.fromList
             , getEmbedTypes = getEmbed
             }

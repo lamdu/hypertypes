@@ -11,13 +11,13 @@ import AST.Class.HasChildrenTypes (HasChildrenTypes)
 import AST.Class.Recursive (Recursive)
 import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import AST.Combinator.Single (Single(..))
-import AST.Knot (Tree, Tie, ChildrenTypesOf)
+import AST.Knot (Tree, Node, ChildrenTypesOf)
 import Control.DeepSeq (NFData)
 import Control.Lens (Iso, iso)
 import Data.Binary (Binary)
 import GHC.Generics (Generic)
 
-newtype ToKnot f k = MkToKnot (f (Tie k (ToKnot f)))
+newtype ToKnot f k = MkToKnot (f (Node k (ToKnot f)))
     deriving stock Generic
 
 _ToKnot ::
@@ -35,7 +35,7 @@ makeKTraversableAndFoldable ''ToKnot
 
 instance (Traversable f, c (ToKnot f)) => Recursive c (ToKnot f)
 
-type InToKnot f k = f (Tie k (ToKnot f))
+type InToKnot f k = f (Node k (ToKnot f))
 deriving instance Eq     (InToKnot f k) => Eq     (ToKnot f k)
 deriving instance Ord    (InToKnot f k) => Ord    (ToKnot f k)
 deriving instance Show   (InToKnot f k) => Show   (ToKnot f k)

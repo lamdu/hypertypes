@@ -19,7 +19,7 @@ import Prelude.Compat
 
 data UTermBody v ast = UTermBody
     { _uConstraints :: TypeConstraintsOf (RunKnot ast)
-    , _uBody :: Tie ast v
+    , _uBody :: Node ast v
     }
 makeLenses ''UTermBody
 
@@ -52,7 +52,7 @@ makePrisms ''UTerm
 type UTermDeps c v ast =
     (( BodyDeps c v ast
      , c (v ast)
-     , c (Tie ast Pure)
+     , c (Node ast Pure)
      ) :: Constraint)
 
 deriving instance UTermDeps Eq v ast => Eq (UTerm v ast)
@@ -61,7 +61,7 @@ deriving instance UTermDeps Show v ast => Show (UTerm v ast)
 
 type BodyDeps c v ast =
     ( ( c (TypeConstraintsOf (RunKnot ast))
-      , c (Tie ast v)
+      , c (Node ast v)
       ) :: Constraint
     )
 deriving instance BodyDeps Eq v ast => Eq (UTermBody v ast)

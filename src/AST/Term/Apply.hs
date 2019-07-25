@@ -24,8 +24,8 @@ import Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 import Prelude.Compat
 
 data Apply expr k = Apply
-    { _applyFunc :: Tie k expr
-    , _applyArg :: Tie k expr
+    { _applyFunc :: Node k expr
+    , _applyArg :: Node k expr
     } deriving Generic
 
 type instance ChildrenTypesOf (Apply e) = Single e
@@ -36,7 +36,7 @@ makeZipMatch ''Apply
 makeKApplicativeBases ''Apply
 makeKTraversableAndFoldable ''Apply
 
-instance Pretty (Tie k expr) => Pretty (Apply expr k) where
+instance Pretty (Node k expr) => Pretty (Apply expr k) where
     pPrintPrec lvl p (Apply f x) =
         pPrintPrec lvl 10 f <+>
         pPrintPrec lvl 11 x
@@ -47,7 +47,7 @@ instance RecursiveConstraint (Apply expr) constraint => Recursive constraint (Ap
 -- Type changing traversal.
 -- TODO: Could the normal `Children` class support this?
 applyChildren ::
-    Traversal (Apply t0 f0) (Apply t1 f1) (Tie f0 t0) (Tie f1 t1)
+    Traversal (Apply t0 f0) (Apply t1 f1) (Node f0 t0) (Node f1 t1)
 applyChildren f (Apply x0 x1) = Apply <$> f x0 <*> f x1
 
 type instance TypeOf  (Apply expr) = TypeOf  expr
@@ -63,8 +63,8 @@ instance (Infer m expr, HasFuncType (TypeOf expr)) => Infer m (Apply expr) where
             InferRes (Apply funcI argI) funcRes <$
                 (newTerm (funcType # FuncType argT funcRes) >>= unify funcT)
 
-deriving instance Eq   (Tie k expr) => Eq   (Apply expr k)
-deriving instance Ord  (Tie k expr) => Ord  (Apply expr k)
-deriving instance Show (Tie k expr) => Show (Apply expr k)
-instance Binary (Tie k expr) => Binary (Apply expr k)
-instance NFData (Tie k expr) => NFData (Apply expr k)
+deriving instance Eq   (Node k expr) => Eq   (Apply expr k)
+deriving instance Ord  (Node k expr) => Ord  (Apply expr k)
+deriving instance Show (Node k expr) => Show (Apply expr k)
+instance Binary (Node k expr) => Binary (Apply expr k)
+instance NFData (Node k expr) => NFData (Apply expr k)

@@ -32,7 +32,7 @@ import           Prelude.Compat
 
 data EmptyScope
 
-newtype Scope expr a k = Scope (Tie k (expr (Maybe a)))
+newtype Scope expr a k = Scope (Node k (expr (Maybe a)))
 Lens.makePrisms ''Scope
 
 type instance ChildrenTypesOf (Scope e a) = Single (e (Maybe a))
@@ -66,7 +66,7 @@ instance DeBruijnIndex a => DeBruijnIndex (Maybe a) where
                 | x == 0 = Just Nothing
                 | otherwise = (x - 1) ^? deBruijnIndex <&> Just
 
-newtype ScopeTypes t v = ScopeTypes (Seq (Tie v t))
+newtype ScopeTypes t v = ScopeTypes (Seq (Node v t))
     deriving newtype (Semigroup, Monoid)
 
 type instance ChildrenTypesOf (ScopeTypes t) = Single t

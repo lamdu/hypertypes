@@ -26,7 +26,7 @@ import           Prelude.Compat
 
 data Lam v expr k = Lam
     { _lamIn :: v
-    , _lamOut :: Tie k expr
+    , _lamOut :: Node k expr
     } deriving Generic
 makeLenses ''Lam
 
@@ -35,7 +35,7 @@ instance HasChildrenTypes (Lam v e)
 
 makeKTraversableAndBases ''Lam
 
-type Deps v expr k cls = ((cls v, cls (Tie k expr)) :: Constraint)
+type Deps v expr k cls = ((cls v, cls (Node k expr)) :: Constraint)
 
 instance Deps v expr k Pretty => Pretty (Lam v expr k) where
     pPrintPrec lvl p (Lam i o) =

@@ -48,7 +48,7 @@ data GTerm v ast
         -- ^ Points to a quantified variable (instantiation will
         -- create fresh unification terms) (`AST.Unify.Term.USkolem`
         -- or `AST.Unify.Term.UResolved`)
-    | GBody (Tie ast (GTerm v)) -- ^ Term with some polymorphic parts
+    | GBody (Node ast (GTerm v)) -- ^ Term with some polymorphic parts
     deriving Generic
 
 Lens.makePrisms ''GTerm
@@ -197,7 +197,7 @@ instantiate ::
     Tree (GTerm (UVarOf m)) t -> m (Tree (UVarOf m) t)
 instantiate g = instantiateWith (pure ()) g <&> (^. Lens._1)
 
-type Deps c v t = ((c (v t), c (Tie t (GTerm v))) :: Constraint)
+type Deps c v t = ((c (v t), c (Node t (GTerm v))) :: Constraint)
 deriving instance Deps Eq   v t => Eq   (GTerm v t)
 deriving instance Deps Ord  v t => Ord  (GTerm v t)
 deriving instance Deps Show v t => Show (GTerm v t)

@@ -51,7 +51,7 @@ data LangB k
     | BLet (Let Name LangB k)
     | BRecEmpty
     | BRecExtend (RowExtend Name LangB LangB k)
-    | BGetField (Tie k LangB) Name
+    | BGetField (Node k LangB) Name
     | BToNom (ToNom Name LangB k)
 
 type instance ChildrenTypesOf LangB = Single LangB
@@ -280,5 +280,5 @@ instance Unify (STInferB s) Row where
         traverseKWith (Proxy :: Proxy '[Recursive (Unify (STInferB s))]) applyBindings e
         >>= throwError . RowError
 
-deriving instance Show (Tie k LangB) => Show (LangB k)
-deriving instance (Show (Tie k Typ), Show (Tie k Row)) => Show (ScopeTypes k)
+deriving instance Show (Node k LangB) => Show (LangB k)
+deriving instance (Show (Node k Typ), Show (Node k Row)) => Show (ScopeTypes k)

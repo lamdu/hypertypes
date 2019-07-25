@@ -15,7 +15,7 @@ import           AST.Class.Traversable
 import           AST.Class.Traversable.TH (makeKTraversableAndBases)
 import           AST.Class.ZipMatch.TH (makeZipMatch)
 import           AST.Combinator.Single (Single)
-import           AST.Knot (Tree, Tie, ChildrenTypesOf)
+import           AST.Knot (Tree, Node, ChildrenTypesOf)
 import           AST.Knot.Pure (Pure(..))
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Traversal, makeLenses)
@@ -32,7 +32,7 @@ import           Prelude.Compat
 -- Annotate tree nodes
 data Ann a knot = Ann
     { _ann :: a
-    , _val :: Tie knot (Ann a)
+    , _val :: Node knot (Ann a)
     } deriving Generic
 makeLenses ''Ann
 
@@ -97,7 +97,7 @@ addAnnotations ::
     Tree Pure expr -> Tree (Ann a) expr
 addAnnotations p f = wrap p (\x -> Ann (f x) x)
 
-type Deps c a t = ((c a, c (Tie t (Ann a))) :: Constraint)
+type Deps c a t = ((c a, c (Node t (Ann a))) :: Constraint)
 deriving instance Deps Eq   a t => Eq   (Ann a t)
 deriving instance Deps Ord  a t => Ord  (Ann a t)
 deriving instance Deps Show a t => Show (Ann a t)

@@ -29,13 +29,13 @@ type family TypeOf (t :: Knot -> *) :: Knot -> *
 type family ScopeOf (t :: Knot -> *) :: Knot -> *
 
 data IResult e v = IResult
-    { _irType :: Tie v (TypeOf e)
+    { _irType :: Node v (TypeOf e)
     , _irScope :: ScopeOf e v
     }
 makeLenses ''IResult
 
 data IResultChildrenTypes e k = IResultChildrenTypes
-    { _ircType :: Tie k (TypeOf e)
+    { _ircType :: Node k (TypeOf e)
     , _ircScope :: ChildrenTypesOf (ScopeOf e) k
     }
 
@@ -95,7 +95,7 @@ makeKTraversableAndFoldable ''IResult
 data ITerm a v e = ITerm
     { _iAnn :: a
     , _iRes :: {-# UNPACK #-} !(Tree (IResult (RunKnot e)) v)
-    , _iVal :: Tie e (ITerm a v)
+    , _iVal :: Node e (ITerm a v)
     }
 makeLenses ''ITerm
 
@@ -308,4 +308,4 @@ iAnnotations f (ITerm pl r x) =
     <*> recursiveChildren (Proxy :: Proxy KTraversable) (iAnnotations f) x
 
 deriving instance (Show (Tree v (TypeOf e)), Show (Tree (ScopeOf e) v)) => Show (Tree (IResult e) v)
-deriving instance (Show a, Show (Tie e (ITerm a v)), Show (Tree (IResult (RunKnot e)) v)) => Show (ITerm a v e)
+deriving instance (Show a, Show (Node e (ITerm a v)), Show (Tree (IResult (RunKnot e)) v)) => Show (ITerm a v e)

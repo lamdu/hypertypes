@@ -25,8 +25,8 @@ import           Prelude.Compat
 
 data Let v expr k = Let
     { _letVar :: v
-    , _letEquals :: Tie k expr
-    , _letIn :: Tie k expr
+    , _letEquals :: Node k expr
+    , _letIn :: Node k expr
     } deriving (Generic)
 makeLenses ''Let
 
@@ -35,7 +35,7 @@ instance HasChildrenTypes (Let v e)
 
 makeKTraversableAndBases ''Let
 
-type Deps v expr k cls = ((cls v, cls (Tie k expr)) :: Constraint)
+type Deps v expr k cls = ((cls v, cls (Node k expr)) :: Constraint)
 
 instance Deps v expr k Pretty => Pretty (Let v expr k) where
     pPrintPrec lvl p (Let v e i) =

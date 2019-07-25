@@ -11,7 +11,7 @@ import AST.Class.HasChildrenTypes (HasChildrenTypes)
 import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import AST.Class.Has (KHas(..))
 import AST.Combinator.Single (Single(..))
-import AST.Knot (Tie, ChildrenTypesOf)
+import AST.Knot (Node, ChildrenTypesOf)
 import Control.DeepSeq (NFData)
 import Control.Lens (makeLenses)
 import Data.Binary (Binary)
@@ -21,8 +21,8 @@ import GHC.Generics (Generic)
 import Prelude.Compat
 
 data Pair a b k = MkPair
-    { _pairFst :: Tie k a
-    , _pairSnd :: Tie k b
+    { _pairFst :: Node k a
+    , _pairSnd :: Node k b
     } deriving stock Generic
 
 type instance ChildrenTypesOf (Pair a b) = Pair a b
@@ -43,7 +43,7 @@ instance KHas (Single a) (Pair a b) where
 instance KHas (Single b) (Pair a b) where
     hasK (MkPair _ x) = MkSingle x
 
-type Deps a b k c = ((c (Tie k a), c (Tie k b)) :: Constraint)
+type Deps a b k c = ((c (Node k a), c (Node k b)) :: Constraint)
 
 deriving instance Deps a b k Eq   => Eq   (Pair a b k)
 deriving instance Deps a b k Ord  => Ord  (Pair a b k)

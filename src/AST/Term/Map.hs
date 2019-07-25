@@ -21,7 +21,7 @@ import           GHC.Generics (Generic)
 
 import           Prelude.Compat
 
-newtype TermMap k expr f = TermMap (Map k (Tie f expr))
+newtype TermMap k expr f = TermMap (Map k (Node f expr))
     deriving stock Generic
 
 type instance ChildrenTypesOf (TermMap k e) = Single e
@@ -49,7 +49,7 @@ zipMatchList ((k0, v0) : xs) ((k1, v1) : ys)
         zipMatchList xs ys <&> ((k0, (v0, v1)) :)
 zipMatchList _ _ = Nothing
 
-type Deps c k e f = ((c k, c (Tie f e)) :: Constraint)
+type Deps c k e f = ((c k, c (Node f e)) :: Constraint)
 deriving instance Deps Eq   k e f => Eq   (TermMap k e f)
 deriving instance Deps Ord  k e f => Ord  (TermMap k e f)
 deriving instance Deps Show k e f => Show (TermMap k e f)

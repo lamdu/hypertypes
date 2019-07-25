@@ -48,13 +48,13 @@ type RowKey typ = RowConstraintsKey (TypeConstraintsOf typ)
 -- | Row-extend primitive for use in both value-level and type-level
 data RowExtend key val rest k = RowExtend
     { _eKey :: key
-    , _eVal :: Tie k val
-    , _eRest :: Tie k rest
+    , _eVal :: Node k val
+    , _eRest :: Node k rest
     } deriving Generic
 
 data FlatRowExtends key val rest k = FlatRowExtends
-    { _freExtends :: Map key (Tie k val)
-    , _freRest :: Tie k rest
+    { _freExtends :: Map key (Node k val)
+    , _freRest :: Node k rest
     } deriving Generic
 
 type instance ChildrenTypesOf (RowExtend k v r) = Pair v r
@@ -72,7 +72,7 @@ instance
     RecursiveConstraint (RowExtend key val rest) constraint =>
     Recursive constraint (RowExtend key val rest)
 
-type Deps c key val rest k = ((c key, c (Tie k val), c (Tie k rest)) :: Constraint)
+type Deps c key val rest k = ((c key, c (Node k val), c (Node k rest)) :: Constraint)
 
 instance Deps Show key val rest k => Show (RowExtend key val rest k) where
     showsPrec p (RowExtend k v r) = (showCon "RowExtend" @| k @| v @| r) p

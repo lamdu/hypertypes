@@ -42,7 +42,7 @@ newtype Name = Name String deriving stock (Eq, Ord, Show)
 data Typ k
     = TInt
     | TFun (FuncType Typ k)
-    | TRec (Tie k Row)
+    | TRec (Node k Row)
     | TVar Name
     | TNom (NominalInst Name Types k)
 
@@ -58,8 +58,8 @@ data RConstraints = RowConstraints
     deriving (Semigroup, Monoid) via Generically RConstraints
 
 data Types k = Types
-    { _tTyp :: Tie k Typ
-    , _tRow :: Tie k Row
+    { _tTyp :: Node k Typ
+    , _tRow :: Node k Row
     }
 
 data TypeError k = TypError (UnifyError Typ k) | RowError (UnifyError Row k)
@@ -92,7 +92,7 @@ makeKTraversableAndBases ''Row
 makeKApplicativeBases ''Types
 makeKTraversableAndFoldable ''Types
 
-type TypDeps cls k = ((cls (Tie k Typ), cls (Tie k Row)) :: Constraint)
+type TypDeps cls k = ((cls (Node k Typ), cls (Node k Row)) :: Constraint)
 
 type instance NomVarTypes Typ = Types
 

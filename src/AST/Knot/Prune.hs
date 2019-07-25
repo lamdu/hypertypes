@@ -25,7 +25,7 @@ import GHC.Generics (Generic)
 import Prelude.Compat
 
 data Prune k =
-    Pruned | Unpruned (Tie k Prune)
+    Pruned | Unpruned (Node k Prune)
     deriving Generic
 
 type instance ChildrenTypesOf Prune = Single Prune
@@ -65,8 +65,8 @@ instance
         & inferBody
         <&> inferResBody %~ MkCompose . Unpruned . MkCompose
 
-deriving instance Eq   (Tie k Prune) => Eq   (Prune k)
-deriving instance Ord  (Tie k Prune) => Ord  (Prune k)
-deriving instance Show (Tie k Prune) => Show (Prune k)
-instance Binary (Tie k Prune) => Binary (Prune k)
-instance NFData (Tie k Prune) => NFData (Prune k)
+deriving instance Eq   (Node k Prune) => Eq   (Prune k)
+deriving instance Ord  (Node k Prune) => Ord  (Prune k)
+deriving instance Show (Node k Prune) => Show (Prune k)
+instance Binary (Node k Prune) => Binary (Prune k)
+instance NFData (Node k Prune) => NFData (Prune k)

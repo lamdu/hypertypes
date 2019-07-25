@@ -32,7 +32,7 @@ data Diff a b e
 data CommonBody a b e = MkCommonBody
     { _annPrev :: a
     , _annNew :: b
-    , _val :: Tie e (Diff a b)
+    , _val :: Node e (Diff a b)
     } deriving Generic
 
 makePrisms ''Diff
@@ -54,9 +54,9 @@ diff x@(Ann xA xB) y@(Ann yA yB) =
 type Deps c a b e =
     (
         ( c a, c b
-        , c (Tie e (Ann a)), c (Tie e (Ann b))
-        , c (Tie e (Ann (a, b)))
-        , c (Tie e (Diff a b))
+        , c (Node e (Ann a)), c (Node e (Ann b))
+        , c (Node e (Ann (a, b)))
+        , c (Node e (Diff a b))
         ) :: Constraint
     )
 deriving instance Deps Eq   a b e => Eq   (CommonBody a b e)

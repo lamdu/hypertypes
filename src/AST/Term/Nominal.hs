@@ -72,7 +72,7 @@ data NominalInst nomId varTypes k = NominalInst
 -- Introduces the nominal's forall type variables into the value's scope.
 data ToNom nomId term k = ToNom
     { _tnId :: nomId
-    , _tnVal :: Tie k term
+    , _tnVal :: Node k term
     } deriving Generic
 
 newtype FromNom nomId (term :: Knot -> *) (k :: Knot) = FromNom nomId
@@ -155,7 +155,7 @@ instance
     ( Pretty nomId
     , KApply varTypes, KFoldable varTypes, HasChildrenTypes varTypes
     , KLiftConstraint (ChildrenTypesOf varTypes) (QVarHasInstance Pretty)
-    , KLiftConstraint (ChildrenTypesOf varTypes) (TieHasConstraint Pretty k)
+    , KLiftConstraint (ChildrenTypesOf varTypes) (NodeHasConstraint Pretty k)
     ) =>
     Pretty (NominalInst nomId varTypes k) where
 
@@ -163,7 +163,7 @@ instance
         withDict (hasChildrenTypes (Proxy :: Proxy varTypes)) $
         pPrint n <>
         joinArgs
-        (foldMapKWith (Proxy :: Proxy [QVarHasInstance Pretty, TieHasConstraint Pretty k]) mkArgs vars)
+        (foldMapKWith (Proxy :: Proxy [QVarHasInstance Pretty, NodeHasConstraint Pretty k]) mkArgs vars)
         where
             joinArgs [] = mempty
             joinArgs xs =
@@ -339,7 +339,7 @@ subst p mkType params (MkPure x) =
         (subst p mkType params) x
         >>= mkType
 
-type DepsD c t k = ((c (Tree (NomVarTypes t) QVars), c (Tie k t)) :: Constraint)
+type DepsD c t k = ((c (Tree (NomVarTypes t) QVars), c (Node k t)) :: Constraint)
 deriving instance DepsD Eq   t k => Eq   (NominalDecl t k)
 deriving instance DepsD Ord  t k => Ord  (NominalDecl t k)
 deriving instance DepsD Show t k => Show (NominalDecl t k)
@@ -353,7 +353,7 @@ deriving instance DepsI Show n v k => Show (NominalInst n v k)
 instance DepsI Binary n v k => Binary (NominalInst n v k)
 instance DepsI NFData n v k => NFData (NominalInst n v k)
 
-type DepsT c n t k = ((c n, c (Tie k t)) :: Constraint)
+type DepsT c n t k = ((c n, c (Node k t)) :: Constraint)
 deriving instance DepsT Eq   n t k => Eq   (ToNom n t k)
 deriving instance DepsT Ord  n t k => Ord  (ToNom n t k)
 deriving instance DepsT Show n t k => Show (ToNom n t k)

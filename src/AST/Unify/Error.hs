@@ -26,10 +26,10 @@ import           Prelude.Compat
 
 -- | An error that occurred during unification
 data UnifyError t k
-    = SkolemUnified (Tie k t) (Tie k t)
+    = SkolemUnified (Node k t) (Node k t)
       -- ^ A universally quantified variable was unified with a
       -- different type
-    | SkolemEscape (Tie k t)
+    | SkolemEscape (Node k t)
       -- ^ A universally quantified variable escapes its scope
     | ConstraintsViolation (t k) (TypeConstraintsOf t)
       -- ^ A term violates constraints that should apply to it
@@ -41,7 +41,7 @@ data UnifyError t k
 makePrisms ''UnifyError
 
 data UnifyErrorNodes t k = UnifyErrorNodes
-    { _ueTerm :: Tie k t
+    { _ueTerm :: Node k t
     , _ueBody :: ChildrenTypesOf t k
     }
 
@@ -85,7 +85,7 @@ instance
 
 makeKTraversableAndBases ''UnifyError
 
-type Deps c t k = ((c (Tie k t), c (t k), c (TypeConstraintsOf t)) :: Constraint)
+type Deps c t k = ((c (Node k t), c (t k), c (TypeConstraintsOf t)) :: Constraint)
 
 instance Deps Pretty t k => Pretty (UnifyError t k) where
     pPrintPrec lvl p =
