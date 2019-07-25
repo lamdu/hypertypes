@@ -49,7 +49,7 @@ class HasNodeTypes k where
     {-# INLINE mNoChildren #-}
     mNoChildren = Nothing
 
-class KPointed k where
+class HasNodeTypes k => KPointed k where
     -- | Construct a value from given child values
     pureC ::
         Tree (NodeTypesOf k) n ->
