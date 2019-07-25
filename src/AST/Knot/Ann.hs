@@ -9,9 +9,9 @@ module AST.Knot.Ann
     , para
     ) where
 
-import           AST.Class.Children (Children(..))
 import           AST.Class.HasChildrenTypes (HasChildrenTypes)
 import           AST.Class.Recursive (Recursive, wrap, unwrap, recursiveChildren, recursiveOverChildren)
+import           AST.Class.Traversable
 import           AST.Class.Traversable.TH (makeKTraversableAndBases)
 import           AST.Class.ZipMatch.TH (makeZipMatch)
 import           AST.Combinator.Single (Single)
@@ -66,12 +66,12 @@ annotationsWith p f (Ann pl x) =
     <*> recursiveChildren p (annotationsWith p f) x
 
 annotations ::
-    Recursive Children e =>
+    Recursive KTraversable e =>
     Traversal
     (Tree (Ann a) e)
     (Tree (Ann b) e)
     a b
-annotations = annotationsWith (Proxy :: Proxy Children)
+annotations = annotationsWith (Proxy :: Proxy KTraversable)
 
 -- Similar to `para` from `recursion-schemes`,
 -- except it's int term of full annotated trees rather than just the final result.
@@ -87,8 +87,8 @@ para p f x =
     where
         r = recursiveOverChildren p (para p f) (getPure x)
 
-strip :: Recursive Children expr => Tree (Ann a) expr -> Tree Pure expr
-strip = unwrap (Proxy :: Proxy Children) (^. val)
+strip :: Recursive KTraversable expr => Tree (Ann a) expr -> Tree Pure expr
+strip = unwrap (Proxy :: Proxy KTraversable) (^. val)
 
 addAnnotations ::
     Recursive constraint expr =>

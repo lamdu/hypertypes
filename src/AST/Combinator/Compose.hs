@@ -33,19 +33,15 @@ _Compose = Lens.iso getCompose MkCompose
 
 type instance ChildrenTypesOf (Compose a b) = Compose (ChildrenTypesOf a) (ChildrenTypesOf b)
 
--- TODO: Remove ComposeConstraint0 when get rid of Children class
-class    ChildrenConstraint k (ComposeConstraint1 c o) => ComposeConstraint0 c k o
-instance ChildrenConstraint k (ComposeConstraint1 c o) => ComposeConstraint0 c k o
-
-class    KLiftConstraint k (ComposeConstraint1 c o) => ComposeConstraint0K c k o
-instance KLiftConstraint k (ComposeConstraint1 c o) => ComposeConstraint0K c k o
+class    KLiftConstraint k (ComposeConstraint1 c o) => ComposeConstraint0 c k o
+instance KLiftConstraint k (ComposeConstraint1 c o) => ComposeConstraint0 c k o
 class    c (Compose k0 k1) => ComposeConstraint1 c k0 k1
 instance c (Compose k0 k1) => ComposeConstraint1 c k0 k1
 
 instance
     (HasChildrenTypes a, KPointed a, KPointed b) =>
     KPointed (Compose a b) where
-    type KLiftConstraint (Compose a b) c = KLiftConstraint a (ComposeConstraint0K c b)
+    type KLiftConstraint (Compose a b) c = KLiftConstraint a (ComposeConstraint0 c b)
     {-# INLINE pureC #-}
     pureC =
         withDict (hasChildrenTypes (Proxy :: Proxy a)) $
@@ -57,7 +53,7 @@ instance
         pureKWithConstraint (p0 p) (makeP1 p (\p1 -> pureKWithConstraint p1 (MkCompose x) & MkCompose))
         & MkCompose
         where
-            p0 :: Proxy c -> Proxy (ComposeConstraint0K c b)
+            p0 :: Proxy c -> Proxy (ComposeConstraint0 c b)
             p0 _ = Proxy
             makeP1 ::
                 Proxy c ->
@@ -124,19 +120,6 @@ instance
         ( sequenceC .
             mapK (MkContainedK . _Compose (traverseK (_Compose runContainedK)))
         )
-
-instance (Children k0, Children k1) => Children (Compose k0 k1) where
-    type ChildrenConstraint (Compose k0 k1) c = ChildrenConstraint k0 (ComposeConstraint0 c k1)
-    children p f =
-        _Compose
-        (children (p0 p)
-            (\x1 -> _Compose (children (p1 p x1) (_Compose f)) x1)
-        )
-        where
-            p0 :: Proxy c -> Proxy (ComposeConstraint0 c k1)
-            p0 _ = Proxy
-            p1 :: Proxy c -> Tree (Compose a n) b -> Proxy (ComposeConstraint1 c b)
-            p1 _ _ = Proxy
 
 instance
     ( ZipMatch k0, ZipMatch k1

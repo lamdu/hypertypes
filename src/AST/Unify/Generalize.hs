@@ -112,24 +112,6 @@ instance
             <&> GBody
         <&> MkFlip
 
-instance Children (Flip GTerm ast) where
-    type ChildrenConstraint (Flip GTerm ast) cls = Recursive cls ast
-    {-# INLINE children #-}
-    children ::
-        forall f constraint n m.
-        (Applicative f, Recursive constraint ast) =>
-        Proxy constraint ->
-        (forall child. constraint child => Tree n child -> f (Tree m child)) ->
-        Tree (Flip GTerm ast) n -> f (Tree (Flip GTerm ast) m)
-    children p f g =
-        case g ^. _Flip of
-        GMono x -> f x <&> GMono
-        GPoly x -> f x <&> GPoly
-        GBody x ->
-            recursiveChildren p (Lens.from _Flip (children p f)) x
-            <&> GBody
-        <&> (_Flip #)
-
 -- | Generalize a unification term pointed by the given variable to a `GTerm`.
 -- Unification variables that are scoped within the term
 -- become universally quantified skolems.
