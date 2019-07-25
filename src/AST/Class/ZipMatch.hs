@@ -8,9 +8,9 @@ module AST.Class.ZipMatch
     , Both(..)
     ) where
 
+import           AST.Class (KFunctor)
 import           AST.Class.Combinators
 import           AST.Class.Foldable (KFoldable)
-import           AST.Class.Functor (KFunctor)
 import           AST.Class.Traversable (KTraversable)
 import           AST.Combinator.Both (Both(..))
 import           AST.Knot (Tree, NodeTypesOf)

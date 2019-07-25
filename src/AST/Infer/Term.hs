@@ -12,8 +12,8 @@ module AST.Infer.Term
     ) where
 
 import AST
+import AST.Class
 import AST.Class.Foldable
-import AST.Class.Functor
 import AST.Class.Traversable
 import AST.Combinator.Both
 import AST.Combinator.Flip (Flip(..), _Flip)

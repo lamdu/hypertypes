@@ -9,7 +9,7 @@ module AST.Unify.Error
     ) where
 
 import           AST
-import           AST.Class.Functor
+import           AST.Class
 import           AST.Combinator.Both
 import           AST.Unify.Constraints (HasTypeConstraints(..))
 import           Control.DeepSeq (NFData)

@@ -4,7 +4,7 @@ module AST.Class.Apply
     ( KApply(..)
     ) where
 
-import AST.Class.Functor (KFunctor)
+import AST.Class (KFunctor)
 import AST.Combinator.Both (Both(..))
 import AST.Knot (Tree)
 import Data.Functor.Const (Const(..))

@@ -4,7 +4,7 @@ module AST.Class.Functor.TH
     ( makeKFunctor
     ) where
 
-import           AST.Class.Functor
+import           AST.Class
 import           AST.Internal.TH
 import           Control.Lens.Operators
 import qualified Data.Map as Map

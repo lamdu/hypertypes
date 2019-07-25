@@ -5,8 +5,8 @@ module AST.Class.Traversable
     , ContainedK(..), _ContainedK
     ) where
 
+import AST.Class (KFunctor)
 import AST.Class.Foldable (KFoldable)
-import AST.Class.Functor (KFunctor)
 import AST.Knot (Knot, Tree)
 import Control.Lens (Iso, iso)
 import Data.Functor.Const (Const(..))

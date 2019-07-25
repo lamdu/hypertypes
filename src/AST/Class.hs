@@ -3,9 +3,11 @@
 
 module AST.Class
     ( KPointed(..)
+    , KFunctor(..), MapK(..), _MapK
     ) where
 
 import AST.Knot (Knot, Tree, NodeTypesOf)
+import Control.Lens (Iso, iso)
 import Data.Constraint (Constraint)
 import Data.Functor.Const (Const(..))
 import Data.Kind (Type)
@@ -42,6 +44,23 @@ class KPointed k where
         (forall child. constraint child => Tree n child) ->
         Tree k n
 
+newtype MapK m n (k :: Knot) = MkMapK { runMapK :: m k -> n k }
+
+{-# INLINE _MapK #-}
+_MapK ::
+    Iso (Tree (MapK m0 n0) k0)
+        (Tree (MapK m1 n1) k1)
+        (Tree m0 k0 -> Tree n0 k0)
+        (Tree m1 k1 -> Tree n1 k1)
+_MapK = iso runMapK MkMapK
+
+class KFunctor k where
+    -- | Map child values given a mapping function per child type
+    mapC ::
+        Tree (NodeTypesOf k) (MapK m n) ->
+        Tree k m ->
+        Tree k n
+
 instance Monoid a => KPointed (Const a) where
     type KLiftConstraint (Const a) c = ()
     {-# INLINE pureC #-}
@@ -50,3 +69,7 @@ instance Monoid a => KPointed (Const a) where
     pureK _ = Const mempty
     {-# INLINE pureKWithConstraint #-}
     pureKWithConstraint _ _ = Const mempty
+
+instance KFunctor (Const a) where
+    {-# INLINE mapC #-}
+    mapC _ (Const x) = Const x

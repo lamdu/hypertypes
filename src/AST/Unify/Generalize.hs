@@ -14,8 +14,8 @@ module AST.Unify.Generalize
 
 import           Algebra.PartialOrd (PartialOrd(..))
 import           AST
+import           AST.Class
 import           AST.Class.Foldable
-import           AST.Class.Functor
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Class.Traversable
 import           AST.Combinator.Flip

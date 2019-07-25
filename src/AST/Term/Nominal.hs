@@ -18,9 +18,9 @@ module AST.Term.Nominal
     ) where
 
 import           AST
+import           AST.Class (_MapK)
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Foldable (_ConvertK)
-import           AST.Class.Functor (_MapK)
 import           AST.Class.Recursive (wrapM)
 import           AST.Class.Traversable (ContainedK(..))
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))

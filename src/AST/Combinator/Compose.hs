@@ -7,8 +7,8 @@ module AST.Combinator.Compose
     ) where
 
 import           AST
+import           AST.Class
 import           AST.Class.Foldable
-import           AST.Class.Functor
 import           AST.Class.Traversable
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
 import           Control.DeepSeq (NFData)
