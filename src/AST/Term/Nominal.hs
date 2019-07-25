@@ -18,7 +18,6 @@ module AST.Term.Nominal
     ) where
 
 import           AST
-import           AST.Class.Combinators
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Foldable (_ConvertK)
 import           AST.Class.Functor (_MapK)

@@ -8,6 +8,7 @@ import AST.Class.Apply.TH as X (makeKApply, makeKApplyAndBases, makeKApplicative
 import AST.Class.Children as X
 import AST.Class.Children.Mono as X (monoChildren)
 import AST.Class.Children.TH as X (makeChildren)
+import AST.Class.Combinators as X
 import AST.Class.Foldable as X (KFoldable(..))
 import AST.Class.Foldable.TH as X (makeKFoldable)
 import AST.Class.Functor as X (KFunctor(..))

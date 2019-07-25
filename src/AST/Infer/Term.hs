@@ -12,9 +12,9 @@ module AST.Infer.Term
     ) where
 
 import AST
-import AST.Class.Combinators
 import AST.Class.Foldable
 import AST.Class.Functor
+import AST.Class.Traversable
 import AST.Combinator.Both
 import AST.Combinator.Flip (Flip(..), _Flip)
 import AST.Combinator.RecursiveChildren
@@ -106,7 +106,6 @@ type InferChildDeps c ast =
     , HasChildrenTypes (ScopeOf ast)
     , KTraversable (ScopeOf ast)
     , KLiftConstraint (ChildrenTypesOf (ScopeOf ast)) c
-    , ChildrenWithConstraint (ScopeOf ast) c
     )
 class    InferChildDeps c ast => InferChildConstraints c ast
 instance InferChildDeps c ast => InferChildConstraints c ast
@@ -271,21 +270,24 @@ instance
                 foldMapC (ITermTypes f) . (_Flip #)
                 & MkConvertK
 
-instance Children (Flip (ITerm a) e) where
-    type ChildrenConstraint (Flip (ITerm a) e) c = Recursive (InferChildConstraints c) e
-    {-# INLINE children #-}
-    children ::
-        forall f c n m.
-        (Applicative f, Recursive (InferChildConstraints c) e) =>
-        Proxy c ->
-        (forall child. c child => Tree n child -> f (Tree m child)) ->
-        Tree (Flip (ITerm a) e) n -> f (Tree (Flip (ITerm a) e) m)
-    children p f (MkFlip (ITerm a (IResult t s) b)) =
+instance
+    ( Recursive HasChildrenTypes e
+    , Recursive (InferChildConstraints HasChildrenTypes) e
+    ) =>
+    KTraversable (Flip (ITerm a) e) where
+
+    {-# INLINE sequenceC #-}
+    sequenceC =
+        withDict (hasChildrenTypes (Proxy :: Proxy e)) $
+        withDict (recursive :: RecursiveDict HasChildrenTypes e) $
+        withDict (recursive :: RecursiveDict (InferChildConstraints HasChildrenTypes) e) $
+        _Flip $
+        \(ITerm a r x) ->
         ITerm a
-        <$> (IResult <$> f t <*> children p f s)
-        <*> recursiveChildren (Proxy :: Proxy (InferChildConstraints c))
-            (from _Flip (children p f)) b
-        <&> (_Flip #)
+        <$> traverseK runContainedK r
+        <*> traverseKWith
+            (Proxy :: Proxy '[Recursive HasChildrenTypes, Recursive (InferChildConstraints HasChildrenTypes)])
+            (from _Flip sequenceC) x
 
 iType :: Lens' (ITerm a v e) (Tree v (TypeOf (RunKnot e)))
 iType = iRes . irType

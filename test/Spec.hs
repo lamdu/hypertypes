@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts, TypeFamilies, BlockArguments, ScopedTypeVariables #-}
-{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TupleSections, DataKinds #-}
 
 import           AST
 import           AST.Class.Recursive
@@ -126,12 +126,14 @@ inferExpr ::
     forall m t.
     ( Recursive (Infer m) t
     , Recursive (InferChildConstraints (Recursive (Unify m))) t
+    , Recursive (InferChildConstraints HasChildrenTypes) t
+    , Recursive HasChildrenTypes t
     ) =>
     Tree Pure t ->
     m (Tree Pure (TypeOf t))
 inferExpr x =
     infer (wrap (Proxy :: Proxy (Infer m)) (Ann ()) x)
-    >>= Lens.from _Flip (children (Proxy :: Proxy (Recursive (Unify m))) applyBindings)
+    >>= Lens.from _Flip (traverseKWith (Proxy :: Proxy '[Recursive (Unify m)]) applyBindings)
     <&> (^. iType)
 
 vecNominalDecl :: Tree Pure (NominalDecl Typ)

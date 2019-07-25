@@ -52,6 +52,7 @@ instance HasChildrenTypes (LangA v)
 makeKTraversableAndBases ''LangA
 makeChildren ''LangA
 instance Recursive Children (LangA v)
+instance Recursive HasChildrenTypes (LangA v)
 
 type instance TypeOf (LangA k) = Typ
 type instance ScopeOf (LangA k) = ScopeTypes Typ
@@ -96,7 +97,7 @@ instance (DeBruijnIndex k, TermInfer1Deps env m) => Infer m (LangA k) where
 
 instance (DeBruijnIndex k, TermInfer1Deps env m) => Recursive (Infer m) (LangA k)
 
-instance (c Typ, c Row) => Recursive (InferChildConstraints (Recursive c)) (LangA k)
+instance (c Typ, c Row) => Recursive (InferChildConstraints c) (LangA k)
 
 -- Monads for inferring `LangA`:
 
