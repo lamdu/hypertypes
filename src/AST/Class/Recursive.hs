@@ -10,11 +10,11 @@ module AST.Class.Recursive
     , recursiveChildren, recursiveOverChildren, recursiveChildren_
     ) where
 
-import AST.Class (KPointed(..))
+import AST.Class (NodeTypesOf, KPointed(..))
 import AST.Class.Combinators
 import AST.Class.HasNodeTypes
 import AST.Class.Traversable (KTraversable)
-import AST.Knot (Tree, NodeTypesOf)
+import AST.Knot (Tree)
 import AST.Knot.Pure (Pure, _Pure)
 import Control.Lens.Operators
 import Data.Constraint (Dict(..), withDict)

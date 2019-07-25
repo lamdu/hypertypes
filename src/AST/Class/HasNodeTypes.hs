@@ -6,12 +6,12 @@ module AST.Class.HasNodeTypes
     , mapK, liftK2, foldMapK, traverseK, traverseK1, traverseK_
     ) where
 
-import AST.Class (KPointed(..), KFunctor(..), MapK(..), KApply(..), KApplicative)
+import AST.Class (NodeTypesOf, KPointed(..), KFunctor(..), MapK(..), KApply(..), KApplicative)
 import AST.Class.Foldable (KFoldable(..), ConvertK(..))
 import AST.Class.Traversable (KTraversable(..), ContainedK(..))
 import AST.Combinator.Both (Both(..))
 import AST.Combinator.Single
-import AST.Knot (Tree, NodeTypesOf)
+import AST.Knot (Tree)
 import Data.Constraint (Dict(..), withDict)
 import Data.Foldable (sequenceA_)
 import Data.Functor.Const (Const(..))

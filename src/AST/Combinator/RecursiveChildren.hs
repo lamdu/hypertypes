@@ -11,7 +11,7 @@ import AST.Class.HasNodeTypes
 import AST.Class.Recursive
 import AST.Combinator.Both
 import AST.Combinator.Flip
-import AST.Knot (Tree, Node, RunKnot, NodeTypesOf)
+import AST.Knot (Tree, Node, RunKnot)
 import Control.Lens.Operators
 import Data.Constraint
 import Data.Proxy

@@ -4,11 +4,12 @@ module AST.Knot.Pure
     ( Pure(..), _Pure
     ) where
 
+import           AST.Class (NodeTypesOf)
 import           AST.Class.Apply.TH (makeKApplicativeBases)
 import           AST.Class.HasNodeTypes (HasNodeTypes)
 import           AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import           AST.Class.ZipMatch.TH (makeZipMatch)
-import           AST.Knot (Tree, Node, NodeTypesOf)
+import           AST.Knot (Tree, Node)
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Data.Binary (Binary)

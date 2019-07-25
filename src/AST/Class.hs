@@ -2,14 +2,15 @@
 {-# LANGUAGE ConstraintKinds, FlexibleInstances, UndecidableInstances #-}
 
 module AST.Class
-    ( KPointed(..)
+    ( NodeTypesOf
+    , KPointed(..)
     , KFunctor(..), MapK(..), _MapK
     , KApply(..)
     , KApplicative
     ) where
 
 import AST.Combinator.Both (Both(..))
-import AST.Knot (Knot, Tree, NodeTypesOf)
+import AST.Knot (Knot, Tree)
 import Control.Lens (Iso, iso)
 import Data.Constraint (Constraint)
 import Data.Functor.Const (Const(..))
@@ -17,6 +18,12 @@ import Data.Kind (Type)
 import Data.Proxy (Proxy)
 
 import Prelude.Compat
+
+-- | A type family for the different types of children a knot has.
+-- Maps to a simple knot which has a single child of each child type.
+type family NodeTypesOf (knot :: Knot -> Type) :: Knot -> Type
+
+type instance NodeTypesOf (Const k) = Const ()
 
 class KPointed k where
     -- | Construct a value from given child values
@@ -90,6 +97,8 @@ instance KFunctor (Const a) where
 instance Semigroup a => KApply (Const a) where
     {-# INLINE zipK #-}
     zipK (Const x) (Const y) = Const (x <> y)
+
+type instance NodeTypesOf (Both a b) = Both (NodeTypesOf a) (NodeTypesOf b)
 
 instance (KPointed a, KPointed b) => KPointed (Both a b) where
     type KLiftConstraint (Both a b) c = (KLiftConstraint a c, KLiftConstraint b c)

@@ -9,13 +9,14 @@ module AST.Knot.Ann
     , para
     ) where
 
+import           AST.Class (NodeTypesOf)
 import           AST.Class.HasNodeTypes (HasNodeTypes)
 import           AST.Class.Recursive (Recursive, wrap, unwrap, recursiveChildren, recursiveOverChildren)
 import           AST.Class.Traversable
 import           AST.Class.Traversable.TH (makeKTraversableAndBases)
 import           AST.Class.ZipMatch.TH (makeZipMatch)
 import           AST.Combinator.Single (Single)
-import           AST.Knot (Tree, Node, NodeTypesOf)
+import           AST.Knot (Tree, Node)
 import           AST.Knot.Pure (Pure(..))
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Traversal, makeLenses)

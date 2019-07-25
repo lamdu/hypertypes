@@ -8,12 +8,12 @@ module AST.Class.ZipMatch
     , Both(..)
     ) where
 
-import           AST.Class (KFunctor)
+import           AST.Class (NodeTypesOf, KFunctor)
 import           AST.Class.Combinators
 import           AST.Class.Foldable (KFoldable)
 import           AST.Class.Traversable (KTraversable)
 import           AST.Combinator.Both (Both(..))
-import           AST.Knot (Tree, NodeTypesOf)
+import           AST.Knot (Tree)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad (guard)

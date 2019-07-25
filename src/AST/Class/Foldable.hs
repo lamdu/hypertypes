@@ -5,6 +5,7 @@ module AST.Class.Foldable
     , ConvertK(..), _ConvertK
     ) where
 
+import AST.Class (NodeTypesOf)
 import AST.Knot
 import Control.Lens (Iso, iso)
 import Data.Functor.Const (Const(..))

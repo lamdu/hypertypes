@@ -2,7 +2,7 @@
 
 module AST (module X) where
 
-import AST.Class as X (KPointed(..), KFunctor(..), KApply(..), KApplicative)
+import AST.Class as X (NodeTypesOf, KPointed(..), KFunctor(..), KApply(..), KApplicative)
 import AST.Class.Apply.TH as X (makeKApply, makeKApplyAndBases, makeKApplicativeBases)
 import AST.Class.Combinators as X
 import AST.Class.Foldable as X (KFoldable(..))

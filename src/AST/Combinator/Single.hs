@@ -5,9 +5,10 @@ module AST.Combinator.Single
     ( Single(..), _Single
     ) where
 
+import AST.Class (NodeTypesOf)
 import AST.Class.Apply.TH (makeKApplicativeBases)
 import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
-import AST.Knot (Tree, Node, NodeTypesOf)
+import AST.Knot (Tree, Node)
 import Control.DeepSeq (NFData)
 import Control.Lens (Iso, iso)
 import Data.Binary (Binary)

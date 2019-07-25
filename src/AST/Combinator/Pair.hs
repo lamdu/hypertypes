@@ -6,12 +6,13 @@ module AST.Combinator.Pair
     ( Pair(..), pairFst, pairSnd
     ) where
 
+import AST.Class (NodeTypesOf)
 import AST.Class.Apply.TH (makeKApplicativeBases)
 import AST.Class.HasNodeTypes (HasNodeTypes)
 import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import AST.Class.Has (KHas(..))
 import AST.Combinator.Single (Single(..))
-import AST.Knot (Node, NodeTypesOf)
+import AST.Knot (Node)
 import Control.DeepSeq (NFData)
 import Control.Lens (makeLenses)
 import Data.Binary (Binary)

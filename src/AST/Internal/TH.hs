@@ -15,7 +15,7 @@ module AST.Internal.TH
 
 import           AST.Class
 import           AST.Class.Has
-import           AST.Knot (Knot(..), RunKnot, Node, NodeTypesOf)
+import           AST.Knot (Knot(..), RunKnot, Node)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
