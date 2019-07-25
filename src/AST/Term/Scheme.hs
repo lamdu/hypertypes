@@ -142,7 +142,7 @@ schemeBodyToType foralls x =
 schemeToRestrictedType ::
     forall m varTypes typ.
     ( Monad m
-    , KTraversable varTypes, HasNodes varTypes
+    , KTraversable varTypes
     , KLiftConstraint (NodeTypesOf varTypes) (Unify m)
     , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
     ) =>
@@ -181,7 +181,7 @@ loadBody foralls x =
 loadScheme ::
     forall m varTypes typ.
     ( Monad m
-    , KTraversable varTypes, HasNodes varTypes
+    , KTraversable varTypes
     , KLiftConstraint (NodeTypesOf varTypes) (Unify m)
     , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
     ) =>

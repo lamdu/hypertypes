@@ -60,7 +60,7 @@ saveVar v =
 saveBody ::
     forall m typeVars t.
     ( Monad m
-    , KTraversable t, HasNodes t
+    , KTraversable t
     , KLiftConstraint (NodeTypesOf t) (Recursive (Deps m typeVars))
     ) =>
     Tree t (UVarOf m) ->
@@ -71,7 +71,7 @@ saveBody =
 
 save ::
     ( Monad m
-    , KTraversable t, HasNodes t
+    , KTraversable t
     , KLiftConstraint (NodeTypesOf t) (Recursive (Deps m typeVars))
     ) =>
     Tree t (UVarOf m) ->

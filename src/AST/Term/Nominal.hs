@@ -209,7 +209,7 @@ loadBody params foralls x =
 loadNominalDecl ::
     forall m typ.
     ( Monad m
-    , KTraversable (NomVarTypes typ), HasNodes (NomVarTypes typ)
+    , KTraversable (NomVarTypes typ)
     , KLiftConstraint (NodeTypesOf (NomVarTypes typ)) (Unify m)
     , Recursive (Unify m `And` HasChild (NomVarTypes typ) `And` QVarHasInstance Ord) typ
     ) =>
@@ -235,7 +235,6 @@ lookupParams ::
     forall m varTypes.
     ( Applicative m
     , KTraversable varTypes
-    , HasNodes varTypes
     , KLiftConstraint (NodeTypesOf varTypes) (Unify m)
     ) =>
     Tree varTypes (QVarInstances (UVarOf m)) ->
@@ -297,7 +296,6 @@ instance
     , HasNominalInst nomId (TypeOf expr)
     , MonadNominals nomId (TypeOf expr) m
     , KTraversable (NomVarTypes (TypeOf expr))
-    , HasNodes (NomVarTypes (TypeOf expr))
     , KLiftConstraint (NodeTypesOf (NomVarTypes (TypeOf expr))) (Unify m)
     ) =>
     Infer m (FromNom nomId expr) where

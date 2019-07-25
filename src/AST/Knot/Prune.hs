@@ -50,9 +50,7 @@ type instance TypeOf  (Compose Prune t) = TypeOf  t
 type instance ScopeOf (Compose Prune t) = ScopeOf t
 
 instance
-    ( Infer m t
-    , KFunctor t, HasNodes t
-    ) =>
+    (Infer m t, KFunctor t) =>
     Infer m (Compose Prune t) where
     inferBody (MkCompose Pruned) = newUnbound <&> InferRes (MkCompose Pruned)
     inferBody (MkCompose (Unpruned (MkCompose x))) =

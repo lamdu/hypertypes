@@ -214,26 +214,31 @@ instance
     type NodeTypesOf (Flip (ITerm a) e) = ITermTypes e
 
 instance
-    Recursive (InferChildConstraints HasNodes) e =>
+    ( Recursive (InferChildConstraints HasNodes) e
+    , Recursive HasNodes e
+    ) =>
     KFunctor (Flip (ITerm a) e) where
 
     {-# INLINE mapC #-}
     mapC (ITermTypes (RecursiveChildren (MkFlip ft) fs)) =
         withDict (hasNodeTypes (Proxy :: Proxy e)) $
+        withDict (recursive :: RecursiveDict HasNodes e) $
         withDict (recursive :: RecursiveDict (InferChildConstraints HasNodes) e) $
         _Flip %~
         \(ITerm a r x) ->
         ITerm a
         (mapC ft r)
         (mapC
-            ( mapKWith (Proxy :: Proxy '[Recursive (InferChildConstraints HasNodes)])
+            ( mapKWith (Proxy :: Proxy '[Recursive HasNodes, Recursive (InferChildConstraints HasNodes)])
                 g fs
             ) x
         )
         where
             g ::
                 forall child m n.
-                Recursive (InferChildConstraints HasNodes) child =>
+                ( Recursive HasNodes child
+                , Recursive (InferChildConstraints HasNodes) child
+                ) =>
                 Tree (Flip RecursiveChildren (Flip IResultNodeTypes (MapK m n))) child ->
                 Tree (MapK (ITerm a m) (ITerm a n)) child
             g (MkFlip f) =

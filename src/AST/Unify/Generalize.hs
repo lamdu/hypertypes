@@ -60,7 +60,7 @@ instance
     type NodeTypesOf (Flip GTerm ast) = RecursiveChildren ast
 
 instance
-    (Recursive KFunctor ast, HasNodes ast) =>
+    (Recursive HasNodes ast, Recursive KFunctor ast) =>
     KFunctor (Flip GTerm ast) where
 
     {-# INLINE mapC #-}
@@ -70,10 +70,11 @@ instance
         GMono x -> mapTop x & GMono
         GPoly x -> mapTop x & GPoly
         GBody x ->
+            withDict (recursive :: RecursiveDict HasNodes ast) $
             withDict (recursive :: RecursiveDict KFunctor ast) $
             withDict (hasNodeTypes (Proxy :: Proxy ast)) $
             mapC
-            ( mapKWith (Proxy :: Proxy '[Recursive KFunctor])
+            ( mapKWith (Proxy :: Proxy '[Recursive HasNodes, Recursive KFunctor])
                 (\(MkFlip f) -> Lens.from _Flip %~ mapC f & MkMapK)
                 mapSub
             ) x
@@ -99,7 +100,10 @@ instance
         . (^. _Flip)
 
 instance
-    (Recursive KFunctor ast, Recursive KFoldable ast) =>
+    ( Recursive HasNodes ast
+    , Recursive KFunctor ast
+    , Recursive KFoldable ast
+    ) =>
     KTraversable (Flip GTerm ast) where
 
     sequenceC (MkFlip fx) =
@@ -108,10 +112,11 @@ instance
         GPoly x -> runContainedK x <&> GPoly
         GBody x ->
             withDict (hasNodeTypes (Proxy :: Proxy ast)) $
+            withDict (recursive :: RecursiveDict HasNodes ast) $
             withDict (recursive :: RecursiveDict KFunctor ast) $
             withDict (recursive :: RecursiveDict KFoldable ast) $
             -- KTraversable will be required when not implied by Recursive
-            traverseKWith (Proxy :: Proxy '[Recursive KFunctor, Recursive KFoldable])
+            traverseKWith (Proxy :: Proxy '[Recursive HasNodes, Recursive KFunctor, Recursive KFoldable])
             (Lens.from _Flip sequenceC) x
             <&> GBody
         <&> MkFlip

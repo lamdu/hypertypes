@@ -128,9 +128,7 @@ instance
         )
 
 instance
-    ( ZipMatch k0, ZipMatch k1
-    , HasNodes k0, HasNodes k1, KTraversable k0, KFunctor k1
-    ) =>
+    (ZipMatch k0, ZipMatch k1, KTraversable k0, KFunctor k1) =>
     ZipMatch (Compose k0 k1) where
     {-# INLINE zipMatch #-}
     zipMatch (MkCompose x) (MkCompose y) =

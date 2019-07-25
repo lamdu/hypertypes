@@ -76,7 +76,6 @@ loadBody ::
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
     , KTraversable t
-    , HasNodes t
     , KLiftConstraint (NodeTypesOf t) (Recursive (HasChild typeVars `And` Unify m))
     ) =>
     Tree typeVars Binding -> Tree typeVars (ConvertState (World m)) ->
@@ -90,8 +89,8 @@ loadBody src conv =
 load ::
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
-    , KTraversable typeVars, HasNodes typeVars
-    , KTraversable t, HasNodes t
+    , KTraversable typeVars
+    , KTraversable t
     , KLiftConstraint (NodeTypesOf t) (Recursive (HasChild typeVars `And` Unify m))
     ) =>
     Tree typeVars Binding -> Tree t UVar -> m (Tree t (STUVar (World m)))

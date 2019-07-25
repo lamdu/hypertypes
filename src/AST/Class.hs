@@ -88,7 +88,7 @@ _MapK ::
         (Tree m1 k1 -> Tree n1 k1)
 _MapK = iso runMapK MkMapK
 
-class KFunctor k where
+class HasNodes k => KFunctor k where
     -- | Map child values given a mapping function per child type
     mapC ::
         Tree (NodeTypesOf k) (MapK m n) ->
@@ -161,7 +161,7 @@ instance (KApply a, KApply b) => KApply (Both a b) where
 
 {-# INLINE mapK #-}
 mapK ::
-    (KFunctor k, HasNodes k) =>
+    KFunctor k =>
     (forall c. Tree m c -> Tree n c) ->
     Tree k m ->
     Tree k n
@@ -174,7 +174,7 @@ mapK f x =
 
 {-# INLINE liftK2 #-}
 liftK2 ::
-    (KApply k, HasNodes k) =>
+    KApply k =>
     (forall c. Tree l c -> Tree m c -> Tree n c) ->
     Tree k l ->
     Tree k m ->

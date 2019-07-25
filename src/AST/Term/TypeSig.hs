@@ -52,7 +52,7 @@ type instance ScopeOf (TypeSig vars term) = ScopeOf term
 instance
     ( MonadScopeLevel m
     , Infer m term
-    , KTraversable vars, HasNodes vars
+    , KTraversable vars
     , KLiftConstraint (NodeTypesOf vars) (Unify m)
     , Recursive (Unify m `And` HasChild vars `And` QVarHasInstance Ord) (TypeOf term)
     ) =>
