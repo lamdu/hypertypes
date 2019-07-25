@@ -6,6 +6,7 @@ module AST.Class
     , KFunctor(..), MapK(..), _MapK
     ) where
 
+import AST.Combinator.Both (Both(..))
 import AST.Knot (Knot, Tree, NodeTypesOf)
 import Control.Lens (Iso, iso)
 import Data.Constraint (Constraint)
@@ -73,3 +74,15 @@ instance Monoid a => KPointed (Const a) where
 instance KFunctor (Const a) where
     {-# INLINE mapC #-}
     mapC _ (Const x) = Const x
+
+instance (KPointed a, KPointed b) => KPointed (Both a b) where
+    type KLiftConstraint (Both a b) c = (KLiftConstraint a c, KLiftConstraint b c)
+    {-# INLINE pureC #-}
+    pureC (Both x y) = Both (pureC x) (pureC y)
+    {-# INLINE pureK #-}
+    pureK f = Both (pureK f) (pureK f)
+    {-# INLINE pureKWithConstraint #-}
+    pureKWithConstraint p f = Both (pureKWithConstraint p f) (pureKWithConstraint p f)
+
+instance (KFunctor a, KFunctor b) => KFunctor (Both a b) where
+    mapC (Both fx fy) (Both x y) = Both (mapC fx x) (mapC fy y)

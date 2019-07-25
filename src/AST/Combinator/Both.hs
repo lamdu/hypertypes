@@ -4,9 +4,6 @@ module AST.Combinator.Both
     ( Both(..), bothA, bothB
     ) where
 
-import AST.Class.Functor.TH (makeKFunctor)
-import AST.Class.Pointed.TH (makeKPointed)
-import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import AST.Knot (Knot, NodeTypesOf)
 import Control.DeepSeq (NFData)
 import Control.Lens (makeLenses)
@@ -22,11 +19,6 @@ data Both a b (k :: Knot) = Both
 makeLenses ''Both
 
 type instance NodeTypesOf (Both a b) = Both (NodeTypesOf a) (NodeTypesOf b)
-
--- KApply instance declared in AST.Class.Apply
-makeKFunctor ''Both
-makeKPointed ''Both
-makeKTraversableAndFoldable ''Both
 
 instance (Binary (a k), Binary (b k)) => Binary (Both a b k)
 instance (NFData (a k), NFData (b k)) => NFData (Both a b k)
