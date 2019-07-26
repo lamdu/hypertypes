@@ -1,11 +1,11 @@
 {-# LANGUAGE NoImplicitPrelude, FlexibleContexts, ScopedTypeVariables, TupleSections #-}
+{-# LANGUAGE DataKinds #-}
 
 module AST.Infer.Blame
     ( Blame(..), blame
     ) where
 
 import AST
-import AST.Class.Recursive
 import AST.Knot.Ann (annotationsWith)
 import AST.Infer
 import AST.Unify
@@ -14,6 +14,7 @@ import AST.Unify.New
 import AST.Unify.Occurs
 import Control.Lens.Operators
 import Control.Monad.Except (MonadError(..))
+import Data.Constraint (withDict)
 import Data.Foldable (traverse_)
 import Data.List (sortOn)
 import Data.Proxy
@@ -35,8 +36,9 @@ prepare ::
     Tree (Ann a) exp ->
     m (Tree (Ann (PrepAnn m a)) exp)
 prepare typeFromAbove (Ann a x) =
+    withDict (recursive :: RecursiveDict (Infer m) exp) $
     inferBody
-    (recursiveOverChildren (Proxy :: Proxy (Infer m))
+    (mapKWith (Proxy :: Proxy '[Recursive (Infer m)])
         (\c ->
             do
                 t <- newUnbound

@@ -7,12 +7,11 @@ module AST.Class.Recursive
     ( Recursive(..), RecursiveContext, RecursiveDict, RecursiveConstraint
     , wrap, unwrap, wrapM, unwrapM, fold, unfold
     , foldMapRecursive
-    , recursiveChildren, recursiveOverChildren, recursiveChildren_
+    , recursiveChildren
     ) where
 
 import AST.Class (HasNodes(..), KLiftConstraint)
-import AST.Class.Combinators
-import AST.Class.Foldable (foldMapKWith, traverseKWith_)
+import AST.Class.Foldable (foldMapKWith)
 import AST.Class.Traversable (KTraversable, traverseKWith)
 import AST.Constraint
 import AST.Knot (Tree)
@@ -142,25 +141,3 @@ recursiveChildren ::
 recursiveChildren _ f x =
     withDict (recursive :: RecursiveDict constraint expr) $
     traverseKWith (Proxy :: Proxy '[Recursive constraint]) f x
-
-{-# INLINE recursiveChildren_ #-}
-recursiveChildren_ ::
-    forall constraint expr n f.
-    (Applicative f, Recursive constraint expr) =>
-    Proxy constraint ->
-    (forall child. Recursive constraint child => Tree n child -> f ()) ->
-    Tree expr n -> f ()
-recursiveChildren_ _ f x =
-    withDict (recursive :: RecursiveDict constraint expr) $
-    traverseKWith_ (Proxy :: Proxy '[Recursive constraint]) f x
-
-{-# INLINE recursiveOverChildren #-}
-recursiveOverChildren ::
-    forall constraint expr n m.
-    Recursive constraint expr =>
-    Proxy constraint ->
-    (forall child. Recursive constraint child => Tree n child -> Tree m child) ->
-    Tree expr n -> Tree expr m
-recursiveOverChildren _ f x =
-    withDict (recursive :: RecursiveDict constraint expr) $
-    mapKWith (Proxy :: Proxy '[Recursive constraint]) f x

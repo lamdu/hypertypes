@@ -9,7 +9,7 @@ import AST.Class as X
     )
 import AST.Class.Apply.TH as X (makeKApply, makeKApplyAndBases, makeKApplicativeBases)
 import AST.Class.Combinators as X (pureKWith, mapKWith, liftK2With)
-import AST.Class.Foldable as X (KFoldable(..), foldMapK, traverseK_)
+import AST.Class.Foldable as X (KFoldable(..), foldMapK, foldMapKWith, traverseK_, traverseKWith_)
 import AST.Class.Foldable.TH as X (makeKFoldable)
 import AST.Class.Functor.TH as X (makeKFunctor)
 import AST.Class.Pointed.TH as X (makeKPointed)

@@ -1,6 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, StandaloneDeriving, RankNTypes #-}
 {-# LANGUAGE DeriveGeneric, FlexibleContexts, TypeFamilies, FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses, UndecidableInstances, ConstraintKinds, DataKinds #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module AST.Knot.Ann
     ( Ann(..), ann, val
@@ -10,7 +11,8 @@ module AST.Knot.Ann
     ) where
 
 import           AST.Class (HasNodes(..))
-import           AST.Class.Recursive (Recursive, wrap, unwrap, recursiveChildren, recursiveOverChildren)
+import           AST.Class.Combinators (mapKWith)
+import           AST.Class.Recursive (Recursive(..), RecursiveDict, wrap, unwrap, recursiveChildren)
 import           AST.Class.Traversable
 import           AST.Class.Traversable.TH (makeKTraversableAndBases)
 import           AST.Class.ZipMatch.TH (makeZipMatch)
@@ -22,7 +24,7 @@ import           Control.DeepSeq (NFData)
 import           Control.Lens (Traversal, makeLenses)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
-import           Data.Constraint (Constraint)
+import           Data.Constraint (Constraint, withDict)
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import qualified Text.PrettyPrint as PP
@@ -76,9 +78,10 @@ annotations ::
 annotations = annotationsWith (Proxy :: Proxy KTraversable)
 
 -- Similar to `para` from `recursion-schemes`,
--- except it's int term of full annotated trees rather than just the final result.
+-- except it's in terms of full annotated trees rather than just the final result.
 -- TODO: What does the name `para` mean?
 para ::
+    forall constraint expr a.
     Recursive constraint expr =>
     Proxy constraint ->
     (forall child. Recursive constraint child => Tree child (Ann a) -> a) ->
@@ -87,7 +90,9 @@ para ::
 para p f x =
     Ann (f r) r
     where
-        r = recursiveOverChildren p (para p f) (getPure x)
+        r =
+            withDict (recursive :: RecursiveDict constraint expr) $
+            mapKWith (Proxy :: Proxy '[Recursive constraint]) (para p f) (getPure x)
 
 strip :: Recursive KTraversable expr => Tree (Ann a) expr -> Tree Pure expr
 strip = unwrap (Proxy :: Proxy KTraversable) (^. val)

@@ -1,5 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, FlexibleContexts, ConstraintKinds #-}
 {-# LANGUAGE StandaloneDeriving, UndecidableInstances, KindSignatures, DeriveGeneric #-}
+{-# LANGUAGE DataKinds, ScopedTypeVariables #-}
 
 module AST.Diff
     ( Diff(..), _CommonBody, _CommonSubTree, _Different
@@ -8,13 +9,13 @@ module AST.Diff
     ) where
 
 import AST
-import AST.Class.Recursive (Recursive,  recursiveOverChildren)
+import AST.Class.Recursive (Recursive)
 import AST.Class.ZipMatch (ZipMatch(..), Both(..))
 import Control.DeepSeq (NFData)
 import Control.Lens (makeLenses, makePrisms)
 import Control.Lens.Operators
 import Data.Binary (Binary)
-import Data.Constraint (Constraint)
+import Data.Constraint (Constraint, withDict)
 import Data.Proxy (Proxy(..))
 import GHC.Generics (Generic)
 
@@ -39,17 +40,20 @@ makePrisms ''Diff
 makeLenses ''CommonBody
 
 diff ::
+    forall t a b.
     Recursive ZipMatch t =>
     Tree (Ann a) t -> Tree (Ann b) t -> Tree (Diff a b) t
 diff x@(Ann xA xB) y@(Ann yA yB) =
+    withDict (recursive :: RecursiveDict ZipMatch t) $
     case zipMatch xB yB of
     Nothing -> Different (Both x y)
     Just match ->
-        case recursiveChildren (Proxy :: Proxy ZipMatch) (^? _CommonSubTree) sub of
+        case traverseK (^? _CommonSubTree) sub of
         Nothing -> MkCommonBody xA yA sub & CommonBody
         Just r -> Ann (xA, yA) r & CommonSubTree
         where
-            sub = recursiveOverChildren (Proxy :: Proxy ZipMatch) (\(Both xC yC) -> diff xC yC) match
+            sub =
+                mapKWith (Proxy :: Proxy '[Recursive ZipMatch]) (\(Both xC yC) -> diff xC yC) match
 
 type Deps c a b e =
     (

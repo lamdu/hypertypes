@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables, FlexibleContexts #-}
+{-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables, FlexibleContexts, DataKinds #-}
 
 module AST.Unify.Occurs
     ( occursCheck
@@ -8,12 +8,12 @@ module AST.Unify.Occurs
 
 import AST
 import AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
-import AST.Class.Recursive (recursiveChildren_)
 import AST.Unify.Error (UnifyError(..))
 import AST.Unify.Lookup (semiPruneLookup)
 import AST.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify(..))
 import AST.Unify.Term (UTerm(..), UTermBody(..), uBody)
 import Control.Lens.Operators
+import Data.Constraint (withDict)
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
@@ -44,9 +44,10 @@ occursCheck v0 =
         case (mNoChildren :: Maybe (Tree t Pure -> Tree t Pure)) of
         Just{} -> pure () -- no children to check!
         Nothing ->
+            withDict (recursive :: RecursiveDict (Unify m) t) $
             do
                 bindVar binding v1 (UResolving b)
-                recursiveChildren_ (Proxy :: Proxy (Unify m)) occursCheck
+                traverseKWith_ (Proxy :: Proxy '[Recursive (Unify m)]) occursCheck
                     (b ^. uBody)
                 bindVar binding v1 (UTerm b)
     UToVar{} -> error "lookup not expected to result in var (in occursCheck)"
