@@ -44,7 +44,7 @@ diff ::
     Recursive ZipMatch t =>
     Tree (Ann a) t -> Tree (Ann b) t -> Tree (Diff a b) t
 diff x@(Ann xA xB) y@(Ann yA yB) =
-    withDict (recursive :: RecursiveDict ZipMatch t) $
+    withDict (recursive :: RecursiveDict t ZipMatch) $
     case zipMatch xB yB of
     Nothing -> Different (Both x y)
     Just match ->

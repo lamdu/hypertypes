@@ -65,8 +65,8 @@ saveBody ::
     Tree t (UVarOf m) ->
     StateT (Tree typeVars Binding, [m ()]) m (Tree t UVar)
 saveBody =
-    withDict (recursive :: RecursiveDict (Unify m) t) $
-    withDict (recursive :: RecursiveDict (HasChild typeVars) t) $
+    withDict (recursive :: RecursiveDict t (Unify m)) $
+    withDict (recursive :: RecursiveDict t (HasChild typeVars)) $
     traverseKWith (Proxy :: Proxy '[Recursive (Unify m), Recursive (HasChild typeVars)]) saveVar
 
 save ::

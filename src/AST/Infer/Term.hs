@@ -167,8 +167,8 @@ instance
         { _recSelf = t & _Flip %~ mapC mapTop
         , _recSub =
             withDict (hasNodes (Proxy :: Proxy e)) $
-            withDict (recursive :: RecursiveDict HasNodes e) $
-            withDict (recursive :: RecursiveDict (InferChildConstraints HasNodes) e) $
+            withDict (recursive :: RecursiveDict e HasNodes) $
+            withDict (recursive :: RecursiveDict e (InferChildConstraints HasNodes)) $
             mapC
             ( mapKWith
                 (Proxy ::
@@ -228,8 +228,8 @@ instance
     {-# INLINE mapC #-}
     mapC (ITermTypes (RecursiveChildren (MkFlip ft) fs)) =
         withDict (hasNodes (Proxy :: Proxy e)) $
-        withDict (recursive :: RecursiveDict HasNodes e) $
-        withDict (recursive :: RecursiveDict (InferChildConstraints HasNodes) e) $
+        withDict (recursive :: RecursiveDict e HasNodes) $
+        withDict (recursive :: RecursiveDict e (InferChildConstraints HasNodes)) $
         _Flip %~
         \(ITerm a r x) ->
         ITerm a
@@ -250,8 +250,8 @@ instance
     {-# INLINE foldMapC #-}
     foldMapC (ITermTypes (RecursiveChildren (MkFlip ft) fs)) (MkFlip (ITerm _ r x)) =
         withDict (hasNodes (Proxy :: Proxy e)) $
-        withDict (recursive :: RecursiveDict HasNodes e) $
-        withDict (recursive :: RecursiveDict (InferChildConstraints HasNodes) e) $
+        withDict (recursive :: RecursiveDict e HasNodes) $
+        withDict (recursive :: RecursiveDict e (InferChildConstraints HasNodes)) $
         foldMapC ft r <>
         foldMapC
         ( mapKWith
@@ -268,8 +268,8 @@ instance
 
     {-# INLINE sequenceC #-}
     sequenceC =
-        withDict (recursive :: RecursiveDict HasNodes e) $
-        withDict (recursive :: RecursiveDict (InferChildConstraints HasNodes) e) $
+        withDict (recursive :: RecursiveDict e HasNodes) $
+        withDict (recursive :: RecursiveDict e (InferChildConstraints HasNodes)) $
         _Flip $
         \(ITerm a r x) ->
         ITerm a

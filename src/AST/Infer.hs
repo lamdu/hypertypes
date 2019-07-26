@@ -24,7 +24,7 @@ infer ::
     Recursive (Infer m) t =>
     Tree (Ann a) t -> m (Tree (ITerm a (UVarOf m)) t)
 infer (Ann a x) =
-    withDict (recursive :: RecursiveDict (Infer m) t) $
+    withDict (recursive :: RecursiveDict t (Infer m)) $
     (\s (InferRes xI t) -> ITerm a (IResult t s) xI)
     <$> getScope
     <*> inferBody

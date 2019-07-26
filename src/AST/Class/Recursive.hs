@@ -28,13 +28,13 @@ import Prelude.Compat
 -- of an AST. As opposed to the `ChildrenConstraint` type family which
 -- only carries a constraint to the direct children of an AST.
 class (KTraversable expr, HasNodes expr, constraint expr) => Recursive constraint expr where
-    recursive :: RecursiveDict constraint expr
+    recursive :: RecursiveDict expr constraint
     {-# INLINE recursive #-}
     -- | When an instance's constraints already imply
     -- `RecursiveContext expr constraint`, the default
     -- implementation can be used.
     default recursive ::
-        RecursiveContext expr constraint => RecursiveDict constraint expr
+        RecursiveContext expr constraint => RecursiveDict expr constraint
     recursive = Dict
 
 type RecursiveContext expr constraint =
@@ -42,7 +42,7 @@ type RecursiveContext expr constraint =
     , KLiftConstraint expr (Recursive constraint)
     )
 
-type RecursiveDict constraint expr = Dict (RecursiveContext expr constraint)
+type RecursiveDict expr constraint = Dict (RecursiveContext expr constraint)
 
 class    Recursive c k => RecursiveConstraint k c
 instance Recursive c k => RecursiveConstraint k c
@@ -124,8 +124,8 @@ foldMapRecursive ::
     Tree expr f ->
     a
 foldMapRecursive p0 p1 f x =
-    withDict (recursive :: RecursiveDict c0 expr) $
-    withDict (recursive :: RecursiveDict c1 f) $
+    withDict (recursive :: RecursiveDict expr c0) $
+    withDict (recursive :: RecursiveDict f c1) $
     f x <>
     foldMapKWith (Proxy :: Proxy '[Recursive c0])
     (foldMapKWith (Proxy :: Proxy '[Recursive c1]) (foldMapRecursive p0 p1 f))
@@ -139,5 +139,5 @@ recursiveChildren ::
     (forall child. Recursive constraint child => Tree n child -> f (Tree m child)) ->
     Tree expr n -> f (Tree expr m)
 recursiveChildren _ f x =
-    withDict (recursive :: RecursiveDict constraint expr) $
+    withDict (recursive :: RecursiveDict expr constraint) $
     traverseKWith (Proxy :: Proxy '[Recursive constraint]) f x

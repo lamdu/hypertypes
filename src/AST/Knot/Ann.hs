@@ -91,7 +91,7 @@ para p f x =
     Ann (f r) r
     where
         r =
-            withDict (recursive :: RecursiveDict constraint expr) $
+            withDict (recursive :: RecursiveDict expr constraint) $
             mapKWith (Proxy :: Proxy '[Recursive constraint]) (para p f) (getPure x)
 
 strip :: Recursive KTraversable expr => Tree (Ann a) expr -> Tree Pure expr

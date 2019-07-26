@@ -36,7 +36,7 @@ prepare ::
     Tree (Ann a) exp ->
     m (Tree (Ann (PrepAnn m a)) exp)
 prepare typeFromAbove (Ann a x) =
-    withDict (recursive :: RecursiveDict (Infer m) exp) $
+    withDict (recursive :: RecursiveDict exp (Infer m)) $
     inferBody
     (mapKWith (Proxy :: Proxy '[Recursive (Infer m)])
         (\c ->

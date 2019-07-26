@@ -44,7 +44,7 @@ occursCheck v0 =
         case (mNoChildren :: Maybe (Tree t Pure -> Tree t Pure)) of
         Just{} -> pure () -- no children to check!
         Nothing ->
-            withDict (recursive :: RecursiveDict (Unify m) t) $
+            withDict (recursive :: RecursiveDict t (Unify m)) $
             do
                 bindVar binding v1 (UResolving b)
                 traverseKWith_ (Proxy :: Proxy '[Recursive (Unify m)]) occursCheck

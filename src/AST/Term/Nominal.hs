@@ -335,7 +335,7 @@ subst p mkType params (MkPure x) =
         getChild . _QVarInstances . Lens.ix q
         & maybe (mkType (quantifiedVar # q)) pure
     Nothing ->
-        withDict (recursive :: (RecursiveDict (HasChild varTypes `And` QVarHasInstance Ord `And` constraint) typ)) $
+        withDict (recursive :: (RecursiveDict typ (HasChild varTypes `And` QVarHasInstance Ord `And` constraint))) $
         traverseKWith (Proxy :: Proxy '[Recursive (HasChild varTypes `And` QVarHasInstance Ord `And` constraint)])
         (subst p mkType params) x
         >>= mkType
