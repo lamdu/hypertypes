@@ -11,7 +11,7 @@ module AST.Class.Recursive
     ) where
 
 import AST.Class (KLiftConstraint)
-import AST.Class.Foldable (foldMapKWith)
+import AST.Class.Foldable (KFoldable, foldMapKWith)
 import AST.Class.Traversable (KTraversable, traverseKWith)
 import AST.Constraint
 import AST.Knot (Tree)
@@ -116,19 +116,18 @@ unfold p f = unwrap p (f . getConst) . Const
 
 {-# INLINE foldMapRecursive #-}
 foldMapRecursive ::
-    forall c0 c1 expr a f.
-    (Recursively c0 expr, Recursively c1 f, Monoid a) =>
+    forall c0 expr a f.
+    (Recursively c0 expr, Recursively KFoldable f, Monoid a) =>
     Proxy c0 ->
-    Proxy c1 ->
-    (forall child g. (c0 child, Recursively c1 g) => Tree child g -> a) ->
+    (forall child g. (c0 child, Recursively KFoldable g) => Tree child g -> a) ->
     Tree expr f ->
     a
-foldMapRecursive p0 p1 f x =
+foldMapRecursive p f x =
     withDict (recursive :: RecursiveDict expr c0) $
-    withDict (recursive :: RecursiveDict f c1) $
+    withDict (recursive :: RecursiveDict f KFoldable) $
     f x <>
     foldMapKWith (Proxy :: Proxy '[Recursively c0])
-    (foldMapKWith (Proxy :: Proxy '[Recursively c1]) (foldMapRecursive p0 p1 f))
+    (foldMapKWith (Proxy :: Proxy '[Recursively KFoldable]) (foldMapRecursive p f))
     x
 
 {-# INLINE recursiveChildren #-}
