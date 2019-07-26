@@ -10,7 +10,7 @@ module AST.Class.Recursive
     , recursiveChildren, recursiveOverChildren, recursiveChildren_
     ) where
 
-import AST.Class (HasNodes(..))
+import AST.Class (HasNodes(..), KLiftConstraint)
 import AST.Class.Combinators
 import AST.Class.Traversable (KTraversable)
 import AST.Constraint
@@ -39,7 +39,7 @@ class (KTraversable expr, HasNodes expr, constraint expr) => Recursive constrain
 
 type RecursiveContext expr constraint =
     ( constraint expr
-    , ApplyKnotConstraint (NodesConstraint expr) (Recursive constraint)
+    , KLiftConstraint expr (Recursive constraint)
     )
 
 type RecursiveDict constraint expr = Dict (RecursiveContext expr constraint)

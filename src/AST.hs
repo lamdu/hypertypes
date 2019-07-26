@@ -3,7 +3,8 @@
 module AST (module X) where
 
 import AST.Class as X
-    ( HasNodes(..), KPointed(..), KFunctor(..), KApply(..), KApplicative
+    ( HasNodes(..), KLiftConstraint
+    , KPointed(..), KFunctor(..), KApply(..), KApplicative
     , mapK, liftK2
     )
 import AST.Class.Apply.TH as X (makeKApply, makeKApplyAndBases, makeKApplicativeBases)

@@ -54,7 +54,7 @@ instance
     ( MonadScopeLevel m
     , Infer m term
     , KTraversable vars
-    , ApplyKnotConstraint (NodesConstraint vars) (Unify m)
+    , KLiftConstraint vars (Unify m)
     , Recursive (Unify m `And` HasChild vars `And` QVarHasInstance Ord) (TypeOf term)
     ) =>
     Infer m (TypeSig vars term) where

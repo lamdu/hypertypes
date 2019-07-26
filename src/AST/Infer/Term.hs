@@ -120,9 +120,8 @@ makeLenses ''ITerm
 type InferChildDeps c ast =
     ( c (TypeOf ast)
     , KTraversable ast
-    , HasNodes (ScopeOf ast)
     , KTraversable (ScopeOf ast)
-    , ApplyKnotConstraint (NodesConstraint (ScopeOf ast)) c
+    , KLiftConstraint (ScopeOf ast) c
     )
 class    InferChildDeps c ast => InferChildConstraints c ast
 instance InferChildDeps c ast => InferChildConstraints c ast

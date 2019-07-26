@@ -3,7 +3,7 @@
 {-# LANGUAGE DefaultSignatures, FlexibleContexts #-}
 
 module AST.Class
-    ( HasNodes(..), NodeTypesConstraints
+    ( HasNodes(..), NodeTypesConstraints, KLiftConstraint
     , KPointed(..)
     , KFunctor(..), MapK(..), _MapK
     , KApply(..)
@@ -21,6 +21,8 @@ import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
+
+type KLiftConstraint k c = ApplyKnotConstraint (NodesConstraint k) c
 
 type NodeTypesConstraints k =
     ( NodesConstraint k ~ NodesConstraint (NodeTypesOf k)
@@ -70,7 +72,7 @@ class HasNodes k => KPointed k where
 
     -- | Construct a value from a higher ranked child value with a constraint
     pureKWithConstraint ::
-        ApplyKnotConstraint (NodesConstraint k) constraint =>
+        KLiftConstraint k constraint =>
         Proxy constraint ->
         (forall child. constraint child => Tree n child) ->
         Tree k n

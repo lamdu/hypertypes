@@ -61,7 +61,7 @@ saveBody ::
     forall m typeVars t.
     ( Monad m
     , KTraversable t
-    , ApplyKnotConstraint (NodesConstraint t) (Recursive (Deps m typeVars))
+    , KLiftConstraint t (Recursive (Deps m typeVars))
     ) =>
     Tree t (UVarOf m) ->
     StateT (Tree typeVars Binding, [m ()]) m (Tree t UVar)
@@ -72,7 +72,7 @@ saveBody =
 save ::
     ( Monad m
     , KTraversable t
-    , ApplyKnotConstraint (NodesConstraint t) (Recursive (Deps m typeVars))
+    , KLiftConstraint t (Recursive (Deps m typeVars))
     ) =>
     Tree t (UVarOf m) ->
     StateT (Tree typeVars Binding) m (Tree t UVar)
