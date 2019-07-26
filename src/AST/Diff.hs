@@ -9,7 +9,7 @@ module AST.Diff
     ) where
 
 import AST
-import AST.Class.Recursive (Recursive)
+import AST.Class.Recursive (Recursively)
 import AST.Class.ZipMatch (ZipMatch(..), Both(..))
 import Control.DeepSeq (NFData)
 import Control.Lens (makeLenses, makePrisms)
@@ -41,7 +41,7 @@ makeLenses ''CommonBody
 
 diff ::
     forall t a b.
-    Recursive ZipMatch t =>
+    Recursively ZipMatch t =>
     Tree (Ann a) t -> Tree (Ann b) t -> Tree (Diff a b) t
 diff x@(Ann xA xB) y@(Ann yA yB) =
     withDict (recursive :: RecursiveDict t ZipMatch) $
@@ -53,7 +53,7 @@ diff x@(Ann xA xB) y@(Ann yA yB) =
         Just r -> Ann (xA, yA) r & CommonSubTree
         where
             sub =
-                mapKWith (Proxy :: Proxy '[Recursive ZipMatch]) (\(Both xC yC) -> diff xC yC) match
+                mapKWith (Proxy :: Proxy '[Recursively ZipMatch]) (\(Both xC yC) -> diff xC yC) match
 
 type Deps c a b e =
     (

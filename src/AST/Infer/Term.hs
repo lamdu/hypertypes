@@ -118,11 +118,11 @@ type InferChildDeps c ast =
 class    InferChildDeps c ast => InferChildConstraints c ast
 instance InferChildDeps c ast => InferChildConstraints c ast
 
-class    Recursive (InferChildConstraints c) k => InferConstraint k c
-instance Recursive (InferChildConstraints c) k => InferConstraint k c
+class    Recursively (InferChildConstraints c) k => InferConstraint k c
+instance Recursively (InferChildConstraints c) k => InferConstraint k c
 
 instance KnotConstraintFunc (InferConstraint k) where
-    type ApplyKnotConstraint (InferConstraint k) c = Recursive (InferChildConstraints c) k
+    type ApplyKnotConstraint (InferConstraint k) c = Recursively (InferChildConstraints c) k
     {-# INLINE applyKnotConstraint #-}
     applyKnotConstraint _ _ = Dict
 
@@ -131,8 +131,8 @@ newtype ITermTypes e k =
 makePrisms ''ITermTypes
 
 instance
-    ( Recursive HasNodes e
-    , Recursive (InferChildConstraints HasNodes) e
+    ( Recursively HasNodes e
+    , Recursively (InferChildConstraints HasNodes) e
     ) =>
     KPointed (ITermTypes e) where
 
@@ -154,8 +154,8 @@ instance
             makeP _ = Proxy
 
 instance
-    ( Recursive HasNodes e
-    , Recursive (InferChildConstraints HasNodes) e
+    ( Recursively HasNodes e
+    , Recursively (InferChildConstraints HasNodes) e
     ) =>
     KFunctor (ITermTypes e) where
 
@@ -172,7 +172,7 @@ instance
             mapC
             ( mapKWith
                 (Proxy ::
-                    Proxy '[Recursive HasNodes, Recursive (InferChildConstraints HasNodes)])
+                    Proxy '[Recursively HasNodes, Recursively (InferChildConstraints HasNodes)])
                 ( \(MkFlip f) ->
                     _Flip %~
                     mapC
@@ -187,8 +187,8 @@ instance
         }
 
 instance
-    ( Recursive HasNodes e
-    , Recursive (InferChildConstraints HasNodes) e
+    ( Recursively HasNodes e
+    , Recursively (InferChildConstraints HasNodes) e
     ) =>
     KApply (ITermTypes e) where
 
@@ -199,8 +199,8 @@ instance
         (\(MkFlip x0) -> _Flip %~ zipK x0) x
 
 instance
-    ( Recursive HasNodes e
-    , Recursive (InferChildConstraints HasNodes) e
+    ( Recursively HasNodes e
+    , Recursively (InferChildConstraints HasNodes) e
     ) =>
     HasNodes (ITermTypes e) where
 
@@ -211,8 +211,8 @@ instance
     hasNodes _ = Dict
 
 instance
-    ( Recursive HasNodes e
-    , Recursive (InferChildConstraints HasNodes) e
+    ( Recursively HasNodes e
+    , Recursively (InferChildConstraints HasNodes) e
     ) =>
     HasNodes (Flip (ITerm a) e) where
 
@@ -220,8 +220,8 @@ instance
     type NodesConstraint (Flip (ITerm a) e) = NodesConstraint (ITermTypes e)
 
 instance
-    ( Recursive (InferChildConstraints HasNodes) e
-    , Recursive HasNodes e
+    ( Recursively (InferChildConstraints HasNodes) e
+    , Recursively HasNodes e
     ) =>
     KFunctor (Flip (ITerm a) e) where
 
@@ -235,7 +235,7 @@ instance
         ITerm a
         (mapC ft r)
         (mapC
-            ( mapKWith (Proxy :: Proxy '[Recursive HasNodes, Recursive (InferChildConstraints HasNodes)])
+            ( mapKWith (Proxy :: Proxy '[Recursively HasNodes, Recursively (InferChildConstraints HasNodes)])
                 (\(MkFlip f) -> from _Flip %~ mapC (ITermTypes f) & MkMapK) fs
             ) x
         )
@@ -243,8 +243,8 @@ instance
 instance
     ( KFoldable e
     , KFoldable (ScopeOf e)
-    , Recursive HasNodes e
-    , Recursive (InferChildConstraints HasNodes) e
+    , Recursively HasNodes e
+    , Recursively (InferChildConstraints HasNodes) e
     ) =>
     KFoldable (Flip (ITerm a) e) where
     {-# INLINE foldMapC #-}
@@ -256,13 +256,13 @@ instance
         foldMapC
         ( mapKWith
             (Proxy ::
-                Proxy '[Recursive HasNodes, Recursive (InferChildConstraints HasNodes)])
+                Proxy '[Recursively HasNodes, Recursively (InferChildConstraints HasNodes)])
             (\(MkFlip f) -> foldMapC (ITermTypes f) . (_Flip #) & MkConvertK) fs
         ) x
 
 instance
-    ( Recursive HasNodes e
-    , Recursive (InferChildConstraints HasNodes) e
+    ( Recursively HasNodes e
+    , Recursively (InferChildConstraints HasNodes) e
     ) =>
     KTraversable (Flip (ITerm a) e) where
 
@@ -275,7 +275,7 @@ instance
         ITerm a
         <$> traverseK runContainedK r
         <*> traverseKWith
-            (Proxy :: Proxy '[Recursive HasNodes, Recursive (InferChildConstraints HasNodes)])
+            (Proxy :: Proxy '[Recursively HasNodes, Recursively (InferChildConstraints HasNodes)])
             (from _Flip sequenceC) x
 
 iType :: Lens' (ITerm a v e) (Tree v (TypeOf (RunKnot e)))
@@ -285,7 +285,7 @@ iScope :: Lens' (ITerm a v e) (Tree (ScopeOf (RunKnot e)) v)
 iScope = iRes . irScope
 
 iAnnotations ::
-    Recursive KTraversable e =>
+    Recursively KTraversable e =>
     Traversal
     (Tree (ITerm a v) e)
     (Tree (ITerm b v) e)

@@ -38,7 +38,7 @@ instance HasNodes (TypeSig v t) where
 
 makeKTraversableAndBases ''TypeSig
 
-instance RecursiveContext (TypeSig vars term) constraint => Recursive constraint (TypeSig vars term)
+instance RecursiveContext (TypeSig vars term) constraint => Recursively constraint (TypeSig vars term)
 
 type Deps vars term k cls = ((cls (Node k term), cls (Tree Pure (Scheme vars (TypeOf term)))) :: Constraint)
 
@@ -55,7 +55,7 @@ instance
     , Infer m term
     , KTraversable vars
     , KLiftConstraint vars (Unify m)
-    , Recursive (Unify m `And` HasChild vars `And` QVarHasInstance Ord) (TypeOf term)
+    , Recursively (Unify m `And` HasChild vars `And` QVarHasInstance Ord) (TypeOf term)
     ) =>
     Infer m (TypeSig vars term) where
 

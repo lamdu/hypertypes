@@ -124,16 +124,16 @@ nomSkolem1 =
 
 inferExpr ::
     forall m t.
-    ( Recursive (Infer m) t
-    , Recursive (InferChildConstraints (Recursive (Unify m))) t
-    , Recursive (InferChildConstraints HasNodes) t
-    , Recursive HasNodes t
+    ( Recursively (Infer m) t
+    , Recursively (InferChildConstraints (Recursively (Unify m))) t
+    , Recursively (InferChildConstraints HasNodes) t
+    , Recursively HasNodes t
     ) =>
     Tree Pure t ->
     m (Tree Pure (TypeOf t))
 inferExpr x =
     infer (wrap (Proxy :: Proxy (Infer m)) (Ann ()) x)
-    >>= Lens.from _Flip (traverseKWith (Proxy :: Proxy '[Recursive (Unify m)]) applyBindings)
+    >>= Lens.from _Flip (traverseKWith (Proxy :: Proxy '[Recursively (Unify m)]) applyBindings)
     <&> (^. iType)
 
 vecNominalDecl :: Tree Pure (NominalDecl Typ)

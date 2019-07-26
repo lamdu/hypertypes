@@ -58,7 +58,7 @@ instance HasNodes LangB where
     type NodesConstraint LangB = KnotsConstraint '[LangB]
 
 makeKTraversableAndBases ''LangB
-instance c LangB => Recursive c LangB
+instance c LangB => Recursively c LangB
 
 type instance TypeOf LangB = Typ
 type instance ScopeOf LangB = ScopeTypes
@@ -209,14 +209,14 @@ instance MonadQuantify RConstraints Name PureInferB where
 instance Unify PureInferB Typ where
     binding = bindingDict (Lens._1 . tTyp)
     unifyError e =
-        traverseKWith (Proxy :: Proxy '[Recursive (Unify PureInferB)]) applyBindings e
+        traverseKWith (Proxy :: Proxy '[Recursively (Unify PureInferB)]) applyBindings e
         >>= throwError . TypError
 
 instance Unify PureInferB Row where
     binding = bindingDict (Lens._1 . tRow)
     structureMismatch = rStructureMismatch
     unifyError e =
-        traverseKWith (Proxy :: Proxy '[Recursive (Unify PureInferB)]) applyBindings e
+        traverseKWith (Proxy :: Proxy '[Recursively (Unify PureInferB)]) applyBindings e
         >>= throwError . RowError
 
 newtype STInferB s a =
@@ -269,14 +269,14 @@ instance MonadQuantify RConstraints Name (STInferB s) where
 instance Unify (STInferB s) Typ where
     binding = stBinding
     unifyError e =
-        traverseKWith (Proxy :: Proxy '[Recursive (Unify (STInferB s))]) applyBindings e
+        traverseKWith (Proxy :: Proxy '[Recursively (Unify (STInferB s))]) applyBindings e
         >>= throwError . TypError
 
 instance Unify (STInferB s) Row where
     binding = stBinding
     structureMismatch = rStructureMismatch
     unifyError e =
-        traverseKWith (Proxy :: Proxy '[Recursive (Unify (STInferB s))]) applyBindings e
+        traverseKWith (Proxy :: Proxy '[Recursively (Unify (STInferB s))]) applyBindings e
         >>= throwError . RowError
 
 deriving instance Show (Node k LangB) => Show (LangB k)

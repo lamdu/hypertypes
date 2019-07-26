@@ -146,9 +146,9 @@ instance
 instance
     ( c (NominalInst nomId varTypes)
     , KTraversable varTypes
-    , KLiftConstraint varTypes (Recursive c)
+    , KLiftConstraint varTypes (Recursively c)
     ) =>
-    Recursive c (NominalInst nomId varTypes) where
+    Recursively c (NominalInst nomId varTypes) where
 
     {-# INLINE recursive #-}
     recursive =
@@ -217,7 +217,7 @@ loadNominalDecl ::
     ( Monad m
     , KTraversable (NomVarTypes typ)
     , KLiftConstraint (NomVarTypes typ) (Unify m)
-    , Recursive (Unify m `And` HasChild (NomVarTypes typ) `And` QVarHasInstance Ord) typ
+    , Recursively (Unify m `And` HasChild (NomVarTypes typ) `And` QVarHasInstance Ord) typ
     ) =>
     Tree Pure (NominalDecl typ) ->
     m (Tree (LoadedNominalDecl typ) (UVarOf m))
@@ -313,7 +313,7 @@ instance
 
 -- | Get the scheme in a nominal given the parameters of a specific nominal instance.
 applyNominal ::
-    (Monad m, Recursive (HasChild (NomVarTypes typ) `And` QVarHasInstance Ord `And` constraint) typ) =>
+    (Monad m, Recursively (HasChild (NomVarTypes typ) `And` QVarHasInstance Ord `And` constraint) typ) =>
     Proxy constraint ->
     (forall child. constraint child => Tree child k -> m (Tree k child)) ->
     Tree Pure (NominalDecl typ) ->
@@ -324,7 +324,7 @@ applyNominal p mkType (MkPure (NominalDecl _paramsDecl scheme)) params =
 
 subst ::
     forall varTypes typ k constraint m.
-    (Monad m, Recursive (HasChild varTypes `And` QVarHasInstance Ord `And` constraint) typ) =>
+    (Monad m, Recursively (HasChild varTypes `And` QVarHasInstance Ord `And` constraint) typ) =>
     Proxy constraint ->
     (forall child. constraint child => Tree child k -> m (Tree k child)) ->
     Tree varTypes (QVarInstances k) -> Tree Pure typ -> m (Tree k typ)
@@ -336,7 +336,7 @@ subst p mkType params (MkPure x) =
         & maybe (mkType (quantifiedVar # q)) pure
     Nothing ->
         withDict (recursive :: (RecursiveDict typ (HasChild varTypes `And` QVarHasInstance Ord `And` constraint))) $
-        traverseKWith (Proxy :: Proxy '[Recursive (HasChild varTypes `And` QVarHasInstance Ord `And` constraint)])
+        traverseKWith (Proxy :: Proxy '[Recursively (HasChild varTypes `And` QVarHasInstance Ord `And` constraint)])
         (subst p mkType params) x
         >>= mkType
 

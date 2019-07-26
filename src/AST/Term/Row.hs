@@ -72,7 +72,7 @@ makeKTraversableAndBases ''FlatRowExtends
 
 instance
     RecursiveContext (RowExtend key val rest) constraint =>
-    Recursive constraint (RowExtend key val rest)
+    Recursively constraint (RowExtend key val rest)
 
 type Deps c key val rest k = ((c key, c (Node k val), c (Node k rest)) :: Constraint)
 
@@ -135,10 +135,10 @@ applyRowExtendConstraints _ c toChildC err update (RowExtend k v rest) =
 {-# INLINE rowExtendStructureMismatch #-}
 rowExtendStructureMismatch ::
     Ord key =>
-    ( Recursive (Unify m) rowTyp
-    , Recursive (Unify m) valTyp
+    ( Recursively (Unify m) rowTyp
+    , Recursively (Unify m) valTyp
     ) =>
-    (forall c. Recursive (Unify m) c => Tree (UVarOf m) c -> Tree (UVarOf m) c -> m (Tree (UVarOf m) c)) ->
+    (forall c. Recursively (Unify m) c => Tree (UVarOf m) c -> Tree (UVarOf m) c -> m (Tree (UVarOf m) c)) ->
     Prism' (Tree rowTyp (UVarOf m))
         (Tree (RowExtend key valTyp rowTyp) (UVarOf m)) ->
     (TypeConstraintsOf rowTyp, Tree (RowExtend key valTyp rowTyp) (UVarOf m)) ->

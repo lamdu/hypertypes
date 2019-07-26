@@ -14,7 +14,7 @@ import AST.Class.Foldable.TH as X (makeKFoldable)
 import AST.Class.Functor.TH as X (makeKFunctor)
 import AST.Class.Pointed.TH as X (makeKPointed)
 import AST.Class.Recursive as X
-    ( Recursive(..), RecursiveConstraint, RecursiveContext, RecursiveDict, recursiveChildren )
+    ( Recursively(..), RecursiveConstraint, RecursiveContext, RecursiveDict, recursiveChildren )
 import AST.Class.Traversable as X (KTraversable(..), traverseK, traverseK1, traverseKWith)
 import AST.Class.Traversable.TH as X
     ( makeKTraversable, makeKTraversableAndFoldable, makeKTraversableAndBases )

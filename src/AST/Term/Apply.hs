@@ -43,7 +43,7 @@ instance Pretty (Node k expr) => Pretty (Apply expr k) where
         pPrintPrec lvl 11 x
         & maybeParens (p > 10)
 
-instance RecursiveContext (Apply expr) constraint => Recursive constraint (Apply expr)
+instance RecursiveContext (Apply expr) constraint => Recursively constraint (Apply expr)
 
 -- Type changing traversal.
 -- TODO: Could the normal `Children` class support this?

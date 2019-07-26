@@ -44,7 +44,7 @@ instance KApply Prune where
     zipK _ Pruned = Pruned
     zipK (Unpruned x) (Unpruned y) = Both x y & Unpruned
 
-instance c Prune => Recursive c Prune
+instance c Prune => Recursively c Prune
 
 type instance TypeOf  (Compose Prune t) = TypeOf  t
 type instance ScopeOf (Compose Prune t) = ScopeOf t

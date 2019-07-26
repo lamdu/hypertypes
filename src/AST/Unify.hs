@@ -33,7 +33,7 @@ import Prelude.Compat
 
 {-# INLINE updateConstraints #-}
 updateConstraints ::
-    Recursive (Unify m) t =>
+    Recursively (Unify m) t =>
     TypeConstraintsOf t ->
     Tree (UVarOf m) t ->
     Tree (UTerm (UVarOf m)) t ->
@@ -53,7 +53,7 @@ updateConstraints !newConstraints v x =
 {-# INLINE updateTermConstraints #-}
 updateTermConstraints ::
     forall m t.
-    Recursive (Unify m) t =>
+    Recursively (Unify m) t =>
     Tree (UVarOf m) t -> Tree (UTermBody (UVarOf m)) t -> TypeConstraintsOf t -> m ()
 updateTermConstraints v t newConstraints
     | newConstraints `leq` (t ^. uConstraints) = pure ()
@@ -61,7 +61,7 @@ updateTermConstraints v t newConstraints
         withDict (recursive :: RecursiveDict t (Unify m)) $
         do
             bindVar binding v (UResolving t)
-            verifyConstraints (Proxy :: Proxy (Recursive (Unify m))) newConstraints
+            verifyConstraints (Proxy :: Proxy (Recursively (Unify m))) newConstraints
                 (unifyError . ConstraintsViolation (t ^. uBody))
                 f
                 (t ^. uBody)
@@ -80,7 +80,7 @@ updateTermConstraints v t newConstraints
 {-# INLINE unify #-}
 unify ::
     forall m t.
-    Recursive (Unify m) t =>
+    Recursively (Unify m) t =>
     Tree (UVarOf m) t -> Tree (UVarOf m) t -> m (Tree (UVarOf m) t)
 unify x0 y0
     | x0 == y0 = pure x0
@@ -98,7 +98,7 @@ unify x0 y0
 
 {-# INLINE unifyUnbound #-}
 unifyUnbound ::
-    Recursive (Unify m) t =>
+    Recursively (Unify m) t =>
     Tree (UVarOf m) t -> TypeConstraintsOf t ->
     Tree (UVarOf m) t -> Tree (UTerm (UVarOf m)) t ->
     m (Tree (UVarOf m) t)
@@ -110,7 +110,7 @@ unifyUnbound xv level yv yt =
 {-# INLINE unifyUTerms #-}
 unifyUTerms ::
     forall m t.
-    Recursive (Unify m) t =>
+    Recursively (Unify m) t =>
     Tree (UVarOf m) t -> Tree (UTerm (UVarOf m)) t ->
     Tree (UVarOf m) t -> Tree (UTerm (UVarOf m)) t ->
     m (Tree (UVarOf m) t)
@@ -122,7 +122,7 @@ unifyUTerms xv (UTerm xt) yv (UTerm yt) =
     withDict (recursive :: RecursiveDict t (Unify m)) $
     do
         bindVar binding yv (UToVar xv)
-        zipMatchWithA (Proxy :: Proxy '[Recursive (Unify m)]) unify (xt ^. uBody) (yt ^. uBody)
+        zipMatchWithA (Proxy :: Proxy '[Recursively (Unify m)]) unify (xt ^. uBody) (yt ^. uBody)
             & fromMaybe (xt ^. uBody <$ structureMismatch unify xt yt)
             >>= bindVar binding xv . UTerm . UTermBody (xt ^. uConstraints <> yt ^. uConstraints)
         pure xv

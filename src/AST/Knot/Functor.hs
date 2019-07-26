@@ -8,7 +8,7 @@ module AST.Knot.Functor
 
 import AST.Class (HasNodes(..))
 import AST.Class.Apply.TH (makeKApplicativeBases)
-import AST.Class.Recursive (Recursive)
+import AST.Class.Recursive (Recursively)
 import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import AST.Constraint
 import AST.Combinator.Single (Single(..))
@@ -35,7 +35,7 @@ instance HasNodes (ToKnot f) where
 makeKApplicativeBases ''ToKnot
 makeKTraversableAndFoldable ''ToKnot
 
-instance (Traversable f, c (ToKnot f)) => Recursive c (ToKnot f)
+instance (Traversable f, c (ToKnot f)) => Recursively c (ToKnot f)
 
 type InToKnot f k = f (Node k (ToKnot f))
 deriving instance Eq     (InToKnot f k) => Eq     (ToKnot f k)

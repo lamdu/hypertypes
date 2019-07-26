@@ -31,14 +31,14 @@ data PrepAnn m a = PrepAnn
 
 prepare ::
     forall err m exp a.
-    (MonadError err m, Recursive (Infer m) exp) =>
+    (MonadError err m, Recursively (Infer m) exp) =>
     Tree (UVarOf m) (TypeOf exp) ->
     Tree (Ann a) exp ->
     m (Tree (Ann (PrepAnn m a)) exp)
 prepare typeFromAbove (Ann a x) =
     withDict (recursive :: RecursiveDict exp (Infer m)) $
     inferBody
-    (mapKWith (Proxy :: Proxy '[Recursive (Infer m)])
+    (mapKWith (Proxy :: Proxy '[Recursively (Infer m)])
         (\c ->
             do
                 t <- newUnbound
@@ -70,7 +70,7 @@ prepare typeFromAbove (Ann a x) =
 -- (i.e `StateT s (Either e)` is ok but `EitherT e (State s)` is not)
 blame ::
     forall priority err m exp a.
-    (Ord priority, MonadError err m, Recursive (Infer m) exp) =>
+    (Ord priority, MonadError err m, Recursively (Infer m) exp) =>
     (a -> priority) ->
     Tree (UVarOf m) (TypeOf exp) ->
     Tree (Ann a) exp ->

@@ -30,7 +30,7 @@ instance HasNodes (TermMap k e) where
 Lens.makePrisms ''TermMap
 makeKTraversableAndBases ''TermMap
 
-instance RecursiveContext (TermMap k expr) constraint => Recursive constraint (TermMap k expr)
+instance RecursiveContext (TermMap k expr) constraint => Recursively constraint (TermMap k expr)
 
 instance Eq k => ZipMatch (TermMap k expr) where
     {-# INLINE zipMatch #-}

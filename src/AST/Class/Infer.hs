@@ -50,7 +50,7 @@ class LocalScopeType var scheme m where
     localScopeType :: var -> scheme -> m a -> m a
 
 class
-    (HasScope m (ScopeOf t), Recursive (Unify m) (TypeOf t)) =>
+    (HasScope m (ScopeOf t), Recursively (Unify m) (TypeOf t)) =>
     Infer m t where
 
     inferBody ::

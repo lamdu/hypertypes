@@ -54,14 +54,14 @@ data GTerm v ast
 Lens.makePrisms ''GTerm
 
 instance
-    Recursive HasNodes ast =>
+    Recursively HasNodes ast =>
     HasNodes (Flip GTerm ast) where
 
     type NodeTypesOf (Flip GTerm ast) = RecursiveChildren ast
     type NodesConstraint (Flip GTerm ast) = RecursiveConstraint ast
 
 instance
-    (Recursive HasNodes ast, Recursive KFunctor ast) =>
+    (Recursively HasNodes ast, Recursively KFunctor ast) =>
     KFunctor (Flip GTerm ast) where
 
     {-# INLINE mapC #-}
@@ -75,14 +75,14 @@ instance
             withDict (recursive :: RecursiveDict ast KFunctor) $
             withDict (hasNodes (Proxy :: Proxy ast)) $
             mapC
-            ( mapKWith (Proxy :: Proxy '[Recursive HasNodes, Recursive KFunctor])
+            ( mapKWith (Proxy :: Proxy '[Recursively HasNodes, Recursively KFunctor])
                 (\(MkFlip f) -> Lens.from _Flip %~ mapC f & MkMapK)
                 mapSub
             ) x
             & GBody
 
 instance
-    (Recursive HasNodes ast, Recursive KFoldable ast) =>
+    (Recursively HasNodes ast, Recursively KFoldable ast) =>
     KFoldable (Flip GTerm ast) where
 
     {-# INLINE foldMapC #-}
@@ -95,16 +95,16 @@ instance
             withDict (recursive :: RecursiveDict ast KFoldable) $
             withDict (hasNodes (Proxy :: Proxy ast)) $
             foldMapC
-            ( mapKWith (Proxy :: Proxy '[Recursive HasNodes, Recursive KFoldable])
+            ( mapKWith (Proxy :: Proxy '[Recursively HasNodes, Recursively KFoldable])
                 (\(MkFlip f) -> foldMapC f . (_Flip #) & MkConvertK)
                 convSub
             ) x
         . (^. _Flip)
 
 instance
-    ( Recursive HasNodes ast
-    , Recursive KFunctor ast
-    , Recursive KFoldable ast
+    ( Recursively HasNodes ast
+    , Recursively KFunctor ast
+    , Recursively KFoldable ast
     ) =>
     KTraversable (Flip GTerm ast) where
 
@@ -116,8 +116,8 @@ instance
             withDict (recursive :: RecursiveDict ast HasNodes) $
             withDict (recursive :: RecursiveDict ast KFunctor) $
             withDict (recursive :: RecursiveDict ast KFoldable) $
-            -- KTraversable will be required when not implied by Recursive
-            traverseKWith (Proxy :: Proxy '[Recursive HasNodes, Recursive KFunctor, Recursive KFoldable])
+            -- KTraversable will be required when not implied by Recursively
+            traverseKWith (Proxy :: Proxy '[Recursively HasNodes, Recursively KFunctor, Recursively KFoldable])
             (Lens.from _Flip sequenceC) x
             <&> GBody
         <&> MkFlip
@@ -127,7 +127,7 @@ instance
 -- become universally quantified skolems.
 generalize ::
     forall m t.
-    Recursive (Unify m) t =>
+    Recursively (Unify m) t =>
     Tree (UVarOf m) t -> m (Tree (GTerm (UVarOf m)) t)
 generalize v0 =
     do
@@ -156,7 +156,7 @@ generalize v0 =
             UResolving t -> GMono v1 <$ occursError v1 t
             _ -> pure (GMono v1)
     where
-        p = Proxy :: Proxy '[Recursive (Unify m)]
+        p = Proxy :: Proxy '[Recursively (Unify m)]
 
 {-# INLINE instantiateForAll #-}
 instantiateForAll ::
@@ -180,7 +180,7 @@ instantiateForAll cons x =
 {-# INLINE instantiateH #-}
 instantiateH ::
     forall m t.
-    Recursive (Unify m) t =>
+    Recursively (Unify m) t =>
     Tree (GTerm (UVarOf m)) t -> WriterT [m ()] m (Tree (UVarOf m) t)
 instantiateH (GMono x) = pure x
 instantiateH (GBody x) =
@@ -189,7 +189,7 @@ instantiateH (GPoly x) = instantiateForAll UUnbound x
 
 {-# INLINE instantiateWith #-}
 instantiateWith ::
-    Recursive (Unify m) t =>
+    Recursively (Unify m) t =>
     m a ->
     Tree (GTerm (UVarOf m)) t ->
     m (Tree (UVarOf m) t, a)
@@ -202,7 +202,7 @@ instantiateWith action g =
 -- for the quantified variables
 {-# INLINE instantiate #-}
 instantiate ::
-    Recursive (Unify m) t =>
+    Recursively (Unify m) t =>
     Tree (GTerm (UVarOf m)) t -> m (Tree (UVarOf m) t)
 instantiate g = instantiateWith (pure ()) g <&> (^. Lens._1)
 

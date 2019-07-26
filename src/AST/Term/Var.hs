@@ -25,7 +25,7 @@ import           Prelude.Compat
 class VarType var expr where
     -- | Instantiate a type for a variable in a given scope
     varType ::
-        Recursive (Unify m) (TypeOf expr) =>
+        Recursively (Unify m) (TypeOf expr) =>
         Proxy expr -> var -> Tree (ScopeOf expr) (UVarOf m) ->
         m (Tree (UVarOf m) (TypeOf expr))
 
@@ -43,7 +43,7 @@ instance HasNodes (Var v e) where
 Lens.makePrisms ''Var
 makeKTraversableAndBases ''Var
 
-instance c (Var v expr) => Recursive c (Var v expr)
+instance c (Var v expr) => Recursively c (Var v expr)
 
 instance Pretty v => Pretty (Var v expr k) where
     pPrintPrec lvl p (Var v) = pPrintPrec lvl p v
@@ -52,7 +52,7 @@ type instance TypeOf  (Var v t) = TypeOf  t
 type instance ScopeOf (Var v t) = ScopeOf t
 
 instance
-    ( Recursive (Unify m) (TypeOf expr)
+    ( Recursively (Unify m) (TypeOf expr)
     , HasScope m (ScopeOf expr)
     , VarType v expr
     ) =>

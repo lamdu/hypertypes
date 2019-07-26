@@ -7,7 +7,7 @@ module AST.Class.Unify
     ) where
 
 import AST.Class (HasNodes)
-import AST.Class.Recursive (Recursive)
+import AST.Class.Recursive (Recursively)
 import AST.Class.Traversable (KTraversable)
 import AST.Class.ZipMatch (ZipMatch)
 import AST.Knot (Tree, Knot)
@@ -59,6 +59,6 @@ class
     -- like record extends with fields ordered differently,
     -- and these could still match.
     structureMismatch ::
-        (forall c. Recursive (Unify m) c => Tree (UVarOf m) c -> Tree (UVarOf m) c -> m (Tree (UVarOf m) c)) ->
+        (forall c. Recursively (Unify m) c => Tree (UVarOf m) c -> Tree (UVarOf m) c -> m (Tree (UVarOf m) c)) ->
         Tree (UTermBody (UVarOf m)) t -> Tree (UTermBody (UVarOf m)) t -> m ()
     structureMismatch _ x y = unifyError (Mismatch (x ^. uBody) (y ^. uBody))

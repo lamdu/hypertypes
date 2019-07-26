@@ -51,7 +51,7 @@ makeKApplicativeBases ''Scope
 makeKTraversableAndFoldable ''Scope
 makeZipMatch ''ScopeVar
 makeKTraversableAndBases ''ScopeVar
-instance (c (Scope expr a), Recursive c (expr (Maybe a))) => Recursive c (Scope expr a)
+instance (c (Scope expr a), Recursively c (expr (Maybe a))) => Recursively c (Scope expr a)
 
 class DeBruijnIndex a where
     deBruijnIndex :: Prism' Int a
@@ -103,7 +103,7 @@ instance
     ( HasTypeOf1 t
     , HasFuncType (TypeOf1 t)
     , Infer1 m t
-    , Recursive (Unify m) (TypeOf (t k))
+    , Recursively (Unify m) (TypeOf (t k))
     , TypeOfIndexConstraint t ~ DeBruijnIndex
     , DeBruijnIndex k
     , MonadReader env m
@@ -124,7 +124,7 @@ instance
         \\ (inferMonad :: DeBruijnIndex (Maybe k) :- Infer m (t (Maybe k)))
 
 instance
-    ( Recursive (Unify m) (TypeOf (t k))
+    ( Recursively (Unify m) (TypeOf (t k))
     , MonadReader env m
     , HasScopeTypes (UVarOf m) (TypeOf (t k)) env
     , DeBruijnIndex k

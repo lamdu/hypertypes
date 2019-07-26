@@ -29,7 +29,7 @@ occursError v (UTermBody c b) =
 
 {-# INLINE occursCheck #-}
 occursCheck ::
-    forall m t. Recursive (Unify m) t =>
+    forall m t. Recursively (Unify m) t =>
     Tree (UVarOf m) t -> m ()
 occursCheck v0 =
     semiPruneLookup v0
@@ -47,7 +47,7 @@ occursCheck v0 =
             withDict (recursive :: RecursiveDict t (Unify m)) $
             do
                 bindVar binding v1 (UResolving b)
-                traverseKWith_ (Proxy :: Proxy '[Recursive (Unify m)]) occursCheck
+                traverseKWith_ (Proxy :: Proxy '[Recursively (Unify m)]) occursCheck
                     (b ^. uBody)
                 bindVar binding v1 (UTerm b)
     UToVar{} -> error "lookup not expected to result in var (in occursCheck)"

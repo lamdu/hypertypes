@@ -5,7 +5,7 @@ module AST.Unify.New
     ) where
 
 import AST (Tree, Pure)
-import AST.Class.Recursive (Recursive, wrapM)
+import AST.Class.Recursive (Recursively, wrapM)
 import AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import AST.Unify.Constraints (MonadScopeConstraints(..))
 import AST.Unify.Term (UTerm(..), UTermBody(..))
@@ -24,6 +24,6 @@ newTerm x = scopeConstraints >>= newVar binding . UTerm . (`UTermBody` x)
 -- | Embed a pure term as a unification term.
 unfreeze ::
     forall m t.
-    Recursive (Unify m) t =>
+    Recursively (Unify m) t =>
     Tree Pure t -> m (Tree (UVarOf m) t)
 unfreeze = wrapM (Proxy :: Proxy (Unify m)) newTerm

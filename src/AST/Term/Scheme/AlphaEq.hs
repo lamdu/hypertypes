@@ -22,7 +22,7 @@ import           Prelude.Compat
 
 goUTerm ::
     forall m t.
-    Recursive (Unify m) t =>
+    Recursively (Unify m) t =>
     Tree (UVarOf m) t -> Tree (UTerm (UVarOf m)) t ->
     Tree (UVarOf m) t -> Tree (UTerm (UVarOf m)) t ->
     m ()
@@ -49,12 +49,12 @@ goUTerm xv UUnbound{} yv yu = goUTerm xv yu yv yu -- Term created in structure m
 goUTerm xv xu yv UUnbound{} = goUTerm xv xu yv xu -- Term created in structure mismatch
 goUTerm _ (UTerm xt) _ (UTerm yt) =
     withDict (recursive :: RecursiveDict t (Unify m)) $
-    zipMatchWith_ (Proxy :: Proxy '[Recursive (Unify m)]) goUVar (xt ^. uBody) (yt ^. uBody)
+    zipMatchWith_ (Proxy :: Proxy '[Recursively (Unify m)]) goUVar (xt ^. uBody) (yt ^. uBody)
     & fromMaybe (structureMismatch (\x y -> x <$ goUVar x y) xt yt)
 goUTerm _ _ _ _ = error "unexpected state at alpha-eq"
 
 goUVar ::
-    Recursive (Unify m) t =>
+    Recursively (Unify m) t =>
     Tree (UVarOf m) t -> Tree (UVarOf m) t -> m ()
 goUVar xv yv =
     do
@@ -66,8 +66,8 @@ goUVar xv yv =
 alphaEq ::
     ( KTraversable varTypes
     , KLiftConstraint varTypes (Unify m)
-    , Recursive (Unify m) typ
-    , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
+    , Recursively (Unify m) typ
+    , Recursively (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
     ) =>
     Tree Pure (Scheme varTypes typ) ->
     Tree Pure (Scheme varTypes typ) ->

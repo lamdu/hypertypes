@@ -12,7 +12,7 @@ module AST.Knot.Ann
 
 import           AST.Class (HasNodes(..))
 import           AST.Class.Combinators (mapKWith)
-import           AST.Class.Recursive (Recursive(..), RecursiveDict, wrap, unwrap, recursiveChildren)
+import           AST.Class.Recursive (Recursively(..), RecursiveDict, wrap, unwrap, recursiveChildren)
 import           AST.Class.Traversable
 import           AST.Class.Traversable.TH (makeKTraversableAndBases)
 import           AST.Class.ZipMatch.TH (makeZipMatch)
@@ -46,7 +46,7 @@ instance HasNodes (Ann a) where
 makeKTraversableAndBases ''Ann
 makeZipMatch ''Ann
 
-instance c (Ann a) => Recursive c (Ann a)
+instance c (Ann a) => Recursively c (Ann a)
 
 instance Deps Pretty a t => Pretty (Ann a t) where
     pPrintPrec lvl prec (Ann pl b)
@@ -58,7 +58,7 @@ instance Deps Pretty a t => Pretty (Ann a t) where
             plDoc = pPrintPrec lvl 0 pl
 
 annotationsWith ::
-    Recursive constraint e =>
+    Recursively constraint e =>
     Proxy constraint ->
     Traversal
     (Tree (Ann a) e)
@@ -70,7 +70,7 @@ annotationsWith p f (Ann pl x) =
     <*> recursiveChildren p (annotationsWith p f) x
 
 annotations ::
-    Recursive KTraversable e =>
+    Recursively KTraversable e =>
     Traversal
     (Tree (Ann a) e)
     (Tree (Ann b) e)
@@ -82,9 +82,9 @@ annotations = annotationsWith (Proxy :: Proxy KTraversable)
 -- TODO: What does the name `para` mean?
 para ::
     forall constraint expr a.
-    Recursive constraint expr =>
+    Recursively constraint expr =>
     Proxy constraint ->
-    (forall child. Recursive constraint child => Tree child (Ann a) -> a) ->
+    (forall child. Recursively constraint child => Tree child (Ann a) -> a) ->
     Tree Pure expr ->
     Tree (Ann a) expr
 para p f x =
@@ -92,13 +92,13 @@ para p f x =
     where
         r =
             withDict (recursive :: RecursiveDict expr constraint) $
-            mapKWith (Proxy :: Proxy '[Recursive constraint]) (para p f) (getPure x)
+            mapKWith (Proxy :: Proxy '[Recursively constraint]) (para p f) (getPure x)
 
-strip :: Recursive KTraversable expr => Tree (Ann a) expr -> Tree Pure expr
+strip :: Recursively KTraversable expr => Tree (Ann a) expr -> Tree Pure expr
 strip = unwrap (Proxy :: Proxy KTraversable) (^. val)
 
 addAnnotations ::
-    Recursive constraint expr =>
+    Recursively constraint expr =>
     Proxy constraint ->
     (forall child. constraint child => Tree child (Ann a) -> a) ->
     Tree Pure expr -> Tree (Ann a) expr

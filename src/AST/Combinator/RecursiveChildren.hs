@@ -23,13 +23,13 @@ data RecursiveChildren a k = RecursiveChildren
     }
 
 instance
-    Recursive HasNodes a =>
+    Recursively HasNodes a =>
     HasNodes (RecursiveChildren a) where
     type NodeTypesOf (RecursiveChildren a) = RecursiveChildren a
     type NodesConstraint (RecursiveChildren a) = RecursiveConstraint a
 
 instance
-    Recursive HasNodes a =>
+    Recursively HasNodes a =>
     KPointed (RecursiveChildren a) where
 
     {-# INLINE pureK #-}
@@ -38,7 +38,7 @@ instance
         withDict (hasNodes (Proxy :: Proxy a)) $
         RecursiveChildren
         { _recSelf = f
-        , _recSub = pureKWith (Proxy :: Proxy '[Recursive HasNodes]) (_Flip # pureK f)
+        , _recSub = pureKWith (Proxy :: Proxy '[Recursively HasNodes]) (_Flip # pureK f)
         }
 
     {-# INLINE pureKWithConstraint #-}
@@ -51,13 +51,13 @@ instance
         , _recSub = pureKWith (mkP p) (_Flip # pureKWithConstraint p f)
         }
         where
-            recP :: Recursive c a => Proxy c -> RecursiveDict a c
+            recP :: Recursively c a => Proxy c -> RecursiveDict a c
             recP _ = recursive
-            mkP :: Proxy c -> Proxy '[Recursive HasNodes, Recursive c]
+            mkP :: Proxy c -> Proxy '[Recursively HasNodes, Recursively c]
             mkP _ = Proxy
 
 instance
-    Recursive HasNodes a =>
+    Recursively HasNodes a =>
     KFunctor (RecursiveChildren a) where
 
     {-# INLINE mapC #-}
@@ -68,13 +68,13 @@ instance
         { _recSelf = runMapK fSelf xSelf
         , _recSub =
             mapC
-            ( mapKWith (Proxy :: Proxy '[Recursive HasNodes])
+            ( mapKWith (Proxy :: Proxy '[Recursively HasNodes])
                 ((_MapK #) . (\(MkFlip sf) -> _Flip %~ mapC sf)) fSub
             ) xSub
         }
 
 instance
-    Recursive HasNodes a =>
+    Recursively HasNodes a =>
     KApply (RecursiveChildren a) where
 
     {-# INLINE zipK #-}
@@ -84,6 +84,6 @@ instance
         RecursiveChildren
         { _recSelf = Both xSelf ySelf
         , _recSub =
-            liftK2With (Proxy :: Proxy '[Recursive HasNodes])
+            liftK2With (Proxy :: Proxy '[Recursively HasNodes])
             (\(MkFlip x) -> _Flip %~ zipK x) xSub ySub
         }

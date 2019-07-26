@@ -17,7 +17,7 @@ import Prelude.Compat
 
 {-# INLINE applyBindings #-}
 applyBindings ::
-    forall m t. Recursive (Unify m) t =>
+    forall m t. Recursively (Unify m) t =>
     Tree (UVarOf m) t -> m (Tree Pure t)
 applyBindings v0 =
     semiPruneLookup v0

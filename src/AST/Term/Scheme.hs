@@ -60,7 +60,7 @@ Lens.makeLenses ''Scheme
 Lens.makePrisms ''QVars
 makeKTraversableAndBases ''Scheme
 
-instance (c (Scheme v t), Recursive c t) => Recursive c (Scheme v t)
+instance (c (Scheme v t), Recursively c t) => Recursively c (Scheme v t)
 
 instance
     ( Ord (QVar (RunKnot typ))
@@ -145,7 +145,7 @@ schemeToRestrictedType ::
     ( Monad m
     , KTraversable varTypes
     , KLiftConstraint varTypes (Unify m)
-    , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
+    , Recursively (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
     ) =>
     Tree Pure (Scheme varTypes typ) -> m (Tree (UVarOf m) typ)
 schemeToRestrictedType (MkPure (Scheme vars typ)) =
@@ -183,7 +183,7 @@ loadScheme ::
     ( Monad m
     , KTraversable varTypes
     , KLiftConstraint varTypes (Unify m)
-    , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
+    , Recursively (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
     ) =>
     Tree Pure (Scheme varTypes typ) ->
     m (Tree (GTerm (UVarOf m)) typ)
@@ -195,7 +195,7 @@ loadScheme (MkPure (Scheme vars typ)) =
 
 saveH ::
     forall m varTypes typ.
-    Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ =>
+    Recursively (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ =>
     Tree (GTerm (UVarOf m)) typ ->
     StateT (Tree varTypes QVars, [m ()]) m (Tree Pure typ)
 saveH (GBody x) =
@@ -233,7 +233,7 @@ saveH (GPoly x) =
 saveScheme ::
     ( KLiftConstraint varTypes (QVarHasInstance Ord)
     , KPointed varTypes
-    , Recursive (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
+    , Recursively (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
     ) =>
     Tree (GTerm (UVarOf m)) typ ->
     m (Tree Pure (Scheme varTypes typ))

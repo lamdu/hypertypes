@@ -22,8 +22,8 @@ import           Prelude.Compat
 
 saveUTerm ::
     forall m typeVars t.
-    ( Recursive (Unify m) t
-    , Recursive (HasChild typeVars) t
+    ( Recursively (Unify m) t
+    , Recursively (HasChild typeVars) t
     ) =>
     Tree (UTerm (UVarOf m)) t ->
     StateT (Tree typeVars Binding, [m ()]) m (Tree (UTerm UVar) t)
@@ -37,8 +37,8 @@ saveUTerm UResolved{} = error "converting bindings after resolution"
 saveUTerm UConverted{} = error "converting variable again"
 
 saveVar ::
-    ( Recursive (Unify m) t
-    , Recursive (HasChild typeVars) t
+    ( Recursively (Unify m) t
+    , Recursively (HasChild typeVars) t
     ) =>
     Tree (UVarOf m) t ->
     StateT (Tree typeVars Binding, [m ()]) m (Tree UVar t)
@@ -59,19 +59,19 @@ saveVar v =
 
 saveBody ::
     forall m typeVars t.
-    ( Recursive (Unify m) t
-    , Recursive (HasChild typeVars) t
+    ( Recursively (Unify m) t
+    , Recursively (HasChild typeVars) t
     ) =>
     Tree t (UVarOf m) ->
     StateT (Tree typeVars Binding, [m ()]) m (Tree t UVar)
 saveBody =
     withDict (recursive :: RecursiveDict t (Unify m)) $
     withDict (recursive :: RecursiveDict t (HasChild typeVars)) $
-    traverseKWith (Proxy :: Proxy '[Recursive (Unify m), Recursive (HasChild typeVars)]) saveVar
+    traverseKWith (Proxy :: Proxy '[Recursively (Unify m), Recursively (HasChild typeVars)]) saveVar
 
 save ::
-    ( Recursive (Unify m) t
-    , Recursive (HasChild typeVars) t
+    ( Recursively (Unify m) t
+    , Recursively (HasChild typeVars) t
     ) =>
     Tree t (UVarOf m) ->
     StateT (Tree typeVars Binding) m (Tree t UVar)
