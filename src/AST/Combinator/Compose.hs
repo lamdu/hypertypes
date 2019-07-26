@@ -11,6 +11,7 @@ import           AST.Class
 import           AST.Class.Foldable
 import           AST.Class.Traversable
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
+import           AST.Constraint
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -33,24 +34,31 @@ _Compose = Lens.iso getCompose MkCompose
 
 instance (HasNodes a, HasNodes b) => HasNodes (Compose a b) where
     type NodeTypesOf (Compose a b) = Compose (NodeTypesOf a) (NodeTypesOf b)
-    type NodesConstraint (Compose a b) = ComposeConstraint (NodeTypesOf a) (NodeTypesOf b)
+    type NodesConstraint (Compose a b) =
+        ComposeConstraint (NodesConstraint a) (NodesConstraint b)
     {-# INLINE hasNodes #-}
     hasNodes _ =
         withDict (hasNodes (Proxy :: Proxy a)) $
         withDict (hasNodes (Proxy :: Proxy b))
         Dict
 
-class ComposeConstraint0 c a b => ComposeConstraint a b c
+instance KnotConstraintFunc (ComposeConstraint a b) where
+    type ApplyKnotConstraint (ComposeConstraint a b) c =
+        ApplyKnotConstraint a (ComposeConstraint0 c b)
+    {-# INLINE applyKnotConstraint #-}
+    applyKnotConstraint _ _ = Dict
 
-class    KLiftConstraint k (ComposeConstraint1 c o) => ComposeConstraint0 c k o
-instance KLiftConstraint k (ComposeConstraint1 c o) => ComposeConstraint0 c k o
+class    ApplyKnotConstraint a (ComposeConstraint0 c b) => ComposeConstraint a b c
+instance ApplyKnotConstraint a (ComposeConstraint0 c b) => ComposeConstraint a b c
+
+class    ApplyKnotConstraint b (ComposeConstraint1 c k0) => ComposeConstraint0 c b k0
+instance ApplyKnotConstraint b (ComposeConstraint1 c k0) => ComposeConstraint0 c b k0
 class    c (Compose k0 k1) => ComposeConstraint1 c k0 k1
 instance c (Compose k0 k1) => ComposeConstraint1 c k0 k1
 
 instance
     (HasNodes a, KPointed a, KPointed b) =>
     KPointed (Compose a b) where
-    type KLiftConstraint (Compose a b) c = KLiftConstraint a (ComposeConstraint0 c b)
     {-# INLINE pureK #-}
     pureK x = pureK (pureK (MkCompose x) & MkCompose) & MkCompose
     {-# INLINE pureKWithConstraint #-}
@@ -58,13 +66,13 @@ instance
         pureKWithConstraint (p0 p) (makeP1 p (\p1 -> pureKWithConstraint p1 (MkCompose x) & MkCompose))
         & MkCompose
         where
-            p0 :: Proxy c -> Proxy (ComposeConstraint0 c b)
+            p0 :: Proxy c -> Proxy (ComposeConstraint0 c (NodesConstraint b))
             p0 _ = Proxy
             makeP1 ::
                 Proxy c ->
                 (Proxy (ComposeConstraint1 c k1) -> Tree k0 k1) ->
                 Tree k0 k1
-            makeP1 = undefined
+            makeP1 _ f = f Proxy
 
 instance
     (HasNodes a, HasNodes b, KFunctor a, KFunctor b) =>

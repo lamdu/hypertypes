@@ -18,7 +18,7 @@ import AST.Class.Traversable as X (KTraversable(..), traverseK, traverseK1)
 import AST.Class.Traversable.TH as X
     ( makeKTraversable, makeKTraversableAndFoldable, makeKTraversableAndBases )
 import AST.Class.ZipMatch.TH as X (makeZipMatch)
-import AST.Constraint as X (KnotsConstraint, ConcatKnotConstraints)
+import AST.Constraint as X (ApplyKnotConstraint, KnotsConstraint, ConcatKnotConstraints)
 import AST.Knot as X
 import AST.Knot.Ann as X (Ann(..), ann, annotations)
 import AST.Knot.Pure as X

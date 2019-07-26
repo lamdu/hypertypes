@@ -15,6 +15,7 @@ import AST
 import AST.Class
 import AST.Class.Foldable
 import AST.Class.Traversable
+import AST.Constraint
 import AST.Combinator.Both
 import AST.Combinator.Flip (Flip(..), _Flip)
 import AST.Combinator.RecursiveChildren
@@ -51,7 +52,19 @@ instance
     hasNodes _ =
         withDict (hasNodes (Proxy :: Proxy (ScopeOf e))) Dict
 
-makeKPointed ''IResultNodeTypes
+instance
+    HasNodes (ScopeOf e) =>
+    KPointed (IResultNodeTypes e) where
+
+    {-# INLINE pureK #-}
+    pureK f =
+        withDict (hasNodes (Proxy :: Proxy (ScopeOf e))) $
+        IResultNodeTypes f (pureK f)
+
+    {-# INLINE pureKWithConstraint #-}
+    pureKWithConstraint p f =
+        withDict (hasNodes (Proxy :: Proxy (ScopeOf e))) $
+        IResultNodeTypes f (pureKWithConstraint p f)
 
 instance
     HasNodes (ScopeOf e) =>
@@ -109,10 +122,18 @@ type InferChildDeps c ast =
     , KTraversable ast
     , HasNodes (ScopeOf ast)
     , KTraversable (ScopeOf ast)
-    , KLiftConstraint (NodeTypesOf (ScopeOf ast)) c
+    , ApplyKnotConstraint (NodesConstraint (ScopeOf ast)) c
     )
 class    InferChildDeps c ast => InferChildConstraints c ast
 instance InferChildDeps c ast => InferChildConstraints c ast
+
+class    Recursive (InferChildConstraints c) k => InferConstraint k c
+instance Recursive (InferChildConstraints c) k => InferConstraint k c
+
+instance KnotConstraintFunc (InferConstraint k) where
+    type ApplyKnotConstraint (InferConstraint k) c = Recursive (InferChildConstraints c) k
+    {-# INLINE applyKnotConstraint #-}
+    applyKnotConstraint _ _ = Dict
 
 newtype ITermTypes e k =
     ITermTypes (Tree (RecursiveChildren e) (Flip IResultNodeTypes (RunKnot k)))
@@ -123,8 +144,6 @@ instance
     , Recursive (InferChildConstraints HasNodes) e
     ) =>
     KPointed (ITermTypes e) where
-
-    type KLiftConstraint (ITermTypes e) c = Recursive (InferChildConstraints c) e
 
     {-# INLINE pureK #-}
     pureK f =
@@ -201,7 +220,7 @@ instance
     HasNodes (ITermTypes e) where
 
     type NodeTypesOf (ITermTypes e) = ITermTypes e
-    type NodesConstraint (ITermTypes e) = KnotsConstraint '[] -- TODO
+    type NodesConstraint (ITermTypes e) = InferConstraint e
 
     {-# INLINE hasNodes #-}
     hasNodes _ = Dict

@@ -125,8 +125,8 @@ instance
     , ZipMatch varTypes
     , KTraversable varTypes
     , HasNodes varTypes
-    , KLiftConstraint (NodeTypesOf varTypes) ZipMatch
-    , KLiftConstraint (NodeTypesOf varTypes) (QVarHasInstance Ord)
+    , ApplyKnotConstraint (NodesConstraint varTypes) ZipMatch
+    , ApplyKnotConstraint (NodesConstraint varTypes) (QVarHasInstance Ord)
     ) =>
     ZipMatch (NominalInst nomId varTypes) where
 
@@ -148,9 +148,14 @@ instance
     ( c (NominalInst nomId varTypes)
     , HasNodes varTypes
     , KTraversable varTypes
-    , KLiftConstraint (NodeTypesOf varTypes) (Recursive c)
+    , ApplyKnotConstraint (NodesConstraint varTypes) (Recursive c)
     ) =>
-    Recursive c (NominalInst nomId varTypes)
+    Recursive c (NominalInst nomId varTypes) where
+
+    {-# INLINE recursive #-}
+    recursive =
+        withDict (hasNodes (Proxy :: Proxy varTypes))
+        Dict
 
 instance DepsT Pretty nomId term k => Pretty (ToNom nomId term k) where
     pPrintPrec lvl p (ToNom nomId term) =
@@ -160,8 +165,8 @@ instance DepsT Pretty nomId term k => Pretty (ToNom nomId term k) where
 instance
     ( Pretty nomId
     , KApply varTypes, KFoldable varTypes, HasNodes varTypes
-    , KLiftConstraint (NodeTypesOf varTypes) (QVarHasInstance Pretty)
-    , KLiftConstraint (NodeTypesOf varTypes) (NodeHasConstraint Pretty k)
+    , ApplyKnotConstraint (NodesConstraint varTypes) (QVarHasInstance Pretty)
+    , ApplyKnotConstraint (NodesConstraint varTypes) (NodeHasConstraint Pretty k)
     ) =>
     Pretty (NominalInst nomId varTypes k) where
 
@@ -214,7 +219,7 @@ loadNominalDecl ::
     forall m typ.
     ( Monad m
     , KTraversable (NomVarTypes typ)
-    , KLiftConstraint (NodeTypesOf (NomVarTypes typ)) (Unify m)
+    , ApplyKnotConstraint (NodesConstraint (NomVarTypes typ)) (Unify m)
     , Recursive (Unify m `And` HasChild (NomVarTypes typ) `And` QVarHasInstance Ord) typ
     ) =>
     Tree Pure (NominalDecl typ) ->
@@ -239,7 +244,7 @@ lookupParams ::
     forall m varTypes.
     ( Applicative m
     , KTraversable varTypes
-    , KLiftConstraint (NodeTypesOf varTypes) (Unify m)
+    , ApplyKnotConstraint (NodesConstraint varTypes) (Unify m)
     ) =>
     Tree varTypes (QVarInstances (UVarOf m)) ->
     m (Tree varTypes (QVarInstances (UVarOf m)))
@@ -267,7 +272,7 @@ instance
     , MonadNominals nomId (TypeOf expr) m
     , KTraversable (NomVarTypes (TypeOf expr))
     , HasNodes (NomVarTypes (TypeOf expr))
-    , KLiftConstraint (NodeTypesOf (NomVarTypes (TypeOf expr))) (Unify m)
+    , ApplyKnotConstraint (NodesConstraint (NomVarTypes (TypeOf expr))) (Unify m)
     ) =>
     Infer m (ToNom nomId expr) where
 
@@ -300,7 +305,7 @@ instance
     , HasNominalInst nomId (TypeOf expr)
     , MonadNominals nomId (TypeOf expr) m
     , KTraversable (NomVarTypes (TypeOf expr))
-    , KLiftConstraint (NodeTypesOf (NomVarTypes (TypeOf expr))) (Unify m)
+    , ApplyKnotConstraint (NodesConstraint (NomVarTypes (TypeOf expr))) (Unify m)
     ) =>
     Infer m (FromNom nomId expr) where
 

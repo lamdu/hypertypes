@@ -24,9 +24,10 @@ import Prelude.Compat
 
 type NodeTypesConstraints k =
     ( NodesConstraint k ~ NodesConstraint (NodeTypesOf k)
-    , NodeTypesOf (NodeTypesOf k) ~ (NodeTypesOf k)
+    , NodeTypesOf k ~ NodeTypesOf (NodeTypesOf k)
     , HasNodes (NodeTypesOf k)
     , KApplicative (NodeTypesOf k)
+    , KnotConstraintFunc (NodesConstraint k)
     )
 
 class HasNodes k where
@@ -34,6 +35,14 @@ class HasNodes k where
     -- Maps to a simple knot which has a single child of each child type.
     type family NodeTypesOf k :: Knot -> Type
 
+    -- | Lift a constraint to apply to the node types.
+    --
+    -- Note: It would seem natural to use a simpler type family
+    -- which enumerates the nodes types.
+    -- It could be then used to lift a constraint to each of them.
+    -- But - making such a family is impossible for knots which have
+    -- an unbounded set of children types, such as
+    -- `Flip GTerm (LangA Nothing)` (with `LangA` from the test suite).
     type family NodesConstraint k :: ((Knot -> Type) -> Constraint) -> Constraint
 
     hasNodes ::
@@ -59,20 +68,9 @@ class HasNodes k => KPointed k where
         (forall child. Tree n child) ->
         Tree k n
 
-    -- | Lift a constraint to apply to each of a knot's children types.
-    --
-    -- Note: It would seem natural to use a simpler type family
-    -- which enumerates the children types.
-    -- It could be then used to lift a constraint to each of them.
-    -- But - making such a family is impossible for knots which have
-    -- an unbounded set of children types, such as
-    -- `Flip GTerm (LangA Nothing)` (with `LangA` from the test suite).
-    type KLiftConstraint k (c :: (Knot -> Type) -> Constraint) :: Constraint
-    type KLiftConstraint k c = KLiftConstraint (NodeTypesOf k) c
-
     -- | Construct a value from a higher ranked child value with a constraint
     pureKWithConstraint ::
-        KLiftConstraint k constraint =>
+        ApplyKnotConstraint (NodesConstraint k) constraint =>
         Proxy constraint ->
         (forall child. constraint child => Tree n child) ->
         Tree k n
@@ -111,7 +109,6 @@ instance HasNodes (Const a) where
     mNoChildren = Just (\(Const x) -> Const x)
 
 instance Monoid a => KPointed (Const a) where
-    type KLiftConstraint (Const a) c = ()
     {-# INLINE pureK #-}
     pureK _ = Const mempty
     {-# INLINE pureKWithConstraint #-}
@@ -142,7 +139,6 @@ instance
             pb _ = Proxy
 
 instance (KPointed a, KPointed b) => KPointed (Both a b) where
-    type KLiftConstraint (Both a b) c = (KLiftConstraint a c, KLiftConstraint b c)
     {-# INLINE pureK #-}
     pureK f = Both (pureK f) (pureK f)
     {-# INLINE pureKWithConstraint #-}

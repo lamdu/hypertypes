@@ -6,6 +6,7 @@ module AST.Constraint
     ( KnotConstraintFunc(..)
     , KnotsConstraint
     , ConcatKnotConstraints
+    , ApplyKnotConstraints
     ) where
 
 import AST.Knot (Knot)
@@ -84,3 +85,7 @@ instance
     concatKnotConstraints _ p =
         withDict (applyKnotConstraint (Proxy :: Proxy x) p)
         (withDict (concatKnotConstraints (Proxy :: Proxy xs) p) Dict)
+
+type family ApplyKnotConstraints x cs :: Constraint where
+    ApplyKnotConstraints x (c ': cs) = (ApplyKnotConstraint x c, ApplyKnotConstraints x cs)
+    ApplyKnotConstraints x '[] = ()

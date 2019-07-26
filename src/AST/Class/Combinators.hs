@@ -21,6 +21,7 @@ module AST.Class.Combinators
 import AST.Class
 import AST.Class.Foldable
 import AST.Class.Traversable
+import AST.Constraint
 import AST.Combinator.Both
 import AST.Knot
 import Control.Lens.Operators
@@ -55,7 +56,9 @@ instance
     kLiftConstraint = pureK (MkKDict Dict)
 
 instance
-    (KLiftConstraints cs k, KLiftConstraint k c) =>
+    ( ApplyKnotConstraint (NodesConstraint k) c
+    , KLiftConstraints cs k
+    ) =>
     KLiftConstraints (c ': cs) k where
     {-# INLINE kLiftConstraint #-}
     kLiftConstraint =

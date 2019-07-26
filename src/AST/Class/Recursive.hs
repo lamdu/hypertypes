@@ -10,9 +10,10 @@ module AST.Class.Recursive
     , recursiveChildren, recursiveOverChildren, recursiveChildren_
     ) where
 
-import AST.Class (NodeTypesOf, HasNodes(..), KPointed(..))
+import AST.Class (HasNodes(..))
 import AST.Class.Combinators
 import AST.Class.Traversable (KTraversable)
+import AST.Constraint
 import AST.Knot (Tree)
 import AST.Knot.Pure (Pure, _Pure)
 import Control.Lens.Operators
@@ -38,13 +39,18 @@ class (KTraversable expr, HasNodes expr, constraint expr) => Recursive constrain
 
 type RecursiveContext expr constraint =
     ( constraint expr
-    , KLiftConstraint (NodeTypesOf expr) (Recursive constraint)
+    , ApplyKnotConstraint (NodesConstraint expr) (Recursive constraint)
     )
 
 type RecursiveDict constraint expr = Dict (RecursiveContext expr constraint)
 
 class    Recursive c k => RecursiveConstraint k c
 instance Recursive c k => RecursiveConstraint k c
+
+instance KnotConstraintFunc (RecursiveConstraint k) where
+    type ApplyKnotConstraint (RecursiveConstraint k) c = Recursive c k
+    {-# INLINE applyKnotConstraint #-}
+    applyKnotConstraint _ _ = Dict
 
 instance constraint Pure => Recursive constraint Pure
 

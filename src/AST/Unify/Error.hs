@@ -57,7 +57,19 @@ instance
     hasNodes _ =
         withDict (hasNodes (Proxy :: Proxy t)) Dict
 
-makeKPointed ''UnifyErrorNodes
+instance
+    HasNodes t =>
+    KPointed (UnifyErrorNodes t) where
+
+    {-# INLINE pureK #-}
+    pureK f =
+        withDict (hasNodes (Proxy :: Proxy t)) $
+        UnifyErrorNodes f (pureK f)
+
+    {-# INLINE pureKWithConstraint #-}
+    pureKWithConstraint p f =
+        withDict (hasNodes (Proxy :: Proxy t)) $
+        UnifyErrorNodes f (pureKWithConstraint p f)
 
 instance
     HasNodes t =>

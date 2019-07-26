@@ -32,8 +32,6 @@ instance
     Recursive HasNodes a =>
     KPointed (RecursiveChildren a) where
 
-    type KLiftConstraint (RecursiveChildren a) c = Recursive c a
-
     {-# INLINE pureK #-}
     pureK f =
         withDict (recursive :: RecursiveDict HasNodes a) $

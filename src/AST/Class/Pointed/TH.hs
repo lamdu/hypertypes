@@ -7,7 +7,6 @@ module AST.Class.Pointed.TH
 import           AST.Class
 import           AST.Internal.TH
 import           Control.Lens.Operators
-import qualified Data.Set as Set
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
 
@@ -24,25 +23,12 @@ makeKPointedForType info =
             [x] -> pure x
             _ -> fail "makeKPointed only supports types with a single constructor"
         instanceD (simplifyContext (makeContext info)) (appT (conT ''KPointed) (pure (tiInstance info)))
-            [ tySynInstD ''KLiftConstraint
-                (pure (TySynEqn [tiInstance info, VarT constraintVar] liftedConstraint))
-            , InlineP 'pureK Inline FunLike AllPhases & PragmaD & pure
+            [ InlineP 'pureK Inline FunLike AllPhases & PragmaD & pure
             , funD 'pureK [makePureKCtr (tiVar info) cons]
             , InlineP 'pureKWithConstraint Inline FunLike AllPhases & PragmaD & pure
             , funD 'pureKWithConstraint [makePureKWithCtr (tiVar info) cons]
             ]
     <&> (:[])
-    where
-        contents = tiContents info
-        liftedConstraint =
-            (Set.toList (tcChildren contents) <&> (VarT constraintVar `AppT`))
-            <> (Set.toList (tcEmbeds contents) <&>
-                \x -> ConT ''KLiftConstraint `AppT` x `AppT` VarT constraintVar)
-            <> Set.toList (tcOthers contents)
-            & toTuple
-
-constraintVar :: Name
-constraintVar = mkName "constraint"
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =

@@ -39,7 +39,7 @@ class
     verifyConstraints ::
         ( Applicative m
         , KTraversable ast
-        , KLiftConstraint (NodeTypesOf ast) childOp
+        , ApplyKnotConstraint (NodesConstraint ast) childOp
         ) =>
         Proxy childOp ->
         TypeConstraintsOf ast ->
@@ -53,10 +53,10 @@ class
     {-# INLINE verifyConstraints #-}
     default verifyConstraints ::
         forall m childOp p q.
-        ( KLiftConstraint (NodeTypesOf ast) (TypeConstraintsAre (TypeConstraintsOf ast))
-        , Applicative m
+        ( Applicative m
         , KTraversable ast
-        , KLiftConstraint (NodeTypesOf ast) childOp
+        , ApplyKnotConstraint (NodesConstraint ast) childOp
+        , ApplyKnotConstraint (NodesConstraint ast) (TypeConstraintsAre (TypeConstraintsOf ast))
         ) =>
         Proxy childOp ->
         TypeConstraintsOf ast ->
