@@ -1,12 +1,11 @@
 {-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables, FlexibleContexts, LambdaCase #-}
-{-# LANGUAGE TypeOperators, ConstraintKinds, DataKinds #-}
+{-# LANGUAGE ConstraintKinds, DataKinds #-}
 
 module AST.Unify.Binding.Save
     ( save
     ) where
 
 import           AST
-import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Unify.Binding (Binding, _Binding, UVar(..))
@@ -21,26 +20,26 @@ import qualified Data.Sequence as Sequence
 
 import           Prelude.Compat
 
-type Deps m typeVars = Unify m `And` HasChild typeVars
-
 saveUTerm ::
     forall m typeVars t.
-    Recursive (Deps m typeVars) t =>
+    ( Recursive (Unify m) t
+    , Recursive (HasChild typeVars) t
+    ) =>
     Tree (UTerm (UVarOf m)) t ->
     StateT (Tree typeVars Binding, [m ()]) m (Tree (UTerm UVar) t)
 saveUTerm (UUnbound c) = UUnbound c & pure
 saveUTerm (USkolem c) = USkolem c & pure
 saveUTerm (UToVar v) = saveVar v <&> UToVar
-saveUTerm (UTerm u) =
-    withDict (recursive :: RecursiveDict (Deps m typeVars) t) $
-    uBody saveBody u <&> UTerm
+saveUTerm (UTerm u) = uBody saveBody u <&> UTerm
 saveUTerm UInstantiated{} = error "converting bindings during instantiation"
 saveUTerm UResolving{} = error "converting bindings after resolution"
 saveUTerm UResolved{} = error "converting bindings after resolution"
 saveUTerm UConverted{} = error "converting variable again"
 
 saveVar ::
-    Recursive (Deps m typeVars) t =>
+    ( Recursive (Unify m) t
+    , Recursive (HasChild typeVars) t
+    ) =>
     Tree (UVarOf m) t ->
     StateT (Tree typeVars Binding, [m ()]) m (Tree UVar t)
 saveVar v =
@@ -60,20 +59,19 @@ saveVar v =
 
 saveBody ::
     forall m typeVars t.
-    ( Monad m
-    , KTraversable t
-    , KLiftConstraint t (Recursive (Deps m typeVars))
+    ( Recursive (Unify m) t
+    , Recursive (HasChild typeVars) t
     ) =>
     Tree t (UVarOf m) ->
     StateT (Tree typeVars Binding, [m ()]) m (Tree t UVar)
 saveBody =
-    withDict (hasNodes (Proxy :: Proxy t)) $
-    traverseKWith (Proxy :: Proxy '[Recursive (Deps m typeVars)]) saveVar
+    withDict (recursive :: RecursiveDict (Unify m) t) $
+    withDict (recursive :: RecursiveDict (HasChild typeVars) t) $
+    traverseKWith (Proxy :: Proxy '[Recursive (Unify m), Recursive (HasChild typeVars)]) saveVar
 
 save ::
-    ( Monad m
-    , KTraversable t
-    , KLiftConstraint t (Recursive (Deps m typeVars))
+    ( Recursive (Unify m) t
+    , Recursive (HasChild typeVars) t
     ) =>
     Tree t (UVarOf m) ->
     StateT (Tree typeVars Binding) m (Tree t UVar)

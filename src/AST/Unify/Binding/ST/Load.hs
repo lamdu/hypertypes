@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables, FlexibleContexts, TemplateHaskell #-}
-{-# LANGUAGE LambdaCase, TypeFamilies, TypeOperators, DataKinds #-}
+{-# LANGUAGE LambdaCase, TypeFamilies, DataKinds #-}
 
 -- | Load state from pure bindings to ST based bindings
 
@@ -8,7 +8,6 @@ module AST.Unify.Binding.ST.Load
     ) where
 
 import           AST
-import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Unify.Binding (Binding(..), _Binding, UVar(..))
@@ -35,16 +34,15 @@ loadUTerm ::
     forall m typeVars t.
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
-    , Recursive (HasChild typeVars `And` Unify m) t
+    , Recursive (Unify m) t
+    , Recursive (HasChild typeVars) t
     ) =>
     Tree typeVars Binding -> Tree typeVars (ConvertState (World m)) ->
     Tree (UTerm UVar) t -> m (Tree (UTerm (STUVar (World m))) t)
 loadUTerm _ _ (UUnbound c) = UUnbound c & pure
 loadUTerm _ _ (USkolem c) = USkolem c & pure
 loadUTerm src conv (UToVar v) = loadVar src conv v <&> UToVar
-loadUTerm src conv (UTerm u) =
-    withDict (recursive :: RecursiveDict (HasChild typeVars `And` Unify m) t) $
-    uBody (loadBody src conv) u <&> UTerm
+loadUTerm src conv (UTerm u) = uBody (loadBody src conv) u <&> UTerm
 loadUTerm _ _ UResolving{} = error "converting bindings after resolution"
 loadUTerm _ _ UResolved{} = error "converting bindings after resolution"
 loadUTerm _ _ UConverted{} = error "loading while saving?"
@@ -53,7 +51,8 @@ loadUTerm _ _ UInstantiated{} = error "loading during instantiation"
 loadVar ::
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
-    , Recursive (HasChild typeVars `And` Unify m) t
+    , Recursive (Unify m) t
+    , Recursive (HasChild typeVars) t
     ) =>
     Tree typeVars Binding -> Tree typeVars (ConvertState (World m)) ->
     Tree UVar t -> m (Tree (STUVar (World m)) t)
@@ -76,23 +75,24 @@ loadBody ::
     forall m typeVars t.
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
-    , KTraversable t
-    , KLiftConstraint t (Recursive (HasChild typeVars `And` Unify m))
+    , Recursive (Unify m) t
+    , Recursive (HasChild typeVars) t
     ) =>
     Tree typeVars Binding -> Tree typeVars (ConvertState (World m)) ->
     Tree t UVar -> m (Tree t (STUVar (World m)))
 loadBody src conv =
-    withDict (hasNodes (Proxy :: Proxy t)) $
+    withDict (recursive :: RecursiveDict (Unify m) t) $
+    withDict (recursive :: RecursiveDict (HasChild typeVars) t) $
     traverseKWith
-    (Proxy :: Proxy '[Recursive (HasChild typeVars `And` Unify m)])
+    (Proxy :: Proxy '[Recursive (Unify m), Recursive (HasChild typeVars)])
     (loadVar src conv)
 
 load ::
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
     , KTraversable typeVars
-    , KTraversable t
-    , KLiftConstraint t (Recursive (HasChild typeVars `And` Unify m))
+    , Recursive (Unify m) t
+    , Recursive (HasChild typeVars) t
     ) =>
     Tree typeVars Binding -> Tree t UVar -> m (Tree t (STUVar (World m)))
 load src collection =
