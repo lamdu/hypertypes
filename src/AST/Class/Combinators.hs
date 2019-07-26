@@ -47,25 +47,25 @@ newtype KDict cs k = MkKDict (Dict (ApplyKConstraints (RunKnot k) cs))
 class
     (KApplicative k, HasNodes k) =>
     KLiftConstraints k (cs :: [(Knot -> Type) -> Constraint]) where
-    kLiftConstraint :: Tree k (KDict cs)
+    kLiftConstraints :: Tree k (KDict cs)
 
 instance
     (KApplicative k, HasNodes k) =>
     KLiftConstraints k '[] where
-    {-# INLINE kLiftConstraint #-}
-    kLiftConstraint = pureK (MkKDict Dict)
+    {-# INLINE kLiftConstraints #-}
+    kLiftConstraints = pureK (MkKDict Dict)
 
 instance
     ( ApplyKnotConstraint (NodesConstraint k) c
     , KLiftConstraints k cs
     ) =>
     KLiftConstraints k (c ': cs) where
-    {-# INLINE kLiftConstraint #-}
-    kLiftConstraint =
+    {-# INLINE kLiftConstraints #-}
+    kLiftConstraints =
         liftK2
         (\(MkKDict c) (MkKDict cs) -> withDict c (withDict cs (MkKDict Dict)))
         (pureKWithConstraint (Proxy :: Proxy c) (MkKDict Dict) :: Tree k (KDict '[c]))
-        (kLiftConstraint :: Tree k (KDict cs))
+        (kLiftConstraints :: Tree k (KDict cs))
 
 {-# INLINE pureKWith #-}
 pureKWith ::
@@ -74,7 +74,7 @@ pureKWith ::
     Proxy constraints ->
     (forall child. ApplyKConstraints child constraints => Tree n child) ->
     Tree k n
-pureKWith _ f = mapK (\(MkKDict d) -> withDict d f) (kLiftConstraint :: Tree k (KDict constraints))
+pureKWith _ f = mapK (\(MkKDict d) -> withDict d f) (kLiftConstraints :: Tree k (KDict constraints))
 
 {-# INLINE mapKWith #-}
 mapKWith ::
