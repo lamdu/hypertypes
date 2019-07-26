@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, DataKinds, FlexibleContexts, FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses, ConstraintKinds, UndecidableSuperClasses #-}
 {-# LANGUAGE UndecidableInstances, TypeOperators, TypeFamilies, RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables, TypeApplications #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 -- | Combinators for partially applied constraints on knots
 
@@ -13,20 +13,13 @@ module AST.Class.Combinators
     , pureKWith
     , mapKWith
     , liftK2With
-    , foldMapKWith
-    , traverseKWith
-    , traverseKWith_
     ) where
 
 import AST.Class
-import AST.Class.Foldable
-import AST.Class.Traversable
-import AST.Constraint
-import AST.Combinator.Both
-import AST.Knot
-import Control.Lens.Operators
+import AST.Constraint (ApplyKnotConstraint)
+import AST.Combinator.Both (Both(..))
+import AST.Knot (Tree, Knot, RunKnot, Node)
 import Data.Constraint (Dict(..), Constraint, withDict)
-import Data.Foldable (sequenceA_)
 import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
 
@@ -114,40 +107,3 @@ liftK2With ::
     Tree k m ->
     Tree k n
 liftK2With p f x = mapKWith p (\(Both a b) -> f a b) . zipK x
-
-{-# INLINE foldMapKWith #-}
-foldMapKWith ::
-    forall a k n constraints.
-    (Monoid a, KFoldable k, KLiftConstraints k constraints) =>
-    Proxy constraints ->
-    (forall child. ApplyKConstraints child constraints => Tree n child -> a) ->
-    Tree k n ->
-    a
-foldMapKWith p f =
-    withDict (hasNodes (Proxy :: Proxy k)) $
-    withDict (kLiftConstraintsNodeTypes (Proxy :: Proxy k) p) $
-    foldMapC (pureKWith p (_ConvertK # f))
-
-{-# INLINE traverseKWith #-}
-traverseKWith ::
-    forall n constraints m f k.
-    (Applicative f, KTraversable k, KLiftConstraints k constraints) =>
-    Proxy constraints ->
-    (forall c. ApplyKConstraints c constraints => Tree m c -> f (Tree n c)) ->
-    Tree k m ->
-    f (Tree k n)
-traverseKWith p f =
-    withDict (hasNodes (Proxy :: Proxy k)) $
-    withDict (kLiftConstraintsNodeTypes (Proxy :: Proxy k) p) $
-    sequenceC . mapC (pureKWith p (MkMapK (MkContainedK . f)))
-
-{-# INLINE traverseKWith_ #-}
-traverseKWith_ ::
-    forall f k constraints m.
-    (Applicative f, KFoldable k, KLiftConstraints k constraints) =>
-    Proxy constraints ->
-    (forall c. ApplyKConstraints c constraints => Tree m c -> f ()) ->
-    Tree k m ->
-    f ()
-traverseKWith_ p f =
-    sequenceA_ . foldMapKWith @[f ()] p ((:[]) . f)

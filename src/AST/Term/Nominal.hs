@@ -19,8 +19,9 @@ module AST.Term.Nominal
 
 import           AST
 import           AST.Class (_MapK)
+import           AST.Class.Combinators (NodeHasConstraint, And)
 import           AST.Class.HasChild (HasChild(..))
-import           AST.Class.Foldable (_ConvertK)
+import           AST.Class.Foldable (_ConvertK, foldMapKWith, traverseKWith_)
 import           AST.Class.Recursive (wrapM)
 import           AST.Class.Traversable (ContainedK(..))
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))

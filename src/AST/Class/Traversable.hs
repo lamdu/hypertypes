@@ -1,17 +1,21 @@
 {-# LANGUAGE NoImplicitPrelude, TypeFamilies, DataKinds, RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module AST.Class.Traversable
     ( KTraversable(..)
     , ContainedK(..), _ContainedK
-    , traverseK, traverseK1
+    , traverseK, traverseK1, traverseKWith
     ) where
 
-import AST.Class (KFunctor(..), MapK(..), mapK, NodeTypesOf)
+import AST.Class (HasNodes(..), KFunctor(..), MapK(..), mapK, NodeTypesOf)
+import AST.Class.Combinators (KLiftConstraints(..), ApplyKConstraints, pureKWith)
 import AST.Class.Foldable (KFoldable)
 import AST.Combinator.Single (Single(..))
 import AST.Knot (Knot, Tree)
 import Control.Lens (Iso, iso)
+import Data.Constraint (withDict)
 import Data.Functor.Const (Const(..))
+import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
@@ -52,3 +56,16 @@ traverseK1 ::
     Tree k m ->
     f (Tree k n)
 traverseK1 f = sequenceC . mapC (MkSingle (MkMapK (MkContainedK . f)))
+
+{-# INLINE traverseKWith #-}
+traverseKWith ::
+    forall n constraints m f k.
+    (Applicative f, KTraversable k, KLiftConstraints k constraints) =>
+    Proxy constraints ->
+    (forall c. ApplyKConstraints c constraints => Tree m c -> f (Tree n c)) ->
+    Tree k m ->
+    f (Tree k n)
+traverseKWith p f =
+    withDict (hasNodes (Proxy :: Proxy k)) $
+    withDict (kLiftConstraintsNodeTypes (Proxy :: Proxy k) p) $
+    sequenceC . mapC (pureKWith p (MkMapK (MkContainedK . f)))

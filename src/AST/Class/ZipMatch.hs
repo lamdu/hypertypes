@@ -10,8 +10,8 @@ module AST.Class.ZipMatch
 
 import           AST.Class (KFunctor)
 import           AST.Class.Combinators
-import           AST.Class.Foldable (KFoldable)
-import           AST.Class.Traversable (KTraversable)
+import           AST.Class.Foldable (KFoldable, foldMapKWith)
+import           AST.Class.Traversable (KTraversable, traverseKWith)
 import           AST.Combinator.Both (Both(..))
 import           AST.Knot (Tree)
 import qualified Control.Lens as Lens

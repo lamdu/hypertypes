@@ -12,7 +12,8 @@ module AST.Class.Recursive
 
 import AST.Class (HasNodes(..), KLiftConstraint)
 import AST.Class.Combinators
-import AST.Class.Traversable (KTraversable)
+import AST.Class.Foldable (foldMapKWith, traverseKWith_)
+import AST.Class.Traversable (KTraversable, traverseKWith)
 import AST.Constraint
 import AST.Knot (Tree)
 import AST.Knot.Pure (Pure, _Pure)

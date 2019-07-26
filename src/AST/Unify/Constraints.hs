@@ -11,7 +11,6 @@ module AST.Unify.Constraints
 
 import Algebra.PartialOrd (PartialOrd(..))
 import AST
-import AST.Class.Combinators (traverseKWith)
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
