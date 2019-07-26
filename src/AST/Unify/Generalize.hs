@@ -82,7 +82,7 @@ instance
             & GBody
 
 instance
-    Recursive KFoldable ast =>
+    (Recursive HasNodes ast, Recursive KFoldable ast) =>
     KFoldable (Flip GTerm ast) where
 
     {-# INLINE foldMapC #-}
@@ -91,10 +91,11 @@ instance
         GMono x -> convTop x
         GPoly x -> convTop x
         GBody x ->
+            withDict (recursive :: RecursiveDict HasNodes ast) $
             withDict (recursive :: RecursiveDict KFoldable ast) $
             withDict (hasNodes (Proxy :: Proxy ast)) $
             foldMapC
-            ( mapKWith (Proxy :: Proxy '[Recursive KFoldable])
+            ( mapKWith (Proxy :: Proxy '[Recursive HasNodes, Recursive KFoldable])
                 (\(MkFlip f) -> foldMapC f . (_Flip #) & MkConvertK)
                 convSub
             ) x

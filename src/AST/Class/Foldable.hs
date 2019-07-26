@@ -26,7 +26,7 @@ _ConvertK ::
         (Tree l1 k1 -> a1)
 _ConvertK = iso runConvertK MkConvertK
 
-class KFoldable k where
+class HasNodes k => KFoldable k where
     foldMapC ::
         Monoid a =>
         Tree (NodeTypesOf k) (ConvertK a l) ->
@@ -39,7 +39,7 @@ instance KFoldable (Const a) where
 
 {-# INLINE foldMapK #-}
 foldMapK ::
-    (Monoid a, KFoldable k, HasNodes k) =>
+    (Monoid a, KFoldable k) =>
     (forall c. Tree l c -> a) ->
     Tree k l ->
     a
@@ -52,7 +52,7 @@ foldMapK f x =
 
 {-# INLINE traverseK_ #-}
 traverseK_ ::
-    (Applicative f, KFoldable k, HasNodes k) =>
+    (Applicative f, KFoldable k) =>
     (forall c. Tree m c -> f ()) ->
     Tree k m ->
     f ()
