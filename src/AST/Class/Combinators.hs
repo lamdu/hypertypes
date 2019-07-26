@@ -46,20 +46,20 @@ newtype KDict cs k = MkKDict (Dict (ApplyKConstraints cs (RunKnot k)))
 
 class
     (KApplicative k, HasNodes k) =>
-    KLiftConstraints (cs :: [(Knot -> Type) -> Constraint]) k where
+    KLiftConstraints k (cs :: [(Knot -> Type) -> Constraint]) where
     kLiftConstraint :: Tree k (KDict cs)
 
 instance
     (KApplicative k, HasNodes k) =>
-    KLiftConstraints '[] k where
+    KLiftConstraints k '[] where
     {-# INLINE kLiftConstraint #-}
     kLiftConstraint = pureK (MkKDict Dict)
 
 instance
     ( ApplyKnotConstraint (NodesConstraint k) c
-    , KLiftConstraints cs k
+    , KLiftConstraints k cs
     ) =>
-    KLiftConstraints (c ': cs) k where
+    KLiftConstraints k (c ': cs) where
     {-# INLINE kLiftConstraint #-}
     kLiftConstraint =
         liftK2
@@ -70,7 +70,7 @@ instance
 {-# INLINE pureKWith #-}
 pureKWith ::
     forall n constraints k.
-    KLiftConstraints constraints k =>
+    KLiftConstraints k constraints =>
     Proxy constraints ->
     (forall child. ApplyKConstraints constraints child => Tree n child) ->
     Tree k n
@@ -78,7 +78,7 @@ pureKWith _ f = mapK (\(MkKDict d) -> withDict d f) (kLiftConstraint :: Tree k (
 
 {-# INLINE mapKWith #-}
 mapKWith ::
-    (KFunctor k, KLiftConstraints constraints (NodeTypesOf k)) =>
+    (KFunctor k, KLiftConstraints (NodeTypesOf k) constraints) =>
     Proxy constraints ->
     (forall child. ApplyKConstraints constraints child => Tree m child -> Tree n child) ->
     Tree k m ->
@@ -87,7 +87,7 @@ mapKWith p f = mapC (pureKWith p (MkMapK f))
 
 {-# INLINE liftK2With #-}
 liftK2With ::
-    (KApply k, KLiftConstraints constraints (NodeTypesOf k)) =>
+    (KApply k, KLiftConstraints (NodeTypesOf k) constraints) =>
     Proxy constraints ->
     (forall c. ApplyKConstraints constraints c => Tree l c -> Tree m c -> Tree n c) ->
     Tree k l ->
@@ -97,7 +97,7 @@ liftK2With p f x = mapKWith p (\(Both a b) -> f a b) . zipK x
 
 {-# INLINE foldMapKWith #-}
 foldMapKWith ::
-    (Monoid a, KFoldable k, KLiftConstraints constraints (NodeTypesOf k)) =>
+    (Monoid a, KFoldable k, KLiftConstraints (NodeTypesOf k) constraints) =>
     Proxy constraints ->
     (forall child. ApplyKConstraints constraints child => Tree n child -> a) ->
     Tree k n ->
@@ -107,7 +107,7 @@ foldMapKWith p f = foldMapC (pureKWith p (_ConvertK # f))
 {-# INLINE traverseKWith #-}
 traverseKWith ::
     forall n constraints m f k.
-    (Applicative f, KTraversable k, KLiftConstraints constraints (NodeTypesOf k)) =>
+    (Applicative f, KTraversable k, KLiftConstraints (NodeTypesOf k) constraints) =>
     Proxy constraints ->
     (forall c. ApplyKConstraints constraints c => Tree m c -> f (Tree n c)) ->
     Tree k m ->
@@ -117,7 +117,7 @@ traverseKWith p f = sequenceC . mapC (pureKWith p (MkMapK (MkContainedK . f)))
 {-# INLINE traverseKWith_ #-}
 traverseKWith_ ::
     forall f k constraints m.
-    (Applicative f, KFoldable k, KLiftConstraints constraints (NodeTypesOf k)) =>
+    (Applicative f, KFoldable k, KLiftConstraints (NodeTypesOf k) constraints) =>
     Proxy constraints ->
     (forall c. ApplyKConstraints constraints c => Tree m c -> f ()) ->
     Tree k m ->
