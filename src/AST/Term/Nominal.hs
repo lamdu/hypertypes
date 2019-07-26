@@ -2,7 +2,7 @@
 {-# LANGUAGE ConstraintKinds, UndecidableInstances, TypeFamilies, ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeOperators, FlexibleContexts, DataKinds, LambdaCase #-}
-{-# LANGUAGE RankNTypes, DerivingStrategies #-}
+{-# LANGUAGE RankNTypes, DerivingStrategies, UndecidableSuperClasses #-}
 
 module AST.Term.Nominal
     ( NominalDecl(..), nParams, nScheme
@@ -19,7 +19,7 @@ module AST.Term.Nominal
 
 import           AST
 import           AST.Class (_MapK)
-import           AST.Class.Combinators (NodeHasConstraint, And)
+import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Foldable (_ConvertK, foldMapKWith, traverseKWith_)
 import           AST.Class.Recursive (wrapM)
@@ -159,6 +159,9 @@ instance DepsT Pretty nomId term k => Pretty (ToNom nomId term k) where
     pPrintPrec lvl p (ToNom nomId term) =
         (pPrint nomId <> Pretty.text "#") <+> pPrintPrec lvl 11 term
         & maybeParens (p > 10)
+
+class    constraint (Node outer k) => NodeHasConstraint constraint outer k
+instance constraint (Node outer k) => NodeHasConstraint constraint outer k
 
 instance
     ( Pretty nomId

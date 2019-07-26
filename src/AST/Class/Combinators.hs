@@ -7,7 +7,6 @@
 
 module AST.Class.Combinators
     ( And
-    , NodeHasConstraint
     , ApplyKConstraints
     , KLiftConstraints(..)
     , pureKWith
@@ -18,7 +17,7 @@ module AST.Class.Combinators
 import AST.Class
 import AST.Constraint (ApplyKnotConstraint)
 import AST.Combinator.Both (Both(..))
-import AST.Knot (Tree, Knot, RunKnot, Node)
+import AST.Knot (Tree, Knot, RunKnot)
 import Data.Constraint (Dict(..), Constraint, withDict)
 import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
@@ -27,9 +26,6 @@ import Prelude.Compat
 
 class    (c0 k, c1 k) => And c0 c1 (k :: Knot -> *)
 instance (c0 k, c1 k) => And c0 c1 k
-
-class    constraint (Node outer k) => NodeHasConstraint constraint outer k
-instance constraint (Node outer k) => NodeHasConstraint constraint outer k
 
 type family ApplyKConstraints (k :: Knot -> Type) cs :: Constraint where
     ApplyKConstraints k (c ': cs) = (c k, ApplyKConstraints k cs)
