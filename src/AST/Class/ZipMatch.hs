@@ -42,7 +42,7 @@ zipMatchWithA ::
     , KLiftConstraints (NodeTypesOf expr) constraints
     ) =>
     Proxy constraints ->
-    (forall child. ApplyKConstraints constraints child => Tree a child -> Tree b child -> f (Tree c child)) ->
+    (forall child. ApplyKConstraints child constraints => Tree a child -> Tree b child -> f (Tree c child)) ->
     Tree expr a -> Tree expr b -> Maybe (f (Tree expr c))
 zipMatchWithA p f x y = zipMatch x y <&> traverseKWith p (\(Both a b) -> f a b)
 
@@ -52,7 +52,7 @@ zipMatchWith ::
     , KLiftConstraints (NodeTypesOf expr) constraints
     ) =>
     Proxy constraints ->
-    (forall child. ApplyKConstraints constraints child => Tree a child -> Tree b child -> Tree c child) ->
+    (forall child. ApplyKConstraints child constraints => Tree a child -> Tree b child -> Tree c child) ->
     Tree expr a -> Tree expr b -> Maybe (Tree expr c)
 zipMatchWith p f x y = zipMatch x y <&> mapKWith p (\(Both a b) -> f a b)
 
@@ -64,7 +64,7 @@ zipMatchWith_ ::
     , KLiftConstraints (NodeTypesOf expr) constraints
     ) =>
     Proxy constraints ->
-    (forall child. ApplyKConstraints constraints child => Tree a child -> Tree b child -> f ()) ->
+    (forall child. ApplyKConstraints child constraints => Tree a child -> Tree b child -> f ()) ->
     Tree expr a -> Tree expr b -> Maybe (f ())
 zipMatchWith_ p f x y =
     zipMatch x y
