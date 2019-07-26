@@ -113,7 +113,6 @@ instance
         GMono x -> runContainedK x <&> GMono
         GPoly x -> runContainedK x <&> GPoly
         GBody x ->
-            withDict (hasNodes (Proxy :: Proxy ast)) $
             withDict (recursive :: RecursiveDict HasNodes ast) $
             withDict (recursive :: RecursiveDict KFunctor ast) $
             withDict (recursive :: RecursiveDict KFoldable ast) $
@@ -145,7 +144,6 @@ generalize v0 =
             USkolem l | toScopeConstraints l `leq` c -> pure (GPoly v1)
             UTerm t ->
                 withDict (recursive :: RecursiveDict (Unify m) t) $
-                withDict (hasNodes (Proxy :: Proxy t)) $
                 do
                     bindVar binding v1 (UResolving t)
                     r <- traverseKWith p generalize (t ^. uBody)

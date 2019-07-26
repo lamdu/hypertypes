@@ -48,10 +48,6 @@ instance
     type NodesConstraint (IResultNodeTypes e) =
         ConcatKnotConstraints '[KnotsConstraint '[TypeOf e], NodesConstraint (ScopeOf e)]
 
-    {-# INLINE hasNodes #-}
-    hasNodes _ =
-        withDict (hasNodes (Proxy :: Proxy (ScopeOf e))) Dict
-
 instance
     HasNodes (ScopeOf e) =>
     KPointed (IResultNodeTypes e) where
@@ -94,10 +90,6 @@ instance
 
     type NodeTypesOf (IResult e) = IResultNodeTypes e
     type NodesConstraint (IResult e) = NodesConstraint (IResultNodeTypes e)
-
-    {-# INLINE hasNodes #-}
-    hasNodes _ =
-        withDict (hasNodes (Proxy :: Proxy (ScopeOf e))) Dict
 
 makeKApplicativeBases ''IResult
 makeKTraversableAndFoldable ''IResult
@@ -147,25 +139,19 @@ instance
     {-# INLINE pureK #-}
     pureK f =
         pureKWithConstraint (Proxy :: Proxy (InferChildConstraints HasNodes))
-        (_Flip # withScopeOfP (\p -> withDict (hasNodes p) (pureK f)))
+        (_Flip # pureK f)
         & ITermTypes
 
     {-# INLINE pureKWithConstraint #-}
     pureKWithConstraint p f =
         pureKWith (makeP p)
-        (_Flip # withScopeOfP (\ps -> withDict (hasNodes ps) (pureKWithConstraint p f)))
+        (_Flip # pureKWithConstraint p f)
         & ITermTypes
         where
             makeP ::
                 Proxy c ->
                 Proxy '[InferChildConstraints c, InferChildConstraints HasNodes]
             makeP _ = Proxy
-
-{-# INLINE withScopeOfP #-}
-withScopeOfP ::
-    (Proxy (ScopeOf k) -> Tree (IResultNodeTypes k) n) ->
-    Tree (IResultNodeTypes k) n
-withScopeOfP g = g Proxy
 
 instance
     ( Recursive HasNodes e
@@ -250,21 +236,9 @@ instance
         (mapC ft r)
         (mapC
             ( mapKWith (Proxy :: Proxy '[Recursive HasNodes, Recursive (InferChildConstraints HasNodes)])
-                g fs
+                (\(MkFlip f) -> from _Flip %~ mapC (ITermTypes f) & MkMapK) fs
             ) x
         )
-        where
-            g ::
-                forall child m n.
-                ( Recursive HasNodes child
-                , Recursive (InferChildConstraints HasNodes) child
-                ) =>
-                Tree (Flip RecursiveChildren (Flip IResultNodeTypes (MapK m n))) child ->
-                Tree (MapK (ITerm a m) (ITerm a n)) child
-            g (MkFlip f) =
-                withDict (hasNodes (Proxy :: Proxy (ScopeOf child))) $
-                from _Flip %~ mapC (ITermTypes f)
-                & MkMapK
 
 instance
     ( KFoldable e
@@ -283,19 +257,8 @@ instance
         ( mapKWith
             (Proxy ::
                 Proxy '[Recursive HasNodes, Recursive (InferChildConstraints HasNodes)])
-            g fs
+            (\(MkFlip f) -> foldMapC (ITermTypes f) . (_Flip #) & MkConvertK) fs
         ) x
-        where
-            g ::
-                ( Monoid r
-                , Recursive HasNodes child
-                , Recursive (InferChildConstraints HasNodes) child
-                ) =>
-                Tree (Flip RecursiveChildren (Flip IResultNodeTypes (ConvertK r l))) child ->
-                Tree (ConvertK r (ITerm a l)) child
-            g (MkFlip f) =
-                foldMapC (ITermTypes f) . (_Flip #)
-                & MkConvertK
 
 instance
     ( Recursive HasNodes e
@@ -305,7 +268,6 @@ instance
 
     {-# INLINE sequenceC #-}
     sequenceC =
-        withDict (hasNodes (Proxy :: Proxy e)) $
         withDict (recursive :: RecursiveDict HasNodes e) $
         withDict (recursive :: RecursiveDict (InferChildConstraints HasNodes) e) $
         _Flip $

@@ -53,10 +53,6 @@ instance
     type NodesConstraint (UnifyErrorNodes t) =
         ConcatKnotConstraints '[KnotsConstraint '[t], NodesConstraint t]
 
-    {-# INLINE hasNodes #-}
-    hasNodes _ =
-        withDict (hasNodes (Proxy :: Proxy t)) Dict
-
 instance
     HasNodes t =>
     KPointed (UnifyErrorNodes t) where

@@ -126,8 +126,6 @@ foldMapRecursive ::
 foldMapRecursive p0 p1 f x =
     withDict (recursive :: RecursiveDict c0 expr) $
     withDict (recursive :: RecursiveDict c1 f) $
-    withDict (hasNodes (Proxy :: Proxy expr)) $
-    withDict (hasNodes (Proxy :: Proxy f)) $
     f x <>
     foldMapKWith (Proxy :: Proxy '[Recursive c0])
     (foldMapKWith (Proxy :: Proxy '[Recursive c1]) (foldMapRecursive p0 p1 f))
@@ -142,7 +140,6 @@ recursiveChildren ::
     Tree expr n -> f (Tree expr m)
 recursiveChildren _ f x =
     withDict (recursive :: RecursiveDict constraint expr) $
-    withDict (hasNodes (Proxy :: Proxy expr)) $
     traverseKWith (Proxy :: Proxy '[Recursive constraint]) f x
 
 {-# INLINE recursiveChildren_ #-}
@@ -154,7 +151,6 @@ recursiveChildren_ ::
     Tree expr n -> f ()
 recursiveChildren_ _ f x =
     withDict (recursive :: RecursiveDict constraint expr) $
-    withDict (hasNodes (Proxy :: Proxy expr)) $
     traverseKWith_ (Proxy :: Proxy '[Recursive constraint]) f x
 
 {-# INLINE recursiveOverChildren #-}
@@ -166,5 +162,4 @@ recursiveOverChildren ::
     Tree expr n -> Tree expr m
 recursiveOverChildren _ f x =
     withDict (recursive :: RecursiveDict constraint expr) $
-    withDict (hasNodes (Proxy :: Proxy expr)) $
     mapKWith (Proxy :: Proxy '[Recursive constraint]) f x

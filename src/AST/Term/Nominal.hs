@@ -133,7 +133,6 @@ instance
     zipMatch (NominalInst xId x) (NominalInst yId y)
         | xId /= yId = Nothing
         | otherwise =
-            withDict (hasNodes (Proxy :: Proxy varTypes)) $
             zipMatch x y
             >>= traverseKWith (Proxy :: Proxy '[ZipMatch, QVarHasInstance Ord])
                 (\(Both (QVarInstances c0) (QVarInstances c1)) ->
@@ -169,7 +168,6 @@ instance
     Pretty (NominalInst nomId varTypes k) where
 
     pPrint (NominalInst n vars) =
-        withDict (hasNodes (Proxy :: Proxy varTypes)) $
         pPrint n <>
         joinArgs
         (foldMapKWith (Proxy :: Proxy [QVarHasInstance Pretty, NodeHasConstraint Pretty k]) mkArgs vars)
@@ -223,7 +221,6 @@ loadNominalDecl ::
     Tree Pure (NominalDecl typ) ->
     m (Tree (LoadedNominalDecl typ) (UVarOf m))
 loadNominalDecl (MkPure (NominalDecl params (Scheme foralls typ))) =
-    withDict (hasNodes (Proxy :: Proxy (NomVarTypes typ))) $
     do
         paramsL <- traverseKWith (Proxy :: Proxy '[Unify m]) makeQVarInstances params
         forallsL <- traverseKWith (Proxy :: Proxy '[Unify m]) makeQVarInstances foralls
@@ -247,7 +244,6 @@ lookupParams ::
     Tree varTypes (QVarInstances (UVarOf m)) ->
     m (Tree varTypes (QVarInstances (UVarOf m)))
 lookupParams =
-    withDict (hasNodes (Proxy :: Proxy varTypes)) $
     traverseKWith (Proxy :: Proxy '[Unify m]) ((_QVarInstances . traverse) lookupParam)
     where
         lookupParam v =
@@ -275,7 +271,6 @@ instance
 
     {-# INLINE inferBody #-}
     inferBody (ToNom nomId val) =
-        withDict (hasNodes (Proxy :: Proxy (NomVarTypes (TypeOf expr)))) $
         do
             (valI, paramsT) <-
                 do
@@ -340,7 +335,6 @@ subst p mkType params (MkPure x) =
         & maybe (mkType (quantifiedVar # q)) pure
     Nothing ->
         withDict (recursive :: (RecursiveDict (HasChild varTypes `And` QVarHasInstance Ord `And` constraint) typ)) $
-        withDict (hasNodes (Proxy :: Proxy typ)) $
         traverseKWith (Proxy :: Proxy '[Recursive (HasChild varTypes `And` QVarHasInstance Ord `And` constraint)])
         (subst p mkType params) x
         >>= mkType

@@ -12,7 +12,6 @@ module AST.Unify.Constraints
 import Algebra.PartialOrd (PartialOrd(..))
 import AST
 import AST.Class.Combinators (traverseKWith)
-import Data.Constraint (withDict)
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
@@ -65,7 +64,6 @@ class
         Tree ast p ->
         m (Tree ast q)
     verifyConstraints _ constraints _ update =
-        withDict (hasNodes (Proxy :: Proxy ast)) $
         traverseKWith (Proxy :: Proxy [childOp, TypeConstraintsAre (TypeConstraintsOf ast)])
         (update constraints)
 
