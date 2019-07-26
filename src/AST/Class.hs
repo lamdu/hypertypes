@@ -36,15 +36,15 @@ class HasNodes k where
 
     type family NodesConstraint k :: ((Knot -> Type) -> Constraint) -> Constraint
 
-    hasNodeTypes ::
+    hasNodes ::
         Proxy k ->
         Dict (NodeTypesConstraints k)
-    {-# INLINE hasNodeTypes #-}
-    default hasNodeTypes ::
+    {-# INLINE hasNodes #-}
+    default hasNodes ::
         NodeTypesConstraints k =>
         Proxy k ->
         Dict (NodeTypesConstraints k)
-    hasNodeTypes _ = Dict
+    hasNodes _ = Dict
 
     -- TODO: Remove this.
     -- Algorithms that avoid actions for leafs can more accurately
@@ -131,10 +131,10 @@ instance
     type NodeTypesOf (Both a b) = Both (NodeTypesOf a) (NodeTypesOf b)
     type NodesConstraint (Both a b) = ConcatKnotConstraints [NodesConstraint a, NodesConstraint b]
 
-    {-# INLINE hasNodeTypes #-}
-    hasNodeTypes p =
-        withDict (hasNodeTypes (pa p)) $
-        withDict (hasNodeTypes (pb p)) Dict
+    {-# INLINE hasNodes #-}
+    hasNodes p =
+        withDict (hasNodes (pa p)) $
+        withDict (hasNodes (pb p)) Dict
         where
             pa :: Proxy (Both a b) -> Proxy a
             pa _ = Proxy
@@ -163,7 +163,7 @@ mapK ::
     Tree k m ->
     Tree k n
 mapK f x =
-    withDict (hasNodeTypes (p x)) $
+    withDict (hasNodes (p x)) $
     mapC (pureK (MkMapK f)) x
     where
         p :: Tree k l -> Proxy k

@@ -34,10 +34,10 @@ _Compose = Lens.iso getCompose MkCompose
 instance (HasNodes a, HasNodes b) => HasNodes (Compose a b) where
     type NodeTypesOf (Compose a b) = Compose (NodeTypesOf a) (NodeTypesOf b)
     type NodesConstraint (Compose a b) = ComposeConstraint (NodeTypesOf a) (NodeTypesOf b)
-    {-# INLINE hasNodeTypes #-}
-    hasNodeTypes _ =
-        withDict (hasNodeTypes (Proxy :: Proxy a)) $
-        withDict (hasNodeTypes (Proxy :: Proxy b))
+    {-# INLINE hasNodes #-}
+    hasNodes _ =
+        withDict (hasNodes (Proxy :: Proxy a)) $
+        withDict (hasNodes (Proxy :: Proxy b))
         Dict
 
 class ComposeConstraint0 c a b => ComposeConstraint a b c
@@ -71,8 +71,8 @@ instance
     KFunctor (Compose a b) where
     {-# INLINE mapC #-}
     mapC (MkCompose f) =
-        withDict (hasNodeTypes (Proxy :: Proxy a)) $
-        withDict (hasNodeTypes (Proxy :: Proxy b)) $
+        withDict (hasNodes (Proxy :: Proxy a)) $
+        withDict (hasNodes (Proxy :: Proxy b)) $
         _Compose %~
         mapC
         ( mapK
@@ -103,8 +103,8 @@ instance
     KFoldable (Compose a b) where
     {-# INLINE foldMapC #-}
     foldMapC (MkCompose f) =
-        withDict (hasNodeTypes (Proxy :: Proxy a)) $
-        withDict (hasNodeTypes (Proxy :: Proxy b)) $
+        withDict (hasNodes (Proxy :: Proxy a)) $
+        withDict (hasNodes (Proxy :: Proxy b)) $
         foldMapC
         ( mapK
             ( \(MkCompose bf) ->

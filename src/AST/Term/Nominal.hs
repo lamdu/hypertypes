@@ -94,8 +94,8 @@ instance HasNodes (FromNom n t) where
 instance HasNodes v => HasNodes (NominalInst n v) where
     type NodeTypesOf (NominalInst n v) = NodeTypesOf v
     type NodesConstraint (NominalInst n v) = NodesConstraint (NodeTypesOf v)
-    {-# INLINE hasNodeTypes #-}
-    hasNodeTypes _ = withDict (hasNodeTypes (Proxy :: Proxy v)) Dict
+    {-# INLINE hasNodes #-}
+    hasNodes _ = withDict (hasNodes (Proxy :: Proxy v)) Dict
 
 makeLenses ''NominalDecl
 makeLenses ''NominalInst
@@ -107,12 +107,12 @@ makeKTraversableAndBases ''FromNom
 
 instance (KFunctor v, HasNodes v) => KFunctor (NominalInst n v) where
     mapC f (NominalInst n v) =
-        withDict (hasNodeTypes (Proxy :: Proxy v)) $
+        withDict (hasNodes (Proxy :: Proxy v)) $
         mapC (mapK (_MapK %~ (_QVarInstances . Lens.mapped %~)) f) v & NominalInst n
 
 instance (KFoldable v, HasNodes v) => KFoldable (NominalInst n v) where
     foldMapC f (NominalInst _ v) =
-        withDict (hasNodeTypes (Proxy :: Proxy v)) $
+        withDict (hasNodes (Proxy :: Proxy v)) $
         foldMapC (mapK (_ConvertK %~ \fq -> foldMap fq . (^. _QVarInstances)) f) v
 
 instance (KTraversable v, HasNodes v) => KTraversable (NominalInst n v) where
@@ -134,7 +134,7 @@ instance
     zipMatch (NominalInst xId x) (NominalInst yId y)
         | xId /= yId = Nothing
         | otherwise =
-            withDict (hasNodeTypes (Proxy :: Proxy varTypes)) $
+            withDict (hasNodes (Proxy :: Proxy varTypes)) $
             zipMatch x y
             >>= traverseKWith (Proxy :: Proxy '[ZipMatch, QVarHasInstance Ord])
                 (\(Both (QVarInstances c0) (QVarInstances c1)) ->
@@ -166,7 +166,7 @@ instance
     Pretty (NominalInst nomId varTypes k) where
 
     pPrint (NominalInst n vars) =
-        withDict (hasNodeTypes (Proxy :: Proxy varTypes)) $
+        withDict (hasNodes (Proxy :: Proxy varTypes)) $
         pPrint n <>
         joinArgs
         (foldMapKWith (Proxy :: Proxy [QVarHasInstance Pretty, NodeHasConstraint Pretty k]) mkArgs vars)
@@ -220,7 +220,7 @@ loadNominalDecl ::
     Tree Pure (NominalDecl typ) ->
     m (Tree (LoadedNominalDecl typ) (UVarOf m))
 loadNominalDecl (MkPure (NominalDecl params (Scheme foralls typ))) =
-    withDict (hasNodeTypes (Proxy :: Proxy (NomVarTypes typ))) $
+    withDict (hasNodes (Proxy :: Proxy (NomVarTypes typ))) $
     do
         paramsL <- traverseKWith (Proxy :: Proxy '[Unify m]) makeQVarInstances params
         forallsL <- traverseKWith (Proxy :: Proxy '[Unify m]) makeQVarInstances foralls
@@ -244,7 +244,7 @@ lookupParams ::
     Tree varTypes (QVarInstances (UVarOf m)) ->
     m (Tree varTypes (QVarInstances (UVarOf m)))
 lookupParams =
-    withDict (hasNodeTypes (Proxy :: Proxy varTypes)) $
+    withDict (hasNodes (Proxy :: Proxy varTypes)) $
     traverseKWith (Proxy :: Proxy '[Unify m]) ((_QVarInstances . traverse) lookupParam)
     where
         lookupParam v =
@@ -273,7 +273,7 @@ instance
 
     {-# INLINE inferBody #-}
     inferBody (ToNom nomId val) =
-        withDict (hasNodeTypes (Proxy :: Proxy (NomVarTypes (TypeOf expr)))) $
+        withDict (hasNodes (Proxy :: Proxy (NomVarTypes (TypeOf expr)))) $
         do
             (valI, paramsT) <-
                 do
@@ -338,7 +338,7 @@ subst p mkType params (MkPure x) =
         & maybe (mkType (quantifiedVar # q)) pure
     Nothing ->
         withDict (recursive :: (RecursiveDict (HasChild varTypes `And` QVarHasInstance Ord `And` constraint) typ)) $
-        withDict (hasNodeTypes (Proxy :: Proxy typ)) $
+        withDict (hasNodes (Proxy :: Proxy typ)) $
         traverseKWith (Proxy :: Proxy '[Recursive (HasChild varTypes `And` QVarHasInstance Ord `And` constraint)])
         (subst p mkType params) x
         >>= mkType

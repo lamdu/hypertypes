@@ -149,7 +149,7 @@ schemeToRestrictedType ::
     ) =>
     Tree Pure (Scheme varTypes typ) -> m (Tree (UVarOf m) typ)
 schemeToRestrictedType (MkPure (Scheme vars typ)) =
-    withDict (hasNodeTypes (Proxy :: Proxy varTypes)) $
+    withDict (hasNodes (Proxy :: Proxy varTypes)) $
     do
         foralls <- traverseKWith (Proxy :: Proxy '[Unify m]) makeQVarInstancesInScope vars
         wrapM
@@ -189,7 +189,7 @@ loadScheme ::
     Tree Pure (Scheme varTypes typ) ->
     m (Tree (GTerm (UVarOf m)) typ)
 loadScheme (MkPure (Scheme vars typ)) =
-    withDict (hasNodeTypes (Proxy :: Proxy varTypes)) $
+    withDict (hasNodes (Proxy :: Proxy varTypes)) $
     do
         foralls <- traverseKWith (Proxy :: Proxy '[Unify m]) makeQVarInstances vars
         wrapM (Proxy :: Proxy (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord))

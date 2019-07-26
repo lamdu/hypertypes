@@ -37,7 +37,7 @@ instance
     {-# INLINE pureK #-}
     pureK f =
         withDict (recursive :: RecursiveDict HasNodes a) $
-        withDict (hasNodeTypes (Proxy :: Proxy a)) $
+        withDict (hasNodes (Proxy :: Proxy a)) $
         RecursiveChildren
         { _recSelf = f
         , _recSub = pureKWith (Proxy :: Proxy '[Recursive HasNodes]) (_Flip # pureK f)
@@ -47,7 +47,7 @@ instance
     pureKWithConstraint p f =
         withDict (recP p) $
         withDict (recursive :: RecursiveDict HasNodes a) $
-        withDict (hasNodeTypes (Proxy :: Proxy a)) $
+        withDict (hasNodes (Proxy :: Proxy a)) $
         RecursiveChildren
         { _recSelf = f
         , _recSub = pureKWith (mkP p) (_Flip # pureKWithConstraint p f)
@@ -65,7 +65,7 @@ instance
     {-# INLINE mapC #-}
     mapC (RecursiveChildren fSelf fSub) (RecursiveChildren xSelf xSub) =
         withDict (recursive :: RecursiveDict HasNodes a) $
-        withDict (hasNodeTypes (Proxy :: Proxy a)) $
+        withDict (hasNodes (Proxy :: Proxy a)) $
         RecursiveChildren
         { _recSelf = runMapK fSelf xSelf
         , _recSub =
@@ -82,7 +82,7 @@ instance
     {-# INLINE zipK #-}
     zipK (RecursiveChildren xSelf xSub) (RecursiveChildren ySelf ySub) =
         withDict (recursive :: RecursiveDict HasNodes a) $
-        withDict (hasNodeTypes (Proxy :: Proxy a)) $
+        withDict (hasNodes (Proxy :: Proxy a)) $
         RecursiveChildren
         { _recSelf = Both xSelf ySelf
         , _recSub =

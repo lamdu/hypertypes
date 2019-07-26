@@ -44,7 +44,7 @@ foldMapK ::
     Tree k l ->
     a
 foldMapK f x =
-    withDict (hasNodeTypes (p x)) $
+    withDict (hasNodes (p x)) $
     foldMapC (pureK (MkConvertK f)) x
     where
         p :: Tree k l -> Proxy k

@@ -53,9 +53,9 @@ instance
     type NodesConstraint (UnifyErrorNodes t) =
         ConcatKnotConstraints '[KnotsConstraint '[t], NodesConstraint t]
 
-    {-# INLINE hasNodeTypes #-}
-    hasNodeTypes _ =
-        withDict (hasNodeTypes (Proxy :: Proxy t)) Dict
+    {-# INLINE hasNodes #-}
+    hasNodes _ =
+        withDict (hasNodes (Proxy :: Proxy t)) Dict
 
 makeKPointed ''UnifyErrorNodes
 
@@ -66,8 +66,8 @@ instance
     type NodeTypesOf (UnifyError t) = UnifyErrorNodes t
     type NodesConstraint (UnifyError t) = NodesConstraint (UnifyErrorNodes t)
 
-    {-# INLINE hasNodeTypes #-}
-    hasNodeTypes _ = hasNodeTypes (Proxy :: Proxy (UnifyErrorNodes t))
+    {-# INLINE hasNodes #-}
+    hasNodes _ = hasNodes (Proxy :: Proxy (UnifyErrorNodes t))
 
 instance
     HasNodes t =>
@@ -75,7 +75,7 @@ instance
 
     {-# INLINE mapC #-}
     mapC (UnifyErrorNodes tf bf) (UnifyErrorNodes tx bx) =
-        withDict (hasNodeTypes (Proxy :: Proxy t)) $
+        withDict (hasNodes (Proxy :: Proxy t)) $
         UnifyErrorNodes (runMapK tf tx) (mapC bf bx)
 
 instance
@@ -84,7 +84,7 @@ instance
 
     {-# INLINE zipK #-}
     zipK (UnifyErrorNodes t0 b0) (UnifyErrorNodes t1 b1) =
-        withDict (hasNodeTypes (Proxy :: Proxy t)) $
+        withDict (hasNodes (Proxy :: Proxy t)) $
         UnifyErrorNodes (Both t0 t1) (zipK b0 b1)
 
 makeKTraversableAndBases ''UnifyError

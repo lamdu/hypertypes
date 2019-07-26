@@ -66,7 +66,7 @@ saveBody ::
     Tree t (UVarOf m) ->
     StateT (Tree typeVars Binding, [m ()]) m (Tree t UVar)
 saveBody =
-    withDict (hasNodeTypes (Proxy :: Proxy t)) $
+    withDict (hasNodes (Proxy :: Proxy t)) $
     traverseKWith (Proxy :: Proxy '[Recursive (Deps m typeVars)]) saveVar
 
 save ::

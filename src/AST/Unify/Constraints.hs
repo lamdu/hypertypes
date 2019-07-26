@@ -65,7 +65,7 @@ class
         Tree ast p ->
         m (Tree ast q)
     verifyConstraints _ constraints _ update =
-        withDict (hasNodeTypes (Proxy :: Proxy ast)) $
+        withDict (hasNodes (Proxy :: Proxy ast)) $
         traverseKWith (Proxy :: Proxy [childOp, TypeConstraintsAre (TypeConstraintsOf ast)])
         (update constraints)
 

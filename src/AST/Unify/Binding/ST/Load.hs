@@ -81,7 +81,7 @@ loadBody ::
     Tree typeVars Binding -> Tree typeVars (ConvertState (World m)) ->
     Tree t UVar -> m (Tree t (STUVar (World m)))
 loadBody src conv =
-    withDict (hasNodeTypes (Proxy :: Proxy t)) $
+    withDict (hasNodes (Proxy :: Proxy t)) $
     traverseKWith
     (Proxy :: Proxy '[Recursive (HasChild typeVars `And` Unify m)])
     (loadVar src conv)

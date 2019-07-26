@@ -73,7 +73,7 @@ instance
         GBody x ->
             withDict (recursive :: RecursiveDict HasNodes ast) $
             withDict (recursive :: RecursiveDict KFunctor ast) $
-            withDict (hasNodeTypes (Proxy :: Proxy ast)) $
+            withDict (hasNodes (Proxy :: Proxy ast)) $
             mapC
             ( mapKWith (Proxy :: Proxy '[Recursive HasNodes, Recursive KFunctor])
                 (\(MkFlip f) -> Lens.from _Flip %~ mapC f & MkMapK)
@@ -92,7 +92,7 @@ instance
         GPoly x -> convTop x
         GBody x ->
             withDict (recursive :: RecursiveDict KFoldable ast) $
-            withDict (hasNodeTypes (Proxy :: Proxy ast)) $
+            withDict (hasNodes (Proxy :: Proxy ast)) $
             foldMapC
             ( mapKWith (Proxy :: Proxy '[Recursive KFoldable])
                 (\(MkFlip f) -> foldMapC f . (_Flip #) & MkConvertK)
@@ -112,7 +112,7 @@ instance
         GMono x -> runContainedK x <&> GMono
         GPoly x -> runContainedK x <&> GPoly
         GBody x ->
-            withDict (hasNodeTypes (Proxy :: Proxy ast)) $
+            withDict (hasNodes (Proxy :: Proxy ast)) $
             withDict (recursive :: RecursiveDict HasNodes ast) $
             withDict (recursive :: RecursiveDict KFunctor ast) $
             withDict (recursive :: RecursiveDict KFoldable ast) $
@@ -144,7 +144,7 @@ generalize v0 =
             USkolem l | toScopeConstraints l `leq` c -> pure (GPoly v1)
             UTerm t ->
                 withDict (recursive :: RecursiveDict (Unify m) t) $
-                withDict (hasNodeTypes (Proxy :: Proxy t)) $
+                withDict (hasNodes (Proxy :: Proxy t)) $
                 do
                     bindVar binding v1 (UResolving t)
                     r <- traverseKWith p generalize (t ^. uBody)
