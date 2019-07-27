@@ -7,6 +7,7 @@ module AST.Constraint
     , KnotsConstraint
     , ConcatKnotConstraints
     , ApplyKnotConstraints
+    , KnotConstraint
     ) where
 
 import AST.Knot (Knot)
@@ -14,10 +15,10 @@ import Data.Constraint (Constraint, Dict(..), withDict)
 import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
 
-type KnotCons = (Knot -> Type) -> Constraint
+type KnotConstraint = (Knot -> Type) -> Constraint
 
-class KnotConstraintFunc (cls :: KnotCons -> Constraint) where
-    type family ApplyKnotConstraint cls (c :: KnotCons) :: Constraint
+class KnotConstraintFunc (cls :: KnotConstraint -> Constraint) where
+    type family ApplyKnotConstraint cls (c :: KnotConstraint) :: Constraint
     applyKnotConstraint ::
         cls c =>
         Proxy cls ->
@@ -53,7 +54,7 @@ instance (c k, KnotsConstraint ks c) => KnotsConstraint (k ': ks) c where
     knotsConstraint _ p =
         withDict (knotsConstraint (Proxy :: Proxy ks) p) Dict
 
-class ConcatKnotConstraints (xs :: [KnotCons -> Constraint]) c where
+class ConcatKnotConstraints (xs :: [KnotConstraint -> Constraint]) c where
     concatKnotConstraints ::
         Proxy xs ->
         Proxy c ->
@@ -63,7 +64,7 @@ instance KnotConstraintFunc (ConcatKnotConstraints '[]) where
     type ApplyKnotConstraint (ConcatKnotConstraints '[]) c = ()
     {-# INLINE applyKnotConstraint #-}
     applyKnotConstraint _ =
-        concatKnotConstraints (Proxy :: Proxy ('[] :: [KnotCons -> Constraint]))
+        concatKnotConstraints (Proxy :: Proxy ('[] :: [KnotConstraint -> Constraint]))
 
 instance KnotConstraintFunc (ConcatKnotConstraints (x ': xs)) where
     type ApplyKnotConstraint (ConcatKnotConstraints (x ': xs)) c =
