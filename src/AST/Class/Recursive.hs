@@ -12,7 +12,7 @@ module AST.Class.Recursive
     ) where
 
 import AST.Class
-import AST.Class.Combinators (pureKWith, mapKWith, liftK2With)
+import AST.Class.Combinators
 import AST.Class.Foldable (KFoldable, foldMapKWith)
 import AST.Class.Traversable (KTraversable, traverseKWith)
 import AST.Combinator.Both

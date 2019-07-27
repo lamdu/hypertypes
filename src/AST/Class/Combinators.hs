@@ -8,7 +8,7 @@
 module AST.Class.Combinators
     ( And
     , ApplyKConstraints
-    , KLiftConstraints(..)
+    , KLiftConstraints(..), KDict(..)
     , pureKWith
     , mapKWith
     , liftK2With
