@@ -1,21 +1,26 @@
-{-# LANGUAGE NoImplicitPrelude, RankNTypes, DefaultSignatures #-}
+{-# LANGUAGE NoImplicitPrelude, RankNTypes, DefaultSignatures, TemplateHaskell #-}
 {-# LANGUAGE MultiParamTypeClasses, ConstraintKinds, FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts, ScopedTypeVariables, UndecidableInstances #-}
 {-# LANGUAGE UndecidableSuperClasses, DataKinds, TypeFamilies #-}
 
 module AST.Class.Recursive
     ( Recursively(..), RecursiveContext, RecursiveDict, RecursiveConstraint
+    , RecursiveNodes(..), recSelf, recSub
     , wrap, unwrap, wrapM, unwrapM, fold, unfold
     , foldMapRecursive
     , recursiveChildren
     ) where
 
-import AST.Class (KLiftConstraint)
+import AST.Class
+import AST.Class.Combinators (pureKWith, mapKWith, liftK2With)
 import AST.Class.Foldable (KFoldable, foldMapKWith)
 import AST.Class.Traversable (KTraversable, traverseKWith)
+import AST.Combinator.Both
+import AST.Combinator.Flip
 import AST.Constraint
-import AST.Knot (Tree)
+import AST.Knot (Tree, Node, RunKnot)
 import AST.Knot.Pure (Pure, _Pure)
+import Control.Lens (makeLenses)
 import Control.Lens.Operators
 import Data.Constraint (Dict(..), withDict)
 import Data.Functor.Const (Const(..))
@@ -51,6 +56,78 @@ instance KnotConstraintFunc (RecursiveConstraint k) where
     type ApplyKnotConstraint (RecursiveConstraint k) c = Recursively c k
     {-# INLINE applyKnotConstraint #-}
     applyKnotConstraint _ _ = Dict
+
+data RecursiveNodes a k = RecursiveNodes
+    { _recSelf :: Node k a
+    , _recSub :: Tree (NodeTypesOf a) (Flip RecursiveNodes (RunKnot k))
+    }
+makeLenses ''RecursiveNodes
+
+instance
+    Recursively HasNodes a =>
+    HasNodes (RecursiveNodes a) where
+    type NodeTypesOf (RecursiveNodes a) = RecursiveNodes a
+    type NodesConstraint (RecursiveNodes a) = RecursiveConstraint a
+
+instance
+    Recursively HasNodes a =>
+    KPointed (RecursiveNodes a) where
+
+    {-# INLINE pureK #-}
+    pureK f =
+        withDict (recursive :: RecursiveDict a HasNodes) $
+        withDict (hasNodes (Proxy :: Proxy a)) $
+        RecursiveNodes
+        { _recSelf = f
+        , _recSub = pureKWith (Proxy :: Proxy '[Recursively HasNodes]) (_Flip # pureK f)
+        }
+
+    {-# INLINE pureKWithConstraint #-}
+    pureKWithConstraint p f =
+        withDict (recP p) $
+        withDict (recursive :: RecursiveDict a HasNodes) $
+        withDict (hasNodes (Proxy :: Proxy a)) $
+        RecursiveNodes
+        { _recSelf = f
+        , _recSub = pureKWith (mkP p) (_Flip # pureKWithConstraint p f)
+        }
+        where
+            recP :: Recursively c a => Proxy c -> RecursiveDict a c
+            recP _ = recursive
+            mkP :: Proxy c -> Proxy '[Recursively HasNodes, Recursively c]
+            mkP _ = Proxy
+
+instance
+    Recursively HasNodes a =>
+    KFunctor (RecursiveNodes a) where
+
+    {-# INLINE mapC #-}
+    mapC (RecursiveNodes fSelf fSub) (RecursiveNodes xSelf xSub) =
+        withDict (recursive :: RecursiveDict a HasNodes) $
+        withDict (hasNodes (Proxy :: Proxy a)) $
+        RecursiveNodes
+        { _recSelf = runMapK fSelf xSelf
+        , _recSub =
+            mapC
+            ( mapKWith (Proxy :: Proxy '[Recursively HasNodes])
+                ((_MapK #) . (\(MkFlip sf) -> _Flip %~ mapC sf)) fSub
+            ) xSub
+        }
+
+instance
+    Recursively HasNodes a =>
+    KApply (RecursiveNodes a) where
+
+    {-# INLINE zipK #-}
+    zipK (RecursiveNodes xSelf xSub) (RecursiveNodes ySelf ySub) =
+        withDict (recursive :: RecursiveDict a HasNodes) $
+        withDict (hasNodes (Proxy :: Proxy a)) $
+        RecursiveNodes
+        { _recSelf = Both xSelf ySelf
+        , _recSub =
+            liftK2With (Proxy :: Proxy '[Recursively HasNodes])
+            (\(MkFlip x) -> _Flip %~ zipK x) xSub ySub
+        }
 
 instance constraint Pure => Recursively constraint Pure
 

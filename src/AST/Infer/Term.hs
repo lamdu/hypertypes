@@ -18,7 +18,6 @@ import AST.Class.Traversable
 import AST.Constraint
 import AST.Combinator.Both
 import AST.Combinator.Flip (Flip(..), _Flip)
-import AST.Combinator.RecursiveNodes
 import Control.Lens (Traversal, Lens', makeLenses, makePrisms, from)
 import Control.Lens.Operators
 import Data.Constraint

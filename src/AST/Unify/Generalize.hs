@@ -19,7 +19,6 @@ import           AST.Class.Foldable
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Class.Traversable
 import           AST.Combinator.Flip
-import           AST.Combinator.RecursiveNodes
 import           AST.Unify
 import           AST.Unify.Lookup (semiPruneLookup)
 import           AST.Unify.New
