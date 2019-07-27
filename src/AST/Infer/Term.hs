@@ -18,7 +18,7 @@ import AST.Class.Traversable
 import AST.Constraint
 import AST.Combinator.Both
 import AST.Combinator.Flip (Flip(..), _Flip)
-import AST.Combinator.RecursiveChildren
+import AST.Combinator.RecursiveNodes
 import Control.Lens (Traversal, Lens', makeLenses, makePrisms, from)
 import Control.Lens.Operators
 import Data.Constraint
@@ -127,7 +127,7 @@ instance KnotConstraintFunc (InferConstraint k) where
     applyKnotConstraint _ _ = Dict
 
 newtype ITermTypes e k =
-    ITermTypes (Tree (RecursiveChildren e) (Flip IResultNodeTypes (RunKnot k)))
+    ITermTypes (Tree (RecursiveNodes e) (Flip IResultNodeTypes (RunKnot k)))
 makePrisms ''ITermTypes
 
 instance
@@ -160,10 +160,10 @@ instance
     KFunctor (ITermTypes e) where
 
     {-# INLINE mapC #-}
-    mapC (ITermTypes (RecursiveChildren (MkFlip mapTop) mapSub)) =
+    mapC (ITermTypes (RecursiveNodes (MkFlip mapTop) mapSub)) =
         _ITermTypes %~
-        \(RecursiveChildren t s) ->
-        RecursiveChildren
+        \(RecursiveNodes t s) ->
+        RecursiveNodes
         { _recSelf = t & _Flip %~ mapC mapTop
         , _recSub =
             withDict (hasNodes (Proxy :: Proxy e)) $
@@ -226,7 +226,7 @@ instance
     KFunctor (Flip (ITerm a) e) where
 
     {-# INLINE mapC #-}
-    mapC (ITermTypes (RecursiveChildren (MkFlip ft) fs)) =
+    mapC (ITermTypes (RecursiveNodes (MkFlip ft) fs)) =
         withDict (hasNodes (Proxy :: Proxy e)) $
         withDict (recursive :: RecursiveDict e HasNodes) $
         withDict (recursive :: RecursiveDict e (InferChildConstraints HasNodes)) $
@@ -248,7 +248,7 @@ instance
     ) =>
     KFoldable (Flip (ITerm a) e) where
     {-# INLINE foldMapC #-}
-    foldMapC (ITermTypes (RecursiveChildren (MkFlip ft) fs)) (MkFlip (ITerm _ r x)) =
+    foldMapC (ITermTypes (RecursiveNodes (MkFlip ft) fs)) (MkFlip (ITerm _ r x)) =
         withDict (hasNodes (Proxy :: Proxy e)) $
         withDict (recursive :: RecursiveDict e HasNodes) $
         withDict (recursive :: RecursiveDict e (InferChildConstraints HasNodes)) $

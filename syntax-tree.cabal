@@ -51,7 +51,7 @@ library
       AST.Combinator.Compose
       AST.Combinator.Flip
       AST.Combinator.Pair
-      AST.Combinator.RecursiveChildren
+      AST.Combinator.RecursiveNodes
       AST.Combinator.Single
       AST.Constraint
       AST.Diff

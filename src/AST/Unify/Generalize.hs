@@ -19,7 +19,7 @@ import           AST.Class.Foldable
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Class.Traversable
 import           AST.Combinator.Flip
-import           AST.Combinator.RecursiveChildren
+import           AST.Combinator.RecursiveNodes
 import           AST.Unify
 import           AST.Unify.Lookup (semiPruneLookup)
 import           AST.Unify.New
@@ -57,7 +57,7 @@ instance
     Recursively HasNodes ast =>
     HasNodes (Flip GTerm ast) where
 
-    type NodeTypesOf (Flip GTerm ast) = RecursiveChildren ast
+    type NodeTypesOf (Flip GTerm ast) = RecursiveNodes ast
     type NodesConstraint (Flip GTerm ast) = RecursiveConstraint ast
 
 instance
@@ -65,7 +65,7 @@ instance
     KFunctor (Flip GTerm ast) where
 
     {-# INLINE mapC #-}
-    mapC (RecursiveChildren (MkMapK mapTop) mapSub) =
+    mapC (RecursiveNodes (MkMapK mapTop) mapSub) =
         _Flip %~
         \case
         GMono x -> mapTop x & GMono
@@ -86,7 +86,7 @@ instance
     KFoldable (Flip GTerm ast) where
 
     {-# INLINE foldMapC #-}
-    foldMapC (RecursiveChildren (MkConvertK convTop) convSub) =
+    foldMapC (RecursiveNodes (MkConvertK convTop) convSub) =
         \case
         GMono x -> convTop x
         GPoly x -> convTop x
