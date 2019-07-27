@@ -133,13 +133,17 @@ instance constraint Pure => Recursively constraint Pure
 
 {-# INLINE wrapM #-}
 wrapM ::
+    forall m constraint expr f.
     (Monad m, Recursively constraint expr) =>
     Proxy constraint ->
     (forall child. constraint child => Tree child f -> m (Tree f child)) ->
     Tree Pure expr ->
     m (Tree f expr)
 wrapM p f x =
-    x ^. _Pure & recursiveChildren p (wrapM p f) >>= f
+    withDict (recursive :: RecursiveDict expr constraint) $
+    x ^. _Pure
+    & traverseKWith (Proxy :: Proxy '[Recursively constraint]) (wrapM p f)
+    >>= f
 
 {-# INLINE unwrapM #-}
 unwrapM ::
