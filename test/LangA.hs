@@ -52,6 +52,7 @@ instance HasNodes (LangA v) where
 
 makeKTraversableAndBases ''LangA
 instance Recursively HasNodes (LangA v)
+instance Recursively KFunctor (LangA v)
 
 type instance TypeOf (LangA k) = Typ
 type instance ScopeOf (LangA k) = ScopeTypes Typ

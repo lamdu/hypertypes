@@ -16,6 +16,7 @@ import           Control.Lens.Operators
 import           Control.Monad.Except
 import           Control.Monad.RWS
 import           Control.Monad.ST
+import           Data.Constraint
 import qualified Data.Map as Map
 import           Data.Proxy
 import qualified Data.Set as Set
@@ -128,11 +129,12 @@ inferExpr ::
     , Recursively (InferChildConstraints (Recursively (Unify m))) t
     , Recursively (InferChildConstraints HasNodes) t
     , Recursively HasNodes t
+    , Recursively KFunctor t
     ) =>
     Tree Pure t ->
     m (Tree Pure (TypeOf t))
 inferExpr x =
-    infer (wrap (Proxy :: Proxy (Infer m)) (Ann ()) x)
+    infer (wrap (Proxy :: Proxy '[Infer m, KFunctor]) Dict (Ann ()) x)
     >>= Lens.from _Flip (traverseKWith (Proxy :: Proxy '[Recursively (Unify m)]) applyBindings)
     <&> (^. iType)
 

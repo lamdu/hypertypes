@@ -105,6 +105,7 @@ instance
     ( Recursively HasNodes ast
     , Recursively KFunctor ast
     , Recursively KFoldable ast
+    , Recursively KTraversable ast
     ) =>
     KTraversable (Flip GTerm ast) where
 
@@ -116,8 +117,12 @@ instance
             withDict (recursive :: RecursiveDict ast HasNodes) $
             withDict (recursive :: RecursiveDict ast KFunctor) $
             withDict (recursive :: RecursiveDict ast KFoldable) $
+            withDict (recursive :: RecursiveDict ast KTraversable) $
             -- KTraversable will be required when not implied by Recursively
-            traverseKWith (Proxy :: Proxy '[Recursively HasNodes, Recursively KFunctor, Recursively KFoldable])
+            traverseKWith
+            (Proxy ::
+                Proxy
+                '[Recursively HasNodes, Recursively KFunctor, Recursively KFoldable, Recursively KTraversable])
             (Lens.from _Flip sequenceC) x
             <&> GBody
         <&> MkFlip

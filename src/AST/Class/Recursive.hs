@@ -37,7 +37,7 @@ import Prelude.Compat
 -- | `Recursively` carries a constraint to all of the descendant types
 -- of an AST. As opposed to the `ChildrenConstraint` type family which
 -- only carries a constraint to the direct children of an AST.
-class (KTraversable expr, constraint expr) => Recursively constraint expr where
+class constraint expr => Recursively constraint expr where
     recursive :: RecursiveDict expr constraint
     {-# INLINE recursive #-}
     -- | When an instance's constraints already imply

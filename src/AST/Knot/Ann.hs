@@ -7,11 +7,9 @@ module AST.Knot.Ann
     ( Ann(..), ann, val
     , annotations, annotationsWith
     , strip, addAnnotations
-    , para
     ) where
 
 import           AST.Class
-import           AST.Class.Combinators (mapKWith)
 import           AST.Class.Recursive
 import           AST.Class.Traversable
 import           AST.Class.Traversable.TH (makeKTraversableAndBases)
@@ -92,23 +90,6 @@ annotations ::
     (Tree (Ann b) e)
     a b
 annotations = annotationsWith (Proxy :: Proxy '[KTraversable]) Dict
-
--- Similar to `para` from `recursion-schemes`,
--- except it's in terms of full annotated trees rather than just the final result.
--- TODO: What does the name `para` mean?
-para ::
-    forall constraint expr a.
-    Recursively constraint expr =>
-    Proxy constraint ->
-    (forall child. Recursively constraint child => Tree child (Ann a) -> a) ->
-    Tree Pure expr ->
-    Tree (Ann a) expr
-para p f x =
-    Ann (f r) r
-    where
-        r =
-            withDict (recursive :: RecursiveDict expr constraint) $
-            mapKWith (Proxy :: Proxy '[Recursively constraint]) (para p f) (getPure x)
 
 strip ::
     (Recursively HasNodes expr, Recursively KTraversable expr) =>
