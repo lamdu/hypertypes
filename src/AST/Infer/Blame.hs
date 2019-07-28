@@ -14,7 +14,7 @@ import AST.Unify.New
 import AST.Unify.Occurs
 import Control.Lens.Operators
 import Control.Monad.Except (MonadError(..))
-import Data.Constraint (withDict)
+import Data.Constraint
 import Data.Foldable (traverse_)
 import Data.List (sortOn)
 import Data.Proxy
@@ -70,7 +70,12 @@ prepare typeFromAbove (Ann a x) =
 -- (i.e `StateT s (Either e)` is ok but `EitherT e (State s)` is not)
 blame ::
     forall priority err m exp a.
-    (Ord priority, MonadError err m, Recursively (Infer m) exp) =>
+    ( Ord priority
+    , MonadError err m
+    , Recursively (Infer m) exp
+    , Recursively KTraversable exp
+    , Recursively HasNodes exp
+    ) =>
     (a -> priority) ->
     Tree (UVarOf m) (TypeOf exp) ->
     Tree (Ann a) exp ->
@@ -78,8 +83,8 @@ blame ::
 blame order topLevelType e =
     do
         p <- prepare topLevelType e
-        p ^.. annotationsWith prox & sortOn (order . pAnn) & traverse_ pTryUnify
-        annotationsWith prox (\x -> pFinalize x <&> (, pAnn x)) p
+        p ^.. annotationsWith prox Dict & sortOn (order . pAnn) & traverse_ pTryUnify
+        annotationsWith prox Dict (\x -> pFinalize x <&> (, pAnn x)) p
     where
-        prox :: Proxy (Infer m)
+        prox :: Proxy '[Infer m, KTraversable]
         prox = Proxy

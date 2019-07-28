@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, ConstraintKinds #-}
-{-# LANGUAGE FlexibleContexts, ScopedTypeVariables, LambdaCase, InstanceSigs #-}
+{-# LANGUAGE FlexibleContexts, ScopedTypeVariables, LambdaCase #-}
 {-# LANGUAGE RankNTypes, TupleSections, FlexibleInstances, DeriveGeneric #-}
 {-# LANGUAGE StandaloneDeriving, UndecidableInstances, DataKinds #-}
 
@@ -16,6 +16,7 @@ import           Algebra.PartialOrd (PartialOrd(..))
 import           AST
 import           AST.Class
 import           AST.Class.Foldable
+import           AST.Class.Recursive
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Class.Traversable
 import           AST.Combinator.Flip
@@ -179,29 +180,36 @@ instantiateForAll cons x =
 {-# INLINE instantiateH #-}
 instantiateH ::
     forall m t.
-    Recursively (Unify m) t =>
+    Applicative m =>
+    Tree (RecursiveNodes t) (KDict '[Unify m]) ->
     Tree (GTerm (UVarOf m)) t -> WriterT [m ()] m (Tree (UVarOf m) t)
-instantiateH (GMono x) = pure x
-instantiateH (GBody x) =
-    recursiveChildren (Proxy :: Proxy (Unify m)) instantiateH x >>= lift . newTerm
-instantiateH (GPoly x) = instantiateForAll UUnbound x
+instantiateH _ (GMono x) = pure x
+instantiateH c (GBody x) =
+    withDict (c ^. recSelf . _KDict) $
+    traverseKRec c instantiateH x >>= lift . newTerm
+instantiateH c (GPoly x) =
+    withDict (c ^. recSelf . _KDict) $
+    instantiateForAll UUnbound x
 
 {-# INLINE instantiateWith #-}
 instantiateWith ::
-    Recursively (Unify m) t =>
+    forall m t a.
+    (Recursively HasNodes t, Recursively (Unify m) t) =>
     m a ->
     Tree (GTerm (UVarOf m)) t ->
     m (Tree (UVarOf m) t, a)
 instantiateWith action g =
     do
-        (r, recover) <- runWriterT (instantiateH g)
+        (r, recover) <-
+            instantiateH (rLiftConstraints :: Tree (RecursiveNodes t) (KDict '[Unify m])) g
+            & runWriterT
         action <* sequence_ recover <&> (r, )
 
 -- | Instantiate a `Generalized` type with fresh unification variables
 -- for the quantified variables
 {-# INLINE instantiate #-}
 instantiate ::
-    Recursively (Unify m) t =>
+    (Recursively HasNodes t, Recursively (Unify m) t) =>
     Tree (GTerm (UVarOf m)) t -> m (Tree (UVarOf m) t)
 instantiate g = instantiateWith (pure ()) g <&> (^. Lens._1)
 

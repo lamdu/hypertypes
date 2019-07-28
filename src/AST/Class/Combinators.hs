@@ -1,13 +1,11 @@
-{-# LANGUAGE NoImplicitPrelude, DataKinds, FlexibleContexts, FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses, ConstraintKinds, UndecidableSuperClasses #-}
+{-# LANGUAGE NoImplicitPrelude, DataKinds, FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses, ScopedTypeVariables #-}
 {-# LANGUAGE UndecidableInstances, TypeOperators, TypeFamilies, RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
 -- | Combinators for partially applied constraints on knots
 
 module AST.Class.Combinators
-    ( And
-    , ApplyKConstraints
+    ( ApplyKConstraints
     , KLiftConstraints(..)
     , pureKWith
     , mapKWith
@@ -24,9 +22,6 @@ import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
-
-class    (c0 k, c1 k) => And c0 c1 (k :: Knot -> *)
-instance (c0 k, c1 k) => And c0 c1 k
 
 class
     HasNodes k =>

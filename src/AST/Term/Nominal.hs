@@ -19,13 +19,13 @@ module AST.Term.Nominal
 
 import           AST
 import           AST.Class (_MapK)
-import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.Foldable (_ConvertK, foldMapKWith, traverseKWith_)
-import           AST.Class.Recursive (wrapM)
+import           AST.Class.Recursive
 import           AST.Class.Traversable (ContainedK(..))
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
 import           AST.Combinator.Single (Single)
+import           AST.Knot.Dict
 import           AST.Infer
 import           AST.Term.FuncType (HasFuncType(..), FuncType(..))
 import           AST.Term.Map (TermMap(..), _TermMap)
@@ -220,7 +220,7 @@ loadNominalDecl ::
     ( Monad m
     , KTraversable (NomVarTypes typ)
     , KLiftConstraint (NomVarTypes typ) (Unify m)
-    , Recursively (Unify m `And` HasChild (NomVarTypes typ) `And` QVarHasInstance Ord) typ
+    , RLiftConstraints typ '[Unify m, HasChild (NomVarTypes typ), QVarHasInstance Ord]
     ) =>
     Tree Pure (NominalDecl typ) ->
     m (Tree (LoadedNominalDecl typ) (UVarOf m))
@@ -228,8 +228,8 @@ loadNominalDecl (MkPure (NominalDecl params (Scheme foralls typ))) =
     do
         paramsL <- traverseKWith (Proxy :: Proxy '[Unify m]) makeQVarInstances params
         forallsL <- traverseKWith (Proxy :: Proxy '[Unify m]) makeQVarInstances foralls
-        wrapM (Proxy :: Proxy (Unify m `And` HasChild (NomVarTypes typ) `And` QVarHasInstance Ord))
-            (loadBody paramsL forallsL) typ
+        wrapM (Proxy :: Proxy '[Unify m, HasChild (NomVarTypes typ), QVarHasInstance Ord])
+            Dict (loadBody paramsL forallsL) typ
             <&> LoadedNominalDecl paramsL forallsL
 
 class MonadNominals nomId typ m where
@@ -270,6 +270,7 @@ instance
     , MonadNominals nomId (TypeOf expr) m
     , KTraversable (NomVarTypes (TypeOf expr))
     , KLiftConstraint (NomVarTypes (TypeOf expr)) (Unify m)
+    , Recursively HasNodes (TypeOf expr)
     ) =>
     Infer m (ToNom nomId expr) where
 
@@ -302,6 +303,7 @@ instance
     , MonadNominals nomId (TypeOf expr) m
     , KTraversable (NomVarTypes (TypeOf expr))
     , KLiftConstraint (NomVarTypes (TypeOf expr)) (Unify m)
+    , Recursively HasNodes (TypeOf expr)
     ) =>
     Infer m (FromNom nomId expr) where
 
@@ -316,31 +318,45 @@ instance
 
 -- | Get the scheme in a nominal given the parameters of a specific nominal instance.
 applyNominal ::
-    (Monad m, Recursively (HasChild (NomVarTypes typ) `And` QVarHasInstance Ord `And` constraint) typ) =>
-    Proxy constraint ->
-    (forall child. constraint child => Tree child k -> m (Tree k child)) ->
+    forall m k cs typ.
+    (Monad m, RLiftConstraints typ cs) =>
+    Proxy cs ->
+    (forall n. ApplyKConstraints n cs =>
+        Dict (HasQuantifiedVar n, HasChild (NomVarTypes typ) n, QVarHasInstance Ord n, KTraversable n)
+    ) ->
+    (forall n. ApplyKConstraints n cs => Tree n k -> m (Tree k n)) ->
     Tree Pure (NominalDecl typ) ->
     Tree (NomVarTypes typ) (QVarInstances k) ->
     m (Tree (Scheme (NomVarTypes typ) typ) k)
-applyNominal p mkType (MkPure (NominalDecl _paramsDecl scheme)) params =
-    sTyp (subst p mkType params) scheme
+applyNominal _ getDeps mkType (MkPure (NominalDecl _paramsDecl scheme)) params =
+    sTyp
+    (subst (rLiftConstraints :: Tree (RecursiveNodes typ) (KDict cs)) getDeps mkType params)
+    scheme
 
 subst ::
-    forall varTypes typ k constraint m.
-    (Monad m, Recursively (HasChild varTypes `And` QVarHasInstance Ord `And` constraint) typ) =>
-    Proxy constraint ->
-    (forall child. constraint child => Tree child k -> m (Tree k child)) ->
-    Tree varTypes (QVarInstances k) -> Tree Pure typ -> m (Tree k typ)
-subst p mkType params (MkPure x) =
+    forall m typ cs varTypes k.
+    Monad m =>
+    Tree (RecursiveNodes typ) (KDict cs) ->
+    (forall n. ApplyKConstraints n cs =>
+        Dict (HasQuantifiedVar n, HasChild varTypes n, QVarHasInstance Ord n, KTraversable n)
+    ) ->
+    (forall n. ApplyKConstraints n cs => Tree n k -> m (Tree k n)) ->
+    Tree varTypes (QVarInstances k) ->
+    Tree Pure typ ->
+    m (Tree k typ)
+subst c getDeps mkType params (MkPure x) =
+    withDict (c ^. recSelf . _KDict) $
+    withDict
+        (getDeps ::
+            Dict (HasQuantifiedVar typ, HasChild varTypes typ, QVarHasInstance Ord typ, KTraversable typ)
+        ) $
     case x ^? quantifiedVar of
     Just q ->
         params ^?
         getChild . _QVarInstances . Lens.ix q
         & maybe (mkType (quantifiedVar # q)) pure
     Nothing ->
-        withDict (recursive :: (RecursiveDict typ (HasChild varTypes `And` QVarHasInstance Ord `And` constraint))) $
-        traverseKWith (Proxy :: Proxy '[Recursively (HasChild varTypes `And` QVarHasInstance Ord `And` constraint)])
-        (subst p mkType params) x
+        traverseKRec c (\d -> subst d getDeps mkType params) x
         >>= mkType
 
 type DepsD c t k = ((c (Tree (NomVarTypes t) QVars), c (Node k t)) :: Constraint)

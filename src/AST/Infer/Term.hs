@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DataKinds, TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses, ConstraintKinds, FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances, UndecidableSuperClasses, FlexibleInstances #-}
-{-# LANGUAGE InstanceSigs, ScopedTypeVariables, RankNTypes, StandaloneDeriving #-}
+{-# LANGUAGE ScopedTypeVariables, RankNTypes, StandaloneDeriving #-}
 
 module AST.Infer.Term
     ( TypeOf, ScopeOf
@@ -284,16 +284,18 @@ iScope :: Lens' (ITerm a v e) (Tree (ScopeOf (RunKnot e)) v)
 iScope = iRes . irScope
 
 iAnnotations ::
+    forall e a b v.
     Recursively KTraversable e =>
     Traversal
     (Tree (ITerm a v) e)
     (Tree (ITerm b v) e)
     a b
 iAnnotations f (ITerm pl r x) =
+    withDict (recursive :: RecursiveDict e KTraversable) $
     ITerm
     <$> f pl
     <*> pure r
-    <*> recursiveChildren (Proxy :: Proxy KTraversable) (iAnnotations f) x
+    <*> traverseKWith (Proxy :: Proxy '[Recursively KTraversable]) (iAnnotations f) x
 
 deriving instance (Show (Tree v (TypeOf e)), Show (Tree (ScopeOf e) v)) => Show (Tree (IResult e) v)
 deriving instance (Show a, Show (Node e (ITerm a v)), Show (Tree (IResult (RunKnot e)) v)) => Show (ITerm a v e)

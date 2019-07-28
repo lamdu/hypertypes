@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables, FlexibleContexts #-}
+{-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables, FlexibleContexts, DataKinds #-}
 
 module AST.Unify.Apply
     ( applyBindings
@@ -11,14 +11,17 @@ import AST.Unify.Occurs (occursError)
 import AST.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify(..))
 import AST.Unify.Term (UTerm(..), uBody)
 import Control.Lens.Operators
+import Data.Constraint (withDict)
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
 {-# INLINE applyBindings #-}
 applyBindings ::
-    forall m t. Recursively (Unify m) t =>
-    Tree (UVarOf m) t -> m (Tree Pure t)
+    forall m t.
+    Recursively (Unify m) t =>
+    Tree (UVarOf m) t ->
+    m (Tree Pure t)
 applyBindings v0 =
     semiPruneLookup v0
     >>=
@@ -37,10 +40,11 @@ applyBindings v0 =
         case mNoChildren of
         Just f -> _Pure # f (b ^. uBody) & pure
         Nothing ->
+            withDict (recursive :: RecursiveDict t (Unify m)) $
             do
                 bindVar binding v1 (UResolving b)
-                recursiveChildren (Proxy :: Proxy (Unify m)) applyBindings
-                    (b ^. uBody)
+                traverseKWith (Proxy :: Proxy '[Recursively (Unify m)])
+                    applyBindings (b ^. uBody)
             <&> (_Pure #)
             >>= result
     UToVar{} -> error "lookup not expected to result in var"

@@ -1,14 +1,16 @@
-{-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables, FlexibleContexts #-}
+{-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables, FlexibleContexts, DataKinds #-}
 
 module AST.Unify.New
     ( newUnbound, newTerm, unfreeze
     ) where
 
 import AST (Tree, Pure)
-import AST.Class.Recursive (Recursively, wrapM)
+import AST.Class (HasNodes)
+import AST.Class.Recursive
 import AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import AST.Unify.Constraints (MonadScopeConstraints(..))
 import AST.Unify.Term (UTerm(..), UTermBody(..))
+import Data.Constraint (Dict(..))
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
@@ -24,6 +26,6 @@ newTerm x = scopeConstraints >>= newVar binding . UTerm . (`UTermBody` x)
 -- | Embed a pure term as a unification term.
 unfreeze ::
     forall m t.
-    Recursively (Unify m) t =>
+    (Recursively HasNodes t, Recursively (Unify m) t) =>
     Tree Pure t -> m (Tree (UVarOf m) t)
-unfreeze = wrapM (Proxy :: Proxy (Unify m)) newTerm
+unfreeze = wrapM (Proxy :: Proxy '[Unify m]) Dict newTerm

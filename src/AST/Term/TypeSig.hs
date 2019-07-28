@@ -7,7 +7,6 @@ module AST.Term.TypeSig
     ) where
 
 import           AST
-import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Combinator.Single (Single)
 import           AST.Infer
@@ -55,7 +54,7 @@ instance
     , Infer m term
     , KTraversable vars
     , KLiftConstraint vars (Unify m)
-    , Recursively (Unify m `And` HasChild vars `And` QVarHasInstance Ord) (TypeOf term)
+    , RLiftConstraints (TypeOf term) '[Unify m, HasChild vars, QVarHasInstance Ord]
     ) =>
     Infer m (TypeSig vars term) where
 

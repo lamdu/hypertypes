@@ -6,7 +6,6 @@ module AST.Term.Scheme.AlphaEq
     ) where
 
 import           AST
-import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
 import           AST.Class.ZipMatch (zipMatchWith_)
 import           AST.Term.Scheme (Scheme, schemeToRestrictedType)
@@ -66,8 +65,10 @@ goUVar xv yv =
 alphaEq ::
     ( KTraversable varTypes
     , KLiftConstraint varTypes (Unify m)
+    , Recursively HasNodes typ
     , Recursively (Unify m) typ
-    , Recursively (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
+    , Recursively (HasChild varTypes) typ
+    , Recursively (QVarHasInstance Ord) typ
     ) =>
     Tree Pure (Scheme varTypes typ) ->
     Tree Pure (Scheme varTypes typ) ->

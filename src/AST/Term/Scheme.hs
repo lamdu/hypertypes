@@ -15,9 +15,8 @@ module AST.Term.Scheme
     ) where
 
 import           AST
-import           AST.Class.Combinators (And)
 import           AST.Class.HasChild (HasChild(..))
-import           AST.Class.Recursive (wrapM, unwrapM)
+import           AST.Class.Recursive
 import           AST.Combinator.Single (Single)
 import           AST.Unify
 import           AST.Unify.Lookup (semiPruneLookup)
@@ -145,15 +144,15 @@ schemeToRestrictedType ::
     ( Monad m
     , KTraversable varTypes
     , KLiftConstraint varTypes (Unify m)
-    , Recursively (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
+    , RLiftConstraints typ '[Unify m, HasChild varTypes, QVarHasInstance Ord]
     ) =>
     Tree Pure (Scheme varTypes typ) -> m (Tree (UVarOf m) typ)
 schemeToRestrictedType (MkPure (Scheme vars typ)) =
     do
         foralls <- traverseKWith (Proxy :: Proxy '[Unify m]) makeQVarInstancesInScope vars
         wrapM
-            (Proxy :: Proxy (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord))
-            (schemeBodyToType foralls) typ
+            (Proxy :: Proxy '[Unify m, HasChild varTypes, QVarHasInstance Ord])
+            Dict (schemeBodyToType foralls) typ
 
 {-# INLINE loadBody #-}
 loadBody ::
@@ -183,29 +182,27 @@ loadScheme ::
     ( Monad m
     , KTraversable varTypes
     , KLiftConstraint varTypes (Unify m)
-    , Recursively (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
+    , RLiftConstraints typ '[Unify m, HasChild varTypes, QVarHasInstance Ord]
     ) =>
     Tree Pure (Scheme varTypes typ) ->
     m (Tree (GTerm (UVarOf m)) typ)
 loadScheme (MkPure (Scheme vars typ)) =
     do
         foralls <- traverseKWith (Proxy :: Proxy '[Unify m]) makeQVarInstances vars
-        wrapM (Proxy :: Proxy (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord))
-            (loadBody foralls) typ
+        wrapM (Proxy :: Proxy '[Unify m, HasChild varTypes, QVarHasInstance Ord])
+            Dict (loadBody foralls) typ
 
 saveH ::
-    forall m varTypes typ.
-    Recursively (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ =>
+    forall typ varTypes m.
+    Monad m =>
+    Tree (RecursiveNodes typ) (KDict '[Unify m, HasChild varTypes, QVarHasInstance Ord]) ->
     Tree (GTerm (UVarOf m)) typ ->
     StateT (Tree varTypes QVars, [m ()]) m (Tree Pure typ)
-saveH (GBody x) =
-    recursiveChildren
-    (Proxy :: Proxy (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord))
-    saveH x <&> (_Pure #)
-saveH (GMono x) =
-    unwrapM
-    (Proxy :: Proxy (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord))
-    f x & lift
+saveH c (GBody x) =
+    withDict (c ^. recSelf . _KDict) $
+    traverseKRec c saveH x <&> (_Pure #)
+saveH c (GMono x) =
+    unwrapMWithDict c Dict f x & lift
     where
         f v =
             semiPruneLookup v
@@ -214,7 +211,8 @@ saveH (GMono x) =
             (_, UTerm t) -> t ^. uBody
             (_, UUnbound{}) -> error "saveScheme of non-toplevel scheme!"
             _ -> error "unexpected state at saveScheme of monomorphic part"
-saveH (GPoly x) =
+saveH c (GPoly x) =
+    withDict (c ^. recSelf . _KDict) $
     lookupVar binding x & lift
     >>=
     \case
@@ -233,14 +231,15 @@ saveH (GPoly x) =
 saveScheme ::
     ( KLiftConstraint varTypes (QVarHasInstance Ord)
     , KPointed varTypes
-    , Recursively (Unify m `And` HasChild varTypes `And` QVarHasInstance Ord) typ
+    , RLiftConstraints typ '[Unify m, HasChild varTypes, QVarHasInstance Ord]
+    , Monad m
     ) =>
     Tree (GTerm (UVarOf m)) typ ->
     m (Tree Pure (Scheme varTypes typ))
 saveScheme x =
     do
         (t, (v, recover)) <-
-            runStateT (saveH x)
+            runStateT (saveH rLiftConstraints x)
             ( pureKWithConstraint (Proxy :: Proxy (QVarHasInstance Ord)) (QVars mempty)
             , []
             )

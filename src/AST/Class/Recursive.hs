@@ -1,30 +1,35 @@
 {-# LANGUAGE NoImplicitPrelude, RankNTypes, DefaultSignatures, TemplateHaskell #-}
 {-# LANGUAGE MultiParamTypeClasses, ConstraintKinds, FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts, ScopedTypeVariables, UndecidableInstances #-}
-{-# LANGUAGE UndecidableSuperClasses, DataKinds, TypeFamilies #-}
+{-# LANGUAGE UndecidableSuperClasses, DataKinds, TypeFamilies, TypeOperators #-}
 
 module AST.Class.Recursive
     ( Recursively(..), RecursiveContext, RecursiveDict, RecursiveConstraint
     , RecursiveNodes(..), recSelf, recSub
-    , wrap, unwrap, wrapM, unwrapM, fold, unfold
-    , foldMapRecursive
-    , recursiveChildren
+    , RLiftConstraints(..)
+    , traverseKRec, foldMapKRec, mapKRec
+    , wrap, wrapWithDict
+    , wrapM, wrapMWithDict
+    , unwrap, unwrapWithDict
+    , unwrapM, unwrapMWithDict
+    , fold, unfold
+    , foldMapRecursive, foldMapRecursiveWithDict
     ) where
 
 import AST.Class
 import AST.Class.Combinators
-import AST.Class.Foldable (KFoldable, foldMapKWith)
-import AST.Class.Traversable (KTraversable, traverseKWith)
+import AST.Class.Foldable
+import AST.Class.Traversable
 import AST.Combinator.Both
 import AST.Combinator.Flip
 import AST.Constraint
 import AST.Knot (Tree, Node, RunKnot)
-import AST.Knot.Pure (Pure, _Pure)
+import AST.Knot.Dict
+import AST.Knot.Pure (Pure(..), _Pure)
 import Control.Lens (makeLenses)
 import Control.Lens.Operators
 import Data.Constraint (Dict(..), withDict)
 import Data.Functor.Const (Const(..))
-import Data.Functor.Identity (Identity(..))
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
@@ -131,93 +136,230 @@ instance
 
 instance constraint Pure => Recursively constraint Pure
 
+type family RecursivelyConstraints cs :: [KnotConstraint] where
+    RecursivelyConstraints (c ': cs) = (Recursively c ': RecursivelyConstraints cs)
+    RecursivelyConstraints '[] = '[]
+
+class RLiftConstraints k cs where
+    rLiftConstraints :: Tree (RecursiveNodes k) (KDict cs)
+
+instance
+    Recursively HasNodes k =>
+    RLiftConstraints k '[] where
+
+    {-# INLINE rLiftConstraints #-}
+    rLiftConstraints = pureK (MkKDict Dict)
+
+instance
+    (Recursively HasNodes k, Recursively c k, RLiftConstraints k cs) =>
+    RLiftConstraints k (c ': cs) where
+
+    {-# INLINE rLiftConstraints #-}
+    rLiftConstraints =
+        liftK2
+        (\(MkKDict c) (MkKDict cs) -> withDict c (withDict cs (MkKDict Dict)))
+        (pureKWithConstraint (Proxy :: Proxy c) (MkKDict Dict) :: Tree (RecursiveNodes k) (KDict '[c]))
+        (rLiftConstraints :: Tree (RecursiveNodes k) (KDict cs))
+
+{-# INLINE mapKRec #-}
+mapKRec ::
+    forall k cs m n.
+    KFunctor k =>
+    Tree (RecursiveNodes k) (KDict cs) ->
+    (forall c. Tree (RecursiveNodes c) (KDict cs) -> Tree m c -> Tree n c) ->
+    Tree k m ->
+    Tree k n
+mapKRec c f =
+    withDict (hasNodes (Proxy :: Proxy k)) $
+    mapC (mapK (MkMapK . \(MkFlip d) -> f d) (c ^. recSub))
+
+{-# INLINE foldMapKRec #-}
+foldMapKRec ::
+    forall a k cs n.
+    (Monoid a, KFoldable k) =>
+    Tree (RecursiveNodes k) (KDict cs) ->
+    (forall c. Tree (RecursiveNodes c) (KDict cs) -> Tree n c -> a) ->
+    Tree k n ->
+    a
+foldMapKRec c f =
+    withDict (hasNodes (Proxy :: Proxy k)) $
+    foldMapC (mapK (MkConvertK . \(MkFlip d) -> f d) (c ^. recSub))
+
+{-# INLINE traverseKRec #-}
+traverseKRec ::
+    forall k cs m n f.
+    (Applicative f, KTraversable k) =>
+    Tree (RecursiveNodes k) (KDict cs) ->
+    (forall c. Tree (RecursiveNodes c) (KDict cs) -> Tree m c -> f (Tree n c)) ->
+    Tree k m ->
+    f (Tree k n)
+traverseKRec c f =
+    withDict (hasNodes (Proxy :: Proxy k)) $
+    sequenceC .
+    mapC (mapK (MkMapK . \(MkFlip d) -> MkContainedK . f d) (c ^. recSub))
+
+{-# INLINE wrapMWithDict #-}
+wrapMWithDict ::
+    forall k cs w m.
+    Monad m =>
+    Tree (RecursiveNodes k) (KDict cs) ->
+    (forall n. ApplyKConstraints n cs => Dict (KTraversable n)) ->
+    (forall n. ApplyKConstraints n cs => Tree n w -> m (Tree w n)) ->
+    Tree Pure k ->
+    m (Tree w k)
+wrapMWithDict c getTraversable f x =
+    withDict (c ^. recSelf . _KDict) $
+    withDict (getTraversable :: Dict (KTraversable k)) $
+    x ^. _Pure
+    & traverseKRec c (\d -> wrapMWithDict d getTraversable f)
+    >>= f
+
 {-# INLINE wrapM #-}
 wrapM ::
-    forall m constraint expr f.
-    (Monad m, Recursively constraint expr) =>
-    Proxy constraint ->
-    (forall child. constraint child => Tree child f -> m (Tree f child)) ->
-    Tree Pure expr ->
-    m (Tree f expr)
-wrapM p f x =
-    withDict (recursive :: RecursiveDict expr constraint) $
-    x ^. _Pure
-    & traverseKWith (Proxy :: Proxy '[Recursively constraint]) (wrapM p f)
-    >>= f
+    forall m k cs w.
+    (Monad m, RLiftConstraints k cs) =>
+    Proxy cs ->
+    (forall n. ApplyKConstraints n cs => Dict (KTraversable n)) ->
+    (forall n. ApplyKConstraints n cs => Tree n w -> m (Tree w n)) ->
+    Tree Pure k ->
+    m (Tree w k)
+wrapM _ =
+    wrapMWithDict (rLiftConstraints :: Tree (RecursiveNodes k) (KDict cs))
+
+{-# INLINE unwrapMWithDict #-}
+unwrapMWithDict ::
+    forall k cs w m.
+    Monad m =>
+    Tree (RecursiveNodes k) (KDict cs) ->
+    (forall n. ApplyKConstraints n cs => Dict (KTraversable n)) ->
+    (forall n. ApplyKConstraints n cs => Tree w n -> m (Tree n w)) ->
+    Tree w k ->
+    m (Tree Pure k)
+unwrapMWithDict c getTraversable f x =
+    withDict (c ^. recSelf . _KDict) $
+    withDict (getTraversable :: Dict (KTraversable k)) $
+    f x
+    >>= traverseKRec c (\d -> unwrapMWithDict d getTraversable f)
+    <&> (_Pure #)
 
 {-# INLINE unwrapM #-}
 unwrapM ::
-    (Monad m, Recursively constraint expr) =>
-    Proxy constraint ->
-    (forall child. constraint child => Tree f child -> m (Tree child f)) ->
-    Tree f expr ->
-    m (Tree Pure expr)
-unwrapM p f x =
-    f x >>= recursiveChildren p (unwrapM p f) <&> (_Pure #)
+    forall m k cs w.
+    (Monad m, RLiftConstraints k cs) =>
+    Proxy cs ->
+    (forall n. ApplyKConstraints n cs => Dict (KTraversable n)) ->
+    (forall n. ApplyKConstraints n cs => Tree w n -> m (Tree n w)) ->
+    Tree w k ->
+    m (Tree Pure k)
+unwrapM _ =
+    unwrapMWithDict (rLiftConstraints :: Tree (RecursiveNodes k) (KDict cs))
+
+{-# INLINE wrapWithDict #-}
+wrapWithDict ::
+    forall k cs w.
+    Tree (RecursiveNodes k) (KDict cs) ->
+    (forall n. ApplyKConstraints n cs => Dict (KFunctor n)) ->
+    (forall n. ApplyKConstraints n cs => Tree n w -> Tree w n) ->
+    Tree Pure k ->
+    Tree w k
+wrapWithDict c getFunctor f x =
+    withDict (c ^. recSelf . _KDict) $
+    withDict (getFunctor :: Dict (KFunctor k)) $
+    x ^. _Pure
+    & mapKRec c (\d -> wrapWithDict d getFunctor f)
+    & f
 
 {-# INLINE wrap #-}
 wrap ::
-    Recursively constraint expr =>
-    Proxy constraint ->
-    (forall child. constraint child => Tree child f -> Tree f child) ->
-    Tree Pure expr ->
-    Tree f expr
-wrap p f = runIdentity . wrapM p (Identity . f)
+    forall k cs w.
+    RLiftConstraints k cs =>
+    Proxy cs ->
+    (forall n. ApplyKConstraints n cs => Dict (KFunctor n)) ->
+    (forall n. ApplyKConstraints n cs => Tree n w -> Tree w n) ->
+    Tree Pure k ->
+    Tree w k
+wrap _ =
+    wrapWithDict (rLiftConstraints :: Tree (RecursiveNodes k) (KDict cs))
+
+{-# INLINE unwrapWithDict #-}
+unwrapWithDict ::
+    forall k cs w.
+    Tree (RecursiveNodes k) (KDict cs) ->
+    (forall n. ApplyKConstraints n cs => Dict (KFunctor n)) ->
+    (forall n. ApplyKConstraints n cs => Tree w n -> Tree n w) ->
+    Tree w k ->
+    Tree Pure k
+unwrapWithDict c getFunctor f x =
+    withDict (c ^. recSelf . _KDict) $
+    withDict (getFunctor :: Dict (KFunctor k)) $
+    f x
+    & mapKRec c (\d -> unwrapWithDict d getFunctor f)
+    & MkPure
 
 {-# INLINE unwrap #-}
 unwrap ::
-    Recursively constraint expr =>
-    Proxy constraint ->
-    (forall child. constraint child => Tree f child -> Tree child f) ->
-    Tree f expr ->
-    Tree Pure expr
-unwrap p f = runIdentity . unwrapM p (Identity . f)
+    forall k cs w.
+    RLiftConstraints k cs =>
+    Proxy cs ->
+    (forall n. ApplyKConstraints n cs => Dict (KFunctor n)) ->
+    (forall n. ApplyKConstraints n cs => Tree w n -> Tree n w) ->
+    Tree w k ->
+    Tree Pure k
+unwrap _ =
+    unwrapWithDict (rLiftConstraints :: Tree (RecursiveNodes k) (KDict cs))
 
 -- | Recursively fold up a tree to produce a result.
 -- TODO: Is this a "cata-morphism"?
 {-# INLINE fold #-}
 fold ::
-    Recursively constraint expr =>
-    Proxy constraint ->
-    (forall child. constraint child => Tree child (Const a) -> a) ->
-    Tree Pure expr ->
+    RLiftConstraints k cs =>
+    Proxy cs ->
+    (forall n. ApplyKConstraints n cs => Dict (KFunctor n)) ->
+    (forall n. ApplyKConstraints n cs => Tree n (Const a) -> a) ->
+    Tree Pure k ->
     a
-fold p f = getConst . wrap p (Const . f)
+fold p getFunctor f = getConst . wrap p getFunctor (Const . f)
 
 -- | Build/load a tree from a seed value.
 -- TODO: Is this an "ana-morphism"?
 {-# INLINE unfold #-}
 unfold ::
-    Recursively constraint expr =>
-    Proxy constraint ->
-    (forall child. constraint child => a -> Tree child (Const a)) ->
+    RLiftConstraints k cs =>
+    Proxy cs ->
+    (forall n. ApplyKConstraints n cs => Dict (KFunctor n)) ->
+    (forall n. ApplyKConstraints n cs => a -> Tree n (Const a)) ->
     a ->
-    Tree Pure expr
-unfold p f = unwrap p (f . getConst) . Const
+    Tree Pure k
+unfold p getFunctor f = unwrap p getFunctor (f . getConst) . Const
+
+{-# INLINE foldMapRecursiveWithDict #-}
+foldMapRecursiveWithDict ::
+    forall cs k a f.
+    (Recursively KFoldable f, Monoid a) =>
+    Tree (RecursiveNodes k) (KDict cs) ->
+    (forall n. ApplyKConstraints n cs => Dict (KFoldable n)) ->
+    (forall n g. (ApplyKConstraints n cs, Recursively KFoldable g) => Tree n g -> a) ->
+    Tree k f ->
+    a
+foldMapRecursiveWithDict c getFoldable f x =
+    withDict (c ^. recSelf . _KDict) $
+    withDict (getFoldable :: Dict (KFoldable k)) $
+    withDict (recursive :: RecursiveDict f KFoldable) $
+    f x <>
+    foldMapKRec c
+    ( \d ->
+        foldMapKWith (Proxy :: Proxy '[Recursively KFoldable])
+        (foldMapRecursiveWithDict d getFoldable f)
+    ) x
 
 {-# INLINE foldMapRecursive #-}
 foldMapRecursive ::
-    forall c0 expr a f.
-    (Recursively c0 expr, Recursively KFoldable f, Monoid a) =>
-    Proxy c0 ->
-    (forall child g. (c0 child, Recursively KFoldable g) => Tree child g -> a) ->
-    Tree expr f ->
+    forall cs k a f.
+    (RLiftConstraints k cs, Recursively KFoldable f, Monoid a) =>
+    Proxy cs ->
+    (forall n. ApplyKConstraints n cs => Dict (KFoldable n)) ->
+    (forall n g. (ApplyKConstraints n cs, Recursively KFoldable g) => Tree n g -> a) ->
+    Tree k f ->
     a
-foldMapRecursive p f x =
-    withDict (recursive :: RecursiveDict expr c0) $
-    withDict (recursive :: RecursiveDict f KFoldable) $
-    f x <>
-    foldMapKWith (Proxy :: Proxy '[Recursively c0])
-    (foldMapKWith (Proxy :: Proxy '[Recursively KFoldable]) (foldMapRecursive p f))
-    x
-
-{-# INLINE recursiveChildren #-}
-recursiveChildren ::
-    forall constraint expr n m f.
-    (Applicative f, Recursively constraint expr) =>
-    Proxy constraint ->
-    (forall child. Recursively constraint child => Tree n child -> f (Tree m child)) ->
-    Tree expr n -> f (Tree expr m)
-recursiveChildren _ f x =
-    withDict (recursive :: RecursiveDict expr constraint) $
-    traverseKWith (Proxy :: Proxy '[Recursively constraint]) f x
+foldMapRecursive _ =
+    foldMapRecursiveWithDict (rLiftConstraints :: Tree (RecursiveNodes k) (KDict cs))
