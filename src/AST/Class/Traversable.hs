@@ -12,6 +12,7 @@ import AST.Class.Combinators
 import AST.Class.Foldable (KFoldable)
 import AST.Combinator.Single (Single(..))
 import AST.Knot (Knot, Tree)
+import AST.Knot.Dict (KDict, pureKWithDict)
 import Control.Lens (Iso, iso)
 import Data.Constraint (withDict)
 import Data.Functor.Const (Const(..))
