@@ -45,8 +45,6 @@ instance (KNodes a, KNodes b) => KNodes (Compose a b) where
 instance KnotConstraintFunc (ComposeConstraint a b) where
     type ApplyKnotConstraint (ComposeConstraint a b) c =
         ApplyKnotConstraint a (ComposeConstraint0 c b)
-    {-# INLINE applyKnotConstraint #-}
-    applyKnotConstraint _ _ = Dict
 
 class    ApplyKnotConstraint a (ComposeConstraint0 c b) => ComposeConstraint a b c
 instance ApplyKnotConstraint a (ComposeConstraint0 c b) => ComposeConstraint a b c

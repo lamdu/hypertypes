@@ -51,7 +51,7 @@ traverseK f = sequenceC . mapK (MkContainedK . f)
 {-# INLINE traverseK1 #-}
 traverseK1 ::
     ( Applicative f, KTraversable k
-    , NodeTypesOf k ~ (Single c)
+    , NodeTypesOf k ~ Single c
     ) =>
     (Tree m c -> f (Tree n c)) ->
     Tree k m ->

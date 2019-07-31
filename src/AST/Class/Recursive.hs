@@ -59,8 +59,6 @@ instance Recursively c k => RecursiveConstraint k c
 
 instance KnotConstraintFunc (RecursiveConstraint k) where
     type ApplyKnotConstraint (RecursiveConstraint k) c = Recursively c k
-    {-# INLINE applyKnotConstraint #-}
-    applyKnotConstraint _ _ = Dict
 
 data RecursiveNodes a k = RecursiveNodes
     { _recSelf :: Node k a

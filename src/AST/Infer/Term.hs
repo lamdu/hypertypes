@@ -122,8 +122,6 @@ instance Recursively (InferChildConstraints c) k => InferConstraint k c
 
 instance KnotConstraintFunc (InferConstraint k) where
     type ApplyKnotConstraint (InferConstraint k) c = Recursively (InferChildConstraints c) k
-    {-# INLINE applyKnotConstraint #-}
-    applyKnotConstraint _ _ = Dict
 
 newtype ITermTypes e k =
     ITermTypes (Tree (RecursiveNodes e) (Flip IResultNodeTypes (RunKnot k)))
