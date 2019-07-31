@@ -2,7 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, ConstraintKinds #-}
 
 module AST.Constraint
-    ( KnotConstraintFunc(..)
+    ( ApplyKnotConstraint
     , KnotsConstraint
     , ConcatKnotConstraints
     , ApplyKnotConstraints
@@ -15,34 +15,25 @@ import Data.Kind (Type)
 
 type KnotConstraint = (Knot -> Type) -> Constraint
 
-class KnotConstraintFunc (cls :: KnotConstraint -> Constraint) where
-    type family ApplyKnotConstraint cls (c :: KnotConstraint) :: Constraint
+type family ApplyKnotConstraint (cls :: KnotConstraint -> Constraint) (c :: KnotConstraint) :: Constraint
+type instance ApplyKnotConstraint (KnotsConstraint '[]) c = ()
+type instance ApplyKnotConstraint (KnotsConstraint (k ': ks)) c =
+    ( c k
+    , ApplyKnotConstraint (KnotsConstraint ks) c
+    )
 
 -- | Apply a constraint on the given knots
 class KnotsConstraint (ks :: [Knot -> Type]) (c :: KnotConstraint)
-
-instance KnotConstraintFunc (KnotsConstraint '[]) where
-    type ApplyKnotConstraint (KnotsConstraint '[]) c = ()
-
-instance KnotConstraintFunc (KnotsConstraint (k ': ks)) where
-    type ApplyKnotConstraint (KnotsConstraint (k ': ks)) c =
-            ( c k
-            , ApplyKnotConstraint (KnotsConstraint ks) c
-            )
-
 instance KnotsConstraint '[] c
 instance c k => KnotsConstraint (k ': ks) c
 
 class ConcatKnotConstraints (xs :: [KnotConstraint -> Constraint]) (c :: KnotConstraint)
 
-instance KnotConstraintFunc (ConcatKnotConstraints '[]) where
-    type ApplyKnotConstraint (ConcatKnotConstraints '[]) c = ()
-
-instance KnotConstraintFunc (ConcatKnotConstraints (x ': xs)) where
-    type ApplyKnotConstraint (ConcatKnotConstraints (x ': xs)) c =
-        ( ApplyKnotConstraint x c
-        , ApplyKnotConstraint (ConcatKnotConstraints xs) c
-        )
+type instance ApplyKnotConstraint (ConcatKnotConstraints '[]) c = ()
+type instance ApplyKnotConstraint (ConcatKnotConstraints (x ': xs)) c =
+    ( ApplyKnotConstraint x c
+    , ApplyKnotConstraint (ConcatKnotConstraints xs) c
+    )
 
 instance ConcatKnotConstraints '[] c
 instance ConcatKnotConstraints (x ': xs) c

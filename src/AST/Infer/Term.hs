@@ -15,7 +15,6 @@ import AST
 import AST.Class
 import AST.Class.Foldable
 import AST.Class.Traversable
-import AST.Constraint
 import AST.Combinator.Both
 import AST.Combinator.Flip (Flip(..), _Flip)
 import Control.Lens (Traversal, Lens', makeLenses, makePrisms, from)
@@ -120,8 +119,7 @@ instance InferChildDeps c ast => InferChildConstraints c ast
 class    Recursively (InferChildConstraints c) k => InferConstraint k c
 instance Recursively (InferChildConstraints c) k => InferConstraint k c
 
-instance KnotConstraintFunc (InferConstraint k) where
-    type ApplyKnotConstraint (InferConstraint k) c = Recursively (InferChildConstraints c) k
+type instance ApplyKnotConstraint (InferConstraint k) c = Recursively (InferChildConstraints c) k
 
 newtype ITermTypes e k =
     ITermTypes (Tree (RecursiveNodes e) (Flip IResultNodeTypes (RunKnot k)))

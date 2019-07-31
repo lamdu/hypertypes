@@ -29,7 +29,6 @@ type NodeTypesConstraints k =
     , NodeTypesOf k ~ NodeTypesOf (NodeTypesOf k)
     , KNodes (NodeTypesOf k)
     , KApplicative (NodeTypesOf k)
-    , KnotConstraintFunc (NodesConstraint k)
     )
 
 class KNodes k where

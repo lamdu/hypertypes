@@ -11,7 +11,6 @@ import           AST.Class
 import           AST.Class.Foldable
 import           AST.Class.Traversable
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
-import           AST.Constraint
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -42,9 +41,8 @@ instance (KNodes a, KNodes b) => KNodes (Compose a b) where
         withDict (kNodes (Proxy :: Proxy b))
         Dict
 
-instance KnotConstraintFunc (ComposeConstraint a b) where
-    type ApplyKnotConstraint (ComposeConstraint a b) c =
-        ApplyKnotConstraint a (ComposeConstraint0 c b)
+type instance ApplyKnotConstraint (ComposeConstraint a b) c =
+    ApplyKnotConstraint a (ComposeConstraint0 c b)
 
 class    ApplyKnotConstraint a (ComposeConstraint0 c b) => ComposeConstraint a b c
 instance ApplyKnotConstraint a (ComposeConstraint0 c b) => ComposeConstraint a b c
