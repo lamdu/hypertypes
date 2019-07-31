@@ -31,6 +31,7 @@ import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Data.Proxy (Proxy(..))
 import           Data.Set (Set)
+import           Data.TyFun
 import           GHC.Generics (Generic)
 import           Text.Show.Combinators ((@|), showCon)
 
@@ -59,10 +60,10 @@ data FlatRowExtends key val rest k = FlatRowExtends
 
 instance KNodes (RowExtend k v r) where
     type NodeTypesOf (RowExtend k v r) = Pair v r
-    type NodesConstraint (RowExtend k v r) = KnotsConstraint '[v, r]
+    type NodesConstraint (RowExtend k v r) = ConcatConstraintFuncs '[On v, On r]
 instance KNodes (FlatRowExtends k v r) where
     type NodeTypesOf (FlatRowExtends k v r) = Pair v r
-    type NodesConstraint (FlatRowExtends k v r) = KnotsConstraint '[v, r]
+    type NodesConstraint (FlatRowExtends k v r) = ConcatConstraintFuncs '[On v, On r]
 
 makeLenses ''RowExtend
 makeLenses ''FlatRowExtends

@@ -52,7 +52,7 @@ instance
 
     type NodeTypesOf (UnifyErrorNodes t) = UnifyErrorNodes t
     type NodesConstraint (UnifyErrorNodes t) =
-        ConcatConstraintFuncs '[KnotsConstraint '[t], NodesConstraint t]
+        ConcatConstraintFuncs '[On t, NodesConstraint t]
 
 instance
     KNodes t =>

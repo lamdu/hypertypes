@@ -10,13 +10,13 @@ import AST.Class (KNodes(..))
 import AST.Class.Apply.TH (makeKApplicativeBases)
 import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import AST.Class.Has (KHas(..))
-import AST.Constraint
 import AST.Combinator.Single (Single(..))
 import AST.Knot (Node)
 import Control.DeepSeq (NFData)
 import Control.Lens (makeLenses)
 import Data.Binary (Binary)
 import Data.Constraint (Constraint)
+import Data.TyFun
 import GHC.Generics (Generic)
 
 import Prelude.Compat
@@ -28,7 +28,7 @@ data Pair a b k = MkPair
 
 instance KNodes (Pair a b) where
     type NodeTypesOf (Pair a b) = Pair a b
-    type NodesConstraint (Pair a b) = KnotsConstraint '[a, b]
+    type NodesConstraint (Pair a b) = ConcatConstraintFuncs '[On a, On b]
 
 makeLenses ''Pair
 makeKApplicativeBases ''Pair

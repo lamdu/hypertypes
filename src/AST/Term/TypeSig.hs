@@ -18,6 +18,7 @@ import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           Data.Constraint (Constraint)
+import           Data.TyFun
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
@@ -33,7 +34,7 @@ makeLenses ''TypeSig
 
 instance KNodes (TypeSig v t) where
     type NodeTypesOf (TypeSig v t) = Single t
-    type NodesConstraint (TypeSig v t) = KnotsConstraint '[t]
+    type NodesConstraint (TypeSig v t) = On t
 
 makeKTraversableAndBases ''TypeSig
 

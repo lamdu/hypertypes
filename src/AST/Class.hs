@@ -12,7 +12,6 @@ module AST.Class
     , mapK, liftK2
     ) where
 
-import AST.Constraint
 import AST.Combinator.Both (Both(..))
 import AST.Knot (Knot, Tree)
 import Control.Lens (Iso, iso)
@@ -46,7 +45,7 @@ class KNodes k where
     -- But - making such a family is impossible for knots which have
     -- an unbounded set of children types, such as
     -- `Flip GTerm (LangA Nothing)` (with `LangA` from the test suite).
-    type family NodesConstraint k :: KnotConstraint ~> Constraint
+    type family NodesConstraint k :: ((Knot -> Type) -> Constraint) ~> Constraint
 
     kNodes ::
         Proxy k ->
@@ -100,7 +99,7 @@ instance (KPointed k, KApply k) => KApplicative k
 
 instance KNodes (Const a) where
     type NodeTypesOf (Const a) = Const ()
-    type NodesConstraint (Const a) = KnotsConstraint '[]
+    type NodesConstraint (Const a) = TConst (() :: Constraint)
 
 instance Monoid a => KPointed (Const a) where
     {-# INLINE pureK #-}

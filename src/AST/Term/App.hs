@@ -17,6 +17,7 @@ import Control.DeepSeq (NFData)
 import Control.Lens (Traversal, makeLenses)
 import Control.Lens.Operators
 import Data.Binary (Binary)
+import Data.TyFun
 import GHC.Generics (Generic)
 import Text.PrettyPrint ((<+>))
 import Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
@@ -30,7 +31,7 @@ data App expr k = App
 
 instance KNodes (App e) where
     type NodeTypesOf (App e) = Single e
-    type NodesConstraint (App e) = KnotsConstraint '[e]
+    type NodesConstraint (App e) = On e
 
 makeLenses ''App
 makeZipMatch ''App

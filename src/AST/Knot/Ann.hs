@@ -14,7 +14,6 @@ import           AST.Class.Recursive
 import           AST.Class.Traversable
 import           AST.Class.Traversable.TH (makeKTraversableAndBases)
 import           AST.Class.ZipMatch.TH (makeZipMatch)
-import           AST.Constraint
 import           AST.Combinator.Single (Single)
 import           AST.Knot (Tree, Node)
 import           AST.Knot.Dict
@@ -25,6 +24,7 @@ import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           Data.Constraint (Constraint, Dict(..), withDict)
 import           Data.Proxy (Proxy(..))
+import           Data.TyFun
 import           GHC.Generics (Generic)
 import qualified Text.PrettyPrint as PP
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
@@ -40,7 +40,7 @@ makeLenses ''Ann
 
 instance KNodes (Ann a) where
     type NodeTypesOf (Ann a) = Single (Ann a)
-    type NodesConstraint (Ann a) = KnotsConstraint '[Ann a]
+    type NodesConstraint (Ann a) = On (Ann a)
 
 makeKTraversableAndBases ''Ann
 makeZipMatch ''Ann

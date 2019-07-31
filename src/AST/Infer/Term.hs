@@ -17,7 +17,6 @@ import AST.Class.Foldable
 import AST.Class.Traversable
 import AST.Combinator.Both
 import AST.Combinator.Flip (Flip(..), _Flip)
-import AST.Constraint
 import Control.Lens (Traversal, Lens', makeLenses, makePrisms, from)
 import Control.Lens.Operators
 import Data.Constraint
@@ -47,7 +46,7 @@ instance
 
     type NodeTypesOf (IResultNodeTypes e) = IResultNodeTypes e
     type NodesConstraint (IResultNodeTypes e) =
-        ConcatConstraintFuncs '[KnotsConstraint '[TypeOf e], NodesConstraint (ScopeOf e)]
+        ConcatConstraintFuncs '[On (TypeOf e), NodesConstraint (ScopeOf e)]
 
 instance
     KNodes (ScopeOf e) =>
@@ -119,7 +118,7 @@ type InferChildDeps c ast =
 class    InferChildDeps c ast => InferChildConstraints c ast
 instance InferChildDeps c ast => InferChildConstraints c ast
 
-data InferConstraint :: (Knot -> Type) -> KnotConstraint ~> Constraint
+data InferConstraint :: (Knot -> Type) -> ((Knot -> Type) -> Constraint) ~> Constraint
 
 type instance Apply (InferConstraint k) c = Recursively (InferChildConstraints c) k
 

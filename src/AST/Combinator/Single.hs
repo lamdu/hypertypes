@@ -7,11 +7,11 @@ module AST.Combinator.Single
 
 import AST.Class (KNodes(..))
 import AST.Class.Apply.TH (makeKApplicativeBases)
-import AST.Constraint
 import AST.Knot (Tree, Node)
 import Control.DeepSeq (NFData)
 import Control.Lens (Iso, iso)
 import Data.Binary (Binary)
+import Data.TyFun
 import GHC.Generics (Generic)
 
 import Prelude.Compat
@@ -25,7 +25,7 @@ _Single = iso getSingle MkSingle
 
 instance KNodes (Single c) where
     type NodeTypesOf (Single c) = Single c
-    type NodesConstraint (Single c) = KnotsConstraint '[c]
+    type NodesConstraint (Single c) = On c
 
 makeKApplicativeBases ''Single
 

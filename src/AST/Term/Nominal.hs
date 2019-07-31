@@ -47,6 +47,7 @@ import           Data.Foldable (traverse_)
 import           Data.Functor.Const (Const)
 import           Data.Proxy (Proxy(..))
 import qualified Data.Map as Map
+import           Data.TyFun
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
@@ -82,15 +83,15 @@ newtype FromNom nomId (term :: Knot -> *) (k :: Knot) = FromNom nomId
 
 instance KNodes (NominalDecl t) where
     type NodeTypesOf (NominalDecl t) = Single t
-    type NodesConstraint (NominalDecl t) = KnotsConstraint '[t]
+    type NodesConstraint (NominalDecl t) = On t
 
 instance KNodes (ToNom n t) where
     type NodeTypesOf (ToNom n t) = Single t
-    type NodesConstraint (ToNom n t) = KnotsConstraint '[t]
+    type NodesConstraint (ToNom n t) = On t
 
 instance KNodes (FromNom n t) where
     type NodeTypesOf (FromNom n t) = Const ()
-    type NodesConstraint (FromNom n t) = KnotsConstraint '[]
+    type NodesConstraint (FromNom n t) = TConst (() :: Constraint)
 
 instance KNodes v => KNodes (NominalInst n v) where
     type NodeTypesOf (NominalInst n v) = NodeTypesOf v

@@ -12,12 +12,12 @@ import           AST.Class
 import           AST.Class.Foldable
 import           AST.Class.Traversable
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
-import           AST.Constraint
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           Data.Constraint
+import           Data.Kind (Type)
 import           Data.Proxy (Proxy(..))
 import           Data.TyFun
 import           GHC.Generics (Generic)
@@ -46,9 +46,9 @@ instance (KNodes a, KNodes b) => KNodes (Compose a b) where
 
 data
     ComposeConstraint ::
-    (KnotConstraint ~> Constraint) ->
-    (KnotConstraint ~> Constraint) ->
-    KnotConstraint ~> Constraint
+    (((Knot -> Type) -> Constraint) ~> Constraint) ->
+    (((Knot -> Type) -> Constraint) ~> Constraint) ->
+    ((Knot -> Type) -> Constraint) ~> Constraint
 type instance Apply (ComposeConstraint a b) c =
     Apply a (ComposeConstraint0 c b)
 

@@ -22,11 +22,12 @@ import           Control.Lens (Lens', Prism')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Reader (MonadReader, local)
-import           Data.Constraint (Dict(..), withDict, (:-), (\\))
+import           Data.Constraint
 import           Data.Functor.Const (Const)
 import           Data.Sequence (Seq)
 import qualified Data.Sequence as Sequence
 import           Data.Proxy (Proxy(..))
+import           Data.TyFun
 
 import           Prelude.Compat
 
@@ -37,14 +38,14 @@ Lens.makePrisms ''Scope
 
 instance KNodes (Scope e a) where
     type NodeTypesOf (Scope e a) = Single (e (Maybe a))
-    type NodesConstraint (Scope e a) = KnotsConstraint '[e (Maybe a)]
+    type NodesConstraint (Scope e a) = On (e (Maybe a))
 
 newtype ScopeVar (expr :: * -> Knot -> *) a (k :: Knot) = ScopeVar a
 Lens.makePrisms ''ScopeVar
 
 instance KNodes (ScopeVar e a) where
     type NodeTypesOf (ScopeVar e a) = Const ()
-    type NodesConstraint (ScopeVar e a) = KnotsConstraint '[]
+    type NodesConstraint (ScopeVar e a) = TConst (() :: Constraint)
 
 makeZipMatch ''Scope
 makeKApplicativeBases ''Scope
@@ -74,7 +75,7 @@ newtype ScopeTypes t v = ScopeTypes (Seq (Node v t))
 
 instance KNodes (ScopeTypes t) where
     type NodeTypesOf (ScopeTypes t) = Single t
-    type NodesConstraint (ScopeTypes t) = KnotsConstraint '[t]
+    type NodesConstraint (ScopeTypes t) = On t
 
 Lens.makePrisms ''ScopeTypes
 makeKTraversableAndBases ''ScopeTypes

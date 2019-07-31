@@ -9,11 +9,11 @@ import           AST.Class (KNodes(..))
 import           AST.Class.Apply.TH (makeKApplicativeBases)
 import           AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import           AST.Class.ZipMatch.TH (makeZipMatch)
-import           AST.Constraint (KnotsConstraint)
 import           AST.Knot (Tree, Node)
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Data.Binary (Binary)
+import           Data.TyFun
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 import           Text.Show.Combinators ((@|), showCon)
@@ -28,7 +28,7 @@ newtype Pure k = MkPure { getPure :: Node k Pure }
 
 instance KNodes Pure where
     type NodeTypesOf Pure = Pure
-    type NodesConstraint Pure = KnotsConstraint '[Pure]
+    type NodesConstraint Pure = On Pure
 
 makeKApplicativeBases ''Pure
 makeKTraversableAndFoldable ''Pure

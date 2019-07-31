@@ -13,6 +13,7 @@ import           Control.DeepSeq (NFData)
 import           Control.Lens (Prism', makeLenses)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
+import           Data.TyFun
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
@@ -28,7 +29,7 @@ data FuncType typ k = FuncType
 
 instance KNodes (FuncType t) where
     type NodeTypesOf (FuncType t) = Single t
-    type NodesConstraint (FuncType t) = KnotsConstraint '[t]
+    type NodesConstraint (FuncType t) = On t
 
 makeLenses ''FuncType
 makeZipMatch ''FuncType

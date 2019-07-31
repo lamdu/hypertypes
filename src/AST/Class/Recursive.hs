@@ -22,7 +22,6 @@ import AST.Class.Foldable
 import AST.Class.Traversable
 import AST.Combinator.Both
 import AST.Combinator.Flip
-import AST.Constraint
 import AST.Knot
 import AST.Knot.Dict
 import AST.Knot.Pure (Pure(..), _Pure)
@@ -56,7 +55,7 @@ type RecursiveContext expr constraint =
 
 type RecursiveDict expr constraint = Dict (RecursiveContext expr constraint)
 
-data RecursiveConstraint :: (Knot -> Type) -> KnotConstraint ~> Constraint
+data RecursiveConstraint :: (Knot -> Type) -> ((Knot -> Type) -> Constraint) ~> Constraint
 
 type instance Apply (RecursiveConstraint k) c = Recursively c k
 
@@ -134,7 +133,7 @@ instance
 
 instance constraint Pure => Recursively constraint Pure
 
-type family RecursivelyConstraints cs :: [KnotConstraint] where
+type family RecursivelyConstraints cs :: [(Knot -> Type) -> Constraint] where
     RecursivelyConstraints (c ': cs) = (Recursively c ': RecursivelyConstraints cs)
     RecursivelyConstraints '[] = '[]
 

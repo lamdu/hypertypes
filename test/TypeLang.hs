@@ -31,6 +31,7 @@ import           Control.Monad.ST.Class (MonadST(..))
 import           Data.Constraint (Constraint)
 import           Data.STRef
 import           Data.Set (Set, singleton)
+import           Data.TyFun
 import           Generic.Data
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
@@ -78,13 +79,13 @@ instance KHas (Pair Typ Row) Types where
 
 instance KNodes Types where
     type NodeTypesOf Types = Types
-    type NodesConstraint Types = KnotsConstraint '[Typ, Row]
+    type NodesConstraint Types = ConcatConstraintFuncs '[On Typ, On Row]
 instance KNodes Typ where
     type NodeTypesOf Typ = Types
-    type NodesConstraint Typ = KnotsConstraint '[Typ, Row]
+    type NodesConstraint Typ = ConcatConstraintFuncs '[On Typ, On Row]
 instance KNodes Row where
     type NodeTypesOf Row = Types
-    type NodesConstraint Row = KnotsConstraint '[Typ, Row]
+    type NodesConstraint Row = ConcatConstraintFuncs '[On Typ, On Row]
 
 makeZipMatch ''Typ
 makeZipMatch ''Row
