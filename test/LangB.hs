@@ -10,7 +10,6 @@ import           TypeLang
 import           AST
 import           AST.Class.Unify
 import           AST.Combinator.Flip
-import           AST.Combinator.Single
 import           AST.Infer
 import           AST.Term.App
 import           AST.Term.Lam

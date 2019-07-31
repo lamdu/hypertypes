@@ -8,7 +8,6 @@ module TypeLang where
 import           AST
 import           AST.Class.Has
 import           AST.Class.Unify
-import           AST.Combinator.Single
 import           AST.Combinator.Pair
 import           AST.Infer
 import           AST.Term.FuncType
