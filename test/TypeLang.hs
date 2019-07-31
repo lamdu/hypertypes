@@ -30,7 +30,6 @@ import           Control.Monad.ST.Class (MonadST(..))
 import           Data.Constraint (Constraint)
 import           Data.STRef
 import           Data.Set (Set, singleton)
-import           Data.TyFun
 import           Generic.Data
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))

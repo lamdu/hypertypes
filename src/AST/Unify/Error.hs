@@ -17,7 +17,6 @@ import           Control.Lens (makePrisms)
 import           Data.Binary (Binary)
 import           Data.Constraint
 import           Data.Proxy
-import           Data.TyFun
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
