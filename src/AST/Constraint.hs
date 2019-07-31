@@ -1,9 +1,8 @@
 {-# LANGUAGE NoImplicitPrelude, TypeFamilies, DataKinds, TypeOperators #-}
-{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE ConstraintKinds, PolyKinds #-}
 
 module AST.Constraint
     ( KnotsConstraint
-    , ConcatKnotConstraints
     , KnotConstraint
     ) where
 
@@ -20,11 +19,4 @@ type instance Apply (KnotsConstraint '[]) c = ()
 type instance Apply (KnotsConstraint (k ': ks)) c =
     ( c k
     , Apply (KnotsConstraint ks) c
-    )
-
-data ConcatKnotConstraints :: [KnotConstraint ~> Constraint] -> KnotConstraint ~> Constraint
-type instance Apply (ConcatKnotConstraints '[]) c = ()
-type instance Apply (ConcatKnotConstraints (x ': xs)) c =
-    ( Apply x c
-    , Apply (ConcatKnotConstraints xs) c
     )

@@ -47,7 +47,7 @@ instance
 
     type NodeTypesOf (IResultNodeTypes e) = IResultNodeTypes e
     type NodesConstraint (IResultNodeTypes e) =
-        ConcatKnotConstraints '[KnotsConstraint '[TypeOf e], NodesConstraint (ScopeOf e)]
+        ConcatConstraintFuncs '[KnotsConstraint '[TypeOf e], NodesConstraint (ScopeOf e)]
 
 instance
     KNodes (ScopeOf e) =>

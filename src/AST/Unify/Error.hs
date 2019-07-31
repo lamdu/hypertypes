@@ -17,6 +17,7 @@ import           Control.Lens (makePrisms)
 import           Data.Binary (Binary)
 import           Data.Constraint
 import           Data.Proxy
+import           Data.TyFun
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
@@ -51,7 +52,7 @@ instance
 
     type NodeTypesOf (UnifyErrorNodes t) = UnifyErrorNodes t
     type NodesConstraint (UnifyErrorNodes t) =
-        ConcatKnotConstraints '[KnotsConstraint '[t], NodesConstraint t]
+        ConcatConstraintFuncs '[KnotsConstraint '[t], NodesConstraint t]
 
 instance
     KNodes t =>

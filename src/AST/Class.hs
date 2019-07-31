@@ -120,7 +120,7 @@ instance
     (KNodes a, KNodes b) =>
     KNodes (Both a b) where
     type NodeTypesOf (Both a b) = Both (NodeTypesOf a) (NodeTypesOf b)
-    type NodesConstraint (Both a b) = ConcatKnotConstraints [NodesConstraint a, NodesConstraint b]
+    type NodesConstraint (Both a b) = ConcatConstraintFuncs [NodesConstraint a, NodesConstraint b]
 
     {-# INLINE kNodes #-}
     kNodes _ =
