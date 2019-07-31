@@ -17,6 +17,7 @@ import           AST.Knot (Tree)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad (guard)
+import           Data.Constraint.List (ApplyConstraints)
 import           Data.Foldable (sequenceA_)
 import           Data.Functor.Const (Const(..))
 import           Data.Proxy (Proxy(..))
@@ -42,7 +43,7 @@ zipMatchWithA ::
     , KLiftConstraints expr constraints
     ) =>
     Proxy constraints ->
-    (forall child. ApplyKConstraints child constraints => Tree a child -> Tree b child -> f (Tree c child)) ->
+    (forall child. ApplyConstraints constraints child => Tree a child -> Tree b child -> f (Tree c child)) ->
     Tree expr a -> Tree expr b -> Maybe (f (Tree expr c))
 zipMatchWithA p f x y = zipMatch x y <&> traverseKWith p (\(Both a b) -> f a b)
 
@@ -52,7 +53,7 @@ zipMatchWith ::
     , KLiftConstraints expr constraints
     ) =>
     Proxy constraints ->
-    (forall child. ApplyKConstraints child constraints => Tree a child -> Tree b child -> Tree c child) ->
+    (forall child. ApplyConstraints constraints child => Tree a child -> Tree b child -> Tree c child) ->
     Tree expr a -> Tree expr b -> Maybe (Tree expr c)
 zipMatchWith p f x y = zipMatch x y <&> mapKWith p (\(Both a b) -> f a b)
 
@@ -64,7 +65,7 @@ zipMatchWith_ ::
     , KLiftConstraints expr constraints
     ) =>
     Proxy constraints ->
-    (forall child. ApplyKConstraints child constraints => Tree a child -> Tree b child -> f ()) ->
+    (forall child. ApplyConstraints constraints child => Tree a child -> Tree b child -> f ()) ->
     Tree expr a -> Tree expr b -> Maybe (f ())
 zipMatchWith_ p f x y =
     zipMatch x y

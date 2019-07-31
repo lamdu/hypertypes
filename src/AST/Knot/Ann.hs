@@ -23,6 +23,7 @@ import           Control.Lens (Traversal, makeLenses)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           Data.Constraint (Constraint, Dict(..), withDict)
+import           Data.Constraint.List (ApplyConstraints)
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import qualified Text.PrettyPrint as PP
@@ -57,7 +58,7 @@ instance Deps Pretty a t => Pretty (Ann a t) where
 annotationsWithDict ::
     forall k cs a b.
     Tree (RecursiveNodes k) (KDict cs) ->
-    (forall n. ApplyKConstraints n cs => Dict (KTraversable n)) ->
+    (forall n. ApplyConstraints cs n => Dict (KTraversable n)) ->
     Traversal
     (Tree (Ann a) k)
     (Tree (Ann b) k)
@@ -73,7 +74,7 @@ annotationsWith ::
     forall k cs a b.
     RLiftConstraints k cs =>
     Proxy cs ->
-    (forall n. ApplyKConstraints n cs => Dict (KTraversable n)) ->
+    (forall n. ApplyConstraints cs n => Dict (KTraversable n)) ->
     Traversal
     (Tree (Ann a) k)
     (Tree (Ann b) k)
@@ -98,8 +99,8 @@ strip = unwrap (Proxy :: Proxy '[KTraversable]) Dict (^. val)
 addAnnotations ::
     RLiftConstraints k cs =>
     Proxy cs ->
-    (forall n. ApplyKConstraints n cs => Dict (KFunctor n)) ->
-    (forall n. ApplyKConstraints n cs => Tree n (Ann a) -> a) ->
+    (forall n. ApplyConstraints cs n => Dict (KFunctor n)) ->
+    (forall n. ApplyConstraints cs n => Tree n (Ann a) -> a) ->
     Tree Pure k -> Tree (Ann a) k
 addAnnotations p getFunctor f = wrap p getFunctor (\x -> Ann (f x) x)
 

@@ -25,7 +25,6 @@ import           AST.Class.Recursive
 import           AST.Class.Traversable (ContainedK(..))
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
 import           AST.Combinator.Single (Single)
-import           AST.Knot.Dict
 import           AST.Infer
 import           AST.Term.FuncType (HasFuncType(..), FuncType(..))
 import           AST.Term.Map (TermMap(..), _TermMap)
@@ -317,10 +316,10 @@ applyNominal ::
     forall m k cs typ.
     (Monad m, RLiftConstraints typ cs) =>
     Proxy cs ->
-    (forall n. ApplyKConstraints n cs =>
+    (forall n. ApplyConstraints cs n =>
         Dict (HasQuantifiedVar n, HasChild (NomVarTypes typ) n, QVarHasInstance Ord n, KTraversable n)
     ) ->
-    (forall n. ApplyKConstraints n cs => Tree n k -> m (Tree k n)) ->
+    (forall n. ApplyConstraints cs n => Tree n k -> m (Tree k n)) ->
     Tree Pure (NominalDecl typ) ->
     Tree (NomVarTypes typ) (QVarInstances k) ->
     m (Tree (Scheme (NomVarTypes typ) typ) k)
@@ -333,10 +332,10 @@ subst ::
     forall m typ cs varTypes k.
     Monad m =>
     Tree (RecursiveNodes typ) (KDict cs) ->
-    (forall n. ApplyKConstraints n cs =>
+    (forall n. ApplyConstraints cs n =>
         Dict (HasQuantifiedVar n, HasChild varTypes n, QVarHasInstance Ord n, KTraversable n)
     ) ->
-    (forall n. ApplyKConstraints n cs => Tree n k -> m (Tree k n)) ->
+    (forall n. ApplyConstraints cs n => Tree n k -> m (Tree k n)) ->
     Tree varTypes (QVarInstances k) ->
     Tree Pure typ ->
     m (Tree k typ)

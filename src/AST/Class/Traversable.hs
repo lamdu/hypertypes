@@ -15,6 +15,7 @@ import AST.Knot (Knot, Tree)
 import AST.Knot.Dict (KDict, pureKWithDict)
 import Control.Lens (Iso, iso)
 import Data.Constraint (withDict)
+import Data.Constraint.List (ApplyConstraints)
 import Data.Functor.Const (Const(..))
 import Data.Proxy (Proxy(..))
 
@@ -63,7 +64,7 @@ traverseKWith ::
     forall n constraints m f k.
     (Applicative f, KTraversable k, KLiftConstraints k constraints) =>
     Proxy constraints ->
-    (forall c. ApplyKConstraints c constraints => Tree m c -> f (Tree n c)) ->
+    (forall c. ApplyConstraints constraints c => Tree m c -> f (Tree n c)) ->
     Tree k m ->
     f (Tree k n)
 traverseKWith p f =
@@ -76,7 +77,7 @@ traverseKWithDict ::
     forall n constraints m f k.
     (Applicative f, KTraversable k) =>
     Tree (NodeTypesOf k) (KDict constraints) ->
-    (forall c. ApplyKConstraints c constraints => Tree m c -> f (Tree n c)) ->
+    (forall c. ApplyConstraints constraints c => Tree m c -> f (Tree n c)) ->
     Tree k m ->
     f (Tree k n)
 traverseKWithDict d f =

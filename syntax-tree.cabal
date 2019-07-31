@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 23fad8afbf8eec608631fa2c19b03d56a09385a6b3da790683fae10e1fc42b57
+-- hash: 28cf12758712a028f7ac32142ebfe164b6dcd8df5c206f05cfa20ee91eaede92
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -92,6 +92,7 @@ library
       AST.Unify.Occurs
       AST.Unify.QuantifiedVar
       AST.Unify.Term
+      Data.Constraint.List
       Data.TyFun
   other-modules:
       Paths_syntax_tree

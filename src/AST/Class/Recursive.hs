@@ -28,6 +28,7 @@ import AST.Knot.Pure (Pure(..), _Pure)
 import Control.Lens (makeLenses)
 import Control.Lens.Operators
 import Data.Constraint (Dict(..), withDict)
+import Data.Constraint.List (ApplyConstraints)
 import Data.Functor.Const (Const(..))
 import Data.Kind (Type, Constraint)
 import Data.Proxy (Proxy(..))
@@ -200,8 +201,8 @@ wrapMWithDict ::
     forall k cs w m.
     Monad m =>
     Tree (RecursiveNodes k) (KDict cs) ->
-    (forall n. ApplyKConstraints n cs => Dict (KTraversable n)) ->
-    (forall n. ApplyKConstraints n cs => Tree n w -> m (Tree w n)) ->
+    (forall n. ApplyConstraints cs n => Dict (KTraversable n)) ->
+    (forall n. ApplyConstraints cs n => Tree n w -> m (Tree w n)) ->
     Tree Pure k ->
     m (Tree w k)
 wrapMWithDict c getTraversable f x =
@@ -216,8 +217,8 @@ wrapM ::
     forall m k cs w.
     (Monad m, RLiftConstraints k cs) =>
     Proxy cs ->
-    (forall n. ApplyKConstraints n cs => Dict (KTraversable n)) ->
-    (forall n. ApplyKConstraints n cs => Tree n w -> m (Tree w n)) ->
+    (forall n. ApplyConstraints cs n => Dict (KTraversable n)) ->
+    (forall n. ApplyConstraints cs n => Tree n w -> m (Tree w n)) ->
     Tree Pure k ->
     m (Tree w k)
 wrapM _ =
@@ -228,8 +229,8 @@ unwrapMWithDict ::
     forall k cs w m.
     Monad m =>
     Tree (RecursiveNodes k) (KDict cs) ->
-    (forall n. ApplyKConstraints n cs => Dict (KTraversable n)) ->
-    (forall n. ApplyKConstraints n cs => Tree w n -> m (Tree n w)) ->
+    (forall n. ApplyConstraints cs n => Dict (KTraversable n)) ->
+    (forall n. ApplyConstraints cs n => Tree w n -> m (Tree n w)) ->
     Tree w k ->
     m (Tree Pure k)
 unwrapMWithDict c getTraversable f x =
@@ -244,8 +245,8 @@ unwrapM ::
     forall m k cs w.
     (Monad m, RLiftConstraints k cs) =>
     Proxy cs ->
-    (forall n. ApplyKConstraints n cs => Dict (KTraversable n)) ->
-    (forall n. ApplyKConstraints n cs => Tree w n -> m (Tree n w)) ->
+    (forall n. ApplyConstraints cs n => Dict (KTraversable n)) ->
+    (forall n. ApplyConstraints cs n => Tree w n -> m (Tree n w)) ->
     Tree w k ->
     m (Tree Pure k)
 unwrapM _ =
@@ -255,8 +256,8 @@ unwrapM _ =
 wrapWithDict ::
     forall k cs w.
     Tree (RecursiveNodes k) (KDict cs) ->
-    (forall n. ApplyKConstraints n cs => Dict (KFunctor n)) ->
-    (forall n. ApplyKConstraints n cs => Tree n w -> Tree w n) ->
+    (forall n. ApplyConstraints cs n => Dict (KFunctor n)) ->
+    (forall n. ApplyConstraints cs n => Tree n w -> Tree w n) ->
     Tree Pure k ->
     Tree w k
 wrapWithDict c getFunctor f x =
@@ -271,8 +272,8 @@ wrap ::
     forall k cs w.
     RLiftConstraints k cs =>
     Proxy cs ->
-    (forall n. ApplyKConstraints n cs => Dict (KFunctor n)) ->
-    (forall n. ApplyKConstraints n cs => Tree n w -> Tree w n) ->
+    (forall n. ApplyConstraints cs n => Dict (KFunctor n)) ->
+    (forall n. ApplyConstraints cs n => Tree n w -> Tree w n) ->
     Tree Pure k ->
     Tree w k
 wrap _ =
@@ -282,8 +283,8 @@ wrap _ =
 unwrapWithDict ::
     forall k cs w.
     Tree (RecursiveNodes k) (KDict cs) ->
-    (forall n. ApplyKConstraints n cs => Dict (KFunctor n)) ->
-    (forall n. ApplyKConstraints n cs => Tree w n -> Tree n w) ->
+    (forall n. ApplyConstraints cs n => Dict (KFunctor n)) ->
+    (forall n. ApplyConstraints cs n => Tree w n -> Tree n w) ->
     Tree w k ->
     Tree Pure k
 unwrapWithDict c getFunctor f x =
@@ -298,8 +299,8 @@ unwrap ::
     forall k cs w.
     RLiftConstraints k cs =>
     Proxy cs ->
-    (forall n. ApplyKConstraints n cs => Dict (KFunctor n)) ->
-    (forall n. ApplyKConstraints n cs => Tree w n -> Tree n w) ->
+    (forall n. ApplyConstraints cs n => Dict (KFunctor n)) ->
+    (forall n. ApplyConstraints cs n => Tree w n -> Tree n w) ->
     Tree w k ->
     Tree Pure k
 unwrap _ =
@@ -311,8 +312,8 @@ unwrap _ =
 fold ::
     RLiftConstraints k cs =>
     Proxy cs ->
-    (forall n. ApplyKConstraints n cs => Dict (KFunctor n)) ->
-    (forall n. ApplyKConstraints n cs => Tree n (Const a) -> a) ->
+    (forall n. ApplyConstraints cs n => Dict (KFunctor n)) ->
+    (forall n. ApplyConstraints cs n => Tree n (Const a) -> a) ->
     Tree Pure k ->
     a
 fold p getFunctor f = getConst . wrap p getFunctor (Const . f)
@@ -323,8 +324,8 @@ fold p getFunctor f = getConst . wrap p getFunctor (Const . f)
 unfold ::
     RLiftConstraints k cs =>
     Proxy cs ->
-    (forall n. ApplyKConstraints n cs => Dict (KFunctor n)) ->
-    (forall n. ApplyKConstraints n cs => a -> Tree n (Const a)) ->
+    (forall n. ApplyConstraints cs n => Dict (KFunctor n)) ->
+    (forall n. ApplyConstraints cs n => a -> Tree n (Const a)) ->
     a ->
     Tree Pure k
 unfold p getFunctor f = unwrap p getFunctor (f . getConst) . Const
@@ -334,8 +335,8 @@ foldMapRecursiveWithDict ::
     forall cs k a f.
     (Recursively KFoldable f, Monoid a) =>
     Tree (RecursiveNodes k) (KDict cs) ->
-    (forall n. ApplyKConstraints n cs => Dict (KFoldable n)) ->
-    (forall n g. (ApplyKConstraints n cs, Recursively KFoldable g) => Tree n g -> a) ->
+    (forall n. ApplyConstraints cs n => Dict (KFoldable n)) ->
+    (forall n g. (ApplyConstraints cs n, Recursively KFoldable g) => Tree n g -> a) ->
     Tree k f ->
     a
 foldMapRecursiveWithDict c getFoldable f x =
@@ -354,8 +355,8 @@ foldMapRecursive ::
     forall cs k a f.
     (RLiftConstraints k cs, Recursively KFoldable f, Monoid a) =>
     Proxy cs ->
-    (forall n. ApplyKConstraints n cs => Dict (KFoldable n)) ->
-    (forall n g. (ApplyKConstraints n cs, Recursively KFoldable g) => Tree n g -> a) ->
+    (forall n. ApplyConstraints cs n => Dict (KFoldable n)) ->
+    (forall n g. (ApplyConstraints cs n, Recursively KFoldable g) => Tree n g -> a) ->
     Tree k f ->
     a
 foldMapRecursive _ =

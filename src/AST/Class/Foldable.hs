@@ -9,13 +9,14 @@ module AST.Class.Foldable
     ) where
 
 import AST.Class (NodeTypesOf, KNodes(..), KPointed(..))
-import AST.Class.Combinators (KLiftConstraints(..), ApplyKConstraints, pureKWith)
+import AST.Class.Combinators (KLiftConstraints(..), pureKWith)
 import AST.Knot (Tree, Knot)
 import Control.Lens (Iso, iso)
 import Control.Lens.Operators
 import Data.Foldable (sequenceA_)
 import Data.Functor.Const (Const(..))
 import Data.Constraint (withDict)
+import Data.Constraint.List (ApplyConstraints)
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
@@ -57,7 +58,7 @@ foldMapKWith ::
     forall a k n constraints.
     (Monoid a, KFoldable k, KLiftConstraints k constraints) =>
     Proxy constraints ->
-    (forall child. ApplyKConstraints child constraints => Tree n child -> a) ->
+    (forall child. ApplyConstraints constraints child => Tree n child -> a) ->
     Tree k n ->
     a
 foldMapKWith p f =
@@ -78,7 +79,7 @@ traverseKWith_ ::
     forall f k constraints m.
     (Applicative f, KFoldable k, KLiftConstraints k constraints) =>
     Proxy constraints ->
-    (forall c. ApplyKConstraints c constraints => Tree m c -> f ()) ->
+    (forall c. ApplyConstraints constraints c => Tree m c -> f ()) ->
     Tree k m ->
     f ()
 traverseKWith_ p f =
