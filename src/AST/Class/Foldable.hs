@@ -43,16 +43,14 @@ instance KFoldable (Const a) where
 
 {-# INLINE foldMapK #-}
 foldMapK ::
+    forall a k l.
     (Monoid a, KFoldable k) =>
     (forall c. Tree l c -> a) ->
     Tree k l ->
     a
 foldMapK f x =
-    withDict (kNodes (p x)) $
+    withDict (kNodes (Proxy :: Proxy k)) $
     foldMapC (pureK (MkConvertK f)) x
-    where
-        p :: Tree k l -> Proxy k
-        p _ = Proxy
 
 {-# INLINE foldMapKWith #-}
 foldMapKWith ::

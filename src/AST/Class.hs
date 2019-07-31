@@ -1,6 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, DataKinds, TypeFamilies, RankNTypes #-}
 {-# LANGUAGE ConstraintKinds, FlexibleInstances, UndecidableInstances #-}
 {-# LANGUAGE DefaultSignatures, FlexibleContexts, TypeOperators #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module AST.Class
     ( KNodes(..), NodeTypesConstraints, KLiftConstraint
@@ -122,14 +123,9 @@ instance
     type NodesConstraint (Both a b) = ConcatKnotConstraints [NodesConstraint a, NodesConstraint b]
 
     {-# INLINE kNodes #-}
-    kNodes p =
-        withDict (kNodes (pa p)) $
-        withDict (kNodes (pb p)) Dict
-        where
-            pa :: Proxy (Both a b) -> Proxy a
-            pa _ = Proxy
-            pb :: Proxy (Both a b) -> Proxy b
-            pb _ = Proxy
+    kNodes _ =
+        withDict (kNodes (Proxy :: Proxy a)) $
+        withDict (kNodes (Proxy :: Proxy b)) Dict
 
 instance (KPointed a, KPointed b) => KPointed (Both a b) where
     {-# INLINE pureK #-}
@@ -147,16 +143,14 @@ instance (KApply a, KApply b) => KApply (Both a b) where
 
 {-# INLINE mapK #-}
 mapK ::
+    forall k m n.
     KFunctor k =>
     (forall c. Tree m c -> Tree n c) ->
     Tree k m ->
     Tree k n
 mapK f x =
-    withDict (kNodes (p x)) $
+    withDict (kNodes (Proxy :: Proxy k)) $
     mapC (pureK (MkMapK f)) x
-    where
-        p :: Tree k l -> Proxy k
-        p _ = Proxy
 
 {-# INLINE liftK2 #-}
 liftK2 ::
