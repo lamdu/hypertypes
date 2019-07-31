@@ -15,10 +15,8 @@ import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
-import           Data.Constraint (Constraint)
 import           Data.Functor.Const (Const)
 import           Data.Proxy (Proxy(..))
-import           Data.TyFun
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 
@@ -40,7 +38,6 @@ newtype Var v (expr :: Knot -> *) (k :: Knot) = Var v
 
 instance KNodes (Var v e) where
     type NodeTypesOf (Var v e) = Const ()
-    type NodesConstraint (Var v e) = TConst (() :: Constraint)
 
 Lens.makePrisms ''Var
 makeKTraversableAndBases ''Var

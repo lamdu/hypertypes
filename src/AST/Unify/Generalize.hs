@@ -58,7 +58,6 @@ instance
     KNodes (Flip GTerm ast) where
 
     type NodeTypesOf (Flip GTerm ast) = RecursiveNodes ast
-    type NodesConstraint (Flip GTerm ast) = RecursiveConstraint ast
 
 instance
     (Recursively KNodes ast, Recursively KFunctor ast) =>

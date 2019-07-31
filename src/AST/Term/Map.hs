@@ -16,7 +16,6 @@ import           Data.Binary (Binary)
 import           Data.Constraint (Constraint)
 import           Data.Map (Map)
 import qualified Data.Map as Map
-import           Data.TyFun
 import           GHC.Generics (Generic)
 
 import           Prelude.Compat
@@ -26,7 +25,6 @@ newtype TermMap k expr f = TermMap (Map k (Node f expr))
 
 instance KNodes (TermMap k e) where
     type NodeTypesOf (TermMap k e) = Single e
-    type NodesConstraint (TermMap k e) = On e
 
 Lens.makePrisms ''TermMap
 makeKTraversableAndBases ''TermMap

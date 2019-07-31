@@ -15,7 +15,6 @@ import AST.Knot (Tree, Node)
 import Control.DeepSeq (NFData)
 import Control.Lens (Iso, iso)
 import Data.Binary (Binary)
-import Data.TyFun
 import GHC.Generics (Generic)
 
 newtype ToKnot f k = MkToKnot (f (Node k (ToKnot f)))
@@ -30,7 +29,6 @@ _ToKnot = iso (\(MkToKnot x) -> x) MkToKnot
 
 instance KNodes (ToKnot f) where
     type NodeTypesOf (ToKnot f) = Single (ToKnot f)
-    type NodesConstraint (ToKnot f) = On (ToKnot f)
 
 makeKApplicativeBases ''ToKnot
 makeKTraversableAndFoldable ''ToKnot

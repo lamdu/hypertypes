@@ -17,7 +17,6 @@ import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           Data.Constraint (Constraint)
-import           Data.TyFun
 import           GHC.Generics (Generic)
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint ((<+>))
@@ -33,7 +32,6 @@ makeLenses ''Lam
 
 instance KNodes (Lam v e) where
     type NodeTypesOf (Lam v e) = Single e
-    type NodesConstraint (Lam v e) = On e
 
 makeKTraversableAndBases ''Lam
 

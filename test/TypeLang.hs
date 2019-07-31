@@ -82,10 +82,8 @@ instance KNodes Types where
     type NodesConstraint Types = ConcatConstraintFuncs '[On Typ, On Row]
 instance KNodes Typ where
     type NodeTypesOf Typ = Types
-    type NodesConstraint Typ = ConcatConstraintFuncs '[On Typ, On Row]
 instance KNodes Row where
     type NodeTypesOf Row = Types
-    type NodesConstraint Row = ConcatConstraintFuncs '[On Typ, On Row]
 
 makeZipMatch ''Typ
 makeZipMatch ''Row

@@ -73,7 +73,6 @@ instance
     KNodes (UnifyError t) where
 
     type NodeTypesOf (UnifyError t) = UnifyErrorNodes t
-    type NodesConstraint (UnifyError t) = NodesConstraint (UnifyErrorNodes t)
 
 instance
     KNodes t =>

@@ -34,7 +34,6 @@ import           Data.Constraint
 import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Data.Proxy (Proxy(..))
-import           Data.TyFun
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
@@ -54,7 +53,6 @@ newtype QVars typ = QVars
 
 instance KNodes (Scheme v t) where
     type NodeTypesOf (Scheme v t) = Single t
-    type NodesConstraint (Scheme v t) = On t
 
 Lens.makeLenses ''Scheme
 Lens.makePrisms ''QVars

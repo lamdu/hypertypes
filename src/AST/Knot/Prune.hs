@@ -17,7 +17,6 @@ import Control.DeepSeq (NFData)
 import Control.Lens (makePrisms)
 import Control.Lens.Operators
 import Data.Binary (Binary)
-import Data.TyFun
 import GHC.Generics (Generic)
 
 import Prelude.Compat
@@ -28,7 +27,6 @@ data Prune k =
 
 instance KNodes Prune where
     type NodeTypesOf Prune = Single Prune
-    type NodesConstraint Prune = On Prune
 
 makePrisms ''Prune
 makeKTraversableAndBases ''Prune

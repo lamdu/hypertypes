@@ -46,6 +46,7 @@ class KNodes k where
     -- an unbounded set of children types, such as
     -- `Flip GTerm (LangA Nothing)` (with `LangA` from the test suite).
     type family NodesConstraint k :: ((Knot -> Type) -> Constraint) ~> Constraint
+    type NodesConstraint k = NodesConstraint (NodeTypesOf k)
 
     kNodes ::
         Proxy k ->

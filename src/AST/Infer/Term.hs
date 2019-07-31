@@ -89,7 +89,6 @@ instance
     KNodes (IResult e) where
 
     type NodeTypesOf (IResult e) = IResultNodeTypes e
-    type NodesConstraint (IResult e) = NodesConstraint (IResultNodeTypes e)
 
 makeKApplicativeBases ''IResult
 makeKTraversableAndFoldable ''IResult
@@ -210,7 +209,6 @@ instance
     KNodes (Flip (ITerm a) e) where
 
     type NodeTypesOf (Flip (ITerm a) e) = ITermTypes e
-    type NodesConstraint (Flip (ITerm a) e) = NodesConstraint (ITermTypes e)
 
 instance
     ( Recursively (InferChildConstraints KNodes) e

@@ -24,7 +24,6 @@ import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           Data.Constraint (Constraint, Dict(..), withDict)
 import           Data.Proxy (Proxy(..))
-import           Data.TyFun
 import           GHC.Generics (Generic)
 import qualified Text.PrettyPrint as PP
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
@@ -40,7 +39,6 @@ makeLenses ''Ann
 
 instance KNodes (Ann a) where
     type NodeTypesOf (Ann a) = Single (Ann a)
-    type NodesConstraint (Ann a) = On (Ann a)
 
 makeKTraversableAndBases ''Ann
 makeZipMatch ''Ann

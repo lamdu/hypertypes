@@ -35,7 +35,6 @@ import           Control.Monad.ST.Class (MonadST(..))
 import           Data.Constraint
 import           Data.Proxy (Proxy(..))
 import           Data.STRef
-import           Data.TyFun
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
@@ -49,7 +48,6 @@ data LangA v k
 
 instance KNodes (LangA v) where
     type NodeTypesOf (LangA v) = Pair (LangA v) (LangA (Maybe v))
-    type NodesConstraint (LangA v) = ConcatConstraintFuncs '[On (LangA v), On (LangA (Maybe v))]
 
 makeKTraversableAndBases ''LangA
 instance Recursively KNodes (LangA v)

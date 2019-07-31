@@ -38,7 +38,6 @@ import           Control.Monad.ST.Class (MonadST(..))
 import           Data.Map (Map)
 import           Data.Proxy
 import           Data.STRef
-import           Data.TyFun
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
@@ -56,7 +55,6 @@ data LangB k
 
 instance KNodes LangB where
     type NodeTypesOf LangB = Single LangB
-    type NodesConstraint LangB = On LangB
 
 makeKTraversableAndBases ''LangB
 instance c LangB => Recursively c LangB
@@ -126,7 +124,6 @@ newtype ScopeTypes v = ScopeTypes (Map Name (Tree (GTerm (RunKnot v)) Typ))
 
 instance KNodes ScopeTypes where
     type NodeTypesOf ScopeTypes = NodeTypesOf (Flip GTerm Typ)
-    type NodesConstraint ScopeTypes = NodesConstraint (Flip GTerm Typ)
 
 Lens.makePrisms ''ScopeTypes
 
