@@ -44,7 +44,7 @@ class KNodes k where
     -- But - making such a family is impossible for knots which have
     -- an unbounded set of children types, such as
     -- `Flip GTerm (LangA Nothing)` (with `LangA` from the test suite).
-    type family NodesConstraint k :: Constraint
+    type family NodesConstraint k
 
     kNodes ::
         Proxy k ->

@@ -42,10 +42,9 @@ instance (KNodes a, KNodes b) => KNodes (Compose a b) where
         withDict (kNodes (Proxy :: Proxy b))
         Dict
 
+data ComposeConstraint a b
 type instance ApplyKnotConstraint (ComposeConstraint a b) c =
     ApplyKnotConstraint a (ComposeConstraint0 c b)
-
-class ComposeConstraint (a :: Constraint) (b :: Constraint)
 
 class    ApplyKnotConstraint b (ComposeConstraint1 c k0) => ComposeConstraint0 c b k0
 instance ApplyKnotConstraint b (ComposeConstraint1 c k0) => ComposeConstraint0 c b k0

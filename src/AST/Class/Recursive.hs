@@ -55,7 +55,7 @@ type RecursiveContext expr constraint =
 
 type RecursiveDict expr constraint = Dict (RecursiveContext expr constraint)
 
-class RecursiveConstraint (k :: Knot -> Type)
+data RecursiveConstraint (k :: Knot -> Type)
 
 type instance ApplyKnotConstraint (RecursiveConstraint k) c = Recursively c k
 
