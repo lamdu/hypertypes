@@ -119,7 +119,7 @@ instance InferChildDeps c ast => InferChildConstraints c ast
 
 data InferConstraint (k :: Knot -> Type)
 
-type instance ApplyKnotConstraint (InferConstraint k) c = Recursively (InferChildConstraints c) k
+type instance Apply (InferConstraint k) c = Recursively (InferChildConstraints c) k
 
 newtype ITermTypes e k =
     ITermTypes (Tree (RecursiveNodes e) (Flip IResultNodeTypes (RunKnot k)))

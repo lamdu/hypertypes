@@ -13,7 +13,7 @@ module AST.Class.Combinators
     ) where
 
 import AST.Class
-import AST.Constraint (ApplyKnotConstraint)
+import AST.Constraint (Apply)
 import AST.Combinator.Both (Both(..))
 import AST.Knot (Tree, Knot)
 import AST.Knot.Dict (KDict(..), ApplyKConstraints, pureKWithDict)
@@ -44,7 +44,7 @@ instance
     kLiftConstraintsNodeTypes p _ = withDict (kNodes p) Dict
 
 instance
-    ( ApplyKnotConstraint (NodesConstraint k) c
+    ( Apply (NodesConstraint k) c
     , KLiftConstraints k cs
     ) =>
     KLiftConstraints k (c ': cs) where

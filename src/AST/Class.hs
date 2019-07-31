@@ -22,7 +22,7 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
-type KLiftConstraint k c = ApplyKnotConstraint (NodesConstraint k) c
+type KLiftConstraint k c = Apply (NodesConstraint k) c
 
 type NodeTypesConstraints k =
     ( NodesConstraint k ~ NodesConstraint (NodeTypesOf k)

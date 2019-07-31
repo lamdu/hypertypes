@@ -43,11 +43,11 @@ instance (KNodes a, KNodes b) => KNodes (Compose a b) where
         Dict
 
 data ComposeConstraint a b
-type instance ApplyKnotConstraint (ComposeConstraint a b) c =
-    ApplyKnotConstraint a (ComposeConstraint0 c b)
+type instance Apply (ComposeConstraint a b) c =
+    Apply a (ComposeConstraint0 c b)
 
-class    ApplyKnotConstraint b (ComposeConstraint1 c k0) => ComposeConstraint0 c b k0
-instance ApplyKnotConstraint b (ComposeConstraint1 c k0) => ComposeConstraint0 c b k0
+class    Apply b (ComposeConstraint1 c k0) => ComposeConstraint0 c b k0
+instance Apply b (ComposeConstraint1 c k0) => ComposeConstraint0 c b k0
 class    c (Compose k0 k1) => ComposeConstraint1 c k0 k1
 instance c (Compose k0 k1) => ComposeConstraint1 c k0 k1
 
