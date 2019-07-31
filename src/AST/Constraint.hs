@@ -15,7 +15,7 @@ import Data.Kind (Type)
 
 type KnotConstraint = (Knot -> Type) -> Constraint
 
-type family ApplyKnotConstraint (cls :: KnotConstraint -> Constraint) (c :: KnotConstraint) :: Constraint
+type family ApplyKnotConstraint (cls :: Constraint) (c :: KnotConstraint) :: Constraint
 type instance ApplyKnotConstraint (KnotsConstraint '[]) c = ()
 type instance ApplyKnotConstraint (KnotsConstraint (k ': ks)) c =
     ( c k
@@ -23,9 +23,9 @@ type instance ApplyKnotConstraint (KnotsConstraint (k ': ks)) c =
     )
 
 -- | Apply a constraint on the given knots
-class KnotsConstraint (ks :: [Knot -> Type]) (c :: KnotConstraint)
+class KnotsConstraint (ks :: [Knot -> Type])
 
-class ConcatKnotConstraints (xs :: [KnotConstraint -> Constraint]) (c :: KnotConstraint)
+class ConcatKnotConstraints (xs :: [Constraint])
 
 type instance ApplyKnotConstraint (ConcatKnotConstraints '[]) c = ()
 type instance ApplyKnotConstraint (ConcatKnotConstraints (x ': xs)) c =

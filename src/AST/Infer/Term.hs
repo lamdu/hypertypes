@@ -20,6 +20,7 @@ import AST.Combinator.Flip (Flip(..), _Flip)
 import Control.Lens (Traversal, Lens', makeLenses, makePrisms, from)
 import Control.Lens.Operators
 import Data.Constraint
+import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
@@ -116,8 +117,7 @@ type InferChildDeps c ast =
 class    InferChildDeps c ast => InferChildConstraints c ast
 instance InferChildDeps c ast => InferChildConstraints c ast
 
-class    Recursively (InferChildConstraints c) k => InferConstraint k c
-instance Recursively (InferChildConstraints c) k => InferConstraint k c
+class  InferConstraint (k :: Knot -> Type)
 
 type instance ApplyKnotConstraint (InferConstraint k) c = Recursively (InferChildConstraints c) k
 

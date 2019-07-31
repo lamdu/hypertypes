@@ -1,6 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, StandaloneDeriving, UndecidableInstances, DeriveGeneric #-}
 {-# LANGUAGE TypeFamilies, MultiParamTypeClasses, ConstraintKinds, UndecidableSuperClasses #-}
 {-# LANGUAGE FlexibleInstances, DerivingStrategies, ScopedTypeVariables, FlexibleContexts #-}
+{-# LANGUAGE DataKinds #-}
 
 module AST.Combinator.Compose
     ( Compose(..), _Compose
@@ -44,8 +45,7 @@ instance (KNodes a, KNodes b) => KNodes (Compose a b) where
 type instance ApplyKnotConstraint (ComposeConstraint a b) c =
     ApplyKnotConstraint a (ComposeConstraint0 c b)
 
-class    ApplyKnotConstraint a (ComposeConstraint0 c b) => ComposeConstraint a b c
-instance ApplyKnotConstraint a (ComposeConstraint0 c b) => ComposeConstraint a b c
+class ComposeConstraint (a :: Constraint) (b :: Constraint)
 
 class    ApplyKnotConstraint b (ComposeConstraint1 c k0) => ComposeConstraint0 c b k0
 instance ApplyKnotConstraint b (ComposeConstraint1 c k0) => ComposeConstraint0 c b k0

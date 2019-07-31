@@ -23,13 +23,14 @@ import AST.Class.Traversable
 import AST.Combinator.Both
 import AST.Combinator.Flip
 import AST.Constraint
-import AST.Knot (Tree, Node, RunKnot)
+import AST.Knot
 import AST.Knot.Dict
 import AST.Knot.Pure (Pure(..), _Pure)
 import Control.Lens (makeLenses)
 import Control.Lens.Operators
 import Data.Constraint (Dict(..), withDict)
 import Data.Functor.Const (Const(..))
+import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
@@ -54,8 +55,7 @@ type RecursiveContext expr constraint =
 
 type RecursiveDict expr constraint = Dict (RecursiveContext expr constraint)
 
-class    Recursively c k => RecursiveConstraint k c
-instance Recursively c k => RecursiveConstraint k c
+class RecursiveConstraint (k :: Knot -> Type)
 
 type instance ApplyKnotConstraint (RecursiveConstraint k) c = Recursively c k
 
