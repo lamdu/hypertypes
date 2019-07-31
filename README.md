@@ -1,16 +1,16 @@
 # syntax-tree
 
-**Note:** Currently the library is in the process of shifting from the `Children` class to classes like `KTraversable`. Documentation and example may currently reflect to-be-obsoleted practices.
+`syntax-tree` is a Haskell library that can be described in several ways:
 
-A Haskell library for representing syntax trees using type-level interleaved continuations, and processing these trees.
+* [`recursion-schemes`](https://github.com/ekmett/recursion-schemes/), super-powered
+* Tools for indexed indices
+* A library for representing and processing mutually recursive syntax trees via indexed variants of `Functor` and other classes
 
-Like [`recursion-schemes`](https://github.com/ekmett/recursion-schemes/),
-`syntax-tree` allows parameterizing the "fix-point" of a syntax tree. Parameterized fix-points allow various useful things, like adding annotations on all nodes, conviniently "folding" the tree, pruning trees, and more.
+Like `recursion-schemes`, `syntax-tree` allows parameterizing the "fix-point" of a syntax tree. Parameterized fix-points enabled useful combinators, conviniently "folding" the tree, annotating trees, pruning them, and more.
 
-But unlike `recursion-schemes`, heterogeneous ASTs represented using `syntax-tree` can share a single fix-point type,
-meaning that there could be "statement" nodes containing "expression" nodes, etc. all sharing the same fix-point.
+While `recursion-schemes` works best for ASTs with a single expression types, many ASTs are more complex and have several node types, for statements, expressions, types, etc. `syntax-tree` can represent these ASTs a single fix-point type parameter.
 
-The fix-points for ASTs may also be heterogeneous, allowing for fix-points representing code diffs, and more.
+Not only are complex ASTs supported, the fix-points themselves may be equally rich. This allows for fix-points representing code diffs, and more.
 
 ## Heterogeneous AST examples
 
@@ -46,12 +46,11 @@ data Row k
 
 Differences:
 
-* The types are parameterized by a type variable "k"
-* Node children are specified via the `Node` type-synonym which "ties the knot"
+* The child nodes are parameterized by a type variable "k"
+* Nodes are specified via the `Node` type-synonym which "ties the knot"
 
-## What does `syntax-tree` do for me
+## What kind of processing does `syntax-tree` do for me
 
-* Allow representing ASTs in a type-safe and versatile manner
 * Helpers for recursive processing and transformation of ASTs
 * Provides existing structures for common terms and fix-points
 * A generic implementation for unification of terms
@@ -62,7 +61,7 @@ Differences:
 * We want ASTs to be parameterized by fix-points
 * We want fix-points to be parameterized by ASTs, too
 * Therefore, ASTs and fix-points need to be mutually parameterized by each other
-* The AST parameterized by a fix-point which may be parameterized by the same AST results in infinite types
+* This results in infinite types, as the AST is parameterized by something which may be parameterized by the AST itself.
 
 To represent these infinite types we break the cycle with a `newtype`:
 
