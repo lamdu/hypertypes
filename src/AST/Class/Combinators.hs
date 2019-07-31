@@ -13,13 +13,13 @@ module AST.Class.Combinators
     ) where
 
 import AST.Class
-import AST.Constraint (Apply)
 import AST.Combinator.Both (Both(..))
 import AST.Knot (Tree, Knot)
 import AST.Knot.Dict (KDict(..), ApplyKConstraints, pureKWithDict)
 import Data.Constraint (Dict(..), Constraint, withDict)
 import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
+import Data.TyFun
 
 import Prelude.Compat
 

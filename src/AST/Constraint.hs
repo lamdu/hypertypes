@@ -2,8 +2,7 @@
 {-# LANGUAGE ConstraintKinds #-}
 
 module AST.Constraint
-    ( Apply
-    , KnotsConstraint
+    ( KnotsConstraint
     , ConcatKnotConstraints
     , KnotConstraint
     ) where
