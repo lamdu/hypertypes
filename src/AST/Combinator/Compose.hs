@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, StandaloneDeriving, UndecidableInstances, DeriveGeneric #-}
 {-# LANGUAGE TypeFamilies, MultiParamTypeClasses, ConstraintKinds, UndecidableSuperClasses #-}
 {-# LANGUAGE FlexibleInstances, DerivingStrategies, ScopedTypeVariables, FlexibleContexts #-}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds, TypeOperators #-}
 
 module AST.Combinator.Compose
     ( Compose(..), _Compose
@@ -12,12 +12,14 @@ import           AST.Class
 import           AST.Class.Foldable
 import           AST.Class.Traversable
 import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
+import           AST.Constraint
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           Data.Constraint
 import           Data.Proxy (Proxy(..))
+import           Data.TyFun
 import           GHC.Generics (Generic)
 
 import           Prelude.Compat
@@ -42,7 +44,11 @@ instance (KNodes a, KNodes b) => KNodes (Compose a b) where
         withDict (kNodes (Proxy :: Proxy b))
         Dict
 
-data ComposeConstraint a b
+data
+    ComposeConstraint
+    (a :: KnotConstraint ~> Constraint)
+    (b :: KnotConstraint ~> Constraint)
+    :: KnotConstraint ~> Constraint
 type instance Apply (ComposeConstraint a b) c =
     Apply a (ComposeConstraint0 c b)
 

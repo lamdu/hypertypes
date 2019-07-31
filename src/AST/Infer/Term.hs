@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DataKinds, TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses, ConstraintKinds, FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances, UndecidableSuperClasses, FlexibleInstances #-}
-{-# LANGUAGE ScopedTypeVariables, RankNTypes, StandaloneDeriving #-}
+{-# LANGUAGE ScopedTypeVariables, RankNTypes, StandaloneDeriving, TypeOperators #-}
 
 module AST.Infer.Term
     ( TypeOf, ScopeOf
@@ -17,11 +17,13 @@ import AST.Class.Foldable
 import AST.Class.Traversable
 import AST.Combinator.Both
 import AST.Combinator.Flip (Flip(..), _Flip)
+import AST.Constraint
 import Control.Lens (Traversal, Lens', makeLenses, makePrisms, from)
 import Control.Lens.Operators
 import Data.Constraint
 import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
+import Data.TyFun
 
 import Prelude.Compat
 
@@ -117,7 +119,7 @@ type InferChildDeps c ast =
 class    InferChildDeps c ast => InferChildConstraints c ast
 instance InferChildDeps c ast => InferChildConstraints c ast
 
-data InferConstraint (k :: Knot -> Type)
+data InferConstraint (k :: Knot -> Type) :: KnotConstraint ~> Constraint
 
 type instance Apply (InferConstraint k) c = Recursively (InferChildConstraints c) k
 

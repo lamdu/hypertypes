@@ -30,8 +30,9 @@ import Control.Lens (makeLenses)
 import Control.Lens.Operators
 import Data.Constraint (Dict(..), withDict)
 import Data.Functor.Const (Const(..))
-import Data.Kind (Type)
+import Data.Kind (Type, Constraint)
 import Data.Proxy (Proxy(..))
+import Data.TyFun
 
 import Prelude.Compat
 
@@ -55,7 +56,7 @@ type RecursiveContext expr constraint =
 
 type RecursiveDict expr constraint = Dict (RecursiveContext expr constraint)
 
-data RecursiveConstraint (k :: Knot -> Type)
+data RecursiveConstraint (k :: Knot -> Type) :: KnotConstraint ~> Constraint
 
 type instance Apply (RecursiveConstraint k) c = Recursively c k
 

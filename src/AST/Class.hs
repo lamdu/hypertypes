@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, DataKinds, TypeFamilies, RankNTypes #-}
 {-# LANGUAGE ConstraintKinds, FlexibleInstances, UndecidableInstances #-}
-{-# LANGUAGE DefaultSignatures, FlexibleContexts #-}
+{-# LANGUAGE DefaultSignatures, FlexibleContexts, TypeOperators #-}
 
 module AST.Class
     ( KNodes(..), NodeTypesConstraints, KLiftConstraint
@@ -19,6 +19,7 @@ import Data.Constraint
 import Data.Functor.Const (Const(..))
 import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
+import Data.TyFun
 
 import Prelude.Compat
 
@@ -44,7 +45,7 @@ class KNodes k where
     -- But - making such a family is impossible for knots which have
     -- an unbounded set of children types, such as
     -- `Flip GTerm (LangA Nothing)` (with `LangA` from the test suite).
-    type family NodesConstraint k
+    type family NodesConstraint k :: KnotConstraint ~> Constraint
 
     kNodes ::
         Proxy k ->
