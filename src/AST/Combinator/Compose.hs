@@ -45,10 +45,10 @@ instance (KNodes a, KNodes b) => KNodes (Compose a b) where
         Dict
 
 data
-    ComposeConstraint
-    (a :: KnotConstraint ~> Constraint)
-    (b :: KnotConstraint ~> Constraint)
-    :: KnotConstraint ~> Constraint
+    ComposeConstraint ::
+    (KnotConstraint ~> Constraint) ->
+    (KnotConstraint ~> Constraint) ->
+    KnotConstraint ~> Constraint
 type instance Apply (ComposeConstraint a b) c =
     Apply a (ComposeConstraint0 c b)
 

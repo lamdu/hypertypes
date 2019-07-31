@@ -119,7 +119,7 @@ type InferChildDeps c ast =
 class    InferChildDeps c ast => InferChildConstraints c ast
 instance InferChildDeps c ast => InferChildConstraints c ast
 
-data InferConstraint (k :: Knot -> Type) :: KnotConstraint ~> Constraint
+data InferConstraint :: (Knot -> Type) -> KnotConstraint ~> Constraint
 
 type instance Apply (InferConstraint k) c = Recursively (InferChildConstraints c) k
 
