@@ -11,6 +11,9 @@ import AST.Unify.Occurs (occursError)
 import AST.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify(..))
 import AST.Unify.Term (UTerm(..), uBody)
 import Control.Lens.Operators
+import Control.Monad (unless)
+import Control.Monad.Trans.Class (MonadTrans(..))
+import Control.Monad.Trans.State (runStateT, get, put)
 import Data.Constraint (withDict)
 import Data.Proxy (Proxy(..))
 
@@ -37,16 +40,18 @@ applyBindings v0 =
     UUnbound c -> quantify c
     USkolem c -> quantify c
     UTerm b ->
-        case mNoChildren of
-        Just f -> _Pure # f (b ^. uBody) & pure
-        Nothing ->
-            withDict (recursive :: RecursiveDict t (Unify m)) $
-            do
-                bindVar binding v1 (UResolving b)
+        do
+            (r, anyChild) <-
+                withDict (recursive :: RecursiveDict t (Unify m)) $
                 traverseKWith (Proxy :: Proxy '[Recursively (Unify m)])
-                    applyBindings (b ^. uBody)
-            <&> (_Pure #)
-            >>= result
+                ( \c ->
+                    do
+                        get >>= lift . (`unless` bindVar binding v1 (UResolving b))
+                        put True
+                        applyBindings c & lift
+                ) (b ^. uBody)
+                & (`runStateT` False)
+            _Pure # r & if anyChild then result else pure
     UToVar{} -> error "lookup not expected to result in var"
     UConverted{} -> error "conversion state not expected in applyBindings"
     UInstantiated{} -> error "applyBindings during instantiation"

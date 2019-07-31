@@ -57,13 +57,6 @@ class HasNodes k where
         Dict (NodeTypesConstraints k)
     hasNodes _ = Dict
 
-    -- TODO: Remove this.
-    -- Algorithms that avoid actions for leafs can more accurately
-    -- use KTraversable to check for their presence
-    mNoChildren :: Maybe (k m -> k n)
-    {-# INLINE mNoChildren #-}
-    mNoChildren = Nothing
-
 class HasNodes k => KPointed k where
     -- | Construct a value from a higher ranked child value
     pureK ::
@@ -107,8 +100,6 @@ instance (KPointed k, KApply k) => KApplicative k
 instance HasNodes (Const a) where
     type NodeTypesOf (Const a) = Const ()
     type NodesConstraint (Const a) = KnotsConstraint '[]
-    {-# INLINE mNoChildren #-}
-    mNoChildren = Just (\(Const x) -> Const x)
 
 instance Monoid a => KPointed (Const a) where
     {-# INLINE pureK #-}

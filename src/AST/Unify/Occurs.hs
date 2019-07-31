@@ -13,6 +13,9 @@ import AST.Unify.Lookup (semiPruneLookup)
 import AST.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify(..))
 import AST.Unify.Term (UTerm(..), UTermBody(..), uBody)
 import Control.Lens.Operators
+import Control.Monad (unless, when)
+import Control.Monad.Trans.Class (MonadTrans(..))
+import Control.Monad.Trans.State (execStateT, get, put)
 import Data.Constraint (withDict)
 import Data.Proxy (Proxy(..))
 
@@ -29,7 +32,8 @@ occursError v (UTermBody c b) =
 
 {-# INLINE occursCheck #-}
 occursCheck ::
-    forall m t. Recursively (Unify m) t =>
+    forall m t.
+    Recursively (Unify m) t =>
     Tree (UVarOf m) t -> m ()
 occursCheck v0 =
     semiPruneLookup v0
@@ -41,15 +45,16 @@ occursCheck v0 =
     UUnbound{} -> pure ()
     USkolem{} -> pure ()
     UTerm b ->
-        case (mNoChildren :: Maybe (Tree t Pure -> Tree t Pure)) of
-        Just{} -> pure () -- no children to check!
-        Nothing ->
-            withDict (recursive :: RecursiveDict t (Unify m)) $
+        withDict (recursive :: RecursiveDict t (Unify m)) $
+        traverseKWith_ (Proxy :: Proxy '[Recursively (Unify m)])
+        ( \c ->
             do
-                bindVar binding v1 (UResolving b)
-                traverseKWith_ (Proxy :: Proxy '[Recursively (Unify m)]) occursCheck
-                    (b ^. uBody)
-                bindVar binding v1 (UTerm b)
+                get >>= lift . (`unless` bindVar binding v1 (UResolving b))
+                put True
+                occursCheck c & lift
+        ) (b ^. uBody)
+        & (`execStateT` False)
+        >>= (`when` bindVar binding v1 (UTerm b))
     UToVar{} -> error "lookup not expected to result in var (in occursCheck)"
     UConverted{} -> error "conversion state not expected in occursCheck"
     UInstantiated{} -> error "occursCheck during instantiation"
