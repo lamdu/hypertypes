@@ -19,7 +19,7 @@ module AST.Term.Nominal
 
 import           AST
 import           AST.Class (_MapK)
-import           AST.Class.HasChild (HasChild(..))
+import           AST.Class.Has (HasChild(..))
 import           AST.Class.Foldable (_ConvertK, foldMapKWith, traverseKWith_)
 import           AST.Class.Recursive
 import           AST.Class.Traversable (ContainedK(..))

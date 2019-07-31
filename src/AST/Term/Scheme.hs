@@ -15,7 +15,7 @@ module AST.Term.Scheme
     ) where
 
 import           AST
-import           AST.Class.HasChild (HasChild(..))
+import           AST.Class.Has (HasChild(..))
 import           AST.Class.Recursive
 import           AST.Combinator.Single (Single)
 import           AST.Unify

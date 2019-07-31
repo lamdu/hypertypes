@@ -6,7 +6,7 @@ module AST.Unify.Binding.Save
     ) where
 
 import           AST
-import           AST.Class.HasChild (HasChild(..))
+import           AST.Class.Has (HasChild(..))
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Unify.Binding (Binding, _Binding, UVar(..))
 import           AST.Unify.Term (UTerm(..), uBody)

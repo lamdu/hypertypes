@@ -6,7 +6,7 @@ module AST.Term.Scheme.AlphaEq
     ) where
 
 import           AST
-import           AST.Class.HasChild (HasChild(..))
+import           AST.Class.Has (HasChild(..))
 import           AST.Class.ZipMatch (zipMatchWith_)
 import           AST.Term.Scheme (Scheme, schemeToRestrictedType)
 import           AST.Unify (Unify(..), UVarOf, BindingDict(..), UnifyError(..))

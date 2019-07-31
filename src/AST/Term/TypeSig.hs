@@ -7,7 +7,7 @@ module AST.Term.TypeSig
     ) where
 
 import           AST
-import           AST.Class.HasChild (HasChild(..))
+import           AST.Class.Has (HasChild(..))
 import           AST.Combinator.Single (Single)
 import           AST.Infer
 import           AST.Term.Scheme (Scheme, schemeToRestrictedType)

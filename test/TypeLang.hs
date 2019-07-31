@@ -7,7 +7,6 @@ module TypeLang where
 
 import           AST
 import           AST.Class.Has
-import           AST.Class.HasChild
 import           AST.Class.Unify
 import           AST.Combinator.Single
 import           AST.Combinator.Pair
