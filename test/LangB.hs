@@ -12,7 +12,7 @@ import           AST.Class.Unify
 import           AST.Combinator.Flip
 import           AST.Combinator.Single
 import           AST.Infer
-import           AST.Term.Apply
+import           AST.Term.App
 import           AST.Term.Lam
 import           AST.Term.Let
 import           AST.Term.Nominal
@@ -44,7 +44,7 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 data LangB k
     = BLit Int
-    | BApp (Apply LangB k)
+    | BApp (App LangB k)
     | BVar (Var Name LangB k)
     | BLam (Lam Name LangB k)
     | BLet (Let Name LangB k)

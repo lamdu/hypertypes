@@ -14,7 +14,7 @@ import           AST.Class.Infer.Infer1
 import           AST.Class.Unify
 import           AST.Combinator.Pair
 import           AST.Infer
-import           AST.Term.Apply
+import           AST.Term.App
 import           AST.Term.NamelessScope
 import           AST.Term.NamelessScope.InvDeBruijn
 import           AST.Term.TypeSig
@@ -42,7 +42,7 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 data LangA v k
     = ALam (Scope LangA v k)
     | AVar (ScopeVar LangA v k)
-    | AApp (Apply (LangA v) k)
+    | AApp (App (LangA v) k)
     | ATypeSig (TypeSig Types (LangA v) k)
     | ALit Int
 
@@ -67,7 +67,7 @@ instance InvDeBruijnIndex v => Pretty (LangA v ('Knot Pure)) where
         & maybeParens (p > 0)
     pPrintPrec _ _ (AVar (ScopeVar v)) =
         Pretty.text "#" <> pPrint (inverseDeBruijnIndex # v)
-    pPrintPrec lvl p (AApp (Apply f x)) =
+    pPrintPrec lvl p (AApp (App f x)) =
         pPrintPrec lvl p f <+> pPrintPrec lvl p x
     pPrintPrec lvl p (ATypeSig typeSig) = pPrintPrec lvl p typeSig
     pPrintPrec _ _ (ALit i) = pPrint i

@@ -6,7 +6,7 @@ module LangB.Pure
     ) where
 
 import AST
-import AST.Term.Apply
+import AST.Term.App
 import AST.Term.Lam
 import AST.Term.Let
 import AST.Term.Row
@@ -28,7 +28,7 @@ bLet v val body = Let (Name v) val (body (bVar v)) & BLet & MkPure
 
 infixl 9 $$
 ($$) :: Tree Pure LangB -> Tree Pure LangB -> Tree Pure LangB
-x $$ y = Apply x y & BApp & MkPure
+x $$ y = App x y & BApp & MkPure
 
 bLit :: Int -> Tree Pure LangB
 bLit = MkPure . BLit
