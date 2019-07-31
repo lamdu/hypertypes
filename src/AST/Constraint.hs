@@ -5,7 +5,6 @@ module AST.Constraint
     ( ApplyKnotConstraint
     , KnotsConstraint
     , ConcatKnotConstraints
-    , ApplyKnotConstraints
     , KnotConstraint
     ) where
 
@@ -31,7 +30,3 @@ type instance ApplyKnotConstraint (ConcatKnotConstraints (x ': xs)) c =
     ( ApplyKnotConstraint x c
     , ApplyKnotConstraint (ConcatKnotConstraints xs) c
     )
-
-type family ApplyKnotConstraints x cs :: Constraint where
-    ApplyKnotConstraints x (c ': cs) = (ApplyKnotConstraint x c, ApplyKnotConstraints x cs)
-    ApplyKnotConstraints x '[] = ()
