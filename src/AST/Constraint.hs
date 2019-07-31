@@ -24,8 +24,6 @@ type instance ApplyKnotConstraint (KnotsConstraint (k ': ks)) c =
 
 -- | Apply a constraint on the given knots
 class KnotsConstraint (ks :: [Knot -> Type]) (c :: KnotConstraint)
-instance KnotsConstraint '[] c
-instance c k => KnotsConstraint (k ': ks) c
 
 class ConcatKnotConstraints (xs :: [KnotConstraint -> Constraint]) (c :: KnotConstraint)
 
@@ -34,9 +32,6 @@ type instance ApplyKnotConstraint (ConcatKnotConstraints (x ': xs)) c =
     ( ApplyKnotConstraint x c
     , ApplyKnotConstraint (ConcatKnotConstraints xs) c
     )
-
-instance ConcatKnotConstraints '[] c
-instance ConcatKnotConstraints (x ': xs) c
 
 type family ApplyKnotConstraints x cs :: Constraint where
     ApplyKnotConstraints x (c ': cs) = (ApplyKnotConstraint x c, ApplyKnotConstraints x cs)
