@@ -31,7 +31,7 @@ data TypeSig vars term k = TypeSig
     } deriving Generic
 makeLenses ''TypeSig
 
-instance HasNodes (TypeSig v t) where
+instance KNodes (TypeSig v t) where
     type NodeTypesOf (TypeSig v t) = Single t
     type NodesConstraint (TypeSig v t) = KnotsConstraint '[t]
 

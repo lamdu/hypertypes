@@ -65,7 +65,7 @@ goUVar xv yv =
 alphaEq ::
     ( KTraversable varTypes
     , KLiftConstraint varTypes (Unify m)
-    , Recursively HasNodes typ
+    , Recursively KNodes typ
     , Recursively (Unify m) typ
     , Recursively (HasChild varTypes) typ
     , Recursively (QVarHasInstance Ord) typ

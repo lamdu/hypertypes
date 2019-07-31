@@ -80,23 +80,23 @@ newtype FromNom nomId (term :: Knot -> *) (k :: Knot) = FromNom nomId
     deriving newtype (Eq, Ord, Binary, NFData)
     deriving stock (Show, Generic)
 
-instance HasNodes (NominalDecl t) where
+instance KNodes (NominalDecl t) where
     type NodeTypesOf (NominalDecl t) = Single t
     type NodesConstraint (NominalDecl t) = KnotsConstraint '[t]
 
-instance HasNodes (ToNom n t) where
+instance KNodes (ToNom n t) where
     type NodeTypesOf (ToNom n t) = Single t
     type NodesConstraint (ToNom n t) = KnotsConstraint '[t]
 
-instance HasNodes (FromNom n t) where
+instance KNodes (FromNom n t) where
     type NodeTypesOf (FromNom n t) = Const ()
     type NodesConstraint (FromNom n t) = KnotsConstraint '[]
 
-instance HasNodes v => HasNodes (NominalInst n v) where
+instance KNodes v => KNodes (NominalInst n v) where
     type NodeTypesOf (NominalInst n v) = NodeTypesOf v
     type NodesConstraint (NominalInst n v) = NodesConstraint (NodeTypesOf v)
-    {-# INLINE hasNodes #-}
-    hasNodes _ = withDict (hasNodes (Proxy :: Proxy v)) Dict
+    {-# INLINE kNodes #-}
+    kNodes _ = withDict (kNodes (Proxy :: Proxy v)) Dict
 
 makeLenses ''NominalDecl
 makeLenses ''NominalInst
@@ -106,17 +106,17 @@ makeKTraversableAndBases ''NominalDecl
 makeKTraversableAndBases ''ToNom
 makeKTraversableAndBases ''FromNom
 
-instance (KFunctor v, HasNodes v) => KFunctor (NominalInst n v) where
+instance (KFunctor v, KNodes v) => KFunctor (NominalInst n v) where
     mapC f (NominalInst n v) =
-        withDict (hasNodes (Proxy :: Proxy v)) $
+        withDict (kNodes (Proxy :: Proxy v)) $
         mapC (mapK (_MapK %~ (_QVarInstances . Lens.mapped %~)) f) v & NominalInst n
 
-instance (KFoldable v, HasNodes v) => KFoldable (NominalInst n v) where
+instance (KFoldable v, KNodes v) => KFoldable (NominalInst n v) where
     foldMapC f (NominalInst _ v) =
-        withDict (hasNodes (Proxy :: Proxy v)) $
+        withDict (kNodes (Proxy :: Proxy v)) $
         foldMapC (mapK (_ConvertK %~ \fq -> foldMap fq . (^. _QVarInstances)) f) v
 
-instance (KTraversable v, HasNodes v) => KTraversable (NominalInst n v) where
+instance (KTraversable v, KNodes v) => KTraversable (NominalInst n v) where
     sequenceC (NominalInst n v) =
         traverseK (_QVarInstances (traverse runContainedK)) v
         <&> NominalInst n
@@ -152,7 +152,7 @@ instance
 
     {-# INLINE recursive #-}
     recursive =
-        withDict (hasNodes (Proxy :: Proxy varTypes))
+        withDict (kNodes (Proxy :: Proxy varTypes))
         Dict
 
 instance DepsT Pretty nomId term k => Pretty (ToNom nomId term k) where
@@ -270,7 +270,7 @@ instance
     , MonadNominals nomId (TypeOf expr) m
     , KTraversable (NomVarTypes (TypeOf expr))
     , KLiftConstraint (NomVarTypes (TypeOf expr)) (Unify m)
-    , Recursively HasNodes (TypeOf expr)
+    , Recursively KNodes (TypeOf expr)
     ) =>
     Infer m (ToNom nomId expr) where
 
@@ -303,7 +303,7 @@ instance
     , MonadNominals nomId (TypeOf expr) m
     , KTraversable (NomVarTypes (TypeOf expr))
     , KLiftConstraint (NomVarTypes (TypeOf expr)) (Unify m)
-    , Recursively HasNodes (TypeOf expr)
+    , Recursively KNodes (TypeOf expr)
     ) =>
     Infer m (FromNom nomId expr) where
 

@@ -5,7 +5,7 @@ module AST.Knot.Pure
     ( Pure(..), _Pure
     ) where
 
-import           AST.Class (HasNodes(..))
+import           AST.Class (KNodes(..))
 import           AST.Class.Apply.TH (makeKApplicativeBases)
 import           AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import           AST.Class.ZipMatch.TH (makeZipMatch)
@@ -26,7 +26,7 @@ import           Prelude.Compat
 newtype Pure k = MkPure { getPure :: Node k Pure }
     deriving stock Generic
 
-instance HasNodes Pure where
+instance KNodes Pure where
     type NodeTypesOf Pure = Pure
     type NodesConstraint Pure = KnotsConstraint '[Pure]
 

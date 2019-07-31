@@ -30,7 +30,7 @@ data Lam v expr k = Lam
     } deriving Generic
 makeLenses ''Lam
 
-instance HasNodes (Lam v e) where
+instance KNodes (Lam v e) where
     type NodeTypesOf (Lam v e) = Single e
     type NodesConstraint (Lam v e) = KnotsConstraint '[e]
 

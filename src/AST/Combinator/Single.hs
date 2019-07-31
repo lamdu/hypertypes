@@ -5,7 +5,7 @@ module AST.Combinator.Single
     ( Single(..), _Single
     ) where
 
-import AST.Class (HasNodes(..))
+import AST.Class (KNodes(..))
 import AST.Class.Apply.TH (makeKApplicativeBases)
 import AST.Constraint
 import AST.Knot (Tree, Node)
@@ -23,7 +23,7 @@ newtype Single c k = MkSingle { getSingle :: Node k c }
 _Single :: Iso (Tree (Single c0) k0) (Tree (Single c1) k1) (Tree k0 c0) (Tree k1 c1)
 _Single = iso getSingle MkSingle
 
-instance HasNodes (Single c) where
+instance KNodes (Single c) where
     type NodeTypesOf (Single c) = Single c
     type NodesConstraint (Single c) = KnotsConstraint '[c]
 

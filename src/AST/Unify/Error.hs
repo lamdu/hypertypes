@@ -46,53 +46,50 @@ data UnifyErrorNodes t k = UnifyErrorNodes
     }
 
 instance
-    HasNodes t =>
-    HasNodes (UnifyErrorNodes t) where
+    KNodes t =>
+    KNodes (UnifyErrorNodes t) where
 
     type NodeTypesOf (UnifyErrorNodes t) = UnifyErrorNodes t
     type NodesConstraint (UnifyErrorNodes t) =
         ConcatKnotConstraints '[KnotsConstraint '[t], NodesConstraint t]
 
 instance
-    HasNodes t =>
+    KNodes t =>
     KPointed (UnifyErrorNodes t) where
 
     {-# INLINE pureK #-}
     pureK f =
-        withDict (hasNodes (Proxy :: Proxy t)) $
+        withDict (kNodes (Proxy :: Proxy t)) $
         UnifyErrorNodes f (pureK f)
 
     {-# INLINE pureKWithConstraint #-}
     pureKWithConstraint p f =
-        withDict (hasNodes (Proxy :: Proxy t)) $
+        withDict (kNodes (Proxy :: Proxy t)) $
         UnifyErrorNodes f (pureKWithConstraint p f)
 
 instance
-    HasNodes t =>
-    HasNodes (UnifyError t) where
+    KNodes t =>
+    KNodes (UnifyError t) where
 
     type NodeTypesOf (UnifyError t) = UnifyErrorNodes t
     type NodesConstraint (UnifyError t) = NodesConstraint (UnifyErrorNodes t)
 
-    {-# INLINE hasNodes #-}
-    hasNodes _ = hasNodes (Proxy :: Proxy (UnifyErrorNodes t))
-
 instance
-    HasNodes t =>
+    KNodes t =>
     KFunctor (UnifyErrorNodes t) where
 
     {-# INLINE mapC #-}
     mapC (UnifyErrorNodes tf bf) (UnifyErrorNodes tx bx) =
-        withDict (hasNodes (Proxy :: Proxy t)) $
+        withDict (kNodes (Proxy :: Proxy t)) $
         UnifyErrorNodes (runMapK tf tx) (mapC bf bx)
 
 instance
-    HasNodes t =>
+    KNodes t =>
     KApply (UnifyErrorNodes t) where
 
     {-# INLINE zipK #-}
     zipK (UnifyErrorNodes t0 b0) (UnifyErrorNodes t1 b1) =
-        withDict (hasNodes (Proxy :: Proxy t)) $
+        withDict (kNodes (Proxy :: Proxy t)) $
         UnifyErrorNodes (Both t0 t1) (zipK b0 b1)
 
 makeKTraversableAndBases ''UnifyError

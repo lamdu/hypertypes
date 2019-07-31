@@ -76,13 +76,13 @@ instance KHas (Single Typ) Types where
 instance KHas (Pair Typ Row) Types where
     hasK (Types t0 r0) = MkPair t0 r0
 
-instance HasNodes Types where
+instance KNodes Types where
     type NodeTypesOf Types = Types
     type NodesConstraint Types = KnotsConstraint '[Typ, Row]
-instance HasNodes Typ where
+instance KNodes Typ where
     type NodeTypesOf Typ = Types
     type NodesConstraint Typ = KnotsConstraint '[Typ, Row]
-instance HasNodes Row where
+instance KNodes Row where
     type NodeTypesOf Row = Types
     type NodesConstraint Row = KnotsConstraint '[Typ, Row]
 

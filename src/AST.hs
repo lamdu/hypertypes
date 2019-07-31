@@ -3,7 +3,7 @@
 module AST (module X) where
 
 import AST.Class as X
-    ( HasNodes(..), KLiftConstraint
+    ( KNodes(..), KLiftConstraint
     , KPointed(..), KFunctor(..), KApply(..), KApplicative
     , mapK, liftK2
     )

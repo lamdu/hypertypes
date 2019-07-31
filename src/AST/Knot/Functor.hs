@@ -6,7 +6,7 @@ module AST.Knot.Functor
     ( ToKnot(..), _ToKnot
     ) where
 
-import AST.Class (HasNodes(..))
+import AST.Class (KNodes(..))
 import AST.Class.Apply.TH (makeKApplicativeBases)
 import AST.Class.Recursive (Recursively)
 import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
@@ -28,7 +28,7 @@ _ToKnot ::
         (f1 (Tree k1 (ToKnot f1)))
 _ToKnot = iso (\(MkToKnot x) -> x) MkToKnot
 
-instance HasNodes (ToKnot f) where
+instance KNodes (ToKnot f) where
     type NodeTypesOf (ToKnot f) = Single (ToKnot f)
     type NodesConstraint (ToKnot f) = KnotsConstraint '[ToKnot f]
 

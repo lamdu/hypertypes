@@ -127,8 +127,8 @@ inferExpr ::
     forall m t.
     ( Recursively (Infer m) t
     , Recursively (InferChildConstraints (Recursively (Unify m))) t
-    , Recursively (InferChildConstraints HasNodes) t
-    , Recursively HasNodes t
+    , Recursively (InferChildConstraints KNodes) t
+    , Recursively KNodes t
     , Recursively KFunctor t
     ) =>
     Tree Pure t ->

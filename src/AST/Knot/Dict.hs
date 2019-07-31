@@ -45,5 +45,5 @@ mapKWithDict ::
     Tree k m ->
     Tree k n
 mapKWithDict c f =
-    withDict (hasNodes (Proxy :: Proxy k))
+    withDict (kNodes (Proxy :: Proxy k))
     (mapC (pureKWithDict c (MkMapK f)))

@@ -26,7 +26,7 @@ data FuncType typ k = FuncType
     , _funcOut :: Node k typ
     } deriving Generic
 
-instance HasNodes (FuncType t) where
+instance KNodes (FuncType t) where
     type NodeTypesOf (FuncType t) = Single t
     type NodesConstraint (FuncType t) = KnotsConstraint '[t]
 

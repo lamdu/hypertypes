@@ -24,7 +24,7 @@ import Data.Proxy (Proxy(..))
 import Prelude.Compat
 
 class
-    HasNodes k =>
+    KNodes k =>
     KLiftConstraints k (cs :: [(Knot -> Type) -> Constraint]) where
 
     kLiftConstraints :: KApplicative k => Tree k (KDict cs)
@@ -34,14 +34,14 @@ class
         Dict (KLiftConstraints (NodeTypesOf k) cs)
 
 instance
-    HasNodes k =>
+    KNodes k =>
     KLiftConstraints k '[] where
 
     {-# INLINE kLiftConstraints #-}
     kLiftConstraints = pureK (MkKDict Dict)
 
     {-# INLINE kLiftConstraintsNodeTypes #-}
-    kLiftConstraintsNodeTypes p _ = withDict (hasNodes p) Dict
+    kLiftConstraintsNodeTypes p _ = withDict (kNodes p) Dict
 
 instance
     ( ApplyKnotConstraint (NodesConstraint k) c
@@ -58,7 +58,7 @@ instance
 
     {-# INLINE kLiftConstraintsNodeTypes #-}
     kLiftConstraintsNodeTypes pk _ =
-        withDict (hasNodes pk) $
+        withDict (kNodes pk) $
         withDict (kLiftConstraintsNodeTypes pk (Proxy :: Proxy cs))
         Dict
 
@@ -80,7 +80,7 @@ mapKWith ::
     Tree k m ->
     Tree k n
 mapKWith p f =
-    withDict (hasNodes (Proxy :: Proxy k)) $
+    withDict (kNodes (Proxy :: Proxy k)) $
     withDict (kLiftConstraintsNodeTypes (Proxy :: Proxy k) p) $
     mapC (pureKWith p (MkMapK f))
 

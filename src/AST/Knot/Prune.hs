@@ -25,7 +25,7 @@ data Prune k =
     Pruned | Unpruned (Node k Prune)
     deriving Generic
 
-instance HasNodes Prune where
+instance KNodes Prune where
     type NodeTypesOf Prune = Single Prune
     type NodesConstraint Prune = KnotsConstraint '[Prune]
 

@@ -69,29 +69,29 @@ data RecursiveNodes a k = RecursiveNodes
 makeLenses ''RecursiveNodes
 
 instance
-    Recursively HasNodes a =>
-    HasNodes (RecursiveNodes a) where
+    Recursively KNodes a =>
+    KNodes (RecursiveNodes a) where
     type NodeTypesOf (RecursiveNodes a) = RecursiveNodes a
     type NodesConstraint (RecursiveNodes a) = RecursiveConstraint a
 
 instance
-    Recursively HasNodes a =>
+    Recursively KNodes a =>
     KPointed (RecursiveNodes a) where
 
     {-# INLINE pureK #-}
     pureK f =
-        withDict (recursive :: RecursiveDict a HasNodes) $
-        withDict (hasNodes (Proxy :: Proxy a)) $
+        withDict (recursive :: RecursiveDict a KNodes) $
+        withDict (kNodes (Proxy :: Proxy a)) $
         RecursiveNodes
         { _recSelf = f
-        , _recSub = pureKWith (Proxy :: Proxy '[Recursively HasNodes]) (_Flip # pureK f)
+        , _recSub = pureKWith (Proxy :: Proxy '[Recursively KNodes]) (_Flip # pureK f)
         }
 
     {-# INLINE pureKWithConstraint #-}
     pureKWithConstraint p f =
         withDict (recP p) $
-        withDict (recursive :: RecursiveDict a HasNodes) $
-        withDict (hasNodes (Proxy :: Proxy a)) $
+        withDict (recursive :: RecursiveDict a KNodes) $
+        withDict (kNodes (Proxy :: Proxy a)) $
         RecursiveNodes
         { _recSelf = f
         , _recSub = pureKWith (mkP p) (_Flip # pureKWithConstraint p f)
@@ -99,38 +99,38 @@ instance
         where
             recP :: Recursively c a => Proxy c -> RecursiveDict a c
             recP _ = recursive
-            mkP :: Proxy c -> Proxy '[Recursively HasNodes, Recursively c]
+            mkP :: Proxy c -> Proxy '[Recursively KNodes, Recursively c]
             mkP _ = Proxy
 
 instance
-    Recursively HasNodes a =>
+    Recursively KNodes a =>
     KFunctor (RecursiveNodes a) where
 
     {-# INLINE mapC #-}
     mapC (RecursiveNodes fSelf fSub) (RecursiveNodes xSelf xSub) =
-        withDict (recursive :: RecursiveDict a HasNodes) $
-        withDict (hasNodes (Proxy :: Proxy a)) $
+        withDict (recursive :: RecursiveDict a KNodes) $
+        withDict (kNodes (Proxy :: Proxy a)) $
         RecursiveNodes
         { _recSelf = runMapK fSelf xSelf
         , _recSub =
             mapC
-            ( mapKWith (Proxy :: Proxy '[Recursively HasNodes])
+            ( mapKWith (Proxy :: Proxy '[Recursively KNodes])
                 ((_MapK #) . (\(MkFlip sf) -> _Flip %~ mapC sf)) fSub
             ) xSub
         }
 
 instance
-    Recursively HasNodes a =>
+    Recursively KNodes a =>
     KApply (RecursiveNodes a) where
 
     {-# INLINE zipK #-}
     zipK (RecursiveNodes xSelf xSub) (RecursiveNodes ySelf ySub) =
-        withDict (recursive :: RecursiveDict a HasNodes) $
-        withDict (hasNodes (Proxy :: Proxy a)) $
+        withDict (recursive :: RecursiveDict a KNodes) $
+        withDict (kNodes (Proxy :: Proxy a)) $
         RecursiveNodes
         { _recSelf = Both xSelf ySelf
         , _recSub =
-            liftK2With (Proxy :: Proxy '[Recursively HasNodes])
+            liftK2With (Proxy :: Proxy '[Recursively KNodes])
             (\(MkFlip x) -> _Flip %~ zipK x) xSub ySub
         }
 
@@ -144,14 +144,14 @@ class RLiftConstraints k cs where
     rLiftConstraints :: Tree (RecursiveNodes k) (KDict cs)
 
 instance
-    Recursively HasNodes k =>
+    Recursively KNodes k =>
     RLiftConstraints k '[] where
 
     {-# INLINE rLiftConstraints #-}
     rLiftConstraints = pureK (MkKDict Dict)
 
 instance
-    (Recursively HasNodes k, Recursively c k, RLiftConstraints k cs) =>
+    (Recursively KNodes k, Recursively c k, RLiftConstraints k cs) =>
     RLiftConstraints k (c ': cs) where
 
     {-# INLINE rLiftConstraints #-}
@@ -170,7 +170,7 @@ mapKRec ::
     Tree k m ->
     Tree k n
 mapKRec c f =
-    withDict (hasNodes (Proxy :: Proxy k)) $
+    withDict (kNodes (Proxy :: Proxy k)) $
     mapC (mapK (MkMapK . \(MkFlip d) -> f d) (c ^. recSub))
 
 {-# INLINE foldMapKRec #-}
@@ -182,7 +182,7 @@ foldMapKRec ::
     Tree k n ->
     a
 foldMapKRec c f =
-    withDict (hasNodes (Proxy :: Proxy k)) $
+    withDict (kNodes (Proxy :: Proxy k)) $
     foldMapC (mapK (MkConvertK . \(MkFlip d) -> f d) (c ^. recSub))
 
 {-# INLINE traverseKRec #-}
@@ -194,7 +194,7 @@ traverseKRec ::
     Tree k m ->
     f (Tree k n)
 traverseKRec c f =
-    withDict (hasNodes (Proxy :: Proxy k)) $
+    withDict (kNodes (Proxy :: Proxy k)) $
     sequenceC .
     mapC (mapK (MkMapK . \(MkFlip d) -> MkContainedK . f d) (c ^. recSub))
 

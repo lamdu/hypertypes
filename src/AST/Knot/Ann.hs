@@ -38,7 +38,7 @@ data Ann a knot = Ann
     } deriving Generic
 makeLenses ''Ann
 
-instance HasNodes (Ann a) where
+instance KNodes (Ann a) where
     type NodeTypesOf (Ann a) = Single (Ann a)
     type NodesConstraint (Ann a) = KnotsConstraint '[Ann a]
 
@@ -84,7 +84,7 @@ annotationsWith _ =
     annotationsWithDict (rLiftConstraints :: Tree (RecursiveNodes k) (KDict cs))
 
 annotations ::
-    (Recursively HasNodes e, Recursively KTraversable e) =>
+    (Recursively KNodes e, Recursively KTraversable e) =>
     Traversal
     (Tree (Ann a) e)
     (Tree (Ann b) e)
@@ -92,7 +92,7 @@ annotations ::
 annotations = annotationsWith (Proxy :: Proxy '[KTraversable]) Dict
 
 strip ::
-    (Recursively HasNodes expr, Recursively KTraversable expr) =>
+    (Recursively KNodes expr, Recursively KTraversable expr) =>
     Tree (Ann a) expr ->
     Tree Pure expr
 strip = unwrap (Proxy :: Proxy '[KTraversable]) Dict (^. val)

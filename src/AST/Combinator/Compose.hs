@@ -32,14 +32,14 @@ _Compose ::
     (Tree a0 (Compose b0 k0)) (Tree a1 (Compose b1 k1))
 _Compose = Lens.iso getCompose MkCompose
 
-instance (HasNodes a, HasNodes b) => HasNodes (Compose a b) where
+instance (KNodes a, KNodes b) => KNodes (Compose a b) where
     type NodeTypesOf (Compose a b) = Compose (NodeTypesOf a) (NodeTypesOf b)
     type NodesConstraint (Compose a b) =
         ComposeConstraint (NodesConstraint a) (NodesConstraint b)
-    {-# INLINE hasNodes #-}
-    hasNodes _ =
-        withDict (hasNodes (Proxy :: Proxy a)) $
-        withDict (hasNodes (Proxy :: Proxy b))
+    {-# INLINE kNodes #-}
+    kNodes _ =
+        withDict (kNodes (Proxy :: Proxy a)) $
+        withDict (kNodes (Proxy :: Proxy b))
         Dict
 
 instance KnotConstraintFunc (ComposeConstraint a b) where
@@ -57,7 +57,7 @@ class    c (Compose k0 k1) => ComposeConstraint1 c k0 k1
 instance c (Compose k0 k1) => ComposeConstraint1 c k0 k1
 
 instance
-    (HasNodes a, KPointed a, KPointed b) =>
+    (KNodes a, KPointed a, KPointed b) =>
     KPointed (Compose a b) where
     {-# INLINE pureK #-}
     pureK x = pureK (pureK (MkCompose x) & MkCompose) & MkCompose
@@ -75,12 +75,12 @@ instance
             makeP1 _ f = f Proxy
 
 instance
-    (HasNodes a, HasNodes b, KFunctor a, KFunctor b) =>
+    (KNodes a, KNodes b, KFunctor a, KFunctor b) =>
     KFunctor (Compose a b) where
     {-# INLINE mapC #-}
     mapC (MkCompose f) =
-        withDict (hasNodes (Proxy :: Proxy a)) $
-        withDict (hasNodes (Proxy :: Proxy b)) $
+        withDict (kNodes (Proxy :: Proxy a)) $
+        withDict (kNodes (Proxy :: Proxy b)) $
         _Compose %~
         mapC
         ( mapK
@@ -90,7 +90,7 @@ instance
         )
 
 instance
-    (HasNodes a, HasNodes b, KApply a, KApply b) =>
+    (KNodes a, KNodes b, KApply a, KApply b) =>
     KApply (Compose a b) where
     {-# INLINE zipK #-}
     zipK (MkCompose a0) =
@@ -107,12 +107,12 @@ instance
         . zipK a0
 
 instance
-    (HasNodes a, HasNodes b, KFoldable a, KFoldable b) =>
+    (KNodes a, KNodes b, KFoldable a, KFoldable b) =>
     KFoldable (Compose a b) where
     {-# INLINE foldMapC #-}
     foldMapC (MkCompose f) =
-        withDict (hasNodes (Proxy :: Proxy a)) $
-        withDict (hasNodes (Proxy :: Proxy b)) $
+        withDict (kNodes (Proxy :: Proxy a)) $
+        withDict (kNodes (Proxy :: Proxy b)) $
         foldMapC
         ( mapK
             ( \(MkCompose bf) ->
@@ -125,7 +125,7 @@ instance
         ) . getCompose
 
 instance
-    (HasNodes a, HasNodes b, KTraversable a, KTraversable b) =>
+    (KNodes a, KNodes b, KTraversable a, KTraversable b) =>
     KTraversable (Compose a b) where
     {-# INLINE sequenceC #-}
     sequenceC =

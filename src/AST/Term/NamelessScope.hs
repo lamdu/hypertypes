@@ -35,14 +35,14 @@ data EmptyScope
 newtype Scope expr a k = Scope (Node k (expr (Maybe a)))
 Lens.makePrisms ''Scope
 
-instance HasNodes (Scope e a) where
+instance KNodes (Scope e a) where
     type NodeTypesOf (Scope e a) = Single (e (Maybe a))
     type NodesConstraint (Scope e a) = KnotsConstraint '[e (Maybe a)]
 
 newtype ScopeVar (expr :: * -> Knot -> *) a (k :: Knot) = ScopeVar a
 Lens.makePrisms ''ScopeVar
 
-instance HasNodes (ScopeVar e a) where
+instance KNodes (ScopeVar e a) where
     type NodeTypesOf (ScopeVar e a) = Const ()
     type NodesConstraint (ScopeVar e a) = KnotsConstraint '[]
 
@@ -72,7 +72,7 @@ instance DeBruijnIndex a => DeBruijnIndex (Maybe a) where
 newtype ScopeTypes t v = ScopeTypes (Seq (Node v t))
     deriving newtype (Semigroup, Monoid)
 
-instance HasNodes (ScopeTypes t) where
+instance KNodes (ScopeTypes t) where
     type NodeTypesOf (ScopeTypes t) = Single t
     type NodesConstraint (ScopeTypes t) = KnotsConstraint '[t]
 

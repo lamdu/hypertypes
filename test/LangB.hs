@@ -53,7 +53,7 @@ data LangB k
     | BGetField (Node k LangB) Name
     | BToNom (ToNom Name LangB k)
 
-instance HasNodes LangB where
+instance KNodes LangB where
     type NodeTypesOf LangB = Single LangB
     type NodesConstraint LangB = KnotsConstraint '[LangB]
 
@@ -123,7 +123,7 @@ instance
 newtype ScopeTypes v = ScopeTypes (Map Name (Tree (GTerm (RunKnot v)) Typ))
     deriving newtype (Semigroup, Monoid)
 
-instance HasNodes ScopeTypes where
+instance KNodes ScopeTypes where
     type NodeTypesOf ScopeTypes = NodeTypesOf (Flip GTerm Typ)
     type NodesConstraint ScopeTypes = NodesConstraint (Flip GTerm Typ)
 

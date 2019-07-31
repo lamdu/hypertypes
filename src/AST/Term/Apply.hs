@@ -28,7 +28,7 @@ data Apply expr k = Apply
     , _applyArg :: Node k expr
     } deriving Generic
 
-instance HasNodes (Apply e) where
+instance KNodes (Apply e) where
     type NodeTypesOf (Apply e) = Single e
     type NodesConstraint (Apply e) = KnotsConstraint '[e]
 

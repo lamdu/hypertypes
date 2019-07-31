@@ -57,10 +57,10 @@ data FlatRowExtends key val rest k = FlatRowExtends
     , _freRest :: Node k rest
     } deriving Generic
 
-instance HasNodes (RowExtend k v r) where
+instance KNodes (RowExtend k v r) where
     type NodeTypesOf (RowExtend k v r) = Pair v r
     type NodesConstraint (RowExtend k v r) = KnotsConstraint '[v, r]
-instance HasNodes (FlatRowExtends k v r) where
+instance KNodes (FlatRowExtends k v r) where
     type NodeTypesOf (FlatRowExtends k v r) = Pair v r
     type NodesConstraint (FlatRowExtends k v r) = KnotsConstraint '[v, r]
 

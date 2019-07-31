@@ -51,7 +51,7 @@ newtype QVars typ = QVars
     (Map (QVar (RunKnot typ)) (TypeConstraintsOf (RunKnot typ)))
     deriving stock Generic
 
-instance HasNodes (Scheme v t) where
+instance KNodes (Scheme v t) where
     type NodeTypesOf (Scheme v t) = Single t
     type NodesConstraint (Scheme v t) = KnotsConstraint '[t]
 

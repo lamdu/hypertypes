@@ -30,7 +30,7 @@ data Let v expr k = Let
     } deriving (Generic)
 makeLenses ''Let
 
-instance HasNodes (Let v e) where
+instance KNodes (Let v e) where
     type NodeTypesOf (Let v e) = Single e
     type NodesConstraint (Let v e) = KnotsConstraint '[e]
 

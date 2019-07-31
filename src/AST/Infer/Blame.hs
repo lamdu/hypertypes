@@ -76,7 +76,7 @@ blame ::
     , Recursively (Infer m) exp
     , Recursively KTraversable exp
     , Recursively KFunctor exp
-    , Recursively HasNodes exp
+    , Recursively KNodes exp
     ) =>
     (a -> priority) ->
     Tree (UVarOf m) (TypeOf exp) ->

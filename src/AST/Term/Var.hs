@@ -36,7 +36,7 @@ newtype Var v (expr :: Knot -> *) (k :: Knot) = Var v
     deriving newtype (Eq, Ord, Binary, NFData)
     deriving stock (Show, Generic)
 
-instance HasNodes (Var v e) where
+instance KNodes (Var v e) where
     type NodeTypesOf (Var v e) = Const ()
     type NodesConstraint (Var v e) = KnotsConstraint '[]
 

@@ -3,7 +3,7 @@
 {-# LANGUAGE DefaultSignatures, FlexibleContexts #-}
 
 module AST.Class
-    ( HasNodes(..), NodeTypesConstraints, KLiftConstraint
+    ( KNodes(..), NodeTypesConstraints, KLiftConstraint
     , KPointed(..)
     , KFunctor(..), MapK(..), _MapK
     , KApply(..)
@@ -27,12 +27,12 @@ type KLiftConstraint k c = ApplyKnotConstraint (NodesConstraint k) c
 type NodeTypesConstraints k =
     ( NodesConstraint k ~ NodesConstraint (NodeTypesOf k)
     , NodeTypesOf k ~ NodeTypesOf (NodeTypesOf k)
-    , HasNodes (NodeTypesOf k)
+    , KNodes (NodeTypesOf k)
     , KApplicative (NodeTypesOf k)
     , KnotConstraintFunc (NodesConstraint k)
     )
 
-class HasNodes k where
+class KNodes k where
     -- | A type family for the different types of children a knot has.
     -- Maps to a simple knot which has a single child of each child type.
     type family NodeTypesOf k :: Knot -> Type
@@ -47,17 +47,17 @@ class HasNodes k where
     -- `Flip GTerm (LangA Nothing)` (with `LangA` from the test suite).
     type family NodesConstraint k :: ((Knot -> Type) -> Constraint) -> Constraint
 
-    hasNodes ::
+    kNodes ::
         Proxy k ->
         Dict (NodeTypesConstraints k)
-    {-# INLINE hasNodes #-}
-    default hasNodes ::
+    {-# INLINE kNodes #-}
+    default kNodes ::
         NodeTypesConstraints k =>
         Proxy k ->
         Dict (NodeTypesConstraints k)
-    hasNodes _ = Dict
+    kNodes _ = Dict
 
-class HasNodes k => KPointed k where
+class KNodes k => KPointed k where
     -- | Construct a value from a higher ranked child value
     pureK ::
         (forall child. Tree n child) ->
@@ -80,7 +80,7 @@ _MapK ::
         (Tree m1 k1 -> Tree n1 k1)
 _MapK = iso runMapK MkMapK
 
-class HasNodes k => KFunctor k where
+class KNodes k => KFunctor k where
     -- | Map child values given a mapping function per child type
     mapC ::
         Tree (NodeTypesOf k) (MapK m n) ->
@@ -97,7 +97,7 @@ class KFunctor k => KApply k where
 class    (KPointed k, KApply k) => KApplicative k
 instance (KPointed k, KApply k) => KApplicative k
 
-instance HasNodes (Const a) where
+instance KNodes (Const a) where
     type NodeTypesOf (Const a) = Const ()
     type NodesConstraint (Const a) = KnotsConstraint '[]
 
@@ -116,15 +116,15 @@ instance Semigroup a => KApply (Const a) where
     zipK (Const x) (Const y) = Const (x <> y)
 
 instance
-    (HasNodes a, HasNodes b) =>
-    HasNodes (Both a b) where
+    (KNodes a, KNodes b) =>
+    KNodes (Both a b) where
     type NodeTypesOf (Both a b) = Both (NodeTypesOf a) (NodeTypesOf b)
     type NodesConstraint (Both a b) = ConcatKnotConstraints [NodesConstraint a, NodesConstraint b]
 
-    {-# INLINE hasNodes #-}
-    hasNodes p =
-        withDict (hasNodes (pa p)) $
-        withDict (hasNodes (pb p)) Dict
+    {-# INLINE kNodes #-}
+    kNodes p =
+        withDict (kNodes (pa p)) $
+        withDict (kNodes (pb p)) Dict
         where
             pa :: Proxy (Both a b) -> Proxy a
             pa _ = Proxy
@@ -152,7 +152,7 @@ mapK ::
     Tree k m ->
     Tree k n
 mapK f x =
-    withDict (hasNodes (p x)) $
+    withDict (kNodes (p x)) $
     mapC (pureK (MkMapK f)) x
     where
         p :: Tree k l -> Proxy k

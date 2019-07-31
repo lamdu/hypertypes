@@ -8,7 +8,7 @@ module AST.Class.Foldable
     , traverseK_, traverseKWith_
     ) where
 
-import AST.Class (NodeTypesOf, HasNodes(..), KPointed(..))
+import AST.Class (NodeTypesOf, KNodes(..), KPointed(..))
 import AST.Class.Combinators (KLiftConstraints(..), ApplyKConstraints, pureKWith)
 import AST.Knot (Tree, Knot)
 import Control.Lens (Iso, iso)
@@ -30,7 +30,7 @@ _ConvertK ::
         (Tree l1 k1 -> a1)
 _ConvertK = iso runConvertK MkConvertK
 
-class HasNodes k => KFoldable k where
+class KNodes k => KFoldable k where
     foldMapC ::
         Monoid a =>
         Tree (NodeTypesOf k) (ConvertK a l) ->
@@ -48,7 +48,7 @@ foldMapK ::
     Tree k l ->
     a
 foldMapK f x =
-    withDict (hasNodes (p x)) $
+    withDict (kNodes (p x)) $
     foldMapC (pureK (MkConvertK f)) x
     where
         p :: Tree k l -> Proxy k
@@ -63,7 +63,7 @@ foldMapKWith ::
     Tree k n ->
     a
 foldMapKWith p f =
-    withDict (hasNodes (Proxy :: Proxy k)) $
+    withDict (kNodes (Proxy :: Proxy k)) $
     withDict (kLiftConstraintsNodeTypes (Proxy :: Proxy k) p) $
     foldMapC (pureKWith p (_ConvertK # f))
 

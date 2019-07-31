@@ -7,7 +7,7 @@ module AST.Class.Traversable
     , traverseK, traverseK1, traverseKWith, traverseKWithDict
     ) where
 
-import AST.Class (HasNodes(..), KFunctor(..), MapK(..), mapK, NodeTypesOf)
+import AST.Class (KNodes(..), KFunctor(..), MapK(..), mapK, NodeTypesOf)
 import AST.Class.Combinators
 import AST.Class.Foldable (KFoldable)
 import AST.Combinator.Single (Single(..))
@@ -67,7 +67,7 @@ traverseKWith ::
     Tree k m ->
     f (Tree k n)
 traverseKWith p f =
-    withDict (hasNodes (Proxy :: Proxy k)) $
+    withDict (kNodes (Proxy :: Proxy k)) $
     withDict (kLiftConstraintsNodeTypes (Proxy :: Proxy k) p) $
     sequenceC . mapC (pureKWith p (MkMapK (MkContainedK . f)))
 
@@ -80,5 +80,5 @@ traverseKWithDict ::
     Tree k m ->
     f (Tree k n)
 traverseKWithDict d f =
-    withDict (hasNodes (Proxy :: Proxy k)) $
+    withDict (kNodes (Proxy :: Proxy k)) $
     sequenceC . mapC (pureKWithDict d (MkMapK (MkContainedK . f)))
