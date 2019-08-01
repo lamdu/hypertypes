@@ -19,7 +19,7 @@ import AST.Combinator.Flip (Flip(..), _Flip)
 import Control.Lens (Traversal, Lens', makeLenses, makePrisms, from)
 import Control.Lens.Operators
 import Data.Constraint
-import Data.Functor.Product (Product(..))
+import Data.Functor.Product.PolyKinds (Product(..))
 import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
 import Data.TyFun

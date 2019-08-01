@@ -16,7 +16,7 @@ import AST.Knot (Knot, Tree)
 import Control.Lens (Iso, iso)
 import Data.Constraint
 import Data.Functor.Const (Const(..))
-import Data.Functor.Product (Product(..))
+import Data.Functor.Product.PolyKinds (Product(..))
 import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
 import Data.TyFun

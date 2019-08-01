@@ -16,7 +16,7 @@ import AST.Knot (Tree, Knot)
 import AST.Knot.Dict (KDict(..), pureKWithDict)
 import Data.Constraint (Dict(..), Constraint, withDict)
 import Data.Constraint.List (ApplyConstraints)
-import Data.Functor.Product (Product(..))
+import Data.Functor.Product.PolyKinds (Product(..))
 import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
 import Data.TyFun

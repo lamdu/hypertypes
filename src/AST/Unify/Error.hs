@@ -15,7 +15,6 @@ import           Control.DeepSeq (NFData)
 import           Control.Lens (makePrisms)
 import           Data.Binary (Binary)
 import           Data.Constraint
-import           Data.Functor.Product (Product(..))
 import           Data.Proxy
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))

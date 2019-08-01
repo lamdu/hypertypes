@@ -29,7 +29,7 @@ import Control.Lens.Operators
 import Data.Constraint (Dict(..), withDict)
 import Data.Constraint.List (ApplyConstraints)
 import Data.Functor.Const (Const(..))
-import Data.Functor.Product (Product(..))
+import Data.Functor.Product.PolyKinds (Product(..))
 import Data.Kind (Type, Constraint)
 import Data.Proxy (Proxy(..))
 import Data.TyFun

@@ -11,7 +11,7 @@ import AST.Knot (Tree, Node)
 import Control.DeepSeq (NFData)
 import Control.Lens (Iso, iso)
 import Data.Binary (Binary)
-import Data.TyFun
+import Data.TyFun (On)
 import GHC.Generics (Generic)
 
 import Prelude.Compat

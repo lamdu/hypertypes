@@ -18,7 +18,7 @@ import           Control.Monad (guard)
 import           Data.Constraint.List (ApplyConstraints)
 import           Data.Foldable (sequenceA_)
 import           Data.Functor.Const (Const(..))
-import           Data.Functor.Product (Product(..))
+import           Data.Functor.Product.PolyKinds (Product(..))
 import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat

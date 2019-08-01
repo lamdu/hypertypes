@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6025132b4c04055ce04e02a85b7b4c371cb5ff4bd001fed0bbceb20981275ec5
+-- hash: 8319584e81e4d563204d836c22ec9a6d7040832659cf4623e8efd78eb89ebcd7
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -91,6 +91,7 @@ library
       AST.Unify.QuantifiedVar
       AST.Unify.Term
       Data.Constraint.List
+      Data.Functor.Product.PolyKinds
       Data.TyFun
   other-modules:
       Paths_syntax_tree

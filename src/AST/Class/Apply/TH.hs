@@ -12,7 +12,7 @@ import           AST.Class.Pointed.TH (makeKPointed)
 import           AST.Internal.TH
 import           Control.Applicative (liftA2)
 import           Control.Lens.Operators
-import           Data.Functor.Product (Product(..))
+import           Data.Functor.Product.PolyKinds (Product(..))
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
 

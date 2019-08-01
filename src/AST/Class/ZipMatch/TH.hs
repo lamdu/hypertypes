@@ -7,7 +7,7 @@ module AST.Class.ZipMatch.TH
 import           AST.Class.ZipMatch (ZipMatch(..))
 import           AST.Internal.TH
 import           Control.Lens.Operators
-import           Data.Functor.Product (Product(..))
+import           Data.Functor.Product.PolyKinds (Product(..))
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
 
