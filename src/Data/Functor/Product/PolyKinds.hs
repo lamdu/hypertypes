@@ -31,7 +31,7 @@ instance (Eq1 f, Eq1 g) => Eq1 (Product f g) where
 
 instance (Ord1 f, Ord1 g) => Ord1 (Product f g) where
     liftCompare comp (Pair x1 y1) (Pair x2 y2) =
-        liftCompare comp x1 x2 `mappend` liftCompare comp y1 y2
+        liftCompare comp x1 x2 <> liftCompare comp y1 y2
 
 instance (Read1 f, Read1 g) => Read1 (Product f g) where
     liftReadPrec rp rl =
@@ -50,7 +50,7 @@ instance (Functor f, Functor g) => Functor (Product f g) where
     a <$ (Pair x y) = Pair (a <$ x) (a <$ y)
 
 instance (Foldable f, Foldable g) => Foldable (Product f g) where
-    foldMap f (Pair x y) = foldMap f x `mappend` foldMap f y
+    foldMap f (Pair x y) = foldMap f x <> foldMap f y
 
 instance (Traversable f, Traversable g) => Traversable (Product f g) where
     traverse f (Pair x y) = liftA2 Pair (traverse f x) (traverse f y)
