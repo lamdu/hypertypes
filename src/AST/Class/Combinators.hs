@@ -12,11 +12,11 @@ module AST.Class.Combinators
     ) where
 
 import AST.Class
-import AST.Combinator.Both (Both(..))
 import AST.Knot (Tree, Knot)
 import AST.Knot.Dict (KDict(..), pureKWithDict)
 import Data.Constraint (Dict(..), Constraint, withDict)
 import Data.Constraint.List (ApplyConstraints)
+import Data.Functor.Product (Product(..))
 import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
 import Data.TyFun
@@ -92,4 +92,4 @@ liftK2With ::
     Tree k l ->
     Tree k m ->
     Tree k n
-liftK2With p f x = mapKWith p (\(Both a b) -> f a b) . zipK x
+liftK2With p f x = mapKWith p (\(Pair a b) -> f a b) . zipK x

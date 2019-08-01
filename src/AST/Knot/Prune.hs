@@ -8,7 +8,6 @@ module AST.Knot.Prune
 
 import AST
 import AST.Class.Traversable.TH (makeKTraversableAndBases)
-import AST.Combinator.Both (Both(..))
 import AST.Combinator.Compose (Compose(..))
 import AST.Combinator.Single (Single(..))
 import AST.Infer
@@ -41,7 +40,7 @@ instance KPointed Prune where
 instance KApply Prune where
     zipK Pruned _ = Pruned
     zipK _ Pruned = Pruned
-    zipK (Unpruned x) (Unpruned y) = Both x y & Unpruned
+    zipK (Unpruned x) (Unpruned y) = Pair x y & Unpruned
 
 instance c Prune => Recursively c Prune
 

@@ -9,10 +9,10 @@ module AST.Class.Apply.TH
 import           AST.Class
 import           AST.Class.Functor.TH (makeKFunctor)
 import           AST.Class.Pointed.TH (makeKPointed)
-import           AST.Combinator.Both
 import           AST.Internal.TH
 import           Control.Applicative (liftA2)
 import           Control.Lens.Operators
+import           Data.Functor.Product (Product(..))
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
 
@@ -57,7 +57,7 @@ makeKApplyForType info =
             ]
             <&> (:[])
     where
-        bodyForPat NodeFofX{} = ConE 'Both
+        bodyForPat NodeFofX{} = ConE 'Pair
         bodyForPat XofF{} = VarE 'zipK
         bodyForPat (Tof _ pat) = VarE 'liftA2 `AppE` bodyForPat pat
         bodyForPat Other{} = VarE '(<>)

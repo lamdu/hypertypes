@@ -8,12 +8,13 @@ module AST.Term.Map
 
 import           AST
 import           AST.Combinator.Single (Single)
-import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
+import           AST.Class.ZipMatch (ZipMatch(..))
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           Data.Constraint (Constraint)
+import           Data.Functor.Product (Product(..))
 import           Data.Map (Map)
 import qualified Data.Map as Map
 import           GHC.Generics (Generic)
@@ -37,7 +38,7 @@ instance Eq k => ZipMatch (TermMap k expr) where
         | Map.size x /= Map.size y = Nothing
         | otherwise =
             zipMatchList (Map.toList x) (Map.toList y)
-            <&> traverse . Lens._2 %~ uncurry Both
+            <&> traverse . Lens._2 %~ uncurry Pair
             <&> TermMap . Map.fromAscList
 
 {-# INLINE zipMatchList #-}

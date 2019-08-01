@@ -5,9 +5,9 @@ module AST.Class.ZipMatch.TH
     ) where
 
 import           AST.Class.ZipMatch (ZipMatch(..))
-import           AST.Combinator.Both (Both(..))
 import           AST.Internal.TH
 import           Control.Lens.Operators
+import           Data.Functor.Product (Product(..))
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
 
@@ -57,7 +57,7 @@ makeZipMatchCtr var info =
         bodyExp = applicativeStyle (ConE (D.constructorName info)) (fieldParts <&> zmfResult)
         field (x, y) NodeFofX{} =
             ZipMatchField
-            { zmfResult = ConE 'Just `AppE` (ConE 'Both `AppE` VarE x `AppE` VarE y)
+            { zmfResult = ConE 'Just `AppE` (ConE 'Pair `AppE` VarE x `AppE` VarE y)
             , zmfConds = []
             , zmfContext = []
             }

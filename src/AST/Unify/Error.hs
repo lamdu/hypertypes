@@ -10,12 +10,12 @@ module AST.Unify.Error
 
 import           AST
 import           AST.Class
-import           AST.Combinator.Both
 import           AST.Unify.Constraints (HasTypeConstraints(..))
 import           Control.DeepSeq (NFData)
 import           Control.Lens (makePrisms)
 import           Data.Binary (Binary)
 import           Data.Constraint
+import           Data.Functor.Product (Product(..))
 import           Data.Proxy
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
@@ -89,7 +89,7 @@ instance
     {-# INLINE zipK #-}
     zipK (UnifyErrorNodes t0 b0) (UnifyErrorNodes t1 b1) =
         withDict (kNodes (Proxy :: Proxy t)) $
-        UnifyErrorNodes (Both t0 t1) (zipK b0 b1)
+        UnifyErrorNodes (Pair t0 t1) (zipK b0 b1)
 
 makeKTraversableAndBases ''UnifyError
 

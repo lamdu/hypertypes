@@ -11,7 +11,7 @@ import           AST
 import           AST.Class
 import           AST.Class.Foldable
 import           AST.Class.Traversable
-import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
+import           AST.Class.ZipMatch (ZipMatch(..))
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -97,11 +97,11 @@ instance
     zipK (MkCompose a0) =
         _Compose %~
         mapK
-            ( \(Both (MkCompose b0) (MkCompose b1)) ->
+            ( \(Pair (MkCompose b0) (MkCompose b1)) ->
                 zipK b0 b1
                 & mapK
-                    ( \(Both (MkCompose i0) (MkCompose i1)) ->
-                        Both i0 i1 & MkCompose
+                    ( \(Pair (MkCompose i0) (MkCompose i1)) ->
+                        Pair i0 i1 & MkCompose
                     )
                 & MkCompose
             )
@@ -142,10 +142,10 @@ instance
     zipMatch (MkCompose x) (MkCompose y) =
         zipMatch x y
         >>= traverseK
-            (\(Both (MkCompose cx) (MkCompose cy)) ->
+            (\(Pair (MkCompose cx) (MkCompose cy)) ->
                 zipMatch cx cy
                 <&> mapK
-                    (\(Both (MkCompose bx) (MkCompose by)) -> Both bx by & MkCompose)
+                    (\(Pair (MkCompose bx) (MkCompose by)) -> Pair bx by & MkCompose)
                 <&> MkCompose
             )
         <&> MkCompose

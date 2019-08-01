@@ -5,14 +5,12 @@ module AST.Class.ZipMatch
     ( ZipMatch(..)
     , zipMatchWith, zipMatchWithA, zipMatchWith_
     , doesMatch
-    , Both(..)
     ) where
 
 import           AST.Class (KFunctor)
 import           AST.Class.Combinators
 import           AST.Class.Foldable (KFoldable, foldMapKWith)
 import           AST.Class.Traversable (KTraversable, traverseKWith)
-import           AST.Combinator.Both (Both(..))
 import           AST.Knot (Tree)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -20,16 +18,17 @@ import           Control.Monad (guard)
 import           Data.Constraint.List (ApplyConstraints)
 import           Data.Foldable (sequenceA_)
 import           Data.Functor.Const (Const(..))
+import           Data.Functor.Product (Product(..))
 import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
 
 class ZipMatch expr where
-    zipMatch :: Tree expr a -> Tree expr b -> Maybe (Tree expr (Both a b))
+    zipMatch :: Tree expr a -> Tree expr b -> Maybe (Tree expr (Product a b))
 
-instance (ZipMatch a, ZipMatch b) => ZipMatch (Both a b) where
+instance (ZipMatch a, ZipMatch b) => ZipMatch (Product a b) where
     {-# INLINE zipMatch #-}
-    zipMatch (Both a0 b0) (Both a1 b1) = Both <$> zipMatch a0 a1 <*> zipMatch b0 b1
+    zipMatch (Pair a0 b0) (Pair a1 b1) = Pair <$> zipMatch a0 a1 <*> zipMatch b0 b1
 
 instance Eq a => ZipMatch (Const a) where
     {-# INLINE zipMatch #-}
@@ -45,7 +44,7 @@ zipMatchWithA ::
     Proxy constraints ->
     (forall child. ApplyConstraints constraints child => Tree a child -> Tree b child -> f (Tree c child)) ->
     Tree expr a -> Tree expr b -> Maybe (f (Tree expr c))
-zipMatchWithA p f x y = zipMatch x y <&> traverseKWith p (\(Both a b) -> f a b)
+zipMatchWithA p f x y = zipMatch x y <&> traverseKWith p (\(Pair a b) -> f a b)
 
 {-# INLINE zipMatchWith #-}
 zipMatchWith ::
@@ -55,7 +54,7 @@ zipMatchWith ::
     Proxy constraints ->
     (forall child. ApplyConstraints constraints child => Tree a child -> Tree b child -> Tree c child) ->
     Tree expr a -> Tree expr b -> Maybe (Tree expr c)
-zipMatchWith p f x y = zipMatch x y <&> mapKWith p (\(Both a b) -> f a b)
+zipMatchWith p f x y = zipMatch x y <&> mapKWith p (\(Pair a b) -> f a b)
 
 {-# INLINE zipMatchWith_ #-}
 zipMatchWith_ ::
@@ -69,7 +68,7 @@ zipMatchWith_ ::
     Tree expr a -> Tree expr b -> Maybe (f ())
 zipMatchWith_ p f x y =
     zipMatch x y
-    <&> sequenceA_ . foldMapKWith @[f ()] p (\(Both a b) -> [f a b])
+    <&> sequenceA_ . foldMapKWith @[f ()] p (\(Pair a b) -> [f a b])
 
 {-# INLINE doesMatch #-}
 doesMatch :: ZipMatch expr => Tree expr a -> Tree expr b -> Bool

@@ -12,11 +12,11 @@ module AST.Class
     , mapK, liftK2
     ) where
 
-import AST.Combinator.Both (Both(..))
 import AST.Knot (Knot, Tree)
 import Control.Lens (Iso, iso)
 import Data.Constraint
 import Data.Functor.Const (Const(..))
+import Data.Functor.Product (Product(..))
 import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
 import Data.TyFun
@@ -93,7 +93,7 @@ class KFunctor k => KApply k where
     zipK ::
         Tree k a ->
         Tree k b ->
-        Tree k (Both a b)
+        Tree k (Product a b)
 
 class    (KPointed k, KApply k) => KApplicative k
 instance (KPointed k, KApply k) => KApplicative k
@@ -118,28 +118,28 @@ instance Semigroup a => KApply (Const a) where
 
 instance
     (KNodes a, KNodes b) =>
-    KNodes (Both a b) where
-    type NodeTypesOf (Both a b) = Both (NodeTypesOf a) (NodeTypesOf b)
-    type NodesConstraint (Both a b) = ConcatConstraintFuncs [NodesConstraint a, NodesConstraint b]
+    KNodes (Product a b) where
+    type NodeTypesOf (Product a b) = Product (NodeTypesOf a) (NodeTypesOf b)
+    type NodesConstraint (Product a b) = ConcatConstraintFuncs [NodesConstraint a, NodesConstraint b]
 
     {-# INLINE kNodes #-}
     kNodes _ =
         withDict (kNodes (Proxy :: Proxy a)) $
         withDict (kNodes (Proxy :: Proxy b)) Dict
 
-instance (KPointed a, KPointed b) => KPointed (Both a b) where
+instance (KPointed a, KPointed b) => KPointed (Product a b) where
     {-# INLINE pureK #-}
-    pureK f = Both (pureK f) (pureK f)
+    pureK f = Pair (pureK f) (pureK f)
     {-# INLINE pureKWithConstraint #-}
-    pureKWithConstraint p f = Both (pureKWithConstraint p f) (pureKWithConstraint p f)
+    pureKWithConstraint p f = Pair (pureKWithConstraint p f) (pureKWithConstraint p f)
 
-instance (KFunctor a, KFunctor b) => KFunctor (Both a b) where
+instance (KFunctor a, KFunctor b) => KFunctor (Product a b) where
     {-# INLINE mapC #-}
-    mapC (Both fx fy) (Both x y) = Both (mapC fx x) (mapC fy y)
+    mapC (Pair fx fy) (Pair x y) = Pair (mapC fx x) (mapC fy y)
 
-instance (KApply a, KApply b) => KApply (Both a b) where
+instance (KApply a, KApply b) => KApply (Product a b) where
     {-# INLINE zipK #-}
-    zipK (Both a0 b0) (Both a1 b1) = Both (zipK a0 a1) (zipK b0 b1)
+    zipK (Pair a0 b0) (Pair a1 b1) = Pair (zipK a0 a1) (zipK b0 b1)
 
 {-# INLINE mapK #-}
 mapK ::
@@ -159,4 +159,4 @@ liftK2 ::
     Tree k l ->
     Tree k m ->
     Tree k n
-liftK2 f x = mapK (\(Both a b) -> f a b) . zipK x
+liftK2 f x = mapK (\(Pair a b) -> f a b) . zipK x

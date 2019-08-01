@@ -20,7 +20,6 @@ import AST.Class
 import AST.Class.Combinators
 import AST.Class.Foldable
 import AST.Class.Traversable
-import AST.Combinator.Both
 import AST.Combinator.Flip
 import AST.Knot
 import AST.Knot.Dict
@@ -30,6 +29,7 @@ import Control.Lens.Operators
 import Data.Constraint (Dict(..), withDict)
 import Data.Constraint.List (ApplyConstraints)
 import Data.Functor.Const (Const(..))
+import Data.Functor.Product (Product(..))
 import Data.Kind (Type, Constraint)
 import Data.Proxy (Proxy(..))
 import Data.TyFun
@@ -126,7 +126,7 @@ instance
         withDict (recursive :: RecursiveDict a KNodes) $
         withDict (kNodes (Proxy :: Proxy a)) $
         RecursiveNodes
-        { _recSelf = Both xSelf ySelf
+        { _recSelf = Pair xSelf ySelf
         , _recSub =
             liftK2With (Proxy :: Proxy '[Recursively KNodes])
             (\(MkFlip x) -> _Flip %~ zipK x) xSub ySub

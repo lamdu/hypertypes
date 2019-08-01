@@ -23,7 +23,7 @@ import           AST.Class.Has (HasChild(..))
 import           AST.Class.Foldable (_ConvertK, foldMapKWith, traverseKWith_)
 import           AST.Class.Recursive
 import           AST.Class.Traversable (ContainedK(..))
-import           AST.Class.ZipMatch (ZipMatch(..), Both(..))
+import           AST.Class.ZipMatch (ZipMatch(..))
 import           AST.Combinator.Single (Single)
 import           AST.Infer
 import           AST.Term.FuncType (HasFuncType(..), FuncType(..))
@@ -131,7 +131,7 @@ instance
         | otherwise =
             zipMatch x y
             >>= traverseKWith (Proxy :: Proxy '[ZipMatch, QVarHasInstance Ord])
-                (\(Both (QVarInstances c0) (QVarInstances c1)) ->
+                (\(Pair (QVarInstances c0) (QVarInstances c1)) ->
                     zipMatch (TermMap c0) (TermMap c1)
                     <&> (^. _TermMap)
                     <&> QVarInstances

@@ -15,11 +15,11 @@ import AST
 import AST.Class
 import AST.Class.Foldable
 import AST.Class.Traversable
-import AST.Combinator.Both
 import AST.Combinator.Flip (Flip(..), _Flip)
 import Control.Lens (Traversal, Lens', makeLenses, makePrisms, from)
 import Control.Lens.Operators
 import Data.Constraint
+import Data.Functor.Product (Product(..))
 import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
 import Data.TyFun
@@ -82,7 +82,7 @@ instance
     {-# INLINE zipK #-}
     zipK (IResultNodeTypes t0 s0) (IResultNodeTypes t1 s1) =
         withDict (kNodes (Proxy :: Proxy (ScopeOf e))) $
-        IResultNodeTypes (Both t0 t1) (zipK s0 s1)
+        IResultNodeTypes (Pair t0 t1) (zipK s0 s1)
 
 instance
     KNodes (ScopeOf e) =>

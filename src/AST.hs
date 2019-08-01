@@ -27,4 +27,5 @@ import AST.Knot.Ann as X (Ann(..), ann, annotations)
 import AST.Knot.Dict as X (KDict(..), _KDict)
 import AST.Knot.Pure as X
 import Data.Constraint.List as X (ApplyConstraints)
+import Data.Functor.Product as X (Product(..))
 import Data.TyFun as X (ConcatConstraintFuncs, On)

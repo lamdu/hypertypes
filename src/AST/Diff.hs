@@ -10,7 +10,7 @@ module AST.Diff
 
 import AST
 import AST.Class.Recursive (Recursively)
-import AST.Class.ZipMatch (ZipMatch(..), Both(..))
+import AST.Class.ZipMatch (ZipMatch(..))
 import Control.DeepSeq (NFData)
 import Control.Lens (makeLenses, makePrisms)
 import Control.Lens.Operators
@@ -18,6 +18,7 @@ import Data.Binary (Binary)
 import Data.Constraint (Constraint, withDict)
 import Data.Proxy (Proxy(..))
 import GHC.Generics (Generic)
+import Text.Show.Combinators
 
 import Prelude.Compat
 
@@ -27,7 +28,7 @@ import Prelude.Compat
 data Diff a b e
     = CommonSubTree (Ann (a, b) e)
     | CommonBody (CommonBody a b e)
-    | Different (Both (Ann a) (Ann b) e)
+    | Different (Product (Ann a) (Ann b) e)
     deriving Generic
 
 data CommonBody a b e = MkCommonBody
@@ -47,7 +48,7 @@ diff x@(Ann xA xB) y@(Ann yA yB) =
     withDict (recursive :: RecursiveDict t ZipMatch) $
     withDict (recursive :: RecursiveDict t KTraversable) $
     case zipMatch xB yB of
-    Nothing -> Different (Both x y)
+    Nothing -> Different (Pair x y)
     Just match ->
         case traverseK (^? _CommonSubTree) sub of
         Nothing -> MkCommonBody xA yA sub & CommonBody
@@ -55,7 +56,7 @@ diff x@(Ann xA xB) y@(Ann yA yB) =
         where
             sub =
                 mapKWith (Proxy :: Proxy '[Recursively ZipMatch, Recursively KTraversable])
-                (\(Both xC yC) -> diff xC yC) match
+                (\(Pair xC yC) -> diff xC yC) match
 
 type Deps c a b e =
     (
@@ -65,13 +66,24 @@ type Deps c a b e =
         , c (Node e (Diff a b))
         ) :: Constraint
     )
+
+-- Note on manual instances below -
+-- `Data.Functor.Product` only has `Eq` instances when it is a product of functors
+-- which have `Eq1` instances, however unfortunately `Eq1` is not poly-kinded,
+-- so we can't declare an `Eq1` instance for `Ann` and other knots.
+
+instance Deps Show a b e => Show (Diff a b e) where
+    showsPrec p b =
+        p &
+        case b of
+        CommonSubTree x -> showCon "CommonSubTree" @| x
+        CommonBody x -> showCon "CommonBody" @| x
+        Different (Pair x y) ->
+            -- Work around missing instance for `Data.Functor.Product`
+            showCon "Different" `showApp` (showCon "Pair" @| x @| y)
+
 deriving instance Deps Eq   a b e => Eq   (CommonBody a b e)
-deriving instance Deps Eq   a b e => Eq   (Diff a b e)
 deriving instance Deps Ord  a b e => Ord  (CommonBody a b e)
-deriving instance Deps Ord  a b e => Ord  (Diff a b e)
 deriving instance Deps Show a b e => Show (CommonBody a b e)
-deriving instance Deps Show a b e => Show (Diff a b e)
 instance Deps Binary a b e => Binary (CommonBody a b e)
-instance Deps Binary a b e => Binary (Diff a b e)
 instance Deps NFData a b e => NFData (CommonBody a b e)
-instance Deps NFData a b e => NFData (Diff a b e)
