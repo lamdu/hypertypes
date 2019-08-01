@@ -51,7 +51,7 @@ class constraint expr => Recursively constraint expr where
 
 type RecursiveContext expr constraint =
     ( constraint expr
-    , KLiftConstraint expr (Recursively constraint)
+    , NodesConstraint expr $ Recursively constraint
     )
 
 type RecursiveDict expr constraint = Dict (RecursiveContext expr constraint)

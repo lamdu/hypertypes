@@ -4,7 +4,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module AST.Class
-    ( KNodes(..), NodeTypesConstraints, KLiftConstraint
+    ( KNodes(..), NodeTypesConstraints
     , KPointed(..)
     , KFunctor(..), MapK(..), _MapK
     , KApply(..)
@@ -22,8 +22,6 @@ import Data.Proxy (Proxy(..))
 import Data.TyFun
 
 import Prelude.Compat
-
-type KLiftConstraint k c = Apply (NodesConstraint k) c
 
 type NodeTypesConstraints k =
     ( NodesConstraint k ~ NodesConstraint (NodeTypesOf k)
@@ -66,7 +64,7 @@ class KNodes k => KPointed k where
 
     -- | Construct a value from a higher ranked child value with a constraint
     pureKWithConstraint ::
-        KLiftConstraint k constraint =>
+        NodesConstraint k $ constraint =>
         Proxy constraint ->
         (forall child. constraint child => Tree n child) ->
         Tree k n

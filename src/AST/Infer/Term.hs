@@ -21,7 +21,6 @@ import Data.Constraint
 import Data.Functor.Product.PolyKinds (Product(..))
 import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
-import Data.TyFun
 
 import Prelude.Compat
 
@@ -40,7 +39,7 @@ type InferChildDeps c ast =
     ( c (TypeOf ast)
     , KTraversable ast
     , KTraversable (ScopeOf ast)
-    , KLiftConstraint (ScopeOf ast) c
+    , NodesConstraint (ScopeOf ast) $ c
     )
 class    InferChildDeps c ast => InferChildConstraints c ast
 instance InferChildDeps c ast => InferChildConstraints c ast
@@ -96,7 +95,7 @@ instance
                 forall child n constraint.
                 ( KNodes (ScopeOf child)
                 , constraint (TypeOf child)
-                , KLiftConstraint (ScopeOf child) constraint
+                , NodesConstraint (ScopeOf child) $ constraint
                 ) =>
                 Proxy constraint ->
                 (forall c. constraint c => Tree n c) ->

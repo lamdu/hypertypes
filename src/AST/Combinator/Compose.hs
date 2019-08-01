@@ -19,7 +19,6 @@ import           Data.Binary (Binary)
 import           Data.Constraint
 import           Data.Kind (Type)
 import           Data.Proxy (Proxy(..))
-import           Data.TyFun
 import           GHC.Generics (Generic)
 
 import           Prelude.Compat

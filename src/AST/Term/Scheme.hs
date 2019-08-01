@@ -142,7 +142,7 @@ schemeToRestrictedType ::
     forall m varTypes typ.
     ( Monad m
     , KTraversable varTypes
-    , KLiftConstraint varTypes (Unify m)
+    , NodesConstraint varTypes $ Unify m
     , RLiftConstraints typ '[Unify m, HasChild varTypes, QVarHasInstance Ord]
     ) =>
     Tree Pure (Scheme varTypes typ) -> m (Tree (UVarOf m) typ)
@@ -180,7 +180,7 @@ loadScheme ::
     forall m varTypes typ.
     ( Monad m
     , KTraversable varTypes
-    , KLiftConstraint varTypes (Unify m)
+    , NodesConstraint varTypes $ Unify m
     , RLiftConstraints typ '[Unify m, HasChild varTypes, QVarHasInstance Ord]
     ) =>
     Tree Pure (Scheme varTypes typ) ->
@@ -228,7 +228,7 @@ saveH c (GPoly x) =
     _ -> error "unexpected state at saveScheme's forall"
 
 saveScheme ::
-    ( KLiftConstraint varTypes (QVarHasInstance Ord)
+    ( NodesConstraint varTypes $ QVarHasInstance Ord
     , KPointed varTypes
     , RLiftConstraints typ '[Unify m, HasChild varTypes, QVarHasInstance Ord]
     , Monad m

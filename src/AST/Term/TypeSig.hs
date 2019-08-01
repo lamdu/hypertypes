@@ -52,7 +52,7 @@ instance
     ( MonadScopeLevel m
     , Infer m term
     , KTraversable vars
-    , KLiftConstraint vars (Unify m)
+    , NodesConstraint vars $ Unify m
     , RLiftConstraints (TypeOf term) '[Unify m, HasChild vars, QVarHasInstance Ord]
     ) =>
     Infer m (TypeSig vars term) where

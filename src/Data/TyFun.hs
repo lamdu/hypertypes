@@ -22,6 +22,9 @@ infixr 0 ~>
 -- | Type level function application of defunctionalized type functions
 type family Apply (f :: i ~> o) (x :: i) :: o
 
+type f $ x = Apply f x
+infixr 0 $
+
 -- | Type level `const` function
 data TConst :: r -> a ~> r
 type instance Apply (TConst x) y = x
@@ -34,6 +37,6 @@ type instance Apply (On x) f = f x
 data ConcatConstraintFuncs :: [a ~> Constraint] -> a ~> Constraint
 type instance Apply (ConcatConstraintFuncs '[]) c = ()
 type instance Apply (ConcatConstraintFuncs (x ': xs)) c =
-    ( Apply x c
-    , Apply (ConcatConstraintFuncs xs) c
+    ( x $ c
+    , ConcatConstraintFuncs xs $ c
     )

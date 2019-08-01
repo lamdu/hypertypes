@@ -3,8 +3,7 @@
 module AST (module X) where
 
 import AST.Class as X
-    ( KNodes(..), KLiftConstraint
-    , KPointed(..), KFunctor(..), KApply(..), KApplicative
+    ( KNodes(..), KPointed(..), KFunctor(..), KApply(..), KApplicative
     , mapK, liftK2
     )
 import AST.Class.Combinators as X (pureKWith, mapKWith, liftK2With)
@@ -28,4 +27,4 @@ import AST.TH.Traversable as X
 import AST.TH.ZipMatch as X (makeZipMatch)
 import Data.Constraint.List as X (ApplyConstraints)
 import Data.Functor.Product.PolyKinds as X (Product(..))
-import Data.TyFun as X (ConcatConstraintFuncs, On)
+import Data.TyFun as X
