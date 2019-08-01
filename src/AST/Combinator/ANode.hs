@@ -16,12 +16,12 @@ import GHC.Generics (Generic)
 
 import Prelude.Compat
 
-newtype ANode c k = MkSingle { getSingle :: Node k c }
+newtype ANode c k = MkANode { getANode :: Node k c }
     deriving stock Generic
 
 {-# INLINE _ANode #-}
 _ANode :: Iso (Tree (ANode c0) k0) (Tree (ANode c1) k1) (Tree k0 c0) (Tree k1 c1)
-_ANode = iso getSingle MkSingle
+_ANode = iso getANode MkANode
 
 instance KNodes (ANode c) where
     type NodeTypesOf (ANode c) = ANode c

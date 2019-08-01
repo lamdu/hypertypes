@@ -37,13 +37,13 @@ makeKTraversableAndFoldable ''Pair
 -- Useful instance for when a type has a single child type,
 -- but uses a parameterized AST term which may have two different types.
 instance KHas (Pair a a) (ANode a) where
-    hasK (MkSingle x) = MkPair x x
+    hasK (MkANode x) = MkPair x x
 
 instance KHas (ANode a) (Pair a b) where
-    hasK (MkPair x _) = MkSingle x
+    hasK (MkPair x _) = MkANode x
 
 instance KHas (ANode b) (Pair a b) where
-    hasK (MkPair _ x) = MkSingle x
+    hasK (MkPair _ x) = MkANode x
 
 type Deps a b k c = ((c (Node k a), c (Node k b)) :: Constraint)
 

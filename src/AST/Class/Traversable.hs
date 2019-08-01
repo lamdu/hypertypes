@@ -57,7 +57,7 @@ traverseK1 ::
     (Tree m c -> f (Tree n c)) ->
     Tree k m ->
     f (Tree k n)
-traverseK1 f = sequenceC . mapC (MkSingle (MkMapK (MkContainedK . f)))
+traverseK1 f = sequenceC . mapC (MkANode (MkMapK (MkContainedK . f)))
 
 {-# INLINE traverseKWith #-}
 traverseKWith ::

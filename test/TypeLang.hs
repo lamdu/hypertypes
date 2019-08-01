@@ -69,7 +69,7 @@ Lens.makeLenses ''RConstraints
 Lens.makeLenses ''Types
 
 instance KHas (ANode Typ) Types where
-    hasK = MkSingle . (^. tTyp)
+    hasK = MkANode . (^. tTyp)
 
 instance KHas (Pair Typ Row) Types where
     hasK (Types t0 r0) = MkPair t0 r0
