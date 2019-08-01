@@ -6,6 +6,7 @@ module AST.Class.Traversable
     , ContainedK(..), _ContainedK
     , traverseK, traverseK1, traverseKWith, traverseKWithDict
     , sequencePureK, sequencePureKWith
+    , sequenceLiftK2, sequenceLiftK2With
     ) where
 
 import AST.Class
@@ -99,3 +100,22 @@ sequencePureKWith ::
     (forall c. ApplyConstraints constraints c => f (Tree n c)) ->
     f (Tree k n)
 sequencePureKWith p f = sequenceC (pureKWith p (MkContainedK f))
+
+{-# INLINE sequenceLiftK2 #-}
+sequenceLiftK2 ::
+    (Applicative f, KApply k, KTraversable k) =>
+    (forall c. Tree l c -> Tree m c -> f (Tree n c)) ->
+    Tree k l ->
+    Tree k m ->
+    f (Tree k n)
+sequenceLiftK2 f x = sequenceC . liftK2 (\a -> MkContainedK . f a) x
+
+{-# INLINE sequenceLiftK2With #-}
+sequenceLiftK2With ::
+    (Applicative f, KApply k, KTraversable k, KLiftConstraints k constraints) =>
+    Proxy constraints ->
+    (forall c. ApplyConstraints constraints c => Tree l c -> Tree m c -> f (Tree n c)) ->
+    Tree k l ->
+    Tree k m ->
+    f (Tree k n)
+sequenceLiftK2With p f x = sequenceC . liftK2With p (\a -> MkContainedK . f a) x
