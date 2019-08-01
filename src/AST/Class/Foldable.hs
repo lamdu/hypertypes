@@ -6,10 +6,11 @@ module AST.Class.Foldable
     , ConvertK(..), _ConvertK
     , foldMapK, foldMapKWith
     , traverseK_, traverseKWith_
+    , sequenceLiftK2_, sequenceLiftK2With_
     ) where
 
-import AST.Class (NodeTypesOf, KNodes(..), KPointed(..))
-import AST.Class.Combinators (KLiftConstraints(..), pureKWith)
+import AST.Class
+import AST.Class.Combinators (KLiftConstraints(..), pureKWith, liftK2With)
 import AST.Knot (Tree, Knot)
 import Control.Lens (Iso, iso)
 import Control.Lens.Operators
@@ -84,3 +85,25 @@ traverseKWith_ ::
     f ()
 traverseKWith_ p f =
     sequenceA_ . foldMapKWith @[f ()] p ((:[]) . f)
+
+{-# INLINE sequenceLiftK2_ #-}
+sequenceLiftK2_ ::
+    (Applicative f, KApply k, KFoldable k) =>
+    (forall c. Tree l c -> Tree m c -> f ()) ->
+    Tree k l ->
+    Tree k m ->
+    f ()
+sequenceLiftK2_ f x =
+    sequenceA_ . foldMapK ((:[]) . getConst) . liftK2 (\a -> Const . f a) x
+
+{-# INLINE sequenceLiftK2With_ #-}
+sequenceLiftK2With_ ::
+    forall f k constraints l m.
+    (Applicative f, KApply k, KFoldable k, KLiftConstraints k constraints) =>
+    Proxy constraints ->
+    (forall c. ApplyConstraints constraints c => Tree l c -> Tree m c -> f ()) ->
+    Tree k l ->
+    Tree k m ->
+    f ()
+sequenceLiftK2With_ p f x =
+    sequenceA_ . foldMapK @[f ()] ((:[]) . getConst) . liftK2With p (\a -> Const . f a) x
