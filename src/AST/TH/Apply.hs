@@ -1,15 +1,15 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskellQuotes #-}
 
-module AST.Class.Apply.TH
+module AST.TH.Apply
     ( makeKApply
     , makeKApplyAndBases
     , makeKApplicativeBases
     ) where
 
 import           AST.Class
-import           AST.Class.Functor.TH (makeKFunctor)
-import           AST.Class.Pointed.TH (makeKPointed)
-import           AST.Internal.TH
+import           AST.TH.Functor (makeKFunctor)
+import           AST.TH.Internal
+import           AST.TH.Pointed (makeKPointed)
 import           Control.Applicative (liftA2)
 import           Control.Lens.Operators
 import           Data.Functor.Product.PolyKinds (Product(..))

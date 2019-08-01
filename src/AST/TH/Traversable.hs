@@ -1,15 +1,15 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskellQuotes #-}
 
-module AST.Class.Traversable.TH
+module AST.TH.Traversable
     ( makeKTraversable
     , makeKTraversableAndFoldable
     , makeKTraversableAndBases
     ) where
 
-import           AST.Class.Foldable.TH (makeKFoldable)
-import           AST.Class.Functor.TH (makeKFunctor)
 import           AST.Class.Traversable
-import           AST.Internal.TH
+import           AST.TH.Foldable (makeKFoldable)
+import           AST.TH.Functor (makeKFunctor)
+import           AST.TH.Internal
 import           Control.Lens.Operators
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D

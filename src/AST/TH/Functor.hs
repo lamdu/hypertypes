@@ -1,12 +1,12 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskellQuotes #-}
 
-module AST.Class.Foldable.TH
-    ( makeKFoldable
+module AST.TH.Functor
+    ( makeKFunctor
     ) where
 
-import           AST.Class.Foldable
+import           AST.Class
 import           AST.Combinator.ANode (ANode(..))
-import           AST.Internal.TH
+import           AST.TH.Internal
 import           Control.Lens.Operators
 import qualified Data.Map as Map
 import           Language.Haskell.TH
@@ -14,22 +14,22 @@ import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
 
-makeKFoldable :: Name -> DecsQ
-makeKFoldable typeName = makeTypeInfo typeName >>= makeKFoldableForType
+makeKFunctor :: Name -> DecsQ
+makeKFunctor typeName = makeTypeInfo typeName >>= makeKFunctorForType
 
-makeKFoldableForType :: TypeInfo -> DecsQ
-makeKFoldableForType info =
+makeKFunctorForType :: TypeInfo -> DecsQ
+makeKFunctorForType info =
     do
-        childrenInfo <- makeNodeTypesInfo info
+        childrenTypesInfo <- makeNodeTypesInfo info
         body <-
             tiCons info
-            & traverse (makeCons childrenInfo (tiVar info))
+            & traverse (makeCons childrenTypesInfo (tiVar info))
             <&> CaseE (VarE varX)
-        instanceD (simplifyContext (makeContext info)) (appT (conT ''KFoldable) (pure (tiInstance info)))
-            [ InlineP 'foldMapC Inline FunLike AllPhases & PragmaD & pure
-            , funD 'foldMapC
+        instanceD (simplifyContext (makeContext info)) (appT (conT ''KFunctor) (pure (tiInstance info)))
+            [ InlineP 'mapC Inline FunLike AllPhases & PragmaD & pure
+            , funD 'mapC
                 [ Clause
-                    [ childrenTypesPat childrenInfo
+                    [ childrenTypesPat childrenTypesInfo
                     , VarP varX
                     ] (NormalB body) []
                     & pure
@@ -47,8 +47,8 @@ makeContext info =
     <&> matchType (tiVar info)
     >>= ctxForPat
     where
-        ctxForPat (Tof t pat) = (ConT ''Foldable `AppT` t) : ctxForPat pat
-        ctxForPat (XofF t) = [ConT ''KFoldable `AppT` t]
+        ctxForPat (Tof t pat) = (ConT ''Functor `AppT` t) : ctxForPat pat
+        ctxForPat (XofF t) = [ConT ''KFunctor `AppT` t]
         ctxForPat _ = []
 
 makeCons :: NodeTypesInfo -> Name -> D.ConstructorInfo -> Q Match
@@ -56,18 +56,18 @@ makeCons childrenInfo knot cons =
     do
         let bodyForPat (NodeFofX t) =
                 case Map.lookup t (varsForChildTypes childrenInfo) of
-                Just x -> VarE 'runConvertK `AppE` VarE x & pure
+                Just x -> VarE 'runMapK `AppE` VarE x & pure
                 Nothing ->
                     getEmbedTypes childrenInfo (ConT ''ANode `AppT` t)
                     <&> AppE (VarE 'getANode)
-                    <&> AppE (VarE 'runConvertK)
-            bodyForPat (XofF t) = getEmbedTypes childrenInfo t <&> AppE (VarE 'foldMapC)
-            bodyForPat (Tof _ pat) = bodyForPat pat <&> AppE (VarE 'foldMap)
-            bodyForPat Other{} = VarE 'const `AppE` VarE 'mempty & pure
+                    <&> AppE (VarE 'runMapK)
+            bodyForPat (XofF t) = getEmbedTypes childrenInfo t <&> AppE (VarE 'mapC)
+            bodyForPat (Tof _ pat) = bodyForPat pat <&> AppE (VarE 'fmap)
+            bodyForPat Other{} = VarE 'id & pure
         let f (typ, name) = bodyForPat (matchType knot typ) <&> (`AppE` VarE name)
         fields <- traverse f consVars
         Match (consPat cons consVars)
-            (NormalB (foldl (\x y -> VarE '(<>) `AppE` x `AppE` y) (VarE 'mempty) fields)) []
+            (NormalB (foldl AppE (ConE (D.constructorName cons)) fields)) []
             & pure
     where
         consVars = makeConstructorVars "x" cons

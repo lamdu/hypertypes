@@ -7,11 +7,11 @@ module AST.Knot.Functor
     ) where
 
 import AST.Class (KNodes(..))
-import AST.Class.Apply.TH (makeKApplicativeBases)
 import AST.Class.Recursive (Recursively)
-import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
 import AST.Combinator.ANode (ANode(..))
 import AST.Knot (Tree, Node)
+import AST.TH.Apply (makeKApplicativeBases)
+import AST.TH.Traversable (makeKTraversableAndFoldable)
 import Control.DeepSeq (NFData)
 import Control.Lens (Iso, iso)
 import Data.Binary (Binary)

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 63655572933f364cd3fbeb8cdb1fde7a1c8f6ab95fe4b1fc1608fbdd1b100eef
+-- hash: e825d2bddbe0a684456ec7a481f1b6ae4505236f291285758b014b0d08549a72
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -31,21 +31,15 @@ library
   exposed-modules:
       AST
       AST.Class
-      AST.Class.Apply.TH
       AST.Class.Combinators
       AST.Class.Foldable
-      AST.Class.Foldable.TH
-      AST.Class.Functor.TH
       AST.Class.Has
       AST.Class.Infer
       AST.Class.Infer.Infer1
-      AST.Class.Pointed.TH
       AST.Class.Recursive
       AST.Class.Traversable
-      AST.Class.Traversable.TH
       AST.Class.Unify
       AST.Class.ZipMatch
-      AST.Class.ZipMatch.TH
       AST.Combinator.ANode
       AST.Combinator.Compose
       AST.Combinator.Flip
@@ -54,7 +48,6 @@ library
       AST.Infer.Blame
       AST.Infer.ScopeLevel
       AST.Infer.Term
-      AST.Internal.TH
       AST.Knot
       AST.Knot.Ann
       AST.Knot.Ann.Arbitrary
@@ -75,6 +68,13 @@ library
       AST.Term.Scheme.AlphaEq
       AST.Term.TypeSig
       AST.Term.Var
+      AST.TH.Apply
+      AST.TH.Foldable
+      AST.TH.Functor
+      AST.TH.Internal
+      AST.TH.Pointed
+      AST.TH.Traversable
+      AST.TH.ZipMatch
       AST.Unify
       AST.Unify.Apply
       AST.Unify.Binding

@@ -6,8 +6,8 @@ module AST.Combinator.ANode
     ) where
 
 import AST.Class
-import AST.Class.Pointed.TH (makeKPointed)
 import AST.Knot (Tree, Node)
+import AST.TH.Pointed (makeKPointed)
 import Control.DeepSeq (NFData)
 import Control.Lens (Iso, iso)
 import Control.Lens.Operators

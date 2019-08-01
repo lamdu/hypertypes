@@ -1,11 +1,11 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskellQuotes #-}
 
-module AST.Class.ZipMatch.TH
+module AST.TH.ZipMatch
     ( makeZipMatch
     ) where
 
 import           AST.Class.ZipMatch (ZipMatch(..))
-import           AST.Internal.TH
+import           AST.TH.Internal
 import           Control.Lens.Operators
 import           Data.Functor.Product.PolyKinds (Product(..))
 import           Language.Haskell.TH

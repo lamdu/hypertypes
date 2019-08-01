@@ -1,11 +1,11 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskellQuotes #-}
 
-module AST.Class.Pointed.TH
+module AST.TH.Pointed
     ( makeKPointed
     ) where
 
 import           AST.Class
-import           AST.Internal.TH
+import           AST.TH.Internal
 import           Control.Lens.Operators
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D

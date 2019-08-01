@@ -12,12 +12,12 @@ module AST.Knot.Ann
 import           AST.Class
 import           AST.Class.Recursive
 import           AST.Class.Traversable
-import           AST.Class.Traversable.TH (makeKTraversableAndBases)
-import           AST.Class.ZipMatch.TH (makeZipMatch)
 import           AST.Combinator.ANode (ANode)
 import           AST.Knot (Tree, Node)
 import           AST.Knot.Dict
 import           AST.Knot.Pure (Pure(..))
+import           AST.TH.Traversable (makeKTraversableAndBases)
+import           AST.TH.ZipMatch (makeZipMatch)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Traversal, makeLenses)
 import           Control.Lens.Operators

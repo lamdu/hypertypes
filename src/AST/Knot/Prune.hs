@@ -7,7 +7,6 @@ module AST.Knot.Prune
     ) where
 
 import AST
-import AST.Class.Traversable.TH (makeKTraversableAndBases)
 import AST.Combinator.Compose (Compose(..))
 import AST.Combinator.ANode (ANode(..))
 import AST.Infer
