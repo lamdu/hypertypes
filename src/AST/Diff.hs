@@ -16,7 +16,6 @@ import Control.Lens.Operators
 import Data.Constraint (Constraint, withDict)
 import Data.Proxy (Proxy(..))
 import GHC.Generics (Generic)
-import Text.Show.Combinators
 
 import Prelude.Compat
 

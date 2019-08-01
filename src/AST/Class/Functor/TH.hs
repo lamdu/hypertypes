@@ -5,6 +5,7 @@ module AST.Class.Functor.TH
     ) where
 
 import           AST.Class
+import           AST.Combinator.ANode (ANode(..))
 import           AST.Internal.TH
 import           Control.Lens.Operators
 import qualified Data.Map as Map
@@ -55,11 +56,11 @@ makeCons childrenInfo knot cons =
     do
         let bodyForPat (NodeFofX t) =
                 case Map.lookup t (varsForChildTypes childrenInfo) of
-                Nothing ->
-                    "Failed producing mapC for child of type:\n        " <> show t <>
-                    "\n    not in:\n        " <> show (varsForChildTypes childrenInfo)
-                    & fail
                 Just x -> VarE 'runMapK `AppE` VarE x & pure
+                Nothing ->
+                    getEmbedTypes childrenInfo (ConT ''ANode `AppT` t)
+                    <&> AppE (VarE 'getANode)
+                    <&> AppE (VarE 'runMapK)
             bodyForPat (XofF t) = getEmbedTypes childrenInfo t <&> AppE (VarE 'mapC)
             bodyForPat (Tof _ pat) = bodyForPat pat <&> AppE (VarE 'fmap)
             bodyForPat Other{} = VarE 'id & pure

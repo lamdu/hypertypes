@@ -21,7 +21,6 @@ import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.State (execStateT)
 import           Data.Foldable (traverse_)
-import           Data.Functor.Const (Const(..))
 import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Data.Set (Set)
@@ -158,12 +157,17 @@ makeNodeTypesInfo typeInfo =
             ConT x -> pure x
             _ -> fail ("unsupported NodeTypesOf: " <> show typ)
         info <- D.reifyDatatype typeName
-        let vars = D.datatypeVars info <&> D.tvName
         cons <-
             case D.datatypeCons info of
             [x] -> pure x
             _ -> fail ("NodeTypesOf with more than one constructor: " <> show typ)
         let consVars = makeConstructorVars "c" cons
+        let kindVars =
+                D.datatypeVars info <&> D.tvKind >>= D.freeVariables
+                & Set.fromList
+        let vars =
+                D.datatypeVars info <&> D.tvName
+                & filter (not . (`Set.member` kindVars))
         let subst = zip vars args & Map.fromList
         let varsForEmbedTypes =
                 do
@@ -198,13 +202,7 @@ makeNodeTypesInfo typeInfo =
                     <&>
                     \ct ->
                     Map.lookup ct varsForOtherEmbeds
-                    & maybe (
-                        case ct of
-                        ConT constT `AppT` TupleT 0
-                            | constT == ''Const ->
-                                ConE 'Const `AppE` TupE []
-                        _ -> VarE 'hasK `AppE` VarE wholeVar
-                        ) VarE
+                    & maybe (VarE 'hasK `AppE` VarE wholeVar) VarE
         pure NodeTypesInfo
             { childrenTypesType = typ
             , childrenTypesPat = AsP wholeVar (consPat cons consVars)

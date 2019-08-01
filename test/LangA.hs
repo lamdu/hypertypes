@@ -12,7 +12,6 @@ import           TypeLang
 import           AST
 import           AST.Class.Infer.Infer1
 import           AST.Class.Unify
-import           AST.Combinator.Pair
 import           AST.Infer
 import           AST.Term.App
 import           AST.Term.NamelessScope
@@ -47,7 +46,7 @@ data LangA v k
     | ALit Int
 
 instance KNodes (LangA v) where
-    type NodeTypesOf (LangA v) = Pair (LangA v) (LangA (Maybe v))
+    type NodeTypesOf (LangA v) = AST.Product (ANode (LangA v)) (ANode (LangA (Maybe v)))
 
 makeKTraversableAndBases ''LangA
 instance Recursively KNodes (LangA v)

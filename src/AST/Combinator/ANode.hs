@@ -5,12 +5,14 @@ module AST.Combinator.ANode
     ( ANode(..), _ANode
     ) where
 
-import AST.Class (KNodes(..))
-import AST.Class.Apply.TH (makeKApplicativeBases)
+import AST.Class
+import AST.Class.Pointed.TH (makeKPointed)
 import AST.Knot (Tree, Node)
 import Control.DeepSeq (NFData)
 import Control.Lens (Iso, iso)
+import Control.Lens.Operators
 import Data.Binary (Binary)
+import Data.Functor.Product.PolyKinds
 import Data.TyFun (On)
 import GHC.Generics (Generic)
 
@@ -27,7 +29,9 @@ instance KNodes (ANode c) where
     type NodeTypesOf (ANode c) = ANode c
     type NodesConstraint (ANode c) = On c
 
-makeKApplicativeBases ''ANode
+makeKPointed ''ANode
+instance KFunctor (ANode c) where mapC = (_ANode %~) . (^. _ANode . _MapK)
+instance KApply (ANode c) where zipK = (_ANode %~) . (Pair . getANode)
 
 deriving instance Eq   (Node k c) => Eq   (ANode c k)
 deriving instance Ord  (Node k c) => Ord  (ANode c k)

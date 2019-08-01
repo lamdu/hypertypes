@@ -5,6 +5,7 @@ module AST.Class.Foldable.TH
     ) where
 
 import           AST.Class.Foldable
+import           AST.Combinator.ANode (ANode(..))
 import           AST.Internal.TH
 import           Control.Lens.Operators
 import qualified Data.Map as Map
@@ -55,11 +56,11 @@ makeCons childrenInfo knot cons =
     do
         let bodyForPat (NodeFofX t) =
                 case Map.lookup t (varsForChildTypes childrenInfo) of
-                Nothing ->
-                    "Failed producing foldMapC for child of type:\n        " <> show t <>
-                    "\n    not in:\n        " <> show (varsForChildTypes childrenInfo)
-                    & fail
                 Just x -> VarE 'runConvertK `AppE` VarE x & pure
+                Nothing ->
+                    getEmbedTypes childrenInfo (ConT ''ANode `AppT` t)
+                    <&> AppE (VarE 'getANode)
+                    <&> AppE (VarE 'runConvertK)
             bodyForPat (XofF t) = getEmbedTypes childrenInfo t <&> AppE (VarE 'foldMapC)
             bodyForPat (Tof _ pat) = bodyForPat pat <&> AppE (VarE 'foldMap)
             bodyForPat Other{} = VarE 'const `AppE` VarE 'mempty & pure

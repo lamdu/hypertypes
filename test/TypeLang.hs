@@ -8,7 +8,6 @@ module TypeLang where
 import           AST
 import           AST.Class.Has
 import           AST.Class.Unify
-import           AST.Combinator.Pair
 import           AST.Infer
 import           AST.Term.FuncType
 import           AST.Term.NamelessScope
@@ -71,8 +70,8 @@ Lens.makeLenses ''Types
 instance KHas (ANode Typ) Types where
     hasK = MkANode . (^. tTyp)
 
-instance KHas (Pair Typ Row) Types where
-    hasK (Types t0 r0) = MkPair t0 r0
+instance KHas (Product (ANode Typ) (ANode Row)) Types where
+    hasK (Types t0 r0) = Pair (MkANode t0) (MkANode r0)
 
 instance KNodes Types where
     type NodeTypesOf Types = Types

@@ -14,7 +14,6 @@ module AST.Term.Row
 
 import           AST
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
-import           AST.Combinator.Pair (Pair)
 import           AST.Unify (TypeConstraints(..), HasTypeConstraints(..), MonadScopeConstraints(..))
 import           AST.Unify.Lookup (semiPruneLookup)
 import           AST.Unify.New (newTerm, newUnbound)
@@ -58,9 +57,9 @@ data FlatRowExtends key val rest k = FlatRowExtends
     } deriving Generic
 
 instance KNodes (RowExtend k v r) where
-    type NodeTypesOf (RowExtend k v r) = Pair v r
+    type NodeTypesOf (RowExtend k v r) = Product (ANode v) (ANode r)
 instance KNodes (FlatRowExtends k v r) where
-    type NodeTypesOf (FlatRowExtends k v r) = Pair v r
+    type NodeTypesOf (FlatRowExtends k v r) = Product (ANode v) (ANode r)
 
 makeLenses ''RowExtend
 makeLenses ''FlatRowExtends
