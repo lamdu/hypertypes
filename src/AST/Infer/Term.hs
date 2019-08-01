@@ -29,9 +29,6 @@ import Prelude.Compat
 --
 -- 'e' may vary in different sub-terms, allowing differently typed
 -- type annotations and scopes.
---
--- See also `AST.Class.Infer.Inferred.Inferred`, a newtype wrapper
--- knotted by `v` whose children are the types.
 data ITerm a v e = ITerm
     { _iAnn :: a
     , _iRes :: {-# UNPACK #-} !(Tree (IResult (RunKnot e)) v)
@@ -39,7 +36,6 @@ data ITerm a v e = ITerm
     }
 makeLenses ''ITerm
 
--- TODO: This should get a list of constraints
 type InferChildDeps c ast =
     ( c (TypeOf ast)
     , KTraversable ast
