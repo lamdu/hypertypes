@@ -8,7 +8,7 @@ module AST.Term.App
     ) where
 
 import AST
-import AST.Combinator.Single (Single)
+import AST.Combinator.ANode (ANode)
 import AST.Infer
 import AST.Term.FuncType
 import AST.Unify (unify)
@@ -29,7 +29,7 @@ data App expr k = App
     } deriving Generic
 
 instance KNodes (App e) where
-    type NodeTypesOf (App e) = Single e
+    type NodeTypesOf (App e) = ANode e
 
 makeLenses ''App
 makeZipMatch ''App

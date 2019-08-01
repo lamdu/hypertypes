@@ -8,7 +8,7 @@ module AST.Term.Let
 
 import           AST
 import           AST.Class.Unify (UVarOf)
-import           AST.Combinator.Single (Single)
+import           AST.Combinator.ANode (ANode)
 import           AST.Infer
 import           AST.Unify.Generalize (GTerm, generalize)
 import           Control.DeepSeq (NFData)
@@ -31,7 +31,7 @@ data Let v expr k = Let
 makeLenses ''Let
 
 instance KNodes (Let v e) where
-    type NodeTypesOf (Let v e) = Single e
+    type NodeTypesOf (Let v e) = ANode e
 
 makeKTraversableAndBases ''Let
 

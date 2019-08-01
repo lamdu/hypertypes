@@ -10,7 +10,7 @@ import AST.Class (KNodes(..))
 import AST.Class.Apply.TH (makeKApplicativeBases)
 import AST.Class.Recursive (Recursively)
 import AST.Class.Traversable.TH (makeKTraversableAndFoldable)
-import AST.Combinator.Single (Single(..))
+import AST.Combinator.ANode (ANode(..))
 import AST.Knot (Tree, Node)
 import Control.DeepSeq (NFData)
 import Control.Lens (Iso, iso)
@@ -28,7 +28,7 @@ _ToKnot ::
 _ToKnot = iso (\(MkToKnot x) -> x) MkToKnot
 
 instance KNodes (ToKnot f) where
-    type NodeTypesOf (ToKnot f) = Single (ToKnot f)
+    type NodeTypesOf (ToKnot f) = ANode (ToKnot f)
 
 makeKApplicativeBases ''ToKnot
 makeKTraversableAndFoldable ''ToKnot

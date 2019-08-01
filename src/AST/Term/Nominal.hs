@@ -24,7 +24,7 @@ import           AST.Class.Foldable (_ConvertK, foldMapKWith, traverseKWith_)
 import           AST.Class.Recursive
 import           AST.Class.Traversable (ContainedK(..))
 import           AST.Class.ZipMatch (ZipMatch(..))
-import           AST.Combinator.Single (Single)
+import           AST.Combinator.ANode (ANode)
 import           AST.Infer
 import           AST.Term.FuncType (HasFuncType(..), FuncType(..))
 import           AST.Term.Map (TermMap(..), _TermMap)
@@ -80,10 +80,10 @@ newtype FromNom nomId (term :: Knot -> *) (k :: Knot) = FromNom nomId
     deriving stock (Show, Generic)
 
 instance KNodes (NominalDecl t) where
-    type NodeTypesOf (NominalDecl t) = Single t
+    type NodeTypesOf (NominalDecl t) = ANode t
 
 instance KNodes (ToNom n t) where
-    type NodeTypesOf (ToNom n t) = Single t
+    type NodeTypesOf (ToNom n t) = ANode t
 
 instance KNodes (FromNom n t) where
     type NodeTypesOf (FromNom n t) = Const ()

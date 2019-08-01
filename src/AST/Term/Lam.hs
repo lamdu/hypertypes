@@ -7,7 +7,7 @@ module AST.Term.Lam
     ) where
 
 import           AST
-import           AST.Combinator.Single (Single)
+import           AST.Combinator.ANode (ANode)
 import           AST.Infer
 import           AST.Term.FuncType
 import           AST.Unify (UVarOf)
@@ -31,7 +31,7 @@ data Lam v expr k = Lam
 makeLenses ''Lam
 
 instance KNodes (Lam v e) where
-    type NodeTypesOf (Lam v e) = Single e
+    type NodeTypesOf (Lam v e) = ANode e
 
 makeKTraversableAndBases ''Lam
 

@@ -9,7 +9,7 @@ module AST.Knot.Prune
 import AST
 import AST.Class.Traversable.TH (makeKTraversableAndBases)
 import AST.Combinator.Compose (Compose(..))
-import AST.Combinator.Single (Single(..))
+import AST.Combinator.ANode (ANode(..))
 import AST.Infer
 import AST.Unify.New (newUnbound)
 import Control.DeepSeq (NFData)
@@ -25,7 +25,7 @@ data Prune k =
     deriving Generic
 
 instance KNodes Prune where
-    type NodeTypesOf Prune = Single Prune
+    type NodeTypesOf Prune = ANode Prune
 
 makePrisms ''Prune
 makeKTraversableAndBases ''Prune

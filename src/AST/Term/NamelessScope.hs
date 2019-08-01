@@ -13,7 +13,7 @@ module AST.Term.NamelessScope
 
 import           AST
 import           AST.Class.Infer.Infer1 (Infer1(..), HasTypeOf1(..))
-import           AST.Combinator.Single (Single)
+import           AST.Combinator.ANode (ANode)
 import           AST.Infer
 import           AST.Term.FuncType
 import           AST.Unify (Unify(..), UVarOf)
@@ -36,7 +36,7 @@ newtype Scope expr a k = Scope (Node k (expr (Maybe a)))
 Lens.makePrisms ''Scope
 
 instance KNodes (Scope e a) where
-    type NodeTypesOf (Scope e a) = Single (e (Maybe a))
+    type NodeTypesOf (Scope e a) = ANode (e (Maybe a))
 
 newtype ScopeVar (expr :: * -> Knot -> *) a (k :: Knot) = ScopeVar a
 Lens.makePrisms ''ScopeVar
@@ -71,7 +71,7 @@ newtype ScopeTypes t v = ScopeTypes (Seq (Node v t))
     deriving newtype (Semigroup, Monoid)
 
 instance KNodes (ScopeTypes t) where
-    type NodeTypesOf (ScopeTypes t) = Single t
+    type NodeTypesOf (ScopeTypes t) = ANode t
 
 Lens.makePrisms ''ScopeTypes
 makeKTraversableAndBases ''ScopeTypes

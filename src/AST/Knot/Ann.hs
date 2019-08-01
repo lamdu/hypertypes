@@ -14,7 +14,7 @@ import           AST.Class.Recursive
 import           AST.Class.Traversable
 import           AST.Class.Traversable.TH (makeKTraversableAndBases)
 import           AST.Class.ZipMatch.TH (makeZipMatch)
-import           AST.Combinator.Single (Single)
+import           AST.Combinator.ANode (ANode)
 import           AST.Knot (Tree, Node)
 import           AST.Knot.Dict
 import           AST.Knot.Pure (Pure(..))
@@ -39,7 +39,7 @@ data Ann a knot = Ann
 makeLenses ''Ann
 
 instance KNodes (Ann a) where
-    type NodeTypesOf (Ann a) = Single (Ann a)
+    type NodeTypesOf (Ann a) = ANode (Ann a)
 
 makeKTraversableAndBases ''Ann
 makeZipMatch ''Ann

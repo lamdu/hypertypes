@@ -68,7 +68,7 @@ Lens.makePrisms ''TypeError
 Lens.makeLenses ''RConstraints
 Lens.makeLenses ''Types
 
-instance KHas (Single Typ) Types where
+instance KHas (ANode Typ) Types where
     hasK = MkSingle . (^. tTyp)
 
 instance KHas (Pair Typ Row) Types where

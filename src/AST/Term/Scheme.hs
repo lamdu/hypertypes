@@ -17,7 +17,7 @@ module AST.Term.Scheme
 import           AST
 import           AST.Class.Has (HasChild(..))
 import           AST.Class.Recursive
-import           AST.Combinator.Single (Single)
+import           AST.Combinator.ANode (ANode)
 import           AST.Unify
 import           AST.Unify.Lookup (semiPruneLookup)
 import           AST.Unify.New (newTerm)
@@ -52,7 +52,7 @@ newtype QVars typ = QVars
     deriving stock Generic
 
 instance KNodes (Scheme v t) where
-    type NodeTypesOf (Scheme v t) = Single t
+    type NodeTypesOf (Scheme v t) = ANode t
 
 Lens.makeLenses ''Scheme
 Lens.makePrisms ''QVars

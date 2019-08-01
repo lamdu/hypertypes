@@ -8,7 +8,7 @@ module AST.Term.TypeSig
 
 import           AST
 import           AST.Class.Has (HasChild(..))
-import           AST.Combinator.Single (Single)
+import           AST.Combinator.ANode (ANode)
 import           AST.Infer
 import           AST.Term.Scheme (Scheme, schemeToRestrictedType)
 import           AST.Unify (Unify, unify)
@@ -32,7 +32,7 @@ data TypeSig vars term k = TypeSig
 makeLenses ''TypeSig
 
 instance KNodes (TypeSig v t) where
-    type NodeTypesOf (TypeSig v t) = Single t
+    type NodeTypesOf (TypeSig v t) = ANode t
 
 makeKTraversableAndBases ''TypeSig
 

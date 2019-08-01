@@ -7,7 +7,7 @@ module AST.Term.Map
     ) where
 
 import           AST
-import           AST.Combinator.Single (Single)
+import           AST.Combinator.ANode (ANode)
 import           AST.Class.ZipMatch (ZipMatch(..))
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
@@ -25,7 +25,7 @@ newtype TermMap k expr f = TermMap (Map k (Node f expr))
     deriving stock Generic
 
 instance KNodes (TermMap k e) where
-    type NodeTypesOf (TermMap k e) = Single e
+    type NodeTypesOf (TermMap k e) = ANode e
 
 Lens.makePrisms ''TermMap
 makeKTraversableAndBases ''TermMap

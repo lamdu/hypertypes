@@ -8,7 +8,7 @@ module AST.Term.FuncType
     ) where
 
 import           AST
-import           AST.Combinator.Single (Single)
+import           AST.Combinator.ANode (ANode)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Prism', makeLenses)
 import           Control.Lens.Operators
@@ -27,7 +27,7 @@ data FuncType typ k = FuncType
     } deriving Generic
 
 instance KNodes (FuncType t) where
-    type NodeTypesOf (FuncType t) = Single t
+    type NodeTypesOf (FuncType t) = ANode t
 
 makeLenses ''FuncType
 makeZipMatch ''FuncType

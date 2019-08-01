@@ -21,7 +21,7 @@ import AST.Class.Traversable as X (KTraversable(..), traverseK, traverseK1, trav
 import AST.Class.Traversable.TH as X
     ( makeKTraversable, makeKTraversableAndFoldable, makeKTraversableAndBases )
 import AST.Class.ZipMatch.TH as X (makeZipMatch)
-import AST.Combinator.Single as X
+import AST.Combinator.ANode as X
 import AST.Knot as X
 import AST.Knot.Ann as X (Ann(..), ann, annotations)
 import AST.Knot.Dict as X (KDict(..), _KDict)

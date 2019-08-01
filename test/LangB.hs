@@ -53,7 +53,7 @@ data LangB k
     | BToNom (ToNom Name LangB k)
 
 instance KNodes LangB where
-    type NodeTypesOf LangB = Single LangB
+    type NodeTypesOf LangB = ANode LangB
 
 makeKTraversableAndBases ''LangB
 instance c LangB => Recursively c LangB
