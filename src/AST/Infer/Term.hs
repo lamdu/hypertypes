@@ -4,9 +4,7 @@
 {-# LANGUAGE ScopedTypeVariables, RankNTypes, StandaloneDeriving, TypeOperators #-}
 
 module AST.Infer.Term
-    ( TypeOf, ScopeOf
-    , IResult(..), irType, irScope
-    , ITerm(..), iVal, iRes, iAnn
+    ( ITerm(..), iVal, iRes, iAnn
     , InferChildConstraints, InferChildDeps
     , iType, iScope, iAnnotations
     ) where
@@ -16,6 +14,7 @@ import AST.Class
 import AST.Class.Foldable
 import AST.Class.Traversable
 import AST.Combinator.Flip (Flip(..), _Flip)
+import AST.Infer.Result
 import Control.Lens (Traversal, Iso, Lens', makeLenses, makePrisms, from, iso)
 import Control.Lens.Operators
 import Data.Constraint
@@ -25,27 +24,6 @@ import Data.Proxy (Proxy(..))
 import Data.TyFun
 
 import Prelude.Compat
-
-type family TypeOf (t :: Knot -> *) :: Knot -> *
-type family ScopeOf (t :: Knot -> *) :: Knot -> *
-
-data IResult e v = IResult
-    { _irType :: Node v (TypeOf e)
-    , _irScope :: ScopeOf e v
-    }
-makeLenses ''IResult
-
-instance
-    KNodes (ScopeOf e) =>
-    KNodes (IResult e) where
-
-    type NodeTypesOf (IResult e) = Product (ANode (TypeOf e)) (NodeTypesOf (ScopeOf e))
-
-    kNodes _ =
-        withDict (kNodes (Proxy :: Proxy (ScopeOf e))) Dict
-
-makeKApply ''IResult
-makeKTraversableAndBases ''IResult
 
 -- | Knot for terms, annotating them with inference results
 --
@@ -288,5 +266,4 @@ iAnnotations f (ITerm pl r x) =
     <*> pure r
     <*> traverseKWith (Proxy :: Proxy '[Recursively KTraversable]) (iAnnotations f) x
 
-deriving instance (Show (Tree v (TypeOf e)), Show (Tree (ScopeOf e) v)) => Show (Tree (IResult e) v)
 deriving instance (Show a, Show (Node e (ITerm a v)), Show (Tree (IResult (RunKnot e)) v)) => Show (ITerm a v e)

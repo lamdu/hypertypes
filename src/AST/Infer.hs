@@ -2,6 +2,7 @@
 
 module AST.Infer
     ( module AST.Class.Infer
+    , module AST.Infer.Result
     , module AST.Infer.ScopeLevel
     , module AST.Infer.Term
     , infer
@@ -9,6 +10,7 @@ module AST.Infer
 
 import AST
 import AST.Class.Infer
+import AST.Infer.Result
 import AST.Infer.ScopeLevel
 import AST.Infer.Term
 import AST.Unify (UVarOf)

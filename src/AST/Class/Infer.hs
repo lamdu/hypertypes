@@ -10,7 +10,7 @@ module AST.Class.Infer
 
 import AST
 import AST.Class.Unify (Unify(..), UVarOf)
-import AST.Infer.Term
+import AST.Infer.Result
 import Control.Lens (Lens, makeLenses, makePrisms)
 import Control.Lens.Operators
 
