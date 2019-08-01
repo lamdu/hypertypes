@@ -272,9 +272,9 @@ instance
     {-# INLINE inferBody #-}
     inferBody (ToNom nomId val) =
         do
-            (valI, paramsT) <-
+            (InferredChild valI valT, typ, paramsT) <-
                 do
-                    InferredChild valI valT <- inferChild val
+                    valR <- inferChild val
                     LoadedNominalDecl params foralls gen <- getNominalDecl nomId
                     recover <-
                         traverseKWith_ (Proxy :: Proxy '[Unify m])
@@ -282,9 +282,9 @@ instance
                         foralls
                         & execWriterT
                     (typ, paramsT) <- instantiateWith (lookupParams params) gen
-                    sequence_ recover
-                    (valI, paramsT) <$ unify typ valT
+                    (valR, typ, paramsT) <$ sequence_ recover
                 & localLevel
+            _ <- unify typ valT
             nominalInst # NominalInst nomId paramsT & newTerm
                 <&> InferRes (ToNom nomId valI)
 
