@@ -23,6 +23,7 @@ import Prelude.Compat
 
 newtype ContainedK f l (k :: Knot) = MkContainedK { runContainedK :: f (l k) }
 
+{-# INLINE _ContainedK #-}
 _ContainedK ::
     Iso (Tree (ContainedK f0 l0) k0)
         (Tree (ContainedK f1 l1) k1)
@@ -37,8 +38,10 @@ class (KFunctor k, KFoldable k) => KTraversable k where
         f (Tree k l)
 
 instance KTraversable (Const a) where
+    {-# INLINE sequenceC #-}
     sequenceC (Const x) = pure (Const x)
 
+{-# INLINE traverseK #-}
 traverseK ::
     (Applicative f, KTraversable k) =>
     (forall c. Tree m c -> f (Tree n c)) ->
@@ -46,6 +49,7 @@ traverseK ::
     f (Tree k n)
 traverseK f = sequenceC . mapK (MkContainedK . f)
 
+{-# INLINE traverseKWith #-}
 traverseKWith ::
     forall n constraints m f k.
     (Applicative f, KTraversable k, KLiftConstraints k constraints) =>
@@ -58,6 +62,7 @@ traverseKWith p f =
     withDict (kLiftConstraintsNodeTypes (Proxy @k) p) $
     sequenceC . mapC (pureKWith p (MkMapK (MkContainedK . f)))
 
+{-# INLINE traverseKWithDict #-}
 traverseKWithDict ::
     forall n constraints m f k.
     (Applicative f, KTraversable k) =>
@@ -69,12 +74,14 @@ traverseKWithDict d f =
     withDict (kNodes (Proxy @k)) $
     sequenceC . mapC (pureKWithDict d (MkMapK (MkContainedK . f)))
 
+{-# INLINE sequencePureK #-}
 sequencePureK ::
     (Applicative f, KPointed k, KTraversable k) =>
     (forall c. f (Tree n c)) ->
     f (Tree k n)
 sequencePureK f = sequenceC (pureK (MkContainedK f))
 
+{-# INLINE sequencePureKWith #-}
 sequencePureKWith ::
     (Applicative f, KApplicative k, KTraversable k, KLiftConstraints k constraints) =>
     Proxy constraints ->
@@ -82,6 +89,7 @@ sequencePureKWith ::
     f (Tree k n)
 sequencePureKWith p f = sequenceC (pureKWith p (MkContainedK f))
 
+{-# INLINE sequenceLiftK2 #-}
 sequenceLiftK2 ::
     (Applicative f, KApply k, KTraversable k) =>
     (forall c. Tree l c -> Tree m c -> f (Tree n c)) ->
@@ -90,6 +98,7 @@ sequenceLiftK2 ::
     f (Tree k n)
 sequenceLiftK2 f x = sequenceC . liftK2 (\a -> MkContainedK . f a) x
 
+{-# INLINE sequenceLiftK2With #-}
 sequenceLiftK2With ::
     (Applicative f, KApply k, KTraversable k, KLiftConstraints k constraints) =>
     Proxy constraints ->

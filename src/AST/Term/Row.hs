@@ -74,6 +74,7 @@ type Deps c key val rest k = ((c key, c (Node k val), c (Node k rest)) :: Constr
 instance Deps Show key val rest k => Show (RowExtend key val rest k) where
     showsPrec p (RowExtend k v r) = (showCon "RowExtend" @| k @| v @| r) p
 
+{-# INLINE flattenRowExtend #-}
 flattenRowExtend ::
     (Ord key, Monad m) =>
     (Tree v rest -> m (Maybe (Tree (RowExtend key val rest) v))) ->
@@ -83,6 +84,7 @@ flattenRowExtend nextExtend (RowExtend k v rest) =
     flattenRow nextExtend rest
     <&> freExtends %~ Map.unionWith (error "Colliding keys") (Map.singleton k v)
 
+{-# INLINE flattenRow #-}
 flattenRow ::
     (Ord key, Monad m) =>
     (Tree v rest -> m (Maybe (Tree (RowExtend key val rest) v))) ->
@@ -92,6 +94,7 @@ flattenRow nextExtend x =
     nextExtend x
     >>= maybe (pure (FlatRowExtends mempty x)) (flattenRowExtend nextExtend)
 
+{-# INLINE unflattenRow #-}
 unflattenRow ::
     Monad m =>
     (Tree (RowExtend key val rest) v -> m (Tree v rest)) ->
@@ -103,6 +106,7 @@ unflattenRow mkExtend (FlatRowExtends fields rest) =
 
 -- Helpers for Unify instances of type-level RowExtends:
 
+{-# INLINE applyRowExtendConstraints #-}
 applyRowExtendConstraints ::
     ( Applicative m
     , constraint valTyp, constraint rowTyp
@@ -123,6 +127,7 @@ applyRowExtendConstraints _ c toChildC err update (RowExtend k v rest) =
         <*> update (c & forbidden . contains k .~ True) rest
     )
 
+{-# INLINE rowExtendStructureMismatch #-}
 rowExtendStructureMismatch ::
     Ord key =>
     ( Recursively (Unify m) rowTyp
@@ -157,6 +162,7 @@ rowExtendStructureMismatch match extend (c0, r0) (c1, r1) =
 -- Helper for infering row usages of a row element,
 -- such as getting a field from a record or injecting into a sum type.
 -- Returns a unification variable for the element and for the whole row.
+{-# INLINE rowElementInfer #-}
 rowElementInfer ::
     ( Unify m valTyp
     , Unify m rowTyp

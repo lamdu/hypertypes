@@ -32,6 +32,7 @@ makeKApplicativeBases ''Pure
 makeKTraversableAndFoldable ''Pure
 makeZipMatch ''Pure
 
+{-# INLINE _Pure #-}
 _Pure :: Lens.Iso (Tree Pure k) (Tree Pure j) (Tree k Pure) (Tree j Pure)
 _Pure = Lens.iso getPure MkPure
 

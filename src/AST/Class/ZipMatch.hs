@@ -26,11 +26,14 @@ class ZipMatch expr where
     zipMatch :: Tree expr a -> Tree expr b -> Maybe (Tree expr (Product a b))
 
 instance (ZipMatch a, ZipMatch b) => ZipMatch (Product a b) where
+    {-# INLINE zipMatch #-}
     zipMatch (Pair a0 b0) (Pair a1 b1) = Pair <$> zipMatch a0 a1 <*> zipMatch b0 b1
 
 instance Eq a => ZipMatch (Const a) where
+    {-# INLINE zipMatch #-}
     zipMatch (Const x) (Const y) = Const x <$ guard (x == y)
 
+{-# INLINE zipMatchWithA #-}
 zipMatchWithA ::
     forall expr f constraints a b c.
     ( Applicative f
@@ -42,6 +45,7 @@ zipMatchWithA ::
     Tree expr a -> Tree expr b -> Maybe (f (Tree expr c))
 zipMatchWithA p f x y = zipMatch x y <&> traverseKWith p (\(Pair a b) -> f a b)
 
+{-# INLINE zipMatchWith #-}
 zipMatchWith ::
     ( ZipMatch expr, KFunctor expr
     , KLiftConstraints expr constraints
@@ -51,6 +55,7 @@ zipMatchWith ::
     Tree expr a -> Tree expr b -> Maybe (Tree expr c)
 zipMatchWith p f x y = zipMatch x y <&> mapKWith p (\(Pair a b) -> f a b)
 
+{-# INLINE zipMatchWith_ #-}
 zipMatchWith_ ::
     forall f expr constraints a b.
     ( Applicative f
@@ -64,5 +69,6 @@ zipMatchWith_ p f x y =
     zipMatch x y
     <&> sequenceA_ . foldMapKWith @[f ()] p (\(Pair a b) -> [f a b])
 
+{-# INLINE doesMatch #-}
 doesMatch :: ZipMatch expr => Tree expr a -> Tree expr b -> Bool
 doesMatch x y = Lens.has Lens._Just (zipMatch x y)

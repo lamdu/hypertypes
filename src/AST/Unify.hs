@@ -30,6 +30,7 @@ import Prelude.Compat
 -- occursIn, seenAs, getFreeVars, freshen, equals, equiv
 -- (from unification-fd package)
 
+{-# INLINE updateConstraints #-}
 updateConstraints ::
     Recursively (Unify m) t =>
     TypeConstraintsOf t ->
@@ -48,6 +49,7 @@ updateConstraints !newConstraints v x =
     UResolving t -> () <$ occursError v t
     _ -> error "This shouldn't happen in unification stage"
 
+{-# INLINE updateTermConstraints #-}
 updateTermConstraints ::
     forall m t.
     Recursively (Unify m) t =>
@@ -64,6 +66,7 @@ updateTermConstraints v t newConstraints
                 (t ^. uBody)
                 >>= bindVar binding v . UTerm . UTermBody newConstraints
     where
+        {-# INLINE f #-}
         f !c var =
             do
                 (v1, x) <- semiPruneLookup var
@@ -73,6 +76,7 @@ updateTermConstraints v t newConstraints
 --   Variables are pruned to point to other variables rather than terms,
 --   yielding comparison of (sometimes equal) variables,
 --   rather than recursively unifying the terms that they would prune to.
+{-# INLINE unify #-}
 unify ::
     forall m t.
     Recursively (Unify m) t =>
@@ -91,6 +95,7 @@ unify x0 y0
                             then pure x1
                             else unifyUTerms x1 xu y1 yu
 
+{-# INLINE unifyUnbound #-}
 unifyUnbound ::
     Recursively (Unify m) t =>
     Tree (UVarOf m) t -> TypeConstraintsOf t ->
@@ -101,6 +106,7 @@ unifyUnbound xv level yv yt =
         updateConstraints level yv yt
         yv <$ bindVar binding xv (UToVar yv)
 
+{-# INLINE unifyUTerms #-}
 unifyUTerms ::
     forall m t.
     Recursively (Unify m) t =>

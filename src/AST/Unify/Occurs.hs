@@ -30,6 +30,7 @@ occursError v (UTermBody c b) =
         bindVar binding v (UResolved (_Pure . quantifiedVar # q))
         unifyError (Occurs (quantifiedVar # q) b)
 
+{-# INLINE occursCheck #-}
 occursCheck ::
     forall m t.
     Recursively (Unify m) t =>

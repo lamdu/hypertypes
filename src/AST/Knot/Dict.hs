@@ -14,6 +14,7 @@ import Data.Proxy (Proxy(..))
 
 newtype KDict cs k = MkKDict { getKDict :: Dict (ApplyConstraints cs (RunKnot k)) }
 
+{-# INLINE _KDict #-}
 _KDict ::
     Iso (Tree (KDict cs0) k0)
         (Tree (KDict cs1) k1)
@@ -21,6 +22,7 @@ _KDict ::
         (Dict (ApplyConstraints cs1 k1))
 _KDict = iso getKDict MkKDict
 
+{-# INLINE pureKWithDict #-}
 pureKWithDict ::
     KFunctor k =>
     Tree k (KDict constraints) ->
@@ -28,6 +30,7 @@ pureKWithDict ::
     Tree k n
 pureKWithDict c f = mapK (\(MkKDict d) -> withDict d f) c
 
+{-# INLINE mapKWithDict #-}
 mapKWithDict ::
     forall k m n constraints.
     KFunctor k =>

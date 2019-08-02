@@ -11,6 +11,7 @@ import Prelude.Compat
 -- | Look up a variable, and return last variable pointing to result.
 -- Prunes all variables on way to point to the last variable
 -- (path-compression ala union-find).
+{-# INLINE semiPruneLookup #-}
 semiPruneLookup ::
     Unify m t =>
     Tree (UVarOf m) t ->

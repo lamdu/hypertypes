@@ -26,15 +26,19 @@ newtype ScopeLevel = ScopeLevel Int
 makePrisms ''ScopeLevel
 
 instance PartialOrd ScopeLevel where
+    {-# INLINE leq #-}
     ScopeLevel x `leq` ScopeLevel y = x >= y
 
 instance Semigroup ScopeLevel where
+    {-# INLINE (<>) #-}
     ScopeLevel x <> ScopeLevel y = ScopeLevel (min x y)
 
 instance Monoid ScopeLevel where
+    {-# INLINE mempty #-}
     mempty = ScopeLevel maxBound
 
 instance TypeConstraints ScopeLevel where
+    {-# INLINE generalizeConstraints #-}
     generalizeConstraints _ = mempty
     toScopeConstraints = id
 

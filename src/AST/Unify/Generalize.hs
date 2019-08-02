@@ -61,6 +61,7 @@ instance
     (Recursively KNodes ast, Recursively KFunctor ast) =>
     KFunctor (Flip GTerm ast) where
 
+    {-# INLINE mapC #-}
     mapC (RecursiveNodes (MkMapK mapTop) mapSub) =
         _Flip %~
         \case
@@ -81,6 +82,7 @@ instance
     (Recursively KNodes ast, Recursively KFoldable ast) =>
     KFoldable (Flip GTerm ast) where
 
+    {-# INLINE foldMapC #-}
     foldMapC (RecursiveNodes (MkConvertK convTop) convSub) =
         \case
         GMono x -> convTop x
@@ -158,6 +160,7 @@ generalize v0 =
     where
         p = Proxy @'[Recursively (Unify m)]
 
+{-# INLINE instantiateForAll #-}
 instantiateForAll ::
     Unify m t =>
     (TypeConstraintsOf t -> Tree (UTerm (UVarOf m)) t) ->
@@ -177,6 +180,7 @@ instantiateForAll cons x =
     _ -> error "unexpected state at instantiate's forall"
 
 -- TODO: Better name?
+{-# INLINE instantiateH #-}
 instantiateH ::
     forall m t.
     Applicative m =>
@@ -192,6 +196,7 @@ instantiateH c cons (GPoly x) =
     withDict (c ^. recSelf . _KDict) $
     instantiateForAll cons x
 
+{-# INLINE instantiateWith #-}
 instantiateWith ::
     forall m t a.
     (Recursively KNodes t, Recursively (Unify m) t) =>
@@ -208,6 +213,7 @@ instantiateWith action cons g =
 
 -- | Instantiate a `Generalized` type with fresh unification variables
 -- for the quantified variables
+{-# INLINE instantiate #-}
 instantiate ::
     (Recursively KNodes t, Recursively (Unify m) t) =>
     Tree (GTerm (UVarOf m)) t -> m (Tree (UVarOf m) t)

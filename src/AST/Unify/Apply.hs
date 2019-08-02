@@ -19,6 +19,7 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
+{-# INLINE applyBindings #-}
 applyBindings ::
     forall m t.
     Recursively (Unify m) t =>

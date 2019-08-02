@@ -55,5 +55,6 @@ instance
     ) =>
     Infer m (Var v expr) where
 
+    {-# INLINE inferBody #-}
     inferBody (Var x) =
         getScope >>= varType (Proxy @expr) x <&> MkANode <&> InferRes (Var x)

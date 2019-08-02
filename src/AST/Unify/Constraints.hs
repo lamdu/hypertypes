@@ -47,6 +47,7 @@ class
     -- | A default implementation for when the verification only needs
     -- to propagate the unchanged constraints to the direct AST
     -- children
+    {-# INLINE verifyConstraints #-}
     default verifyConstraints ::
         forall m childOp p q.
         ( Applicative m
