@@ -7,6 +7,7 @@ module AST.Combinator.ANode
     ) where
 
 import AST.Class
+import AST.Class.Foldable
 import AST.Class.Traversable
 import AST.Knot (Tree, Node)
 import AST.TH.Pointed (makeKPointed)
@@ -32,8 +33,10 @@ instance KNodes (ANode c) where
     type NodesConstraint (ANode c) = On c
 
 makeKPointed ''ANode
-instance KFunctor (ANode c) where mapC = (_ANode %~) . (^. _ANode . _MapK)
 instance KApply (ANode c) where zipK = (_ANode %~) . (Pair . getANode)
+instance KFoldable (ANode c) where foldMapC f = (f ^. _ANode . _ConvertK) . getANode
+instance KFunctor (ANode c) where mapC = (_ANode %~) . (^. _ANode . _MapK)
+instance KTraversable (ANode c) where sequenceC = _ANode runContainedK
 
 {-# INLINE traverseK1 #-}
 traverseK1 ::
