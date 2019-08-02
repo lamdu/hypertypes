@@ -1,5 +1,4 @@
 {-# LANGUAGE TemplateHaskell, UndecidableInstances, ScopedTypeVariables #-}
-{-# LANGUAGE StandaloneDeriving, LambdaCase, DeriveGeneric #-}
 
 module AST.Unify.Error
     ( UnifyError(..)

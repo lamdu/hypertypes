@@ -1,5 +1,4 @@
-{-# LANGUAGE FlexibleInstances, UndecidableInstances, TemplateHaskell #-}
-{-# LANGUAGE StandaloneDeriving, DeriveGeneric, ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances, TemplateHaskell, ScopedTypeVariables #-}
 
 module AST.Term.App
     ( App(..), appFunc, appArg

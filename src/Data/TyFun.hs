@@ -2,7 +2,7 @@
 --
 -- `TyFun` and `Apply` were extracted from the `singletons` package to avoid a heavy dependency,
 -- And other useful type-level functions were added.
-{-# LANGUAGE TypeOperators, PolyKinds #-}
+{-# LANGUAGE PolyKinds #-}
 
 module Data.TyFun where
 

@@ -1,5 +1,5 @@
 {-# LANGUAGE RankNTypes, ScopedTypeVariables, FlexibleInstances, UndecidableInstances #-}
-{-# LANGUAGE DefaultSignatures, FlexibleContexts, TypeOperators #-}
+{-# LANGUAGE DefaultSignatures, FlexibleContexts #-}
 
 module AST.Class
     ( KNodes(..), NodeTypesConstraints

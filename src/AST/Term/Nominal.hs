@@ -1,7 +1,6 @@
-{-# LANGUAGE TemplateHaskell, DeriveGeneric, StandaloneDeriving #-}
 {-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, UndecidableInstances #-}
-{-# LANGUAGE TypeOperators, FlexibleContexts, LambdaCase, ScopedTypeVariables #-}
-{-# LANGUAGE RankNTypes, DerivingStrategies, UndecidableSuperClasses #-}
+{-# LANGUAGE FlexibleContexts, ScopedTypeVariables, TemplateHaskell #-}
+{-# LANGUAGE RankNTypes, UndecidableSuperClasses #-}
 
 module AST.Term.Nominal
     ( NominalDecl(..), nParams, nScheme

@@ -1,6 +1,5 @@
-{-# LANGUAGE StandaloneDeriving, UndecidableInstances #-}
 {-# LANGUAGE TemplateHaskell, FlexibleInstances, FlexibleContexts #-}
-{-# LANGUAGE TypeOperators, RankNTypes, DeriveGeneric, DerivingVia #-}
+{-# LANGUAGE RankNTypes, DerivingVia, UndecidableInstances #-}
 
 module TypeLang where
 

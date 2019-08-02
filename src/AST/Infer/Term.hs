@@ -1,6 +1,5 @@
-{-# LANGUAGE TemplateHaskell, FlexibleContexts #-}
-{-# LANGUAGE UndecidableInstances, UndecidableSuperClasses, FlexibleInstances #-}
-{-# LANGUAGE ScopedTypeVariables, RankNTypes, StandaloneDeriving, TypeOperators #-}
+{-# LANGUAGE TemplateHaskell, FlexibleContexts, ScopedTypeVariables, RankNTypes #-}
+{-# LANGUAGE UndecidableInstances, FlexibleInstances #-}
 
 module AST.Infer.Term
     ( ITerm(..), iVal, iRes, iAnn

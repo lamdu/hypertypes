@@ -1,6 +1,5 @@
-{-# LANGUAGE FlexibleContexts, ScopedTypeVariables, LambdaCase #-}
-{-# LANGUAGE RankNTypes, TupleSections, FlexibleInstances, DeriveGeneric #-}
-{-# LANGUAGE StandaloneDeriving, UndecidableInstances, TemplateHaskell #-}
+{-# LANGUAGE FlexibleContexts, ScopedTypeVariables, FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances, TemplateHaskell, RankNTypes #-}
 
 module AST.Unify.Generalize
     ( generalize, instantiate

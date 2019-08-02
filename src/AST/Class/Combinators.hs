@@ -1,5 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables, FlexibleInstances #-}
-{-# LANGUAGE UndecidableInstances, TypeOperators, RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables, FlexibleInstances, UndecidableInstances, RankNTypes #-}
 
 -- | Combinators for partially applied constraints on knots
 

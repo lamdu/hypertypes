@@ -1,6 +1,5 @@
-{-# LANGUAGE StandaloneDeriving, UndecidableInstances, TemplateHaskell #-}
-{-# LANGUAGE LambdaCase, DerivingStrategies, FlexibleInstances, RankNTypes #-}
-{-# LANGUAGE FlexibleContexts, GeneralizedNewtypeDeriving, ScopedTypeVariables #-}
+{-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts, GeneralizedNewtypeDeriving, ScopedTypeVariables, RankNTypes #-}
 
 -- | A test language with locally-nameless variable scoping and type signatures with for-alls
 

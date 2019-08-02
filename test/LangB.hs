@@ -1,6 +1,5 @@
-{-# LANGUAGE TemplateHaskell, LambdaCase, StandaloneDeriving, DerivingStrategies #-}
-{-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
-{-# LANGUAGE ScopedTypeVariables, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances #-}
+{-# LANGUAGE ScopedTypeVariables, GeneralizedNewtypeDeriving, UndecidableInstances #-}
 
 module LangB where
 

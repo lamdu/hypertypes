@@ -1,5 +1,5 @@
-{-# LANGUAGE FlexibleInstances, UndecidableInstances, LambdaCase, DeriveGeneric #-}
-{-# LANGUAGE StandaloneDeriving, FlexibleContexts, RankNTypes, TemplateHaskell #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, TemplateHaskell #-}
 
 module AST.Term.Row
     ( RowConstraints(..), RowKey

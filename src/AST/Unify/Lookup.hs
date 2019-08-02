@@ -1,5 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
-
 module AST.Unify.Lookup
     ( semiPruneLookup
     ) where

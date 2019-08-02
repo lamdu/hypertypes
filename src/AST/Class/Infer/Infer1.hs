@@ -1,5 +1,3 @@
-{-# LANGUAGE TypeOperators #-}
-
 -- | `Infer` for indexed AST types (such as `AST.Term.Scope.Scope`)
 
 module AST.Class.Infer.Infer1

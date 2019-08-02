@@ -1,5 +1,5 @@
-{-# LANGUAGE TemplateHaskell, StandaloneDeriving, RankNTypes, UndecidableInstances #-}
-{-# LANGUAGE DeriveGeneric, FlexibleContexts, FlexibleInstances, ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell, RankNTypes, UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts, FlexibleInstances, ScopedTypeVariables #-}
 
 module AST.Knot.Ann
     ( Ann(..), ann, val

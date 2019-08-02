@@ -1,5 +1,4 @@
-{-# LANGUAGE DeriveGeneric, StandaloneDeriving, TypeOperators, FlexibleInstances #-}
-{-# LANGUAGE UndecidableInstances, ScopedTypeVariables, TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances, ScopedTypeVariables, TemplateHaskell, FlexibleInstances #-}
 
 module AST.Knot.Prune
     ( Prune(..)

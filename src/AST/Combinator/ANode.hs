@@ -1,4 +1,3 @@
-{-# LANGUAGE DerivingStrategies, DeriveGeneric, StandaloneDeriving #-}
 {-# LANGUAGE UndecidableInstances, TemplateHaskell #-}
 
 module AST.Combinator.ANode

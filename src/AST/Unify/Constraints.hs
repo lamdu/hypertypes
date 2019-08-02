@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleInstances, DefaultSignatures, FlexibleContexts, RankNTypes #-}
-{-# LANGUAGE TypeOperators, ScopedTypeVariables, UndecidableInstances #-}
+{-# LANGUAGE ScopedTypeVariables, UndecidableInstances #-}
 
 module AST.Unify.Constraints
     ( TypeConstraints(..)

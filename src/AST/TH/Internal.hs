@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase, TemplateHaskellQuotes #-}
+{-# LANGUAGE TemplateHaskellQuotes #-}
 
 -- Helpers for TemplateHaskell instance generators
 

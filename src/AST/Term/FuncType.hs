@@ -1,5 +1,4 @@
-{-# LANGUAGE StandaloneDeriving, UndecidableInstances #-}
-{-# LANGUAGE DeriveGeneric, TemplateHaskell, FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances #-}
 
 module AST.Term.FuncType
     ( FuncType(..), funcIn, funcOut

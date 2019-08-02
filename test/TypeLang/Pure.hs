@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections, FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts #-}
 module TypeLang.Pure
     ( module TypeLang.Pure
     , module TypeLang

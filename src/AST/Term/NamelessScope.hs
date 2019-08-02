@@ -1,6 +1,5 @@
-{-# LANGUAGE UndecidableInstances, GeneralizedNewtypeDeriving, DerivingStrategies #-}
-{-# LANGUAGE TemplateHaskell, LambdaCase, EmptyCase #-}
-{-# LANGUAGE ScopedTypeVariables, TypeOperators, FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ScopedTypeVariables, FlexibleInstances, TemplateHaskell, EmptyCase #-}
 
 module AST.Term.NamelessScope
     ( Scope(..), _Scope

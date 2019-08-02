@@ -1,5 +1,4 @@
-{-# LANGUAGE TemplateHaskell, DeriveGeneric, ScopedTypeVariables, TupleSections #-}
-{-# LANGUAGE StandaloneDeriving, UndecidableInstances, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, ScopedTypeVariables, UndecidableInstances, FlexibleInstances #-}
 
 module AST.Term.Let
     ( Let(..), letVar, letEquals, letIn

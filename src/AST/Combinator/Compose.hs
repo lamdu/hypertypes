@@ -1,6 +1,5 @@
-{-# LANGUAGE StandaloneDeriving, UndecidableInstances, DeriveGeneric #-}
-{-# LANGUAGE UndecidableSuperClasses, TypeOperators #-}
-{-# LANGUAGE FlexibleInstances, DerivingStrategies, ScopedTypeVariables, FlexibleContexts #-}
+{-# LANGUAGE UndecidableSuperClasses, UndecidableInstances, ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts, FlexibleInstances #-}
 
 module AST.Combinator.Compose
     ( Compose(..), _Compose

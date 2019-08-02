@@ -1,6 +1,5 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, UndecidableInstances, DeriveGeneric #-}
-{-# LANGUAGE FlexibleInstances, DerivingStrategies, TemplateHaskell #-}
-{-# LANGUAGE ScopedTypeVariables, FlexibleContexts #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, TemplateHaskell, ScopedTypeVariables, FlexibleContexts #-}
 
 module AST.Term.Var
     ( Var(..), _Var

@@ -1,4 +1,4 @@
-{-# LANGUAGE PolyKinds, TypeOperators #-}
+{-# LANGUAGE PolyKinds #-}
 
 module Data.Constraint.List
     ( ApplyConstraints

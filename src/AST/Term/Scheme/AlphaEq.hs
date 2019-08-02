@@ -1,6 +1,5 @@
 -- | Alpha-equality for schemes
-{-# LANGUAGE TypeOperators, FlexibleContexts #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts, ScopedTypeVariables #-}
 module AST.Term.Scheme.AlphaEq
     ( alphaEq
     ) where

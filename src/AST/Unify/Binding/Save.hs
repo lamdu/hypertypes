@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables, FlexibleContexts, LambdaCase #-}
+{-# LANGUAGE ScopedTypeVariables, FlexibleContexts #-}
 
 module AST.Unify.Binding.Save
     ( save

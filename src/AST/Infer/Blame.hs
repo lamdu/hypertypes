@@ -1,5 +1,4 @@
-{-# LANGUAGE FlexibleContexts, ScopedTypeVariables, TupleSections #-}
-{-# LANGUAGE UndecidableInstances, UndecidableSuperClasses #-}
+{-# LANGUAGE FlexibleContexts, ScopedTypeVariables #-}
 
 module AST.Infer.Blame
     ( Blame(..), blame

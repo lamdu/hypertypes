@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, DerivingStrategies #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module AST.Unify.Binding.ST
     ( STUVar(..), _STUVar

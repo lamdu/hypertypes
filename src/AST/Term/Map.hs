@@ -1,5 +1,4 @@
-{-# LANGUAGE TemplateHaskell, StandaloneDeriving, FlexibleInstances #-}
-{-# LANGUAGE UndecidableInstances, DeriveGeneric, DerivingStrategies #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances #-}
 
 module AST.Term.Map
     ( TermMap(..), _TermMap

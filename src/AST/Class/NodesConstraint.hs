@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeOperators, UndecidableInstances, UndecidableSuperClasses, FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances, UndecidableSuperClasses, FlexibleInstances #-}
 
 module AST.Class.NodesConstraint
     ( KNodesConstraint

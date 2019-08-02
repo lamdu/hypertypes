@@ -1,5 +1,5 @@
-{-# LANGUAGE FlexibleInstances, TypeOperators, ScopedTypeVariables, DeriveGeneric #-}
-{-# LANGUAGE UndecidableInstances, StandaloneDeriving, PolyKinds, TemplateHaskell #-}
+{-# LANGUAGE FlexibleInstances, ScopedTypeVariables #-}
+{-# LANGUAGE UndecidableInstances, PolyKinds, TemplateHaskell #-}
 
 module AST.Term.TypeSig
     ( TypeSig(..), tsType, tsTerm

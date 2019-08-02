@@ -1,5 +1,4 @@
-{-# LANGUAGE TemplateHaskell, DeriveGeneric, ScopedTypeVariables #-}
-{-# LANGUAGE StandaloneDeriving, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE TemplateHaskell, ScopedTypeVariables, FlexibleInstances, UndecidableInstances #-}
 
 module AST.Term.Lam
     ( Lam(..), lamIn, lamOut

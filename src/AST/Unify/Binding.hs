@@ -1,5 +1,4 @@
-{-# LANGUAGE StandaloneDeriving, FlexibleContexts #-}
-{-# LANGUAGE UndecidableInstances, DerivingStrategies, TemplateHaskell #-}
+{-# LANGUAGE FlexibleContexts, UndecidableInstances, TemplateHaskell #-}
 
 module AST.Unify.Binding
     ( UVar(..), _UVar

@@ -1,5 +1,4 @@
-{-# LANGUAGE TemplateHaskell, FlexibleContexts, ScopedTypeVariables #-}
-{-# LANGUAGE StandaloneDeriving, UndecidableInstances, KindSignatures, DeriveGeneric #-}
+{-# LANGUAGE TemplateHaskell, FlexibleContexts, ScopedTypeVariables, UndecidableInstances #-}
 
 module AST.Diff
     ( Diff(..), _CommonBody, _CommonSubTree, _Different

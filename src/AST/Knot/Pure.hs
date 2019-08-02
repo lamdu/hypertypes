@@ -1,5 +1,4 @@
-{-# LANGUAGE StandaloneDeriving, UndecidableInstances #-}
-{-# LANGUAGE TemplateHaskell, DeriveGeneric, DerivingStrategies #-}
+{-# LANGUAGE UndecidableInstances, TemplateHaskell #-}
 module AST.Knot.Pure
     ( Pure(..), _Pure
     ) where
