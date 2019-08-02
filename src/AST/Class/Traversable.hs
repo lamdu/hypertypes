@@ -4,7 +4,7 @@
 module AST.Class.Traversable
     ( KTraversable(..)
     , ContainedK(..), _ContainedK
-    , traverseK, traverseK1, traverseKWith, traverseKWithDict
+    , traverseK, traverseKWith, traverseKWithDict
     , sequencePureK, sequencePureKWith
     , sequenceLiftK2, sequenceLiftK2With
     ) where
@@ -12,7 +12,6 @@ module AST.Class.Traversable
 import AST.Class
 import AST.Class.Combinators
 import AST.Class.Foldable (KFoldable)
-import AST.Combinator.ANode (ANode(..))
 import AST.Knot (Knot, Tree)
 import AST.Knot.Dict (KDict, pureKWithDict)
 import Control.Lens (Iso, iso)
@@ -50,16 +49,6 @@ traverseK ::
     Tree k m ->
     f (Tree k n)
 traverseK f = sequenceC . mapK (MkContainedK . f)
-
-{-# INLINE traverseK1 #-}
-traverseK1 ::
-    ( Applicative f, KTraversable k
-    , NodeTypesOf k ~ ANode c
-    ) =>
-    (Tree m c -> f (Tree n c)) ->
-    Tree k m ->
-    f (Tree k n)
-traverseK1 f = sequenceC . mapC (MkANode (MkMapK (MkContainedK . f)))
 
 {-# INLINE traverseKWith #-}
 traverseKWith ::

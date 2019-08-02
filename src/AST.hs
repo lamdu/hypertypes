@@ -12,7 +12,7 @@ import AST.Class.Recursive as X
     ( Recursively(..), RecursiveConstraint, RecursiveContext, RecursiveDict
     , RecursiveNodes(..), RLiftConstraints(..)
     )
-import AST.Class.Traversable as X (KTraversable(..), traverseK, traverseK1, traverseKWith)
+import AST.Class.Traversable as X (KTraversable(..), traverseK, traverseKWith)
 import AST.Combinator.ANode as X
 import AST.Knot as X
 import AST.Knot.Ann as X (Ann(..), ann, annotations)

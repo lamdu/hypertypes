@@ -3,9 +3,11 @@
 
 module AST.Combinator.ANode
     ( ANode(..), _ANode
+    , traverseK1
     ) where
 
 import AST.Class
+import AST.Class.Traversable
 import AST.Knot (Tree, Node)
 import AST.TH.Pointed (makeKPointed)
 import Control.DeepSeq (NFData)
@@ -32,6 +34,16 @@ instance KNodes (ANode c) where
 makeKPointed ''ANode
 instance KFunctor (ANode c) where mapC = (_ANode %~) . (^. _ANode . _MapK)
 instance KApply (ANode c) where zipK = (_ANode %~) . (Pair . getANode)
+
+{-# INLINE traverseK1 #-}
+traverseK1 ::
+    ( Applicative f, KTraversable k
+    , NodeTypesOf k ~ ANode c
+    ) =>
+    (Tree m c -> f (Tree n c)) ->
+    Tree k m ->
+    f (Tree k n)
+traverseK1 f = sequenceC . mapC (MkANode (MkMapK (MkContainedK . f)))
 
 deriving instance Eq   (Node k c) => Eq   (ANode c k)
 deriving instance Ord  (Node k c) => Ord  (ANode c k)
