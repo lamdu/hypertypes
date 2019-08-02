@@ -6,12 +6,12 @@ module AST.Term.TypeSig
     ) where
 
 import           AST
-import           AST.Class.Has (HasChild(..))
-import           AST.Combinator.ANode (ANode)
+import           AST.Combinator.Flip (_Flip)
 import           AST.Infer
-import           AST.Term.Scheme (Scheme, schemeToRestrictedType)
+import           AST.Term.Scheme (Scheme)
 import           AST.Unify (Unify, unify)
-import           AST.Unify.QuantifiedVar (QVarHasInstance)
+import           AST.Unify.Generalize (instantiateWith)
+import           AST.Unify.Term (UTerm(..))
 import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
@@ -27,18 +27,23 @@ import           Prelude.Compat
 
 data TypeSig vars term k = TypeSig
     { _tsTerm :: Node k term
-    , _tsType :: Tree Pure (Scheme vars (TypeOf term))
+    , _tsType :: Node k (Scheme vars (TypeOf term))
     } deriving Generic
 makeLenses ''TypeSig
 
 instance KNodes (TypeSig v t) where
-    type NodeTypesOf (TypeSig v t) = ANode t
+    type NodeTypesOf (TypeSig v t) = TypeSig v t
+    type NodesConstraint (TypeSig v t) =
+        ConcatConstraintFuncs [On t, On (Scheme v (TypeOf t))]
 
-makeKTraversableAndBases ''TypeSig
+makeKApplicativeBases ''TypeSig
+makeKTraversableAndFoldable ''TypeSig
 
-instance RecursiveContext (TypeSig vars term) constraint => Recursively constraint (TypeSig vars term)
+instance
+    RecursiveContext (TypeSig vars term) constraint =>
+    Recursively constraint (TypeSig vars term)
 
-type Deps vars term k cls = ((cls (Node k term), cls (Tree Pure (Scheme vars (TypeOf term)))) :: Constraint)
+type Deps vars term k cls = ((cls (Node k term), cls (Node k (Scheme vars (TypeOf term)))) :: Constraint)
 
 instance Deps vars term k Pretty => Pretty (TypeSig vars term k) where
     pPrintPrec lvl p (TypeSig term typ) =
@@ -50,21 +55,19 @@ type instance InferOf (TypeSig vars term) = InferOf term
 instance
     ( MonadScopeLevel m
     , HasInferredType term
-    , KTraversable vars
     , NodesConstraint vars $ Unify m
     , Recursively KNodes (TypeOf term)
     , Recursively (Unify m) (TypeOf term)
-    , Recursively (HasChild vars) (TypeOf term)
-    , Recursively (QVarHasInstance Ord) (TypeOf term)
     ) =>
     Infer m (TypeSig vars term) where
 
     inferBody (TypeSig x s) =
         do
             InferredChild xI xR <- inferChild x
-            t <- schemeToRestrictedType s
+            InferredChild sI sR <- inferChild s
+            (t, ()) <- instantiateWith (pure ()) USkolem (sR ^. _Flip)
             xR & inferredType (Proxy @term) #%%~ unify t
-                <&> InferRes (TypeSig xI s)
+                <&> InferRes (TypeSig xI sI)
         & localLevel
 
 deriving instance Deps vars term k Eq   => Eq   (TypeSig vars term k)

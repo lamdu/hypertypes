@@ -8,17 +8,21 @@ module LangA where
 import           TypeLang
 
 import           AST
+import           AST.Class.Has
 import           AST.Class.Infer.Infer1
 import           AST.Class.Unify
+import           AST.Combinator.Flip
 import           AST.Infer
 import           AST.Term.App
 import           AST.Term.NamelessScope
 import           AST.Term.NamelessScope.InvDeBruijn
+import           AST.Term.Scheme
 import           AST.Term.TypeSig
 import           AST.Unify
 import           AST.Unify.Apply
 import           AST.Unify.Binding
 import           AST.Unify.Binding.ST
+import           AST.Unify.Generalize
 import           AST.Unify.New
 import           AST.Unify.QuantifiedVar
 import           Control.Applicative
@@ -45,15 +49,36 @@ data LangA v k
     | ATypeSig (TypeSig Types (LangA v) k)
     | ALit Int
 
+data LangANodeTypes v k =
+    LangANodeTypes
+    { l0 :: Node k (LangA v)
+    , l1 :: Node k (LangA (Maybe v))
+    , _l2 :: Node k (Scheme Types Typ)
+    }
+
+instance KNodes (LangANodeTypes v) where
+    type NodeTypesOf (LangANodeTypes v) = LangANodeTypes v
+    type NodesConstraint (LangANodeTypes v) =
+        ConcatConstraintFuncs [On (LangA v), On (LangA (Maybe v)), On (Scheme Types Typ)]
+makeKApplicativeBases ''LangANodeTypes
+
+instance KHas (TypeSig Types (LangA v)) (LangANodeTypes v) where
+    hasK (LangANodeTypes e _ s) = TypeSig e s
+instance KHas (ANode (LangA v)) (LangANodeTypes v) where hasK = MkANode . l0
+instance KHas (ANode (LangA (Maybe v))) (LangANodeTypes v) where hasK = MkANode . l1
+
 instance KNodes (LangA v) where
-    type NodeTypesOf (LangA v) = AST.Product (ANode (LangA v)) (ANode (LangA (Maybe v)))
+    type NodeTypesOf (LangA v) = LangANodeTypes v
 
 makeKTraversableAndBases ''LangA
+
 instance Recursively KNodes (LangA v)
 instance Recursively KFoldable (LangA k)
 instance Recursively KFunctor (LangA k)
 instance Recursively KTraversable (LangA k)
-instance c (ANode Typ) => Recursively (InferOfConstraint c) (LangA k)
+instance
+    (c (ANode Typ), c (ANode Row), c (Flip GTerm Typ))
+    => Recursively (InferOfConstraint c) (LangA k)
 
 type instance InferOf (LangA k) = ANode Typ
 type instance TypeOf (LangA k) = Typ
@@ -106,18 +131,29 @@ instance (DeBruijnIndex k, TermInfer1Deps env m) => Infer m (LangA k) where
     inferBody (AApp x) = inferBody x <&> inferResBody %~ AApp
     inferBody (ATypeSig x) = inferBody x <&> inferResBody %~ ATypeSig
 
-instance (DeBruijnIndex k, TermInfer1Deps env m) => Recursively (Infer m) (LangA k)
+instance
+    ( DeBruijnIndex k
+    , TermInfer1Deps env m
+    , MonadInstantiate m Typ
+    , MonadInstantiate m Row
+    , Infer m Typ
+    , Infer m Row
+    ) =>
+    Recursively (Infer m) (LangA k)
 
 -- Monads for inferring `LangA`:
 
 data LangAInferEnv v = LangAInferEnv
     { _iaScopeTypes :: Tree (ScopeTypes Typ) v
     , _iaScopeLevel :: ScopeLevel
+    , _iaInstantiations :: Tree Types (QVarInstances v)
     }
 Lens.makeLenses ''LangAInferEnv
 
 emptyLangAInferEnv :: LangAInferEnv v
-emptyLangAInferEnv = LangAInferEnv mempty (ScopeLevel 0)
+emptyLangAInferEnv =
+    LangAInferEnv mempty (ScopeLevel 0)
+    (pureKWith (Proxy @'[QVarHasInstance Ord]) (QVarInstances mempty))
 
 instance HasScopeTypes v Typ (LangAInferEnv v) where scopeTypes = iaScopeTypes
 
@@ -173,6 +209,20 @@ instance Unify PureInferA Row where
         traverseKWith (Proxy @'[Recursively (Unify PureInferA)]) applyBindings e
         >>= throwError . RowError
 
+instance MonadInstantiate PureInferA Typ where
+    localInstantiations (QVarInstances x) =
+        local (iaInstantiations . tTyp . _QVarInstances %~ (x <>))
+    lookupQVar x =
+        Lens.view (iaInstantiations . tTyp . _QVarInstances . Lens.at x)
+        >>= maybe (throwError (QVarNotInScope x)) pure
+
+instance MonadInstantiate PureInferA Row where
+    localInstantiations (QVarInstances x) =
+        local (iaInstantiations . tRow . _QVarInstances %~ (x <>))
+    lookupQVar x =
+        Lens.view (iaInstantiations . tRow . _QVarInstances . Lens.at x)
+        >>= maybe (throwError (QVarNotInScope x)) pure
+
 newtype STInferA s a =
     STInferA
     ( ReaderT (LangAInferEnv (STUVar s), STNameGen s)
@@ -222,3 +272,17 @@ instance Unify (STInferA s) Row where
     unifyError e =
         traverseKWith (Proxy @'[Recursively (Unify (STInferA s))]) applyBindings e
         >>= throwError . RowError
+
+instance MonadInstantiate (STInferA s) Typ where
+    localInstantiations (QVarInstances x) =
+        local (Lens._1 . iaInstantiations . tTyp . _QVarInstances %~ (x <>))
+    lookupQVar x =
+        Lens.view (Lens._1 . iaInstantiations . tTyp . _QVarInstances . Lens.at x)
+        >>= maybe (throwError (QVarNotInScope x)) pure
+
+instance MonadInstantiate (STInferA s) Row where
+    localInstantiations (QVarInstances x) =
+        local (Lens._1 . iaInstantiations . tRow . _QVarInstances %~ (x <>))
+    lookupQVar x =
+        Lens.view (Lens._1 . iaInstantiations . tRow . _QVarInstances . Lens.at x)
+        >>= maybe (throwError (QVarNotInScope x)) pure

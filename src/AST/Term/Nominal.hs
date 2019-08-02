@@ -278,7 +278,7 @@ instance
                         (traverse_ (instantiateForAll USkolem) . (^. _QVarInstances))
                         foralls
                         & execWriterT
-                    (typ, paramsT) <- instantiateWith (lookupParams params) gen
+                    (typ, paramsT) <- instantiateWith (lookupParams params) UUnbound gen
                     (v, typ, paramsT) <$ sequence_ recover
                 & localLevel
             _ <- unify typ (valR ^# inferredType (Proxy @expr))
@@ -301,7 +301,7 @@ instance
     inferBody (FromNom nomId) =
         do
             LoadedNominalDecl params _ gen <- getNominalDecl nomId
-            (typ, paramsT) <- instantiateWith (lookupParams params) gen
+            (typ, paramsT) <- instantiateWith (lookupParams params) UUnbound gen
             nominalInst # NominalInst nomId paramsT & newTerm
                 <&> (`FuncType` typ)
         <&> InferRes (FromNom nomId)

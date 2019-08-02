@@ -59,7 +59,10 @@ data Types k = Types
     , _tRow :: Node k Row
     }
 
-data TypeError k = TypError (UnifyError Typ k) | RowError (UnifyError Row k)
+data TypeError k
+    = TypError (UnifyError Typ k)
+    | RowError (UnifyError Row k)
+    | QVarNotInScope Name
 
 Lens.makePrisms ''Typ
 Lens.makePrisms ''Row
@@ -111,6 +114,8 @@ instance TypDeps Pretty k => Pretty (Types k) where
 instance TypDeps Pretty k => Pretty (TypeError k) where
     pPrintPrec lvl p (TypError x) = pPrintPrec lvl p x
     pPrintPrec lvl p (RowError x) = pPrintPrec lvl p x
+    pPrintPrec _ _ (QVarNotInScope x) =
+        Pretty.text "quantified type variable not in scope" <+> pPrint x
 
 instance TypDeps Pretty k => Pretty (Typ k) where
     pPrintPrec _ _ TInt = Pretty.text "Int"
@@ -189,6 +194,19 @@ instance HasFuncType Typ where
 
 instance HasScopeTypes v Typ a => HasScopeTypes v Typ (a, x) where
     scopeTypes = Lens._1 . scopeTypes
+
+type instance InferOf Typ = ANode Typ
+type instance InferOf Row = ANode Row
+instance HasInferredValue Typ where inferredValue = _ANode
+instance HasInferredValue Row where inferredValue = _ANode
+
+instance
+    (Monad m, MonadInstantiate m Typ, Unify m Typ) =>
+    Infer m Typ where inferBody = inferType
+
+instance
+    (Monad m, MonadInstantiate m Row, Unify m Row) =>
+    Infer m Row where inferBody = inferType
 
 rStructureMismatch ::
     (Unify m Typ, Unify m Row) =>

@@ -6,7 +6,7 @@ module AST.Term.Scheme
     , QVars(..), _QVars
     , schemeToRestrictedType
     , loadScheme, saveScheme
-    , MonadInstantiate(..)
+    , MonadInstantiate(..), inferType
 
     , QVarInstances(..), _QVarInstances
     , makeQVarInstances
@@ -139,6 +139,24 @@ instance
             InferredChild typI typR <- inferChild typ & withForalls
             generalize (typR ^. inferredValue)
                 <&> InferRes (Scheme vars typI) . MkFlip
+
+inferType ::
+    ( InferOf t ~ ANode t
+    , KTraversable t
+    , NodesConstraint t $ HasInferredValue
+    , Unify m t
+    , MonadInstantiate m t
+    ) =>
+    Tree t (InferChild m k) -> m (InferRes (UVarOf m) k t)
+inferType x =
+    case x ^? quantifiedVar of
+    Just q -> lookupQVar q <&> InferRes (quantifiedVar # q) . MkANode
+    Nothing ->
+        do
+            xI <- traverseK inferChild x
+            mapKWith (Proxy @'[HasInferredValue]) (^. inType . inferredValue) xI
+                & newTerm
+                <&> InferRes (mapK (^. inRep) xI) . MkANode
 
 {-# INLINE makeQVarInstancesInScope #-}
 makeQVarInstancesInScope ::

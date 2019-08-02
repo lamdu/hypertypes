@@ -164,7 +164,8 @@ generalize v0 =
 instantiateForAll ::
     Unify m t =>
     (TypeConstraintsOf t -> Tree (UTerm (UVarOf m)) t) ->
-    Tree (UVarOf m) t -> WriterT [m ()] m (Tree (UVarOf m) t)
+    Tree (UVarOf m) t ->
+    WriterT [m ()] m (Tree (UVarOf m) t)
 instantiateForAll cons x =
     lookupVar binding x & lift
     >>=
@@ -184,26 +185,29 @@ instantiateH ::
     forall m t.
     Applicative m =>
     Tree (RecursiveNodes t) (KDict '[Unify m]) ->
-    Tree (GTerm (UVarOf m)) t -> WriterT [m ()] m (Tree (UVarOf m) t)
-instantiateH _ (GMono x) = pure x
-instantiateH c (GBody x) =
+    (forall n. TypeConstraintsOf n -> Tree (UTerm (UVarOf m)) n) ->
+    Tree (GTerm (UVarOf m)) t ->
+    WriterT [m ()] m (Tree (UVarOf m) t)
+instantiateH _ _ (GMono x) = pure x
+instantiateH c cons (GBody x) =
     withDict (c ^. recSelf . _KDict) $
-    traverseKRec c instantiateH x >>= lift . newTerm
-instantiateH c (GPoly x) =
+    traverseKRec c (\d -> instantiateH d cons) x >>= lift . newTerm
+instantiateH c cons (GPoly x) =
     withDict (c ^. recSelf . _KDict) $
-    instantiateForAll UUnbound x
+    instantiateForAll cons x
 
 {-# INLINE instantiateWith #-}
 instantiateWith ::
     forall m t a.
     (Recursively KNodes t, Recursively (Unify m) t) =>
     m a ->
+    (forall n. TypeConstraintsOf n -> Tree (UTerm (UVarOf m)) n) ->
     Tree (GTerm (UVarOf m)) t ->
     m (Tree (UVarOf m) t, a)
-instantiateWith action g =
+instantiateWith action cons g =
     do
         (r, recover) <-
-            instantiateH (rLiftConstraints @t @'[Unify m]) g
+            instantiateH (rLiftConstraints @t @'[Unify m]) cons g
             & runWriterT
         action <* sequence_ recover <&> (r, )
 
@@ -213,7 +217,7 @@ instantiateWith action g =
 instantiate ::
     (Recursively KNodes t, Recursively (Unify m) t) =>
     Tree (GTerm (UVarOf m)) t -> m (Tree (UVarOf m) t)
-instantiate g = instantiateWith (pure ()) g <&> (^. Lens._1)
+instantiate g = instantiateWith (pure ()) UUnbound g <&> (^. Lens._1)
 
 type Deps c v t = ((c (v t), c (Node t (GTerm v))) :: Constraint)
 deriving instance Deps Eq   v t => Eq   (GTerm v t)
