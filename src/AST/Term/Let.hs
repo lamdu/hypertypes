@@ -10,7 +10,7 @@ import           AST.Combinator.ANode (ANode)
 import           AST.Infer
 import           AST.Unify.Generalize (GTerm, generalize)
 import           Control.DeepSeq (NFData)
-import           Control.Lens (makeLenses, cloneLens)
+import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           Data.Constraint (Constraint)
@@ -60,7 +60,7 @@ instance
             (eI, eG) <-
                 do
                     InferredChild eI eR <- inferChild e
-                    generalize (eR ^. cloneLens (inferredType (Proxy @expr)))
+                    generalize (eR ^# inferredType (Proxy @expr))
                         <&> (eI ,)
                 & localLevel
             inferChild i

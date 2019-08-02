@@ -34,7 +34,7 @@ import           AST.Unify.QuantifiedVar (HasQuantifiedVar(..), QVarHasInstance)
 import           AST.Unify.Term (UTerm(..))
 import           Control.Applicative (Alternative(..))
 import           Control.DeepSeq (NFData)
-import           Control.Lens (Prism', makeLenses, makePrisms, cloneLens)
+import           Control.Lens (Prism', makeLenses, makePrisms)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Writer (execWriterT)
@@ -281,10 +281,8 @@ instance
                     (typ, paramsT) <- instantiateWith (lookupParams params) gen
                     (v, typ, paramsT) <$ sequence_ recover
                 & localLevel
-            _ <- unify typ (valR ^. cloneLens l)
+            _ <- unify typ (valR ^# inferredType (Proxy @expr))
             InferRes (ToNom nomId valI) (NominalInst nomId paramsT) & pure
-        where
-            l = inferredType (Proxy @expr)
 
 type instance InferOf (FromNom nomId expr) = FuncType (TypeOf expr)
 

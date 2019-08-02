@@ -11,7 +11,7 @@ import           AST.Term.FuncType
 import           AST.Unify (Unify, UVarOf)
 import           AST.Unify.New (newUnbound)
 import           Control.DeepSeq (NFData)
-import           Control.Lens (makeLenses, cloneLens)
+import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           Data.Constraint (Constraint)
@@ -60,7 +60,7 @@ instance
             varType <- newUnbound
             InferredChild rI rR <- inferChild r & localScopeType p varType
             InferRes (Lam p rI)
-                (FuncType varType (rR ^. cloneLens (inferredType (Proxy @t))))
+                (FuncType varType (rR ^# inferredType (Proxy @t)))
                 & pure
 
 deriving instance Deps v expr k Eq   => Eq   (Lam v expr k)

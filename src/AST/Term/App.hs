@@ -12,7 +12,7 @@ import AST.Term.FuncType
 import AST.Unify (Unify, unify)
 import AST.Unify.New (newTerm, newUnbound)
 import Control.DeepSeq (NFData)
-import Control.Lens (Traversal, makeLenses, cloneLens)
+import Control.Lens (Traversal, makeLenses)
 import Control.Lens.Operators
 import Data.Binary (Binary)
 import Data.Proxy (Proxy(..))
@@ -66,9 +66,9 @@ instance
             InferredChild funcI funcR <- inferChild func
             funcRes <- newUnbound
             InferRes (App funcI argI) (MkANode funcRes) <$
-                (newTerm (funcType # FuncType (argR ^. l) funcRes) >>= unify (funcR ^. l))
+                (newTerm (funcType # FuncType (argR ^# l) funcRes) >>= unify (funcR ^# l))
         where
-            l = inferredType (Proxy @expr) & cloneLens
+            l = inferredType (Proxy @expr)
 
 deriving instance Eq   (Node k expr) => Eq   (App expr k)
 deriving instance Ord  (Node k expr) => Ord  (App expr k)

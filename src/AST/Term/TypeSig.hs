@@ -13,7 +13,7 @@ import           AST.Term.Scheme (Scheme, schemeToRestrictedType)
 import           AST.Unify (Unify, unify)
 import           AST.Unify.QuantifiedVar (QVarHasInstance)
 import           Control.DeepSeq (NFData)
-import           Control.Lens (makeLenses, cloneLens)
+import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           Data.Constraint (Constraint)
@@ -63,7 +63,7 @@ instance
         do
             InferredChild xI xR <- inferChild x
             t <- schemeToRestrictedType s
-            (cloneLens (inferredType (Proxy @term))) (unify t) xR
+            xR & inferredType (Proxy @term) #%%~ unify t
                 <&> InferRes (TypeSig xI s)
         & localLevel
 

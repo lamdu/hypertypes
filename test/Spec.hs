@@ -142,7 +142,7 @@ inferExpr ::
 inferExpr x =
     infer (wrap (Proxy @'[KFunctor]) Dict (Ann ()) x)
     >>= Lens.from _Flip (traverseKWith (Proxy @'[Recursively (Unify m)]) applyBindings)
-    <&> (^. iRes . Lens.cloneLens (inferredType (Proxy @t)))
+    <&> (^# iRes . inferredType (Proxy @t))
 
 vecNominalDecl :: Tree Pure (NominalDecl Typ)
 vecNominalDecl =

@@ -16,7 +16,7 @@ import           AST.Infer
 import           AST.Term.FuncType
 import           AST.Unify (Unify(..), UVarOf)
 import           AST.Unify.New (newUnbound)
-import           Control.Lens (Lens', Prism', cloneLens)
+import           Control.Lens (Lens', Prism')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Reader (MonadReader, local)
@@ -119,7 +119,7 @@ instance
                 inferChild x
                 & local (scopeTypes . _ScopeTypes %~ (varType Sequence.<|))
             InferRes (Scope xI)
-                (FuncType varType (xR ^. cloneLens (inferredType (Proxy @(t k)))))
+                (FuncType varType (xR ^# inferredType (Proxy @(t k))))
                 & pure
         \\ (inferMonad :: DeBruijnIndex (Maybe k) :- Infer m (t (Maybe k)))
 
