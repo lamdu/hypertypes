@@ -1,7 +1,6 @@
-{-# LANGUAGE NoImplicitPrelude, RankNTypes, DefaultSignatures, TemplateHaskell #-}
-{-# LANGUAGE MultiParamTypeClasses, ConstraintKinds, FlexibleInstances #-}
+{-# LANGUAGE RankNTypes, DefaultSignatures, TemplateHaskell #-}
 {-# LANGUAGE FlexibleContexts, ScopedTypeVariables, UndecidableInstances #-}
-{-# LANGUAGE UndecidableSuperClasses, DataKinds, TypeFamilies, TypeOperators #-}
+{-# LANGUAGE UndecidableSuperClasses, TypeOperators, FlexibleInstances #-}
 
 module AST.Class.Recursive
     ( Recursively(..), RecursiveContext, RecursiveDict, RecursiveConstraint

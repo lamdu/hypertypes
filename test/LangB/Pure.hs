@@ -16,6 +16,8 @@ import Control.Lens.Operators
 import LangB
 import TypeLang.Pure
 
+import Prelude
+
 bVar :: String -> Tree Pure LangB
 bVar = MkPure . BVar . Var . Name
 

@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskellQuotes #-}
+{-# LANGUAGE TemplateHaskellQuotes #-}
 
 module AST.TH.Apply
     ( makeKApply

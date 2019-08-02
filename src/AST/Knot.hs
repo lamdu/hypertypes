@@ -1,5 +1,3 @@
-{-# LANGUAGE NoImplicitPrelude, DataKinds, TypeFamilies #-}
-
 module AST.Knot
     ( Knot(..), RunKnot
     , Node, Tree

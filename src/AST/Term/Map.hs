@@ -1,6 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, StandaloneDeriving, DataKinds #-}
-{-# LANGUAGE UndecidableInstances, DeriveGeneric, TypeFamilies, DerivingStrategies #-}
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, ConstraintKinds #-}
+{-# LANGUAGE TemplateHaskell, StandaloneDeriving, FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances, DeriveGeneric, DerivingStrategies #-}
 
 module AST.Term.Map
     ( TermMap(..), _TermMap

@@ -1,7 +1,6 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DataKinds, DeriveGeneric #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving, TypeFamilies, UndecidableInstances #-}
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, DerivingStrategies #-}
-{-# LANGUAGE ScopedTypeVariables, ConstraintKinds, FlexibleContexts #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, UndecidableInstances, DeriveGeneric #-}
+{-# LANGUAGE FlexibleInstances, DerivingStrategies, TemplateHaskell #-}
+{-# LANGUAGE ScopedTypeVariables, FlexibleContexts #-}
 
 module AST.Term.Var
     ( Var(..), _Var

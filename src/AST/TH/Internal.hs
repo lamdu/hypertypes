@@ -1,5 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, LambdaCase, DerivingVia, TemplateHaskellQuotes #-}
-{-# LANGUAGE DeriveGeneric, TypeFamilies #-}
+{-# LANGUAGE LambdaCase, TemplateHaskellQuotes #-}
 
 -- Helpers for TemplateHaskell instance generators
 

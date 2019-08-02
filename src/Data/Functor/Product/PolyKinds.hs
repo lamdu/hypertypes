@@ -9,7 +9,6 @@
 -- (issue: https://gitlab.haskell.org/ghc/ghc/issues/17015)
 -- this module will be removed and its uses will be replaced with `Product` from base.
 
-{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE DeriveDataTypeable, DeriveGeneric, PolyKinds, Safe #-}
 
 module Data.Functor.Product.PolyKinds (Product(..)) where

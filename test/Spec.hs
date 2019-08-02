@@ -1,5 +1,5 @@
-{-# LANGUAGE FlexibleContexts, TypeFamilies, BlockArguments, ScopedTypeVariables #-}
-{-# LANGUAGE TupleSections, DataKinds #-}
+{-# LANGUAGE FlexibleContexts, BlockArguments, ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections #-}
 
 import           AST
 import           AST.Class.NodesConstraint

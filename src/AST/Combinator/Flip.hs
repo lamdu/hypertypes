@@ -1,5 +1,3 @@
-{-# LANGUAGE NoImplicitPrelude #-}
-
 module AST.Combinator.Flip
     ( Flip(..), _Flip
     ) where

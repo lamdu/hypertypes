@@ -1,6 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude, DataKinds, TypeFamilies, RankNTypes #-}
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, DefaultSignatures, FlexibleContexts #-}
-{-# LANGUAGE ConstraintKinds, TypeOperators, ScopedTypeVariables, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, DefaultSignatures, FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE TypeOperators, ScopedTypeVariables, UndecidableInstances #-}
 
 module AST.Unify.Constraints
     ( TypeConstraints(..)

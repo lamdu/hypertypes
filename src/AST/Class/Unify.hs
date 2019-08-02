@@ -1,4 +1,3 @@
-{-# LANGUAGE NoImplicitPrelude, TypeFamilies, DataKinds, MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts, RankNTypes #-}
 
 module AST.Class.Unify

@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies, TupleSections, FlexibleContexts #-}
+{-# LANGUAGE TupleSections, FlexibleContexts #-}
 module TypeLang.Pure
     ( module TypeLang.Pure
     , module TypeLang
@@ -14,6 +14,8 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import qualified Data.Map as Map
 import           TypeLang
+
+import           Prelude
 
 rowExtends :: Tree Pure Row -> [(String, Tree Pure Typ)] -> Tree Pure Row
 rowExtends =

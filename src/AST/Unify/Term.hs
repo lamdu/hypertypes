@@ -1,6 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, StandaloneDeriving #-}
-{-# LANGUAGE KindSignatures, ConstraintKinds, FlexibleContexts #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE TemplateHaskell, StandaloneDeriving, FlexibleContexts, UndecidableInstances #-}
 
 module AST.Unify.Term
     ( UTerm(..)

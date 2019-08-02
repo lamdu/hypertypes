@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric, DerivingStrategies #-}
+{-# LANGUAGE TemplateHaskell, DeriveGeneric, DerivingStrategies #-}
 
 module AST.Infer.ScopeLevel
     ( MonadScopeLevel(..)

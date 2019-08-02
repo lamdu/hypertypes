@@ -1,6 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, DataKinds #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances, ScopedTypeVariables, StandaloneDeriving #-}
-{-# LANGUAGE FlexibleInstances #-}
 
 module AST.Infer.Result
     ( TypeOf, ScopeOf

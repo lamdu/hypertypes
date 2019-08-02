@@ -1,7 +1,6 @@
 -- | Functors as Knots
-{-# LANGUAGE TemplateHaskell, TypeFamilies, StandaloneDeriving, FlexibleInstances #-}
-{-# LANGUAGE UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses #-}
-{-# LANGUAGE ConstraintKinds, DerivingStrategies, DeriveGeneric, DataKinds #-}
+{-# LANGUAGE TemplateHaskell, StandaloneDeriving, FlexibleInstances, DeriveGeneric #-}
+{-# LANGUAGE UndecidableInstances, GeneralizedNewtypeDeriving, DerivingStrategies #-}
 module AST.Knot.Functor
     ( ToKnot(..), _ToKnot
     ) where
@@ -16,6 +15,8 @@ import Control.DeepSeq (NFData)
 import Control.Lens (Iso, iso)
 import Data.Binary (Binary)
 import GHC.Generics (Generic)
+
+import Prelude.Compat
 
 newtype ToKnot f k = MkToKnot (f (Node k (ToKnot f)))
     deriving stock Generic

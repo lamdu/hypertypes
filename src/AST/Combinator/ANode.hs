@@ -1,5 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude, DerivingStrategies, DeriveGeneric, StandaloneDeriving #-}
-{-# LANGUAGE UndecidableInstances, TypeFamilies, TemplateHaskell, DataKinds #-}
+{-# LANGUAGE DerivingStrategies, DeriveGeneric, StandaloneDeriving #-}
+{-# LANGUAGE UndecidableInstances, TemplateHaskell #-}
 
 module AST.Combinator.ANode
     ( ANode(..), _ANode

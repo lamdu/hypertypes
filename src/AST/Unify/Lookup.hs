@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, LambdaCase #-}
+{-# LANGUAGE LambdaCase #-}
 
 module AST.Unify.Lookup
     ( semiPruneLookup

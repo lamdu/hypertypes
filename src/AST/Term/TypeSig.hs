@@ -1,7 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude, DeriveGeneric, TemplateHaskell, DataKinds #-}
-{-# LANGUAGE TypeFamilies, FlexibleInstances, MultiParamTypeClasses, TypeOperators #-}
-{-# LANGUAGE UndecidableInstances, StandaloneDeriving, ConstraintKinds, PolyKinds #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleInstances, TypeOperators, ScopedTypeVariables, DeriveGeneric #-}
+{-# LANGUAGE UndecidableInstances, StandaloneDeriving, PolyKinds, TemplateHaskell #-}
 
 module AST.Term.TypeSig
     ( TypeSig(..), tsType, tsTerm

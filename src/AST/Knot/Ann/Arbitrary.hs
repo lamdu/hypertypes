@@ -1,4 +1,3 @@
-{-# LANGUAGE NoImplicitPrelude, TypeFamilies, ConstraintKinds #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS -fno-warn-orphans #-} -- Arbitrary instances
 

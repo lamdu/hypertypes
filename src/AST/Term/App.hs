@@ -1,6 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies #-}
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
-{-# LANGUAGE StandaloneDeriving, DeriveGeneric, DataKinds, ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances, TemplateHaskell #-}
+{-# LANGUAGE StandaloneDeriving, DeriveGeneric, ScopedTypeVariables #-}
 
 module AST.Term.App
     ( App(..), appFunc, appArg

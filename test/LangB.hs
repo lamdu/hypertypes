@@ -1,7 +1,6 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeFamilies, LambdaCase #-}
-{-# LANGUAGE FlexibleInstances, UndecidableInstances, DataKinds #-}
-{-# LANGUAGE ScopedTypeVariables, GeneralizedNewtypeDeriving, ConstraintKinds #-}
-{-# LANGUAGE StandaloneDeriving, DerivingStrategies #-}
+{-# LANGUAGE TemplateHaskell, LambdaCase, StandaloneDeriving, DerivingStrategies #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE ScopedTypeVariables, GeneralizedNewtypeDeriving #-}
 
 module LangB where
 
@@ -40,6 +39,8 @@ import           Data.STRef
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
+
+import           Prelude
 
 data LangB k
     = BLit Int

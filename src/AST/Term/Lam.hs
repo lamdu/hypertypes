@@ -1,7 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric, DataKinds #-}
-{-# LANGUAGE StandaloneDeriving, ConstraintKinds, UndecidableInstances #-}
-{-# LANGUAGE MultiParamTypeClasses, TypeFamilies, FlexibleInstances #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell, DeriveGeneric, ScopedTypeVariables #-}
+{-# LANGUAGE StandaloneDeriving, FlexibleInstances, UndecidableInstances #-}
 
 module AST.Term.Lam
     ( Lam(..), lamIn, lamOut

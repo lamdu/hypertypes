@@ -1,7 +1,6 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts, ScopedTypeVariables, LambdaCase #-}
 {-# LANGUAGE RankNTypes, TupleSections, FlexibleInstances, DeriveGeneric #-}
-{-# LANGUAGE StandaloneDeriving, UndecidableInstances, DataKinds #-}
+{-# LANGUAGE StandaloneDeriving, UndecidableInstances, TemplateHaskell #-}
 
 module AST.Unify.Generalize
     ( generalize, instantiate

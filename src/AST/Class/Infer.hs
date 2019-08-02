@@ -1,6 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude, MultiParamTypeClasses, FlexibleContexts, DataKinds #-}
-{-# LANGUAGE TemplateHaskell, TypeFamilies, RecordWildCards, FlexibleInstances #-}
-{-# LANGUAGE ConstraintKinds, UndecidableSuperClasses, UndecidableInstances #-}
+{-# LANGUAGE TemplateHaskell, RecordWildCards, FlexibleInstances, FlexibleContexts #-}
+{-# LANGUAGE UndecidableSuperClasses, UndecidableInstances #-}
 
 module AST.Class.Infer
     ( Infer(..), HasScope(..), LocalScopeType(..)

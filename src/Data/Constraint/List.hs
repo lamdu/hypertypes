@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, PolyKinds, TypeOperators, DataKinds, TypeFamilies #-}
+{-# LANGUAGE PolyKinds, TypeOperators #-}
 
 module Data.Constraint.List
     ( ApplyConstraints

@@ -1,8 +1,7 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, DataKinds #-}
+{-# LANGUAGE TemplateHaskell, DerivingStrategies #-}
 {-# LANGUAGE ScopedTypeVariables, FlexibleInstances, UndecidableInstances #-}
 {-# LANGUAGE DeriveGeneric, StandaloneDeriving, FlexibleContexts, LambdaCase #-}
-{-# LANGUAGE ConstraintKinds, TypeOperators, GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses, DerivingStrategies #-}
+{-# LANGUAGE TypeOperators, GeneralizedNewtypeDeriving #-}
 
 module AST.Term.Scheme
     ( Scheme(..), sForAlls, sTyp

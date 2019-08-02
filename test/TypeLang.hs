@@ -1,7 +1,6 @@
-{-# LANGUAGE MultiParamTypeClasses, StandaloneDeriving, UndecidableInstances #-}
-{-# LANGUAGE TemplateHaskell, TypeFamilies, FlexibleInstances, FlexibleContexts #-}
-{-# LANGUAGE ConstraintKinds, TypeOperators, DataKinds, RankNTypes #-}
-{-# LANGUAGE DeriveGeneric, DerivingVia #-}
+{-# LANGUAGE StandaloneDeriving, UndecidableInstances #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances, FlexibleContexts #-}
+{-# LANGUAGE TypeOperators, RankNTypes, DeriveGeneric, DerivingVia #-}
 
 module TypeLang where
 
@@ -33,6 +32,8 @@ import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
+
+import           Prelude
 
 newtype Name = Name String deriving stock (Eq, Ord, Show)
 

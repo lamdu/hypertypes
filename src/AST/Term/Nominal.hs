@@ -1,7 +1,6 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric, StandaloneDeriving #-}
-{-# LANGUAGE ConstraintKinds, UndecidableInstances, TypeFamilies, ScopedTypeVariables #-}
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TypeOperators, FlexibleContexts, DataKinds, LambdaCase #-}
+{-# LANGUAGE TemplateHaskell, DeriveGeneric, StandaloneDeriving #-}
+{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, UndecidableInstances #-}
+{-# LANGUAGE TypeOperators, FlexibleContexts, LambdaCase, ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes, DerivingStrategies, UndecidableSuperClasses #-}
 
 module AST.Term.Nominal

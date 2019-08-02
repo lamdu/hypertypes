@@ -1,6 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude, DataKinds, FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses, ScopedTypeVariables #-}
-{-# LANGUAGE UndecidableInstances, TypeOperators, TypeFamilies, RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables, FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances, TypeOperators, RankNTypes #-}
 
 -- | Combinators for partially applied constraints on knots
 

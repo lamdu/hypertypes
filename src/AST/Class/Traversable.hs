@@ -1,5 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TypeFamilies, DataKinds, RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE RankNTypes, ScopedTypeVariables #-}
 
 module AST.Class.Traversable
     ( KTraversable(..)

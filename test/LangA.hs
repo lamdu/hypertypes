@@ -1,6 +1,5 @@
 {-# LANGUAGE StandaloneDeriving, UndecidableInstances, TemplateHaskell #-}
-{-# LANGUAGE TypeFamilies, LambdaCase, MultiParamTypeClasses, DerivingStrategies #-}
-{-# LANGUAGE FlexibleInstances, DataKinds, ConstraintKinds, RankNTypes #-}
+{-# LANGUAGE LambdaCase, DerivingStrategies, FlexibleInstances, RankNTypes #-}
 {-# LANGUAGE FlexibleContexts, GeneralizedNewtypeDeriving, ScopedTypeVariables #-}
 
 -- | A test language with locally-nameless variable scoping and type signatures with for-alls
@@ -37,6 +36,8 @@ import           Data.STRef
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
+
+import           Prelude
 
 data LangA v k
     = ALam (Scope LangA v k)

@@ -15,6 +15,8 @@ import Control.Lens.Operators
 import LangA
 import TypeLang
 
+import Prelude
+
 aLam ::
     InvDeBruijnIndex t =>
     ((forall n. InvDeBruijnIndex n =>

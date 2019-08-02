@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables, FlexibleContexts, DataKinds #-}
+{-# LANGUAGE ScopedTypeVariables, FlexibleContexts #-}
 
 module AST.Unify.Apply
     ( applyBindings

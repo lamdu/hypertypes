@@ -1,5 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, KindSignatures, DataKinds, RankNTypes #-}
-{-# LANGUAGE TypeApplications, ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications, ScopedTypeVariables, RankNTypes #-}
 
 module AST.Class.Foldable
     ( KFoldable(..)

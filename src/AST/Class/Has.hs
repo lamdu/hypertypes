@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, MultiParamTypeClasses, FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module AST.Class.Has
     ( KHas(..), HasChild(..)

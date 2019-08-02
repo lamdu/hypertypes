@@ -1,6 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, DataKinds #-}
-{-# LANGUAGE StandaloneDeriving, ConstraintKinds, FlexibleContexts #-}
-{-# LANGUAGE UndecidableInstances, DerivingStrategies #-}
+{-# LANGUAGE StandaloneDeriving, FlexibleContexts #-}
+{-# LANGUAGE UndecidableInstances, DerivingStrategies, TemplateHaskell #-}
 
 module AST.Unify.Binding
     ( UVar(..), _UVar

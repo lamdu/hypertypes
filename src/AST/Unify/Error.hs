@@ -1,6 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies, UndecidableInstances #-}
-{-# LANGUAGE ConstraintKinds, StandaloneDeriving, LambdaCase, DeriveGeneric #-}
-{-# LANGUAGE ScopedTypeVariables, DataKinds #-}
+{-# LANGUAGE TemplateHaskell, UndecidableInstances, ScopedTypeVariables #-}
+{-# LANGUAGE StandaloneDeriving, LambdaCase, DeriveGeneric #-}
 
 module AST.Unify.Error
     ( UnifyError(..)

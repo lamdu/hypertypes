@@ -1,5 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables, FlexibleContexts, BangPatterns #-}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE ScopedTypeVariables, FlexibleContexts, BangPatterns #-}
 
 module AST.Unify
     ( module AST.Class.Unify

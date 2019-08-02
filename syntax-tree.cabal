@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 777a26a7c05c2dfcc655385152d9328256e91b4417c4898d7c8b6eaf85fa1919
+-- hash: 637800989d35a14f5ee8b50e07b087a4bdea6c98c0e8086133ff0cfa8a1796cd
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -98,6 +98,7 @@ library
       Paths_syntax_tree
   hs-source-dirs:
       src
+  default-extensions: ConstraintKinds DataKinds MultiParamTypeClasses TypeFamilies NoImplicitPrelude
   ghc-options: -O2 -Wall -Wnoncanonical-monad-instances -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
   ghc-prof-options: -O2
   build-depends:
@@ -133,6 +134,7 @@ test-suite syntax-tree-test
       TypeLang.Pure
   hs-source-dirs:
       test
+  default-extensions: ConstraintKinds DataKinds MultiParamTypeClasses TypeFamilies
   ghc-options: -Wall -Wcompat -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base
@@ -157,6 +159,7 @@ benchmark syntax-tree-bench
       TypeLang.Pure
   hs-source-dirs:
       test
+  default-extensions: ConstraintKinds DataKinds MultiParamTypeClasses TypeFamilies
   ghc-options: -O2 -Wall -Wnoncanonical-monad-instances -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
   build-depends:
       base

@@ -1,5 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DataKinds, TypeFamilies #-}
-{-# LANGUAGE MultiParamTypeClasses, ConstraintKinds, FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell, FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances, UndecidableSuperClasses, FlexibleInstances #-}
 {-# LANGUAGE ScopedTypeVariables, RankNTypes, StandaloneDeriving, TypeOperators #-}
 

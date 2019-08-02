@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, RankNTypes, ScopedTypeVariables #-}
+{-# LANGUAGE RankNTypes, ScopedTypeVariables #-}
 
 module AST.Knot.Dict
     ( KDict(..), _KDict

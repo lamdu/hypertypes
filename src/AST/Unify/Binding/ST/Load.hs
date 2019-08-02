@@ -1,5 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables, FlexibleContexts, TemplateHaskell #-}
-{-# LANGUAGE LambdaCase, TypeFamilies, DataKinds #-}
+{-# LANGUAGE ScopedTypeVariables, FlexibleContexts, TemplateHaskell, LambdaCase #-}
 
 -- | Load state from pure bindings to ST based bindings
 

@@ -1,6 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, DataKinds, TypeFamilies, UndecidableInstances #-}
-{-# LANGUAGE MultiParamTypeClasses, ConstraintKinds, UndecidableSuperClasses #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances, UndecidableSuperClasses, FlexibleInstances #-}
 
 module AST.Unify.QuantifiedVar
     ( HasQuantifiedVar(..)

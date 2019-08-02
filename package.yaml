@@ -27,6 +27,12 @@ dependencies:
 - transformers
 - pretty
 
+default-extensions:
+- ConstraintKinds
+- DataKinds
+- MultiParamTypeClasses
+- TypeFamilies
+
 library:
   source-dirs: src
   dependencies:
@@ -39,6 +45,8 @@ library:
   - show-combinators
   - template-haskell
   - th-abstraction >= 0.3
+  default-extensions:
+  - NoImplicitPrelude
   ghc-options:
   - -O2
   - -Wall

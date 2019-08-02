@@ -1,5 +1,3 @@
-{-# LANGUAGE NoImplicitPrelude #-}
-
 module AST (module X) where
 
 import AST.Class as X

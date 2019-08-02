@@ -1,7 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude, DataKinds, TypeFamilies, RankNTypes #-}
-{-# LANGUAGE ConstraintKinds, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE RankNTypes, ScopedTypeVariables, FlexibleInstances, UndecidableInstances #-}
 {-# LANGUAGE DefaultSignatures, FlexibleContexts, TypeOperators #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
 module AST.Class
     ( KNodes(..), NodeTypesConstraints
