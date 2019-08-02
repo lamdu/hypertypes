@@ -6,6 +6,7 @@ module AST.Term.Scheme
     , QVars(..), _QVars
     , schemeToRestrictedType
     , loadScheme, saveScheme
+    , MonadInstantiate(..)
 
     , QVarInstances(..), _QVarInstances
     , makeQVarInstances
@@ -15,10 +16,12 @@ import           AST
 import           AST.Class.Has (HasChild(..))
 import           AST.Class.Recursive
 import           AST.Combinator.ANode (ANode)
+import           AST.Combinator.Flip
+import           AST.Infer
 import           AST.Unify
 import           AST.Unify.Lookup (semiPruneLookup)
 import           AST.Unify.New (newTerm)
-import           AST.Unify.Generalize (GTerm(..), _GMono)
+import           AST.Unify.Generalize
 import           AST.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify(..), QVarHasInstance)
 import           AST.Unify.Term (UTerm(..), uBody)
 import           Control.DeepSeq (NFData)
@@ -106,6 +109,36 @@ instance Ord (QVar (RunKnot typ)) => Lens.At (QVars typ) where
 newtype QVarInstances k typ = QVarInstances (Map (QVar (RunKnot typ)) (k typ))
     deriving stock Generic
 Lens.makePrisms ''QVarInstances
+
+type instance InferOf (Scheme varTypes typ) = Flip GTerm typ
+
+class MonadInstantiate m t where
+    localInstantiations ::
+        Tree (QVarInstances (UVarOf m)) t ->
+        m a ->
+        m a
+    lookupQVar :: QVar t -> m (Tree (UVarOf m) t)
+
+instance
+    ( Monad m
+    , HasInferredValue typ
+    , Recursively (Unify m) typ
+    , KTraversable varTypes
+    , NodesConstraint varTypes $ Unify m
+    , NodesConstraint varTypes $ MonadInstantiate m
+    ) =>
+    Infer m (Scheme varTypes typ) where
+
+    {-# INLINE inferBody #-}
+    inferBody (Scheme vars typ) =
+        do
+            foralls <- traverseKWith (Proxy @'[Unify m]) makeQVarInstances vars
+            let withForalls =
+                    foldMapKWith (Proxy @'[MonadInstantiate m]) ((:[]) . localInstantiations) foralls
+                    & foldl (.) id
+            InferredChild typI typR <- inferChild typ & withForalls
+            generalize (typR ^. inferredValue)
+                <&> InferRes (Scheme vars typI) . MkFlip
 
 {-# INLINE makeQVarInstancesInScope #-}
 makeQVarInstancesInScope ::
