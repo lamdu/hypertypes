@@ -5,7 +5,9 @@
 -- Furthermore, the mere existence of the non poly-kinded instances disallows
 -- orphan instances declaration of proper poly-kinded instances.
 --
--- If/when the `Product` from `base` will be fixed this module will be removed.
+-- If/when `Product` from `base` will be fixed
+-- (issue: https://gitlab.haskell.org/ghc/ghc/issues/17015)
+-- this module will be removed and its uses will be replaced with `Product` from base.
 
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE DeriveDataTypeable, DeriveGeneric, PolyKinds, Safe #-}
