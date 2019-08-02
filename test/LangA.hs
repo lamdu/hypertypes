@@ -116,6 +116,9 @@ data LangAInferEnv v = LangAInferEnv
     }
 Lens.makeLenses ''LangAInferEnv
 
+emptyLangAInferEnv :: LangAInferEnv v
+emptyLangAInferEnv = LangAInferEnv mempty (ScopeLevel 0)
+
 instance HasScopeTypes v Typ (LangAInferEnv v) where scopeTypes = iaScopeTypes
 
 newtype PureInferA a =
@@ -132,7 +135,7 @@ newtype PureInferA a =
 
 execPureInferA :: PureInferA a -> Either (Tree TypeError Pure) a
 execPureInferA (PureInferA act) =
-    runRWST act (LangAInferEnv mempty (ScopeLevel 0)) emptyPureInferState
+    runRWST act emptyLangAInferEnv emptyPureInferState
     <&> (^. Lens._1)
 
 type instance UVarOf PureInferA = UVar
@@ -185,7 +188,7 @@ execSTInferA :: STInferA s a -> ST s (Either (Tree TypeError Pure) a)
 execSTInferA (STInferA act) =
     do
         qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
-        runReaderT act (LangAInferEnv mempty (ScopeLevel 0), qvarGen) & runExceptT
+        runReaderT act (emptyLangAInferEnv, qvarGen) & runExceptT
 
 type instance UVarOf (STInferA s) = STUVar s
 
