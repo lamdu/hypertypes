@@ -110,35 +110,44 @@ instance (DeBruijnIndex k, TermInfer1Deps env m) => Recursively (Infer m) (LangA
 
 -- Monads for inferring `LangA`:
 
+data LangAInferEnv v = LangAInferEnv
+    { _iaScopeTypes :: Tree (ScopeTypes Typ) v
+    , _iaScopeLevel :: ScopeLevel
+    }
+Lens.makeLenses ''LangAInferEnv
+
+instance HasScopeTypes v Typ (LangAInferEnv v) where scopeTypes = iaScopeTypes
+
 newtype PureInferA a =
     PureInferA
-    ( RWST (Tree (ScopeTypes Typ) UVar, ScopeLevel) () PureInferState
+    ( RWST (LangAInferEnv UVar) () PureInferState
         (Either (Tree TypeError Pure)) a
     )
     deriving newtype
     ( Functor, Applicative, Monad
     , MonadError (Tree TypeError Pure)
-    , MonadReader (Tree (ScopeTypes Typ) UVar, ScopeLevel)
+    , MonadReader (LangAInferEnv UVar)
     , MonadState PureInferState
     )
 
 execPureInferA :: PureInferA a -> Either (Tree TypeError Pure) a
 execPureInferA (PureInferA act) =
-    runRWST act (mempty, ScopeLevel 0) emptyPureInferState <&> (^. Lens._1)
+    runRWST act (LangAInferEnv mempty (ScopeLevel 0)) emptyPureInferState
+    <&> (^. Lens._1)
 
 type instance UVarOf PureInferA = UVar
 
 instance HasScope PureInferA (ScopeTypes Typ) where
-    getScope = Lens.view Lens._1
+    getScope = Lens.view iaScopeTypes
 
 instance MonadScopeLevel PureInferA where
-    localLevel = local (Lens._2 . _ScopeLevel +~ 1)
+    localLevel = local (iaScopeLevel . _ScopeLevel +~ 1)
 
 instance MonadScopeConstraints ScopeLevel PureInferA where
-    scopeConstraints = Lens.view Lens._2
+    scopeConstraints = Lens.view iaScopeLevel
 
 instance MonadScopeConstraints RConstraints PureInferA where
-    scopeConstraints = Lens.view Lens._2 <&> RowConstraints mempty
+    scopeConstraints = Lens.view iaScopeLevel <&> RowConstraints mempty
 
 instance MonadQuantify ScopeLevel Name PureInferA where
     newQuantifiedVariable _ =
@@ -163,40 +172,40 @@ instance Unify PureInferA Row where
 
 newtype STInferA s a =
     STInferA
-    ( ReaderT (Tree (ScopeTypes Typ) (STUVar s), ScopeLevel, STNameGen s)
+    ( ReaderT (LangAInferEnv (STUVar s), STNameGen s)
         (ExceptT (Tree TypeError Pure) (ST s)) a
     )
     deriving newtype
     ( Functor, Applicative, Monad, MonadST
     , MonadError (Tree TypeError Pure)
-    , MonadReader (Tree (ScopeTypes Typ) (STUVar s), ScopeLevel, STNameGen s)
+    , MonadReader (LangAInferEnv (STUVar s), STNameGen s)
     )
 
 execSTInferA :: STInferA s a -> ST s (Either (Tree TypeError Pure) a)
 execSTInferA (STInferA act) =
     do
         qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
-        runReaderT act (mempty, ScopeLevel 0, qvarGen) & runExceptT
+        runReaderT act (LangAInferEnv mempty (ScopeLevel 0), qvarGen) & runExceptT
 
 type instance UVarOf (STInferA s) = STUVar s
 
 instance HasScope (STInferA s) (ScopeTypes Typ) where
-    getScope = Lens.view Lens._1
+    getScope = Lens.view (Lens._1 . iaScopeTypes)
 
 instance MonadScopeLevel (STInferA s) where
-    localLevel = local (Lens._2 . _ScopeLevel +~ 1)
+    localLevel = local (Lens._1 . iaScopeLevel . _ScopeLevel +~ 1)
 
 instance MonadScopeConstraints ScopeLevel (STInferA s) where
-    scopeConstraints = Lens.view Lens._2
+    scopeConstraints = Lens.view (Lens._1 . iaScopeLevel)
 
 instance MonadScopeConstraints RConstraints (STInferA s) where
-    scopeConstraints = Lens.view Lens._2 <&> RowConstraints mempty
+    scopeConstraints = Lens.view (Lens._1 . iaScopeLevel) <&> RowConstraints mempty
 
 instance MonadQuantify ScopeLevel Name (STInferA s) where
-    newQuantifiedVariable _ = newStQuantified (Lens._3 . tTyp) <&> Name . ('t':) . show
+    newQuantifiedVariable _ = newStQuantified (Lens._2 . tTyp) <&> Name . ('t':) . show
 
 instance MonadQuantify RConstraints Name (STInferA s) where
-    newQuantifiedVariable _ = newStQuantified (Lens._3 . tRow) <&> Name . ('r':) . show
+    newQuantifiedVariable _ = newStQuantified (Lens._2 . tRow) <&> Name . ('r':) . show
 
 instance Unify (STInferA s) Typ where
     binding = stBinding

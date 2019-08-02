@@ -190,9 +190,6 @@ instance HasFuncType Typ where
 instance HasScopeTypes v Typ a => HasScopeTypes v Typ (a, x) where
     scopeTypes = Lens._1 . scopeTypes
 
-instance HasScopeTypes v Typ a => HasScopeTypes v Typ (a, x, y) where
-    scopeTypes = Lens._1 . scopeTypes
-
 rStructureMismatch ::
     (Unify m Typ, Unify m Row) =>
     (forall c. Recursively (Unify m) c => Tree (UVarOf m) c -> Tree (UVarOf m) c -> m (Tree (UVarOf m) c)) ->
