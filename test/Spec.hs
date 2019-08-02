@@ -2,6 +2,7 @@
 {-# LANGUAGE TupleSections, DataKinds #-}
 
 import           AST
+import           AST.Class.NodesConstraint
 import           AST.Class.Recursive
 import           AST.Class.Unify
 import           AST.Combinator.Flip
@@ -125,18 +126,24 @@ nomSkolem1 =
 
 inferExpr ::
     forall m t.
-    ( Recursively (Infer m) t
-    , Recursively (InferChildConstraints (Recursively (Unify m))) t
-    , Recursively (InferChildConstraints KNodes) t
+    ( HasInferredType t
     , Recursively KNodes t
     , Recursively KFunctor t
+    , Recursively KFoldable t
+    , Recursively KTraversable t
+    , Recursively (Infer m) t
+    , Recursively (InferOfConstraint KNodes) t
+    , Recursively (InferOfConstraint KFoldable) t
+    , Recursively (InferOfConstraint KFunctor) t
+    , Recursively (InferOfConstraint KTraversable) t
+    , Recursively (InferOfConstraint (KNodesConstraint (Recursively (Unify m)))) t
     ) =>
     Tree Pure t ->
     m (Tree Pure (TypeOf t))
 inferExpr x =
-    infer (wrap (Proxy :: Proxy '[Infer m, KFunctor]) Dict (Ann ()) x)
+    infer (wrap (Proxy :: Proxy '[KFunctor]) Dict (Ann ()) x)
     >>= Lens.from _Flip (traverseKWith (Proxy :: Proxy '[Recursively (Unify m)]) applyBindings)
-    <&> (^. iType)
+    <&> (^. iRes . Lens.cloneLens (inferredType (Proxy :: Proxy t)))
 
 vecNominalDecl :: Tree Pure (NominalDecl Typ)
 vecNominalDecl =

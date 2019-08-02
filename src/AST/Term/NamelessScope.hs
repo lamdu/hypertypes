@@ -12,13 +12,13 @@ module AST.Term.NamelessScope
     ) where
 
 import           AST
-import           AST.Class.Infer.Infer1 (Infer1(..), HasTypeOf1(..))
+import           AST.Class.Infer.Infer1
 import           AST.Combinator.ANode (ANode)
 import           AST.Infer
 import           AST.Term.FuncType
 import           AST.Unify (Unify(..), UVarOf)
-import           AST.Unify.New (newTerm, newUnbound)
-import           Control.Lens (Lens', Prism')
+import           AST.Unify.New (newUnbound)
+import           Control.Lens (Lens', Prism', cloneLens)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Reader (MonadReader, local)
@@ -83,53 +83,57 @@ class HasScopeTypes v t env where
 instance HasScopeTypes v t (Tree (ScopeTypes t) v) where
     scopeTypes = id
 
-type instance TypeOf (Scope t k) = TypeOf (t k)
-type instance TypeOf (ScopeVar t k) = TypeOf (t k)
-type instance ScopeOf (Scope t k) = ScopeTypes (TypeOf (t k))
-type instance ScopeOf (ScopeVar t k) = ScopeTypes (TypeOf (t k))
+type instance InferOf (Scope t k) = FuncType (TypeOf (t k))
+type instance InferOf (ScopeVar t k) = ANode (TypeOf (t k))
+
 instance HasTypeOf1 t => HasTypeOf1 (Scope t) where
     type TypeOf1 (Scope t) = TypeOf1 t
     type TypeOfIndexConstraint (Scope t) = DeBruijnIndex
     typeAst p = withDict (typeAst p) Dict
-instance HasTypeOf1 t => HasTypeOf1 (ScopeVar t) where
-    type TypeOf1 (ScopeVar t) = TypeOf1 t
-    type TypeOfIndexConstraint (ScopeVar t) = DeBruijnIndex
-    typeAst p = withDict (typeAst p) Dict
+
+instance HasTypeOf1 t => HasInferOf1 (Scope t) where
+    type InferOf1 (Scope t) = FuncType (TypeOf1 t)
+    type InferOf1IndexConstraint (Scope t) = DeBruijnIndex
+    hasInferOf1 p =
+        withDict (typeAst (p0 p)) Dict
+        where
+            p0 :: Proxy (Scope t k) -> Proxy (t k)
+            p0 _ = Proxy
 
 instance
-    ( HasTypeOf1 t
-    , HasFuncType (TypeOf1 t)
-    , Infer1 m t
-    , Recursively (Unify m) (TypeOf (t k))
+    ( Infer1 m t
+    , HasInferOf1 t
     , TypeOfIndexConstraint t ~ DeBruijnIndex
     , DeBruijnIndex k
+    , Unify m (TypeOf (t k))
     , MonadReader env m
-    , HasScopeTypes (UVarOf m) (TypeOf1 t) env
-    , HasScope m (ScopeTypes (TypeOf (t k)))
+    , HasScopeTypes (UVarOf m) (TypeOf (t k)) env
+    , HasInferredType (t k)
     ) =>
     Infer m (Scope t k) where
 
     inferBody (Scope x) =
-        withDict (typeAst (Proxy :: Proxy (t k))) $
-        withDict (typeAst (Proxy :: Proxy (t (Maybe k)))) $
+        withDict (hasInferOf1 (Proxy :: Proxy (t k))) $
+        withDict (hasInferOf1 (Proxy :: Proxy (t (Maybe k)))) $
         do
             varType <- newUnbound
-            InferredChild xI xT <-
+            InferredChild xI xR <-
                 inferChild x
                 & local (scopeTypes . _ScopeTypes %~ (varType Sequence.<|))
-            funcType # FuncType varType xT & newTerm <&> InferRes (Scope xI)
+            InferRes (Scope xI)
+                (FuncType varType (xR ^. cloneLens (inferredType (Proxy :: Proxy (t k)))))
+                & pure
         \\ (inferMonad :: DeBruijnIndex (Maybe k) :- Infer m (t (Maybe k)))
 
 instance
-    ( Recursively (Unify m) (TypeOf (t k))
-    , MonadReader env m
+    ( MonadReader env m
     , HasScopeTypes (UVarOf m) (TypeOf (t k)) env
     , DeBruijnIndex k
-    , HasScope m (ScopeTypes (TypeOf (t k)))
     ) =>
     Infer m (ScopeVar t k) where
 
     inferBody (ScopeVar v) =
         Lens.view (scopeTypes . _ScopeTypes)
         <&> (^?! Lens.ix (deBruijnIndex # v))
+        <&> MkANode
         <&> InferRes (ScopeVar v)

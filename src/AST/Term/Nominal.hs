@@ -26,7 +26,7 @@ import           AST.Class.Traversable (ContainedK(..))
 import           AST.Class.ZipMatch (ZipMatch(..))
 import           AST.Combinator.ANode (ANode)
 import           AST.Infer
-import           AST.Term.FuncType (HasFuncType(..), FuncType(..))
+import           AST.Term.FuncType (FuncType(..))
 import           AST.Term.Map (TermMap(..), _TermMap)
 import           AST.Term.Scheme
 import           AST.Unify
@@ -36,7 +36,7 @@ import           AST.Unify.QuantifiedVar (HasQuantifiedVar(..), QVarHasInstance)
 import           AST.Unify.Term (UTerm(..))
 import           Control.Applicative (Alternative(..))
 import           Control.DeepSeq (NFData)
-import           Control.Lens (Prism', makeLenses, makePrisms)
+import           Control.Lens (Prism', makeLenses, makePrisms, cloneLens)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Writer (execWriterT)
@@ -255,26 +255,25 @@ lookupParams =
                 scopeConstraints <&> (<> l) >>= newVar binding . UUnbound
             _ -> error "unexpected state at nominal's parameter"
 
-type instance TypeOf  (ToNom nomId expr) = TypeOf expr
-type instance ScopeOf (ToNom nomId expr) = ScopeOf expr
+type instance InferOf (ToNom nomId expr) = NominalInst nomId (NomVarTypes (TypeOf expr))
 
 instance
-    ( Infer m expr
-    , MonadScopeLevel m
-    , HasNominalInst nomId (TypeOf expr)
+    ( MonadScopeLevel m
     , MonadNominals nomId (TypeOf expr) m
     , KTraversable (NomVarTypes (TypeOf expr))
     , NodesConstraint (NomVarTypes (TypeOf expr)) $ Unify m
     , Recursively KNodes (TypeOf expr)
+    , Recursively (Unify m) (TypeOf expr)
+    , HasInferredType expr
     ) =>
     Infer m (ToNom nomId expr) where
 
     {-# INLINE inferBody #-}
     inferBody (ToNom nomId val) =
         do
-            (InferredChild valI valT, typ, paramsT) <-
+            (InferredChild valI valR, typ, paramsT) <-
                 do
-                    valR <- inferChild val
+                    v <- inferChild val
                     LoadedNominalDecl params foralls gen <- getNominalDecl nomId
                     recover <-
                         traverseKWith_ (Proxy :: Proxy '[Unify m])
@@ -282,23 +281,23 @@ instance
                         foralls
                         & execWriterT
                     (typ, paramsT) <- instantiateWith (lookupParams params) gen
-                    (valR, typ, paramsT) <$ sequence_ recover
+                    (v, typ, paramsT) <$ sequence_ recover
                 & localLevel
-            _ <- unify typ valT
-            nominalInst # NominalInst nomId paramsT & newTerm
-                <&> InferRes (ToNom nomId valI)
+            _ <- unify typ (valR ^. cloneLens l)
+            InferRes (ToNom nomId valI) (NominalInst nomId paramsT) & pure
+        where
+            l = inferredType (Proxy :: Proxy expr)
 
-type instance TypeOf  (FromNom nomId expr) = TypeOf expr
-type instance ScopeOf (FromNom nomId expr) = ScopeOf expr
+type instance InferOf (FromNom nomId expr) = FuncType (TypeOf expr)
 
 instance
     ( Infer m expr
-    , HasFuncType (TypeOf expr)
     , HasNominalInst nomId (TypeOf expr)
     , MonadNominals nomId (TypeOf expr) m
     , KTraversable (NomVarTypes (TypeOf expr))
     , NodesConstraint (NomVarTypes (TypeOf expr)) $ Unify m
     , Recursively KNodes (TypeOf expr)
+    , Recursively (Unify m) (TypeOf expr)
     ) =>
     Infer m (FromNom nomId expr) where
 
@@ -307,8 +306,8 @@ instance
         do
             LoadedNominalDecl params _ gen <- getNominalDecl nomId
             (typ, paramsT) <- instantiateWith (lookupParams params) gen
-            nomT <- nominalInst # NominalInst nomId paramsT & newTerm
-            funcType # FuncType nomT typ & newTerm
+            nominalInst # NominalInst nomId paramsT & newTerm
+                <&> (`FuncType` typ)
         <&> InferRes (FromNom nomId)
 
 -- | Get the scheme in a nominal given the parameters of a specific nominal instance.

@@ -5,10 +5,12 @@
 module AST.Infer.Result
     ( TypeOf, ScopeOf
     , IResult(..), irType, irScope
+    , HasInferredType(..)
     ) where
 
 import AST
-import Control.Lens (makeLenses)
+import AST.Class.Infer (InferOf)
+import Control.Lens (ALens', makeLenses)
 import Data.Constraint (Dict(..), withDict)
 import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
@@ -36,3 +38,6 @@ makeKApply ''IResult
 makeKTraversableAndBases ''IResult
 
 deriving instance (Show (Tree v (TypeOf e)), Show (Tree (ScopeOf e) v)) => Show (Tree (IResult e) v)
+
+class HasInferredType t where
+    inferredType :: Proxy t -> ALens' (Tree (InferOf t) v) (Tree v (TypeOf t))

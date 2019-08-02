@@ -1,12 +1,14 @@
-{-# LANGUAGE NoImplicitPrelude, DeriveGeneric, StandaloneDeriving #-}
+{-# LANGUAGE NoImplicitPrelude, DeriveGeneric, StandaloneDeriving, TypeOperators #-}
 {-# LANGUAGE TemplateHaskell, TypeFamilies, FlexibleInstances, MultiParamTypeClasses #-}
-{-# LANGUAGE ConstraintKinds, UndecidableInstances, DataKinds #-}
+{-# LANGUAGE ConstraintKinds, UndecidableInstances, DataKinds, ScopedTypeVariables #-}
 
 module AST.Knot.Prune
     ( Prune(..)
     ) where
 
 import AST
+import AST.Class.Traversable
+import AST.Class.Unify (Unify)
 import AST.Combinator.Compose (Compose(..))
 import AST.Combinator.ANode (ANode(..))
 import AST.Infer
@@ -15,6 +17,7 @@ import Control.DeepSeq (NFData)
 import Control.Lens (makePrisms)
 import Control.Lens.Operators
 import Data.Binary (Binary)
+import Data.Proxy (Proxy(..))
 import GHC.Generics (Generic)
 
 import Prelude.Compat
@@ -43,13 +46,17 @@ instance KApply Prune where
 
 instance c Prune => Recursively c Prune
 
-type instance TypeOf  (Compose Prune t) = TypeOf  t
-type instance ScopeOf (Compose Prune t) = ScopeOf t
+type instance InferOf (Compose Prune t) = InferOf t
 
 instance
-    (Infer m t, KFunctor t) =>
+    ( KApplicative (InferOf t), KTraversable (InferOf t)
+    , NodesConstraint (InferOf t) $ Unify m
+    , KFunctor t, Infer m t
+    ) =>
     Infer m (Compose Prune t) where
-    inferBody (MkCompose Pruned) = newUnbound <&> InferRes (MkCompose Pruned)
+    inferBody (MkCompose Pruned) =
+        sequencePureKWith (Proxy :: Proxy '[Unify m]) newUnbound
+        <&> InferRes (MkCompose Pruned)
     inferBody (MkCompose (Unpruned (MkCompose x))) =
         mapK
         (\(MkCompose (InferChild i)) -> i <&> inRep %~ MkCompose & InferChild)

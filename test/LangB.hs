@@ -58,8 +58,11 @@ instance KNodes LangB where
 makeKTraversableAndBases ''LangB
 instance c LangB => Recursively c LangB
 
+type instance InferOf LangB = ANode Typ
 type instance TypeOf LangB = Typ
 type instance ScopeOf LangB = ScopeTypes
+
+instance HasInferredType LangB where inferredType _ = _ANode
 
 instance Pretty (Tree LangB Pure) where
     pPrintPrec _ _ (BLit i) = pPrint i
@@ -93,10 +96,14 @@ instance
 
     inferBody (BApp x) = inferBody x <&> inferResBody %~ BApp
     inferBody (BVar x) = inferBody x <&> inferResBody %~ BVar
-    inferBody (BLam x) = inferBody x <&> inferResBody %~ BLam
+    inferBody (BLam x) =
+        inferBody x
+        >>= \(InferRes b t) -> TFun t & newTerm <&> InferRes (BLam b) . MkANode
     inferBody (BLet x) = inferBody x <&> inferResBody %~ BLet
-    inferBody (BLit x) = newTerm TInt <&> InferRes (BLit x)
-    inferBody (BToNom x) = inferBody x <&> inferResBody %~ BToNom
+    inferBody (BLit x) = newTerm TInt <&> InferRes (BLit x) . MkANode
+    inferBody (BToNom x) =
+        inferBody x
+        >>= \(InferRes b t) -> TNom t & newTerm <&> InferRes (BToNom b) . MkANode
     inferBody (BRecExtend (RowExtend k v r)) =
         do
             InferredChild vI vT <- inferChild v
@@ -104,17 +111,18 @@ instance
             restR <-
                 scopeConstraints <&> rForbiddenFields . Lens.contains k .~ True
                 >>= newVar binding . UUnbound
-            _ <- TRec restR & newTerm >>= unify rT
-            RowExtend k vT restR & RExtend & newTerm
+            _ <- TRec restR & newTerm >>= unify (rT ^. _ANode)
+            RowExtend k (vT ^. _ANode) restR & RExtend & newTerm
                 >>= newTerm . TRec
-                <&> InferRes (BRecExtend (RowExtend k vI rI))
+                <&> InferRes (BRecExtend (RowExtend k vI rI)) . MkANode
     inferBody BRecEmpty =
-        newTerm REmpty >>= newTerm . TRec <&> InferRes BRecEmpty
+        newTerm REmpty >>= newTerm . TRec <&> InferRes BRecEmpty . MkANode
     inferBody (BGetField w k) =
         do
             (rT, wR) <- rowElementInfer RExtend k
             InferredChild wI wT <- inferChild w
-            InferRes (BGetField wI k) rT <$ (newTerm (TRec wR) >>= unify wT)
+            InferRes (BGetField wI k) (_ANode # rT) <$
+                (newTerm (TRec wR) >>= unify (wT ^. _ANode))
 
 -- Monads for inferring `LangB`:
 

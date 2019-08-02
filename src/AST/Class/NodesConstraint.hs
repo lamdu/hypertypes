@@ -2,7 +2,7 @@
 {-# LANGUAGE UndecidableInstances, UndecidableSuperClasses, FlexibleInstances #-}
 
 module AST.Class.NodesConstraint
-    ( NodesConstraint
+    ( KNodesConstraint
     ) where
 
 import AST

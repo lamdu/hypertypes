@@ -47,16 +47,16 @@ instance c (Var v expr) => Recursively c (Var v expr)
 instance Pretty v => Pretty (Var v expr k) where
     pPrintPrec lvl p (Var v) = pPrintPrec lvl p v
 
-type instance TypeOf  (Var v t) = TypeOf  t
-type instance ScopeOf (Var v t) = ScopeOf t
+type instance InferOf (Var v t) = ANode (TypeOf t)
 
 instance
     ( Recursively (Unify m) (TypeOf expr)
     , HasScope m (ScopeOf expr)
     , VarType v expr
+    , Monad m
     ) =>
     Infer m (Var v expr) where
 
     {-# INLINE inferBody #-}
     inferBody (Var x) =
-        getScope >>= varType (Proxy :: Proxy expr) x <&> InferRes (Var x)
+        getScope >>= varType (Proxy :: Proxy expr) x <&> MkANode <&> InferRes (Var x)

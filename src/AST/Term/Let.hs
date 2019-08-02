@@ -1,21 +1,23 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric, TypeFamilies #-}
 {-# LANGUAGE StandaloneDeriving, ConstraintKinds, UndecidableInstances #-}
 {-# LANGUAGE TupleSections, FlexibleInstances, MultiParamTypeClasses, DataKinds #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module AST.Term.Let
     ( Let(..), letVar, letEquals, letIn
     ) where
 
 import           AST
-import           AST.Class.Unify (UVarOf)
+import           AST.Class.Unify (Unify, UVarOf)
 import           AST.Combinator.ANode (ANode)
 import           AST.Infer
 import           AST.Unify.Generalize (GTerm, generalize)
 import           Control.DeepSeq (NFData)
-import           Control.Lens (makeLenses)
+import           Control.Lens (makeLenses, cloneLens)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           Data.Constraint (Constraint)
+import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint (($+$), (<+>))
 import qualified Text.PrettyPrint as Pretty
@@ -46,13 +48,13 @@ instance Deps v expr k Pretty => Pretty (Let v expr k) where
 
 instance RecursiveContext (Let v expr) constraint => Recursively constraint (Let v expr)
 
-type instance TypeOf  (Let v t) = TypeOf  t
-type instance ScopeOf (Let v t) = ScopeOf t
+type instance InferOf (Let v expr) = InferOf expr
 
 instance
     ( MonadScopeLevel m
-    , Infer m expr
     , LocalScopeType v (Tree (GTerm (UVarOf m)) (TypeOf expr)) m
+    , Recursively (Unify m) (TypeOf expr)
+    , HasInferredType expr
     ) =>
     Infer m (Let v expr) where
 
@@ -60,12 +62,13 @@ instance
         do
             (eI, eG) <-
                 do
-                    InferredChild eI eT <- inferChild e
-                    generalize eT <&> (eI ,)
+                    InferredChild eI eR <- inferChild e
+                    generalize (eR ^. cloneLens (inferredType (Proxy :: Proxy expr)))
+                        <&> (eI ,)
                 & localLevel
             inferChild i
                 & localScopeType v eG
-                <&> \(InferredChild iI iT) -> InferRes (Let v eI iI) iT
+                <&> \(InferredChild iI iR) -> InferRes (Let v eI iI) iR
 
 deriving instance Deps v expr k Eq   => Eq   (Let v expr k)
 deriving instance Deps v expr k Ord  => Ord  (Let v expr k)

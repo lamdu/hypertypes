@@ -1,28 +1,37 @@
-{-# LANGUAGE NoImplicitPrelude, MultiParamTypeClasses, FlexibleContexts #-}
-{-# LANGUAGE TemplateHaskell, TypeFamilies, RecordWildCards #-}
+{-# LANGUAGE NoImplicitPrelude, MultiParamTypeClasses, FlexibleContexts, DataKinds #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies, RecordWildCards, FlexibleInstances #-}
+{-# LANGUAGE ConstraintKinds, UndecidableSuperClasses, UndecidableInstances #-}
 
 module AST.Class.Infer
     ( Infer(..), HasScope(..), LocalScopeType(..)
     , InferredChild(..), inType, inRep
     , InferChild(..), _InferChild
-    , InferRes(..), inferResType, inferResBody
+    , InferRes(..), inferResVal, inferResBody
+    , InferOf, InferOfConstraint
     ) where
 
 import AST
-import AST.Class.Unify (Unify(..), UVarOf)
-import AST.Infer.Result
+import AST.Class.Unify (UVarOf)
 import Control.Lens (Lens, makeLenses, makePrisms)
 import Control.Lens.Operators
+import Data.Kind (Type)
+
+import Prelude.Compat
+
+type family InferOf (t :: Knot -> Type) :: Knot -> Type
+
+class    c (InferOf t) => InferOfConstraint c t
+instance c (InferOf t) => InferOfConstraint c t
 
 data InferredChild v k t = InferredChild
     { -- Representing the inferred child in the resulting node
       __inRep :: !(k t)
-    , _inType :: !(Tree v (TypeOf (RunKnot t)))
+    , _inType :: !(Tree (InferOf (RunKnot t)) v)
     }
 makeLenses ''InferredChild
 
 inRep ::
-    TypeOf (RunKnot t0) ~ TypeOf (RunKnot t1) =>
+    InferOf (RunKnot t0) ~ InferOf (RunKnot t1) =>
     Lens (InferredChild v k0 t0) (InferredChild v k1 t1) (k0 t0) (k1 t1)
 inRep f InferredChild{..} =
     f __inRep <&> \__inRep -> InferredChild{..}
@@ -33,12 +42,12 @@ makePrisms ''InferChild
 
 data InferRes v k t = InferRes
     { __inferResBody :: !(Tree t k)
-    , _inferResType :: !(Tree v (TypeOf t))
+    , _inferResVal :: !(Tree (InferOf t) v)
     }
 makeLenses ''InferRes
 
 inferResBody ::
-    TypeOf t0 ~ TypeOf t1 =>
+    InferOf t0 ~ InferOf t1 =>
     Lens (InferRes v k0 t0) (InferRes v k1 t1) (Tree t0 k0) (Tree t1 k1)
 inferResBody f InferRes{..} =
     f __inferResBody <&> \__inferResBody -> InferRes{..}
@@ -49,10 +58,7 @@ class HasScope m s where
 class LocalScopeType var scheme m where
     localScopeType :: var -> scheme -> m a -> m a
 
-class
-    (HasScope m (ScopeOf t), Recursively (Unify m) (TypeOf t)) =>
-    Infer m t where
-
+class Monad m => Infer m t where
     inferBody ::
         Tree t (InferChild m k) ->
         m (InferRes (UVarOf m) k t)

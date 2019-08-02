@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, UndecidableInstances #-}
-{-# LANGUAGE StandaloneDeriving, DeriveGeneric, DataKinds #-}
+{-# LANGUAGE StandaloneDeriving, DeriveGeneric, DataKinds, ScopedTypeVariables #-}
 
 module AST.Term.App
     ( App(..), appFunc, appArg
@@ -11,12 +11,13 @@ import AST
 import AST.Combinator.ANode (ANode)
 import AST.Infer
 import AST.Term.FuncType
-import AST.Unify (unify)
+import AST.Unify (Unify, unify)
 import AST.Unify.New (newTerm, newUnbound)
 import Control.DeepSeq (NFData)
-import Control.Lens (Traversal, makeLenses)
+import Control.Lens (Traversal, makeLenses, cloneLens)
 import Control.Lens.Operators
 import Data.Binary (Binary)
+import Data.Proxy (Proxy(..))
 import GHC.Generics (Generic)
 import Text.PrettyPrint ((<+>))
 import Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
@@ -50,18 +51,26 @@ appChildren ::
     Traversal (App t0 f0) (App t1 f1) (Node f0 t0) (Node f1 t1)
 appChildren f (App x0 x1) = App <$> f x0 <*> f x1
 
-type instance TypeOf  (App expr) = TypeOf  expr
-type instance ScopeOf (App expr) = ScopeOf expr
+type instance InferOf (App expr) = ANode (TypeOf expr)
 
-instance (Infer m expr, HasFuncType (TypeOf expr)) => Infer m (App expr) where
+instance
+    ( Infer m expr
+    , HasInferredType expr
+    , HasFuncType (TypeOf expr)
+    , Recursively (Unify m) (TypeOf expr)
+    ) =>
+    Infer m (App expr) where
+
     {-# INLINE inferBody #-}
     inferBody (App func arg) =
         do
-            InferredChild argI argT <- inferChild arg
-            InferredChild funcI funcT <- inferChild func
+            InferredChild argI argR <- inferChild arg
+            InferredChild funcI funcR <- inferChild func
             funcRes <- newUnbound
-            InferRes (App funcI argI) funcRes <$
-                (newTerm (funcType # FuncType argT funcRes) >>= unify funcT)
+            InferRes (App funcI argI) (MkANode funcRes) <$
+                (newTerm (funcType # FuncType (argR ^. l) funcRes) >>= unify (funcR ^. l))
+        where
+            l = inferredType (Proxy :: Proxy expr) & cloneLens
 
 deriving instance Eq   (Node k expr) => Eq   (App expr k)
 deriving instance Ord  (Node k expr) => Ord  (App expr k)

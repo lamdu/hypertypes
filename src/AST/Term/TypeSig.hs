@@ -1,6 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, DeriveGeneric, TemplateHaskell, DataKinds #-}
 {-# LANGUAGE TypeFamilies, FlexibleInstances, MultiParamTypeClasses, TypeOperators #-}
-{-# LANGUAGE UndecidableInstances, StandaloneDeriving, ConstraintKinds #-}
+{-# LANGUAGE UndecidableInstances, StandaloneDeriving, ConstraintKinds, PolyKinds #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module AST.Term.TypeSig
     ( TypeSig(..), tsType, tsTerm
@@ -14,10 +15,11 @@ import           AST.Term.Scheme (Scheme, schemeToRestrictedType)
 import           AST.Unify (Unify, unify)
 import           AST.Unify.QuantifiedVar (QVarHasInstance)
 import           Control.DeepSeq (NFData)
-import           Control.Lens (makeLenses)
+import           Control.Lens (makeLenses, cloneLens)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           Data.Constraint (Constraint)
+import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
@@ -45,23 +47,25 @@ instance Deps vars term k Pretty => Pretty (TypeSig vars term k) where
         pPrintPrec lvl 1 term <+> Pretty.text ":" <+> pPrintPrec lvl 1 typ
         & maybeParens (p > 1)
 
-type instance TypeOf  (TypeSig vars term) = TypeOf  term
-type instance ScopeOf (TypeSig vars term) = ScopeOf term
+type instance InferOf (TypeSig vars term) = InferOf term
 
 instance
     ( MonadScopeLevel m
-    , Infer m term
+    , HasInferredType term
     , KTraversable vars
     , NodesConstraint vars $ Unify m
-    , RLiftConstraints (TypeOf term) '[Unify m, HasChild vars, QVarHasInstance Ord]
+    , Recursively KNodes (TypeOf term)
+    , Recursively (Unify m) (TypeOf term)
+    , Recursively (HasChild vars) (TypeOf term)
+    , Recursively (QVarHasInstance Ord) (TypeOf term)
     ) =>
     Infer m (TypeSig vars term) where
 
     inferBody (TypeSig x s) =
         do
-            InferredChild xI xT <- inferChild x
-            schemeToRestrictedType s
-                >>= unify xT
+            InferredChild xI xR <- inferChild x
+            t <- schemeToRestrictedType s
+            (cloneLens (inferredType (Proxy :: Proxy term))) (unify t) xR
                 <&> InferRes (TypeSig xI s)
         & localLevel
 

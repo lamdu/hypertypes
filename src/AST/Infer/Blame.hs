@@ -1,17 +1,21 @@
 {-# LANGUAGE NoImplicitPrelude, FlexibleContexts, ScopedTypeVariables, TupleSections #-}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds, MultiParamTypeClasses, UndecidableInstances, UndecidableSuperClasses #-}
 
 module AST.Infer.Blame
     ( Blame(..), blame
     ) where
 
 import AST
+import AST.Class.Foldable (sequenceLiftK2With_)
+import AST.Class.NodesConstraint (KNodesConstraint)
+import AST.Class.Traversable
 import AST.Knot.Ann (annotationsWith)
 import AST.Infer
 import AST.Unify
 import AST.Unify.Lookup
 import AST.Unify.New
 import AST.Unify.Occurs
+import Control.Lens (mapped)
 import Control.Lens.Operators
 import Control.Monad.Except (MonadError(..))
 import Data.Constraint
@@ -31,18 +35,35 @@ data PrepAnn m a = PrepAnn
 
 prepare ::
     forall err m exp a.
-    (MonadError err m, Recursively (Infer m) exp, Recursively KFunctor exp) =>
-    Tree (UVarOf m) (TypeOf exp) ->
+    ( MonadError err m
+    , Recursively KFunctor exp
+    , Recursively (Infer m) exp
+    , Recursively (InferOfConstraint KApplicative) exp
+    , Recursively (InferOfConstraint KTraversable) exp
+    , Recursively (InferOfConstraint (KNodesConstraint (Recursively (Unify m)))) exp
+    ) =>
+    Tree (InferOf exp) (UVarOf m) ->
     Tree (Ann a) exp ->
     m (Tree (Ann (PrepAnn m a)) exp)
 prepare typeFromAbove (Ann a x) =
-    withDict (recursive :: RecursiveDict exp (Infer m)) $
     withDict (recursive :: RecursiveDict exp KFunctor) $
+    withDict (recursive :: RecursiveDict exp (Infer m)) $
+    withDict (recursive :: RecursiveDict exp (InferOfConstraint KApplicative)) $
+    withDict (recursive :: RecursiveDict exp (InferOfConstraint KTraversable)) $
+    withDict (recursive :: RecursiveDict exp (InferOfConstraint (KNodesConstraint (Recursively (Unify m))))) $
     inferBody
-    (mapKWith (Proxy :: Proxy '[Recursively (Infer m), Recursively KFunctor])
+    (mapKWith
+        (Proxy ::
+            Proxy
+            '[ Recursively KFunctor
+            , Recursively (Infer m)
+            , Recursively (InferOfConstraint KApplicative)
+            , Recursively (InferOfConstraint KTraversable)
+            , Recursively (InferOfConstraint (KNodesConstraint (Recursively (Unify m))))
+            ])
         (\c ->
             do
-                t <- newUnbound
+                t <- sequencePureKWith (Proxy :: Proxy '[Recursively (Unify m)]) newUnbound
                 prepare t c <&> (`InferredChild` t)
             & InferChild
         )
@@ -53,16 +74,21 @@ prepare typeFromAbove (Ann a x) =
     { pAnn = a
     , pTryUnify =
         do
-            _ <- unify typeFromAbove t
-            occursCheck t
+            sequenceLiftK2With_
+                (Proxy :: Proxy '[Recursively (Unify m)])
+                (unify <&> mapped . mapped .~ ()) typeFromAbove t
+            traverseKWith_
+                (Proxy :: Proxy '[Recursively (Unify m)])
+                occursCheck t
         & (`catchError` const (pure ()))
     , pFinalize =
-        do
-            (t0, _) <- semiPruneLookup typeFromAbove
-            (t1, _) <- semiPruneLookup t
-            if t0 == t1
-                then pure Ok
-                else pure TypeMismatch
+        foldMapKWith
+            (Proxy :: Proxy '[Recursively (Unify m)])
+            (\(Pair t0 t1) -> [(==) <$> (semiPruneLookup t0 <&> fst) <*> (semiPruneLookup t1 <&> fst)])
+            (zipK typeFromAbove t)
+        & sequenceA
+        <&>
+        \xs -> if and xs then Ok else TypeMismatch
     } xI
 
 -- | Assign blame for type errors, given a prioritisation for the possible blame positions.
@@ -73,13 +99,16 @@ blame ::
     forall priority err m exp a.
     ( Ord priority
     , MonadError err m
-    , Recursively (Infer m) exp
-    , Recursively KTraversable exp
-    , Recursively KFunctor exp
     , Recursively KNodes exp
+    , Recursively KFunctor exp
+    , Recursively KTraversable exp
+    , Recursively (Infer m) exp
+    , Recursively (InferOfConstraint KApplicative) exp
+    , Recursively (InferOfConstraint KTraversable) exp
+    , Recursively (InferOfConstraint (KNodesConstraint (Recursively (Unify m)))) exp
     ) =>
     (a -> priority) ->
-    Tree (UVarOf m) (TypeOf exp) ->
+    Tree (InferOf exp) (UVarOf m) ->
     Tree (Ann a) exp ->
     m (Tree (Ann (Blame, a)) exp)
 blame order topLevelType e =

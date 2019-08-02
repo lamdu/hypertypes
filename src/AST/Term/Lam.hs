@@ -1,6 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude, TemplateHaskell, DeriveGeneric, DataKinds #-}
 {-# LANGUAGE StandaloneDeriving, ConstraintKinds, UndecidableInstances #-}
 {-# LANGUAGE MultiParamTypeClasses, TypeFamilies, FlexibleInstances #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module AST.Term.Lam
     ( Lam(..), lamIn, lamOut
@@ -10,13 +11,14 @@ import           AST
 import           AST.Combinator.ANode (ANode)
 import           AST.Infer
 import           AST.Term.FuncType
-import           AST.Unify (UVarOf)
-import           AST.Unify.New (newTerm, newUnbound)
+import           AST.Unify (Unify, UVarOf)
+import           AST.Unify.New (newUnbound)
 import           Control.DeepSeq (NFData)
-import           Control.Lens (makeLenses)
+import           Control.Lens (makeLenses, cloneLens)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           Data.Constraint (Constraint)
+import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint ((<+>))
@@ -45,13 +47,12 @@ instance Deps v expr k Pretty => Pretty (Lam v expr k) where
 
 instance RecursiveContext (Lam v expr) constraint => Recursively constraint (Lam v expr)
 
-type instance TypeOf  (Lam v t) = TypeOf  t
-type instance ScopeOf (Lam v t) = ScopeOf t
-type instance ScopeOf (Lam v t) = ScopeOf t
+type instance InferOf (Lam v t) = FuncType (TypeOf t)
 
 instance
     ( Infer m t
-    , HasFuncType (TypeOf t)
+    , Unify m (TypeOf t)
+    , HasInferredType t
     , LocalScopeType v (Tree (UVarOf m) (TypeOf t)) m
     ) =>
     Infer m (Lam v t) where
@@ -60,8 +61,10 @@ instance
     inferBody (Lam p r) =
         do
             varType <- newUnbound
-            InferredChild rI rT <- inferChild r & localScopeType p varType
-            funcType # FuncType varType rT & newTerm <&> InferRes (Lam p rI)
+            InferredChild rI rR <- inferChild r & localScopeType p varType
+            InferRes (Lam p rI)
+                (FuncType varType (rR ^. cloneLens (inferredType (Proxy :: Proxy t))))
+                & pure
 
 deriving instance Deps v expr k Eq   => Eq   (Lam v expr k)
 deriving instance Deps v expr k Ord  => Ord  (Lam v expr k)

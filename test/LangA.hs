@@ -50,10 +50,16 @@ instance KNodes (LangA v) where
 
 makeKTraversableAndBases ''LangA
 instance Recursively KNodes (LangA v)
-instance Recursively KFunctor (LangA v)
+instance Recursively KFoldable (LangA k)
+instance Recursively KFunctor (LangA k)
+instance Recursively KTraversable (LangA k)
+instance c (ANode Typ) => Recursively (InferOfConstraint c) (LangA k)
 
+type instance InferOf (LangA k) = ANode Typ
 type instance TypeOf (LangA k) = Typ
 type instance ScopeOf (LangA k) = ScopeTypes Typ
+
+instance HasInferredType (LangA k) where inferredType _ = _ANode
 
 instance InvDeBruijnIndex v => Pretty (LangA v ('Knot Pure)) where
     pPrintPrec lvl p (ALam (Scope expr)) =
@@ -75,6 +81,11 @@ instance HasTypeOf1 LangA where
     type TypeOfIndexConstraint LangA = DeBruijnIndex
     typeAst _ = Dict
 
+instance HasInferOf1 LangA where
+    type InferOf1 LangA = ANode Typ
+    type InferOf1IndexConstraint LangA = DeBruijnIndex
+    hasInferOf1 _ = Dict
+
 type TermInfer1Deps env m =
     ( MonadScopeLevel m
     , MonadReader env m
@@ -87,15 +98,15 @@ instance TermInfer1Deps env m => Infer1 m LangA where
     inferMonad = Sub Dict
 
 instance (DeBruijnIndex k, TermInfer1Deps env m) => Infer m (LangA k) where
-    inferBody (ALit     x) = newTerm TInt <&> InferRes (ALit x)
-    inferBody (AVar     x) = inferBody x <&> inferResBody %~ AVar
-    inferBody (ALam     x) = inferBody x <&> inferResBody %~ ALam
-    inferBody (AApp     x) = inferBody x <&> inferResBody %~ AApp
+    inferBody (ALit x) = newTerm TInt <&> MkANode <&> InferRes (ALit x)
+    inferBody (AVar x) = inferBody x <&> inferResBody %~ AVar
+    inferBody (ALam x) =
+        inferBody x
+        >>= \(InferRes b t) -> TFun t & newTerm <&> InferRes (ALam b) . MkANode
+    inferBody (AApp x) = inferBody x <&> inferResBody %~ AApp
     inferBody (ATypeSig x) = inferBody x <&> inferResBody %~ ATypeSig
 
 instance (DeBruijnIndex k, TermInfer1Deps env m) => Recursively (Infer m) (LangA k)
-
-instance (c Typ, c Row) => Recursively (InferChildConstraints c) (LangA k)
 
 -- Monads for inferring `LangA`:
 
