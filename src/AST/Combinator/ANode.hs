@@ -23,7 +23,6 @@ import Prelude.Compat
 newtype ANode c k = MkANode { getANode :: Node k c }
     deriving stock Generic
 
-{-# INLINE _ANode #-}
 _ANode :: Iso (Tree (ANode c0) k0) (Tree (ANode c1) k1) (Tree k0 c0) (Tree k1 c1)
 _ANode = iso getANode MkANode
 
@@ -37,7 +36,6 @@ instance KFoldable (ANode c) where foldMapC f = (f ^. _ANode . _ConvertK) . getA
 instance KFunctor (ANode c) where mapC = (_ANode %~) . (^. _ANode . _MapK)
 instance KTraversable (ANode c) where sequenceC = _ANode runContainedK
 
-{-# INLINE traverseK1 #-}
 traverseK1 ::
     ( Applicative f, KTraversable k
     , NodeTypesOf k ~ ANode c

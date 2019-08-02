@@ -67,7 +67,6 @@ instance
     ) =>
     KPointed (ITermTypes e) where
 
-    {-# INLINE pureK #-}
     pureK f =
         pureKWith (Proxy @'[InferOfConstraint KNodes]) (g f)
         & ITermTypes
@@ -81,7 +80,6 @@ instance
                 withDict (kNodes (Proxy @(InferOf child))) $
                 _IResultNodeTypes # pureK f1
 
-    {-# INLINE pureKWithConstraint #-}
     pureKWithConstraint p f =
         pureKWith (makeP p) (g p f)
         & ITermTypes
@@ -108,7 +106,6 @@ instance
     ) =>
     KFunctor (ITermTypes e) where
 
-    {-# INLINE mapC #-}
     mapC (ITermTypes (RecursiveNodes (MkIResultNodeTypes mapTop) mapSub)) =
         _ITermTypes %~
         \(RecursiveNodes t s) ->
@@ -148,7 +145,6 @@ instance
     ) =>
     KApply (ITermTypes e) where
 
-    {-# INLINE zipK #-}
     zipK (ITermTypes x) =
         _ITermTypes %~
         liftK2With (Proxy @'[InferOfConstraint KNodes]) f x
@@ -179,7 +175,6 @@ instance
     ) =>
     KFunctor (Flip (ITerm a) e) where
 
-    {-# INLINE mapC #-}
     mapC (ITermTypes (RecursiveNodes (MkIResultNodeTypes ft) fs)) =
         withDict (kNodes (Proxy @e)) $
         withDict (recursive @KNodes @e) $
@@ -210,7 +205,6 @@ instance
     , Recursively (InferOfConstraint KFoldable) e
     ) =>
     KFoldable (Flip (ITerm a) e) where
-    {-# INLINE foldMapC #-}
     foldMapC (ITermTypes (RecursiveNodes (MkIResultNodeTypes ft) fs)) (MkFlip (ITerm _ r x)) =
         withDict (kNodes (Proxy @e)) $
         withDict (recursive @KNodes @e) $
@@ -242,7 +236,6 @@ instance
     ) =>
     KTraversable (Flip (ITerm a) e) where
 
-    {-# INLINE sequenceC #-}
     sequenceC =
         withDict (recursive @KNodes @e) $
         withDict (recursive @KFoldable @e) $

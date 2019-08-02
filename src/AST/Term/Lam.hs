@@ -54,7 +54,6 @@ instance
     ) =>
     Infer m (Lam v t) where
 
-    {-# INLINE inferBody #-}
     inferBody (Lam p r) =
         do
             varType <- newUnbound

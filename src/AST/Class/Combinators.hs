@@ -35,10 +35,7 @@ instance
     KNodes k =>
     KLiftConstraints k '[] where
 
-    {-# INLINE kLiftConstraints #-}
     kLiftConstraints = pureK (MkKDict Dict)
-
-    {-# INLINE kLiftConstraintsNodeTypes #-}
     kLiftConstraintsNodeTypes p _ = withDict (kNodes p) Dict
 
 instance
@@ -47,20 +44,17 @@ instance
     ) =>
     KLiftConstraints k (c ': cs) where
 
-    {-# INLINE kLiftConstraints #-}
     kLiftConstraints =
         liftK2
         (\(MkKDict c) (MkKDict cs) -> withDict c (withDict cs (MkKDict Dict)))
         (pureKWithConstraint (Proxy @c) (MkKDict Dict) :: Tree k (KDict '[c]))
         (kLiftConstraints :: Tree k (KDict cs))
 
-    {-# INLINE kLiftConstraintsNodeTypes #-}
     kLiftConstraintsNodeTypes pk _ =
         withDict (kNodes pk) $
         withDict (kLiftConstraintsNodeTypes pk (Proxy @cs))
         Dict
 
-{-# INLINE pureKWith #-}
 pureKWith ::
     forall n constraints k.
     (KApplicative k, KLiftConstraints k constraints) =>
@@ -69,7 +63,6 @@ pureKWith ::
     Tree k n
 pureKWith _ = pureKWithDict (kLiftConstraints :: Tree k (KDict constraints))
 
-{-# INLINE mapKWith #-}
 mapKWith ::
     forall k m n constraints.
     (KFunctor k, KLiftConstraints k constraints) =>
@@ -82,7 +75,6 @@ mapKWith p f =
     withDict (kLiftConstraintsNodeTypes (Proxy @k) p) $
     mapC (pureKWith p (MkMapK f))
 
-{-# INLINE liftK2With #-}
 liftK2With ::
     (KApply k, KLiftConstraints k constraints) =>
     Proxy constraints ->

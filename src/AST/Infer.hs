@@ -20,7 +20,6 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
-{-# INLINE infer #-}
 infer ::
     forall m t a.
     (Recursively (Infer m) t, Recursively KFunctor t) =>

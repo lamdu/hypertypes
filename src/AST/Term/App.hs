@@ -59,7 +59,6 @@ instance
     ) =>
     Infer m (App expr) where
 
-    {-# INLINE inferBody #-}
     inferBody (App func arg) =
         do
             InferredChild argI argR <- inferChild arg

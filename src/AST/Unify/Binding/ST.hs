@@ -18,7 +18,6 @@ newtype STUVar s t = STUVar (STRef s (UTerm (STUVar s) t))
     deriving stock Eq
 Lens.makePrisms ''STUVar
 
-{-# INLINE stBinding #-}
 stBinding ::
     MonadST m =>
     BindingDict (STUVar (World m)) m t

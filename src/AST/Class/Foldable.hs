@@ -23,7 +23,6 @@ import Prelude.Compat
 
 newtype ConvertK a l (k :: Knot) = MkConvertK { runConvertK :: l k -> a }
 
-{-# INLINE _ConvertK #-}
 _ConvertK ::
     Iso (Tree (ConvertK a0 l0) k0)
         (Tree (ConvertK a1 l1) k1)
@@ -39,10 +38,8 @@ class KNodes k => KFoldable k where
         a
 
 instance KFoldable (Const a) where
-    {-# INLINE foldMapC #-}
     foldMapC _ _ = mempty
 
-{-# INLINE foldMapK #-}
 foldMapK ::
     forall a k l.
     (Monoid a, KFoldable k) =>
@@ -53,7 +50,6 @@ foldMapK f x =
     withDict (kNodes (Proxy @k)) $
     foldMapC (pureK (MkConvertK f)) x
 
-{-# INLINE foldMapKWith #-}
 foldMapKWith ::
     forall a k n constraints.
     (Monoid a, KFoldable k, KLiftConstraints k constraints) =>
@@ -66,7 +62,6 @@ foldMapKWith p f =
     withDict (kLiftConstraintsNodeTypes (Proxy @k) p) $
     foldMapC (pureKWith p (_ConvertK # f))
 
-{-# INLINE traverseK_ #-}
 traverseK_ ::
     (Applicative f, KFoldable k) =>
     (forall c. Tree m c -> f ()) ->
@@ -74,7 +69,6 @@ traverseK_ ::
     f ()
 traverseK_ f = sequenceA_ . foldMapK ((:[]) . f)
 
-{-# INLINE traverseKWith_ #-}
 traverseKWith_ ::
     forall f k constraints m.
     (Applicative f, KFoldable k, KLiftConstraints k constraints) =>
@@ -85,7 +79,6 @@ traverseKWith_ ::
 traverseKWith_ p f =
     sequenceA_ . foldMapKWith @[f ()] p ((:[]) . f)
 
-{-# INLINE sequenceLiftK2_ #-}
 sequenceLiftK2_ ::
     (Applicative f, KApply k, KFoldable k) =>
     (forall c. Tree l c -> Tree m c -> f ()) ->
@@ -95,7 +88,6 @@ sequenceLiftK2_ ::
 sequenceLiftK2_ f x =
     sequenceA_ . foldMapK ((:[]) . getConst) . liftK2 (\a -> Const . f a) x
 
-{-# INLINE sequenceLiftK2With_ #-}
 sequenceLiftK2With_ ::
     forall f k constraints l m.
     (Applicative f, KApply k, KFoldable k, KLiftConstraints k constraints) =>

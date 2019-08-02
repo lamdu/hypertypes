@@ -29,7 +29,6 @@ Lens.makePrisms ''Binding
 emptyBinding :: Binding t
 emptyBinding = Binding mempty
 
-{-# INLINE bindingDict #-}
 bindingDict ::
     MonadState s m =>
     ALens' s (Tree Binding t) ->

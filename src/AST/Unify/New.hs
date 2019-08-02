@@ -15,11 +15,9 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
-{-# INLINE newUnbound #-}
 newUnbound :: Unify m t => m (Tree (UVarOf m) t)
 newUnbound = scopeConstraints >>= newVar binding . UUnbound
 
-{-# INLINE newTerm #-}
 newTerm :: Unify m t => Tree t (UVarOf m) -> m (Tree (UVarOf m) t)
 newTerm x = scopeConstraints >>= newVar binding . UTerm . (`UTermBody` x)
 

@@ -31,7 +31,6 @@ makeKTraversableAndBases ''TermMap
 instance RecursiveContext (TermMap k expr) constraint => Recursively constraint (TermMap k expr)
 
 instance Eq k => ZipMatch (TermMap k expr) where
-    {-# INLINE zipMatch #-}
     zipMatch (TermMap x) (TermMap y)
         | Map.size x /= Map.size y = Nothing
         | otherwise =
@@ -39,7 +38,6 @@ instance Eq k => ZipMatch (TermMap k expr) where
             <&> traverse . Lens._2 %~ uncurry Pair
             <&> TermMap . Map.fromAscList
 
-{-# INLINE zipMatchList #-}
 zipMatchList :: Eq k => [(k, a)] -> [(k, b)] -> Maybe [(k, (a, b))]
 zipMatchList [] [] = Just []
 zipMatchList ((k0, v0) : xs) ((k1, v1) : ys)

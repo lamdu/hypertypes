@@ -54,12 +54,10 @@ instance
     KNodes t =>
     KPointed (UnifyErrorNodes t) where
 
-    {-# INLINE pureK #-}
     pureK f =
         withDict (kNodes (Proxy @t)) $
         UnifyErrorNodes f (pureK f)
 
-    {-# INLINE pureKWithConstraint #-}
     pureKWithConstraint p f =
         withDict (kNodes (Proxy @t)) $
         UnifyErrorNodes f (pureKWithConstraint p f)
@@ -74,7 +72,6 @@ instance
     KNodes t =>
     KFunctor (UnifyErrorNodes t) where
 
-    {-# INLINE mapC #-}
     mapC (UnifyErrorNodes tf bf) (UnifyErrorNodes tx bx) =
         withDict (kNodes (Proxy @t)) $
         UnifyErrorNodes (runMapK tf tx) (mapC bf bx)
@@ -83,7 +80,6 @@ instance
     KNodes t =>
     KApply (UnifyErrorNodes t) where
 
-    {-# INLINE zipK #-}
     zipK (UnifyErrorNodes t0 b0) (UnifyErrorNodes t1 b1) =
         withDict (kNodes (Proxy @t)) $
         UnifyErrorNodes (Pair t0 t1) (zipK b0 b1)

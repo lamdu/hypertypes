@@ -88,7 +88,6 @@ instance KNodes (FromNom n t) where
 
 instance KNodes v => KNodes (NominalInst n v) where
     type NodeTypesOf (NominalInst n v) = NodeTypesOf v
-    {-# INLINE kNodes #-}
     kNodes _ = withDict (kNodes (Proxy @v)) Dict
 
 makeLenses ''NominalDecl
@@ -123,7 +122,6 @@ instance
     ) =>
     ZipMatch (NominalInst nomId varTypes) where
 
-    {-# INLINE zipMatch #-}
     zipMatch (NominalInst xId x) (NominalInst yId y)
         | xId /= yId = Nothing
         | otherwise =
@@ -143,7 +141,6 @@ instance
     ) =>
     Recursively c (NominalInst nomId varTypes) where
 
-    {-# INLINE recursive #-}
     recursive =
         withDict (kNodes (Proxy @varTypes))
         Dict
@@ -185,7 +182,6 @@ data LoadedNominalDecl typ v = LoadedNominalDecl
     , _lnType :: Tree (GTerm (RunKnot v)) typ
     } deriving Generic
 
-{-# INLINE loadBody #-}
 loadBody ::
     ( Unify m typ
     , HasChild varTypes typ
@@ -207,7 +203,6 @@ loadBody params foralls x =
             params ^? getChild . _QVarInstances . Lens.ix v <|>
             foralls ^? getChild . _QVarInstances . Lens.ix v
 
-{-# INLINE loadNominalDecl #-}
 loadNominalDecl ::
     forall m typ.
     ( Monad m
@@ -231,7 +226,6 @@ class MonadNominals nomId typ m where
 class HasNominalInst nomId typ where
     nominalInst :: Prism' (Tree typ k) (Tree (NominalInst nomId (NomVarTypes typ)) k)
 
-{-# INLINE lookupParams #-}
 lookupParams ::
     forall m varTypes.
     ( Applicative m
@@ -266,7 +260,6 @@ instance
     ) =>
     Infer m (ToNom nomId expr) where
 
-    {-# INLINE inferBody #-}
     inferBody (ToNom nomId val) =
         do
             (InferredChild valI valR, typ, paramsT) <-
@@ -297,7 +290,6 @@ instance
     ) =>
     Infer m (FromNom nomId expr) where
 
-    {-# INLINE inferBody #-}
     inferBody (FromNom nomId) =
         do
             LoadedNominalDecl params _ gen <- getNominalDecl nomId

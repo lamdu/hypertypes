@@ -129,7 +129,6 @@ instance
     ) =>
     Infer m (Scheme varTypes typ) where
 
-    {-# INLINE inferBody #-}
     inferBody (Scheme vars typ) =
         do
             foralls <- traverseKWith (Proxy @'[Unify m]) makeQVarInstances vars
@@ -158,7 +157,6 @@ inferType x =
                 & newTerm
                 <&> InferRes (mapK (^. inRep) xI) . MkANode
 
-{-# INLINE makeQVarInstancesInScope #-}
 makeQVarInstancesInScope ::
     Unify m typ =>
     Tree QVars typ -> m (Tree (QVarInstances (UVarOf m)) typ)
@@ -167,14 +165,12 @@ makeQVarInstancesInScope (QVars foralls) =
     where
         makeSkolem c = scopeConstraints >>= newVar binding . USkolem . (c <>)
 
-{-# INLINE makeQVarInstances #-}
 makeQVarInstances ::
     Unify m typ =>
     Tree QVars typ -> m (Tree (QVarInstances (UVarOf m)) typ)
 makeQVarInstances (QVars foralls) =
     traverse (newVar binding . USkolem) foralls <&> QVarInstances
 
-{-# INLINE schemeBodyToType #-}
 schemeBodyToType ::
     (Unify m typ, HasChild varTypes typ, Ord (QVar typ)) =>
     Tree varTypes (QVarInstances (UVarOf m)) -> Tree typ (UVarOf m) -> m (Tree (UVarOf m) typ)
@@ -185,7 +181,6 @@ schemeBodyToType foralls x =
     where
         getForAll v = foralls ^? getChild . _QVarInstances . Lens.ix v
 
-{-# INLINE schemeToRestrictedType #-}
 schemeToRestrictedType ::
     forall m varTypes typ.
     ( Monad m
@@ -201,7 +196,6 @@ schemeToRestrictedType (MkPure (Scheme vars typ)) =
             (Proxy @'[Unify m, HasChild varTypes, QVarHasInstance Ord])
             Dict (schemeBodyToType foralls) typ
 
-{-# INLINE loadBody #-}
 loadBody ::
     ( Unify m typ
     , HasChild varTypes typ
@@ -223,7 +217,6 @@ loadBody foralls x =
 -- | Load scheme into unification monad so that different instantiations share
 -- the scheme's monomorphic parts -
 -- their unification is O(1) as it is the same shared unification term.
-{-# INLINE loadScheme #-}
 loadScheme ::
     forall m varTypes typ.
     ( Monad m

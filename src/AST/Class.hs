@@ -47,7 +47,6 @@ class KNodes k where
     kNodes ::
         Proxy k ->
         Dict (NodeTypesConstraints k)
-    {-# INLINE kNodes #-}
     default kNodes ::
         NodeTypesConstraints k =>
         Proxy k ->
@@ -69,7 +68,6 @@ class KNodes k => KPointed k where
 
 newtype MapK m n (k :: Knot) = MkMapK { runMapK :: m k -> n k }
 
-{-# INLINE _MapK #-}
 _MapK ::
     Iso (Tree (MapK m0 n0) k0)
         (Tree (MapK m1 n1) k1)
@@ -99,17 +97,13 @@ instance KNodes (Const a) where
     type NodesConstraint (Const a) = TConst (() :: Constraint)
 
 instance Monoid a => KPointed (Const a) where
-    {-# INLINE pureK #-}
     pureK _ = Const mempty
-    {-# INLINE pureKWithConstraint #-}
     pureKWithConstraint _ _ = Const mempty
 
 instance KFunctor (Const a) where
-    {-# INLINE mapC #-}
     mapC _ (Const x) = Const x
 
 instance Semigroup a => KApply (Const a) where
-    {-# INLINE zipK #-}
     zipK (Const x) (Const y) = Const (x <> y)
 
 instance
@@ -118,26 +112,20 @@ instance
     type NodeTypesOf (Product a b) = Product (NodeTypesOf a) (NodeTypesOf b)
     type NodesConstraint (Product a b) = ConcatConstraintFuncs [NodesConstraint a, NodesConstraint b]
 
-    {-# INLINE kNodes #-}
     kNodes _ =
         withDict (kNodes (Proxy @a)) $
         withDict (kNodes (Proxy @b)) Dict
 
 instance (KPointed a, KPointed b) => KPointed (Product a b) where
-    {-# INLINE pureK #-}
     pureK f = Pair (pureK f) (pureK f)
-    {-# INLINE pureKWithConstraint #-}
     pureKWithConstraint p f = Pair (pureKWithConstraint p f) (pureKWithConstraint p f)
 
 instance (KFunctor a, KFunctor b) => KFunctor (Product a b) where
-    {-# INLINE mapC #-}
     mapC (Pair fx fy) (Pair x y) = Pair (mapC fx x) (mapC fy y)
 
 instance (KApply a, KApply b) => KApply (Product a b) where
-    {-# INLINE zipK #-}
     zipK (Pair a0 b0) (Pair a1 b1) = Pair (zipK a0 a1) (zipK b0 b1)
 
-{-# INLINE mapK #-}
 mapK ::
     forall k m n.
     KFunctor k =>
@@ -148,7 +136,6 @@ mapK f x =
     withDict (kNodes (Proxy @k)) $
     mapC (pureK (MkMapK f)) x
 
-{-# INLINE liftK2 #-}
 liftK2 ::
     KApply k =>
     (forall c. Tree l c -> Tree m c -> Tree n c) ->
