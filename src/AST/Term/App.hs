@@ -68,7 +68,7 @@ instance
             InferRes (App funcI argI) (MkANode funcRes) <$
                 (newTerm (funcType # FuncType (argR ^. l) funcRes) >>= unify (funcR ^. l))
         where
-            l = inferredType (Proxy :: Proxy expr) & cloneLens
+            l = inferredType (Proxy @expr) & cloneLens
 
 deriving instance Eq   (Node k expr) => Eq   (App expr k)
 deriving instance Ord  (Node k expr) => Ord  (App expr k)

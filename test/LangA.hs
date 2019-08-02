@@ -65,7 +65,7 @@ instance InvDeBruijnIndex v => Pretty (LangA v ('Knot Pure)) where
     pPrintPrec lvl p (ALam (Scope expr)) =
         Pretty.hcat
         [ Pretty.text "λ("
-        , pPrint (1 + deBruijnIndexMax (Proxy :: Proxy v))
+        , pPrint (1 + deBruijnIndexMax (Proxy @v))
         , Pretty.text ")."
         ] <+> pPrintPrec lvl 0 expr
         & maybeParens (p > 0)
@@ -151,14 +151,14 @@ instance MonadQuantify RConstraints Name PureInferA where
 instance Unify PureInferA Typ where
     binding = bindingDict (Lens._1 . tTyp)
     unifyError e =
-        traverseKWith (Proxy :: Proxy '[Recursively (Unify PureInferA)]) applyBindings e
+        traverseKWith (Proxy @'[Recursively (Unify PureInferA)]) applyBindings e
         >>= throwError . TypError
 
 instance Unify PureInferA Row where
     binding = bindingDict (Lens._1 . tRow)
     structureMismatch = rStructureMismatch
     unifyError e =
-        traverseKWith (Proxy :: Proxy '[Recursively (Unify PureInferA)]) applyBindings e
+        traverseKWith (Proxy @'[Recursively (Unify PureInferA)]) applyBindings e
         >>= throwError . RowError
 
 newtype STInferA s a =
@@ -201,12 +201,12 @@ instance MonadQuantify RConstraints Name (STInferA s) where
 instance Unify (STInferA s) Typ where
     binding = stBinding
     unifyError e =
-        traverseKWith (Proxy :: Proxy '[Recursively (Unify (STInferA s))]) applyBindings e
+        traverseKWith (Proxy @'[Recursively (Unify (STInferA s))]) applyBindings e
         >>= throwError . TypError
 
 instance Unify (STInferA s) Row where
     binding = stBinding
     structureMismatch = rStructureMismatch
     unifyError e =
-        traverseKWith (Proxy :: Proxy '[Recursively (Unify (STInferA s))]) applyBindings e
+        traverseKWith (Proxy @'[Recursively (Unify (STInferA s))]) applyBindings e
         >>= throwError . RowError

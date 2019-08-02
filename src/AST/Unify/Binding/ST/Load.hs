@@ -80,10 +80,10 @@ loadBody ::
     Tree typeVars Binding -> Tree typeVars (ConvertState (World m)) ->
     Tree t UVar -> m (Tree t (STUVar (World m)))
 loadBody src conv =
-    withDict (recursive :: RecursiveDict t (Unify m)) $
-    withDict (recursive :: RecursiveDict t (HasChild typeVars)) $
+    withDict (recursive @(Unify m) @t) $
+    withDict (recursive @(HasChild typeVars) @t) $
     traverseKWith
-    (Proxy :: Proxy '[Recursively (Unify m), Recursively (HasChild typeVars)])
+    (Proxy @'[Recursively (Unify m), Recursively (HasChild typeVars)])
     (loadVar src conv)
 
 load ::

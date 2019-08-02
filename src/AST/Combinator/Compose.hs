@@ -37,8 +37,8 @@ instance (KNodes a, KNodes b) => KNodes (Compose a b) where
         ComposeConstraint (NodesConstraint a) (NodesConstraint b)
     {-# INLINE kNodes #-}
     kNodes _ =
-        withDict (kNodes (Proxy :: Proxy a)) $
-        withDict (kNodes (Proxy :: Proxy b))
+        withDict (kNodes (Proxy @a)) $
+        withDict (kNodes (Proxy @b))
         Dict
 
 data
@@ -77,8 +77,8 @@ instance
     KFunctor (Compose a b) where
     {-# INLINE mapC #-}
     mapC (MkCompose f) =
-        withDict (kNodes (Proxy :: Proxy a)) $
-        withDict (kNodes (Proxy :: Proxy b)) $
+        withDict (kNodes (Proxy @a)) $
+        withDict (kNodes (Proxy @b)) $
         _Compose %~
         mapC
         ( mapK
@@ -109,8 +109,8 @@ instance
     KFoldable (Compose a b) where
     {-# INLINE foldMapC #-}
     foldMapC (MkCompose f) =
-        withDict (kNodes (Proxy :: Proxy a)) $
-        withDict (kNodes (Proxy :: Proxy b)) $
+        withDict (kNodes (Proxy @a)) $
+        withDict (kNodes (Proxy @b)) $
         foldMapC
         ( mapK
             ( \(MkCompose bf) ->

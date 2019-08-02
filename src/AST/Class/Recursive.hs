@@ -77,18 +77,18 @@ instance
 
     {-# INLINE pureK #-}
     pureK f =
-        withDict (recursive :: RecursiveDict a KNodes) $
-        withDict (kNodes (Proxy :: Proxy a)) $
+        withDict (recursive @KNodes @a) $
+        withDict (kNodes (Proxy @a)) $
         RecursiveNodes
         { _recSelf = f
-        , _recSub = pureKWith (Proxy :: Proxy '[Recursively KNodes]) (_Flip # pureK f)
+        , _recSub = pureKWith (Proxy @'[Recursively KNodes]) (_Flip # pureK f)
         }
 
     {-# INLINE pureKWithConstraint #-}
     pureKWithConstraint p f =
         withDict (recP p) $
-        withDict (recursive :: RecursiveDict a KNodes) $
-        withDict (kNodes (Proxy :: Proxy a)) $
+        withDict (recursive @KNodes @a) $
+        withDict (kNodes (Proxy @a)) $
         RecursiveNodes
         { _recSelf = f
         , _recSub = pureKWith (mkP p) (_Flip # pureKWithConstraint p f)
@@ -105,13 +105,13 @@ instance
 
     {-# INLINE mapC #-}
     mapC (RecursiveNodes fSelf fSub) (RecursiveNodes xSelf xSub) =
-        withDict (recursive :: RecursiveDict a KNodes) $
-        withDict (kNodes (Proxy :: Proxy a)) $
+        withDict (recursive @KNodes @a) $
+        withDict (kNodes (Proxy @a)) $
         RecursiveNodes
         { _recSelf = runMapK fSelf xSelf
         , _recSub =
             mapC
-            ( mapKWith (Proxy :: Proxy '[Recursively KNodes])
+            ( mapKWith (Proxy @'[Recursively KNodes])
                 ((_MapK #) . (\(MkFlip sf) -> _Flip %~ mapC sf)) fSub
             ) xSub
         }
@@ -122,12 +122,12 @@ instance
 
     {-# INLINE zipK #-}
     zipK (RecursiveNodes xSelf xSub) (RecursiveNodes ySelf ySub) =
-        withDict (recursive :: RecursiveDict a KNodes) $
-        withDict (kNodes (Proxy :: Proxy a)) $
+        withDict (recursive @KNodes @a) $
+        withDict (kNodes (Proxy @a)) $
         RecursiveNodes
         { _recSelf = Pair xSelf ySelf
         , _recSub =
-            liftK2With (Proxy :: Proxy '[Recursively KNodes])
+            liftK2With (Proxy @'[Recursively KNodes])
             (\(MkFlip x) -> _Flip %~ zipK x) xSub ySub
         }
 
@@ -155,8 +155,8 @@ instance
     rLiftConstraints =
         liftK2
         (\(MkKDict c) (MkKDict cs) -> withDict c (withDict cs (MkKDict Dict)))
-        (pureKWithConstraint (Proxy :: Proxy c) (MkKDict Dict) :: Tree (RecursiveNodes k) (KDict '[c]))
-        (rLiftConstraints :: Tree (RecursiveNodes k) (KDict cs))
+        (pureKWithConstraint (Proxy @c) (MkKDict Dict) :: Tree (RecursiveNodes k) (KDict '[c]))
+        (rLiftConstraints @k @cs)
 
 {-# INLINE mapKRec #-}
 mapKRec ::
@@ -167,7 +167,7 @@ mapKRec ::
     Tree k m ->
     Tree k n
 mapKRec c f =
-    withDict (kNodes (Proxy :: Proxy k)) $
+    withDict (kNodes (Proxy @k)) $
     mapC (mapK (MkMapK . \(MkFlip d) -> f d) (c ^. recSub))
 
 {-# INLINE foldMapKRec #-}
@@ -179,7 +179,7 @@ foldMapKRec ::
     Tree k n ->
     a
 foldMapKRec c f =
-    withDict (kNodes (Proxy :: Proxy k)) $
+    withDict (kNodes (Proxy @k)) $
     foldMapC (mapK (MkConvertK . \(MkFlip d) -> f d) (c ^. recSub))
 
 {-# INLINE traverseKRec #-}
@@ -191,7 +191,7 @@ traverseKRec ::
     Tree k m ->
     f (Tree k n)
 traverseKRec c f =
-    withDict (kNodes (Proxy :: Proxy k)) $
+    withDict (kNodes (Proxy @k)) $
     sequenceC .
     mapC (mapK (MkMapK . \(MkFlip d) -> MkContainedK . f d) (c ^. recSub))
 
@@ -206,7 +206,7 @@ wrapMWithDict ::
     m (Tree w k)
 wrapMWithDict c getTraversable f x =
     withDict (c ^. recSelf . _KDict) $
-    withDict (getTraversable :: Dict (KTraversable k)) $
+    withDict (getTraversable @k) $
     x ^. _Pure
     & traverseKRec c (\d -> wrapMWithDict d getTraversable f)
     >>= f
@@ -220,8 +220,7 @@ wrapM ::
     (forall n. ApplyConstraints cs n => Tree n w -> m (Tree w n)) ->
     Tree Pure k ->
     m (Tree w k)
-wrapM _ =
-    wrapMWithDict (rLiftConstraints :: Tree (RecursiveNodes k) (KDict cs))
+wrapM _ = wrapMWithDict (rLiftConstraints @k @cs)
 
 {-# INLINE unwrapMWithDict #-}
 unwrapMWithDict ::
@@ -234,7 +233,7 @@ unwrapMWithDict ::
     m (Tree Pure k)
 unwrapMWithDict c getTraversable f x =
     withDict (c ^. recSelf . _KDict) $
-    withDict (getTraversable :: Dict (KTraversable k)) $
+    withDict (getTraversable @k) $
     f x
     >>= traverseKRec c (\d -> unwrapMWithDict d getTraversable f)
     <&> (_Pure #)
@@ -248,8 +247,7 @@ unwrapM ::
     (forall n. ApplyConstraints cs n => Tree w n -> m (Tree n w)) ->
     Tree w k ->
     m (Tree Pure k)
-unwrapM _ =
-    unwrapMWithDict (rLiftConstraints :: Tree (RecursiveNodes k) (KDict cs))
+unwrapM _ = unwrapMWithDict (rLiftConstraints @k @cs)
 
 {-# INLINE wrapWithDict #-}
 wrapWithDict ::
@@ -261,7 +259,7 @@ wrapWithDict ::
     Tree w k
 wrapWithDict c getFunctor f x =
     withDict (c ^. recSelf . _KDict) $
-    withDict (getFunctor :: Dict (KFunctor k)) $
+    withDict (getFunctor @k) $
     x ^. _Pure
     & mapKRec c (\d -> wrapWithDict d getFunctor f)
     & f
@@ -275,8 +273,7 @@ wrap ::
     (forall n. ApplyConstraints cs n => Tree n w -> Tree w n) ->
     Tree Pure k ->
     Tree w k
-wrap _ =
-    wrapWithDict (rLiftConstraints :: Tree (RecursiveNodes k) (KDict cs))
+wrap _ = wrapWithDict (rLiftConstraints @k @cs)
 
 {-# INLINE unwrapWithDict #-}
 unwrapWithDict ::
@@ -288,7 +285,7 @@ unwrapWithDict ::
     Tree Pure k
 unwrapWithDict c getFunctor f x =
     withDict (c ^. recSelf . _KDict) $
-    withDict (getFunctor :: Dict (KFunctor k)) $
+    withDict (getFunctor @k) $
     f x
     & mapKRec c (\d -> unwrapWithDict d getFunctor f)
     & MkPure
@@ -302,8 +299,7 @@ unwrap ::
     (forall n. ApplyConstraints cs n => Tree w n -> Tree n w) ->
     Tree w k ->
     Tree Pure k
-unwrap _ =
-    unwrapWithDict (rLiftConstraints :: Tree (RecursiveNodes k) (KDict cs))
+unwrap _ = unwrapWithDict (rLiftConstraints @k @cs)
 
 -- | Recursively fold up a tree to produce a result.
 -- TODO: Is this a "cata-morphism"?
@@ -340,12 +336,12 @@ foldMapRecursiveWithDict ::
     a
 foldMapRecursiveWithDict c getFoldable f x =
     withDict (c ^. recSelf . _KDict) $
-    withDict (getFoldable :: Dict (KFoldable k)) $
-    withDict (recursive :: RecursiveDict f KFoldable) $
+    withDict (getFoldable @k) $
+    withDict (recursive @KFoldable @f) $
     f x <>
     foldMapKRec c
     ( \d ->
-        foldMapKWith (Proxy :: Proxy '[Recursively KFoldable])
+        foldMapKWith (Proxy @'[Recursively KFoldable])
         (foldMapRecursiveWithDict d getFoldable f)
     ) x
 
@@ -358,5 +354,4 @@ foldMapRecursive ::
     (forall n g. (ApplyConstraints cs n, Recursively KFoldable g) => Tree n g -> a) ->
     Tree k f ->
     a
-foldMapRecursive _ =
-    foldMapRecursiveWithDict (rLiftConstraints :: Tree (RecursiveNodes k) (KDict cs))
+foldMapRecursive _ = foldMapRecursiveWithDict (rLiftConstraints @k @cs)

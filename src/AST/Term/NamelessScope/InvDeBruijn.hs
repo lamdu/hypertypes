@@ -19,13 +19,13 @@ instance InvDeBruijnIndex EmptyScope where
     deBruijnIndexMax _ = -1
 
 instance InvDeBruijnIndex a => InvDeBruijnIndex (Maybe a) where
-    deBruijnIndexMax _ = 1 + deBruijnIndexMax (Proxy :: Proxy a)
+    deBruijnIndexMax _ = 1 + deBruijnIndexMax (Proxy @a)
 
 inverseDeBruijnIndex :: forall a. InvDeBruijnIndex a => Prism' Int a
 inverseDeBruijnIndex =
     iso (l -) (l -) . deBruijnIndex
     where
-        l = deBruijnIndexMax (Proxy :: Proxy a)
+        l = deBruijnIndexMax (Proxy @a)
 
 scope ::
     forall expr a f.

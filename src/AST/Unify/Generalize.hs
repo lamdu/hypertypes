@@ -68,11 +68,11 @@ instance
         GMono x -> mapTop x & GMono
         GPoly x -> mapTop x & GPoly
         GBody x ->
-            withDict (recursive :: RecursiveDict ast KNodes) $
-            withDict (recursive :: RecursiveDict ast KFunctor) $
-            withDict (kNodes (Proxy :: Proxy ast)) $
+            withDict (recursive @KNodes @ast) $
+            withDict (recursive @KFunctor @ast) $
+            withDict (kNodes (Proxy @ast)) $
             mapC
-            ( mapKWith (Proxy :: Proxy '[Recursively KNodes, Recursively KFunctor])
+            ( mapKWith (Proxy @'[Recursively KNodes, Recursively KFunctor])
                 (\(MkFlip f) -> Lens.from _Flip %~ mapC f & MkMapK)
                 mapSub
             ) x
@@ -88,11 +88,11 @@ instance
         GMono x -> convTop x
         GPoly x -> convTop x
         GBody x ->
-            withDict (recursive :: RecursiveDict ast KNodes) $
-            withDict (recursive :: RecursiveDict ast KFoldable) $
-            withDict (kNodes (Proxy :: Proxy ast)) $
+            withDict (recursive @KNodes @ast) $
+            withDict (recursive @KFoldable @ast) $
+            withDict (kNodes (Proxy @ast)) $
             foldMapC
-            ( mapKWith (Proxy :: Proxy '[Recursively KNodes, Recursively KFoldable])
+            ( mapKWith (Proxy @'[Recursively KNodes, Recursively KFoldable])
                 (\(MkFlip f) -> foldMapC f . (_Flip #) & MkConvertK)
                 convSub
             ) x
@@ -111,10 +111,10 @@ instance
         GMono x -> runContainedK x <&> GMono
         GPoly x -> runContainedK x <&> GPoly
         GBody x ->
-            withDict (recursive :: RecursiveDict ast KNodes) $
-            withDict (recursive :: RecursiveDict ast KFunctor) $
-            withDict (recursive :: RecursiveDict ast KFoldable) $
-            withDict (recursive :: RecursiveDict ast KTraversable) $
+            withDict (recursive @KNodes @ast) $
+            withDict (recursive @KFunctor @ast) $
+            withDict (recursive @KFoldable @ast) $
+            withDict (recursive @KTraversable @ast) $
             -- KTraversable will be required when not implied by Recursively
             traverseKWith
             (Proxy ::
@@ -145,7 +145,7 @@ generalize v0 =
                 bindVar binding v1 (USkolem (generalizeConstraints l))
             USkolem l | toScopeConstraints l `leq` c -> pure (GPoly v1)
             UTerm t ->
-                withDict (recursive :: RecursiveDict t (Unify m)) $
+                withDict (recursive @(Unify m) @t) $
                 do
                     bindVar binding v1 (UResolving t)
                     r <- traverseKWith p generalize (t ^. uBody)
@@ -158,7 +158,7 @@ generalize v0 =
             UResolving t -> GMono v1 <$ occursError v1 t
             _ -> pure (GMono v1)
     where
-        p = Proxy :: Proxy '[Recursively (Unify m)]
+        p = Proxy @'[Recursively (Unify m)]
 
 {-# INLINE instantiateForAll #-}
 instantiateForAll ::
@@ -203,7 +203,7 @@ instantiateWith ::
 instantiateWith action g =
     do
         (r, recover) <-
-            instantiateH (rLiftConstraints :: Tree (RecursiveNodes t) (KDict '[Unify m])) g
+            instantiateH (rLiftConstraints @t @'[Unify m]) g
             & runWriterT
         action <* sequence_ recover <&> (r, )
 

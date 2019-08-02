@@ -36,6 +36,7 @@ default-extensions:
 - MultiParamTypeClasses
 - StandaloneDeriving
 - TupleSections
+- TypeApplications
 - TypeFamilies
 - TypeOperators
 

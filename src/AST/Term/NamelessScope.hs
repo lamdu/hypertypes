@@ -111,15 +111,15 @@ instance
     Infer m (Scope t k) where
 
     inferBody (Scope x) =
-        withDict (hasInferOf1 (Proxy :: Proxy (t k))) $
-        withDict (hasInferOf1 (Proxy :: Proxy (t (Maybe k)))) $
+        withDict (hasInferOf1 (Proxy @(t k))) $
+        withDict (hasInferOf1 (Proxy @(t (Maybe k)))) $
         do
             varType <- newUnbound
             InferredChild xI xR <-
                 inferChild x
                 & local (scopeTypes . _ScopeTypes %~ (varType Sequence.<|))
             InferRes (Scope xI)
-                (FuncType varType (xR ^. cloneLens (inferredType (Proxy :: Proxy (t k)))))
+                (FuncType varType (xR ^. cloneLens (inferredType (Proxy @(t k)))))
                 & pure
         \\ (inferMonad :: DeBruijnIndex (Maybe k) :- Infer m (t (Maybe k)))
 

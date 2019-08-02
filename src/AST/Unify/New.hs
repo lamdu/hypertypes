@@ -28,4 +28,4 @@ unfreeze ::
     forall m t.
     (Recursively KNodes t, Recursively (Unify m) t) =>
     Tree Pure t -> m (Tree (UVarOf m) t)
-unfreeze = wrapM (Proxy :: Proxy '[Unify m]) Dict newTerm
+unfreeze = wrapM (Proxy @'[Unify m]) Dict newTerm

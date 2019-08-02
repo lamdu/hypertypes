@@ -120,8 +120,8 @@ instance
 
     {-# INLINE kNodes #-}
     kNodes _ =
-        withDict (kNodes (Proxy :: Proxy a)) $
-        withDict (kNodes (Proxy :: Proxy b)) Dict
+        withDict (kNodes (Proxy @a)) $
+        withDict (kNodes (Proxy @b)) Dict
 
 instance (KPointed a, KPointed b) => KPointed (Product a b) where
     {-# INLINE pureK #-}
@@ -145,7 +145,7 @@ mapK ::
     Tree k m ->
     Tree k n
 mapK f x =
-    withDict (kNodes (Proxy :: Proxy k)) $
+    withDict (kNodes (Proxy @k)) $
     mapC (pureK (MkMapK f)) x
 
 {-# INLINE liftK2 #-}

@@ -29,7 +29,7 @@ instance
 
     type NodeTypesOf (IResult e) = Product (ANode (TypeOf e)) (NodeTypesOf (ScopeOf e))
 
-    kNodes _ = withDict (kNodes (Proxy :: Proxy (ScopeOf e))) Dict
+    kNodes _ = withDict (kNodes (Proxy @(ScopeOf e))) Dict
 
 makeLenses ''IResult
 makeKApply ''IResult

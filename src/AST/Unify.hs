@@ -57,10 +57,10 @@ updateTermConstraints ::
 updateTermConstraints v t newConstraints
     | newConstraints `leq` (t ^. uConstraints) = pure ()
     | otherwise =
-        withDict (recursive :: RecursiveDict t (Unify m)) $
+        withDict (recursive @(Unify m) @t) $
         do
             bindVar binding v (UResolving t)
-            verifyConstraints (Proxy :: Proxy (Recursively (Unify m))) newConstraints
+            verifyConstraints (Proxy @(Recursively (Unify m))) newConstraints
                 (unifyError . ConstraintsViolation (t ^. uBody))
                 f
                 (t ^. uBody)
@@ -118,10 +118,10 @@ unifyUTerms xv xt yv (UUnbound level) = unifyUnbound yv level xv xt
 unifyUTerms xv USkolem{} yv _ = xv <$ unifyError (SkolemUnified xv yv)
 unifyUTerms xv _ yv USkolem{} = yv <$ unifyError (SkolemUnified yv xv)
 unifyUTerms xv (UTerm xt) yv (UTerm yt) =
-    withDict (recursive :: RecursiveDict t (Unify m)) $
+    withDict (recursive @(Unify m) @t) $
     do
         bindVar binding yv (UToVar xv)
-        zipMatchWithA (Proxy :: Proxy '[Recursively (Unify m)]) unify (xt ^. uBody) (yt ^. uBody)
+        zipMatchWithA (Proxy @'[Recursively (Unify m)]) unify (xt ^. uBody) (yt ^. uBody)
             & fromMaybe (xt ^. uBody <$ structureMismatch unify xt yt)
             >>= bindVar binding xv . UTerm . UTermBody (xt ^. uConstraints <> yt ^. uConstraints)
         pure xv

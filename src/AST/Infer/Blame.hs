@@ -45,11 +45,11 @@ prepare ::
     Tree (Ann a) exp ->
     m (Tree (Ann (PrepAnn m a)) exp)
 prepare typeFromAbove (Ann a x) =
-    withDict (recursive :: RecursiveDict exp KFunctor) $
-    withDict (recursive :: RecursiveDict exp (Infer m)) $
-    withDict (recursive :: RecursiveDict exp (InferOfConstraint KApplicative)) $
-    withDict (recursive :: RecursiveDict exp (InferOfConstraint KTraversable)) $
-    withDict (recursive :: RecursiveDict exp (InferOfConstraint (KNodesConstraint (Recursively (Unify m))))) $
+    withDict (recursive @KFunctor @exp) $
+    withDict (recursive @(Infer m) @exp) $
+    withDict (recursive @(InferOfConstraint KApplicative) @exp) $
+    withDict (recursive @(InferOfConstraint KTraversable) @exp) $
+    withDict (recursive @(InferOfConstraint (KNodesConstraint (Recursively (Unify m)))) @exp) $
     inferBody
     (mapKWith
         (Proxy ::
@@ -62,7 +62,7 @@ prepare typeFromAbove (Ann a x) =
             ])
         (\c ->
             do
-                t <- sequencePureKWith (Proxy :: Proxy '[Recursively (Unify m)]) newUnbound
+                t <- sequencePureKWith (Proxy @'[Recursively (Unify m)]) newUnbound
                 prepare t c <&> (`InferredChild` t)
             & InferChild
         )
@@ -74,15 +74,15 @@ prepare typeFromAbove (Ann a x) =
     , pTryUnify =
         do
             sequenceLiftK2With_
-                (Proxy :: Proxy '[Recursively (Unify m)])
+                (Proxy @'[Recursively (Unify m)])
                 (unify <&> mapped . mapped .~ ()) typeFromAbove t
             traverseKWith_
-                (Proxy :: Proxy '[Recursively (Unify m)])
+                (Proxy @'[Recursively (Unify m)])
                 occursCheck t
         & (`catchError` const (pure ()))
     , pFinalize =
         foldMapKWith
-            (Proxy :: Proxy '[Recursively (Unify m)])
+            (Proxy @'[Recursively (Unify m)])
             (\(Pair t0 t1) -> [(==) <$> (semiPruneLookup t0 <&> fst) <*> (semiPruneLookup t1 <&> fst)])
             (zipK typeFromAbove t)
         & sequenceA
@@ -116,5 +116,4 @@ blame order topLevelType e =
         p ^.. annotationsWith prox Dict & sortOn (order . pAnn) & traverse_ pTryUnify
         annotationsWith prox Dict (\x -> pFinalize x <&> (, pAnn x)) p
     where
-        prox :: Proxy '[Infer m, KTraversable]
-        prox = Proxy
+        prox = Proxy @'[Infer m, KTraversable]

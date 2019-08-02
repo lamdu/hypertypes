@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeApplications, ScopedTypeVariables, RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables, RankNTypes #-}
 
 module AST.Class.Foldable
     ( KFoldable(..)
@@ -50,7 +50,7 @@ foldMapK ::
     Tree k l ->
     a
 foldMapK f x =
-    withDict (kNodes (Proxy :: Proxy k)) $
+    withDict (kNodes (Proxy @k)) $
     foldMapC (pureK (MkConvertK f)) x
 
 {-# INLINE foldMapKWith #-}
@@ -62,8 +62,8 @@ foldMapKWith ::
     Tree k n ->
     a
 foldMapKWith p f =
-    withDict (kNodes (Proxy :: Proxy k)) $
-    withDict (kLiftConstraintsNodeTypes (Proxy :: Proxy k) p) $
+    withDict (kNodes (Proxy @k)) $
+    withDict (kLiftConstraintsNodeTypes (Proxy @k) p) $
     foldMapC (pureKWith p (_ConvertK # f))
 
 {-# INLINE traverseK_ #-}

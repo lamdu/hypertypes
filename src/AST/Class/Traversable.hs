@@ -58,8 +58,8 @@ traverseKWith ::
     Tree k m ->
     f (Tree k n)
 traverseKWith p f =
-    withDict (kNodes (Proxy :: Proxy k)) $
-    withDict (kLiftConstraintsNodeTypes (Proxy :: Proxy k) p) $
+    withDict (kNodes (Proxy @k)) $
+    withDict (kLiftConstraintsNodeTypes (Proxy @k) p) $
     sequenceC . mapC (pureKWith p (MkMapK (MkContainedK . f)))
 
 {-# INLINE traverseKWithDict #-}
@@ -71,7 +71,7 @@ traverseKWithDict ::
     Tree k m ->
     f (Tree k n)
 traverseKWithDict d f =
-    withDict (kNodes (Proxy :: Proxy k)) $
+    withDict (kNodes (Proxy @k)) $
     sequenceC . mapC (pureKWithDict d (MkMapK (MkContainedK . f)))
 
 {-# INLINE sequencePureK #-}

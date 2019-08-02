@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ab400001b840618c8ce45f826446cd3ad0f6276900876200ebdf2102d848e3ed
+-- hash: 37d4f3bdd4887d41b8ff3696d6e090e71e748098eb35008d6352f0a6af578633
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -98,7 +98,7 @@ library
       Paths_syntax_tree
   hs-source-dirs:
       src
-  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies LambdaCase MultiParamTypeClasses StandaloneDeriving TupleSections TypeFamilies TypeOperators NoImplicitPrelude
+  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies LambdaCase MultiParamTypeClasses StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators NoImplicitPrelude
   ghc-options: -O2 -Wall -Wnoncanonical-monad-instances -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
   ghc-prof-options: -O2
   build-depends:
@@ -134,7 +134,7 @@ test-suite syntax-tree-test
       TypeLang.Pure
   hs-source-dirs:
       test
-  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies LambdaCase MultiParamTypeClasses StandaloneDeriving TupleSections TypeFamilies TypeOperators
+  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies LambdaCase MultiParamTypeClasses StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators
   ghc-options: -Wall -Wcompat -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base
@@ -159,7 +159,7 @@ benchmark syntax-tree-bench
       TypeLang.Pure
   hs-source-dirs:
       test
-  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies LambdaCase MultiParamTypeClasses StandaloneDeriving TupleSections TypeFamilies TypeOperators
+  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies LambdaCase MultiParamTypeClasses StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators
   ghc-options: -O2 -Wall -Wnoncanonical-monad-instances -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
   build-depends:
       base

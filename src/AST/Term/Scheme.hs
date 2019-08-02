@@ -145,9 +145,9 @@ schemeToRestrictedType ::
     Tree Pure (Scheme varTypes typ) -> m (Tree (UVarOf m) typ)
 schemeToRestrictedType (MkPure (Scheme vars typ)) =
     do
-        foralls <- traverseKWith (Proxy :: Proxy '[Unify m]) makeQVarInstancesInScope vars
+        foralls <- traverseKWith (Proxy @'[Unify m]) makeQVarInstancesInScope vars
         wrapM
-            (Proxy :: Proxy '[Unify m, HasChild varTypes, QVarHasInstance Ord])
+            (Proxy @'[Unify m, HasChild varTypes, QVarHasInstance Ord])
             Dict (schemeBodyToType foralls) typ
 
 {-# INLINE loadBody #-}
@@ -184,8 +184,8 @@ loadScheme ::
     m (Tree (GTerm (UVarOf m)) typ)
 loadScheme (MkPure (Scheme vars typ)) =
     do
-        foralls <- traverseKWith (Proxy :: Proxy '[Unify m]) makeQVarInstances vars
-        wrapM (Proxy :: Proxy '[Unify m, HasChild varTypes, QVarHasInstance Ord])
+        foralls <- traverseKWith (Proxy @'[Unify m]) makeQVarInstances vars
+        wrapM (Proxy @'[Unify m, HasChild varTypes, QVarHasInstance Ord])
             Dict (loadBody foralls) typ
 
 saveH ::
@@ -236,7 +236,7 @@ saveScheme x =
     do
         (t, (v, recover)) <-
             runStateT (saveH rLiftConstraints x)
-            ( pureKWithConstraint (Proxy :: Proxy (QVarHasInstance Ord)) (QVars mempty)
+            ( pureKWithConstraint (Proxy @(QVarHasInstance Ord)) (QVars mempty)
             , []
             )
         _Pure # Scheme v t <$ sequence_ recover

@@ -40,8 +40,8 @@ diff ::
     (Recursively ZipMatch t, Recursively KTraversable t) =>
     Tree (Ann a) t -> Tree (Ann b) t -> Tree (Diff a b) t
 diff x@(Ann xA xB) y@(Ann yA yB) =
-    withDict (recursive :: RecursiveDict t ZipMatch) $
-    withDict (recursive :: RecursiveDict t KTraversable) $
+    withDict (recursive @ZipMatch @t) $
+    withDict (recursive @KTraversable @t) $
     case zipMatch xB yB of
     Nothing -> Different (Pair x y)
     Just match ->
@@ -50,7 +50,7 @@ diff x@(Ann xA xB) y@(Ann yA yB) =
         Just r -> Ann (xA, yA) r & CommonSubTree
         where
             sub =
-                mapKWith (Proxy :: Proxy '[Recursively ZipMatch, Recursively KTraversable])
+                mapKWith (Proxy @'[Recursively ZipMatch, Recursively KTraversable])
                 (\(Pair xC yC) -> diff xC yC) match
 
 type Deps c a b e =

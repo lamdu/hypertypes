@@ -60,7 +60,7 @@ instance
             varType <- newUnbound
             InferredChild rI rR <- inferChild r & localScopeType p varType
             InferRes (Lam p rI)
-                (FuncType varType (rR ^. cloneLens (inferredType (Proxy :: Proxy t))))
+                (FuncType varType (rR ^. cloneLens (inferredType (Proxy @t))))
                 & pure
 
 deriving instance Deps v expr k Eq   => Eq   (Lam v expr k)

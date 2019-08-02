@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes, ScopedTypeVariables, FlexibleContexts, TypeApplications #-}
+{-# LANGUAGE RankNTypes, ScopedTypeVariables, FlexibleContexts #-}
 
 module AST.Class.ZipMatch
     ( ZipMatch(..)

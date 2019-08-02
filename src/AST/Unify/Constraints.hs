@@ -62,7 +62,7 @@ class
         Tree ast p ->
         m (Tree ast q)
     verifyConstraints _ constraints _ update =
-        traverseKWith (Proxy :: Proxy [childOp, TypeConstraintsAre (TypeConstraintsOf ast)])
+        traverseKWith (Proxy @[childOp, TypeConstraintsAre (TypeConstraintsOf ast)])
         (update constraints)
 
 class TypeConstraintsOf ast ~ constraints => TypeConstraintsAre constraints ast

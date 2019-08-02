@@ -63,7 +63,7 @@ instance
         do
             InferredChild xI xR <- inferChild x
             t <- schemeToRestrictedType s
-            (cloneLens (inferredType (Proxy :: Proxy term))) (unify t) xR
+            (cloneLens (inferredType (Proxy @term))) (unify t) xR
                 <&> InferRes (TypeSig xI s)
         & localLevel
 

@@ -140,9 +140,9 @@ inferExpr ::
     Tree Pure t ->
     m (Tree Pure (TypeOf t))
 inferExpr x =
-    infer (wrap (Proxy :: Proxy '[KFunctor]) Dict (Ann ()) x)
-    >>= Lens.from _Flip (traverseKWith (Proxy :: Proxy '[Recursively (Unify m)]) applyBindings)
-    <&> (^. iRes . Lens.cloneLens (inferredType (Proxy :: Proxy t)))
+    infer (wrap (Proxy @'[KFunctor]) Dict (Ann ()) x)
+    >>= Lens.from _Flip (traverseKWith (Proxy @'[Recursively (Unify m)]) applyBindings)
+    <&> (^. iRes . Lens.cloneLens (inferredType (Proxy @t)))
 
 vecNominalDecl :: Tree Pure (NominalDecl Typ)
 vecNominalDecl =

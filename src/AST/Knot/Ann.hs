@@ -63,7 +63,7 @@ annotationsWithDict ::
     a b
 annotationsWithDict c getTraversable f (Ann pl x) =
     withDict (c ^. recSelf . _KDict) $
-    withDict (getTraversable :: Dict (KTraversable k)) $
+    withDict (getTraversable @k) $
     Ann
     <$> f pl
     <*> traverseKRec c (\d -> annotationsWithDict d getTraversable f) x
@@ -77,8 +77,7 @@ annotationsWith ::
     (Tree (Ann a) k)
     (Tree (Ann b) k)
     a b
-annotationsWith _ =
-    annotationsWithDict (rLiftConstraints :: Tree (RecursiveNodes k) (KDict cs))
+annotationsWith _ = annotationsWithDict (rLiftConstraints @k @cs)
 
 annotations ::
     (Recursively KNodes e, Recursively KTraversable e) =>
@@ -86,13 +85,13 @@ annotations ::
     (Tree (Ann a) e)
     (Tree (Ann b) e)
     a b
-annotations = annotationsWith (Proxy :: Proxy '[KTraversable]) Dict
+annotations = annotationsWith (Proxy @'[KTraversable]) Dict
 
 strip ::
     (Recursively KNodes expr, Recursively KTraversable expr) =>
     Tree (Ann a) expr ->
     Tree Pure expr
-strip = unwrap (Proxy :: Proxy '[KTraversable]) Dict (^. val)
+strip = unwrap (Proxy @'[KTraversable]) Dict (^. val)
 
 addAnnotations ::
     RLiftConstraints k cs =>

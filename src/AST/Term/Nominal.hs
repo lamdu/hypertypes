@@ -89,7 +89,7 @@ instance KNodes (FromNom n t) where
 instance KNodes v => KNodes (NominalInst n v) where
     type NodeTypesOf (NominalInst n v) = NodeTypesOf v
     {-# INLINE kNodes #-}
-    kNodes _ = withDict (kNodes (Proxy :: Proxy v)) Dict
+    kNodes _ = withDict (kNodes (Proxy @v)) Dict
 
 makeLenses ''NominalDecl
 makeLenses ''NominalInst
@@ -101,12 +101,12 @@ makeKTraversableAndBases ''FromNom
 
 instance (KFunctor v, KNodes v) => KFunctor (NominalInst n v) where
     mapC f (NominalInst n v) =
-        withDict (kNodes (Proxy :: Proxy v)) $
+        withDict (kNodes (Proxy @v)) $
         mapC (mapK (_MapK %~ (_QVarInstances . Lens.mapped %~)) f) v & NominalInst n
 
 instance (KFoldable v, KNodes v) => KFoldable (NominalInst n v) where
     foldMapC f (NominalInst _ v) =
-        withDict (kNodes (Proxy :: Proxy v)) $
+        withDict (kNodes (Proxy @v)) $
         foldMapC (mapK (_ConvertK %~ \fq -> foldMap fq . (^. _QVarInstances)) f) v
 
 instance (KTraversable v, KNodes v) => KTraversable (NominalInst n v) where
@@ -128,7 +128,7 @@ instance
         | xId /= yId = Nothing
         | otherwise =
             zipMatch x y
-            >>= traverseKWith (Proxy :: Proxy '[ZipMatch, QVarHasInstance Ord])
+            >>= traverseKWith (Proxy @'[ZipMatch, QVarHasInstance Ord])
                 (\(Pair (QVarInstances c0) (QVarInstances c1)) ->
                     zipMatch (TermMap c0) (TermMap c1)
                     <&> (^. _TermMap)
@@ -145,7 +145,7 @@ instance
 
     {-# INLINE recursive #-}
     recursive =
-        withDict (kNodes (Proxy :: Proxy varTypes))
+        withDict (kNodes (Proxy @varTypes))
         Dict
 
 instance DepsT Pretty nomId term k => Pretty (ToNom nomId term k) where
@@ -167,7 +167,7 @@ instance
     pPrint (NominalInst n vars) =
         pPrint n <>
         joinArgs
-        (foldMapKWith (Proxy :: Proxy [QVarHasInstance Pretty, NodeHasConstraint Pretty k]) mkArgs vars)
+        (foldMapKWith (Proxy @[QVarHasInstance Pretty, NodeHasConstraint Pretty k]) mkArgs vars)
         where
             joinArgs [] = mempty
             joinArgs xs =
@@ -219,9 +219,9 @@ loadNominalDecl ::
     m (Tree (LoadedNominalDecl typ) (UVarOf m))
 loadNominalDecl (MkPure (NominalDecl params (Scheme foralls typ))) =
     do
-        paramsL <- traverseKWith (Proxy :: Proxy '[Unify m]) makeQVarInstances params
-        forallsL <- traverseKWith (Proxy :: Proxy '[Unify m]) makeQVarInstances foralls
-        wrapM (Proxy :: Proxy '[Unify m, HasChild (NomVarTypes typ), QVarHasInstance Ord])
+        paramsL <- traverseKWith (Proxy @'[Unify m]) makeQVarInstances params
+        forallsL <- traverseKWith (Proxy @'[Unify m]) makeQVarInstances foralls
+        wrapM (Proxy @'[Unify m, HasChild (NomVarTypes typ), QVarHasInstance Ord])
             Dict (loadBody paramsL forallsL) typ
             <&> LoadedNominalDecl paramsL forallsL
 
@@ -241,7 +241,7 @@ lookupParams ::
     Tree varTypes (QVarInstances (UVarOf m)) ->
     m (Tree varTypes (QVarInstances (UVarOf m)))
 lookupParams =
-    traverseKWith (Proxy :: Proxy '[Unify m]) ((_QVarInstances . traverse) lookupParam)
+    traverseKWith (Proxy @'[Unify m]) ((_QVarInstances . traverse) lookupParam)
     where
         lookupParam v =
             lookupVar binding v
@@ -274,7 +274,7 @@ instance
                     v <- inferChild val
                     LoadedNominalDecl params foralls gen <- getNominalDecl nomId
                     recover <-
-                        traverseKWith_ (Proxy :: Proxy '[Unify m])
+                        traverseKWith_ (Proxy @'[Unify m])
                         (traverse_ (instantiateForAll USkolem) . (^. _QVarInstances))
                         foralls
                         & execWriterT
@@ -284,7 +284,7 @@ instance
             _ <- unify typ (valR ^. cloneLens l)
             InferRes (ToNom nomId valI) (NominalInst nomId paramsT) & pure
         where
-            l = inferredType (Proxy :: Proxy expr)
+            l = inferredType (Proxy @expr)
 
 type instance InferOf (FromNom nomId expr) = FuncType (TypeOf expr)
 
@@ -322,7 +322,7 @@ applyNominal ::
     m (Tree (Scheme (NomVarTypes typ) typ) k)
 applyNominal _ getDeps mkType (MkPure (NominalDecl _paramsDecl scheme)) params =
     sTyp
-    (subst (rLiftConstraints :: Tree (RecursiveNodes typ) (KDict cs)) getDeps mkType params)
+    (subst (rLiftConstraints @typ @cs) getDeps mkType params)
     scheme
 
 subst ::

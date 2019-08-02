@@ -42,8 +42,8 @@ applyBindings v0 =
     UTerm b ->
         do
             (r, anyChild) <-
-                withDict (recursive :: RecursiveDict t (Unify m)) $
-                traverseKWith (Proxy :: Proxy '[Recursively (Unify m)])
+                withDict (recursive @(Unify m) @t) $
+                traverseKWith (Proxy @'[Recursively (Unify m)])
                 ( \c ->
                     do
                         get >>= lift . (`unless` bindVar binding v1 (UResolving b))

@@ -60,7 +60,7 @@ instance
             (eI, eG) <-
                 do
                     InferredChild eI eR <- inferChild e
-                    generalize (eR ^. cloneLens (inferredType (Proxy :: Proxy expr)))
+                    generalize (eR ^. cloneLens (inferredType (Proxy @expr)))
                         <&> (eI ,)
                 & localLevel
             inferChild i
