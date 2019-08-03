@@ -5,18 +5,20 @@ module AST.Combinator.Compose
     ( Compose(..), _Compose
     ) where
 
-import           AST
 import           AST.Class
 import           AST.Class.Foldable
 import           AST.Class.Traversable
 import           AST.Class.ZipMatch (ZipMatch(..))
+import           AST.Knot
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           Data.Constraint
+import           Data.Functor.Product.PolyKinds (Product(..))
 import           Data.Kind (Type)
 import           Data.Proxy (Proxy(..))
+import           Data.TyFun
 import           GHC.Generics (Generic)
 
 import           Prelude.Compat
