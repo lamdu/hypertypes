@@ -191,7 +191,7 @@ instantiateH ::
 instantiateH _ _ (GMono x) = pure x
 instantiateH c cons (GBody x) =
     withDict (c ^. recSelf . _KDict) $
-    traverseKRec c (\d -> instantiateH d cons) x >>= lift . newTerm
+    traverseKRec c (`instantiateH` cons) x >>= lift . newTerm
 instantiateH c cons (GPoly x) =
     withDict (c ^. recSelf . _KDict) $
     instantiateForAll cons x

@@ -82,7 +82,6 @@ instance
 
 type instance InferOf (LangA k) = ANode Typ
 type instance TypeOf (LangA k) = Typ
-type instance ScopeOf (LangA k) = ScopeTypes Typ
 
 instance HasInferredType (LangA k) where inferredType _ = _ANode
 
@@ -115,7 +114,6 @@ type TermInfer1Deps env m =
     ( MonadScopeLevel m
     , MonadReader env m
     , HasScopeTypes (UVarOf m) Typ env
-    , HasScope m (ScopeTypes Typ)
     , Unify m Typ, Unify m Row
     )
 
@@ -175,9 +173,6 @@ execPureInferA (PureInferA act) =
     <&> (^. Lens._1)
 
 type instance UVarOf PureInferA = UVar
-
-instance HasScope PureInferA (ScopeTypes Typ) where
-    getScope = Lens.view iaScopeTypes
 
 instance MonadScopeLevel PureInferA where
     localLevel = local (iaScopeLevel . _ScopeLevel +~ 1)
@@ -241,9 +236,6 @@ execSTInferA (STInferA act) =
         runReaderT act (emptyLangAInferEnv, qvarGen) & runExceptT
 
 type instance UVarOf (STInferA s) = STUVar s
-
-instance HasScope (STInferA s) (ScopeTypes Typ) where
-    getScope = Lens.view (Lens._1 . iaScopeTypes)
 
 instance MonadScopeLevel (STInferA s) where
     localLevel = local (Lens._1 . iaScopeLevel . _ScopeLevel +~ 1)

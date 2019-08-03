@@ -4,6 +4,7 @@
 module AST.Term.Var
     ( Var(..), _Var
     , VarType(..)
+    , ScopeOf, HasScope(..)
     ) where
 
 import           AST
@@ -14,11 +15,17 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           Data.Functor.Const (Const)
+import           Data.Kind (Type)
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 
 import           Prelude.Compat
+
+type family ScopeOf (t :: Knot -> Type) :: Knot -> Type
+
+class HasScope m s where
+    getScope :: m (Tree s (UVarOf m))
 
 class VarType var expr where
     -- | Instantiate a type for a variable in a given scope

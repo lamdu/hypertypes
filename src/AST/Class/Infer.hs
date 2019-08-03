@@ -2,18 +2,21 @@
 {-# LANGUAGE UndecidableSuperClasses, UndecidableInstances #-}
 
 module AST.Class.Infer
-    ( Infer(..), HasScope(..), LocalScopeType(..)
+    ( Infer(..), LocalScopeType(..)
     , InferredChild(..), inType, inRep
     , InferChild(..), _InferChild
     , InferRes(..), inferResVal, inferResBody
     , InferOf, InferOfConstraint
+    , HasInferredValue(..)
+    , HasInferredType(..), TypeOf
     ) where
 
 import AST
 import AST.Class.Unify (UVarOf)
-import Control.Lens (Lens, makeLenses, makePrisms)
+import Control.Lens (Lens, Lens', ALens', makeLenses, makePrisms)
 import Control.Lens.Operators
 import Data.Kind (Type)
+import Data.Proxy (Proxy)
 
 import Prelude.Compat
 
@@ -21,6 +24,14 @@ type family InferOf (t :: Knot -> Type) :: Knot -> Type
 
 class    c (InferOf t) => InferOfConstraint c t
 instance c (InferOf t) => InferOfConstraint c t
+
+class HasInferredValue t where
+    inferredValue :: Lens' (Tree (InferOf t) v) (Tree v t)
+
+type family TypeOf (t :: Knot -> Type) :: Knot -> Type
+
+class HasInferredType t where
+    inferredType :: Proxy t -> ALens' (Tree (InferOf t) v) (Tree v (TypeOf t))
 
 data InferredChild v k t = InferredChild
     { -- Representing the inferred child in the resulting node
@@ -50,9 +61,6 @@ inferResBody ::
     Lens (InferRes v k0 t0) (InferRes v k1 t1) (Tree t0 k0) (Tree t1 k1)
 inferResBody f InferRes{..} =
     f __inferResBody <&> \__inferResBody -> InferRes{..}
-
-class HasScope m s where
-    getScope :: m (Tree s (UVarOf m))
 
 class LocalScopeType var scheme m where
     localScopeType :: var -> scheme -> m a -> m a
