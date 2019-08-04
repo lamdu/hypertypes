@@ -8,9 +8,9 @@ module AST.Infer.Term
 
 import AST
 import AST.Class
+import AST.Class.Combinators
 import AST.Class.Foldable
 import AST.Class.Infer
-import AST.Class.NodesConstraint
 import AST.Class.Traversable
 import AST.Combinator.Flip (Flip(..), _Flip)
 import Control.Lens (Traversal, Iso, makeLenses, makePrisms, from, iso)
@@ -36,7 +36,7 @@ makeLenses ''ITerm
 data InferConstraint :: (Knot -> Type) -> ((Knot -> Type) -> Constraint) ~> Constraint
 
 type instance Apply (InferConstraint k) c =
-    Recursively (InferOfConstraint (KNodesConstraint c)) k
+    Recursively (InferOfConstraint (KLiftConstraint c)) k
 
 newtype IResultNodeTypes k e =
     MkIResultNodeTypes { runIResultNodeTypes :: NodeTypesOf (InferOf (RunKnot e)) k }
@@ -88,7 +88,7 @@ instance
         where
             makeP ::
                 Proxy c ->
-                Proxy '[InferOfConstraint KNodes, InferOfConstraint (KNodesConstraint c)]
+                Proxy '[InferOfConstraint KNodes, InferOfConstraint (KLiftConstraint c)]
             makeP _ = Proxy
             g ::
                 forall child n constraint.

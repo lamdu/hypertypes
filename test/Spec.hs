@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts, BlockArguments, ScopedTypeVariables #-}
 
 import           AST
-import           AST.Class.NodesConstraint
+import           AST.Class.Combinators
 import           AST.Class.Recursive
 import           AST.Class.Unify
 import           AST.Combinator.Flip
@@ -135,7 +135,7 @@ inferExpr ::
     , Recursively (InferOfConstraint KFoldable) t
     , Recursively (InferOfConstraint KFunctor) t
     , Recursively (InferOfConstraint KTraversable) t
-    , Recursively (InferOfConstraint (KNodesConstraint (Recursively (Unify m)))) t
+    , Recursively (InferOfConstraint (KLiftConstraint (Recursively (Unify m)))) t
     ) =>
     Tree Pure t ->
     m (Tree Pure (TypeOf t))

@@ -5,8 +5,8 @@ module AST.Infer.Blame
     ) where
 
 import AST
+import AST.Class.Combinators
 import AST.Class.Foldable (sequenceLiftK2With_)
-import AST.Class.NodesConstraint (KNodesConstraint)
 import AST.Class.Traversable
 import AST.Knot.Ann (annotationsWith)
 import AST.Infer
@@ -39,7 +39,7 @@ prepare ::
     , Recursively (Infer m) exp
     , Recursively (InferOfConstraint KApplicative) exp
     , Recursively (InferOfConstraint KTraversable) exp
-    , Recursively (InferOfConstraint (KNodesConstraint (Recursively (Unify m)))) exp
+    , Recursively (InferOfConstraint (KLiftConstraint (Recursively (Unify m)))) exp
     ) =>
     Tree (InferOf exp) (UVarOf m) ->
     Tree (Ann a) exp ->
@@ -49,7 +49,7 @@ prepare typeFromAbove (Ann a x) =
     withDict (recursive @(Infer m) @exp) $
     withDict (recursive @(InferOfConstraint KApplicative) @exp) $
     withDict (recursive @(InferOfConstraint KTraversable) @exp) $
-    withDict (recursive @(InferOfConstraint (KNodesConstraint (Recursively (Unify m)))) @exp) $
+    withDict (recursive @(InferOfConstraint (KLiftConstraint (Recursively (Unify m)))) @exp) $
     inferBody
     (mapKWith
         (Proxy ::
@@ -58,7 +58,7 @@ prepare typeFromAbove (Ann a x) =
             , Recursively (Infer m)
             , Recursively (InferOfConstraint KApplicative)
             , Recursively (InferOfConstraint KTraversable)
-            , Recursively (InferOfConstraint (KNodesConstraint (Recursively (Unify m))))
+            , Recursively (InferOfConstraint (KLiftConstraint (Recursively (Unify m))))
             ])
         (\c ->
             do
@@ -104,7 +104,7 @@ blame ::
     , Recursively (Infer m) exp
     , Recursively (InferOfConstraint KApplicative) exp
     , Recursively (InferOfConstraint KTraversable) exp
-    , Recursively (InferOfConstraint (KNodesConstraint (Recursively (Unify m)))) exp
+    , Recursively (InferOfConstraint (KLiftConstraint (Recursively (Unify m)))) exp
     ) =>
     (a -> priority) ->
     Tree (InferOf exp) (UVarOf m) ->

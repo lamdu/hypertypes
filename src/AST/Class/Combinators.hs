@@ -1,9 +1,10 @@
 {-# LANGUAGE ScopedTypeVariables, FlexibleInstances, UndecidableInstances, RankNTypes #-}
+{-# LANGUAGE UndecidableSuperClasses #-}
 
 -- | Combinators for partially applied constraints on knots
 
 module AST.Class.Combinators
-    ( KLiftConstraints(..)
+    ( KLiftConstraints(..), KLiftConstraint
     , pureKWith
     , mapKWith
     , liftK2With
@@ -20,6 +21,9 @@ import Data.Proxy (Proxy(..))
 import Data.TyFun
 
 import Prelude.Compat
+
+class    NodesConstraint k $ c => KLiftConstraint c k
+instance NodesConstraint k $ c => KLiftConstraint c k
 
 class
     KNodes k =>
@@ -42,7 +46,7 @@ instance
     kLiftConstraintsNodeTypes p _ = withDict (kNodes p) Dict
 
 instance
-    ( Apply (NodesConstraint k) c
+    ( KLiftConstraint c k
     , KLiftConstraints cs k
     ) =>
     KLiftConstraints (c ': cs) k where
