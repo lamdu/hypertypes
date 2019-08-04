@@ -42,7 +42,7 @@ bindK ::
 bindK x f = _Compose # mapK f x & joinK
 
 bindKWith ::
-    (KMonad k, Recursively KFunctor l, KLiftConstraints k constraints) =>
+    (KMonad k, Recursively KFunctor l, KLiftConstraints constraints k) =>
     Proxy constraints ->
     Tree k l ->
     (forall c. ApplyConstraints constraints c => Tree l c -> Tree (Compose k l) c) ->

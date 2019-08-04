@@ -56,7 +56,7 @@ foldMapK f x =
 {-# INLINE foldMapKWith #-}
 foldMapKWith ::
     forall a k n constraints.
-    (Monoid a, KFoldable k, KLiftConstraints k constraints) =>
+    (Monoid a, KFoldable k, KLiftConstraints constraints k) =>
     Proxy constraints ->
     (forall child. ApplyConstraints constraints child => Tree n child -> a) ->
     Tree k n ->
@@ -77,7 +77,7 @@ traverseK_ f = sequenceA_ . foldMapK ((:[]) . f)
 {-# INLINE traverseKWith_ #-}
 traverseKWith_ ::
     forall f k constraints m.
-    (Applicative f, KFoldable k, KLiftConstraints k constraints) =>
+    (Applicative f, KFoldable k, KLiftConstraints constraints k) =>
     Proxy constraints ->
     (forall c. ApplyConstraints constraints c => Tree m c -> f ()) ->
     Tree k m ->
@@ -98,7 +98,7 @@ sequenceLiftK2_ f x =
 {-# INLINE sequenceLiftK2With_ #-}
 sequenceLiftK2With_ ::
     forall f k constraints l m.
-    (Applicative f, KApply k, KFoldable k, KLiftConstraints k constraints) =>
+    (Applicative f, KApply k, KFoldable k, KLiftConstraints constraints k) =>
     Proxy constraints ->
     (forall c. ApplyConstraints constraints c => Tree l c -> Tree m c -> f ()) ->
     Tree k l ->

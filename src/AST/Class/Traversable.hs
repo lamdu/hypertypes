@@ -52,7 +52,7 @@ traverseK f = sequenceC . mapK (MkContainedK . f)
 {-# INLINE traverseKWith #-}
 traverseKWith ::
     forall n constraints m f k.
-    (Applicative f, KTraversable k, KLiftConstraints k constraints) =>
+    (Applicative f, KTraversable k, KLiftConstraints constraints k) =>
     Proxy constraints ->
     (forall c. ApplyConstraints constraints c => Tree m c -> f (Tree n c)) ->
     Tree k m ->
@@ -83,7 +83,7 @@ sequencePureK f = sequenceC (pureK (MkContainedK f))
 
 {-# INLINE sequencePureKWith #-}
 sequencePureKWith ::
-    (Applicative f, KApplicative k, KTraversable k, KLiftConstraints k constraints) =>
+    (Applicative f, KApplicative k, KTraversable k, KLiftConstraints constraints k) =>
     Proxy constraints ->
     (forall c. ApplyConstraints constraints c => f (Tree n c)) ->
     f (Tree k n)
@@ -100,7 +100,7 @@ sequenceLiftK2 f x = sequenceC . liftK2 (\a -> MkContainedK . f a) x
 
 {-# INLINE sequenceLiftK2With #-}
 sequenceLiftK2With ::
-    (Applicative f, KApply k, KTraversable k, KLiftConstraints k constraints) =>
+    (Applicative f, KApply k, KTraversable k, KLiftConstraints constraints k) =>
     Proxy constraints ->
     (forall c. ApplyConstraints constraints c => Tree l c -> Tree m c -> f (Tree n c)) ->
     Tree k l ->

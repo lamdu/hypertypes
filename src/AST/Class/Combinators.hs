@@ -23,17 +23,17 @@ import Prelude.Compat
 
 class
     KNodes k =>
-    KLiftConstraints k (cs :: [(Knot -> Type) -> Constraint]) where
+    KLiftConstraints (cs :: [(Knot -> Type) -> Constraint]) k where
 
     kLiftConstraints :: KApplicative k => Tree k (KDict cs)
 
     kLiftConstraintsNodeTypes ::
         Proxy k -> Proxy cs ->
-        Dict (KLiftConstraints (NodeTypesOf k) cs)
+        Dict (KLiftConstraints cs (NodeTypesOf k))
 
 instance
     KNodes k =>
-    KLiftConstraints k '[] where
+    KLiftConstraints '[] k where
 
     {-# INLINE kLiftConstraints #-}
     kLiftConstraints = pureK (MkKDict Dict)
@@ -43,9 +43,9 @@ instance
 
 instance
     ( Apply (NodesConstraint k) c
-    , KLiftConstraints k cs
+    , KLiftConstraints cs k
     ) =>
-    KLiftConstraints k (c ': cs) where
+    KLiftConstraints (c ': cs) k where
 
     {-# INLINE kLiftConstraints #-}
     kLiftConstraints =
@@ -63,7 +63,7 @@ instance
 {-# INLINE pureKWith #-}
 pureKWith ::
     forall n constraints k.
-    (KApplicative k, KLiftConstraints k constraints) =>
+    (KApplicative k, KLiftConstraints constraints k) =>
     Proxy constraints ->
     (forall child. ApplyConstraints constraints child => Tree n child) ->
     Tree k n
@@ -72,7 +72,7 @@ pureKWith _ = pureKWithDict (kLiftConstraints :: Tree k (KDict constraints))
 {-# INLINE mapKWith #-}
 mapKWith ::
     forall k m n constraints.
-    (KFunctor k, KLiftConstraints k constraints) =>
+    (KFunctor k, KLiftConstraints constraints k) =>
     Proxy constraints ->
     (forall child. ApplyConstraints constraints child => Tree m child -> Tree n child) ->
     Tree k m ->
@@ -84,7 +84,7 @@ mapKWith p f =
 
 {-# INLINE liftK2With #-}
 liftK2With ::
-    (KApply k, KLiftConstraints k constraints) =>
+    (KApply k, KLiftConstraints constraints k) =>
     Proxy constraints ->
     (forall c. ApplyConstraints constraints c => Tree l c -> Tree m c -> Tree n c) ->
     Tree k l ->
