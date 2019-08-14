@@ -11,12 +11,11 @@ module AST.Class.Combinators
     ) where
 
 import AST.Class
-import AST.Knot (Tree, Knot)
+import AST.Knot (Tree)
 import AST.Knot.Dict (KDict(..), pureKWithDict)
-import Data.Constraint (Dict(..), Constraint, withDict)
+import Data.Constraint (Dict(..), withDict)
 import Data.Constraint.List (ApplyConstraints)
 import Data.Functor.Product.PolyKinds (Product(..))
-import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
 import Data.TyFun
 
@@ -27,7 +26,7 @@ instance NodesConstraint k $ c => KLiftConstraint c k
 
 class
     KNodes k =>
-    KLiftConstraints (cs :: [(Knot -> Type) -> Constraint]) k where
+    KLiftConstraints cs k where
 
     kLiftConstraints :: KApplicative k => Tree k (KDict cs)
 

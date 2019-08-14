@@ -10,7 +10,7 @@ import Prelude.Compat
 
 newtype Knot = Knot (Knot -> Type)
 
-type family RunKnot (knot :: Knot) = (r :: Knot -> Type) where
+type family RunKnot (k :: Knot) = (r :: Knot -> Type) where
     RunKnot ('Knot t) = t
 
 -- Notes about `RunKnot`:
@@ -22,7 +22,7 @@ type family RunKnot (knot :: Knot) = (r :: Knot -> Type) where
 -- In those cases wrapping terms with the `asTree` helper makes the type inference
 -- overcome the `RunKnot` block.
 
-type Tree k t = k ('Knot t)
+type Tree k t = (k ('Knot t) :: Type)
 
 asTree :: Tree p q -> Tree p q
 asTree = id

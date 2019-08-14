@@ -15,11 +15,12 @@ import AST.Unify.Constraints (HasTypeConstraints(..), MonadScopeConstraints)
 import AST.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify)
 import AST.Unify.Term (UTerm, UTermBody, uBody)
 import Control.Lens.Operators
+import Data.Kind (Type)
 
 import Prelude.Compat
 
 -- Unification variable type for a unification monad
-type family UVarOf (m :: * -> *) :: Knot -> *
+type family UVarOf (m :: Type -> Type) :: Knot -> Type
 
 -- | BindingDict, parameterized on:
 --

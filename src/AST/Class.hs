@@ -28,7 +28,7 @@ type NodeTypesConstraints k =
     , KApplicative (NodeTypesOf k)
     )
 
-class KNodes k where
+class KNodes (k :: Knot -> Type) where
     -- | A type family for the different types of children a knot has.
     -- Maps to a simple knot which has a single child of each child type.
     type family NodeTypesOf k :: Knot -> Type
