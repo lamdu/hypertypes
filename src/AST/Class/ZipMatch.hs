@@ -8,14 +8,13 @@ module AST.Class.ZipMatch
 
 import           AST.Class (KFunctor)
 import           AST.Class.Combinators
-import           AST.Class.Foldable (KFoldable, foldMapKWith)
+import           AST.Class.Foldable
 import           AST.Class.Traversable (KTraversable, traverseKWith)
 import           AST.Knot (Tree)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad (guard)
 import           Data.Constraint.List (ApplyConstraints)
-import           Data.Foldable (sequenceA_)
 import           Data.Functor.Const (Const(..))
 import           Data.Functor.Product.PolyKinds (Product(..))
 import           Data.Proxy (Proxy(..))
@@ -65,9 +64,7 @@ zipMatchWith_ ::
     Proxy constraints ->
     (forall child. ApplyConstraints constraints child => Tree a child -> Tree b child -> f ()) ->
     Tree expr a -> Tree expr b -> Maybe (f ())
-zipMatchWith_ p f x y =
-    zipMatch x y
-    <&> sequenceA_ . foldMapKWith @[f ()] p (\(Pair a b) -> [f a b])
+zipMatchWith_ p f x y = zipMatch x y <&> traverseKWith_ p (\(Pair a b) -> f a b)
 
 {-# INLINE doesMatch #-}
 doesMatch :: ZipMatch expr => Tree expr a -> Tree expr b -> Bool
