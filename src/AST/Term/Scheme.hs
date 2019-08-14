@@ -53,12 +53,27 @@ newtype QVars typ = QVars
 
 instance KNodes (Scheme v t) where
     type NodeTypesOf (Scheme v t) = ANode t
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ _ _ = Dict
 
 Lens.makeLenses ''Scheme
 Lens.makePrisms ''QVars
 makeKTraversableAndBases ''Scheme
 
-instance (c (Scheme v t), Recursively c t) => Recursively c (Scheme v t)
+instance
+    (c (Scheme v t), Recursively c t) =>
+    Recursively c (Scheme v t) where
+
+    {-# INLINE combineRecursive #-}
+    combineRecursive =
+        r
+        where
+            r ::
+                forall o.
+                Recursively o (Scheme v t) =>
+                Dict (Recursively (c `And` o) (Scheme v t))
+            r = withDict (recursive @o @(Scheme v t)) $
+                withDict (combineRecursive @c @t @o) Dict
 
 instance
     ( Ord (QVar (RunKnot typ))

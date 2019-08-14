@@ -14,6 +14,7 @@ import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
+import           Data.Constraint
 import           Data.Functor.Const (Const)
 import           Data.Kind (Type)
 import           Data.Proxy (Proxy(..))
@@ -43,6 +44,8 @@ newtype Var v (expr :: Knot -> *) (k :: Knot) = Var v
 
 instance KNodes (Var v e) where
     type NodeTypesOf (Var v e) = Const ()
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ _ _ = Dict
 
 Lens.makePrisms ''Var
 makeKTraversableAndBases ''Var

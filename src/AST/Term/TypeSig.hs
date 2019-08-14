@@ -16,7 +16,7 @@ import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
-import           Data.Constraint (Constraint)
+import           Data.Constraint
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
@@ -35,6 +35,8 @@ instance KNodes (TypeSig v t) where
     type NodeTypesOf (TypeSig v t) = TypeSig v t
     type NodesConstraint (TypeSig v t) =
         ConcatConstraintFuncs [On t, On (Scheme v (TypeOf t))]
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ _ _ = Dict
 
 makeKApplicativeBases ''TypeSig
 makeKTraversableAndFoldable ''TypeSig

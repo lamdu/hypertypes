@@ -61,6 +61,8 @@ instance
     type NodeTypesOf (ITermTypes e) = ITermTypes e
     type NodesConstraint (ITermTypes e) = InferConstraint e
 
+    combineConstraints = error "TODO"
+
 instance
     ( Recursively KNodes e
     , Recursively (InferOfConstraint KNodes) e
@@ -170,6 +172,8 @@ instance
     KNodes (Flip (ITerm a) e) where
 
     type NodeTypesOf (Flip (ITerm a) e) = ITermTypes e
+
+    combineConstraints = error "TODO"
 
 instance
     ( Recursively KNodes e

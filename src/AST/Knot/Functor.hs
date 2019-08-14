@@ -18,7 +18,7 @@ import Control.DeepSeq (NFData)
 import Control.Lens (Iso, iso)
 import Control.Lens.Operators
 import Data.Binary (Binary)
-import Data.Constraint (withDict)
+import Data.Constraint (Dict(..), withDict)
 import Data.Proxy (Proxy(..))
 import GHC.Generics (Generic)
 
@@ -36,6 +36,8 @@ _ToKnot = iso (\(MkToKnot x) -> x) MkToKnot
 
 instance KNodes (ToKnot f) where
     type NodeTypesOf (ToKnot f) = ANode (ToKnot f)
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ _ _ = Dict
 
 makeKApplicativeBases ''ToKnot
 makeKTraversableAndFoldable ''ToKnot
@@ -51,7 +53,9 @@ instance Monad f => KMonad (ToKnot f) where
             r :: Recursively KFunctor l => Tree k l -> RecursiveDict l KFunctor
             r _ = recursive
 
-instance c (ToKnot f) => Recursively c (ToKnot f)
+instance c (ToKnot f) => Recursively c (ToKnot f) where
+    {-# INLINE combineRecursive #-}
+    combineRecursive = Dict
 
 type InToKnot f k = f (Node k (ToKnot f))
 deriving instance Eq     (InToKnot f k) => Eq     (ToKnot f k)

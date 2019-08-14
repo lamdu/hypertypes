@@ -35,12 +35,16 @@ Lens.makePrisms ''Scope
 
 instance KNodes (Scope e a) where
     type NodeTypesOf (Scope e a) = ANode (e (Maybe a))
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ _ _ = Dict
 
 newtype ScopeVar (expr :: * -> Knot -> *) a (k :: Knot) = ScopeVar a
 Lens.makePrisms ''ScopeVar
 
 instance KNodes (ScopeVar e a) where
     type NodeTypesOf (ScopeVar e a) = Const ()
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ _ _ = Dict
 
 makeZipMatch ''Scope
 makeKApplicativeBases ''Scope
@@ -69,6 +73,8 @@ newtype ScopeTypes t v = ScopeTypes (Seq (Node v t))
 
 instance KNodes (ScopeTypes t) where
     type NodeTypesOf (ScopeTypes t) = ANode t
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ _ _ = Dict
 
 Lens.makePrisms ''ScopeTypes
 makeKTraversableAndBases ''ScopeTypes

@@ -15,6 +15,7 @@ import Control.DeepSeq (NFData)
 import Control.Lens (Traversal, makeLenses)
 import Control.Lens.Operators
 import Data.Binary (Binary)
+import Data.Constraint
 import Data.Proxy (Proxy(..))
 import GHC.Generics (Generic)
 import Text.PrettyPrint ((<+>))
@@ -29,6 +30,8 @@ data App expr k = App
 
 instance KNodes (App e) where
     type NodeTypesOf (App e) = ANode e
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ _ _ = Dict
 
 makeLenses ''App
 makeZipMatch ''App

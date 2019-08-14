@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE ScopedTypeVariables, FlexibleContexts #-}
 
 module AST.Term.Map
     ( TermMap(..), _TermMap
@@ -11,7 +12,7 @@ import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
-import           Data.Constraint (Constraint)
+import           Data.Constraint
 import           Data.Functor.Product.PolyKinds (Product(..))
 import           Data.Map (Map)
 import qualified Data.Map as Map
@@ -24,11 +25,27 @@ newtype TermMap k expr f = TermMap (Map k (Node f expr))
 
 instance KNodes (TermMap k e) where
     type NodeTypesOf (TermMap k e) = ANode e
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ _ _ = Dict
 
 Lens.makePrisms ''TermMap
 makeKTraversableAndBases ''TermMap
 
-instance RecursiveContext (TermMap k expr) constraint => Recursively constraint (TermMap k expr)
+instance
+    RecursiveContext (TermMap k expr) constraint =>
+    Recursively constraint (TermMap k expr) where
+
+    {-# INLINE combineRecursive #-}
+    combineRecursive =
+        r
+        where
+            r ::
+                forall o.
+                Recursively o (TermMap k expr) =>
+                Dict (Recursively (constraint `And` o) (TermMap k expr))
+            r =
+                withDict (recursive @o @(TermMap k expr)) $
+                withDict (combineRecursive @constraint @expr @o) Dict
 
 instance Eq k => ZipMatch (TermMap k expr) where
     {-# INLINE zipMatch #-}

@@ -79,17 +79,27 @@ newtype FromNom nomId (term :: Knot -> *) (k :: Knot) = FromNom nomId
 
 instance KNodes (NominalDecl t) where
     type NodeTypesOf (NominalDecl t) = ANode t
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ _ _ = Dict
 
 instance KNodes (ToNom n t) where
     type NodeTypesOf (ToNom n t) = ANode t
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ _ _ = Dict
 
 instance KNodes (FromNom n t) where
     type NodeTypesOf (FromNom n t) = Const ()
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ _ _ = Dict
 
 instance KNodes v => KNodes (NominalInst n v) where
     type NodeTypesOf (NominalInst n v) = NodeTypesOf v
     {-# INLINE kNodes #-}
     kNodes _ = withDict (kNodes (Proxy @v)) Dict
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ c0 c1 =
+        withDict (kNodes (Proxy @v)) $
+        withDict (combineConstraints (Proxy @(NodeTypesOf v)) c0 c1) Dict
 
 makeLenses ''NominalDecl
 makeLenses ''NominalInst

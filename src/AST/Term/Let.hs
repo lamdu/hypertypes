@@ -13,7 +13,7 @@ import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
-import           Data.Constraint (Constraint)
+import           Data.Constraint
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint (($+$), (<+>))
@@ -31,6 +31,8 @@ makeLenses ''Let
 
 instance KNodes (Let v e) where
     type NodeTypesOf (Let v e) = ANode e
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ _ _ = Dict
 
 makeKTraversableAndBases ''Let
 

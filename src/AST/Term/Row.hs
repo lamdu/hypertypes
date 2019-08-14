@@ -22,7 +22,7 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad (when, foldM)
 import           Data.Binary (Binary)
-import           Data.Constraint (Constraint)
+import           Data.Constraint (Constraint, Dict(..))
 import           Data.Foldable (sequenceA_)
 import           Data.Map (Map)
 import qualified Data.Map as Map
@@ -56,8 +56,12 @@ data FlatRowExtends key val rest k = FlatRowExtends
 
 instance KNodes (RowExtend k v r) where
     type NodeTypesOf (RowExtend k v r) = Product (ANode v) (ANode r)
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ _ _ = Dict
 instance KNodes (FlatRowExtends k v r) where
     type NodeTypesOf (FlatRowExtends k v r) = Product (ANode v) (ANode r)
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ _ _ = Dict
 
 makeLenses ''RowExtend
 makeLenses ''FlatRowExtends

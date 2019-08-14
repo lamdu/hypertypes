@@ -49,6 +49,9 @@ instance
     type NodeTypesOf (UnifyErrorNodes t) = UnifyErrorNodes t
     type NodesConstraint (UnifyErrorNodes t) =
         ConcatConstraintFuncs '[On t, NodesConstraint t]
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ c0 c1 =
+        withDict (combineConstraints (Proxy @t) c0 c1) Dict
 
 instance
     KNodes t =>
@@ -69,6 +72,9 @@ instance
     KNodes (UnifyError t) where
 
     type NodeTypesOf (UnifyError t) = UnifyErrorNodes t
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ c0 c1 =
+        withDict (combineConstraints (Proxy @t) c0 c1) Dict
 
 instance
     KNodes t =>

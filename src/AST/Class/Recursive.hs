@@ -26,7 +26,7 @@ import AST.Knot.Pure (Pure(..), _Pure)
 import Control.Lens (makeLenses)
 import Control.Lens.Operators
 import Data.Constraint (Dict(..), withDict)
-import Data.Constraint.List (ApplyConstraints)
+import Data.Constraint.List (ApplyConstraints, And)
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
 import Data.Kind (Type, Constraint)
@@ -47,6 +47,10 @@ class constraint expr => Recursively constraint expr where
     default recursive ::
         RecursiveContext expr constraint => RecursiveDict expr constraint
     recursive = Dict
+
+    combineRecursive ::
+        Recursively other expr =>
+        Dict (Recursively (constraint `And` other) expr)
 
 type RecursiveContext expr constraint =
     ( constraint expr
@@ -70,6 +74,15 @@ instance
     KNodes (RecursiveNodes a) where
     type NodeTypesOf (RecursiveNodes a) = RecursiveNodes a
     type NodesConstraint (RecursiveNodes a) = RecursiveConstraint a
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ p0 p1 =
+        withDict (r p0 p1)
+        Dict
+        where
+            r ::
+                (Recursively c0 a, Recursively c1 a) =>
+                Proxy c0 -> Proxy c1 -> Dict (Recursively (c0 `And` c1) a)
+            r _ _ = combineRecursive
 
 instance
     Recursively KNodes a =>
@@ -131,7 +144,9 @@ instance
             (\(MkFlip x) -> _Flip %~ zipK x) xSub ySub
         }
 
-instance constraint Pure => Recursively constraint Pure
+instance constraint Pure => Recursively constraint Pure where
+    {-# INLINE combineRecursive #-}
+    combineRecursive = Dict
 
 type family RecursivelyConstraints cs :: [(Knot -> Type) -> Constraint] where
     RecursivelyConstraints (c ': cs) = (Recursively c ': RecursivelyConstraints cs)

@@ -11,6 +11,7 @@ import           AST.TH.ZipMatch (makeZipMatch)
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Data.Binary (Binary)
+import           Data.Constraint (Dict(..))
 import           Data.TyFun
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
@@ -27,6 +28,8 @@ newtype Pure k = MkPure { getPure :: Node k Pure }
 instance KNodes Pure where
     type NodeTypesOf Pure = Pure
     type NodesConstraint Pure = On Pure
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ _ _ = Dict
 
 makeKApplicativeBases ''Pure
 makeKTraversableAndFoldable ''Pure

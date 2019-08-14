@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell, FlexibleInstances, FlexibleContexts #-}
-{-# LANGUAGE RankNTypes, DerivingVia, UndecidableInstances #-}
+{-# LANGUAGE RankNTypes, DerivingVia, UndecidableInstances, ScopedTypeVariables #-}
 
 module TypeLang where
 
@@ -23,7 +23,7 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Reader (MonadReader)
 import           Control.Monad.ST.Class (MonadST(..))
-import           Data.Constraint (Constraint)
+import           Data.Constraint
 import           Data.STRef
 import           Data.Set (Set, singleton)
 import           Generic.Data
@@ -79,10 +79,15 @@ instance KHas (Product (ANode Typ) (ANode Row)) Types where
 instance KNodes Types where
     type NodeTypesOf Types = Types
     type NodesConstraint Types = ConcatConstraintFuncs '[On Typ, On Row]
+    combineConstraints _ _ _ = Dict
+
 instance KNodes Typ where
     type NodeTypesOf Typ = Types
+    combineConstraints _ _ _ = Dict
+
 instance KNodes Row where
     type NodeTypesOf Row = Types
+    combineConstraints _ _ _ = Dict
 
 makeZipMatch ''Typ
 makeZipMatch ''Row
@@ -178,8 +183,25 @@ emptyPureInferState =
 
 type STNameGen s = Tree Types (Const (STRef s Int))
 
-instance (c Typ, c Row) => Recursively c Typ
-instance (c Typ, c Row) => Recursively c Row
+instance (c Typ, c Row) => Recursively c Typ where
+    combineRecursive =
+        r
+        where
+            r ::
+                forall o.
+                Recursively o Typ =>
+                Dict (Recursively (c `And` o) Typ)
+            r = withDict (recursive @o @Typ) Dict
+
+instance (c Typ, c Row) => Recursively c Row where
+    combineRecursive =
+        r
+        where
+            r ::
+                forall o.
+                Recursively o Row =>
+                Dict (Recursively (c `And` o) Row)
+            r = withDict (recursive @o @Row) Dict
 
 instance HasQuantifiedVar Typ where
     type QVar Typ = Name

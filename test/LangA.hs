@@ -60,6 +60,7 @@ instance KNodes (LangANodeTypes v) where
     type NodeTypesOf (LangANodeTypes v) = LangANodeTypes v
     type NodesConstraint (LangANodeTypes v) =
         ConcatConstraintFuncs [On (LangA v), On (LangA (Maybe v)), On (Scheme Types Typ)]
+    combineConstraints _ _ _ = Dict
 makeKApplicativeBases ''LangANodeTypes
 
 instance KHas (TypeSig Types (LangA v)) (LangANodeTypes v) where
@@ -69,16 +70,35 @@ instance KHas (ANode (LangA (Maybe v))) (LangANodeTypes v) where hasK = MkANode 
 
 instance KNodes (LangA v) where
     type NodeTypesOf (LangA v) = LangANodeTypes v
+    combineConstraints _ _ _ = Dict
 
 makeKTraversableAndBases ''LangA
 
-instance Recursively KNodes (LangA v)
-instance Recursively KFoldable (LangA k)
-instance Recursively KFunctor (LangA k)
-instance Recursively KTraversable (LangA k)
 instance
-    (c (ANode Typ), c (ANode Row), c (Flip GTerm Typ))
-    => Recursively (InferOfConstraint c) (LangA k)
+    ( Recursively c0 (LangA v)
+    , Recursively c1 (LangA v)
+    ) =>
+    Recursively (c0 `And` c1) (LangA v) where
+
+    recursive =
+        withDict (recursive @c0 @(LangA v)) $
+        withDict (recursive @c1 @(LangA v)) $
+        withDict (recursive @c0 @(Scheme Types Typ)) $
+        withDict (recursive @c1 @(Scheme Types Typ)) $
+        withDict (recursive @c0 @Typ) $
+        withDict (recursive @c1 @Typ) Dict
+
+    combineRecursive = Dict
+
+instance Recursively KNodes (LangA v) where combineRecursive = Dict
+
+instance Recursively KFoldable (LangA k) where combineRecursive = Dict
+instance Recursively KFunctor (LangA k) where combineRecursive = Dict
+instance Recursively KTraversable (LangA k) where combineRecursive = Dict
+instance
+    (c (ANode Typ), c (ANode Row), c (Flip GTerm Typ)) =>
+    Recursively (InferOfConstraint c) (LangA k) where
+    combineRecursive = Dict
 
 type instance InferOf (LangA k) = ANode Typ
 type instance TypeOf (LangA k) = Typ
@@ -137,7 +157,8 @@ instance
     , Infer m Typ
     , Infer m Row
     ) =>
-    Recursively (Infer m) (LangA k)
+    Recursively (Infer m) (LangA k) where
+    combineRecursive = Dict
 
 -- Monads for inferring `LangA`:
 

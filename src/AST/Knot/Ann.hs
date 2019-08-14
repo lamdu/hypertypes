@@ -42,6 +42,8 @@ makeLenses ''Ann
 
 instance KNodes (Ann a) where
     type NodeTypesOf (Ann a) = ANode (Ann a)
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ _ _ = Dict
 
 makeKTraversableAndBases ''Ann
 makeZipMatch ''Ann
@@ -62,7 +64,9 @@ instance Monoid a => KMonad (Ann a) where
             r :: Recursively KFunctor l => Tree l k -> RecursiveDict l KFunctor
             r _ = recursive
 
-instance c (Ann a) => Recursively c (Ann a)
+instance c (Ann a) => Recursively c (Ann a) where
+    {-# INLINE combineRecursive #-}
+    combineRecursive = Dict
 
 instance Deps Pretty a t => Pretty (Ann a t) where
     pPrintPrec lvl prec (Ann pl b)

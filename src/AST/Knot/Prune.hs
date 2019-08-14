@@ -17,7 +17,7 @@ import Control.DeepSeq (NFData)
 import Control.Lens (makePrisms)
 import Control.Lens.Operators
 import Data.Binary (Binary)
-import Data.Constraint (withDict)
+import Data.Constraint
 import Data.Proxy (Proxy(..))
 import GHC.Generics (Generic)
 
@@ -29,6 +29,8 @@ data Prune k =
 
 instance KNodes Prune where
     type NodeTypesOf Prune = ANode Prune
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ _ _ = Dict
 
 makePrisms ''Prune
 makeKTraversableAndBases ''Prune
@@ -56,7 +58,9 @@ instance KMonad Prune where
             r :: Recursively KFunctor l => Tree l k -> RecursiveDict l KFunctor
             r _ = recursive
 
-instance c Prune => Recursively c Prune
+instance c Prune => Recursively c Prune where
+    {-# INLINE combineRecursive #-}
+    combineRecursive = Dict
 
 type instance InferOf (Compose Prune t) = InferOf t
 

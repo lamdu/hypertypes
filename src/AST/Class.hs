@@ -13,6 +13,7 @@ module AST.Class
 import AST.Knot (Knot, Tree)
 import Control.Lens (Iso, iso)
 import Data.Constraint
+import Data.Constraint.List (And)
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
 import Data.Kind (Type)
@@ -53,6 +54,11 @@ class KNodes (k :: Knot -> Type) where
         Proxy k ->
         Dict (NodeTypesConstraints k)
     kNodes _ = Dict
+
+    combineConstraints ::
+        (NodesConstraint k $ c0, NodesConstraint k $ c1) =>
+        Proxy k -> Proxy c0 -> Proxy c1 ->
+        Dict (NodesConstraint k $ c0 `And` c1)
 
 class KNodes k => KPointed k where
     -- | Construct a value from a higher ranked child value
@@ -97,6 +103,8 @@ instance (KPointed k, KApply k) => KApplicative k
 instance KNodes (Const a) where
     type NodeTypesOf (Const a) = Const ()
     type NodesConstraint (Const a) = TConst (() :: Constraint)
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ _ _ = Dict
 
 instance Monoid a => KPointed (Const a) where
     {-# INLINE pureK #-}
@@ -122,6 +130,11 @@ instance
     kNodes _ =
         withDict (kNodes (Proxy @a)) $
         withDict (kNodes (Proxy @b)) Dict
+
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ p0 p1 =
+        withDict (combineConstraints (Proxy @a) p0 p1) $
+        withDict (combineConstraints (Proxy @b) p0 p1) Dict
 
 instance (KPointed a, KPointed b) => KPointed (Product a b) where
     {-# INLINE pureK #-}

@@ -23,6 +23,6 @@ import AST.TH.Pointed as X (makeKPointed)
 import AST.TH.Traversable as X
     ( makeKTraversable, makeKTraversableAndFoldable, makeKTraversableAndBases )
 import AST.TH.ZipMatch as X (makeZipMatch)
-import Data.Constraint.List as X (ApplyConstraints)
+import Data.Constraint.List as X (ApplyConstraints, And)
 import Data.Functor.Product.PolyKinds as X (Product(..))
 import Data.TyFun as X

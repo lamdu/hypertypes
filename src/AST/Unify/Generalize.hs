@@ -29,7 +29,7 @@ import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.Writer (WriterT(..), tell)
 import           Data.Binary (Binary)
-import           Data.Constraint (Constraint, withDict)
+import           Data.Constraint (Constraint, Dict(..), withDict)
 import           Data.Monoid (All(..))
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
@@ -56,6 +56,15 @@ instance
     KNodes (Flip GTerm ast) where
 
     type NodeTypesOf (Flip GTerm ast) = RecursiveNodes ast
+
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ c0 c1 =
+        withDict (r c0 c1) Dict
+        where
+            r ::
+                (Recursively c0 ast, Recursively c1 ast) =>
+                Proxy c0 -> Proxy c1 -> Dict (Recursively (c0 `And` c1) ast)
+            r _ _ = combineRecursive
 
 instance
     (Recursively KNodes ast, Recursively KFunctor ast) =>

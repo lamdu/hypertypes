@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances, FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables, GeneralizedNewtypeDeriving, UndecidableInstances #-}
 
 module LangB where
@@ -32,6 +32,7 @@ import           Control.Monad.RWS
 import           Control.Monad.Reader
 import           Control.Monad.ST
 import           Control.Monad.ST.Class (MonadST(..))
+import           Data.Constraint
 import           Data.Map (Map)
 import           Data.Proxy
 import           Data.STRef
@@ -54,9 +55,10 @@ data LangB k
 
 instance KNodes LangB where
     type NodeTypesOf LangB = ANode LangB
+    combineConstraints _ _ _ = Dict
 
 makeKTraversableAndBases ''LangB
-instance c LangB => Recursively c LangB
+instance c LangB => Recursively c LangB where combineRecursive = Dict
 
 type instance InferOf LangB = ANode Typ
 type instance TypeOf LangB = Typ
@@ -131,6 +133,12 @@ newtype ScopeTypes v = ScopeTypes (Map Name (Tree (GTerm (RunKnot v)) Typ))
 
 instance KNodes ScopeTypes where
     type NodeTypesOf ScopeTypes = NodeTypesOf (Flip GTerm Typ)
+    combineConstraints _ c0 c1 =
+        withDict (r c0) $
+        withDict (r c1) Dict
+        where
+            r :: Recursively c Typ => Proxy c -> RecursiveDict Typ c
+            r _ = recursive
 
 Lens.makePrisms ''ScopeTypes
 

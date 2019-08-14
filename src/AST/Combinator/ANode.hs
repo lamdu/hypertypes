@@ -14,6 +14,7 @@ import Control.DeepSeq (NFData)
 import Control.Lens (Iso, iso)
 import Control.Lens.Operators
 import Data.Binary (Binary)
+import Data.Constraint (Dict(..))
 import Data.Foldable (sequenceA_)
 import Data.Functor.Product.PolyKinds
 import Data.TyFun (On)
@@ -31,6 +32,8 @@ _ANode = iso getANode MkANode
 instance KNodes (ANode c) where
     type NodeTypesOf (ANode c) = ANode c
     type NodesConstraint (ANode c) = On c
+    {-# INLINE combineConstraints #-}
+    combineConstraints _ _ _ = Dict
 
 makeKPointed ''ANode
 instance KApply (ANode c) where zipK = (_ANode %~) . (Pair . getANode)
