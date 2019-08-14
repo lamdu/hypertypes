@@ -48,8 +48,7 @@ data
     (((Knot -> Type) -> Constraint) ~> Constraint) ->
     (((Knot -> Type) -> Constraint) ~> Constraint) ->
     ((Knot -> Type) -> Constraint) ~> Constraint
-type instance Apply (ComposeConstraint a b) c =
-    Apply a (ComposeConstraint0 c b)
+type instance Apply (ComposeConstraint a b) c = a $ ComposeConstraint0 c b
 
 class    Apply b (ComposeConstraint1 c k0) => ComposeConstraint0 c b k0
 instance Apply b (ComposeConstraint1 c k0) => ComposeConstraint0 c b k0
