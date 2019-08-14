@@ -2,7 +2,7 @@
 
 module AST.Combinator.ANode
     ( ANode(..), _ANode
-    , traverseK1
+    , traverseK1, traverseK1_
     ) where
 
 import AST.Class
@@ -14,6 +14,7 @@ import Control.DeepSeq (NFData)
 import Control.Lens (Iso, iso)
 import Control.Lens.Operators
 import Data.Binary (Binary)
+import Data.Foldable (sequenceA_)
 import Data.Functor.Product.PolyKinds
 import Data.TyFun (On)
 import GHC.Generics (Generic)
@@ -36,6 +37,26 @@ instance KApply (ANode c) where zipK = (_ANode %~) . (Pair . getANode)
 instance KFoldable (ANode c) where foldMapC f = (f ^. _ANode . _ConvertK) . getANode
 instance KFunctor (ANode c) where mapC = (_ANode %~) . (^. _ANode . _MapK)
 instance KTraversable (ANode c) where sequenceC = _ANode runContainedK
+
+{-# INLINE foldMapK1 #-}
+foldMapK1 ::
+    ( Monoid a, KFoldable k
+    , NodeTypesOf k ~ ANode c
+    ) =>
+    (Tree l c -> a) ->
+    Tree k l ->
+    a
+foldMapK1 = foldMapC . MkANode . MkConvertK
+
+{-# INLINE traverseK1_ #-}
+traverseK1_ ::
+    ( Applicative f, KFoldable k
+    , NodeTypesOf k ~ ANode c
+    ) =>
+    (Tree m c -> f ()) ->
+    Tree k m ->
+    f ()
+traverseK1_ f = sequenceA_ . foldMapK1 ((:[]) . f)
 
 {-# INLINE traverseK1 #-}
 traverseK1 ::

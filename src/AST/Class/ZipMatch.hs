@@ -2,14 +2,15 @@
 
 module AST.Class.ZipMatch
     ( ZipMatch(..)
-    , zipMatchWith, zipMatchWithA, zipMatchWith_
+    , zipMatchWith, zipMatchWithA, zipMatchWith_, zipMatch1_
     , doesMatch
     ) where
 
-import           AST.Class (KFunctor)
+import           AST.Class
 import           AST.Class.Combinators
 import           AST.Class.Foldable
 import           AST.Class.Traversable (KTraversable, traverseKWith)
+import           AST.Combinator.ANode
 import           AST.Knot (Tree)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -65,6 +66,16 @@ zipMatchWith_ ::
     (forall child. ApplyConstraints constraints child => Tree a child -> Tree b child -> f ()) ->
     Tree expr a -> Tree expr b -> Maybe (f ())
 zipMatchWith_ p f x y = zipMatch x y <&> traverseKWith_ p (\(Pair a b) -> f a b)
+
+{-# INLINE zipMatch1_ #-}
+zipMatch1_ ::
+    ( Applicative f
+    , ZipMatch k, KFoldable k
+    , NodeTypesOf k ~ ANode c
+    ) =>
+    (Tree a c -> Tree b c -> f ()) ->
+    Tree k a -> Tree k b -> Maybe (f ())
+zipMatch1_ f x y = zipMatch x y <&> traverseK1_ (\(Pair a b) -> f a b)
 
 {-# INLINE doesMatch #-}
 doesMatch :: ZipMatch expr => Tree expr a -> Tree expr b -> Bool
