@@ -8,7 +8,6 @@ import AST
 import AST.Class.Combinators
 import AST.Class.Foldable (sequenceLiftK2With_)
 import AST.Class.Traversable
-import AST.Knot.Ann (annotationsWith)
 import AST.Infer
 import AST.Unify
 import AST.Unify.Lookup
@@ -35,7 +34,6 @@ data PrepAnn m a = PrepAnn
 prepare ::
     forall err m exp a.
     ( MonadError err m
-    , Recursively KFunctor exp
     , Recursively (Infer m) exp
     , Recursively (InferOfConstraint KApplicative) exp
     , Recursively (InferOfConstraint KTraversable) exp
@@ -45,7 +43,6 @@ prepare ::
     Tree (Ann a) exp ->
     m (Tree (Ann (PrepAnn m a)) exp)
 prepare typeFromAbove (Ann a x) =
-    withDict (recursive @KFunctor @exp) $
     withDict (recursive @(Infer m) @exp) $
     withDict (recursive @(InferOfConstraint KApplicative) @exp) $
     withDict (recursive @(InferOfConstraint KTraversable) @exp) $
@@ -54,8 +51,7 @@ prepare typeFromAbove (Ann a x) =
     (mapKWith
         (Proxy ::
             Proxy
-            '[ Recursively KFunctor
-            , Recursively (Infer m)
+            '[ Recursively (Infer m)
             , Recursively (InferOfConstraint KApplicative)
             , Recursively (InferOfConstraint KTraversable)
             , Recursively (InferOfConstraint (KLiftConstraint (Recursively (Unify m))))
@@ -99,7 +95,6 @@ blame ::
     ( Ord priority
     , MonadError err m
     , Recursively KNodes exp
-    , Recursively KFunctor exp
     , Recursively KTraversable exp
     , Recursively (Infer m) exp
     , Recursively (InferOfConstraint KApplicative) exp
@@ -113,7 +108,5 @@ blame ::
 blame order topLevelType e =
     do
         p <- prepare topLevelType e
-        p ^.. annotationsWith prox Dict & sortOn (order . pAnn) & traverse_ pTryUnify
-        annotationsWith prox Dict (\x -> pFinalize x <&> (, pAnn x)) p
-    where
-        prox = Proxy @'[Infer m, KTraversable]
+        p ^.. annotations & sortOn (order . pAnn) & traverse_ pTryUnify
+        annotations (\x -> pFinalize x <&> (, pAnn x)) p
