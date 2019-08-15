@@ -119,7 +119,7 @@ addAnnotations ::
     (forall n. ApplyConstraints cs n => Dict (KFunctor n)) ->
     (forall n. ApplyConstraints cs n => Tree n (Ann a) -> a) ->
     Tree Pure k -> Tree (Ann a) k
-addAnnotations p getFunctor f = wrap p getFunctor (\x -> Ann (f x) x)
+addAnnotations p getFunctor f = wrapDeprecated p getFunctor (\x -> Ann (f x) x)
 
 type Deps c a t = ((c a, c (Node t (Ann a))) :: Constraint)
 deriving instance Deps Eq   a t => Eq   (Ann a t)

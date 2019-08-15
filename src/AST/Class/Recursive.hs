@@ -8,7 +8,7 @@ module AST.Class.Recursive
     , RecursiveNodes(..), recSelf, recSub
     , RLiftConstraints(..)
     , traverseKRec, foldMapKRec, mapKRec
-    , wrap, wrapWithDict
+    , wrap, wrapDeprecated, wrapWithDict
     , wrapM, wrapMDeprecated, wrapMWithDict
     , unwrap, unwrapWithDict
     , unwrapM, unwrapMDecprecated, unwrapMWithDict
@@ -293,6 +293,22 @@ unwrapMDecprecated ::
     m (Tree Pure k)
 unwrapMDecprecated _ = unwrapMWithDict (rLiftConstraints @k @cs)
 
+{-# INLINE wrap #-}
+wrap ::
+    forall k c w.
+    (Recursive c, c k) =>
+    Proxy c ->
+    (forall n. c n => Dict (KFunctor n)) ->
+    (forall n. c n => Tree n w -> Tree w n) ->
+    Tree Pure k ->
+    Tree w k
+wrap p getFunctor f x =
+    withDict (recurse (Proxy @(c k))) $
+    withDict (getFunctor @k) $
+    x ^. _Pure
+    & mapKWith (Proxy @'[c]) (wrap p getFunctor f)
+    & f
+
 {-# INLINE wrapWithDict #-}
 wrapWithDict ::
     forall k cs w.
@@ -308,8 +324,8 @@ wrapWithDict c getFunctor f x =
     & mapKRec c (\d -> wrapWithDict d getFunctor f)
     & f
 
-{-# INLINE wrap #-}
-wrap ::
+{-# INLINE wrapDeprecated #-}
+wrapDeprecated ::
     forall k cs w.
     RLiftConstraints k cs =>
     Proxy cs ->
@@ -317,7 +333,7 @@ wrap ::
     (forall n. ApplyConstraints cs n => Tree n w -> Tree w n) ->
     Tree Pure k ->
     Tree w k
-wrap _ = wrapWithDict (rLiftConstraints @k @cs)
+wrapDeprecated _ = wrapWithDict (rLiftConstraints @k @cs)
 
 {-# INLINE unwrapWithDict #-}
 unwrapWithDict ::
@@ -355,7 +371,7 @@ fold ::
     (forall n. ApplyConstraints cs n => Tree n (Const a) -> a) ->
     Tree Pure k ->
     a
-fold p getFunctor f = getConst . wrap p getFunctor (Const . f)
+fold p getFunctor f = getConst . wrapDeprecated p getFunctor (Const . f)
 
 -- | Build/load a tree from a seed value.
 -- TODO: Is this an "ana-morphism"?

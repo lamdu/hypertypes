@@ -140,7 +140,7 @@ inferExpr ::
     Tree Pure t ->
     m (Tree Pure (TypeOf t))
 inferExpr x =
-    infer (wrap (Proxy @'[KFunctor]) Dict (Ann ()) x)
+    infer (wrapDeprecated (Proxy @'[KFunctor]) Dict (Ann ()) x)
     >>= Lens.from _Flip (traverseKWith (Proxy @'[Unify m]) applyBindings)
     <&> (^# iRes . inferredType (Proxy @t))
 
