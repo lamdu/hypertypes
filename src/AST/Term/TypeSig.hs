@@ -52,8 +52,7 @@ instance
     ( MonadScopeLevel m
     , HasInferredType term
     , NodesConstraint vars $ Unify m
-    , Recursively KNodes (TypeOf term)
-    , Recursively (Unify m) (TypeOf term)
+    , Unify m (TypeOf term)
     ) =>
     Infer m (TypeSig vars term) where
 

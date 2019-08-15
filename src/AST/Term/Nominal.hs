@@ -248,8 +248,7 @@ instance
     , MonadNominals nomId (TypeOf expr) m
     , KTraversable (NomVarTypes (TypeOf expr))
     , NodesConstraint (NomVarTypes (TypeOf expr)) $ Unify m
-    , Recursively KNodes (TypeOf expr)
-    , Recursively (Unify m) (TypeOf expr)
+    , Unify m (TypeOf expr)
     , HasInferredType expr
     ) =>
     Infer m (ToNom nomId expr) where
@@ -280,8 +279,7 @@ instance
     , MonadNominals nomId (TypeOf expr) m
     , KTraversable (NomVarTypes (TypeOf expr))
     , NodesConstraint (NomVarTypes (TypeOf expr)) $ Unify m
-    , Recursively KNodes (TypeOf expr)
-    , Recursively (Unify m) (TypeOf expr)
+    , Unify m (TypeOf expr)
     ) =>
     Infer m (FromNom nomId expr) where
 

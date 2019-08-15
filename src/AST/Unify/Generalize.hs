@@ -14,7 +14,6 @@ import           Algebra.PartialOrd (PartialOrd(..))
 import           AST
 import           AST.Class
 import           AST.Class.Foldable
-import           AST.Class.Recursive
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Class.Traversable
 import           AST.Combinator.Flip
@@ -183,23 +182,20 @@ instantiateForAll cons x =
 {-# INLINE instantiateH #-}
 instantiateH ::
     forall m t.
-    Applicative m =>
-    Tree (RecursiveNodes t) (KDict '[Unify m]) ->
+    Unify m t =>
     (forall n. TypeConstraintsOf n -> Tree (UTerm (UVarOf m)) n) ->
     Tree (GTerm (UVarOf m)) t ->
     WriterT [m ()] m (Tree (UVarOf m) t)
-instantiateH _ _ (GMono x) = pure x
-instantiateH c cons (GBody x) =
-    withDict (c ^. recSelf . _KDict) $
-    traverseKRec c (`instantiateH` cons) x >>= lift . newTerm
-instantiateH c cons (GPoly x) =
-    withDict (c ^. recSelf . _KDict) $
-    instantiateForAll cons x
+instantiateH _ (GMono x) = pure x
+instantiateH cons (GPoly x) = instantiateForAll cons x
+instantiateH cons (GBody x) =
+    withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
+    traverseKWith (Proxy @'[Unify m]) (instantiateH cons) x >>= lift . newTerm
 
 {-# INLINE instantiateWith #-}
 instantiateWith ::
     forall m t a.
-    (Recursively KNodes t, Recursively (Unify m) t) =>
+    Unify m t =>
     m a ->
     (forall n. TypeConstraintsOf n -> Tree (UTerm (UVarOf m)) n) ->
     Tree (GTerm (UVarOf m)) t ->
@@ -207,7 +203,7 @@ instantiateWith ::
 instantiateWith action cons g =
     do
         (r, recover) <-
-            instantiateH (rLiftConstraints @t @'[Unify m]) cons g
+            instantiateH cons g
             & runWriterT
         action <* sequence_ recover <&> (r, )
 
@@ -215,7 +211,7 @@ instantiateWith action cons g =
 -- for the quantified variables
 {-# INLINE instantiate #-}
 instantiate ::
-    (Recursively KNodes t, Recursively (Unify m) t) =>
+    Unify m t =>
     Tree (GTerm (UVarOf m)) t -> m (Tree (UVarOf m) t)
 instantiate g = instantiateWith (pure ()) UUnbound g <&> (^. Lens._1)
 
