@@ -1,10 +1,9 @@
-{-# LANGUAGE TemplateHaskell, GeneralizedNewtypeDeriving, FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell, FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables, FlexibleInstances, UndecidableInstances #-}
 
 module AST.Term.Scheme
     ( Scheme(..), sForAlls, sTyp
     , QVars(..), _QVars
-    , schemeToRestrictedType
     , loadScheme, saveScheme
     , MonadInstantiate(..), inferType
 
@@ -158,48 +157,12 @@ inferType x =
                 & newTerm
                 <&> InferRes (mapK (^. inRep) xI) . MkANode
 
-{-# INLINE makeQVarInstancesInScope #-}
-makeQVarInstancesInScope ::
-    Unify m typ =>
-    Tree QVars typ -> m (Tree (QVarInstances (UVarOf m)) typ)
-makeQVarInstancesInScope (QVars foralls) =
-    traverse makeSkolem foralls <&> QVarInstances
-    where
-        makeSkolem c = scopeConstraints >>= newVar binding . USkolem . (c <>)
-
 {-# INLINE makeQVarInstances #-}
 makeQVarInstances ::
     Unify m typ =>
     Tree QVars typ -> m (Tree (QVarInstances (UVarOf m)) typ)
 makeQVarInstances (QVars foralls) =
     traverse (newVar binding . USkolem) foralls <&> QVarInstances
-
-{-# INLINE schemeBodyToType #-}
-schemeBodyToType ::
-    (Unify m typ, HasChild varTypes typ, Ord (QVar typ)) =>
-    Tree varTypes (QVarInstances (UVarOf m)) -> Tree typ (UVarOf m) -> m (Tree (UVarOf m) typ)
-schemeBodyToType foralls x =
-    case x ^? quantifiedVar >>= getForAll of
-    Nothing -> newTerm x
-    Just r -> pure r
-    where
-        getForAll v = foralls ^? getChild . _QVarInstances . Lens.ix v
-
-{-# INLINE schemeToRestrictedType #-}
-schemeToRestrictedType ::
-    forall m varTypes typ.
-    ( Monad m
-    , KTraversable varTypes
-    , NodesConstraint varTypes $ Unify m
-    , RLiftConstraints typ '[Unify m, HasChild varTypes, QVarHasInstance Ord]
-    ) =>
-    Tree Pure (Scheme varTypes typ) -> m (Tree (UVarOf m) typ)
-schemeToRestrictedType (MkPure (Scheme vars typ)) =
-    do
-        foralls <- traverseKWith (Proxy @'[Unify m]) makeQVarInstancesInScope vars
-        wrapMDeprecated
-            (Proxy @'[Unify m, HasChild varTypes, QVarHasInstance Ord])
-            Dict (schemeBodyToType foralls) typ
 
 {-# INLINE loadBody #-}
 loadBody ::

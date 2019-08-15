@@ -1,22 +1,59 @@
 -- | Alpha-equality for schemes
 {-# LANGUAGE FlexibleContexts, ScopedTypeVariables #-}
+
 module AST.Term.Scheme.AlphaEq
     ( alphaEq
     ) where
 
 import           AST
 import           AST.Class.Has (HasChild(..))
+import           AST.Class.Recursive (wrapMDeprecated)
 import           AST.Class.ZipMatch (zipMatchWith_)
-import           AST.Term.Scheme (Scheme, schemeToRestrictedType)
-import           AST.Unify (Unify(..), UVarOf, BindingDict(..), UnifyError(..))
-import           AST.Unify.QuantifiedVar (QVarHasInstance)
+import           AST.Term.Scheme
+import           AST.Unify
+import           AST.Unify.New (newTerm)
+import           AST.Unify.QuantifiedVar
 import           AST.Unify.Term (UTerm(..), uBody)
+import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Data.Constraint (withDict)
+import           Data.Constraint
 import           Data.Maybe (fromMaybe)
 import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
+
+makeQVarInstancesInScope ::
+    Unify m typ =>
+    Tree QVars typ -> m (Tree (QVarInstances (UVarOf m)) typ)
+makeQVarInstancesInScope (QVars foralls) =
+    traverse makeSkolem foralls <&> QVarInstances
+    where
+        makeSkolem c = scopeConstraints >>= newVar binding . USkolem . (c <>)
+
+schemeBodyToType ::
+    (Unify m typ, HasChild varTypes typ, Ord (QVar typ)) =>
+    Tree varTypes (QVarInstances (UVarOf m)) -> Tree typ (UVarOf m) -> m (Tree (UVarOf m) typ)
+schemeBodyToType foralls x =
+    case x ^? quantifiedVar >>= getForAll of
+    Nothing -> newTerm x
+    Just r -> pure r
+    where
+        getForAll v = foralls ^? getChild . _QVarInstances . Lens.ix v
+
+schemeToRestrictedType ::
+    forall m varTypes typ.
+    ( Monad m
+    , KTraversable varTypes
+    , NodesConstraint varTypes $ Unify m
+    , RLiftConstraints typ '[Unify m, HasChild varTypes, QVarHasInstance Ord]
+    ) =>
+    Tree Pure (Scheme varTypes typ) -> m (Tree (UVarOf m) typ)
+schemeToRestrictedType (MkPure (Scheme vars typ)) =
+    do
+        foralls <- traverseKWith (Proxy @'[Unify m]) makeQVarInstancesInScope vars
+        wrapMDeprecated
+            (Proxy @'[Unify m, HasChild varTypes, QVarHasInstance Ord])
+            Dict (schemeBodyToType foralls) typ
 
 goUTerm ::
     forall m t.
