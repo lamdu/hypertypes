@@ -134,7 +134,7 @@ instance
         withDict (kNodes (Proxy @a)) $
         RecursiveNodes
         { _recSelf = f
-        , _recSub = pureKWith (Proxy @'[Recursively KNodes]) (_Flip # pureK f)
+        , _recSub = pureKWithConstraint (Proxy @(Recursively KNodes)) (_Flip # pureK f)
         }
 
     {-# INLINE pureKWithConstraint #-}

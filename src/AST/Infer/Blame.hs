@@ -58,7 +58,7 @@ prepare typeFromAbove (Ann a x) =
             withDict (inferredUnify (Proxy @m) (p c)) $
             withDict (traversableInferOf (p c)) $
             do
-                t <- sequencePureKWith (Proxy @'[Unify m]) newUnbound
+                t <- sequencePureKWith (Proxy @(Unify m)) newUnbound
                 prepare t c <&> (`InferredChild` t)
             & InferChild
         )

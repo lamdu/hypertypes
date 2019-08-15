@@ -66,7 +66,7 @@ instance
     ) =>
     Infer m (Compose Prune t) where
     inferBody (MkCompose Pruned) =
-        sequencePureKWith (Proxy @'[Unify m]) newUnbound
+        sequencePureKWith (Proxy @(Unify m)) newUnbound
         <&> InferRes (MkCompose Pruned)
     inferBody (MkCompose (Unpruned (MkCompose x))) =
         mapK

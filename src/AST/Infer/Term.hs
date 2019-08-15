@@ -70,7 +70,7 @@ instance
 
     {-# INLINE pureK #-}
     pureK f =
-        pureKWith (Proxy @'[InferOfConstraint KNodes]) (g f)
+        pureKWithConstraint (Proxy @(InferOfConstraint KNodes)) (g f)
         & ITermTypes
         where
             g ::

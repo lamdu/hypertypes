@@ -18,6 +18,7 @@ import Data.Constraint (withDict)
 import Data.Constraint.List (ApplyConstraints)
 import Data.Functor.Const (Const(..))
 import Data.Proxy (Proxy(..))
+import Data.TyFun
 
 import Prelude.Compat
 
@@ -83,11 +84,11 @@ sequencePureK f = sequenceC (pureK (MkContainedK f))
 
 {-# INLINE sequencePureKWith #-}
 sequencePureKWith ::
-    (Applicative f, KApplicative k, KTraversable k, KLiftConstraints constraints k) =>
-    Proxy constraints ->
-    (forall c. ApplyConstraints constraints c => f (Tree n c)) ->
+    (Applicative f, KApplicative k, KTraversable k, NodesConstraint k $ constraint) =>
+    Proxy constraint ->
+    (forall c. constraint c => f (Tree n c)) ->
     f (Tree k n)
-sequencePureKWith p f = sequenceC (pureKWith p (MkContainedK f))
+sequencePureKWith p f = sequenceC (pureKWithConstraint p (MkContainedK f))
 
 {-# INLINE sequenceLiftK2 #-}
 sequenceLiftK2 ::
