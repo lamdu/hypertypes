@@ -15,6 +15,7 @@ import           AST
 import           AST.Class
 import           AST.Class.Foldable
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
+import           AST.Class.Recursive
 import           AST.Class.Traversable
 import           AST.Combinator.Flip
 import           AST.Unify
@@ -57,7 +58,7 @@ instance
     type NodeTypesOf (Flip GTerm ast) = RecursiveNodes ast
 
 instance
-    (Recursively KNodes ast, Recursively KFunctor ast) =>
+    (Recursively KNodes ast, RFunctor ast) =>
     KFunctor (Flip GTerm ast) where
 
     {-# INLINE mapC #-}
@@ -67,18 +68,18 @@ instance
         GMono x -> mapTop x & GMono
         GPoly x -> mapTop x & GPoly
         GBody x ->
+            withDict (recursiveKFunctor (Proxy @ast)) $
             withDict (recursive @KNodes @ast) $
-            withDict (recursive @KFunctor @ast) $
             withDict (kNodes (Proxy @ast)) $
             mapC
-            ( mapKWith (Proxy @'[Recursively KNodes, Recursively KFunctor])
+            ( mapKWith (Proxy @'[RFunctor, Recursively KNodes])
                 (\(MkFlip f) -> Lens.from _Flip %~ mapC f & MkMapK)
                 mapSub
             ) x
             & GBody
 
 instance
-    (Recursively KNodes ast, Recursively KFoldable ast) =>
+    (Recursively KNodes ast, RFoldable ast) =>
     KFoldable (Flip GTerm ast) where
 
     {-# INLINE foldMapC #-}
@@ -87,22 +88,18 @@ instance
         GMono x -> convTop x
         GPoly x -> convTop x
         GBody x ->
+            withDict (recursiveKFoldable (Proxy @ast)) $
             withDict (recursive @KNodes @ast) $
-            withDict (recursive @KFoldable @ast) $
             withDict (kNodes (Proxy @ast)) $
             foldMapC
-            ( mapKWith (Proxy @'[Recursively KNodes, Recursively KFoldable])
+            ( mapKWith (Proxy @'[RFoldable, Recursively KNodes])
                 (\(MkFlip f) -> foldMapC f . (_Flip #) & MkConvertK)
                 convSub
             ) x
         . (^. _Flip)
 
 instance
-    ( Recursively KNodes ast
-    , Recursively KFunctor ast
-    , Recursively KFoldable ast
-    , Recursively KTraversable ast
-    ) =>
+    (RTraversable ast, Recursively KNodes ast) =>
     KTraversable (Flip GTerm ast) where
 
     sequenceC (MkFlip fx) =
@@ -110,15 +107,10 @@ instance
         GMono x -> runContainedK x <&> GMono
         GPoly x -> runContainedK x <&> GPoly
         GBody x ->
+            withDict (recursiveKTraversable (Proxy @ast)) $
             withDict (recursive @KNodes @ast) $
-            withDict (recursive @KFunctor @ast) $
-            withDict (recursive @KFoldable @ast) $
-            withDict (recursive @KTraversable @ast) $
             -- KTraversable will be required when not implied by Recursively
-            traverseKWith
-            (Proxy ::
-                Proxy
-                '[Recursively KNodes, Recursively KFunctor, Recursively KFoldable, Recursively KTraversable])
+            traverseKWith (Proxy @'[RTraversable, Recursively KNodes])
             (Lens.from _Flip sequenceC) x
             <&> GBody
         <&> MkFlip

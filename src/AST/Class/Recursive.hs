@@ -4,6 +4,7 @@
 
 module AST.Class.Recursive
     ( Recursive(..)
+    , RFunctor(..), RFoldable(..), RTraversable(..)
     , Recursively(..), RecursiveContext, RecursiveDict, RecursiveConstraint
     , RecursiveNodes(..), recSelf, recSub
     , traverseKRec, foldMapKRec, mapKRec
@@ -35,7 +36,55 @@ import Data.TyFun
 import Prelude.Compat
 
 class Recursive c where
-    recurse :: c t => Proxy (c t) -> Dict (NodesConstraint t $ c)
+    recurse :: c k => Proxy (c k) -> Dict (NodesConstraint k $ c)
+
+class KFunctor k => RFunctor k where
+    recursiveKFunctor :: Proxy k -> Dict (NodesConstraint k $ RFunctor)
+    {-# INLINE recursiveKFunctor #-}
+    default recursiveKFunctor ::
+        NodesConstraint k $ RFunctor =>
+        Proxy k -> Dict (NodesConstraint k $ RFunctor)
+    recursiveKFunctor _ = Dict
+
+instance Recursive RFunctor where
+    {-# INLINE recurse #-}
+    recurse =
+        recursiveKFunctor . p
+        where
+            p :: Proxy (RFunctor k) -> Proxy k
+            p _ = Proxy
+
+class KFoldable k => RFoldable k where
+    recursiveKFoldable :: Proxy k -> Dict (NodesConstraint k $ RFoldable)
+    {-# INLINE recursiveKFoldable #-}
+    default recursiveKFoldable ::
+        NodesConstraint k $ RFoldable =>
+        Proxy k -> Dict (NodesConstraint k $ RFoldable)
+    recursiveKFoldable _ = Dict
+
+instance Recursive RFoldable where
+    {-# INLINE recurse #-}
+    recurse =
+        recursiveKFoldable . p
+        where
+            p :: Proxy (RFoldable k) -> Proxy k
+            p _ = Proxy
+
+class (KTraversable k, RFunctor k, RFoldable k) => RTraversable k where
+    recursiveKTraversable :: Proxy k -> Dict (NodesConstraint k $ RTraversable)
+    {-# INLINE recursiveKTraversable #-}
+    default recursiveKTraversable ::
+        NodesConstraint k $ RTraversable =>
+        Proxy k -> Dict (NodesConstraint k $ RTraversable)
+    recursiveKTraversable _ = Dict
+
+instance Recursive RTraversable where
+    {-# INLINE recurse #-}
+    recurse =
+        recursiveKTraversable . p
+        where
+            p :: Proxy (RTraversable k) -> Proxy k
+            p _ = Proxy
 
 -- | `Recursively` carries a constraint to all of the descendant types
 -- of an AST. As opposed to the `ChildrenConstraint` type family which

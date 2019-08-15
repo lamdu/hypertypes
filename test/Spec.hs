@@ -126,10 +126,8 @@ nomSkolem1 =
 inferExpr ::
     forall m t.
     ( HasInferredType t
+    , RTraversable t
     , Recursively KNodes t
-    , Recursively KFunctor t
-    , Recursively KFoldable t
-    , Recursively KTraversable t
     , Recursively (Infer m) t
     , Recursively (InferOfConstraint KNodes) t
     , Recursively (InferOfConstraint KFoldable) t
@@ -140,7 +138,7 @@ inferExpr ::
     Tree Pure t ->
     m (Tree Pure (TypeOf t))
 inferExpr x =
-    infer (wrapDeprecated (Proxy @'[KFunctor]) Dict (Ann ()) x)
+    infer (wrap (Proxy @RTraversable) Dict (Ann ()) x)
     >>= Lens.from _Flip (traverseKWith (Proxy @'[Unify m]) applyBindings)
     <&> (^# iRes . inferredType (Proxy @t))
 

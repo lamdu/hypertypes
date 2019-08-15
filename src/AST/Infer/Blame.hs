@@ -94,7 +94,7 @@ blame ::
     forall priority err m exp a.
     ( Ord priority
     , MonadError err m
-    , Recursively KTraversable exp
+    , RTraversable exp
     , Recursively (Infer m) exp
     , Recursively (InferOfConstraint KApplicative) exp
     , Recursively (InferOfConstraint KTraversable) exp

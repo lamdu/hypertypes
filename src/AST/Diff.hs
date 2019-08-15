@@ -7,7 +7,7 @@ module AST.Diff
     ) where
 
 import AST
-import AST.Class.Recursive (Recursively)
+import AST.Class.Recursive
 import AST.Class.ZipMatch (ZipMatch(..))
 import Control.Lens (makeLenses, makePrisms)
 import Control.Lens.Operators
@@ -37,11 +37,11 @@ makeLenses ''CommonBody
 
 diff ::
     forall t a b.
-    (Recursively ZipMatch t, Recursively KTraversable t) =>
+    (Recursively ZipMatch t, RTraversable t) =>
     Tree (Ann a) t -> Tree (Ann b) t -> Tree (Diff a b) t
 diff x@(Ann xA xB) y@(Ann yA yB) =
     withDict (recursive @ZipMatch @t) $
-    withDict (recursive @KTraversable @t) $
+    withDict (recursiveKTraversable (Proxy @t)) $
     case zipMatch xB yB of
     Nothing -> Different (Pair x y)
     Just match ->
@@ -50,7 +50,7 @@ diff x@(Ann xA xB) y@(Ann yA yB) =
         Just r -> Ann (xA, yA) r & CommonSubTree
         where
             sub =
-                mapKWith (Proxy @'[Recursively ZipMatch, Recursively KTraversable])
+                mapKWith (Proxy @'[Recursively ZipMatch, RTraversable])
                 (\(Pair xC yC) -> diff xC yC) match
 
 type Deps c a b e =

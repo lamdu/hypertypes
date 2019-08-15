@@ -59,6 +59,9 @@ instance KNodes LangB where
 
 makeKTraversableAndBases ''LangB
 instance c LangB => Recursively c LangB
+instance RFunctor LangB
+instance RFoldable LangB
+instance RTraversable LangB
 
 type instance InferOf LangB = ANode Typ
 type instance TypeOf LangB = Typ

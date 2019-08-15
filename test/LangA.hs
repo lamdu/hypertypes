@@ -73,9 +73,9 @@ instance KNodes (LangA v) where
 makeKTraversableAndBases ''LangA
 
 instance Recursively KNodes (LangA v)
-instance Recursively KFoldable (LangA k)
-instance Recursively KFunctor (LangA k)
-instance Recursively KTraversable (LangA k)
+instance RFoldable (LangA k)
+instance RFunctor (LangA k)
+instance RTraversable (LangA k)
 instance
     (c (ANode Typ), c (ANode Row), c (Flip GTerm Typ))
     => Recursively (InferOfConstraint c) (LangA k)

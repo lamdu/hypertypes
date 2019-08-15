@@ -181,6 +181,13 @@ type STNameGen s = Tree Types (Const (STRef s Int))
 instance (c Typ, c Row) => Recursively c Typ
 instance (c Typ, c Row) => Recursively c Row
 
+instance RFoldable Typ
+instance RFoldable Row
+instance RFunctor Typ
+instance RFunctor Row
+instance RTraversable Typ
+instance RTraversable Row
+
 instance HasQuantifiedVar Typ where
     type QVar Typ = Name
     quantifiedVar = _TVar

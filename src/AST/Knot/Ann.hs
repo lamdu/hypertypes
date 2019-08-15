@@ -76,12 +76,12 @@ annotationsWith p getTraversable f (Ann pl x) =
     <*> traverseKWith (Proxy @'[c]) (annotationsWith p getTraversable f) x
 
 annotations ::
-    Recursively KTraversable e =>
+    RTraversable e =>
     Traversal
     (Tree (Ann a) e)
     (Tree (Ann b) e)
     a b
-annotations = annotationsWith (Proxy @(Recursively KTraversable)) Dict
+annotations = annotationsWith (Proxy @RTraversable) Dict
 
 strip ::
     (Recursively KNodes expr, Recursively KTraversable expr) =>

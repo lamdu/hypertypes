@@ -11,6 +11,7 @@ import AST.Class
 import AST.Class.Combinators
 import AST.Class.Foldable
 import AST.Class.Infer
+import AST.Class.Recursive
 import AST.Class.Traversable
 import AST.Combinator.Flip (Flip(..), _Flip)
 import Control.Lens (Traversal, Iso, makeLenses, makePrisms, from, iso)
@@ -172,8 +173,8 @@ instance
     type NodeTypesOf (Flip (ITerm a) e) = ITermTypes e
 
 instance
-    ( Recursively KNodes e
-    , Recursively KFunctor e
+    ( RFunctor e
+    , Recursively KNodes e
     , Recursively (InferOfConstraint KNodes) e
     , Recursively (InferOfConstraint KFunctor) e
     ) =>
@@ -182,8 +183,8 @@ instance
     {-# INLINE mapC #-}
     mapC (ITermTypes (RecursiveNodes (MkIResultNodeTypes ft) fs)) =
         withDict (kNodes (Proxy @e)) $
+        withDict (recursiveKFunctor (Proxy @e)) $
         withDict (recursive @KNodes @e) $
-        withDict (recursive @KFunctor @e) $
         withDict (recursive @(InferOfConstraint KNodes) @e) $
         withDict (recursive @(InferOfConstraint KFunctor) @e) $
         _Flip %~
@@ -194,8 +195,8 @@ instance
             ( mapKWith
                 (Proxy ::
                     Proxy
-                    '[Recursively KNodes
-                    , Recursively KFunctor
+                    '[RFunctor
+                    , Recursively KNodes
                     , Recursively (InferOfConstraint KNodes)
                     , Recursively (InferOfConstraint KFunctor)
                     ])
@@ -204,8 +205,8 @@ instance
         )
 
 instance
-    ( Recursively KNodes e
-    , Recursively KFoldable e
+    ( RFoldable e
+    , Recursively KNodes e
     , Recursively (InferOfConstraint KNodes) e
     , Recursively (InferOfConstraint KFoldable) e
     ) =>
@@ -213,8 +214,8 @@ instance
     {-# INLINE foldMapC #-}
     foldMapC (ITermTypes (RecursiveNodes (MkIResultNodeTypes ft) fs)) (MkFlip (ITerm _ r x)) =
         withDict (kNodes (Proxy @e)) $
+        withDict (recursiveKFoldable (Proxy @e)) $
         withDict (recursive @KNodes @e) $
-        withDict (recursive @KFoldable @e) $
         withDict (recursive @(InferOfConstraint KNodes) @e) $
         withDict (recursive @(InferOfConstraint KFoldable) @e) $
         foldMapC ft r <>
@@ -222,8 +223,8 @@ instance
         ( mapKWith
             (Proxy ::
                 Proxy
-                '[Recursively KNodes
-                , Recursively KFoldable
+                '[RFoldable
+                , Recursively KNodes
                 , Recursively (InferOfConstraint KNodes)
                 , Recursively (InferOfConstraint KFoldable)
                 ])
@@ -231,10 +232,8 @@ instance
         ) x
 
 instance
-    ( Recursively KNodes e
-    , Recursively KFoldable e
-    , Recursively KFunctor e
-    , Recursively KTraversable e
+    ( RTraversable e
+    , Recursively KNodes e
     , Recursively (InferOfConstraint KNodes) e
     , Recursively (InferOfConstraint KFoldable) e
     , Recursively (InferOfConstraint KFunctor) e
@@ -244,10 +243,8 @@ instance
 
     {-# INLINE sequenceC #-}
     sequenceC =
+        withDict (recursiveKTraversable (Proxy @e)) $
         withDict (recursive @KNodes @e) $
-        withDict (recursive @KFoldable @e) $
-        withDict (recursive @KFunctor @e) $
-        withDict (recursive @KTraversable @e) $
         withDict (recursive @(InferOfConstraint KNodes) @e) $
         withDict (recursive @(InferOfConstraint KFoldable) @e) $
         withDict (recursive @(InferOfConstraint KFunctor) @e) $
@@ -259,10 +256,8 @@ instance
         <*> traverseKWith
             (Proxy ::
                 Proxy
-                '[Recursively KNodes
-                , Recursively KFoldable
-                , Recursively KFunctor
-                , Recursively KTraversable
+                '[RTraversable
+                , Recursively KNodes
                 , Recursively (InferOfConstraint KNodes)
                 , Recursively (InferOfConstraint KFoldable)
                 , Recursively (InferOfConstraint KFunctor)
@@ -272,16 +267,16 @@ instance
 
 iAnnotations ::
     forall e a b v.
-    Recursively KTraversable e =>
+    RTraversable e =>
     Traversal
     (Tree (ITerm a v) e)
     (Tree (ITerm b v) e)
     a b
 iAnnotations f (ITerm pl r x) =
-    withDict (recursive @KTraversable @e) $
+    withDict (recursiveKTraversable (Proxy @e)) $
     ITerm
     <$> f pl
     <*> pure r
-    <*> traverseKWith (Proxy @'[Recursively KTraversable]) (iAnnotations f) x
+    <*> traverseKWith (Proxy @'[RTraversable]) (iAnnotations f) x
 
 deriving instance (Show a, Show (Tree e (ITerm a v)), Show (Tree (InferOf e) v)) => Show (Tree (ITerm a v) e)

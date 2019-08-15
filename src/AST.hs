@@ -9,6 +9,7 @@ import AST.Class.Foldable as X (KFoldable(..), foldMapK, foldMapKWith, traverseK
 import AST.Class.Recursive as X
     ( Recursively(..), RecursiveConstraint, RecursiveContext, RecursiveDict
     , RecursiveNodes(..)
+    , RFunctor, RFoldable, RTraversable
     )
 import AST.Class.Traversable as X (KTraversable(..), traverseK, traverseKWith)
 import AST.Combinator.ANode as X

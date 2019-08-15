@@ -59,6 +59,10 @@ makeKTraversableAndBases ''Scheme
 
 instance (c (Scheme v t), Recursively c t) => Recursively c (Scheme v t)
 
+instance (KFoldable (Scheme v t), RFoldable t) => RFoldable (Scheme v t)
+instance (KFunctor (Scheme v t), RFunctor t) => RFunctor (Scheme v t)
+instance (KTraversable (Scheme v t), RTraversable t) => RTraversable (Scheme v t)
+
 instance
     ( Ord (QVar (RunKnot typ))
     , Semigroup (TypeConstraintsOf (RunKnot typ))
