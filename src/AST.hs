@@ -8,7 +8,7 @@ import AST.Class.Combinators as X (pureKWith, mapKWith, liftK2With)
 import AST.Class.Foldable as X (KFoldable(..), foldMapK, foldMapKWith, traverseK_, traverseKWith_)
 import AST.Class.Recursive as X
     ( Recursively(..), RecursiveConstraint, RecursiveContext, RecursiveDict
-    , RecursiveNodes(..), RLiftConstraints(..)
+    , RecursiveNodes(..)
     )
 import AST.Class.Traversable as X (KTraversable(..), traverseK, traverseKWith)
 import AST.Combinator.ANode as X

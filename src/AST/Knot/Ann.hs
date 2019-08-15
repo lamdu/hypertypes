@@ -15,7 +15,6 @@ import           AST.Class.Traversable
 import           AST.Combinator.ANode (ANode)
 import           AST.Combinator.Compose
 import           AST.Knot (Tree, Node)
-import           AST.Knot.Dict
 import           AST.Knot.Pure (Pure(..))
 import           AST.TH.Traversable (makeKTraversableAndBases)
 import           AST.TH.ZipMatch (makeZipMatch)
@@ -24,7 +23,6 @@ import           Control.Lens (Traversal, makeLenses)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           Data.Constraint (Constraint, Dict(..), withDict)
-import           Data.Constraint.List (ApplyConstraints)
 import           Data.Functor.Product.PolyKinds (Product(..))
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
@@ -73,39 +71,29 @@ instance Deps Pretty a t => Pretty (Ann a t) where
         where
             plDoc = pPrintPrec lvl 0 pl
 
-annotationsWithDict ::
-    forall k cs a b.
-    Tree (RecursiveNodes k) (KDict cs) ->
-    (forall n. ApplyConstraints cs n => Dict (KTraversable n)) ->
+annotationsWith ::
+    forall k c a b.
+    (Recursive c, c k) =>
+    Proxy c ->
+    (forall n. c n => Dict (KTraversable n)) ->
     Traversal
     (Tree (Ann a) k)
     (Tree (Ann b) k)
     a b
-annotationsWithDict c getTraversable f (Ann pl x) =
-    withDict (c ^. recSelf . _KDict) $
+annotationsWith p getTraversable f (Ann pl x) =
+    withDict (recurse (Proxy @(c k))) $
     withDict (getTraversable @k) $
     Ann
     <$> f pl
-    <*> traverseKRec c (\d -> annotationsWithDict d getTraversable f) x
-
-annotationsWith ::
-    forall k cs a b.
-    RLiftConstraints k cs =>
-    Proxy cs ->
-    (forall n. ApplyConstraints cs n => Dict (KTraversable n)) ->
-    Traversal
-    (Tree (Ann a) k)
-    (Tree (Ann b) k)
-    a b
-annotationsWith _ = annotationsWithDict (rLiftConstraints @k @cs)
+    <*> traverseKWith (Proxy @'[c]) (annotationsWith p getTraversable f) x
 
 annotations ::
-    (Recursively KNodes e, Recursively KTraversable e) =>
+    Recursively KTraversable e =>
     Traversal
     (Tree (Ann a) e)
     (Tree (Ann b) e)
     a b
-annotations = annotationsWith (Proxy @'[KTraversable]) Dict
+annotations = annotationsWith (Proxy @(Recursively KTraversable)) Dict
 
 strip ::
     (Recursively KNodes expr, Recursively KTraversable expr) =>
@@ -114,12 +102,12 @@ strip ::
 strip = unwrap (Proxy @'[KTraversable]) Dict (^. val)
 
 addAnnotations ::
-    RLiftConstraints k cs =>
-    Proxy cs ->
-    (forall n. ApplyConstraints cs n => Dict (KFunctor n)) ->
-    (forall n. ApplyConstraints cs n => Tree n (Ann a) -> a) ->
+    (Recursive c, c k) =>
+    Proxy c ->
+    (forall n. c n => Dict (KFunctor n)) ->
+    (forall n. c n => Tree n (Ann a) -> a) ->
     Tree Pure k -> Tree (Ann a) k
-addAnnotations p getFunctor f = wrapDeprecated p getFunctor (\x -> Ann (f x) x)
+addAnnotations p getFunctor f = wrap p getFunctor (\x -> Ann (f x) x)
 
 type Deps c a t = ((c a, c (Node t (Ann a))) :: Constraint)
 deriving instance Deps Eq   a t => Eq   (Ann a t)

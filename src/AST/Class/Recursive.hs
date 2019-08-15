@@ -6,7 +6,6 @@ module AST.Class.Recursive
     ( Recursive(..)
     , Recursively(..), RecursiveContext, RecursiveDict, RecursiveConstraint
     , RecursiveNodes(..), recSelf, recSub
-    , RLiftConstraints(..)
     , traverseKRec, foldMapKRec, mapKRec
     , wrap, wrapDeprecated, wrapWithDict
     , wrapM, wrapMDeprecated, wrapMWithDict
