@@ -8,12 +8,9 @@ module AST.Knot.Ann
     ) where
 
 import           AST.Class
-import           AST.Class.Combinators
-import           AST.Class.Monad
 import           AST.Class.Recursive
 import           AST.Class.Traversable
 import           AST.Combinator.ANode (ANode)
-import           AST.Combinator.Compose
 import           AST.Knot (Tree, Node)
 import           AST.Knot.Pure (Pure(..))
 import           AST.TH.Traversable (makeKTraversableAndBases)
@@ -50,15 +47,6 @@ instance Monoid a => KPointed (Ann a) where
 
 instance Monoid a => KApply (Ann a) where
     zipK (Ann a0 v0) (Ann a1 v1) = Ann (a0 <> a1) (Pair v0 v1)
-
-instance Monoid a => KMonad (Ann a) where
-    joinK (MkCompose (Ann a0 (MkCompose (Ann a1 (MkCompose x))))) =
-        withDict (r x) $
-        mapKWith (Proxy @'[Recursively KFunctor]) joinK x
-        & Ann (a0 <> a1)
-        where
-            r :: Recursively KFunctor l => Tree l k -> RecursiveDict l KFunctor
-            r _ = recursive
 
 instance c (Ann a) => Recursively c (Ann a)
 

@@ -1,12 +1,10 @@
 {-# LANGUAGE UndecidableInstances, ScopedTypeVariables, TemplateHaskell, FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
 
 module AST.Knot.Prune
     ( Prune(..)
     ) where
 
 import AST
-import AST.Class.Monad (KMonad(..))
 import AST.Class.Traversable
 import AST.Class.Unify (Unify)
 import AST.Combinator.Compose (Compose(..))
@@ -17,7 +15,6 @@ import Control.DeepSeq (NFData)
 import Control.Lens (makePrisms)
 import Control.Lens.Operators
 import Data.Binary (Binary)
-import Data.Constraint (withDict)
 import Data.Proxy (Proxy(..))
 import GHC.Generics (Generic)
 
@@ -44,17 +41,6 @@ instance KApply Prune where
     zipK Pruned _ = Pruned
     zipK _ Pruned = Pruned
     zipK (Unpruned x) (Unpruned y) = Pair x y & Unpruned
-
-instance KMonad Prune where
-    joinK (MkCompose Pruned) = Pruned
-    joinK (MkCompose (Unpruned (MkCompose Pruned))) = Pruned
-    joinK (MkCompose (Unpruned (MkCompose (Unpruned (MkCompose x))))) =
-        withDict (r x) $
-        mapKWith (Proxy @'[Recursively KFunctor]) joinK x
-        & Unpruned
-        where
-            r :: Recursively KFunctor l => Tree l k -> RecursiveDict l KFunctor
-            r _ = recursive
 
 instance c Prune => Recursively c Prune
 

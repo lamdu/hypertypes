@@ -1,25 +1,18 @@
 -- | Functors as Knots
-{-# LANGUAGE TemplateHaskell, FlexibleInstances, FlexibleContexts #-}
-{-# LANGUAGE UndecidableInstances, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances #-}
 module AST.Knot.Functor
     ( ToKnot(..), _ToKnot
     ) where
 
-import AST.Class (KNodes(..), KFunctor)
-import AST.Class.Combinators (mapKWith)
-import AST.Class.Monad (KMonad(..))
-import AST.Class.Recursive (Recursively(..), RecursiveDict)
+import AST.Class (KNodes(..))
+import AST.Class.Recursive (Recursively(..))
 import AST.Combinator.ANode (ANode(..))
-import AST.Combinator.Compose
 import AST.Knot (Tree, Node)
 import AST.TH.Apply (makeKApplicativeBases)
 import AST.TH.Traversable (makeKTraversableAndFoldable)
 import Control.DeepSeq (NFData)
 import Control.Lens (Iso, iso)
-import Control.Lens.Operators
 import Data.Binary (Binary)
-import Data.Constraint (withDict)
-import Data.Proxy (Proxy(..))
 import GHC.Generics (Generic)
 
 import Prelude.Compat
@@ -39,17 +32,6 @@ instance KNodes (ToKnot f) where
 
 makeKApplicativeBases ''ToKnot
 makeKTraversableAndFoldable ''ToKnot
-
-instance Monad f => KMonad (ToKnot f) where
-    joinK x =
-        withDict (r x) $
-        x ^. _Compose . _ToKnot
-        >>= (^. _Compose . _ToKnot)
-        <&> mapKWith (Proxy @'[Recursively KFunctor]) joinK . getCompose
-        & MkToKnot
-        where
-            r :: Recursively KFunctor l => Tree k l -> RecursiveDict l KFunctor
-            r _ = recursive
 
 instance c (ToKnot f) => Recursively c (ToKnot f)
 
