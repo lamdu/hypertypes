@@ -65,10 +65,6 @@ makeZipMatch ''RowExtend
 makeKTraversableAndBases ''RowExtend
 makeKTraversableAndBases ''FlatRowExtends
 
-instance
-    RecursiveContext (RowExtend key val rest) constraint =>
-    Recursively constraint (RowExtend key val rest)
-
 type Deps c key val rest k = ((c key, c (Node k val), c (Node k rest)) :: Constraint)
 
 instance Deps Show key val rest k => Show (RowExtend key val rest k) where
