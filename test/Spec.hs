@@ -129,9 +129,6 @@ inferExpr ::
     , RTraversable t
     , Infer m t
     , Recursively (InferOfConstraint KNodes) t
-    , Recursively (InferOfConstraint KFoldable) t
-    , Recursively (InferOfConstraint KFunctor) t
-    , Recursively (InferOfConstraint KTraversable) t
     , Recursively (InferOfConstraint (KLiftConstraint (Unify m))) t
     ) =>
     Tree Pure t ->

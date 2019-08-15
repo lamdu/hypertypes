@@ -174,17 +174,18 @@ instance
 
 instance
     ( RFunctor e
+    , Inferrable e
     , Recursively (InferOfConstraint KNodes) e
-    , Recursively (InferOfConstraint KFunctor) e
     ) =>
     KFunctor (Flip (ITerm a) e) where
 
     {-# INLINE mapC #-}
     mapC (ITermTypes (RecursiveNodes (MkIResultNodeTypes ft) fs)) =
+        withDict (traversableInferOf (Proxy @e)) $
+        withDict (inferrableRecursive (Proxy @e)) $
         withDict (kNodes (Proxy @e)) $
         withDict (recursiveKFunctor (Proxy @e)) $
         withDict (recursive @(InferOfConstraint KNodes) @e) $
-        withDict (recursive @(InferOfConstraint KFunctor) @e) $
         _Flip %~
         \(ITerm a r x) ->
         ITerm a
@@ -194,8 +195,8 @@ instance
                 (Proxy ::
                     Proxy
                     '[RFunctor
+                    , Inferrable
                     , Recursively (InferOfConstraint KNodes)
-                    , Recursively (InferOfConstraint KFunctor)
                     ])
                 (\(MkFlip f) -> from _Flip %~ mapC (ITermTypes f) & MkMapK) fs
             ) x
@@ -203,44 +204,42 @@ instance
 
 instance
     ( RFoldable e
+    , Inferrable e
     , Recursively (InferOfConstraint KNodes) e
-    , Recursively (InferOfConstraint KFoldable) e
     ) =>
     KFoldable (Flip (ITerm a) e) where
     {-# INLINE foldMapC #-}
     foldMapC (ITermTypes (RecursiveNodes (MkIResultNodeTypes ft) fs)) (MkFlip (ITerm _ r x)) =
+        withDict (traversableInferOf (Proxy @e)) $
+        withDict (inferrableRecursive (Proxy @e)) $
         withDict (kNodes (Proxy @e)) $
         withDict (recursiveKFoldable (Proxy @e)) $
         withDict (recursive @(InferOfConstraint KNodes) @e) $
-        withDict (recursive @(InferOfConstraint KFoldable) @e) $
         foldMapC ft r <>
         foldMapC
         ( mapKWith
             (Proxy ::
                 Proxy
                 '[RFoldable
+                , Inferrable
                 , Recursively (InferOfConstraint KNodes)
-                , Recursively (InferOfConstraint KFoldable)
                 ])
             (\(MkFlip f) -> foldMapC (ITermTypes f) . (_Flip #) & MkConvertK) fs
         ) x
 
 instance
     ( RTraversable e
+    , Inferrable e
     , Recursively (InferOfConstraint KNodes) e
-    , Recursively (InferOfConstraint KFoldable) e
-    , Recursively (InferOfConstraint KFunctor) e
-    , Recursively (InferOfConstraint KTraversable) e
     ) =>
     KTraversable (Flip (ITerm a) e) where
 
     {-# INLINE sequenceC #-}
     sequenceC =
+        withDict (traversableInferOf (Proxy @e)) $
+        withDict (inferrableRecursive (Proxy @e)) $
         withDict (recursiveKTraversable (Proxy @e)) $
         withDict (recursive @(InferOfConstraint KNodes) @e) $
-        withDict (recursive @(InferOfConstraint KFoldable) @e) $
-        withDict (recursive @(InferOfConstraint KFunctor) @e) $
-        withDict (recursive @(InferOfConstraint KTraversable) @e) $
         _Flip $
         \(ITerm a r x) ->
         ITerm a
@@ -249,10 +248,8 @@ instance
             (Proxy ::
                 Proxy
                 '[RTraversable
+                , Inferrable
                 , Recursively (InferOfConstraint KNodes)
-                , Recursively (InferOfConstraint KFoldable)
-                , Recursively (InferOfConstraint KFunctor)
-                , Recursively (InferOfConstraint KTraversable)
                 ])
             (from _Flip sequenceC) x
 
