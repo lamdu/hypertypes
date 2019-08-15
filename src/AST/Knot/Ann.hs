@@ -84,10 +84,10 @@ annotations ::
 annotations = annotationsWith (Proxy @RTraversable) Dict
 
 strip ::
-    (Recursively KNodes expr, Recursively KTraversable expr) =>
+    RTraversable expr =>
     Tree (Ann a) expr ->
     Tree Pure expr
-strip = unwrap (Proxy @'[KTraversable]) Dict (^. val)
+strip = unwrap (Proxy @RTraversable) Dict (^. val)
 
 addAnnotations ::
     (Recursive c, c k) =>

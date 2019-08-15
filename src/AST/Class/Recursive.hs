@@ -17,12 +17,10 @@ import AST.Class.Foldable
 import AST.Class.Traversable
 import AST.Combinator.Flip
 import AST.Knot
-import AST.Knot.Dict
 import AST.Knot.Pure (Pure(..), _Pure)
 import Control.Lens (makeLenses)
 import Control.Lens.Operators
 import Data.Constraint (Dict(..), withDict)
-import Data.Constraint.List (ApplyConstraints)
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
 import Data.Kind (Type, Constraint)
@@ -188,43 +186,6 @@ instance
 
 instance constraint Pure => Recursively constraint Pure
 
-type family RecursivelyConstraints cs :: [(Knot -> Type) -> Constraint] where
-    RecursivelyConstraints (c ': cs) = (Recursively c ': RecursivelyConstraints cs)
-    RecursivelyConstraints '[] = '[]
-
-class RLiftConstraints k cs where
-    rLiftConstraints :: Tree (RecursiveNodes k) (KDict cs)
-
-instance
-    Recursively KNodes k =>
-    RLiftConstraints k '[] where
-
-    {-# INLINE rLiftConstraints #-}
-    rLiftConstraints = pureK (MkKDict Dict)
-
-instance
-    (Recursively KNodes k, Recursively c k, RLiftConstraints k cs) =>
-    RLiftConstraints k (c ': cs) where
-
-    {-# INLINE rLiftConstraints #-}
-    rLiftConstraints =
-        liftK2
-        (\(MkKDict c) (MkKDict cs) -> withDict c (withDict cs (MkKDict Dict)))
-        (pureKWithConstraint (Proxy @c) (MkKDict Dict) :: Tree (RecursiveNodes k) (KDict '[c]))
-        (rLiftConstraints @k @cs)
-
-{-# INLINE mapKRec #-}
-mapKRec ::
-    forall k cs m n.
-    KFunctor k =>
-    Tree (RecursiveNodes k) (KDict cs) ->
-    (forall c. Tree (RecursiveNodes c) (KDict cs) -> Tree m c -> Tree n c) ->
-    Tree k m ->
-    Tree k n
-mapKRec c f =
-    withDict (kNodes (Proxy @k)) $
-    mapC (mapK (MkMapK . \(MkFlip d) -> f d) (c ^. recSub))
-
 {-# INLINE wrapM #-}
 wrapM ::
     forall m k c w.
@@ -273,78 +234,42 @@ wrap p getFunctor f x =
     & mapKWith (Proxy @'[c]) (wrap p getFunctor f)
     & f
 
-{-# INLINE wrapWithDict #-}
-wrapWithDict ::
-    forall k cs w.
-    Tree (RecursiveNodes k) (KDict cs) ->
-    (forall n. ApplyConstraints cs n => Dict (KFunctor n)) ->
-    (forall n. ApplyConstraints cs n => Tree n w -> Tree w n) ->
-    Tree Pure k ->
-    Tree w k
-wrapWithDict c getFunctor f x =
-    withDict (c ^. recSelf . _KDict) $
-    withDict (getFunctor @k) $
-    x ^. _Pure
-    & mapKRec c (\d -> wrapWithDict d getFunctor f)
-    & f
-
-{-# INLINE wrapDeprecated #-}
-wrapDeprecated ::
-    forall k cs w.
-    RLiftConstraints k cs =>
-    Proxy cs ->
-    (forall n. ApplyConstraints cs n => Dict (KFunctor n)) ->
-    (forall n. ApplyConstraints cs n => Tree n w -> Tree w n) ->
-    Tree Pure k ->
-    Tree w k
-wrapDeprecated _ = wrapWithDict (rLiftConstraints @k @cs)
-
-{-# INLINE unwrapWithDict #-}
-unwrapWithDict ::
-    forall k cs w.
-    Tree (RecursiveNodes k) (KDict cs) ->
-    (forall n. ApplyConstraints cs n => Dict (KFunctor n)) ->
-    (forall n. ApplyConstraints cs n => Tree w n -> Tree n w) ->
-    Tree w k ->
-    Tree Pure k
-unwrapWithDict c getFunctor f x =
-    withDict (c ^. recSelf . _KDict) $
-    withDict (getFunctor @k) $
-    f x
-    & mapKRec c (\d -> unwrapWithDict d getFunctor f)
-    & MkPure
-
 {-# INLINE unwrap #-}
 unwrap ::
-    forall k cs w.
-    RLiftConstraints k cs =>
-    Proxy cs ->
-    (forall n. ApplyConstraints cs n => Dict (KFunctor n)) ->
-    (forall n. ApplyConstraints cs n => Tree w n -> Tree n w) ->
+    forall k c w.
+    (Recursive c, c k) =>
+    Proxy c ->
+    (forall n. c n => Dict (KFunctor n)) ->
+    (forall n. c n => Tree w n -> Tree n w) ->
     Tree w k ->
     Tree Pure k
-unwrap _ = unwrapWithDict (rLiftConstraints @k @cs)
+unwrap p getFunctor f x =
+    withDict (recurse (Proxy @(c k))) $
+    withDict (getFunctor @k) $
+    f x
+    & mapKWith (Proxy @'[c]) (unwrap p getFunctor f)
+    & MkPure
 
 -- | Recursively fold up a tree to produce a result.
 -- TODO: Is this a "cata-morphism"?
 {-# INLINE fold #-}
 fold ::
-    RLiftConstraints k cs =>
-    Proxy cs ->
-    (forall n. ApplyConstraints cs n => Dict (KFunctor n)) ->
-    (forall n. ApplyConstraints cs n => Tree n (Const a) -> a) ->
+    (Recursive c, c k) =>
+    Proxy c ->
+    (forall n. c n => Dict (KFunctor n)) ->
+    (forall n. c n => Tree n (Const a) -> a) ->
     Tree Pure k ->
     a
-fold p getFunctor f = getConst . wrapDeprecated p getFunctor (Const . f)
+fold p getFunctor f = getConst . wrap p getFunctor (Const . f)
 
 -- | Build/load a tree from a seed value.
 -- TODO: Is this an "ana-morphism"?
 {-# INLINE unfold #-}
 unfold ::
-    RLiftConstraints k cs =>
-    Proxy cs ->
-    (forall n. ApplyConstraints cs n => Dict (KFunctor n)) ->
-    (forall n. ApplyConstraints cs n => a -> Tree n (Const a)) ->
+    (Recursive c, c k) =>
+    Proxy c ->
+    (forall n. c n => Dict (KFunctor n)) ->
+    (forall n. c n => a -> Tree n (Const a)) ->
     a ->
     Tree Pure k
 unfold p getFunctor f = unwrap p getFunctor (f . getConst) . Const
