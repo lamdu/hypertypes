@@ -225,15 +225,14 @@ loadScheme (MkPure (Scheme vars typ)) =
 
 saveH ::
     forall typ varTypes m.
-    Monad m =>
-    Tree (RecursiveNodes typ) (KDict '[Unify m, HasChild varTypes, QVarHasInstance Ord]) ->
+    (Monad m, HasScheme varTypes m typ) =>
     Tree (GTerm (UVarOf m)) typ ->
     StateT (Tree varTypes QVars, [m ()]) m (Tree Pure typ)
-saveH c (GBody x) =
-    withDict (c ^. recSelf . _KDict) $
-    traverseKRec c saveH x <&> (_Pure #)
-saveH c (GMono x) =
-    unwrapMWithDict c Dict f x & lift
+saveH (GBody x) =
+    withDict (hasSchemeRecursive (Proxy @varTypes) (Proxy @m) (Proxy @typ)) $
+    traverseKWith (Proxy @'[HasScheme varTypes m]) saveH x <&> (_Pure #)
+saveH (GMono x) =
+    unwrapM (Proxy @(HasScheme varTypes m)) Dict f x & lift
     where
         f v =
             semiPruneLookup v
@@ -242,8 +241,7 @@ saveH c (GMono x) =
             (_, UTerm t) -> t ^. uBody
             (_, UUnbound{}) -> error "saveScheme of non-toplevel scheme!"
             _ -> error "unexpected state at saveScheme of monomorphic part"
-saveH c (GPoly x) =
-    withDict (c ^. recSelf . _KDict) $
+saveH (GPoly x) =
     lookupVar binding x & lift
     >>=
     \case
@@ -262,15 +260,14 @@ saveH c (GPoly x) =
 saveScheme ::
     ( NodesConstraint varTypes $ QVarHasInstance Ord
     , KPointed varTypes
-    , RLiftConstraints typ '[Unify m, HasChild varTypes, QVarHasInstance Ord]
-    , Monad m
+    , HasScheme varTypes m typ
     ) =>
     Tree (GTerm (UVarOf m)) typ ->
     m (Tree Pure (Scheme varTypes typ))
 saveScheme x =
     do
         (t, (v, recover)) <-
-            runStateT (saveH rLiftConstraints x)
+            runStateT (saveH x)
             ( pureKWithConstraint (Proxy @(QVarHasInstance Ord)) (QVars mempty)
             , []
             )

@@ -201,7 +201,7 @@ loadNominalDecl ::
     ( Monad m
     , KTraversable (NomVarTypes typ)
     , NodesConstraint (NomVarTypes typ) $ Unify m
-    , RLiftConstraints typ '[Unify m, HasChild (NomVarTypes typ), QVarHasInstance Ord]
+    , HasScheme (NomVarTypes typ) m typ
     ) =>
     Tree Pure (NominalDecl typ) ->
     m (Tree (LoadedNominalDecl typ) (UVarOf m))
@@ -209,7 +209,7 @@ loadNominalDecl (MkPure (NominalDecl params (Scheme foralls typ))) =
     do
         paramsL <- traverseKWith (Proxy @'[Unify m]) makeQVarInstances params
         forallsL <- traverseKWith (Proxy @'[Unify m]) makeQVarInstances foralls
-        wrapMDeprecated (Proxy @'[Unify m, HasChild (NomVarTypes typ), QVarHasInstance Ord])
+        wrapM (Proxy @(HasScheme (NomVarTypes typ) m))
             Dict (loadBody paramsL forallsL) typ
             <&> LoadedNominalDecl paramsL forallsL
 

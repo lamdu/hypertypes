@@ -11,7 +11,7 @@ module AST.Class.Recursive
     , wrap, wrapWithDict
     , wrapM, wrapMDeprecated, wrapMWithDict
     , unwrap, unwrapWithDict
-    , unwrapM, unwrapMWithDict
+    , unwrapM, unwrapMDecprecated, unwrapMWithDict
     , fold, unfold
     , foldMapRecursive, foldMapRecursiveWithDict
     ) where
@@ -250,6 +250,22 @@ wrapMDeprecated ::
     m (Tree w k)
 wrapMDeprecated _ = wrapMWithDict (rLiftConstraints @k @cs)
 
+{-# INLINE unwrapM #-}
+unwrapM ::
+    forall m k c w.
+    (Monad m, Recursive c, c k) =>
+    Proxy c ->
+    (forall n. c n => Dict (KTraversable n)) ->
+    (forall n. c n => Tree w n -> m (Tree n w)) ->
+    Tree w k ->
+    m (Tree Pure k)
+unwrapM p getTraversable f x =
+    withDict (recurse (Proxy @(c k))) $
+    withDict (getTraversable @k) $
+    f x
+    >>= traverseKWith (Proxy @'[c]) (unwrapM p getTraversable f)
+    <&> (_Pure #)
+
 {-# INLINE unwrapMWithDict #-}
 unwrapMWithDict ::
     forall k cs w m.
@@ -266,8 +282,8 @@ unwrapMWithDict c getTraversable f x =
     >>= traverseKRec c (\d -> unwrapMWithDict d getTraversable f)
     <&> (_Pure #)
 
-{-# INLINE unwrapM #-}
-unwrapM ::
+{-# INLINE unwrapMDecprecated #-}
+unwrapMDecprecated ::
     forall m k cs w.
     (Monad m, RLiftConstraints k cs) =>
     Proxy cs ->
@@ -275,7 +291,7 @@ unwrapM ::
     (forall n. ApplyConstraints cs n => Tree w n -> m (Tree n w)) ->
     Tree w k ->
     m (Tree Pure k)
-unwrapM _ = unwrapMWithDict (rLiftConstraints @k @cs)
+unwrapMDecprecated _ = unwrapMWithDict (rLiftConstraints @k @cs)
 
 {-# INLINE wrapWithDict #-}
 wrapWithDict ::
