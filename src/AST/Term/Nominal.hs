@@ -136,18 +136,6 @@ instance
                 )
             <&> NominalInst xId
 
-instance
-    ( c (NominalInst nomId varTypes)
-    , KTraversable varTypes
-    , NodesConstraint varTypes $ Recursively c
-    ) =>
-    Recursively c (NominalInst nomId varTypes) where
-
-    {-# INLINE recursive #-}
-    recursive =
-        withDict (kNodes (Proxy @varTypes))
-        Dict
-
 instance DepsT Pretty nomId term k => Pretty (ToNom nomId term k) where
     pPrintPrec lvl p (ToNom nomId term) =
         (pPrint nomId <> Pretty.text "#") <+> pPrintPrec lvl 11 term
