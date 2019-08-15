@@ -122,6 +122,9 @@ instance
                 & pure
         \\ (inferMonad :: DeBruijnIndex (Maybe k) :- Infer m (t (Maybe k)))
 
+    inferRecursive _ _ =
+        Dict \\ inferMonad @m @t @(Maybe k)
+
 instance
     ( MonadReader env m
     , HasScopeTypes (UVarOf m) (TypeOf (t k)) env

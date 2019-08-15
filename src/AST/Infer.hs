@@ -21,13 +21,13 @@ import Prelude.Compat
 {-# INLINE infer #-}
 infer ::
     forall m t a.
-    Recursively (Infer m) t =>
+    Infer m t =>
     Tree (Ann a) t ->
     m (Tree (ITerm a (UVarOf m)) t)
 infer (Ann a x) =
-    withDict (recursive @(Infer m) @t) $
+    withDict (inferRecursive (Proxy @m) (Proxy @t)) $
     inferBody
-        (mapKWith (Proxy @'[Recursively (Infer m)])
+        (mapKWith (Proxy @'[Infer m])
             (\c -> infer c <&> (\i -> InferredChild i (i ^. iRes)) & InferChild)
             x)
     <&> (\(InferRes xI t) -> ITerm a t xI)

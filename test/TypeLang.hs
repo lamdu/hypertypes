@@ -23,7 +23,7 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Reader (MonadReader)
 import           Control.Monad.ST.Class (MonadST(..))
-import           Data.Constraint (Constraint)
+import           Data.Constraint
 import           Data.STRef
 import           Data.Set (Set, singleton)
 import           Generic.Data
@@ -208,12 +208,16 @@ instance HasInferredValue Typ where inferredValue = _ANode
 instance HasInferredValue Row where inferredValue = _ANode
 
 instance
-    (Monad m, MonadInstantiate m Typ, Unify m Typ) =>
-    Infer m Typ where inferBody = inferType
+    (Monad m, MonadInstantiate m Typ, MonadInstantiate m Row, Unify m Typ, Unify m Row) =>
+    Infer m Typ where
+
+    inferBody = inferType
 
 instance
-    (Monad m, MonadInstantiate m Row, Unify m Row) =>
-    Infer m Row where inferBody = inferType
+    (Monad m, MonadInstantiate m Typ, MonadInstantiate m Row, Unify m Typ, Unify m Row) =>
+    Infer m Row where
+
+    inferBody = inferType
 
 rStructureMismatch ::
     (Unify m Typ, Unify m Row) =>

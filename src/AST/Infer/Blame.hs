@@ -34,7 +34,7 @@ data PrepAnn m a = PrepAnn
 prepare ::
     forall err m exp a.
     ( MonadError err m
-    , Recursively (Infer m) exp
+    , Infer m exp
     , Recursively (InferOfConstraint KApplicative) exp
     , Recursively (InferOfConstraint KTraversable) exp
     , Recursively (InferOfConstraint (KLiftConstraint (Unify m))) exp
@@ -43,7 +43,7 @@ prepare ::
     Tree (Ann a) exp ->
     m (Tree (Ann (PrepAnn m a)) exp)
 prepare typeFromAbove (Ann a x) =
-    withDict (recursive @(Infer m) @exp) $
+    withDict (inferRecursive (Proxy @m) (Proxy @exp)) $
     withDict (recursive @(InferOfConstraint KApplicative) @exp) $
     withDict (recursive @(InferOfConstraint KTraversable) @exp) $
     withDict (recursive @(InferOfConstraint (KLiftConstraint (Unify m))) @exp) $
@@ -51,7 +51,7 @@ prepare typeFromAbove (Ann a x) =
     (mapKWith
         (Proxy ::
             Proxy
-            '[ Recursively (Infer m)
+            '[ Infer m
             , Recursively (InferOfConstraint KApplicative)
             , Recursively (InferOfConstraint KTraversable)
             , Recursively (InferOfConstraint (KLiftConstraint (Unify m)))
@@ -95,7 +95,7 @@ blame ::
     ( Ord priority
     , MonadError err m
     , RTraversable exp
-    , Recursively (Infer m) exp
+    , Infer m exp
     , Recursively (InferOfConstraint KApplicative) exp
     , Recursively (InferOfConstraint KTraversable) exp
     , Recursively (InferOfConstraint (KLiftConstraint (Unify m))) exp

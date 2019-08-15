@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell, RecordWildCards, FlexibleInstances, FlexibleContexts #-}
-{-# LANGUAGE UndecidableSuperClasses, UndecidableInstances #-}
+{-# LANGUAGE UndecidableSuperClasses, UndecidableInstances, DefaultSignatures #-}
 
 module AST.Class.Infer
     ( Infer(..), LocalScopeType(..)
@@ -15,6 +15,7 @@ import AST
 import AST.Class.Unify (UVarOf)
 import Control.Lens (Lens, Lens', ALens', makeLenses, makePrisms)
 import Control.Lens.Operators
+import Data.Constraint (Dict(..))
 import Data.Kind (Type)
 import Data.Proxy (Proxy)
 
@@ -69,3 +70,10 @@ class (Monad m, KFunctor t) => Infer m t where
     inferBody ::
         Tree t (InferChild m k) ->
         m (InferRes (UVarOf m) k t)
+
+    inferRecursive :: Proxy m -> Proxy t -> Dict (NodesConstraint t $ Infer m)
+    {-# INLINE inferRecursive #-}
+    default inferRecursive ::
+        NodesConstraint t $ Infer m =>
+        Proxy m -> Proxy t -> Dict (NodesConstraint t $ Infer m)
+    inferRecursive _ _ = Dict

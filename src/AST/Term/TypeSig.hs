@@ -8,7 +8,7 @@ module AST.Term.TypeSig
 import           AST
 import           AST.Combinator.Flip (_Flip)
 import           AST.Infer
-import           AST.Term.Scheme (Scheme)
+import           AST.Term.Scheme
 import           AST.Unify (Unify, unify)
 import           AST.Unify.Generalize (instantiateWith)
 import           AST.Unify.Term (UTerm(..))
@@ -16,7 +16,7 @@ import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
-import           Data.Constraint (Constraint)
+import           Data.Constraint
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
@@ -51,8 +51,13 @@ type instance InferOf (TypeSig vars term) = InferOf term
 instance
     ( MonadScopeLevel m
     , HasInferredType term
+    , HasInferredValue (TypeOf term)
+    , KTraversable vars
     , NodesConstraint vars $ Unify m
+    , NodesConstraint vars $ MonadInstantiate m
     , Unify m (TypeOf term)
+    , Infer m (TypeOf term)
+    , Infer m term
     ) =>
     Infer m (TypeSig vars term) where
 

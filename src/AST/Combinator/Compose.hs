@@ -3,6 +3,7 @@
 
 module AST.Combinator.Compose
     ( Compose(..), _Compose
+    , ComposeConstraint1
     ) where
 
 import           AST.Class

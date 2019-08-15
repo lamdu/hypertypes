@@ -249,6 +249,7 @@ instance
     , NodesConstraint (NomVarTypes (TypeOf expr)) $ Unify m
     , Unify m (TypeOf expr)
     , HasInferredType expr
+    , Infer m expr
     ) =>
     Infer m (ToNom nomId expr) where
 

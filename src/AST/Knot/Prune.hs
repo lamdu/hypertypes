@@ -7,7 +7,7 @@ module AST.Knot.Prune
 import AST
 import AST.Class.Traversable
 import AST.Class.Unify (Unify)
-import AST.Combinator.Compose (Compose(..))
+import AST.Combinator.Compose (Compose(..), ComposeConstraint1)
 import AST.Combinator.ANode (ANode(..))
 import AST.Infer
 import AST.Unify.New (newUnbound)
@@ -49,6 +49,7 @@ type instance InferOf (Compose Prune t) = InferOf t
 instance
     ( KApplicative (InferOf t), KTraversable (InferOf t)
     , NodesConstraint (InferOf t) $ Unify m
+    , NodesConstraint t $ ComposeConstraint1 (Infer m) Prune
     , Infer m t
     ) =>
     Infer m (Compose Prune t) where

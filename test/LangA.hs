@@ -115,6 +115,7 @@ type TermInfer1Deps env m =
     , MonadReader env m
     , HasScopeTypes (UVarOf m) Typ env
     , Unify m Typ, Unify m Row
+    , MonadInstantiate m Typ, MonadInstantiate m Row
     )
 
 instance TermInfer1Deps env m => Infer1 m LangA where
@@ -128,16 +129,6 @@ instance (DeBruijnIndex k, TermInfer1Deps env m) => Infer m (LangA k) where
         >>= \(InferRes b t) -> TFun t & newTerm <&> InferRes (ALam b) . MkANode
     inferBody (AApp x) = inferBody x <&> inferResBody %~ AApp
     inferBody (ATypeSig x) = inferBody x <&> inferResBody %~ ATypeSig
-
-instance
-    ( DeBruijnIndex k
-    , TermInfer1Deps env m
-    , MonadInstantiate m Typ
-    , MonadInstantiate m Row
-    , Infer m Typ
-    , Infer m Row
-    ) =>
-    Recursively (Infer m) (LangA k)
 
 -- Monads for inferring `LangA`:
 

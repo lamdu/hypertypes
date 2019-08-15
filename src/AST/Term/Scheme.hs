@@ -129,6 +129,7 @@ instance
     , KTraversable varTypes
     , NodesConstraint varTypes $ Unify m
     , NodesConstraint varTypes $ MonadInstantiate m
+    , Infer m typ
     ) =>
     Infer m (Scheme varTypes typ) where
 
