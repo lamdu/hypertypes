@@ -47,8 +47,6 @@ instance KNodes (Var v e) where
 Lens.makePrisms ''Var
 makeKTraversableAndBases ''Var
 
-instance c (Var v expr) => Recursively c (Var v expr)
-
 instance Pretty v => Pretty (Var v expr k) where
     pPrintPrec lvl p (Var v) = pPrintPrec lvl p v
 

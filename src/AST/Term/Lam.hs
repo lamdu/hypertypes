@@ -42,8 +42,6 @@ instance Deps v expr k Pretty => Pretty (Lam v expr k) where
         <+> Pretty.text "->" <+> pPrintPrec lvl 0 o
         & maybeParens (p > 0)
 
-instance RecursiveContext (Lam v expr) constraint => Recursively constraint (Lam v expr)
-
 type instance InferOf (Lam v t) = FuncType (TypeOf t)
 
 instance

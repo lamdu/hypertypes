@@ -43,8 +43,6 @@ instance Deps v expr k Pretty => Pretty (Let v expr k) where
         $+$ pPrintPrec lvl 0 i
         & maybeParens (p > 0)
 
-instance RecursiveContext (Let v expr) constraint => Recursively constraint (Let v expr)
-
 type instance InferOf (Let v expr) = InferOf expr
 
 instance

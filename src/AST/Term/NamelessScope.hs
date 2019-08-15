@@ -47,7 +47,6 @@ makeKApplicativeBases ''Scope
 makeKTraversableAndFoldable ''Scope
 makeZipMatch ''ScopeVar
 makeKTraversableAndBases ''ScopeVar
-instance (c (Scope expr a), Recursively c (expr (Maybe a))) => Recursively c (Scope expr a)
 
 class DeBruijnIndex a where
     deBruijnIndex :: Prism' Int a

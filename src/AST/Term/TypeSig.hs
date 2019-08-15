@@ -39,10 +39,6 @@ instance KNodes (TypeSig v t) where
 makeKApplicativeBases ''TypeSig
 makeKTraversableAndFoldable ''TypeSig
 
-instance
-    RecursiveContext (TypeSig vars term) constraint =>
-    Recursively constraint (TypeSig vars term)
-
 type Deps vars term k cls = ((cls (Node k term), cls (Node k (Scheme vars (TypeOf term)))) :: Constraint)
 
 instance Deps vars term k Pretty => Pretty (TypeSig vars term k) where
