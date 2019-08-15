@@ -197,7 +197,7 @@ schemeToRestrictedType ::
 schemeToRestrictedType (MkPure (Scheme vars typ)) =
     do
         foralls <- traverseKWith (Proxy @'[Unify m]) makeQVarInstancesInScope vars
-        wrapM
+        wrapMDeprecated
             (Proxy @'[Unify m, HasChild varTypes, QVarHasInstance Ord])
             Dict (schemeBodyToType foralls) typ
 
@@ -236,7 +236,7 @@ loadScheme ::
 loadScheme (MkPure (Scheme vars typ)) =
     do
         foralls <- traverseKWith (Proxy @'[Unify m]) makeQVarInstances vars
-        wrapM (Proxy @'[Unify m, HasChild varTypes, QVarHasInstance Ord])
+        wrapMDeprecated (Proxy @'[Unify m, HasChild varTypes, QVarHasInstance Ord])
             Dict (loadBody foralls) typ
 
 saveH ::

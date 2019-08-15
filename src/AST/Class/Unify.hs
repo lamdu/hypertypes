@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes, DefaultSignatures #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, DefaultSignatures, ScopedTypeVariables #-}
 
 module AST.Class.Unify
     ( Unify(..), UVarOf
@@ -6,6 +6,7 @@ module AST.Class.Unify
     ) where
 
 import AST.Class
+import AST.Class.Recursive (Recursive(..))
 import AST.Class.Traversable (KTraversable)
 import AST.Class.ZipMatch (ZipMatch)
 import AST.Knot (Tree, Knot)
@@ -15,7 +16,7 @@ import AST.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify)
 import AST.Unify.Term (UTerm, UTermBody, uBody)
 import Control.Lens.Operators
 import Data.Constraint (Dict(..))
-import Data.Proxy (Proxy)
+import Data.Proxy (Proxy(..))
 import Data.Kind (Type)
 import Data.TyFun
 
@@ -71,3 +72,11 @@ class
         NodesConstraint t $ Unify m =>
         Proxy m -> Proxy t -> Dict (NodesConstraint t $ Unify m)
     unifyRecursive _ _ = Dict
+
+instance Recursive (Unify m) where
+    {-# INLINE recurse #-}
+    recurse =
+        unifyRecursive (Proxy @m) . p
+        where
+            p :: Proxy (Unify m t) -> Proxy t
+            p _ = Proxy

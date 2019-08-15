@@ -26,6 +26,6 @@ newTerm x = scopeConstraints >>= newVar binding . UTerm . (`UTermBody` x)
 -- | Embed a pure term as a unification term.
 unfreeze ::
     forall m t.
-    (Recursively KNodes t, Recursively (Unify m) t) =>
+    (Recursively KNodes t, Unify m t) =>
     Tree Pure t -> m (Tree (UVarOf m) t)
-unfreeze = wrapM (Proxy @'[Unify m]) Dict newTerm
+unfreeze = wrapM (Proxy @(Unify m)) Dict newTerm
