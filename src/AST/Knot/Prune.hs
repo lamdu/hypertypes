@@ -44,7 +44,7 @@ instance KApply Prune where
 
 instance c Prune => Recursively c Prune
 
-type instance InferOf (Compose Prune t) = InferOf t
+instance Inferrable (Compose Prune t) where type InferOf (Compose Prune t) = InferOf t
 
 instance
     ( KApplicative (InferOf t), KTraversable (InferOf t)

@@ -46,7 +46,7 @@ instance Deps vars term k Pretty => Pretty (TypeSig vars term k) where
         pPrintPrec lvl 1 term <+> Pretty.text ":" <+> pPrintPrec lvl 1 typ
         & maybeParens (p > 1)
 
-type instance InferOf (TypeSig vars term) = InferOf term
+instance Inferrable (TypeSig v t) where type InferOf (TypeSig v t) = InferOf t
 
 instance
     ( MonadScopeLevel m

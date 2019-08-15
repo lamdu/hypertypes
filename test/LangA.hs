@@ -80,7 +80,7 @@ instance
     (c (ANode Typ), c (ANode Row), c (Flip GTerm Typ))
     => Recursively (InferOfConstraint c) (LangA k)
 
-type instance InferOf (LangA k) = ANode Typ
+instance Inferrable (LangA k) where type InferOf (LangA k) = ANode Typ
 type instance TypeOf (LangA k) = Typ
 
 instance HasInferredType (LangA k) where inferredType _ = _ANode

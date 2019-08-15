@@ -6,7 +6,7 @@ module AST.Class.Infer
     , InferredChild(..), inType, inRep
     , InferChild(..), _InferChild
     , InferRes(..), inferResVal, inferResBody
-    , InferOf, InferOfConstraint
+    , Inferrable(..), InferOfConstraint
     , HasInferredValue(..)
     , HasInferredType(..), TypeOf
     ) where
@@ -21,7 +21,8 @@ import Data.Proxy (Proxy)
 
 import Prelude.Compat
 
-type family InferOf (t :: Knot -> Type) :: Knot -> Type
+class Inferrable t where
+    type family InferOf (t :: Knot -> Type) :: Knot -> Type
 
 class    c (InferOf t) => InferOfConstraint c t
 instance c (InferOf t) => InferOfConstraint c t

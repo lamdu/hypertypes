@@ -43,7 +43,7 @@ instance Deps v expr k Pretty => Pretty (Let v expr k) where
         $+$ pPrintPrec lvl 0 i
         & maybeParens (p > 0)
 
-type instance InferOf (Let v expr) = InferOf expr
+instance Inferrable (Let v expr) where type InferOf (Let v expr) = InferOf expr
 
 instance
     ( MonadScopeLevel m

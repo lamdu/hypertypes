@@ -240,7 +240,7 @@ lookupParams =
                 scopeConstraints <&> (<> l) >>= newVar binding . UUnbound
             _ -> error "unexpected state at nominal's parameter"
 
-type instance InferOf (ToNom nomId expr) = NominalInst nomId (NomVarTypes (TypeOf expr))
+instance Inferrable (ToNom n e) where type InferOf (ToNom n e) = NominalInst n (NomVarTypes (TypeOf e))
 
 instance
     ( MonadScopeLevel m
@@ -275,7 +275,7 @@ instance
     inferredUnify _ _ =
         withDict (kNodes (Proxy @(NomVarTypes (TypeOf expr)))) Dict
 
-type instance InferOf (FromNom nomId expr) = FuncType (TypeOf expr)
+instance Inferrable (FromNom n e) where type InferOf (FromNom n e) = FuncType (TypeOf e)
 
 instance
     ( Infer m expr

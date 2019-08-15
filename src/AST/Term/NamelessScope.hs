@@ -80,8 +80,8 @@ class HasScopeTypes v t env where
 instance HasScopeTypes v t (Tree (ScopeTypes t) v) where
     scopeTypes = id
 
-type instance InferOf (Scope t k) = FuncType (TypeOf (t k))
-type instance InferOf (ScopeVar t k) = ANode (TypeOf (t k))
+instance Inferrable (Scope t k) where type InferOf (Scope t k) = FuncType (TypeOf (t k))
+instance Inferrable (ScopeVar t k) where type InferOf (ScopeVar t k) = ANode (TypeOf (t k))
 
 instance HasTypeOf1 t => HasTypeOf1 (Scope t) where
     type TypeOf1 (Scope t) = TypeOf1 t

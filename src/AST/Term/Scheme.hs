@@ -113,7 +113,7 @@ newtype QVarInstances k typ = QVarInstances (Map (QVar (RunKnot typ)) (k typ))
     deriving stock Generic
 Lens.makePrisms ''QVarInstances
 
-type instance InferOf (Scheme varTypes typ) = Flip GTerm typ
+instance Inferrable (Scheme v t) where type InferOf (Scheme v t) = Flip GTerm t
 
 class MonadInstantiate m t where
     localInstantiations ::

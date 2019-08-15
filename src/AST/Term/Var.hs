@@ -50,7 +50,7 @@ makeKTraversableAndBases ''Var
 instance Pretty v => Pretty (Var v expr k) where
     pPrintPrec lvl p (Var v) = pPrintPrec lvl p v
 
-type instance InferOf (Var v t) = ANode (TypeOf t)
+instance Inferrable (Var v t) where type InferOf (Var v t) = ANode (TypeOf t)
 
 instance
     ( Unify m (TypeOf expr)

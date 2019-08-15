@@ -42,7 +42,7 @@ instance Deps v expr k Pretty => Pretty (Lam v expr k) where
         <+> Pretty.text "->" <+> pPrintPrec lvl 0 o
         & maybeParens (p > 0)
 
-type instance InferOf (Lam v t) = FuncType (TypeOf t)
+instance Inferrable (Lam v t) where type InferOf (Lam v t) = FuncType (TypeOf t)
 
 instance
     ( Infer m t
