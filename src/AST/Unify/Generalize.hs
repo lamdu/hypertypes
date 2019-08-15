@@ -130,17 +130,15 @@ generalize v0 =
                 withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
                 do
                     bindVar binding v1 (UResolving t)
-                    r <- traverseKWith p generalize (t ^. uBody)
+                    r <- traverseKWith (Proxy @'[Unify m]) generalize (t ^. uBody)
                     r <$ bindVar binding v1 (UTerm t)
                 <&>
                 \b ->
-                if foldMapKWith p (All . Lens.has _GMono) b ^. Lens._Wrapped
+                if foldMapKWith (Proxy @(Unify m)) (All . Lens.has _GMono) b ^. Lens._Wrapped
                 then GMono v1
                 else GBody b
             UResolving t -> GMono v1 <$ occursError v1 t
             _ -> pure (GMono v1)
-    where
-        p = Proxy @'[Unify m]
 
 {-# INLINE instantiateForAll #-}
 instantiateForAll ::

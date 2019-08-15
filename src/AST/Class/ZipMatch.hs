@@ -19,6 +19,7 @@ import           Data.Constraint.List (ApplyConstraints)
 import           Data.Functor.Const (Const(..))
 import           Data.Functor.Product.PolyKinds (Product(..))
 import           Data.Proxy (Proxy(..))
+import           Data.TyFun
 
 import           Prelude.Compat
 
@@ -57,13 +58,13 @@ zipMatchWith p f x y = zipMatch x y <&> mapKWith p (\(Pair a b) -> f a b)
 
 {-# INLINE zipMatchWith_ #-}
 zipMatchWith_ ::
-    forall f expr constraints a b.
+    forall f expr constraint a b.
     ( Applicative f
     , ZipMatch expr, KFoldable expr
-    , KLiftConstraints constraints expr
+    , NodesConstraint expr $ constraint
     ) =>
-    Proxy constraints ->
-    (forall child. ApplyConstraints constraints child => Tree a child -> Tree b child -> f ()) ->
+    Proxy constraint ->
+    (forall child. constraint child => Tree a child -> Tree b child -> f ()) ->
     Tree expr a -> Tree expr b -> Maybe (f ())
 zipMatchWith_ p f x y = zipMatch x y <&> traverseKWith_ p (\(Pair a b) -> f a b)
 

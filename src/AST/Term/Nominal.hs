@@ -146,15 +146,14 @@ instance constraint (Node outer k) => NodeHasConstraint constraint outer k
 instance
     ( Pretty nomId
     , KApply varTypes, KFoldable varTypes
-    , NodesConstraint varTypes $ QVarHasInstance Pretty
-    , NodesConstraint varTypes $ NodeHasConstraint Pretty k
+    , NodesConstraint varTypes $ QVarHasInstance Pretty `And` NodeHasConstraint Pretty k
     ) =>
     Pretty (NominalInst nomId varTypes k) where
 
     pPrint (NominalInst n vars) =
         pPrint n <>
         joinArgs
-        (foldMapKWith (Proxy @[QVarHasInstance Pretty, NodeHasConstraint Pretty k]) mkArgs vars)
+        (foldMapKWith (Proxy @(QVarHasInstance Pretty `And` NodeHasConstraint Pretty k)) mkArgs vars)
         where
             joinArgs [] = mempty
             joinArgs xs =
@@ -264,7 +263,7 @@ instance
                     v <- inferChild val
                     LoadedNominalDecl params foralls gen <- getNominalDecl nomId
                     recover <-
-                        traverseKWith_ (Proxy @'[Unify m])
+                        traverseKWith_ (Proxy @(Unify m))
                         (traverse_ (instantiateForAll USkolem) . (^. _QVarInstances))
                         foralls
                         & execWriterT

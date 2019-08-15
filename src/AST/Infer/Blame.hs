@@ -72,13 +72,10 @@ prepare typeFromAbove (Ann a x) =
             sequenceLiftK2With_
                 (Proxy @'[Unify m])
                 (unify <&> mapped . mapped .~ ()) typeFromAbove t
-            traverseKWith_
-                (Proxy @'[Unify m])
-                occursCheck t
+            traverseKWith_ (Proxy @(Unify m)) occursCheck t
         & (`catchError` const (pure ()))
     , pFinalize =
-        foldMapKWith
-            (Proxy @'[Unify m])
+        foldMapKWith (Proxy @(Unify m))
             (\(Pair t0 t1) -> [(==) <$> (semiPruneLookup t0 <&> fst) <*> (semiPruneLookup t1 <&> fst)])
             (zipK typeFromAbove t)
         & sequenceA

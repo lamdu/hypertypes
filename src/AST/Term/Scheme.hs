@@ -140,7 +140,7 @@ instance
         do
             foralls <- traverseKWith (Proxy @'[Unify m]) makeQVarInstances vars
             let withForalls =
-                    foldMapKWith (Proxy @'[MonadInstantiate m]) ((:[]) . localInstantiations) foralls
+                    foldMapKWith (Proxy @(MonadInstantiate m)) ((:[]) . localInstantiations) foralls
                     & foldl (.) id
             InferredChild typI typR <- inferChild typ & withForalls
             generalize (typR ^. inferredValue)

@@ -9,7 +9,7 @@ module AST.Class.Foldable
     ) where
 
 import AST.Class
-import AST.Class.Combinators (KLiftConstraints(..), pureKWith, liftK2With)
+import AST.Class.Combinators (KLiftConstraints(..), liftK2With)
 import AST.Knot (Tree, Knot)
 import Control.Lens (Iso, iso)
 import Control.Lens.Operators
@@ -18,6 +18,7 @@ import Data.Functor.Const (Const(..))
 import Data.Constraint (withDict)
 import Data.Constraint.List (ApplyConstraints)
 import Data.Proxy (Proxy(..))
+import Data.TyFun
 
 import Prelude.Compat
 
@@ -55,16 +56,15 @@ foldMapK f x =
 
 {-# INLINE foldMapKWith #-}
 foldMapKWith ::
-    forall a k n constraints.
-    (Monoid a, KFoldable k, KLiftConstraints constraints k) =>
-    Proxy constraints ->
-    (forall child. ApplyConstraints constraints child => Tree n child -> a) ->
+    forall a k n constraint.
+    (Monoid a, KFoldable k, NodesConstraint k $ constraint) =>
+    Proxy constraint ->
+    (forall child. constraint child => Tree n child -> a) ->
     Tree k n ->
     a
 foldMapKWith p f =
     withDict (kNodes (Proxy @k)) $
-    withDict (kLiftConstraintsNodeTypes (Proxy @k) p) $
-    foldMapC (pureKWith p (_ConvertK # f))
+    foldMapC (pureKWithConstraint p (_ConvertK # f))
 
 {-# INLINE traverseK_ #-}
 traverseK_ ::
@@ -76,10 +76,10 @@ traverseK_ f = sequenceA_ . foldMapK ((:[]) . f)
 
 {-# INLINE traverseKWith_ #-}
 traverseKWith_ ::
-    forall f k constraints m.
-    (Applicative f, KFoldable k, KLiftConstraints constraints k) =>
-    Proxy constraints ->
-    (forall c. ApplyConstraints constraints c => Tree m c -> f ()) ->
+    forall f k constraint m.
+    (Applicative f, KFoldable k, NodesConstraint k $ constraint) =>
+    Proxy constraint ->
+    (forall c. constraint c => Tree m c -> f ()) ->
     Tree k m ->
     f ()
 traverseKWith_ p f =
