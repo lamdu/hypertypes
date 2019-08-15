@@ -12,7 +12,7 @@ import AST.Class
 import AST.Class.Combinators
 import AST.Class.Foldable (KFoldable)
 import AST.Knot (Knot, Tree)
-import AST.Knot.Dict (KDict, pureKWithDict)
+import AST.Knot.Dict (KDict, mapKWithDict)
 import Control.Lens (Iso, iso)
 import Data.Constraint (withDict)
 import Data.Constraint.List (ApplyConstraints)
@@ -60,7 +60,7 @@ traverseKWith ::
 traverseKWith p f =
     withDict (kNodes (Proxy @k)) $
     withDict (kLiftConstraintsNodeTypes (Proxy @k) p) $
-    sequenceC . mapC (pureKWith p (MkMapK (MkContainedK . f)))
+    sequenceC . mapKWith p (MkContainedK . f)
 
 {-# INLINE traverseKWithDict #-}
 traverseKWithDict ::
@@ -72,7 +72,7 @@ traverseKWithDict ::
     f (Tree k n)
 traverseKWithDict d f =
     withDict (kNodes (Proxy @k)) $
-    sequenceC . mapC (pureKWithDict d (MkMapK (MkContainedK . f)))
+    sequenceC . mapKWithDict d (MkContainedK . f)
 
 {-# INLINE sequencePureK #-}
 sequencePureK ::
