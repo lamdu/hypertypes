@@ -1,8 +1,8 @@
-{-# LANGUAGE RankNTypes, ScopedTypeVariables #-}
+{-# LANGUAGE RankNTypes #-}
 
 module AST.Knot.Dict
     ( KDict(..), _KDict
-    , pureKWithDict, mapKWithDict
+    , pureKWithDict
     ) where
 
 import AST.Class
@@ -10,7 +10,6 @@ import AST.Knot (Tree, RunKnot)
 import Control.Lens (Iso, iso)
 import Data.Constraint (Dict(..), withDict)
 import Data.Constraint.List (ApplyConstraints)
-import Data.Proxy (Proxy(..))
 
 newtype KDict cs k = MkKDict { getKDict :: Dict (ApplyConstraints cs (RunKnot k)) }
 
@@ -29,15 +28,3 @@ pureKWithDict ::
     (forall child. ApplyConstraints constraints child => Tree n child) ->
     Tree k n
 pureKWithDict c f = mapK (\(MkKDict d) -> withDict d f) c
-
-{-# INLINE mapKWithDict #-}
-mapKWithDict ::
-    forall k m n constraints.
-    KFunctor k =>
-    Tree (NodeTypesOf k) (KDict constraints) ->
-    (forall child. ApplyConstraints constraints child => Tree m child -> Tree n child) ->
-    Tree k m ->
-    Tree k n
-mapKWithDict c f =
-    withDict (kNodes (Proxy @k))
-    (mapC (pureKWithDict c (MkMapK f)))

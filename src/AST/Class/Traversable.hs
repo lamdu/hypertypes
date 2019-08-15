@@ -3,7 +3,7 @@
 module AST.Class.Traversable
     ( KTraversable(..)
     , ContainedK(..), _ContainedK
-    , traverseK, traverseKWith, traverseKWithDict
+    , traverseK, traverseKWith
     , sequencePureK, sequencePureKWith
     , sequenceLiftK2, sequenceLiftK2With
     ) where
@@ -12,7 +12,6 @@ import AST.Class
 import AST.Class.Combinators
 import AST.Class.Foldable (KFoldable)
 import AST.Knot (Knot, Tree)
-import AST.Knot.Dict (KDict, mapKWithDict)
 import Control.Lens (Iso, iso)
 import Data.Constraint (withDict)
 import Data.Constraint.List (ApplyConstraints)
@@ -62,18 +61,6 @@ traverseKWith p f =
     withDict (kNodes (Proxy @k)) $
     withDict (kLiftConstraintsNodeTypes (Proxy @k) p) $
     sequenceC . mapKWith p (MkContainedK . f)
-
-{-# INLINE traverseKWithDict #-}
-traverseKWithDict ::
-    forall n constraints m f k.
-    (Applicative f, KTraversable k) =>
-    Tree (NodeTypesOf k) (KDict constraints) ->
-    (forall c. ApplyConstraints constraints c => Tree m c -> f (Tree n c)) ->
-    Tree k m ->
-    f (Tree k n)
-traverseKWithDict d f =
-    withDict (kNodes (Proxy @k)) $
-    sequenceC . mapKWithDict d (MkContainedK . f)
 
 {-# INLINE sequencePureK #-}
 sequencePureK ::
