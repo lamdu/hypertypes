@@ -7,11 +7,7 @@ module AST.Class.Recursive
     , RFunctor(..), RFoldable(..), RTraversable(..)
     , Recursively(..), RecursiveContext, RecursiveDict, RecursiveConstraint
     , RecursiveNodes(..), recSelf, recSub
-    , traverseKRec, foldMapKRec, mapKRec
-    , wrap, wrapDeprecated, wrapWithDict
-    , wrapM, wrapMDeprecated, wrapMWithDict
-    , unwrap, unwrapWithDict
-    , unwrapM, unwrapMDecprecated, unwrapMWithDict
+    , wrap, wrapM, unwrap, unwrapM
     , fold, unfold
     ) where
 
@@ -229,31 +225,6 @@ mapKRec c f =
     withDict (kNodes (Proxy @k)) $
     mapC (mapK (MkMapK . \(MkFlip d) -> f d) (c ^. recSub))
 
-{-# INLINE foldMapKRec #-}
-foldMapKRec ::
-    forall a k cs n.
-    (Monoid a, KFoldable k) =>
-    Tree (RecursiveNodes k) (KDict cs) ->
-    (forall c. Tree (RecursiveNodes c) (KDict cs) -> Tree n c -> a) ->
-    Tree k n ->
-    a
-foldMapKRec c f =
-    withDict (kNodes (Proxy @k)) $
-    foldMapC (mapK (MkConvertK . \(MkFlip d) -> f d) (c ^. recSub))
-
-{-# INLINE traverseKRec #-}
-traverseKRec ::
-    forall k cs m n f.
-    (Applicative f, KTraversable k) =>
-    Tree (RecursiveNodes k) (KDict cs) ->
-    (forall c. Tree (RecursiveNodes c) (KDict cs) -> Tree m c -> f (Tree n c)) ->
-    Tree k m ->
-    f (Tree k n)
-traverseKRec c f =
-    withDict (kNodes (Proxy @k)) $
-    sequenceC .
-    mapC (mapK (MkMapK . \(MkFlip d) -> MkContainedK . f d) (c ^. recSub))
-
 {-# INLINE wrapM #-}
 wrapM ::
     forall m k c w.
@@ -270,33 +241,6 @@ wrapM p getTraversable f x =
     & traverseKWith (Proxy @'[c]) (wrapM p getTraversable f)
     >>= f
 
-{-# INLINE wrapMWithDict #-}
-wrapMWithDict ::
-    forall k cs w m.
-    Monad m =>
-    Tree (RecursiveNodes k) (KDict cs) ->
-    (forall n. ApplyConstraints cs n => Dict (KTraversable n)) ->
-    (forall n. ApplyConstraints cs n => Tree n w -> m (Tree w n)) ->
-    Tree Pure k ->
-    m (Tree w k)
-wrapMWithDict c getTraversable f x =
-    withDict (c ^. recSelf . _KDict) $
-    withDict (getTraversable @k) $
-    x ^. _Pure
-    & traverseKRec c (\d -> wrapMWithDict d getTraversable f)
-    >>= f
-
-{-# INLINE wrapMDeprecated #-}
-wrapMDeprecated ::
-    forall m k cs w.
-    (Monad m, RLiftConstraints k cs) =>
-    Proxy cs ->
-    (forall n. ApplyConstraints cs n => Dict (KTraversable n)) ->
-    (forall n. ApplyConstraints cs n => Tree n w -> m (Tree w n)) ->
-    Tree Pure k ->
-    m (Tree w k)
-wrapMDeprecated _ = wrapMWithDict (rLiftConstraints @k @cs)
-
 {-# INLINE unwrapM #-}
 unwrapM ::
     forall m k c w.
@@ -312,33 +256,6 @@ unwrapM p getTraversable f x =
     f x
     >>= traverseKWith (Proxy @'[c]) (unwrapM p getTraversable f)
     <&> (_Pure #)
-
-{-# INLINE unwrapMWithDict #-}
-unwrapMWithDict ::
-    forall k cs w m.
-    Monad m =>
-    Tree (RecursiveNodes k) (KDict cs) ->
-    (forall n. ApplyConstraints cs n => Dict (KTraversable n)) ->
-    (forall n. ApplyConstraints cs n => Tree w n -> m (Tree n w)) ->
-    Tree w k ->
-    m (Tree Pure k)
-unwrapMWithDict c getTraversable f x =
-    withDict (c ^. recSelf . _KDict) $
-    withDict (getTraversable @k) $
-    f x
-    >>= traverseKRec c (\d -> unwrapMWithDict d getTraversable f)
-    <&> (_Pure #)
-
-{-# INLINE unwrapMDecprecated #-}
-unwrapMDecprecated ::
-    forall m k cs w.
-    (Monad m, RLiftConstraints k cs) =>
-    Proxy cs ->
-    (forall n. ApplyConstraints cs n => Dict (KTraversable n)) ->
-    (forall n. ApplyConstraints cs n => Tree w n -> m (Tree n w)) ->
-    Tree w k ->
-    m (Tree Pure k)
-unwrapMDecprecated _ = unwrapMWithDict (rLiftConstraints @k @cs)
 
 {-# INLINE wrap #-}
 wrap ::
