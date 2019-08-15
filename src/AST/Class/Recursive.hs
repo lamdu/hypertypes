@@ -1,5 +1,5 @@
 {-# LANGUAGE RankNTypes, DefaultSignatures, TemplateHaskell #-}
-{-# LANGUAGE ScopedTypeVariables, UndecidableInstances #-}
+{-# LANGUAGE ScopedTypeVariables, UndecidableInstances, FlexibleContexts #-}
 {-# LANGUAGE UndecidableSuperClasses, FlexibleInstances #-}
 
 module AST.Class.Recursive
@@ -32,7 +32,7 @@ import Prelude.Compat
 class Recursive c where
     recurse :: c k => Proxy (c k) -> Dict (NodesConstraint k $ c)
 
-class KFunctor k => RFunctor k where
+class (KFunctor k, Recursively KNodes k) => RFunctor k where
     recursiveKFunctor :: Proxy k -> Dict (NodesConstraint k $ RFunctor)
     {-# INLINE recursiveKFunctor #-}
     default recursiveKFunctor ::
@@ -48,7 +48,7 @@ instance Recursive RFunctor where
             p :: Proxy (RFunctor k) -> Proxy k
             p _ = Proxy
 
-class KFoldable k => RFoldable k where
+class (KFoldable k, Recursively KNodes k) => RFoldable k where
     recursiveKFoldable :: Proxy k -> Dict (NodesConstraint k $ RFoldable)
     {-# INLINE recursiveKFoldable #-}
     default recursiveKFoldable ::

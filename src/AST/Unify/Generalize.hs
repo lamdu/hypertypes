@@ -57,9 +57,7 @@ instance
 
     type NodeTypesOf (Flip GTerm ast) = RecursiveNodes ast
 
-instance
-    (Recursively KNodes ast, RFunctor ast) =>
-    KFunctor (Flip GTerm ast) where
+instance RFunctor ast => KFunctor (Flip GTerm ast) where
 
     {-# INLINE mapC #-}
     mapC (RecursiveNodes (MkMapK mapTop) mapSub) =
@@ -69,18 +67,15 @@ instance
         GPoly x -> mapTop x & GPoly
         GBody x ->
             withDict (recursiveKFunctor (Proxy @ast)) $
-            withDict (recursive @KNodes @ast) $
             withDict (kNodes (Proxy @ast)) $
             mapC
-            ( mapKWith (Proxy @'[RFunctor, Recursively KNodes])
+            ( mapKWith (Proxy @'[RFunctor])
                 (\(MkFlip f) -> Lens.from _Flip %~ mapC f & MkMapK)
                 mapSub
             ) x
             & GBody
 
-instance
-    (Recursively KNodes ast, RFoldable ast) =>
-    KFoldable (Flip GTerm ast) where
+instance RFoldable ast => KFoldable (Flip GTerm ast) where
 
     {-# INLINE foldMapC #-}
     foldMapC (RecursiveNodes (MkConvertK convTop) convSub) =
@@ -89,18 +84,15 @@ instance
         GPoly x -> convTop x
         GBody x ->
             withDict (recursiveKFoldable (Proxy @ast)) $
-            withDict (recursive @KNodes @ast) $
             withDict (kNodes (Proxy @ast)) $
             foldMapC
-            ( mapKWith (Proxy @'[RFoldable, Recursively KNodes])
+            ( mapKWith (Proxy @'[RFoldable])
                 (\(MkFlip f) -> foldMapC f . (_Flip #) & MkConvertK)
                 convSub
             ) x
         . (^. _Flip)
 
-instance
-    (RTraversable ast, Recursively KNodes ast) =>
-    KTraversable (Flip GTerm ast) where
+instance RTraversable ast => KTraversable (Flip GTerm ast) where
 
     sequenceC (MkFlip fx) =
         case fx of
@@ -108,9 +100,8 @@ instance
         GPoly x -> runContainedK x <&> GPoly
         GBody x ->
             withDict (recursiveKTraversable (Proxy @ast)) $
-            withDict (recursive @KNodes @ast) $
             -- KTraversable will be required when not implied by Recursively
-            traverseKWith (Proxy @'[RTraversable, Recursively KNodes])
+            traverseKWith (Proxy @'[RTraversable])
             (Lens.from _Flip sequenceC) x
             <&> GBody
         <&> MkFlip

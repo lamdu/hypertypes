@@ -174,7 +174,6 @@ instance
 
 instance
     ( RFunctor e
-    , Recursively KNodes e
     , Recursively (InferOfConstraint KNodes) e
     , Recursively (InferOfConstraint KFunctor) e
     ) =>
@@ -184,7 +183,6 @@ instance
     mapC (ITermTypes (RecursiveNodes (MkIResultNodeTypes ft) fs)) =
         withDict (kNodes (Proxy @e)) $
         withDict (recursiveKFunctor (Proxy @e)) $
-        withDict (recursive @KNodes @e) $
         withDict (recursive @(InferOfConstraint KNodes) @e) $
         withDict (recursive @(InferOfConstraint KFunctor) @e) $
         _Flip %~
@@ -196,7 +194,6 @@ instance
                 (Proxy ::
                     Proxy
                     '[RFunctor
-                    , Recursively KNodes
                     , Recursively (InferOfConstraint KNodes)
                     , Recursively (InferOfConstraint KFunctor)
                     ])
@@ -206,7 +203,6 @@ instance
 
 instance
     ( RFoldable e
-    , Recursively KNodes e
     , Recursively (InferOfConstraint KNodes) e
     , Recursively (InferOfConstraint KFoldable) e
     ) =>
@@ -215,7 +211,6 @@ instance
     foldMapC (ITermTypes (RecursiveNodes (MkIResultNodeTypes ft) fs)) (MkFlip (ITerm _ r x)) =
         withDict (kNodes (Proxy @e)) $
         withDict (recursiveKFoldable (Proxy @e)) $
-        withDict (recursive @KNodes @e) $
         withDict (recursive @(InferOfConstraint KNodes) @e) $
         withDict (recursive @(InferOfConstraint KFoldable) @e) $
         foldMapC ft r <>
@@ -224,7 +219,6 @@ instance
             (Proxy ::
                 Proxy
                 '[RFoldable
-                , Recursively KNodes
                 , Recursively (InferOfConstraint KNodes)
                 , Recursively (InferOfConstraint KFoldable)
                 ])
@@ -233,7 +227,6 @@ instance
 
 instance
     ( RTraversable e
-    , Recursively KNodes e
     , Recursively (InferOfConstraint KNodes) e
     , Recursively (InferOfConstraint KFoldable) e
     , Recursively (InferOfConstraint KFunctor) e
@@ -244,7 +237,6 @@ instance
     {-# INLINE sequenceC #-}
     sequenceC =
         withDict (recursiveKTraversable (Proxy @e)) $
-        withDict (recursive @KNodes @e) $
         withDict (recursive @(InferOfConstraint KNodes) @e) $
         withDict (recursive @(InferOfConstraint KFoldable) @e) $
         withDict (recursive @(InferOfConstraint KFunctor) @e) $
@@ -257,7 +249,6 @@ instance
             (Proxy ::
                 Proxy
                 '[RTraversable
-                , Recursively KNodes
                 , Recursively (InferOfConstraint KNodes)
                 , Recursively (InferOfConstraint KFoldable)
                 , Recursively (InferOfConstraint KFunctor)

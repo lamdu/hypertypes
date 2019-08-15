@@ -127,7 +127,6 @@ inferExpr ::
     forall m t.
     ( HasInferredType t
     , RTraversable t
-    , Recursively KNodes t
     , Infer m t
     , Recursively (InferOfConstraint KNodes) t
     , Recursively (InferOfConstraint KFoldable) t
