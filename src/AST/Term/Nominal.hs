@@ -271,6 +271,10 @@ instance
             _ <- unify typ (valR ^# inferredType (Proxy @expr))
             InferRes (ToNom nomId valI) (NominalInst nomId paramsT) & pure
 
+    {-# INLINE inferredUnify #-}
+    inferredUnify _ _ =
+        withDict (kNodes (Proxy @(NomVarTypes (TypeOf expr)))) Dict
+
 type instance InferOf (FromNom nomId expr) = FuncType (TypeOf expr)
 
 instance

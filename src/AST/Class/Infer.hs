@@ -12,7 +12,7 @@ module AST.Class.Infer
     ) where
 
 import AST
-import AST.Class.Unify (UVarOf)
+import AST.Class.Unify
 import Control.Lens (Lens, Lens', ALens', makeLenses, makePrisms)
 import Control.Lens.Operators
 import Data.Constraint (Dict(..))
@@ -77,3 +77,10 @@ class (Monad m, KFunctor t) => Infer m t where
         NodesConstraint t $ Infer m =>
         Proxy m -> Proxy t -> Dict (NodesConstraint t $ Infer m)
     inferRecursive _ _ = Dict
+
+    inferredUnify :: Proxy m -> Proxy t -> Dict (NodesConstraint (InferOf t) $ Unify m)
+    {-# INLINE inferredUnify #-}
+    default inferredUnify ::
+        NodesConstraint (InferOf t) $ Unify m =>
+        Proxy m -> Proxy t -> Dict (NodesConstraint (InferOf t) $ Unify m)
+    inferredUnify _ _ = Dict

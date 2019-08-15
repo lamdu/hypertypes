@@ -54,8 +54,9 @@ instance
     , HasInferredValue (TypeOf term)
     , KTraversable vars
     , NodesConstraint vars $ Unify m
+    , NodesConstraint (InferOf term) $ Unify m
     , NodesConstraint vars $ MonadInstantiate m
-    , Unify m (TypeOf term)
+    , Recursively (Unify m) (TypeOf term)
     , Infer m (TypeOf term)
     , Infer m term
     ) =>

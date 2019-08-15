@@ -129,6 +129,7 @@ instance
     ( MonadReader env m
     , HasScopeTypes (UVarOf m) (TypeOf (t k)) env
     , DeBruijnIndex k
+    , Unify m (TypeOf (t k))
     ) =>
     Infer m (ScopeVar t k) where
 

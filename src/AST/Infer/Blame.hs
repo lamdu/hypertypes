@@ -5,7 +5,6 @@ module AST.Infer.Blame
     ) where
 
 import AST
-import AST.Class.Combinators
 import AST.Class.Foldable (sequenceLiftK2With_)
 import AST.Class.Traversable
 import AST.Infer
@@ -37,16 +36,15 @@ prepare ::
     , Infer m exp
     , Recursively (InferOfConstraint KApplicative) exp
     , Recursively (InferOfConstraint KTraversable) exp
-    , Recursively (InferOfConstraint (KLiftConstraint (Unify m))) exp
     ) =>
     Tree (InferOf exp) (UVarOf m) ->
     Tree (Ann a) exp ->
     m (Tree (Ann (PrepAnn m a)) exp)
 prepare typeFromAbove (Ann a x) =
+    withDict (inferredUnify (Proxy @m) (Proxy @exp)) $
     withDict (inferRecursive (Proxy @m) (Proxy @exp)) $
     withDict (recursive @(InferOfConstraint KApplicative) @exp) $
     withDict (recursive @(InferOfConstraint KTraversable) @exp) $
-    withDict (recursive @(InferOfConstraint (KLiftConstraint (Unify m))) @exp) $
     inferBody
     (mapKWith
         (Proxy ::
@@ -54,9 +52,12 @@ prepare typeFromAbove (Ann a x) =
             '[ Infer m
             , Recursively (InferOfConstraint KApplicative)
             , Recursively (InferOfConstraint KTraversable)
-            , Recursively (InferOfConstraint (KLiftConstraint (Unify m)))
             ])
         (\c ->
+            let p :: Tree (Ann a) k -> Proxy k
+                p _ = Proxy
+            in
+            withDict (inferredUnify (Proxy @m) (p c)) $
             do
                 t <- sequencePureKWith (Proxy @'[Unify m]) newUnbound
                 prepare t c <&> (`InferredChild` t)
@@ -98,7 +99,6 @@ blame ::
     , Infer m exp
     , Recursively (InferOfConstraint KApplicative) exp
     , Recursively (InferOfConstraint KTraversable) exp
-    , Recursively (InferOfConstraint (KLiftConstraint (Unify m))) exp
     ) =>
     (a -> priority) ->
     Tree (InferOf exp) (UVarOf m) ->

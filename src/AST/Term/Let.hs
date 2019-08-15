@@ -50,6 +50,7 @@ instance
     , LocalScopeType v (Tree (GTerm (UVarOf m)) (TypeOf expr)) m
     , Unify m (TypeOf expr)
     , HasInferredType expr
+    , NodesConstraint (InferOf expr) $ Unify m
     , Infer m expr
     ) =>
     Infer m (Let v expr) where

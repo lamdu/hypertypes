@@ -125,7 +125,7 @@ class MonadInstantiate m t where
 instance
     ( Monad m
     , HasInferredValue typ
-    , Unify m typ
+    , Recursively (Unify m) typ
     , KTraversable varTypes
     , NodesConstraint varTypes $ Unify m
     , NodesConstraint varTypes $ MonadInstantiate m
