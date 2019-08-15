@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, UndecidableInstances #-}
 {-# LANGUAGE FlexibleContexts, ScopedTypeVariables, TemplateHaskell #-}
-{-# LANGUAGE RankNTypes, UndecidableSuperClasses #-}
+{-# LANGUAGE UndecidableSuperClasses #-}
 
 module AST.Term.Nominal
     ( NominalDecl(..), nParams, nScheme
@@ -12,7 +12,6 @@ module AST.Term.Nominal
     , NomVarTypes
     , MonadNominals(..)
     , LoadedNominalDecl, loadNominalDecl
-    , applyNominal
     ) where
 
 import           AST
@@ -291,49 +290,6 @@ instance
             nominalInst # NominalInst nomId paramsT & newTerm
                 <&> (`FuncType` typ)
         <&> InferRes (FromNom nomId)
-
--- | Get the scheme in a nominal given the parameters of a specific nominal instance.
-applyNominal ::
-    forall m k cs typ.
-    (Monad m, RLiftConstraints typ cs) =>
-    Proxy cs ->
-    (forall n. ApplyConstraints cs n =>
-        Dict (HasQuantifiedVar n, HasChild (NomVarTypes typ) n, QVarHasInstance Ord n, KTraversable n)
-    ) ->
-    (forall n. ApplyConstraints cs n => Tree n k -> m (Tree k n)) ->
-    Tree Pure (NominalDecl typ) ->
-    Tree (NomVarTypes typ) (QVarInstances k) ->
-    m (Tree (Scheme (NomVarTypes typ) typ) k)
-applyNominal _ getDeps mkType (MkPure (NominalDecl _paramsDecl scheme)) params =
-    sTyp
-    (subst (rLiftConstraints @typ @cs) getDeps mkType params)
-    scheme
-
-subst ::
-    forall m typ cs varTypes k.
-    Monad m =>
-    Tree (RecursiveNodes typ) (KDict cs) ->
-    (forall n. ApplyConstraints cs n =>
-        Dict (HasQuantifiedVar n, HasChild varTypes n, QVarHasInstance Ord n, KTraversable n)
-    ) ->
-    (forall n. ApplyConstraints cs n => Tree n k -> m (Tree k n)) ->
-    Tree varTypes (QVarInstances k) ->
-    Tree Pure typ ->
-    m (Tree k typ)
-subst c getDeps mkType params (MkPure x) =
-    withDict (c ^. recSelf . _KDict) $
-    withDict
-        (getDeps ::
-            Dict (HasQuantifiedVar typ, HasChild varTypes typ, QVarHasInstance Ord typ, KTraversable typ)
-        ) $
-    case x ^? quantifiedVar of
-    Just q ->
-        params ^?
-        getChild . _QVarInstances . Lens.ix q
-        & maybe (mkType (quantifiedVar # q)) pure
-    Nothing ->
-        traverseKRec c (\d -> subst d getDeps mkType params) x
-        >>= mkType
 
 type DepsD c t k = ((c (Tree (NomVarTypes t) QVars), c (Node k t)) :: Constraint)
 deriving instance DepsD Eq   t k => Eq   (NominalDecl t k)
