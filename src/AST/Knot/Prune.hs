@@ -63,7 +63,7 @@ type instance InferOf (Compose Prune t) = InferOf t
 instance
     ( KApplicative (InferOf t), KTraversable (InferOf t)
     , NodesConstraint (InferOf t) $ Unify m
-    , KFunctor t, Infer m t
+    , Infer m t
     ) =>
     Infer m (Compose Prune t) where
     inferBody (MkCompose Pruned) =

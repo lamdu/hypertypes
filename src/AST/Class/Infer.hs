@@ -65,7 +65,7 @@ inferResBody f InferRes{..} =
 class LocalScopeType var scheme m where
     localScopeType :: var -> scheme -> m a -> m a
 
-class Monad m => Infer m t where
+class (Monad m, KFunctor t) => Infer m t where
     inferBody ::
         Tree t (InferChild m k) ->
         m (InferRes (UVarOf m) k t)
