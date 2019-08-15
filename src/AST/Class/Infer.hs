@@ -21,8 +21,22 @@ import Data.Proxy (Proxy)
 
 import Prelude.Compat
 
-class Inferrable t where
+class KFunctor t => Inferrable t where
     type family InferOf (t :: Knot -> Type) :: Knot -> Type
+
+    inferrableRecursive :: Proxy t -> Dict (NodesConstraint t $ Inferrable)
+    {-# INLINE inferrableRecursive #-}
+    default inferrableRecursive ::
+        NodesConstraint t $ Inferrable =>
+        Proxy t -> Dict (NodesConstraint t $ Inferrable)
+    inferrableRecursive _ = Dict
+
+    traversableInferOf :: Proxy t -> Dict (KTraversable (InferOf t))
+    {-# INLINE traversableInferOf #-}
+    default traversableInferOf ::
+        KTraversable (InferOf t) =>
+        Proxy t -> Dict (KTraversable (InferOf t))
+    traversableInferOf _ = Dict
 
 class    c (InferOf t) => InferOfConstraint c t
 instance c (InferOf t) => InferOfConstraint c t
@@ -67,7 +81,7 @@ inferResBody f InferRes{..} =
 class LocalScopeType var scheme m where
     localScopeType :: var -> scheme -> m a -> m a
 
-class (Monad m, KFunctor t) => Infer m t where
+class (Monad m, Inferrable t) => Infer m t where
     inferBody ::
         Tree t (InferChild m k) ->
         m (InferRes (UVarOf m) k t)

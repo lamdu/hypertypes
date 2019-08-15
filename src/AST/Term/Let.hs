@@ -43,7 +43,10 @@ instance Deps v expr k Pretty => Pretty (Let v expr k) where
         $+$ pPrintPrec lvl 0 i
         & maybeParens (p > 0)
 
-instance Inferrable (Let v expr) where type InferOf (Let v expr) = InferOf expr
+instance
+    (Inferrable e, KTraversable (InferOf e)) =>
+    Inferrable (Let v e) where
+    type InferOf (Let v e) = InferOf e
 
 instance
     ( MonadScopeLevel m
@@ -51,6 +54,7 @@ instance
     , Unify m (TypeOf expr)
     , HasInferredType expr
     , NodesConstraint (InferOf expr) $ Unify m
+    , KTraversable (InferOf expr)
     , Infer m expr
     ) =>
     Infer m (Let v expr) where

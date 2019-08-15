@@ -80,7 +80,13 @@ class HasScopeTypes v t env where
 instance HasScopeTypes v t (Tree (ScopeTypes t) v) where
     scopeTypes = id
 
-instance Inferrable (Scope t k) where type InferOf (Scope t k) = FuncType (TypeOf (t k))
+instance HasInferOf1 t => Inferrable (Scope t k) where
+    type InferOf (Scope t k) = FuncType (TypeOf (t k))
+    inferrableRecursive _ =
+        withDict (hasInferOf1 (Proxy @(t k))) $
+        withDict (hasInferOf1 (Proxy @(t (Maybe k)))) $
+        Dict
+
 instance Inferrable (ScopeVar t k) where type InferOf (ScopeVar t k) = ANode (TypeOf (t k))
 
 instance HasTypeOf1 t => HasTypeOf1 (Scope t) where
@@ -88,7 +94,7 @@ instance HasTypeOf1 t => HasTypeOf1 (Scope t) where
     type TypeOfIndexConstraint (Scope t) = DeBruijnIndex
     typeAst p = withDict (typeAst p) Dict
 
-instance HasTypeOf1 t => HasInferOf1 (Scope t) where
+instance (HasInferOf1 t, HasTypeOf1 t) => HasInferOf1 (Scope t) where
     type InferOf1 (Scope t) = FuncType (TypeOf1 t)
     type InferOf1IndexConstraint (Scope t) = DeBruijnIndex
     hasInferOf1 p =

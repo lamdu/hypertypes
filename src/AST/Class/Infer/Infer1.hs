@@ -18,7 +18,7 @@ class HasTypeOf1 t where
 class HasInferOf1 t where
     type family InferOf1 t :: Knot -> Type
     type family InferOf1IndexConstraint t :: Type -> Constraint
-    hasInferOf1 :: Proxy (t k) -> Dict (InferOf (t k) ~ InferOf1 t)
+    hasInferOf1 :: Proxy (t k) -> Dict (InferOf (t k) ~ InferOf1 t, Inferrable (t k))
 
 class HasInferOf1 t => Infer1 m t where
     inferMonad :: TypeOfIndexConstraint t i :- Infer m (t i)

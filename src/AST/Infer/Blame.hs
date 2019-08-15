@@ -35,29 +35,28 @@ prepare ::
     ( MonadError err m
     , Infer m exp
     , Recursively (InferOfConstraint KApplicative) exp
-    , Recursively (InferOfConstraint KTraversable) exp
     ) =>
     Tree (InferOf exp) (UVarOf m) ->
     Tree (Ann a) exp ->
     m (Tree (Ann (PrepAnn m a)) exp)
 prepare typeFromAbove (Ann a x) =
+    withDict (traversableInferOf (Proxy @exp)) $
     withDict (inferredUnify (Proxy @m) (Proxy @exp)) $
     withDict (inferRecursive (Proxy @m) (Proxy @exp)) $
     withDict (recursive @(InferOfConstraint KApplicative) @exp) $
-    withDict (recursive @(InferOfConstraint KTraversable) @exp) $
     inferBody
     (mapKWith
         (Proxy ::
             Proxy
             '[ Infer m
             , Recursively (InferOfConstraint KApplicative)
-            , Recursively (InferOfConstraint KTraversable)
             ])
         (\c ->
             let p :: Tree (Ann a) k -> Proxy k
                 p _ = Proxy
             in
             withDict (inferredUnify (Proxy @m) (p c)) $
+            withDict (traversableInferOf (p c)) $
             do
                 t <- sequencePureKWith (Proxy @'[Unify m]) newUnbound
                 prepare t c <&> (`InferredChild` t)
@@ -98,7 +97,6 @@ blame ::
     , RTraversable exp
     , Infer m exp
     , Recursively (InferOfConstraint KApplicative) exp
-    , Recursively (InferOfConstraint KTraversable) exp
     ) =>
     (a -> priority) ->
     Tree (InferOf exp) (UVarOf m) ->

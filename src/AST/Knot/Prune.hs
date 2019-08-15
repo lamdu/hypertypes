@@ -44,12 +44,24 @@ instance KApply Prune where
 
 instance c Prune => Recursively c Prune
 
-instance Inferrable (Compose Prune t) where type InferOf (Compose Prune t) = InferOf t
+instance
+    ( Inferrable t
+    , NodesConstraint t $ ComposeConstraint1 Inferrable Prune
+    ) =>
+    Inferrable (Compose Prune t) where
+    type InferOf (Compose Prune t) = InferOf t
+    {-# INLINE traversableInferOf #-}
+    traversableInferOf =
+        traversableInferOf . p
+        where
+            p :: Proxy (Compose Prune t) -> Proxy t
+            p _ = Proxy
 
 instance
     ( KApplicative (InferOf t), KTraversable (InferOf t)
     , NodesConstraint (InferOf t) $ Unify m
     , NodesConstraint t $ ComposeConstraint1 (Infer m) Prune
+    , NodesConstraint t $ ComposeConstraint1 Inferrable Prune
     , Infer m t
     ) =>
     Infer m (Compose Prune t) where

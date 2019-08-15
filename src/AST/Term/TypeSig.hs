@@ -46,13 +46,21 @@ instance Deps vars term k Pretty => Pretty (TypeSig vars term k) where
         pPrintPrec lvl 1 term <+> Pretty.text ":" <+> pPrintPrec lvl 1 typ
         & maybeParens (p > 1)
 
-instance Inferrable (TypeSig v t) where type InferOf (TypeSig v t) = InferOf t
+instance
+    ( Inferrable t
+    , KTraversable (InferOf t)
+    , Inferrable (TypeOf t)
+    , RTraversable (TypeOf t)
+    ) =>
+    Inferrable (TypeSig v t) where
+    type InferOf (TypeSig v t) = InferOf t
 
 instance
     ( MonadScopeLevel m
     , HasInferredType term
     , HasInferredValue (TypeOf term)
     , KTraversable vars
+    , KTraversable (InferOf term)
     , NodesConstraint vars $ Unify m
     , NodesConstraint (InferOf term) $ Unify m
     , NodesConstraint vars $ MonadInstantiate m

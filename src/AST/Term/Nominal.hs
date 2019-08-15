@@ -240,7 +240,10 @@ lookupParams =
                 scopeConstraints <&> (<> l) >>= newVar binding . UUnbound
             _ -> error "unexpected state at nominal's parameter"
 
-instance Inferrable (ToNom n e) where type InferOf (ToNom n e) = NominalInst n (NomVarTypes (TypeOf e))
+instance
+    (Inferrable e, KTraversable (NomVarTypes (TypeOf e))) =>
+    Inferrable (ToNom n e) where
+    type InferOf (ToNom n e) = NominalInst n (NomVarTypes (TypeOf e))
 
 instance
     ( MonadScopeLevel m
