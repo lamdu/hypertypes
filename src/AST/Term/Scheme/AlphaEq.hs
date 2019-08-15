@@ -20,7 +20,7 @@ import           Prelude.Compat
 
 goUTerm ::
     forall m t.
-    Recursively (Unify m) t =>
+    Unify m t =>
     Tree (UVarOf m) t -> Tree (UTerm (UVarOf m)) t ->
     Tree (UVarOf m) t -> Tree (UTerm (UVarOf m)) t ->
     m ()
@@ -46,13 +46,13 @@ goUTerm xv _ yv USkolem{} = unifyError (SkolemUnified yv xv)
 goUTerm xv UUnbound{} yv yu = goUTerm xv yu yv yu -- Term created in structure mismatch
 goUTerm xv xu yv UUnbound{} = goUTerm xv xu yv xu -- Term created in structure mismatch
 goUTerm _ (UTerm xt) _ (UTerm yt) =
-    withDict (recursive @(Unify m) @t) $
-    zipMatchWith_ (Proxy @'[Recursively (Unify m)]) goUVar (xt ^. uBody) (yt ^. uBody)
+    withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
+    zipMatchWith_ (Proxy @'[Unify m]) goUVar (xt ^. uBody) (yt ^. uBody)
     & fromMaybe (structureMismatch (\x y -> x <$ goUVar x y) xt yt)
 goUTerm _ _ _ _ = error "unexpected state at alpha-eq"
 
 goUVar ::
-    Recursively (Unify m) t =>
+    Unify m t =>
     Tree (UVarOf m) t -> Tree (UVarOf m) t -> m ()
 goUVar xv yv =
     do

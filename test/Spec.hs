@@ -135,13 +135,13 @@ inferExpr ::
     , Recursively (InferOfConstraint KFoldable) t
     , Recursively (InferOfConstraint KFunctor) t
     , Recursively (InferOfConstraint KTraversable) t
-    , Recursively (InferOfConstraint (KLiftConstraint (Recursively (Unify m)))) t
+    , Recursively (InferOfConstraint (KLiftConstraint (Unify m))) t
     ) =>
     Tree Pure t ->
     m (Tree Pure (TypeOf t))
 inferExpr x =
     infer (wrap (Proxy @'[KFunctor]) Dict (Ann ()) x)
-    >>= Lens.from _Flip (traverseKWith (Proxy @'[Recursively (Unify m)]) applyBindings)
+    >>= Lens.from _Flip (traverseKWith (Proxy @'[Unify m]) applyBindings)
     <&> (^# iRes . inferredType (Proxy @t))
 
 vecNominalDecl :: Tree Pure (NominalDecl Typ)

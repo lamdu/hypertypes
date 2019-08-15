@@ -129,7 +129,7 @@ instance
 -- become universally quantified skolems.
 generalize ::
     forall m t.
-    Recursively (Unify m) t =>
+    Unify m t =>
     Tree (UVarOf m) t -> m (Tree (GTerm (UVarOf m)) t)
 generalize v0 =
     do
@@ -145,7 +145,7 @@ generalize v0 =
                 bindVar binding v1 (USkolem (generalizeConstraints l))
             USkolem l | toScopeConstraints l `leq` c -> pure (GPoly v1)
             UTerm t ->
-                withDict (recursive @(Unify m) @t) $
+                withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
                 do
                     bindVar binding v1 (UResolving t)
                     r <- traverseKWith p generalize (t ^. uBody)
@@ -158,7 +158,7 @@ generalize v0 =
             UResolving t -> GMono v1 <$ occursError v1 t
             _ -> pure (GMono v1)
     where
-        p = Proxy @'[Recursively (Unify m)]
+        p = Proxy @'[Unify m]
 
 {-# INLINE instantiateForAll #-}
 instantiateForAll ::

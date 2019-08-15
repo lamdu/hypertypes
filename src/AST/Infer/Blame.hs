@@ -37,7 +37,7 @@ prepare ::
     , Recursively (Infer m) exp
     , Recursively (InferOfConstraint KApplicative) exp
     , Recursively (InferOfConstraint KTraversable) exp
-    , Recursively (InferOfConstraint (KLiftConstraint (Recursively (Unify m)))) exp
+    , Recursively (InferOfConstraint (KLiftConstraint (Unify m))) exp
     ) =>
     Tree (InferOf exp) (UVarOf m) ->
     Tree (Ann a) exp ->
@@ -46,7 +46,7 @@ prepare typeFromAbove (Ann a x) =
     withDict (recursive @(Infer m) @exp) $
     withDict (recursive @(InferOfConstraint KApplicative) @exp) $
     withDict (recursive @(InferOfConstraint KTraversable) @exp) $
-    withDict (recursive @(InferOfConstraint (KLiftConstraint (Recursively (Unify m)))) @exp) $
+    withDict (recursive @(InferOfConstraint (KLiftConstraint (Unify m))) @exp) $
     inferBody
     (mapKWith
         (Proxy ::
@@ -54,11 +54,11 @@ prepare typeFromAbove (Ann a x) =
             '[ Recursively (Infer m)
             , Recursively (InferOfConstraint KApplicative)
             , Recursively (InferOfConstraint KTraversable)
-            , Recursively (InferOfConstraint (KLiftConstraint (Recursively (Unify m))))
+            , Recursively (InferOfConstraint (KLiftConstraint (Unify m)))
             ])
         (\c ->
             do
-                t <- sequencePureKWith (Proxy @'[Recursively (Unify m)]) newUnbound
+                t <- sequencePureKWith (Proxy @'[Unify m]) newUnbound
                 prepare t c <&> (`InferredChild` t)
             & InferChild
         )
@@ -70,15 +70,15 @@ prepare typeFromAbove (Ann a x) =
     , pTryUnify =
         do
             sequenceLiftK2With_
-                (Proxy @'[Recursively (Unify m)])
+                (Proxy @'[Unify m])
                 (unify <&> mapped . mapped .~ ()) typeFromAbove t
             traverseKWith_
-                (Proxy @'[Recursively (Unify m)])
+                (Proxy @'[Unify m])
                 occursCheck t
         & (`catchError` const (pure ()))
     , pFinalize =
         foldMapKWith
-            (Proxy @'[Recursively (Unify m)])
+            (Proxy @'[Unify m])
             (\(Pair t0 t1) -> [(==) <$> (semiPruneLookup t0 <&> fst) <*> (semiPruneLookup t1 <&> fst)])
             (zipK typeFromAbove t)
         & sequenceA
@@ -99,7 +99,7 @@ blame ::
     , Recursively (Infer m) exp
     , Recursively (InferOfConstraint KApplicative) exp
     , Recursively (InferOfConstraint KTraversable) exp
-    , Recursively (InferOfConstraint (KLiftConstraint (Recursively (Unify m)))) exp
+    , Recursively (InferOfConstraint (KLiftConstraint (Unify m))) exp
     ) =>
     (a -> priority) ->
     Tree (InferOf exp) (UVarOf m) ->

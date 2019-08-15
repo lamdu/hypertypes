@@ -194,14 +194,14 @@ instance MonadQuantify RConstraints Name PureInferA where
 instance Unify PureInferA Typ where
     binding = bindingDict (Lens._1 . tTyp)
     unifyError e =
-        traverseKWith (Proxy @'[Recursively (Unify PureInferA)]) applyBindings e
+        traverseKWith (Proxy @'[Unify PureInferA]) applyBindings e
         >>= throwError . TypError
 
 instance Unify PureInferA Row where
     binding = bindingDict (Lens._1 . tRow)
     structureMismatch = rStructureMismatch
     unifyError e =
-        traverseKWith (Proxy @'[Recursively (Unify PureInferA)]) applyBindings e
+        traverseKWith (Proxy @'[Unify PureInferA]) applyBindings e
         >>= throwError . RowError
 
 instance MonadInstantiate PureInferA Typ where
@@ -255,14 +255,14 @@ instance MonadQuantify RConstraints Name (STInferA s) where
 instance Unify (STInferA s) Typ where
     binding = stBinding
     unifyError e =
-        traverseKWith (Proxy @'[Recursively (Unify (STInferA s))]) applyBindings e
+        traverseKWith (Proxy @'[Unify (STInferA s)]) applyBindings e
         >>= throwError . TypError
 
 instance Unify (STInferA s) Row where
     binding = stBinding
     structureMismatch = rStructureMismatch
     unifyError e =
-        traverseKWith (Proxy @'[Recursively (Unify (STInferA s))]) applyBindings e
+        traverseKWith (Proxy @'[Unify (STInferA s)]) applyBindings e
         >>= throwError . RowError
 
 instance MonadInstantiate (STInferA s) Typ where

@@ -53,7 +53,7 @@ instance
     ( Infer m expr
     , HasInferredType expr
     , HasFuncType (TypeOf expr)
-    , Recursively (Unify m) (TypeOf expr)
+    , Unify m (TypeOf expr)
     ) =>
     Infer m (App expr) where
 

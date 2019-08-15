@@ -33,7 +33,7 @@ occursError v (UTermBody c b) =
 {-# INLINE occursCheck #-}
 occursCheck ::
     forall m t.
-    Recursively (Unify m) t =>
+    Unify m t =>
     Tree (UVarOf m) t -> m ()
 occursCheck v0 =
     semiPruneLookup v0
@@ -45,8 +45,8 @@ occursCheck v0 =
     UUnbound{} -> pure ()
     USkolem{} -> pure ()
     UTerm b ->
-        withDict (recursive @(Unify m) @t) $
-        traverseKWith_ (Proxy @'[Recursively (Unify m)])
+        withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
+        traverseKWith_ (Proxy @'[Unify m])
         ( \c ->
             do
                 get >>= lift . (`unless` bindVar binding v1 (UResolving b))

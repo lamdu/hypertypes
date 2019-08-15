@@ -30,7 +30,7 @@ class HasScope m s where
 class VarType var expr where
     -- | Instantiate a type for a variable in a given scope
     varType ::
-        Recursively (Unify m) (TypeOf expr) =>
+        Unify m (TypeOf expr) =>
         Proxy expr -> var -> Tree (ScopeOf expr) (UVarOf m) ->
         m (Tree (UVarOf m) (TypeOf expr))
 
@@ -53,7 +53,7 @@ instance Pretty v => Pretty (Var v expr k) where
 type instance InferOf (Var v t) = ANode (TypeOf t)
 
 instance
-    ( Recursively (Unify m) (TypeOf expr)
+    ( Unify m (TypeOf expr)
     , HasScope m (ScopeOf expr)
     , VarType v expr
     , Monad m

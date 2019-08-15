@@ -1,12 +1,11 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, DefaultSignatures #-}
 
 module AST.Class.Unify
     ( Unify(..), UVarOf
     , BindingDict(..)
     ) where
 
-import AST.Class (KNodes)
-import AST.Class.Recursive (Recursively)
+import AST.Class
 import AST.Class.Traversable (KTraversable)
 import AST.Class.ZipMatch (ZipMatch)
 import AST.Knot (Tree, Knot)
@@ -15,7 +14,10 @@ import AST.Unify.Constraints (HasTypeConstraints(..), MonadScopeConstraints)
 import AST.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify)
 import AST.Unify.Term (UTerm, UTermBody, uBody)
 import Control.Lens.Operators
+import Data.Constraint (Dict(..))
+import Data.Proxy (Proxy)
 import Data.Kind (Type)
+import Data.TyFun
 
 import Prelude.Compat
 
@@ -59,6 +61,13 @@ class
     -- like record extends with fields ordered differently,
     -- and these could still match.
     structureMismatch ::
-        (forall c. Recursively (Unify m) c => Tree (UVarOf m) c -> Tree (UVarOf m) c -> m (Tree (UVarOf m) c)) ->
+        (forall c. Unify m c => Tree (UVarOf m) c -> Tree (UVarOf m) c -> m (Tree (UVarOf m) c)) ->
         Tree (UTermBody (UVarOf m)) t -> Tree (UTermBody (UVarOf m)) t -> m ()
     structureMismatch _ x y = unifyError (Mismatch (x ^. uBody) (y ^. uBody))
+
+    unifyRecursive :: Proxy m -> Proxy t -> Dict (NodesConstraint t $ Unify m)
+    {-# INLINE unifyRecursive #-}
+    default unifyRecursive ::
+        NodesConstraint t $ Unify m =>
+        Proxy m -> Proxy t -> Dict (NodesConstraint t $ Unify m)
+    unifyRecursive _ _ = Dict

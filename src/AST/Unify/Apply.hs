@@ -22,7 +22,7 @@ import Prelude.Compat
 {-# INLINE applyBindings #-}
 applyBindings ::
     forall m t.
-    Recursively (Unify m) t =>
+    Unify m t =>
     Tree (UVarOf m) t ->
     m (Tree Pure t)
 applyBindings v0 =
@@ -42,8 +42,8 @@ applyBindings v0 =
     UTerm b ->
         do
             (r, anyChild) <-
-                withDict (recursive @(Unify m) @t) $
-                traverseKWith (Proxy @'[Recursively (Unify m)])
+                withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
+                traverseKWith (Proxy @'[Unify m])
                 ( \c ->
                     do
                         get >>= lift . (`unless` bindVar binding v1 (UResolving b))

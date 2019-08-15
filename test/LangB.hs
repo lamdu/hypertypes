@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances, FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables, GeneralizedNewtypeDeriving, UndecidableInstances #-}
 
 module LangB where
@@ -32,6 +32,7 @@ import           Control.Monad.RWS
 import           Control.Monad.Reader
 import           Control.Monad.ST
 import           Control.Monad.ST.Class (MonadST(..))
+import           Data.Constraint
 import           Data.Map (Map)
 import           Data.Proxy
 import           Data.STRef
@@ -82,7 +83,16 @@ instance Pretty (Tree LangB Pure) where
     pPrintPrec lvl p (BToNom n) = pPrintPrec lvl p n
 
 instance VarType Name LangB where
-    varType _ k (ScopeTypes t) = t ^?! Lens.ix k & instantiate
+    varType _ k (ScopeTypes t) =
+        r t
+        where
+            r ::
+                forall m. Unify m Typ =>
+                Map Name (Tree (GTerm (UVarOf m)) Typ) ->
+                m (Tree (UVarOf m) Typ)
+            r x =
+                withDict (unifyRecursive (Proxy @m) (Proxy @Typ)) $
+                x ^?! Lens.ix k & instantiate
 
 instance
     ( MonadScopeLevel m
@@ -214,14 +224,14 @@ instance MonadQuantify RConstraints Name PureInferB where
 instance Unify PureInferB Typ where
     binding = bindingDict (Lens._1 . tTyp)
     unifyError e =
-        traverseKWith (Proxy @'[Recursively (Unify PureInferB)]) applyBindings e
+        traverseKWith (Proxy @'[Unify PureInferB]) applyBindings e
         >>= throwError . TypError
 
 instance Unify PureInferB Row where
     binding = bindingDict (Lens._1 . tRow)
     structureMismatch = rStructureMismatch
     unifyError e =
-        traverseKWith (Proxy @'[Recursively (Unify PureInferB)]) applyBindings e
+        traverseKWith (Proxy @'[Unify PureInferB]) applyBindings e
         >>= throwError . RowError
 
 newtype STInferB s a =
@@ -274,14 +284,14 @@ instance MonadQuantify RConstraints Name (STInferB s) where
 instance Unify (STInferB s) Typ where
     binding = stBinding
     unifyError e =
-        traverseKWith (Proxy @'[Recursively (Unify (STInferB s))]) applyBindings e
+        traverseKWith (Proxy @'[Unify (STInferB s)]) applyBindings e
         >>= throwError . TypError
 
 instance Unify (STInferB s) Row where
     binding = stBinding
     structureMismatch = rStructureMismatch
     unifyError e =
-        traverseKWith (Proxy @'[Recursively (Unify (STInferB s))]) applyBindings e
+        traverseKWith (Proxy @'[Unify (STInferB s)]) applyBindings e
         >>= throwError . RowError
 
 deriving instance Show (Node k LangB) => Show (LangB k)

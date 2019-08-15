@@ -48,7 +48,7 @@ type instance InferOf (Let v expr) = InferOf expr
 instance
     ( MonadScopeLevel m
     , LocalScopeType v (Tree (GTerm (UVarOf m)) (TypeOf expr)) m
-    , Recursively (Unify m) (TypeOf expr)
+    , Unify m (TypeOf expr)
     , HasInferredType expr
     ) =>
     Infer m (Let v expr) where

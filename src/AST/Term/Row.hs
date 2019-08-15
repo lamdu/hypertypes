@@ -126,10 +126,10 @@ applyRowExtendConstraints _ c toChildC err update (RowExtend k v rest) =
 {-# INLINE rowExtendStructureMismatch #-}
 rowExtendStructureMismatch ::
     Ord key =>
-    ( Recursively (Unify m) rowTyp
-    , Recursively (Unify m) valTyp
+    ( Unify m rowTyp
+    , Unify m valTyp
     ) =>
-    (forall c. Recursively (Unify m) c => Tree (UVarOf m) c -> Tree (UVarOf m) c -> m (Tree (UVarOf m) c)) ->
+    (forall c. Unify m c => Tree (UVarOf m) c -> Tree (UVarOf m) c -> m (Tree (UVarOf m) c)) ->
     Prism' (Tree rowTyp (UVarOf m))
         (Tree (RowExtend key valTyp rowTyp) (UVarOf m)) ->
     (TypeConstraintsOf rowTyp, Tree (RowExtend key valTyp rowTyp) (UVarOf m)) ->

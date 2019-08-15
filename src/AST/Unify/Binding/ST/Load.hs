@@ -33,7 +33,7 @@ loadUTerm ::
     forall m typeVars t.
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
-    , Recursively (Unify m) t
+    , Unify m t
     , Recursively (HasChild typeVars) t
     ) =>
     Tree typeVars Binding -> Tree typeVars (ConvertState (World m)) ->
@@ -50,7 +50,7 @@ loadUTerm _ _ UInstantiated{} = error "loading during instantiation"
 loadVar ::
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
-    , Recursively (Unify m) t
+    , Unify m t
     , Recursively (HasChild typeVars) t
     ) =>
     Tree typeVars Binding -> Tree typeVars (ConvertState (World m)) ->
@@ -74,23 +74,23 @@ loadBody ::
     forall m typeVars t.
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
-    , Recursively (Unify m) t
+    , Unify m t
     , Recursively (HasChild typeVars) t
     ) =>
     Tree typeVars Binding -> Tree typeVars (ConvertState (World m)) ->
     Tree t UVar -> m (Tree t (STUVar (World m)))
 loadBody src conv =
-    withDict (recursive @(Unify m) @t) $
+    withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
     withDict (recursive @(HasChild typeVars) @t) $
     traverseKWith
-    (Proxy @'[Recursively (Unify m), Recursively (HasChild typeVars)])
+    (Proxy @'[Unify m, Recursively (HasChild typeVars)])
     (loadVar src conv)
 
 load ::
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
     , KTraversable typeVars
-    , Recursively (Unify m) t
+    , Unify m t
     , Recursively (HasChild typeVars) t
     ) =>
     Tree typeVars Binding -> Tree t UVar -> m (Tree t (STUVar (World m)))
