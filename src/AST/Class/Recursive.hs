@@ -1,5 +1,5 @@
 {-# LANGUAGE RankNTypes, DefaultSignatures, TemplateHaskell #-}
-{-# LANGUAGE FlexibleContexts, ScopedTypeVariables, UndecidableInstances #-}
+{-# LANGUAGE ScopedTypeVariables, UndecidableInstances #-}
 {-# LANGUAGE UndecidableSuperClasses, FlexibleInstances #-}
 
 module AST.Class.Recursive
@@ -12,7 +12,6 @@ module AST.Class.Recursive
     , unwrap, unwrapWithDict
     , unwrapM, unwrapMDecprecated, unwrapMWithDict
     , fold, unfold
-    , foldMapRecursive, foldMapRecursiveWithDict
     ) where
 
 import AST.Class
@@ -383,34 +382,3 @@ unfold ::
     a ->
     Tree Pure k
 unfold p getFunctor f = unwrap p getFunctor (f . getConst) . Const
-
-{-# INLINE foldMapRecursiveWithDict #-}
-foldMapRecursiveWithDict ::
-    forall cs k a f.
-    (Recursively KFoldable f, Monoid a) =>
-    Tree (RecursiveNodes k) (KDict cs) ->
-    (forall n. ApplyConstraints cs n => Dict (KFoldable n)) ->
-    (forall n g. (ApplyConstraints cs n, Recursively KFoldable g) => Tree n g -> a) ->
-    Tree k f ->
-    a
-foldMapRecursiveWithDict c getFoldable f x =
-    withDict (c ^. recSelf . _KDict) $
-    withDict (getFoldable @k) $
-    withDict (recursive @KFoldable @f) $
-    f x <>
-    foldMapKRec c
-    ( \d ->
-        foldMapKWith (Proxy @'[Recursively KFoldable])
-        (foldMapRecursiveWithDict d getFoldable f)
-    ) x
-
-{-# INLINE foldMapRecursive #-}
-foldMapRecursive ::
-    forall cs k a f.
-    (RLiftConstraints k cs, Recursively KFoldable f, Monoid a) =>
-    Proxy cs ->
-    (forall n. ApplyConstraints cs n => Dict (KFoldable n)) ->
-    (forall n g. (ApplyConstraints cs n, Recursively KFoldable g) => Tree n g -> a) ->
-    Tree k f ->
-    a
-foldMapRecursive _ = foldMapRecursiveWithDict (rLiftConstraints @k @cs)
