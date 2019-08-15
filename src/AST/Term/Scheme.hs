@@ -1,10 +1,10 @@
-{-# LANGUAGE TemplateHaskell, FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell, FlexibleContexts, DefaultSignatures #-}
 {-# LANGUAGE ScopedTypeVariables, FlexibleInstances, UndecidableInstances #-}
 
 module AST.Term.Scheme
     ( Scheme(..), sForAlls, sTyp
     , QVars(..), _QVars
-    , loadScheme, saveScheme
+    , HasScheme(..), loadScheme, saveScheme
     , MonadInstantiate(..), inferType
 
     , QVarInstances(..), _QVarInstances
@@ -183,6 +183,27 @@ loadBody foralls x =
     where
         getForAll v = foralls ^? getChild . _QVarInstances . Lens.ix v
 
+class
+    (Unify m t, HasChild varTypes t, Ord (QVar t)) =>
+    HasScheme varTypes m t where
+
+    hasSchemeRecursive ::
+        Proxy varTypes -> Proxy m -> Proxy t ->
+        Dict (NodesConstraint t $ HasScheme varTypes m)
+    {-# INLINE hasSchemeRecursive #-}
+    default hasSchemeRecursive ::
+        NodesConstraint t $ HasScheme varTypes m =>
+        Proxy varTypes -> Proxy m -> Proxy t ->
+        Dict (NodesConstraint t $ HasScheme varTypes m)
+    hasSchemeRecursive _ _ _ = Dict
+
+instance Recursive (HasScheme varTypes m) where
+    recurse =
+        hasSchemeRecursive (Proxy @varTypes) (Proxy @m) . p
+        where
+            p :: Proxy (HasScheme varTypes m t) -> Proxy t
+            p _ = Proxy
+
 -- | Load scheme into unification monad so that different instantiations share
 -- the scheme's monomorphic parts -
 -- their unification is O(1) as it is the same shared unification term.
@@ -192,14 +213,14 @@ loadScheme ::
     ( Monad m
     , KTraversable varTypes
     , NodesConstraint varTypes $ Unify m
-    , RLiftConstraints typ '[Unify m, HasChild varTypes, QVarHasInstance Ord]
+    , HasScheme varTypes m typ
     ) =>
     Tree Pure (Scheme varTypes typ) ->
     m (Tree (GTerm (UVarOf m)) typ)
 loadScheme (MkPure (Scheme vars typ)) =
     do
         foralls <- traverseKWith (Proxy @'[Unify m]) makeQVarInstances vars
-        wrapMDeprecated (Proxy @'[Unify m, HasChild varTypes, QVarHasInstance Ord])
+        wrapM (Proxy @(HasScheme varTypes m))
             Dict (loadBody foralls) typ
 
 saveH ::

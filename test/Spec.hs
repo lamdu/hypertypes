@@ -203,7 +203,9 @@ returnScheme =
     \(Lens.Identity val) _ -> val ~> mutType
 
 withEnv ::
-    (Unify m Row, Unify m Typ, MonadReader env m) =>
+    ( Unify m Row, Unify m Typ, MonadReader env m
+    , HasScheme Types m Typ
+    ) =>
     Lens.LensLike' Lens.Identity env (InferScope (UVarOf m)) -> m a -> m a
 withEnv l act =
     do
