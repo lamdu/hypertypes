@@ -14,6 +14,7 @@ import           AST.Term.Lam
 import           AST.Term.Let
 import           AST.Term.Nominal
 import           AST.Term.Row
+import           AST.Term.Scheme.AlphaEq
 import           AST.Term.Var
 import           AST.Unify
 import           AST.Unify.Apply
@@ -234,6 +235,9 @@ instance Unify PureInferB Row where
         traverseKWith (Proxy @'[Unify PureInferB]) applyBindings e
         >>= throwError . RowError
 
+instance AlphaEq Types PureInferB Typ
+instance AlphaEq Types PureInferB Row
+
 newtype STInferB s a =
     STInferB
     (ReaderT (InferScope (STUVar s), STNameGen s)
@@ -293,6 +297,9 @@ instance Unify (STInferB s) Row where
     unifyError e =
         traverseKWith (Proxy @'[Unify (STInferB s)]) applyBindings e
         >>= throwError . RowError
+
+instance AlphaEq Types (STInferB s) Typ
+instance AlphaEq Types (STInferB s) Row
 
 deriving instance Show (Node k LangB) => Show (LangB k)
 deriving instance (Show (Node k Typ), Show (Node k Row)) => Show (ScopeTypes k)

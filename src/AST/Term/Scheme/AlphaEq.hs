@@ -1,13 +1,13 @@
 -- | Alpha-equality for schemes
-{-# LANGUAGE FlexibleContexts, ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts, ScopedTypeVariables, DefaultSignatures #-}
 
 module AST.Term.Scheme.AlphaEq
-    ( alphaEq
+    ( AlphaEq(..), alphaEq
     ) where
 
 import           AST
 import           AST.Class.Has (HasChild(..))
-import           AST.Class.Recursive (wrapMDeprecated)
+import           AST.Class.Recursive (Recursive(..), wrapM)
 import           AST.Class.ZipMatch (zipMatchWith_)
 import           AST.Term.Scheme
 import           AST.Unify
@@ -21,6 +21,26 @@ import           Data.Maybe (fromMaybe)
 import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
+
+class
+    (Unify m t, HasChild varTypes t, Ord (QVar t)) =>
+    AlphaEq varTypes m t where
+
+    alphaEqRecursive ::
+        Proxy varTypes -> Proxy m -> Proxy t ->
+        Dict (NodesConstraint t $ AlphaEq varTypes m)
+    default alphaEqRecursive ::
+        NodesConstraint t $ AlphaEq varTypes m =>
+        Proxy varTypes -> Proxy m -> Proxy t ->
+        Dict (NodesConstraint t $ AlphaEq varTypes m)
+    alphaEqRecursive _ _ _ = Dict
+
+instance Recursive (AlphaEq varTypes m) where
+    recurse =
+        alphaEqRecursive (Proxy @varTypes) (Proxy @m) . p
+        where
+            p :: Proxy (AlphaEq varTypes m t) -> Proxy t
+            p _ = Proxy
 
 makeQVarInstancesInScope ::
     Unify m typ =>
@@ -45,14 +65,14 @@ schemeToRestrictedType ::
     ( Monad m
     , KTraversable varTypes
     , NodesConstraint varTypes $ Unify m
-    , RLiftConstraints typ '[Unify m, HasChild varTypes, QVarHasInstance Ord]
+    , AlphaEq varTypes m typ
     ) =>
     Tree Pure (Scheme varTypes typ) -> m (Tree (UVarOf m) typ)
 schemeToRestrictedType (MkPure (Scheme vars typ)) =
     do
         foralls <- traverseKWith (Proxy @'[Unify m]) makeQVarInstancesInScope vars
-        wrapMDeprecated
-            (Proxy @'[Unify m, HasChild varTypes, QVarHasInstance Ord])
+        wrapM
+            (Proxy @(AlphaEq varTypes m))
             Dict (schemeBodyToType foralls) typ
 
 goUTerm ::
@@ -101,10 +121,7 @@ goUVar xv yv =
 alphaEq ::
     ( KTraversable varTypes
     , NodesConstraint varTypes $ Unify m
-    , Recursively KNodes typ
-    , Recursively (Unify m) typ
-    , Recursively (HasChild varTypes) typ
-    , Recursively (QVarHasInstance Ord) typ
+    , AlphaEq varTypes m typ
     ) =>
     Tree Pure (Scheme varTypes typ) ->
     Tree Pure (Scheme varTypes typ) ->
