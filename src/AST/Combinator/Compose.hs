@@ -74,9 +74,7 @@ instance
                 Tree k0 k1
             makeP1 _ f = f Proxy
 
-instance
-    (KNodes a, KNodes b, KFunctor a, KFunctor b) =>
-    KFunctor (Compose a b) where
+instance (KFunctor a, KFunctor b) => KFunctor (Compose a b) where
     {-# INLINE mapC #-}
     mapC (MkCompose f) =
         withDict (kNodes (Proxy @a)) $
@@ -89,9 +87,7 @@ instance
             ) f
         )
 
-instance
-    (KNodes a, KNodes b, KApply a, KApply b) =>
-    KApply (Compose a b) where
+instance (KApply a, KApply b) => KApply (Compose a b) where
     {-# INLINE zipK #-}
     zipK (MkCompose a0) =
         _Compose %~
@@ -106,9 +102,7 @@ instance
             )
         . zipK a0
 
-instance
-    (KNodes a, KNodes b, KFoldable a, KFoldable b) =>
-    KFoldable (Compose a b) where
+instance (KFoldable a, KFoldable b) => KFoldable (Compose a b) where
     {-# INLINE foldMapC #-}
     foldMapC (MkCompose f) =
         withDict (kNodes (Proxy @a)) $
@@ -124,9 +118,7 @@ instance
             ) f
         ) . getCompose
 
-instance
-    (KNodes a, KNodes b, KTraversable a, KTraversable b) =>
-    KTraversable (Compose a b) where
+instance (KTraversable a, KTraversable b) => KTraversable (Compose a b) where
     {-# INLINE sequenceC #-}
     sequenceC =
         _Compose

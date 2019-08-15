@@ -43,7 +43,6 @@ data BindingDict v m t = BindingDict
 
 class
     ( Eq (Tree (UVarOf m) t)
-    , KNodes t
     , KTraversable t
     , ZipMatch t
     , HasTypeConstraints t

@@ -98,17 +98,17 @@ makeKTraversableAndBases ''NominalDecl
 makeKTraversableAndBases ''ToNom
 makeKTraversableAndBases ''FromNom
 
-instance (KFunctor v, KNodes v) => KFunctor (NominalInst n v) where
+instance KFunctor v => KFunctor (NominalInst n v) where
     mapC f (NominalInst n v) =
         withDict (kNodes (Proxy @v)) $
         mapC (mapK (_MapK %~ (_QVarInstances . Lens.mapped %~)) f) v & NominalInst n
 
-instance (KFoldable v, KNodes v) => KFoldable (NominalInst n v) where
+instance KFoldable v => KFoldable (NominalInst n v) where
     foldMapC f (NominalInst _ v) =
         withDict (kNodes (Proxy @v)) $
         foldMapC (mapK (_ConvertK %~ \fq -> foldMap fq . (^. _QVarInstances)) f) v
 
-instance (KTraversable v, KNodes v) => KTraversable (NominalInst n v) where
+instance KTraversable v => KTraversable (NominalInst n v) where
     sequenceC (NominalInst n v) =
         traverseK (_QVarInstances (traverse runContainedK)) v
         <&> NominalInst n

@@ -24,7 +24,6 @@ import Prelude.Compat
 type NodeTypesConstraints k =
     ( NodesConstraint k ~ NodesConstraint (NodeTypesOf k)
     , NodeTypesOf k ~ NodeTypesOf (NodeTypesOf k)
-    , KNodes (NodeTypesOf k)
     , KApplicative (NodeTypesOf k)
     )
 
