@@ -60,7 +60,7 @@ updateTermConstraints v t newConstraints
         withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
         do
             bindVar binding v (UResolving t)
-            verifyConstraints (Proxy @(Unify m)) newConstraints
+            verifyConstraints newConstraints
                 (unifyError . ConstraintsViolation (t ^. uBody))
                 f
                 (t ^. uBody)

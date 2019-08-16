@@ -152,11 +152,11 @@ instance RowConstraints RConstraints where
 type instance TypeConstraintsOf Typ = ScopeLevel
 
 instance HasTypeConstraints Typ where
-    verifyConstraints _ _ _ _ TInt = pure TInt
-    verifyConstraints _ _ _ _ (TVar v) = TVar v & pure
-    verifyConstraints _ c _ u (TFun f) = traverseK1 (u c) f <&> TFun
-    verifyConstraints _ c _ u (TRec r) = u (RowConstraints mempty c) r <&> TRec
-    verifyConstraints _ c _ u (TNom (NominalInst n (Types t r))) =
+    verifyConstraints _ _ _ TInt = pure TInt
+    verifyConstraints _ _ _ (TVar v) = TVar v & pure
+    verifyConstraints c _ u (TFun f) = traverseK1 (u c) f <&> TFun
+    verifyConstraints c _ u (TRec r) = u (RowConstraints mempty c) r <&> TRec
+    verifyConstraints c _ u (TNom (NominalInst n (Types t r))) =
         Types
         <$> (_QVarInstances . traverse) (u c) t
         <*> (_QVarInstances . traverse) (u (RowConstraints mempty c)) r
@@ -165,10 +165,10 @@ instance HasTypeConstraints Typ where
 type instance TypeConstraintsOf Row = RConstraints
 
 instance HasTypeConstraints Row where
-    verifyConstraints _ _ _ _ REmpty = pure REmpty
-    verifyConstraints _ _ _ _ (RVar x) = RVar x & pure
-    verifyConstraints p c e u (RExtend x) =
-        applyRowExtendConstraints p c (^. rScope) (e . (`RowConstraints` mempty) . singleton) u x <&> RExtend
+    verifyConstraints _ _ _ REmpty = pure REmpty
+    verifyConstraints _ _ _ (RVar x) = RVar x & pure
+    verifyConstraints c e u (RExtend x) =
+        applyRowExtendConstraints c (^. rScope) (e . (`RowConstraints` mempty) . singleton) u x <&> RExtend
 
 type PureInferState = (Tree Types Binding, Tree Types UVar)
 

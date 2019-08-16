@@ -90,12 +90,11 @@ class
     verifyConstraints ::
         ( Applicative m
         , KTraversable ast
-        , NodesConstraint ast $ childOp
+        , NodesConstraint ast $ Unify m
         ) =>
-        Proxy childOp ->
         TypeConstraintsOf ast ->
         (TypeConstraintsOf ast -> m ()) ->
-        (forall child. childOp child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
+        (forall child. Unify m child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
         Tree ast p ->
         m (Tree ast q)
     -- | A default implementation for when the verification only needs
@@ -103,18 +102,17 @@ class
     -- children
     {-# INLINE verifyConstraints #-}
     default verifyConstraints ::
-        forall m childOp p q.
+        forall m p q.
         ( Applicative m
         , KTraversable ast
-        , NodesConstraint ast $ childOp
+        , NodesConstraint ast $ Unify m
         , NodesConstraint ast $ TypeConstraintsAre (TypeConstraintsOf ast)
         ) =>
-        Proxy childOp ->
         TypeConstraintsOf ast ->
         (TypeConstraintsOf ast -> m ()) ->
-        (forall child. childOp child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
+        (forall child. Unify m child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
         Tree ast p ->
         m (Tree ast q)
-    verifyConstraints _ constraints _ update =
-        traverseKWith (Proxy @[childOp, TypeConstraintsAre (TypeConstraintsOf ast)])
+    verifyConstraints constraints _ update =
+        traverseKWith (Proxy @[Unify m, TypeConstraintsAre (TypeConstraintsOf ast)])
         (update constraints)

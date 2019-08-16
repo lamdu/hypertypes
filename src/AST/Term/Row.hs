@@ -26,7 +26,6 @@ import           Data.Constraint (Constraint)
 import           Data.Foldable (sequenceA_)
 import           Data.Map (Map)
 import qualified Data.Map as Map
-import           Data.Proxy (Proxy(..))
 import           Data.Set (Set)
 import           GHC.Generics (Generic)
 import           Text.Show.Combinators ((@|), showCon)
@@ -105,17 +104,16 @@ unflattenRow mkExtend (FlatRowExtends fields rest) =
 {-# INLINE applyRowExtendConstraints #-}
 applyRowExtendConstraints ::
     ( Applicative m
-    , constraint valTyp, constraint rowTyp
+    , Unify m valTyp, Unify m rowTyp
     , RowConstraints (TypeConstraintsOf rowTyp)
     ) =>
-    Proxy constraint ->
     TypeConstraintsOf rowTyp ->
     (TypeConstraintsOf rowTyp -> TypeConstraintsOf valTyp) ->
     (RowKey rowTyp -> m ()) ->
-    (forall child. constraint child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
+    (forall child. Unify m child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
     Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) p ->
     m (Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) q)
-applyRowExtendConstraints _ c toChildC err update (RowExtend k v rest) =
+applyRowExtendConstraints c toChildC err update (RowExtend k v rest) =
     when (c ^. forbidden . contains k) (err k)
     *>
     (RowExtend k
