@@ -8,7 +8,7 @@ module AST.Unify.Error
 
 import           AST
 import           AST.Class
-import           AST.Unify.Constraints (HasTypeConstraints(..))
+import           AST.Unify.Constraints (TypeConstraintsOf)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (makePrisms)
 import           Data.Binary (Binary)

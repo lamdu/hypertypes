@@ -12,7 +12,7 @@ module AST.Term.Row
 
 import           AST
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
-import           AST.Unify (TypeConstraints(..), HasTypeConstraints(..), MonadScopeConstraints(..))
+import           AST.Unify
 import           AST.Unify.Lookup (semiPruneLookup)
 import           AST.Unify.New (newTerm, newUnbound)
 import           AST.Unify.Term (UTerm(..), _UTerm, uBody)

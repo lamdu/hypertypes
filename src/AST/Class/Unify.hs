@@ -3,14 +3,16 @@
 module AST.Class.Unify
     ( Unify(..), UVarOf
     , BindingDict(..)
+    , HasTypeConstraints(..)
     ) where
 
 import AST.Class
 import AST.Class.Recursive
+import AST.Class.Traversable
 import AST.Class.ZipMatch (ZipMatch)
 import AST.Knot (Tree, Knot)
 import AST.Unify.Error (UnifyError(..))
-import AST.Unify.Constraints (HasTypeConstraints(..), MonadScopeConstraints)
+import AST.Unify.Constraints
 import AST.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify)
 import AST.Unify.Term (UTerm, UTermBody, uBody)
 import Control.Lens.Operators
@@ -78,3 +80,41 @@ instance Recursive (Unify m) where
         where
             p :: Proxy (Unify m t) -> Proxy t
             p _ = Proxy
+
+class
+    TypeConstraints (TypeConstraintsOf ast) =>
+    HasTypeConstraints (ast :: Knot -> *) where
+
+    -- | Verify constraints on the ast and apply the given child
+    -- verifier on children
+    verifyConstraints ::
+        ( Applicative m
+        , KTraversable ast
+        , NodesConstraint ast $ childOp
+        ) =>
+        Proxy childOp ->
+        TypeConstraintsOf ast ->
+        (TypeConstraintsOf ast -> m ()) ->
+        (forall child. childOp child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
+        Tree ast p ->
+        m (Tree ast q)
+    -- | A default implementation for when the verification only needs
+    -- to propagate the unchanged constraints to the direct AST
+    -- children
+    {-# INLINE verifyConstraints #-}
+    default verifyConstraints ::
+        forall m childOp p q.
+        ( Applicative m
+        , KTraversable ast
+        , NodesConstraint ast $ childOp
+        , NodesConstraint ast $ TypeConstraintsAre (TypeConstraintsOf ast)
+        ) =>
+        Proxy childOp ->
+        TypeConstraintsOf ast ->
+        (TypeConstraintsOf ast -> m ()) ->
+        (forall child. childOp child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
+        Tree ast p ->
+        m (Tree ast q)
+    verifyConstraints _ constraints _ update =
+        traverseKWith (Proxy @[childOp, TypeConstraintsAre (TypeConstraintsOf ast)])
+        (update constraints)

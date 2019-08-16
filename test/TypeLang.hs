@@ -149,8 +149,9 @@ instance RowConstraints RConstraints where
     type RowConstraintsKey RConstraints = Name
     forbidden = rForbiddenFields
 
+type instance TypeConstraintsOf Typ = ScopeLevel
+
 instance HasTypeConstraints Typ where
-    type TypeConstraintsOf Typ = ScopeLevel
     verifyConstraints _ _ _ _ TInt = pure TInt
     verifyConstraints _ _ _ _ (TVar v) = TVar v & pure
     verifyConstraints _ c _ u (TFun f) = traverseK1 (u c) f <&> TFun
@@ -161,8 +162,9 @@ instance HasTypeConstraints Typ where
         <*> (_QVarInstances . traverse) (u (RowConstraints mempty c)) r
         <&> NominalInst n <&> TNom
 
+type instance TypeConstraintsOf Row = RConstraints
+
 instance HasTypeConstraints Row where
-    type TypeConstraintsOf Row = RConstraints
     verifyConstraints _ _ _ _ REmpty = pure REmpty
     verifyConstraints _ _ _ _ (RVar x) = RVar x & pure
     verifyConstraints p c e u (RExtend x) =

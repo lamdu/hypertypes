@@ -12,9 +12,9 @@ module AST.Unify
 
 import Algebra.PartialOrd (PartialOrd(..))
 import AST
-import AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
+import AST.Class.Unify (Unify(..), UVarOf, BindingDict(..), HasTypeConstraints(..))
 import AST.Class.ZipMatch (zipMatchWithA)
-import AST.Unify.Constraints (TypeConstraints(..), HasTypeConstraints(..), MonadScopeConstraints(..))
+import AST.Unify.Constraints (TypeConstraints(..), MonadScopeConstraints(..), TypeConstraintsOf)
 import AST.Unify.Error (UnifyError(..))
 import AST.Unify.Lookup (semiPruneLookup)
 import AST.Unify.Occurs (occursError)
