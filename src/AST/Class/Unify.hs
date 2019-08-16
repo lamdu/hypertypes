@@ -97,22 +97,3 @@ class
         (forall child. Unify m child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
         Tree ast p ->
         m (Tree ast q)
-    -- | A default implementation for when the verification only needs
-    -- to propagate the unchanged constraints to the direct AST
-    -- children
-    {-# INLINE verifyConstraints #-}
-    default verifyConstraints ::
-        forall m p q.
-        ( Applicative m
-        , KTraversable ast
-        , NodesConstraint ast $ Unify m
-        , NodesConstraint ast $ TypeConstraintsAre (TypeConstraintsOf ast)
-        ) =>
-        TypeConstraintsOf ast ->
-        (TypeConstraintsOf ast -> m ()) ->
-        (forall child. Unify m child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
-        Tree ast p ->
-        m (Tree ast q)
-    verifyConstraints constraints _ update =
-        traverseKWith (Proxy @[Unify m, TypeConstraintsAre (TypeConstraintsOf ast)])
-        (update constraints)

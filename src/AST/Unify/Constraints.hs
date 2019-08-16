@@ -1,9 +1,7 @@
-{-# LANGUaGE FlexibleInstances #-}
-
 module AST.Unify.Constraints
     ( TypeConstraints(..)
     , MonadScopeConstraints(..)
-    , TypeConstraintsOf, TypeConstraintsAre
+    , TypeConstraintsOf
     ) where
 
 import Algebra.PartialOrd (PartialOrd(..))
@@ -27,6 +25,3 @@ class Monad m => MonadScopeConstraints c m where
     scopeConstraints :: m c
 
 type family TypeConstraintsOf (ast :: Knot -> Type)
-
-class TypeConstraintsOf ast ~ constraints => TypeConstraintsAre constraints ast
-instance TypeConstraintsOf ast ~ constraints => TypeConstraintsAre constraints ast
