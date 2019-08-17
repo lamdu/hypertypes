@@ -84,8 +84,7 @@ instance HasInferOf1 t => Inferrable (Scope t k) where
     type InferOf (Scope t k) = FuncType (TypeOf (t k))
     inferrableRecursive _ =
         withDict (hasInferOf1 (Proxy @(t k))) $
-        withDict (hasInferOf1 (Proxy @(t (Maybe k)))) $
-        Dict
+        withDict (hasInferOf1 (Proxy @(t (Maybe k)))) Dict
 
 instance Inferrable (ScopeVar t k) where type InferOf (ScopeVar t k) = ANode (TypeOf (t k))
 

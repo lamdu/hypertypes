@@ -128,7 +128,7 @@ instance
                 ( \(MkFlip f) ->
                     _Flip %~
                     mapC
-                    ( mapKWith (Proxy @'[InferOfConstraint KNodes]) g f
+                    ( mapKWithConstraint (Proxy @(InferOfConstraint KNodes)) g f
                     ) & MkMapK
                 ) mapSub
             ) s

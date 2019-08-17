@@ -160,7 +160,7 @@ inferType x =
     Nothing ->
         do
             xI <- traverseK inferChild x
-            mapKWith (Proxy @'[HasInferredValue]) (^. inType . inferredValue) xI
+            mapKWithConstraint (Proxy @HasInferredValue) (^. inType . inferredValue) xI
                 & newTerm
                 <&> InferRes (mapK (^. inRep) xI) . MkANode
 

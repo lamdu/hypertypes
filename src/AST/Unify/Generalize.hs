@@ -69,7 +69,7 @@ instance RFunctor ast => KFunctor (Flip GTerm ast) where
             withDict (recursiveKFunctor (Proxy @ast)) $
             withDict (kNodes (Proxy @ast)) $
             mapC
-            ( mapKWith (Proxy @'[RFunctor])
+            ( mapKWithConstraint (Proxy @RFunctor)
                 (\(MkFlip f) -> Lens.from _Flip %~ mapC f & MkMapK)
                 mapSub
             ) x
@@ -86,7 +86,7 @@ instance RFoldable ast => KFoldable (Flip GTerm ast) where
             withDict (recursiveKFoldable (Proxy @ast)) $
             withDict (kNodes (Proxy @ast)) $
             foldMapC
-            ( mapKWith (Proxy @'[RFoldable])
+            ( mapKWithConstraint (Proxy @RFoldable)
                 (\(MkFlip f) -> foldMapC f . (_Flip #) & MkConvertK)
                 convSub
             ) x

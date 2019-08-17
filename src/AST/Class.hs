@@ -7,7 +7,7 @@ module AST.Class
     , KFunctor(..), MapK(..), _MapK
     , KApply(..)
     , KApplicative
-    , mapK, liftK2
+    , liftK2
     ) where
 
 import AST.Knot (Knot, Tree)
@@ -83,6 +83,27 @@ class KNodes k => KFunctor k where
         Tree k m ->
         Tree k n
 
+    mapK ::
+        forall m n.
+        (forall c. Tree m c -> Tree n c) ->
+        Tree k m ->
+        Tree k n
+    {-# INLINE mapK #-}
+    mapK f x =
+        withDict (kNodes (Proxy @k)) $
+        mapC (pureK (MkMapK f)) x
+
+    mapKWithConstraint ::
+        NodesConstraint k $ constraint =>
+        Proxy constraint ->
+        (forall c. constraint c => Tree m c -> Tree n c) ->
+        Tree k m ->
+        Tree k n
+    {-# INLINE mapKWithConstraint #-}
+    mapKWithConstraint p f x =
+        withDict (kNodes (Proxy @k)) $
+        mapC (pureKWithConstraint p (MkMapK f)) x
+
 class KFunctor k => KApply k where
     -- | Combine child values given a combining function per child type
     zipK ::
@@ -135,17 +156,6 @@ instance (KFunctor a, KFunctor b) => KFunctor (Product a b) where
 instance (KApply a, KApply b) => KApply (Product a b) where
     {-# INLINE zipK #-}
     zipK (Pair a0 b0) (Pair a1 b1) = Pair (zipK a0 a1) (zipK b0 b1)
-
-{-# INLINE mapK #-}
-mapK ::
-    forall k m n.
-    KFunctor k =>
-    (forall c. Tree m c -> Tree n c) ->
-    Tree k m ->
-    Tree k n
-mapK f x =
-    withDict (kNodes (Proxy @k)) $
-    mapC (pureK (MkMapK f)) x
 
 {-# INLINE liftK2 #-}
 liftK2 ::

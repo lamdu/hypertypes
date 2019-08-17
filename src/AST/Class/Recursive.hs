@@ -164,7 +164,7 @@ instance
         { _recSelf = runMapK fSelf xSelf
         , _recSub =
             mapC
-            ( mapKWith (Proxy @'[Recursively KNodes])
+            ( mapKWithConstraint (Proxy @(Recursively KNodes))
                 ((_MapK #) . (\(MkFlip sf) -> _Flip %~ mapC sf)) fSub
             ) xSub
         }
@@ -231,7 +231,7 @@ wrap p getFunctor f x =
     withDict (recurse (Proxy @(c k))) $
     withDict (getFunctor @k) $
     x ^. _Pure
-    & mapKWith (Proxy @'[c]) (wrap p getFunctor f)
+    & mapKWithConstraint (Proxy @c) (wrap p getFunctor f)
     & f
 
 {-# INLINE unwrap #-}
@@ -247,7 +247,7 @@ unwrap p getFunctor f x =
     withDict (recurse (Proxy @(c k))) $
     withDict (getFunctor @k) $
     f x
-    & mapKWith (Proxy @'[c]) (unwrap p getFunctor f)
+    & mapKWithConstraint (Proxy @c) (unwrap p getFunctor f)
     & MkPure
 
 -- | Recursively fold up a tree to produce a result.

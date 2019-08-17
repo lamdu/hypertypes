@@ -49,12 +49,12 @@ zipMatchWithA p f x y = zipMatch x y <&> traverseKWith p (\(Pair a b) -> f a b)
 {-# INLINE zipMatchWith #-}
 zipMatchWith ::
     ( ZipMatch expr, KFunctor expr
-    , KLiftConstraints constraints expr
+    , NodesConstraint expr $ constraint
     ) =>
-    Proxy constraints ->
-    (forall child. ApplyConstraints constraints child => Tree a child -> Tree b child -> Tree c child) ->
+    Proxy constraint ->
+    (forall child. constraint child => Tree a child -> Tree b child -> Tree c child) ->
     Tree expr a -> Tree expr b -> Maybe (Tree expr c)
-zipMatchWith p f x y = zipMatch x y <&> mapKWith p (\(Pair a b) -> f a b)
+zipMatchWith p f x y = zipMatch x y <&> mapKWithConstraint p (\(Pair a b) -> f a b)
 
 {-# INLINE zipMatchWith_ #-}
 zipMatchWith_ ::
