@@ -38,11 +38,10 @@ makeLenses ''CommonBody
 
 diff ::
     forall t a b.
-    (Recursively ZipMatch t, RTraversable t) =>
+    RZipMatchTraversable t =>
     Tree (Ann a) t -> Tree (Ann b) t -> Tree (Diff a b) t
 diff x@(Ann xA xB) y@(Ann yA yB) =
-    withDict (recursive @ZipMatch @t) $
-    withDict (recursiveKTraversable (Proxy @t)) $
+    withDict (recursiveZipMatchTraversable (Proxy @t)) $
     case zipMatch xB yB of
     Nothing -> Different (Pair x y)
     Just match ->
@@ -51,7 +50,7 @@ diff x@(Ann xA xB) y@(Ann yA yB) =
         Just r -> Ann (xA, yA) r & CommonSubTree
         where
             sub =
-                mapKWith (Proxy @'[Recursively ZipMatch, RTraversable])
+                mapKWithConstraint (Proxy @RZipMatchTraversable)
                 (\(Pair xC yC) -> diff xC yC) match
 
 deriving instance Constraints (CommonBody a b e) Eq   => Eq   (CommonBody a b e)

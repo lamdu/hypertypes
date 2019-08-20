@@ -5,6 +5,7 @@
 module AST.Class.Recursive
     ( Recursive(..)
     , RFunctor(..), RFoldable(..), RTraversable(..)
+    , RZipMatch(..), RZipMatchTraversable(..)
     , Recursively(..), RecursiveContext, RecursiveDict, RecursiveConstraint
     , RecursiveNodes(..), recSelf, recSub
     , wrap, wrapM, unwrap, unwrapM
@@ -15,6 +16,7 @@ import AST.Class
 import AST.Class.Combinators
 import AST.Class.Foldable
 import AST.Class.Traversable
+import AST.Class.ZipMatch
 import AST.Combinator.Flip
 import AST.Knot
 import AST.Knot.Pure (Pure(..), _Pure)
@@ -78,6 +80,38 @@ instance Recursive RTraversable where
         recursiveKTraversable . p
         where
             p :: Proxy (RTraversable k) -> Proxy k
+            p _ = Proxy
+
+class ZipMatch k => RZipMatch k where
+    recursiveZipMatch :: Proxy k -> Dict (NodesConstraint k $ RZipMatch)
+    {-# INLINE recursiveZipMatch #-}
+    default recursiveZipMatch ::
+        NodesConstraint k $ RZipMatch =>
+        Proxy k -> Dict (NodesConstraint k $ RZipMatch)
+    recursiveZipMatch _ = Dict
+
+instance Recursive RZipMatch where
+    {-# INLINE recurse #-}
+    recurse =
+        recursiveZipMatch . p
+        where
+            p :: Proxy (RZipMatch k) -> Proxy k
+            p _ = Proxy
+
+class (RTraversable k, RZipMatch k) => RZipMatchTraversable k where
+    recursiveZipMatchTraversable :: Proxy k -> Dict (NodesConstraint k $ RZipMatchTraversable)
+    {-# INLINE recursiveZipMatchTraversable #-}
+    default recursiveZipMatchTraversable ::
+        NodesConstraint k $ RZipMatchTraversable =>
+        Proxy k -> Dict (NodesConstraint k $ RZipMatchTraversable)
+    recursiveZipMatchTraversable _ = Dict
+
+instance Recursive RZipMatchTraversable where
+    {-# INLINE recurse #-}
+    recurse =
+        recursiveZipMatchTraversable . p
+        where
+            p :: Proxy (RZipMatchTraversable k) -> Proxy k
             p _ = Proxy
 
 -- | `Recursively` carries a constraint to all of the descendant types
