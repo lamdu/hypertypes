@@ -5,10 +5,8 @@ module AST.TH.Functor
     ) where
 
 import           AST.Class
-import           AST.Combinator.ANode (ANode(..))
 import           AST.TH.Internal
 import           Control.Lens.Operators
-import qualified Data.Map as Map
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
 
@@ -19,26 +17,15 @@ makeKFunctor typeName = makeTypeInfo typeName >>= makeKFunctorForType
 
 makeKFunctorForType :: TypeInfo -> DecsQ
 makeKFunctorForType info =
-    do
-        childrenTypesInfo <- makeNodeTypesInfo info
-        body <-
-            tiCons info
-            & traverse (makeCons childrenTypesInfo (tiVar info))
-            <&> CaseE (VarE varX)
-        instanceD (simplifyContext (makeContext info)) (appT (conT ''KFunctor) (pure (tiInstance info)))
-            [ InlineP 'mapC Inline FunLike AllPhases & PragmaD & pure
-            , funD 'mapC
-                [ Clause
-                    [ childrenTypesPat childrenTypesInfo
-                    , VarP varX
-                    ] (NormalB body) []
-                    & pure
-                ]
-            ]
-            <&> (:[])
-
-varX :: Name
-varX = mkName "_x"
+    instanceD (simplifyContext (makeContext info)) (appT (conT ''KFunctor) (pure (tiInstance info)))
+    [ InlineP 'mapK Inline FunLike AllPhases & PragmaD & pure
+    , funD 'mapK (tiCons info <&> pure . makeMapKCtr [] (VarE 'mapK) (tiVar info))
+    , InlineP 'mapKWith Inline FunLike AllPhases & PragmaD & pure
+    , funD 'mapKWith (tiCons info <&> pure . makeMapKCtr [VarP proxy] (VarE 'mapKWith `AppE` VarE proxy) (tiVar info))
+    ]
+    <&> (:[])
+    where
+        proxy = mkName "_p"
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
@@ -51,23 +38,22 @@ makeContext info =
         ctxForPat (XofF t) = [ConT ''KFunctor `AppT` t]
         ctxForPat _ = []
 
-makeCons :: NodeTypesInfo -> Name -> D.ConstructorInfo -> Q Match
-makeCons childrenInfo knot cons =
-    do
-        let bodyForPat (NodeFofX t) =
-                case Map.lookup t (varsForChildTypes childrenInfo) of
-                Just x -> VarE 'runMapK `AppE` VarE x & pure
-                Nothing ->
-                    getEmbedTypes childrenInfo (ConT ''ANode `AppT` t)
-                    <&> AppE (VarE 'getANode)
-                    <&> AppE (VarE 'runMapK)
-            bodyForPat (XofF t) = getEmbedTypes childrenInfo t <&> AppE (VarE 'mapC)
-            bodyForPat (Tof _ pat) = bodyForPat pat <&> AppE (VarE 'fmap)
-            bodyForPat Other{} = VarE 'id & pure
-        let f (typ, name) = bodyForPat (matchType knot typ) <&> (`AppE` VarE name)
-        fields <- traverse f consVars
-        Match (consPat cons consVars)
-            (NormalB (foldl AppE (ConE (D.constructorName cons)) fields)) []
-            & pure
+makeMapKCtr :: [Pat] -> Exp -> Name -> D.ConstructorInfo -> Clause
+makeMapKCtr patBase inner knot info =
+    Clause (patBase <> [VarP varF, ConP (D.constructorName info) (cVars <&> VarP)]) body []
     where
-        consVars = makeConstructorVars "x" cons
+        varF = mkName "_f"
+        cVars =
+            [0::Int ..] <&> show <&> ('x':) <&> mkName
+            & take (length (D.constructorFields info))
+        body =
+            zipWith AppE
+            (pats <&> bodyForPat)
+            (cVars <&> VarE)
+            & foldl AppE (ConE (D.constructorName info))
+            & NormalB
+        pats = D.constructorFields info <&> matchType knot
+        bodyForPat NodeFofX{} = VarE varF
+        bodyForPat XofF{} = inner `AppE` VarE varF
+        bodyForPat (Tof _ pat) = bodyForPat pat & AppE (VarE 'fmap)
+        bodyForPat Other{} = VarE 'id

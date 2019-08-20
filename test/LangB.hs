@@ -16,6 +16,7 @@ import           AST.Term.Nominal
 import           AST.Term.Row
 import           AST.Term.Scheme
 import           AST.Term.Var
+import           AST.TH.Foldable
 import           AST.Unify
 import           AST.Unify.Apply
 import           AST.Unify.Binding
@@ -54,11 +55,8 @@ data LangB k
     | BGetField (Node k LangB) Name
     | BToNom (ToNom Name LangB k)
 
-instance KNodes LangB where
-    type NodeTypesOf LangB = ANode LangB
-
 makeKTraversableAndBases ''LangB
-instance c LangB => Recursively c LangB
+instance RNodes LangB
 instance RFunctor LangB
 instance RFoldable LangB
 instance RTraversable LangB
@@ -138,13 +136,17 @@ instance
             InferRes (BGetField wI k) (_ANode # rT) <$
                 (newTerm (TRec wR) >>= unify (wT ^. _ANode))
 
+instance TraverseITerm LangB
+instance c Typ => TraverseITermWith c LangB
+
 -- Monads for inferring `LangB`:
 
 newtype ScopeTypes v = ScopeTypes (Map Name (Tree (GTerm (RunKnot v)) Typ))
     deriving newtype (Semigroup, Monoid)
 
 instance KNodes ScopeTypes where
-    type NodeTypesOf ScopeTypes = NodeTypesOf (Flip GTerm Typ)
+    type NodesConstraint ScopeTypes c = (c Typ, Recursive c)
+    kCombineConstraints _ = Dict
 
 Lens.makePrisms ''ScopeTypes
 
@@ -156,14 +158,14 @@ typesInScope ::
         (Tree (Flip GTerm Typ) v1)
 typesInScope = _ScopeTypes . traverse . Lens.from _Flip
 
-instance KFunctor ScopeTypes where
-    mapC f = typesInScope %~ mapC f
+makeKFoldable ''ScopeTypes
 
-instance KFoldable ScopeTypes where
-    foldMapC f = foldMap (foldMapC f) . (^.. typesInScope)
+instance KFunctor ScopeTypes where
+    mapK f = typesInScope %~ mapK f
+    mapKWith p f = typesInScope %~ mapKWith p f
 
 instance KTraversable ScopeTypes where
-    sequenceC = typesInScope sequenceC
+    sequenceK = typesInScope sequenceK
 
 data InferScope v = InferScope
     { _varSchemes :: Tree ScopeTypes v
@@ -228,14 +230,14 @@ instance MonadQuantify RConstraints Name PureInferB where
 instance Unify PureInferB Typ where
     binding = bindingDict (Lens._1 . tTyp)
     unifyError e =
-        traverseKWith (Proxy @'[Unify PureInferB]) applyBindings e
+        traverseKWith (Proxy @(Unify PureInferB)) applyBindings e
         >>= throwError . TypError
 
 instance Unify PureInferB Row where
     binding = bindingDict (Lens._1 . tRow)
     structureMismatch = rStructureMismatch
     unifyError e =
-        traverseKWith (Proxy @'[Unify PureInferB]) applyBindings e
+        traverseKWith (Proxy @(Unify PureInferB)) applyBindings e
         >>= throwError . RowError
 
 instance HasScheme Types PureInferB Typ
@@ -291,14 +293,14 @@ instance MonadQuantify RConstraints Name (STInferB s) where
 instance Unify (STInferB s) Typ where
     binding = stBinding
     unifyError e =
-        traverseKWith (Proxy @'[Unify (STInferB s)]) applyBindings e
+        traverseKWith (Proxy @(Unify (STInferB s))) applyBindings e
         >>= throwError . TypError
 
 instance Unify (STInferB s) Row where
     binding = stBinding
     structureMismatch = rStructureMismatch
     unifyError e =
-        traverseKWith (Proxy @'[Unify (STInferB s)]) applyBindings e
+        traverseKWith (Proxy @(Unify (STInferB s))) applyBindings e
         >>= throwError . RowError
 
 instance HasScheme Types (STInferB s) Typ

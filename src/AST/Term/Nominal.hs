@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, UndecidableInstances #-}
 {-# LANGUAGE FlexibleContexts, ScopedTypeVariables, TemplateHaskell #-}
-{-# LANGUAGE UndecidableSuperClasses #-}
+{-# LANGUAGE UndecidableSuperClasses, TypeOperators #-}
 
 module AST.Term.Nominal
     ( NominalDecl(..), nParams, nScheme
@@ -15,13 +15,11 @@ module AST.Term.Nominal
     ) where
 
 import           AST
-import           AST.Class (_MapK)
 import           AST.Class.Has (HasChild(..))
-import           AST.Class.Foldable (_ConvertK, foldMapKWith, traverseKWith_)
+import           AST.Class.Foldable (foldMapKWith, traverseKWith_)
 import           AST.Class.Recursive
 import           AST.Class.Traversable (ContainedK(..))
 import           AST.Class.ZipMatch (ZipMatch(..))
-import           AST.Combinator.ANode (ANode)
 import           AST.Infer
 import           AST.Term.FuncType (FuncType(..))
 import           AST.Term.Map (TermMap(..), _TermMap)
@@ -40,7 +38,6 @@ import           Control.Monad.Trans.Writer (execWriterT)
 import           Data.Binary (Binary)
 import           Data.Constraint (Dict(..), withDict)
 import           Data.Foldable (traverse_)
-import           Data.Functor.Const (Const)
 import           Data.Proxy (Proxy(..))
 import qualified Data.Map as Map
 import           Generics.OneLiner (Constraints)
@@ -77,47 +74,40 @@ newtype FromNom nomId (term :: Knot -> *) (k :: Knot) = FromNom nomId
     deriving newtype (Eq, Ord, Binary, NFData)
     deriving stock (Show, Generic)
 
-instance KNodes (NominalDecl t) where
-    type NodeTypesOf (NominalDecl t) = ANode t
-
-instance KNodes (ToNom n t) where
-    type NodeTypesOf (ToNom n t) = ANode t
-
-instance KNodes (FromNom n t) where
-    type NodeTypesOf (FromNom n t) = Const ()
-
 instance KNodes v => KNodes (NominalInst n v) where
-    type NodeTypesOf (NominalInst n v) = NodeTypesOf v
-    {-# INLINE kNodes #-}
-    kNodes _ = withDict (kNodes (Proxy @v)) Dict
+    type NodesConstraint (NominalInst n v) c = NodesConstraint v c
+    {-# INLINE kCombineConstraints #-}
+    kCombineConstraints p =
+        withDict (kCombineConstraints (p0 p)) Dict
+        where
+            p0 :: Proxy (And a b (NominalInst n v)) -> Proxy (And a b v)
+            p0 _ = Proxy
 
 makeLenses ''NominalDecl
 makeLenses ''NominalInst
 makeLenses ''ToNom
 makePrisms ''FromNom
 makeKTraversableAndBases ''NominalDecl
-makeKTraversableAndBases ''ToNom
-makeKTraversableAndBases ''FromNom
+makeKTraversableApplyAndBases ''ToNom
+makeKTraversableApplyAndBases ''FromNom
 
 instance KFunctor v => KFunctor (NominalInst n v) where
-    mapC f (NominalInst n v) =
-        withDict (kNodes (Proxy @v)) $
-        mapC (mapK (_MapK %~ (_QVarInstances . Lens.mapped %~)) f) v & NominalInst n
-
     {-# INLINE mapK #-}
     mapK f (NominalInst n v) =
         mapK (_QVarInstances . Lens.mapped %~ f) v & NominalInst n
+    {-# INLINE mapKWith #-}
+    mapKWith p f (NominalInst n v) =
+        mapKWith p (_QVarInstances . Lens.mapped %~ f) v & NominalInst n
 
 instance KFoldable v => KFoldable (NominalInst n v) where
-    foldMapC f (NominalInst _ v) =
-        withDict (kNodes (Proxy @v)) $
-        foldMapC (mapK (_ConvertK %~ \fq -> foldMap fq . (^. _QVarInstances)) f) v
-
     {-# INLINE foldMapK #-}
     foldMapK f = foldMapK (foldMap f . (^. _QVarInstances)) . (^. nArgs)
+    {-# INLINE foldMapKWith #-}
+    foldMapKWith p f = foldMapKWith p (foldMap f . (^. _QVarInstances)) . (^. nArgs)
 
 instance KTraversable v => KTraversable (NominalInst n v) where
-    sequenceC (NominalInst n v) =
+    {-# INLINE sequenceK #-}
+    sequenceK (NominalInst n v) =
         traverseK (_QVarInstances (traverse runContainedK)) v
         <&> NominalInst n
 
@@ -125,8 +115,8 @@ instance
     ( Eq nomId
     , ZipMatch varTypes
     , KTraversable varTypes
-    , NodesConstraint varTypes $ ZipMatch
-    , NodesConstraint varTypes $ QVarHasInstance Ord
+    , NodesConstraint varTypes ZipMatch
+    , NodesConstraint varTypes (QVarHasInstance Ord)
     ) =>
     ZipMatch (NominalInst nomId varTypes) where
 
@@ -134,8 +124,9 @@ instance
     zipMatch (NominalInst xId x) (NominalInst yId y)
         | xId /= yId = Nothing
         | otherwise =
+            withDict (kCombineConstraints (Proxy @(And ZipMatch (QVarHasInstance Ord) varTypes))) $
             zipMatch x y
-            >>= traverseKWith (Proxy @'[ZipMatch, QVarHasInstance Ord])
+            >>= traverseKWith (Proxy @(ZipMatch `And` QVarHasInstance Ord))
                 (\(Pair (QVarInstances c0) (QVarInstances c1)) ->
                     zipMatch (TermMap c0) (TermMap c1)
                     <&> (^. _TermMap)
@@ -154,7 +145,7 @@ instance constraint (Node outer k) => NodeHasConstraint constraint outer k
 instance
     ( Pretty nomId
     , KApply varTypes, KFoldable varTypes
-    , NodesConstraint varTypes $ QVarHasInstance Pretty `And` NodeHasConstraint Pretty k
+    , NodesConstraint varTypes (QVarHasInstance Pretty `And` NodeHasConstraint Pretty k)
     ) =>
     Pretty (NominalInst nomId varTypes k) where
 
@@ -206,15 +197,15 @@ loadNominalDecl ::
     forall m typ.
     ( Monad m
     , KTraversable (NomVarTypes typ)
-    , NodesConstraint (NomVarTypes typ) $ Unify m
+    , NodesConstraint (NomVarTypes typ) (Unify m)
     , HasScheme (NomVarTypes typ) m typ
     ) =>
     Tree Pure (NominalDecl typ) ->
     m (Tree (LoadedNominalDecl typ) (UVarOf m))
 loadNominalDecl (MkPure (NominalDecl params (Scheme foralls typ))) =
     do
-        paramsL <- traverseKWith (Proxy @'[Unify m]) makeQVarInstances params
-        forallsL <- traverseKWith (Proxy @'[Unify m]) makeQVarInstances foralls
+        paramsL <- traverseKWith (Proxy @(Unify m)) makeQVarInstances params
+        forallsL <- traverseKWith (Proxy @(Unify m)) makeQVarInstances foralls
         wrapM (Proxy @(HasScheme (NomVarTypes typ) m))
             Dict (loadBody paramsL forallsL) typ
             <&> LoadedNominalDecl paramsL forallsL
@@ -230,12 +221,12 @@ lookupParams ::
     forall m varTypes.
     ( Applicative m
     , KTraversable varTypes
-    , NodesConstraint varTypes $ Unify m
+    , NodesConstraint varTypes (Unify m)
     ) =>
     Tree varTypes (QVarInstances (UVarOf m)) ->
     m (Tree varTypes (QVarInstances (UVarOf m)))
 lookupParams =
-    traverseKWith (Proxy @'[Unify m]) ((_QVarInstances . traverse) lookupParam)
+    traverseKWith (Proxy @(Unify m)) ((_QVarInstances . traverse) lookupParam)
     where
         lookupParam v =
             lookupVar binding v
@@ -256,7 +247,7 @@ instance
     ( MonadScopeLevel m
     , MonadNominals nomId (TypeOf expr) m
     , KTraversable (NomVarTypes (TypeOf expr))
-    , NodesConstraint (NomVarTypes (TypeOf expr)) $ Unify m
+    , NodesConstraint (NomVarTypes (TypeOf expr)) (Unify m)
     , Unify m (TypeOf expr)
     , HasInferredType expr
     , Infer m expr
@@ -281,10 +272,6 @@ instance
             _ <- unify typ (valR ^# inferredType (Proxy @expr))
             InferRes (ToNom nomId valI) (NominalInst nomId paramsT) & pure
 
-    {-# INLINE inferredUnify #-}
-    inferredUnify _ _ =
-        withDict (kNodes (Proxy @(NomVarTypes (TypeOf expr)))) Dict
-
 instance Inferrable (FromNom n e) where type InferOf (FromNom n e) = FuncType (TypeOf e)
 
 instance
@@ -292,7 +279,7 @@ instance
     , HasNominalInst nomId (TypeOf expr)
     , MonadNominals nomId (TypeOf expr) m
     , KTraversable (NomVarTypes (TypeOf expr))
-    , NodesConstraint (NomVarTypes (TypeOf expr)) $ Unify m
+    , NodesConstraint (NomVarTypes (TypeOf expr)) (Unify m)
     , Unify m (TypeOf expr)
     ) =>
     Infer m (FromNom nomId expr) where

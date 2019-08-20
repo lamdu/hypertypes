@@ -53,16 +53,11 @@ data FlatRowExtends key val rest k = FlatRowExtends
     , _freRest :: Node k rest
     } deriving Generic
 
-instance KNodes (RowExtend k v r) where
-    type NodeTypesOf (RowExtend k v r) = Product (ANode v) (ANode r)
-instance KNodes (FlatRowExtends k v r) where
-    type NodeTypesOf (FlatRowExtends k v r) = Product (ANode v) (ANode r)
-
 makeLenses ''RowExtend
 makeLenses ''FlatRowExtends
 makeZipMatch ''RowExtend
-makeKTraversableAndBases ''RowExtend
-makeKTraversableAndBases ''FlatRowExtends
+makeKTraversableApplyAndBases ''RowExtend
+makeKTraversableApplyAndBases ''FlatRowExtends
 
 instance
     Constraints (RowExtend key val rest k) Show =>

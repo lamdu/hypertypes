@@ -6,7 +6,6 @@ module AST.Term.Let
 
 import           AST
 import           AST.Class.Unify (Unify, UVarOf)
-import           AST.Combinator.ANode (ANode)
 import           AST.Infer
 import           AST.Unify.Generalize (GTerm, generalize)
 import           Control.DeepSeq (NFData)
@@ -29,10 +28,7 @@ data Let v expr k = Let
     } deriving (Generic)
 makeLenses ''Let
 
-instance KNodes (Let v e) where
-    type NodeTypesOf (Let v e) = ANode e
-
-makeKTraversableAndBases ''Let
+makeKTraversableApplyAndBases ''Let
 
 instance
     Constraints (Let v expr k) Pretty =>
@@ -53,7 +49,7 @@ instance
     , LocalScopeType v (Tree (GTerm (UVarOf m)) (TypeOf expr)) m
     , Unify m (TypeOf expr)
     , HasInferredType expr
-    , NodesConstraint (InferOf expr) $ Unify m
+    , NodesConstraint (InferOf expr) (Unify m)
     , KTraversable (InferOf expr)
     , Infer m expr
     ) =>

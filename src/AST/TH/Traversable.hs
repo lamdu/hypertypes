@@ -4,22 +4,33 @@ module AST.TH.Traversable
     ( makeKTraversable
     , makeKTraversableAndFoldable
     , makeKTraversableAndBases
+    , makeKTraversableApplyAndBases
     ) where
 
 import           AST.Class.Traversable
+import           AST.TH.Apply (makeKApplicativeBases)
 import           AST.TH.Foldable (makeKFoldable)
 import           AST.TH.Functor (makeKFunctor)
 import           AST.TH.Internal
+import           AST.TH.Nodes (makeKNodes)
 import           Control.Lens.Operators
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
 
+makeKTraversableApplyAndBases :: Name -> DecsQ
+makeKTraversableApplyAndBases x =
+    sequenceA
+    [ makeKApplicativeBases x
+    , makeKTraversableAndFoldable x
+    ] <&> concat
+
 makeKTraversableAndBases :: Name -> DecsQ
 makeKTraversableAndBases x =
     sequenceA
-    [ makeKFunctor x
+    [ makeKNodes x
+    , makeKFunctor x
     , makeKTraversableAndFoldable x
     ] <&> concat
 
@@ -36,8 +47,8 @@ makeKTraversable typeName = makeTypeInfo typeName >>= makeKTraversableForType
 makeKTraversableForType :: TypeInfo -> DecsQ
 makeKTraversableForType info =
     instanceD (simplifyContext (makeContext info)) (appT (conT ''KTraversable) (pure (tiInstance info)))
-    [ InlineP 'sequenceC Inline FunLike AllPhases & PragmaD & pure
-    , funD 'sequenceC (tiCons info <&> pure . makeCons (tiVar info))
+    [ InlineP 'sequenceK Inline FunLike AllPhases & PragmaD & pure
+    , funD 'sequenceK (tiCons info <&> pure . makeCons (tiVar info))
     ]
     <&> (:[])
 
@@ -64,6 +75,6 @@ makeCons knot cons =
         consVars = makeConstructorVars "x" cons
         f (typ, name) = bodyForPat (matchType knot typ) `AppE` VarE name
         bodyForPat NodeFofX{} = VarE 'runContainedK
-        bodyForPat XofF{} = VarE 'sequenceC
+        bodyForPat XofF{} = VarE 'sequenceK
         bodyForPat (Tof _ pat) = VarE 'traverse `AppE` bodyForPat pat
         bodyForPat Other{} = VarE 'pure

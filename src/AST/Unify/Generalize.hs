@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts, ScopedTypeVariables, FlexibleInstances #-}
-{-# LANGUAGE UndecidableInstances, TemplateHaskell, RankNTypes #-}
+{-# LANGUAGE UndecidableInstances, TemplateHaskell, RankNTypes, TypeOperators #-}
 
 module AST.Unify.Generalize
     ( generalize, instantiate
@@ -12,8 +12,6 @@ module AST.Unify.Generalize
 
 import           Algebra.PartialOrd (PartialOrd(..))
 import           AST
-import           AST.Class
-import           AST.Class.Foldable
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Class.Recursive
 import           AST.Class.Traversable
@@ -29,7 +27,7 @@ import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.Writer (WriterT(..), tell)
 import           Data.Binary (Binary)
-import           Data.Constraint (withDict)
+import           Data.Constraint (Dict(..), withDict)
 import           Data.Monoid (All(..))
 import           Data.Proxy (Proxy(..))
 import           Generics.OneLiner (Constraints)
@@ -52,30 +50,12 @@ data GTerm v ast
 
 Lens.makePrisms ''GTerm
 
-instance
-    Recursively KNodes ast =>
-    KNodes (Flip GTerm ast) where
-
-    type NodeTypesOf (Flip GTerm ast) = RecursiveNodes ast
+instance KNodes (Flip GTerm a) where
+    type NodesConstraint (Flip GTerm a) c = (c a, Recursive c)
+    {-# INLINE kCombineConstraints #-}
+    kCombineConstraints _ = Dict
 
 instance RFunctor ast => KFunctor (Flip GTerm ast) where
-
-    {-# INLINE mapC #-}
-    mapC (RecursiveNodes (MkMapK mapTop) mapSub) =
-        _Flip %~
-        \case
-        GMono x -> mapTop x & GMono
-        GPoly x -> mapTop x & GPoly
-        GBody x ->
-            withDict (recursiveKFunctor (Proxy @ast)) $
-            withDict (kNodes (Proxy @ast)) $
-            mapC
-            ( mapKWithConstraint (Proxy @RFunctor)
-                (\(MkFlip f) -> Lens.from _Flip %~ mapC f & MkMapK)
-                mapSub
-            ) x
-            & GBody
-
     {-# INLINE mapK #-}
     mapK f =
         _Flip %~
@@ -84,25 +64,26 @@ instance RFunctor ast => KFunctor (Flip GTerm ast) where
         GPoly x -> f x & GPoly
         GBody x ->
             withDict (recursiveKFunctor (Proxy @ast)) $
-            mapKWithConstraint (Proxy @RFunctor) (Lens.from _Flip %~ mapK f) x
+            mapKWith (Proxy @RFunctor) (Lens.from _Flip %~ mapK f) x
             & GBody
 
-instance RFoldable ast => KFoldable (Flip GTerm ast) where
-
-    {-# INLINE foldMapC #-}
-    foldMapC (RecursiveNodes (MkConvertK convTop) convSub) =
+    {-# INLINE mapKWith #-}
+    mapKWith p f =
+        _Flip %~
         \case
-        GMono x -> convTop x
-        GPoly x -> convTop x
+        GMono x -> f x & GMono
+        GPoly x -> f x & GPoly
         GBody x ->
-            withDict (recursiveKFoldable (Proxy @ast)) $
-            withDict (kNodes (Proxy @ast)) $
-            foldMapC
-            ( mapKWithConstraint (Proxy @RFoldable)
-                (\(MkFlip f) -> foldMapC f . (_Flip #) & MkConvertK)
-                convSub
-            ) x
-        . (^. _Flip)
+            withDict (recurseBoth (p0 p)) $
+            mapKWith (p1 p) (Lens.from _Flip %~ mapKWith p f) x
+            & GBody
+        where
+            p0 :: Proxy constraint -> Proxy (And RFunctor constraint ast)
+            p0 _ = Proxy
+            p1 :: Proxy constraint -> Proxy (And RFunctor constraint)
+            p1 _ = Proxy
+
+instance RFoldable ast => KFoldable (Flip GTerm ast) where
 
     {-# INLINE foldMapK #-}
     foldMapK f =
@@ -114,17 +95,31 @@ instance RFoldable ast => KFoldable (Flip GTerm ast) where
             foldMapKWith (Proxy @RFoldable) (foldMapK f . (_Flip #)) x
         . (^. _Flip)
 
-instance RTraversable ast => KTraversable (Flip GTerm ast) where
+    {-# INLINE foldMapKWith #-}
+    foldMapKWith p f =
+        \case
+        GMono x -> f x
+        GPoly x -> f x
+        GBody x ->
+            withDict (recurseBoth (p0 p)) $
+            foldMapKWith (p1 p) (foldMapKWith p f . (_Flip #)) x
+        . (^. _Flip)
+        where
+            p0 :: Proxy constraint -> Proxy (And RFoldable constraint ast)
+            p0 _ = Proxy
+            p1 :: Proxy constraint -> Proxy (And RFoldable constraint)
+            p1 _ = Proxy
 
-    sequenceC (MkFlip fx) =
+instance RTraversable ast => KTraversable (Flip GTerm ast) where
+    sequenceK (MkFlip fx) =
         case fx of
         GMono x -> runContainedK x <&> GMono
         GPoly x -> runContainedK x <&> GPoly
         GBody x ->
             withDict (recursiveKTraversable (Proxy @ast)) $
             -- KTraversable will be required when not implied by Recursively
-            traverseKWith (Proxy @'[RTraversable])
-            (Lens.from _Flip sequenceC) x
+            traverseKWith (Proxy @RTraversable)
+            (Lens.from _Flip sequenceK) x
             <&> GBody
         <&> MkFlip
 
@@ -152,7 +147,7 @@ generalize v0 =
                 withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
                 do
                     bindVar binding v1 (UResolving t)
-                    r <- traverseKWith (Proxy @'[Unify m]) generalize (t ^. uBody)
+                    r <- traverseKWith (Proxy @(Unify m)) generalize (t ^. uBody)
                     r <$ bindVar binding v1 (UTerm t)
                 <&>
                 \b ->
@@ -193,7 +188,7 @@ instantiateH _ (GMono x) = pure x
 instantiateH cons (GPoly x) = instantiateForAll cons x
 instantiateH cons (GBody x) =
     withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
-    traverseKWith (Proxy @'[Unify m]) (instantiateH cons) x >>= lift . newTerm
+    traverseKWith (Proxy @(Unify m)) (instantiateH cons) x >>= lift . newTerm
 
 {-# INLINE instantiateWith #-}
 instantiateWith ::

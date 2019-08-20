@@ -1,5 +1,7 @@
 -- | `Infer` for indexed AST types (such as `AST.Term.Scope.Scope`)
 
+{-# LANGUAGE TypeOperators #-}
+
 module AST.Class.Infer.Infer1
     ( HasTypeOf1(..), HasInferOf1(..), Infer1(..)
     ) where

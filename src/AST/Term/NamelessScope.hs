@@ -1,4 +1,4 @@
-{-# LANGUAGE UndecidableInstances, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE UndecidableInstances, GeneralizedNewtypeDeriving, TypeOperators #-}
 {-# LANGUAGE ScopedTypeVariables, FlexibleInstances, TemplateHaskell, EmptyCase #-}
 
 module AST.Term.NamelessScope
@@ -11,7 +11,6 @@ module AST.Term.NamelessScope
 
 import           AST
 import           AST.Class.Infer.Infer1
-import           AST.Combinator.ANode (ANode)
 import           AST.Infer
 import           AST.Term.FuncType
 import           AST.Unify (Unify(..), UVarOf)
@@ -21,7 +20,6 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Reader (MonadReader, local)
 import           Data.Constraint
-import           Data.Functor.Const (Const)
 import           Data.Sequence (Seq)
 import qualified Data.Sequence as Sequence
 import           Data.Proxy (Proxy(..))
@@ -33,20 +31,13 @@ data EmptyScope
 newtype Scope expr a k = Scope (Node k (expr (Maybe a)))
 Lens.makePrisms ''Scope
 
-instance KNodes (Scope e a) where
-    type NodeTypesOf (Scope e a) = ANode (e (Maybe a))
-
 newtype ScopeVar (expr :: * -> Knot -> *) a (k :: Knot) = ScopeVar a
 Lens.makePrisms ''ScopeVar
 
-instance KNodes (ScopeVar e a) where
-    type NodeTypesOf (ScopeVar e a) = Const ()
-
 makeZipMatch ''Scope
-makeKApplicativeBases ''Scope
-makeKTraversableAndFoldable ''Scope
+makeKTraversableApplyAndBases ''Scope
 makeZipMatch ''ScopeVar
-makeKTraversableAndBases ''ScopeVar
+makeKTraversableApplyAndBases ''ScopeVar
 
 class DeBruijnIndex a where
     deBruijnIndex :: Prism' Int a
@@ -67,11 +58,8 @@ instance DeBruijnIndex a => DeBruijnIndex (Maybe a) where
 newtype ScopeTypes t v = ScopeTypes (Seq (Node v t))
     deriving newtype (Semigroup, Monoid)
 
-instance KNodes (ScopeTypes t) where
-    type NodeTypesOf (ScopeTypes t) = ANode t
-
 Lens.makePrisms ''ScopeTypes
-makeKTraversableAndBases ''ScopeTypes
+makeKTraversableApplyAndBases ''ScopeTypes
 
 -- TODO: Replace this class with ones from Infer
 class HasScopeTypes v t env where

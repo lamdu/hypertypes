@@ -7,13 +7,14 @@ module AST.Unify.Error
     ) where
 
 import           AST
-import           AST.Class
 import           AST.Unify.Constraints (TypeConstraintsOf)
+import           AST.TH.Functor (makeKFunctor)
+import           AST.TH.Traversable (makeKTraversableAndFoldable)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (makePrisms)
 import           Data.Binary (Binary)
-import           Data.Constraint
-import           Data.Proxy
+import           Data.Constraint (Dict(..), withDict)
+import           Data.Proxy (Proxy(..))
 import           Generics.OneLiner (Constraints)
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
@@ -38,58 +39,17 @@ data UnifyError t k
     deriving Generic
 makePrisms ''UnifyError
 
-data UnifyErrorNodes t k = UnifyErrorNodes
-    { _ueTerm :: Node k t
-    , _ueBody :: NodeTypesOf t k
-    }
+-- TODO: TH should be able to generate this
+instance KNodes t => KNodes (UnifyError t) where
+    type NodesConstraint (UnifyError t) c = (c t, NodesConstraint t c)
+    kCombineConstraints p =
+        withDict (kCombineConstraints (p0 p)) Dict
+        where
+            p0 :: Proxy (And a b (UnifyError t)) -> Proxy (And a b t)
+            p0 _ = Proxy
 
-instance
-    KNodes t =>
-    KNodes (UnifyErrorNodes t) where
-
-    type NodeTypesOf (UnifyErrorNodes t) = UnifyErrorNodes t
-    type NodesConstraint (UnifyErrorNodes t) =
-        ConcatConstraintFuncs '[On t, NodesConstraint t]
-
-instance
-    KNodes t =>
-    KPointed (UnifyErrorNodes t) where
-
-    {-# INLINE pureK #-}
-    pureK f =
-        withDict (kNodes (Proxy @t)) $
-        UnifyErrorNodes f (pureK f)
-
-    {-# INLINE pureKWithConstraint #-}
-    pureKWithConstraint p f =
-        withDict (kNodes (Proxy @t)) $
-        UnifyErrorNodes f (pureKWithConstraint p f)
-
-instance
-    KNodes t =>
-    KNodes (UnifyError t) where
-
-    type NodeTypesOf (UnifyError t) = UnifyErrorNodes t
-
-instance
-    KNodes t =>
-    KFunctor (UnifyErrorNodes t) where
-
-    {-# INLINE mapC #-}
-    mapC (UnifyErrorNodes tf bf) (UnifyErrorNodes tx bx) =
-        withDict (kNodes (Proxy @t)) $
-        UnifyErrorNodes (runMapK tf tx) (mapC bf bx)
-
-instance
-    KNodes t =>
-    KApply (UnifyErrorNodes t) where
-
-    {-# INLINE zipK #-}
-    zipK (UnifyErrorNodes t0 b0) (UnifyErrorNodes t1 b1) =
-        withDict (kNodes (Proxy @t)) $
-        UnifyErrorNodes (Pair t0 t1) (zipK b0 b1)
-
-makeKTraversableAndBases ''UnifyError
+makeKFunctor ''UnifyError
+makeKTraversableAndFoldable ''UnifyError
 
 instance Constraints (UnifyError t k) Pretty => Pretty (UnifyError t k) where
     pPrintPrec lvl p =

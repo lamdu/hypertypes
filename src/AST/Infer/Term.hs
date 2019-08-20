@@ -1,24 +1,18 @@
 {-# LANGUAGE TemplateHaskell, FlexibleContexts, ScopedTypeVariables, RankNTypes #-}
-{-# LANGUAGE UndecidableInstances, FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances, FlexibleInstances, DefaultSignatures #-}
 
 module AST.Infer.Term
     ( ITerm(..), iVal, iRes, iAnn
     , iAnnotations
+    , TraverseITerm(..), traverseITerm
+    , TraverseITermWith(..), traverseITermWith
     ) where
 
 import AST
-import AST.Class
-import AST.Class.Combinators
-import AST.Class.Foldable
 import AST.Class.Infer
 import AST.Class.Recursive
-import AST.Class.Traversable
-import AST.Combinator.Flip (Flip(..), _Flip)
-import Control.Lens (Traversal, Iso, makeLenses, makePrisms, from, iso)
-import Control.Lens.Operators
+import Control.Lens (Traversal, makeLenses)
 import Data.Constraint
-import Data.Functor.Product.PolyKinds (Product(..))
-import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
@@ -34,225 +28,6 @@ data ITerm a v e = ITerm
     }
 makeLenses ''ITerm
 
-data InferConstraint :: (Knot -> Type) -> ((Knot -> Type) -> Constraint) ~> Constraint
-
-type instance Apply (InferConstraint k) c =
-    Recursively (InferOfConstraint (KLiftConstraint c)) k
-
-newtype IResultNodeTypes k e =
-    MkIResultNodeTypes { runIResultNodeTypes :: NodeTypesOf (InferOf (RunKnot e)) k }
-
-_IResultNodeTypes ::
-    Iso (Tree (IResultNodeTypes k0) e0)
-        (Tree (IResultNodeTypes k1) e1)
-        (NodeTypesOf (InferOf e0) k0)
-        (NodeTypesOf (InferOf e1) k1)
-_IResultNodeTypes = iso runIResultNodeTypes MkIResultNodeTypes
-
-newtype ITermTypes e k =
-    ITermTypes (Tree (RecursiveNodes e) (IResultNodeTypes k))
-makePrisms ''ITermTypes
-
-instance
-    ( Recursively KNodes e
-    , Recursively (InferOfConstraint KNodes) e
-    ) =>
-    KNodes (ITermTypes e) where
-
-    type NodeTypesOf (ITermTypes e) = ITermTypes e
-    type NodesConstraint (ITermTypes e) = InferConstraint e
-
-instance
-    ( Recursively KNodes e
-    , Recursively (InferOfConstraint KNodes) e
-    ) =>
-    KPointed (ITermTypes e) where
-
-    {-# INLINE pureK #-}
-    pureK f =
-        pureKWithConstraint (Proxy @(InferOfConstraint KNodes)) (g f)
-        & ITermTypes
-        where
-            g ::
-                forall child n.
-                KNodes (InferOf child) =>
-                (forall c. Tree n c) ->
-                Tree (IResultNodeTypes ('Knot n)) child
-            g f1 =
-                withDict (kNodes (Proxy @(InferOf child))) $
-                _IResultNodeTypes # pureK f1
-
-    {-# INLINE pureKWithConstraint #-}
-    pureKWithConstraint p f =
-        pureKWith (makeP p) (g p f)
-        & ITermTypes
-        where
-            makeP ::
-                Proxy c ->
-                Proxy '[InferOfConstraint KNodes, InferOfConstraint (KLiftConstraint c)]
-            makeP _ = Proxy
-            g ::
-                forall child n constraint.
-                ( KNodes (InferOf child)
-                , NodesConstraint (InferOf child) $ constraint
-                ) =>
-                Proxy constraint ->
-                (forall c. constraint c => Tree n c) ->
-                Tree (IResultNodeTypes ('Knot n)) child
-            g p1 f1 =
-                withDict (kNodes (Proxy @(InferOf child))) $
-                _IResultNodeTypes # pureKWithConstraint p1 f1
-
-instance
-    ( Recursively KNodes e
-    , Recursively (InferOfConstraint KNodes) e
-    ) =>
-    KFunctor (ITermTypes e) where
-
-    {-# INLINE mapC #-}
-    mapC (ITermTypes (RecursiveNodes (MkIResultNodeTypes mapTop) mapSub)) =
-        _ITermTypes %~
-        \(RecursiveNodes t s) ->
-        RecursiveNodes
-        { _recSelf =
-            withDict (kNodes (Proxy @(InferOf e))) $
-            t & _IResultNodeTypes %~ mapC mapTop
-        , _recSub =
-            withDict (kNodes (Proxy @e)) $
-            withDict (recursive @KNodes @e) $
-            withDict (recursive @(InferOfConstraint KNodes) @e) $
-            mapC
-            ( mapKWith
-                (Proxy ::
-                    Proxy '[Recursively KNodes, Recursively (InferOfConstraint KNodes)])
-                ( \(MkFlip f) ->
-                    _Flip %~
-                    mapC
-                    ( mapKWithConstraint (Proxy @(InferOfConstraint KNodes)) g f
-                    ) & MkMapK
-                ) mapSub
-            ) s
-        }
-        where
-            g ::
-                forall child n m.
-                KNodes (InferOf child) =>
-                Tree (IResultNodeTypes ('Knot (MapK m n))) child ->
-                Tree (MapK (IResultNodeTypes ('Knot m)) (IResultNodeTypes ('Knot n))) child
-            g (MkIResultNodeTypes i) =
-                withDict (kNodes (Proxy @(InferOf child))) $
-                _IResultNodeTypes %~ mapC i & MkMapK
-
-instance
-    ( Recursively KNodes e
-    , Recursively (InferOfConstraint KNodes) e
-    ) =>
-    KApply (ITermTypes e) where
-
-    {-# INLINE zipK #-}
-    zipK (ITermTypes x) =
-        _ITermTypes %~
-        liftK2With (Proxy @'[InferOfConstraint KNodes]) f x
-        where
-            f ::
-                forall a b c.
-                KNodes (InferOf c) =>
-                Tree (IResultNodeTypes ('Knot a)) c ->
-                Tree (IResultNodeTypes ('Knot b)) c ->
-                Tree (IResultNodeTypes ('Knot (Product a b))) c
-            f (MkIResultNodeTypes x1) =
-                withDict (kNodes (Proxy @(InferOf c))) $
-                _IResultNodeTypes %~ zipK x1
-
-instance
-    ( Recursively KNodes e
-    , Recursively (InferOfConstraint KNodes) e
-    ) =>
-    KNodes (Flip (ITerm a) e) where
-
-    type NodeTypesOf (Flip (ITerm a) e) = ITermTypes e
-
-instance
-    ( RFunctor e
-    , Inferrable e
-    , Recursively (InferOfConstraint KNodes) e
-    ) =>
-    KFunctor (Flip (ITerm a) e) where
-
-    {-# INLINE mapC #-}
-    mapC (ITermTypes (RecursiveNodes (MkIResultNodeTypes ft) fs)) =
-        withDict (traversableInferOf (Proxy @e)) $
-        withDict (inferrableRecursive (Proxy @e)) $
-        withDict (kNodes (Proxy @e)) $
-        withDict (recursiveKFunctor (Proxy @e)) $
-        withDict (recursive @(InferOfConstraint KNodes) @e) $
-        _Flip %~
-        \(ITerm a r x) ->
-        ITerm a
-        (mapC ft r)
-        (mapC
-            ( mapKWith
-                (Proxy ::
-                    Proxy
-                    '[RFunctor
-                    , Inferrable
-                    , Recursively (InferOfConstraint KNodes)
-                    ])
-                (\(MkFlip f) -> from _Flip %~ mapC (ITermTypes f) & MkMapK) fs
-            ) x
-        )
-
-instance
-    ( RFoldable e
-    , Inferrable e
-    , Recursively (InferOfConstraint KNodes) e
-    ) =>
-    KFoldable (Flip (ITerm a) e) where
-    {-# INLINE foldMapC #-}
-    foldMapC (ITermTypes (RecursiveNodes (MkIResultNodeTypes ft) fs)) (MkFlip (ITerm _ r x)) =
-        withDict (traversableInferOf (Proxy @e)) $
-        withDict (inferrableRecursive (Proxy @e)) $
-        withDict (kNodes (Proxy @e)) $
-        withDict (recursiveKFoldable (Proxy @e)) $
-        withDict (recursive @(InferOfConstraint KNodes) @e) $
-        foldMapC ft r <>
-        foldMapC
-        ( mapKWith
-            (Proxy ::
-                Proxy
-                '[RFoldable
-                , Inferrable
-                , Recursively (InferOfConstraint KNodes)
-                ])
-            (\(MkFlip f) -> foldMapC (ITermTypes f) . (_Flip #) & MkConvertK) fs
-        ) x
-
-instance
-    ( RTraversable e
-    , Inferrable e
-    , Recursively (InferOfConstraint KNodes) e
-    ) =>
-    KTraversable (Flip (ITerm a) e) where
-
-    {-# INLINE sequenceC #-}
-    sequenceC =
-        withDict (traversableInferOf (Proxy @e)) $
-        withDict (inferrableRecursive (Proxy @e)) $
-        withDict (recursiveKTraversable (Proxy @e)) $
-        withDict (recursive @(InferOfConstraint KNodes) @e) $
-        _Flip $
-        \(ITerm a r x) ->
-        ITerm a
-        <$> traverseK runContainedK r
-        <*> traverseKWith
-            (Proxy ::
-                Proxy
-                '[RTraversable
-                , Inferrable
-                , Recursively (InferOfConstraint KNodes)
-                ])
-            (from _Flip sequenceC) x
-
 iAnnotations ::
     forall e a b v.
     RTraversable e =>
@@ -265,6 +40,52 @@ iAnnotations f (ITerm pl r x) =
     ITerm
     <$> f pl
     <*> pure r
-    <*> traverseKWith (Proxy @'[RTraversable]) (iAnnotations f) x
+    <*> traverseKWith (Proxy @RTraversable) (iAnnotations f) x
+
+class (RTraversable e, KTraversable (InferOf e)) => TraverseITerm e where
+    traverseITermRecursive :: Proxy e -> Dict (NodesConstraint e TraverseITerm)
+    {-# INLINE traverseITermRecursive #-}
+    default traverseITermRecursive ::
+        NodesConstraint e TraverseITerm =>
+        Proxy e -> Dict (NodesConstraint e TraverseITerm)
+    traverseITermRecursive _ = Dict
+
+traverseITerm ::
+    forall e f v r a.
+    (TraverseITerm e, Applicative f) =>
+    (forall c. Tree v c -> f (Tree r c)) ->
+    Tree (ITerm a v) e -> f (Tree (ITerm a r) e)
+traverseITerm f (ITerm a r x) =
+    withDict (traverseITermRecursive (Proxy @e)) $
+    ITerm a
+    <$> traverseK f r
+    <*> traverseKWith (Proxy @TraverseITerm) (traverseITerm f) x
+
+class (TraverseITerm e, KTraversable (InferOf e)) => TraverseITermWith c e where
+    traverseITermWithRecursive :: Proxy c -> Proxy e -> Dict (NodesConstraint e (TraverseITermWith c))
+    {-# INLINE traverseITermWithRecursive #-}
+    default traverseITermWithRecursive ::
+        NodesConstraint e (TraverseITermWith c) =>
+        Proxy c -> Proxy e -> Dict (NodesConstraint e (TraverseITermWith c))
+    traverseITermWithRecursive _ _ = Dict
+    traverseITermWithConstraint :: Proxy c -> Proxy e -> Dict (NodesConstraint (InferOf e) c)
+    {-# INLINE traverseITermWithConstraint #-}
+    default traverseITermWithConstraint ::
+        NodesConstraint (InferOf e) c =>
+        Proxy c -> Proxy e -> Dict (NodesConstraint (InferOf e) c)
+    traverseITermWithConstraint _ _ = Dict
+
+traverseITermWith ::
+    forall e f v r a constraint.
+    (TraverseITermWith constraint e, Applicative f) =>
+    Proxy constraint ->
+    (forall c. constraint c => Tree v c -> f (Tree r c)) ->
+    Tree (ITerm a v) e -> f (Tree (ITerm a r) e)
+traverseITermWith p f (ITerm a r x) =
+    withDict (traverseITermWithRecursive p (Proxy @e)) $
+    withDict (traverseITermWithConstraint p (Proxy @e)) $
+    ITerm a
+    <$> traverseKWith p f r
+    <*> traverseKWith (Proxy @(TraverseITermWith constraint)) (traverseITermWith p f) x
 
 deriving instance (Show a, Show (Tree e (ITerm a v)), Show (Tree (InferOf e) v)) => Show (Tree (ITerm a v) e)

@@ -79,7 +79,7 @@ loadBody ::
     Tree t UVar -> m (Tree t (STUVar (World m)))
 loadBody src conv =
     withDict (savableRecursive (Proxy @m) (Proxy @typeVars) (Proxy @t)) $
-    traverseKWith (Proxy @'[Savable m typeVars]) (loadVar src conv)
+    traverseKWith (Proxy @(Savable m typeVars)) (loadVar src conv)
 
 load ::
     ( MonadST m

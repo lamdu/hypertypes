@@ -1,7 +1,6 @@
 {-# LANGUAGE FlexibleContexts, BlockArguments, ScopedTypeVariables #-}
 
 import           AST
-import           AST.Class.Combinators
 import           AST.Class.Recursive
 import           AST.Class.Unify
 import           AST.Combinator.Flip
@@ -126,16 +125,14 @@ nomSkolem1 =
 inferExpr ::
     forall m t.
     ( HasInferredType t
-    , RTraversable t
     , Infer m t
-    , Recursively (InferOfConstraint KNodes) t
-    , Recursively (InferOfConstraint (KLiftConstraint (Unify m))) t
+    , TraverseITermWith (Unify m) t
     ) =>
     Tree Pure t ->
     m (Tree Pure (TypeOf t))
 inferExpr x =
     infer (wrap (Proxy @RTraversable) Dict (Ann ()) x)
-    >>= Lens.from _Flip (traverseKWith (Proxy @'[Unify m]) applyBindings)
+    >>= traverseITermWith (Proxy @(Unify m)) applyBindings
     <&> (^# iRes . inferredType (Proxy @t))
 
 vecNominalDecl :: Tree Pure (NominalDecl Typ)

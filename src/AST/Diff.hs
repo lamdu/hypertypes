@@ -50,7 +50,7 @@ diff x@(Ann xA xB) y@(Ann yA yB) =
         Just r -> Ann (xA, yA) r & CommonSubTree
         where
             sub =
-                mapKWithConstraint (Proxy @RZipMatchTraversable)
+                mapKWith (Proxy @RZipMatchTraversable)
                 (\(Pair xC yC) -> diff xC yC) match
 
 deriving instance Constraints (CommonBody a b e) Eq   => Eq   (CommonBody a b e)

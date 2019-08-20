@@ -21,11 +21,11 @@ import           Prelude.Compat
 
 class (Unify m t, HasChild typeVars t) => Savable m typeVars t where
     savableRecursive ::
-        Proxy m -> Proxy typeVars -> Proxy t -> Dict (NodesConstraint t $ Savable m typeVars)
+        Proxy m -> Proxy typeVars -> Proxy t -> Dict (NodesConstraint t (Savable m typeVars))
     {-# INLINE savableRecursive #-}
     default savableRecursive ::
-        NodesConstraint t $ Savable m typeVars =>
-        Proxy m -> Proxy typeVars -> Proxy t -> Dict (NodesConstraint t $ Savable m typeVars)
+        NodesConstraint t (Savable m typeVars) =>
+        Proxy m -> Proxy typeVars -> Proxy t -> Dict (NodesConstraint t (Savable m typeVars))
     savableRecursive _ _ _ = Dict
 
 saveUTerm ::
@@ -68,7 +68,7 @@ saveBody ::
     StateT (Tree typeVars Binding, [m ()]) m (Tree t UVar)
 saveBody =
     withDict (savableRecursive (Proxy @m) (Proxy @typeVars) (Proxy @t)) $
-    traverseKWith (Proxy @'[Savable m typeVars]) saveVar
+    traverseKWith (Proxy @(Savable m typeVars)) saveVar
 
 save ::
     Savable m typeVars t =>

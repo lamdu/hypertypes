@@ -30,13 +30,7 @@ data TypeSig vars term k = TypeSig
     } deriving Generic
 makeLenses ''TypeSig
 
-instance KNodes (TypeSig v t) where
-    type NodeTypesOf (TypeSig v t) = TypeSig v t
-    type NodesConstraint (TypeSig v t) =
-        ConcatConstraintFuncs [On t, On (Scheme v (TypeOf t))]
-
-makeKApplicativeBases ''TypeSig
-makeKTraversableAndFoldable ''TypeSig
+makeKTraversableApplyAndBases ''TypeSig
 
 instance
     Constraints (TypeSig vars term k) Pretty =>
@@ -60,9 +54,9 @@ instance
     , HasInferredValue (TypeOf term)
     , KTraversable vars
     , KTraversable (InferOf term)
-    , NodesConstraint (InferOf term) $ Unify m
-    , NodesConstraint vars $ MonadInstantiate m
-    , Recursively (Unify m) (TypeOf term)
+    , NodesConstraint (InferOf term) (Unify m)
+    , NodesConstraint vars (MonadInstantiate m)
+    , Unify m (TypeOf term)
     , Infer m (TypeOf term)
     , Infer m term
     ) =>

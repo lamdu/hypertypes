@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b6b55e4889aa1aa4206326076a628e4bedaddd2b18a00774af9beac7508836d7
+-- hash: 24acb18370ad994d762a15137d0d255d85e6505999349096d561876b0e1c0d19
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -31,7 +31,6 @@ library
   exposed-modules:
       AST
       AST.Class
-      AST.Class.Combinators
       AST.Class.Foldable
       AST.Class.Has
       AST.Class.Infer
@@ -50,7 +49,6 @@ library
       AST.Knot
       AST.Knot.Ann
       AST.Knot.Ann.Arbitrary
-      AST.Knot.Dict
       AST.Knot.Functor
       AST.Knot.Pure
       AST.Term.App
@@ -70,6 +68,7 @@ library
       AST.TH.Foldable
       AST.TH.Functor
       AST.TH.Internal
+      AST.TH.Nodes
       AST.TH.Pointed
       AST.TH.Traversable
       AST.TH.ZipMatch
@@ -89,12 +88,11 @@ library
       AST.Unify.Term
       Data.Constraint.List
       Data.Functor.Product.PolyKinds
-      Data.TyFun
   other-modules:
       Paths_syntax_tree
   hs-source-dirs:
       src
-  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies LambdaCase MultiParamTypeClasses StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators NoImplicitPrelude
+  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies LambdaCase MultiParamTypeClasses StandaloneDeriving TupleSections TypeApplications TypeFamilies NoImplicitPrelude
   ghc-options: -O2 -fexpose-all-unfoldings -Wall -Wnoncanonical-monad-instances -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
   ghc-prof-options: -O2 -fexpose-all-unfoldings
   build-depends:
@@ -131,7 +129,7 @@ test-suite syntax-tree-test
       TypeLang.Pure
   hs-source-dirs:
       test
-  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies LambdaCase MultiParamTypeClasses StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators
+  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies LambdaCase MultiParamTypeClasses StandaloneDeriving TupleSections TypeApplications TypeFamilies
   ghc-options: -Wall -Wcompat -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base
@@ -157,7 +155,7 @@ benchmark syntax-tree-bench
       TypeLang.Pure
   hs-source-dirs:
       test
-  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies LambdaCase MultiParamTypeClasses StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators
+  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies LambdaCase MultiParamTypeClasses StandaloneDeriving TupleSections TypeApplications TypeFamilies
   ghc-options: -O2 -Wall -Wnoncanonical-monad-instances -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
   build-depends:
       base

@@ -6,7 +6,6 @@ module AST.Term.FuncType
     ) where
 
 import           AST
-import           AST.Combinator.ANode (ANode)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Prism', makeLenses)
 import           Control.Lens.Operators
@@ -24,20 +23,14 @@ data FuncType typ k = FuncType
     , _funcOut :: Node k typ
     } deriving Generic
 
-instance KNodes (FuncType t) where
-    type NodeTypesOf (FuncType t) = ANode t
-
 makeLenses ''FuncType
 makeZipMatch ''FuncType
-makeKApplicativeBases ''FuncType
-makeKTraversableAndFoldable ''FuncType
+makeKTraversableApplyAndBases ''FuncType
 
 instance Pretty (Node k typ) => Pretty (FuncType typ k) where
     pPrintPrec lvl p (FuncType i o) =
         pPrintPrec lvl 11 i <+> Pretty.text "->" <+> pPrintPrec lvl 10 o
         & maybeParens (p > 10)
-
-instance RecursiveContext (FuncType typ) constraint => Recursively constraint (FuncType typ)
 
 instance Show (Node k typ) => Show (FuncType typ k) where
     showsPrec p (FuncType i o) = (showCon "FuncType" @| i @| o) p

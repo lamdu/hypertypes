@@ -8,3 +8,4 @@
 /ghci-out/
 /.dir-locals.el
 /.ghcid
+/dumps/

@@ -19,7 +19,6 @@ import Control.Lens.Operators
 import Data.Constraint (Dict(..))
 import Data.Proxy (Proxy(..))
 import Data.Kind (Type)
-import Data.TyFun
 
 import Prelude.Compat
 
@@ -66,11 +65,11 @@ class
         Tree (UTermBody (UVarOf m)) t -> Tree (UTermBody (UVarOf m)) t -> m ()
     structureMismatch _ x y = unifyError (Mismatch (x ^. uBody) (y ^. uBody))
 
-    unifyRecursive :: Proxy m -> Proxy t -> Dict (NodesConstraint t $ Unify m)
+    unifyRecursive :: Proxy m -> Proxy t -> Dict (NodesConstraint t (Unify m))
     {-# INLINE unifyRecursive #-}
     default unifyRecursive ::
-        NodesConstraint t $ Unify m =>
-        Proxy m -> Proxy t -> Dict (NodesConstraint t $ Unify m)
+        NodesConstraint t (Unify m) =>
+        Proxy m -> Proxy t -> Dict (NodesConstraint t (Unify m))
     unifyRecursive _ _ = Dict
 
 instance Recursive (Unify m) where
@@ -90,7 +89,7 @@ class
     verifyConstraints ::
         ( Applicative m
         , KTraversable ast
-        , NodesConstraint ast $ Unify m
+        , NodesConstraint ast (Unify m)
         ) =>
         TypeConstraintsOf ast ->
         (TypeConstraintsOf ast -> m ()) ->

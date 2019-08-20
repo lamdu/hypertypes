@@ -3,15 +3,12 @@ module AST.Knot.Pure
     ( Pure(..), _Pure
     ) where
 
-import           AST.Class (KNodes(..))
 import           AST.Knot (Tree, Node)
-import           AST.TH.Apply (makeKApplicativeBases)
-import           AST.TH.Traversable (makeKTraversableAndFoldable)
+import           AST.TH.Traversable (makeKTraversableApplyAndBases)
 import           AST.TH.ZipMatch (makeZipMatch)
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Data.Binary (Binary)
-import           Data.TyFun
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 import           Text.Show.Combinators ((@|), showCon)
@@ -24,12 +21,7 @@ import           Prelude.Compat
 newtype Pure k = MkPure { getPure :: Node k Pure }
     deriving stock Generic
 
-instance KNodes Pure where
-    type NodeTypesOf Pure = Pure
-    type NodesConstraint Pure = On Pure
-
-makeKApplicativeBases ''Pure
-makeKTraversableAndFoldable ''Pure
+makeKTraversableApplyAndBases ''Pure
 makeZipMatch ''Pure
 
 {-# INLINE _Pure #-}

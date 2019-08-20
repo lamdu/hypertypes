@@ -9,6 +9,7 @@ module AST.TH.Apply
 import           AST.Class
 import           AST.TH.Functor (makeKFunctor)
 import           AST.TH.Internal
+import           AST.TH.Nodes (makeKNodes)
 import           AST.TH.Pointed (makeKPointed)
 import           Control.Applicative (liftA2)
 import           Control.Lens.Operators
@@ -28,7 +29,8 @@ makeKApplicativeBases x =
 makeKApplyAndBases :: Name -> DecsQ
 makeKApplyAndBases x =
     sequenceA
-    [ makeKFunctor x
+    [ makeKNodes x
+    , makeKFunctor x
     , makeKApply x
     ] <&> concat
 
@@ -45,7 +47,7 @@ makeKApplyForType info =
         let xVars = makeConstructorVars "x" cons
         let yVars = makeConstructorVars "y" cons
         let fields = zipWith f xVars yVars
-        instanceD (pure (makeContext info)) (appT (conT ''KApply) (pure (tiInstance info)))
+        instanceD (simplifyContext (makeContext info)) (appT (conT ''KApply) (pure (tiInstance info)))
             [ InlineP 'zipK Inline FunLike AllPhases & PragmaD & pure
             , funD 'zipK
                 [ Clause
@@ -73,4 +75,5 @@ makeContext info =
     where
         ctxForPat (Tof t pat) = (ConT ''Applicative `AppT` t) : ctxForPat pat
         ctxForPat (XofF t) = [ConT ''KApply `AppT` t]
+        ctxForPat (Other t) = [ConT ''Semigroup `AppT` t]
         ctxForPat _ = []

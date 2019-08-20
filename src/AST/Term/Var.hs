@@ -14,7 +14,6 @@ import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
-import           Data.Functor.Const (Const)
 import           Data.Kind (Type)
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
@@ -41,11 +40,8 @@ newtype Var v (expr :: Knot -> *) (k :: Knot) = Var v
     deriving newtype (Eq, Ord, Binary, NFData)
     deriving stock (Show, Generic)
 
-instance KNodes (Var v e) where
-    type NodeTypesOf (Var v e) = Const ()
-
 Lens.makePrisms ''Var
-makeKTraversableAndBases ''Var
+makeKTraversableApplyAndBases ''Var
 
 instance Pretty v => Pretty (Var v expr k) where
     pPrintPrec lvl p (Var v) = pPrintPrec lvl p v

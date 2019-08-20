@@ -6,7 +6,6 @@ module AST.Term.App
     ) where
 
 import AST
-import AST.Combinator.ANode (ANode)
 import AST.Infer
 import AST.Term.FuncType
 import AST.Unify (Unify, unify)
@@ -27,13 +26,9 @@ data App expr k = App
     , _appArg :: Node k expr
     } deriving Generic
 
-instance KNodes (App e) where
-    type NodeTypesOf (App e) = ANode e
-
 makeLenses ''App
 makeZipMatch ''App
-makeKApplicativeBases ''App
-makeKTraversableAndFoldable ''App
+makeKTraversableApplyAndBases ''App
 
 instance Pretty (Node k expr) => Pretty (App expr k) where
     pPrintPrec lvl p (App f x) =

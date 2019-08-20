@@ -72,27 +72,12 @@ Lens.makePrisms ''TypeError
 Lens.makeLenses ''RConstraints
 Lens.makeLenses ''Types
 
-instance KHas (ANode Typ) Types where
-    hasK = MkANode . (^. tTyp)
-
-instance KHas (Product (ANode Typ) (ANode Row)) Types where
-    hasK (Types t0 r0) = Pair (MkANode t0) (MkANode r0)
-
-instance KNodes Types where
-    type NodeTypesOf Types = Types
-    type NodesConstraint Types = ConcatConstraintFuncs '[On Typ, On Row]
-instance KNodes Typ where
-    type NodeTypesOf Typ = Types
-instance KNodes Row where
-    type NodeTypesOf Row = Types
-
+makeZipMatch ''Types
 makeZipMatch ''Typ
 makeZipMatch ''Row
-makeZipMatch ''Types
+makeKTraversableApplyAndBases ''Types
 makeKTraversableAndBases ''Typ
 makeKTraversableAndBases ''Row
-makeKApplicativeBases ''Types
-makeKTraversableAndFoldable ''Types
 
 type instance NomVarTypes Typ = Types
 
@@ -180,15 +165,18 @@ emptyPureInferState =
 
 type STNameGen s = Tree Types (Const (STRef s Int))
 
-instance (c Typ, c Row) => Recursively c Typ
-instance (c Typ, c Row) => Recursively c Row
-
+instance RNodes Typ
+instance RNodes Row
 instance RFoldable Typ
 instance RFoldable Row
 instance RFunctor Typ
 instance RFunctor Row
 instance RTraversable Typ
 instance RTraversable Row
+instance TraverseITerm Typ
+instance TraverseITerm Row
+instance (c Typ, c Row) => TraverseITermWith c Typ
+instance (c Typ, c Row) => TraverseITermWith c Row
 
 instance HasQuantifiedVar Typ where
     type QVar Typ = Name
@@ -212,13 +200,11 @@ instance HasInferredValue Row where inferredValue = _ANode
 instance
     (Monad m, MonadInstantiate m Typ, MonadInstantiate m Row) =>
     Infer m Typ where
-
     inferBody = inferType
 
 instance
     (Monad m, MonadInstantiate m Typ, MonadInstantiate m Row) =>
     Infer m Row where
-
     inferBody = inferType
 
 rStructureMismatch ::
