@@ -42,13 +42,12 @@ class (KFunctor k, Recursively KNodes k) => RFunctor k where
         Proxy k -> Dict (NodesConstraint k $ RFunctor)
     recursiveKFunctor _ = Dict
 
+argP :: Proxy (f k :: Constraint) -> Proxy (k :: Knot -> Type)
+argP _ = Proxy
+
 instance Recursive RFunctor where
     {-# INLINE recurse #-}
-    recurse =
-        recursiveKFunctor . p
-        where
-            p :: Proxy (RFunctor k) -> Proxy k
-            p _ = Proxy
+    recurse = recursiveKFunctor . argP
 
 class (KFoldable k, Recursively KNodes k) => RFoldable k where
     recursiveKFoldable :: Proxy k -> Dict (NodesConstraint k $ RFoldable)
@@ -60,11 +59,7 @@ class (KFoldable k, Recursively KNodes k) => RFoldable k where
 
 instance Recursive RFoldable where
     {-# INLINE recurse #-}
-    recurse =
-        recursiveKFoldable . p
-        where
-            p :: Proxy (RFoldable k) -> Proxy k
-            p _ = Proxy
+    recurse = recursiveKFoldable . argP
 
 class (KTraversable k, RFunctor k, RFoldable k) => RTraversable k where
     recursiveKTraversable :: Proxy k -> Dict (NodesConstraint k $ RTraversable)
@@ -76,11 +71,7 @@ class (KTraversable k, RFunctor k, RFoldable k) => RTraversable k where
 
 instance Recursive RTraversable where
     {-# INLINE recurse #-}
-    recurse =
-        recursiveKTraversable . p
-        where
-            p :: Proxy (RTraversable k) -> Proxy k
-            p _ = Proxy
+    recurse = recursiveKTraversable . argP
 
 class ZipMatch k => RZipMatch k where
     recursiveZipMatch :: Proxy k -> Dict (NodesConstraint k $ RZipMatch)
@@ -92,11 +83,7 @@ class ZipMatch k => RZipMatch k where
 
 instance Recursive RZipMatch where
     {-# INLINE recurse #-}
-    recurse =
-        recursiveZipMatch . p
-        where
-            p :: Proxy (RZipMatch k) -> Proxy k
-            p _ = Proxy
+    recurse = recursiveZipMatch . argP
 
 class (RTraversable k, RZipMatch k) => RZipMatchTraversable k where
     recursiveZipMatchTraversable :: Proxy k -> Dict (NodesConstraint k $ RZipMatchTraversable)
@@ -108,11 +95,7 @@ class (RTraversable k, RZipMatch k) => RZipMatchTraversable k where
 
 instance Recursive RZipMatchTraversable where
     {-# INLINE recurse #-}
-    recurse =
-        recursiveZipMatchTraversable . p
-        where
-            p :: Proxy (RZipMatchTraversable k) -> Proxy k
-            p _ = Proxy
+    recurse = recursiveZipMatchTraversable . argP
 
 -- | `Recursively` carries a constraint to all of the descendant types
 -- of an AST. As opposed to the `ChildrenConstraint` type family which
