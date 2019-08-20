@@ -112,6 +112,9 @@ instance KFoldable v => KFoldable (NominalInst n v) where
         withDict (kNodes (Proxy @v)) $
         foldMapC (mapK (_ConvertK %~ \fq -> foldMap fq . (^. _QVarInstances)) f) v
 
+    {-# INLINE foldMapK #-}
+    foldMapK f = foldMapK (foldMap f . (^. _QVarInstances)) . (^. nArgs)
+
 instance KTraversable v => KTraversable (NominalInst n v) where
     sequenceC (NominalInst n v) =
         traverseK (_QVarInstances (traverse runContainedK)) v

@@ -103,6 +103,16 @@ instance RFoldable ast => KFoldable (Flip GTerm ast) where
             ) x
         . (^. _Flip)
 
+    {-# INLINE foldMapK #-}
+    foldMapK f =
+        \case
+        GMono x -> f x
+        GPoly x -> f x
+        GBody x ->
+            withDict (recursiveKFoldable (Proxy @ast)) $
+            foldMapKWith (Proxy @RFoldable) (foldMapK f . (_Flip #)) x
+        . (^. _Flip)
+
 instance RTraversable ast => KTraversable (Flip GTerm ast) where
 
     sequenceC (MkFlip fx) =

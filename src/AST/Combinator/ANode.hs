@@ -40,6 +40,10 @@ instance KApply (ANode c) where
 
 instance KFoldable (ANode c) where
     foldMapC f = (f ^. _ANode . _ConvertK) . getANode
+    {-# INLINE foldMapK #-}
+    foldMapK = (. getANode)
+    {-# INLINE foldMapKWith #-}
+    foldMapKWith _ = (. getANode)
 
 instance KFunctor (ANode c) where
     mapC = (_ANode %~) . (^. _ANode . _MapK)

@@ -3,7 +3,6 @@
 module AST.Class.Foldable
     ( KFoldable(..)
     , ConvertK(..), _ConvertK
-    , foldMapK, foldMapKWith
     , traverseK_, traverseKWith_
     , sequenceLiftK2_, sequenceLiftK2With_
     ) where
@@ -39,32 +38,33 @@ class KNodes k => KFoldable k where
         Tree k l ->
         a
 
+    {-# INLINE foldMapK #-}
+    foldMapK ::
+        forall a l.
+        Monoid a =>
+        (forall c. Tree l c -> a) ->
+        Tree k l ->
+        a
+    foldMapK f x =
+        withDict (kNodes (Proxy @k)) $
+        foldMapC (pureK (MkConvertK f)) x
+
+    {-# INLINE foldMapKWith #-}
+    foldMapKWith ::
+        forall a n constraint.
+        (Monoid a, NodesConstraint k $ constraint) =>
+        Proxy constraint ->
+        (forall child. constraint child => Tree n child -> a) ->
+        Tree k n ->
+        a
+    foldMapKWith p f =
+        withDict (kNodes (Proxy @k)) $
+        foldMapC (pureKWithConstraint p (_ConvertK # f))
+
+
 instance KFoldable (Const a) where
     {-# INLINE foldMapC #-}
     foldMapC _ _ = mempty
-
-{-# INLINE foldMapK #-}
-foldMapK ::
-    forall a k l.
-    (Monoid a, KFoldable k) =>
-    (forall c. Tree l c -> a) ->
-    Tree k l ->
-    a
-foldMapK f x =
-    withDict (kNodes (Proxy @k)) $
-    foldMapC (pureK (MkConvertK f)) x
-
-{-# INLINE foldMapKWith #-}
-foldMapKWith ::
-    forall a k n constraint.
-    (Monoid a, KFoldable k, NodesConstraint k $ constraint) =>
-    Proxy constraint ->
-    (forall child. constraint child => Tree n child -> a) ->
-    Tree k n ->
-    a
-foldMapKWith p f =
-    withDict (kNodes (Proxy @k)) $
-    foldMapC (pureKWithConstraint p (_ConvertK # f))
 
 {-# INLINE traverseK_ #-}
 traverseK_ ::
@@ -83,7 +83,7 @@ traverseKWith_ ::
     Tree k m ->
     f ()
 traverseKWith_ p f =
-    sequenceA_ . foldMapKWith @[f ()] p ((:[]) . f)
+    sequenceA_ . foldMapKWith @_ @[f ()] p ((:[]) . f)
 
 {-# INLINE sequenceLiftK2_ #-}
 sequenceLiftK2_ ::
@@ -105,4 +105,4 @@ sequenceLiftK2With_ ::
     Tree k m ->
     f ()
 sequenceLiftK2With_ p f x =
-    sequenceA_ . foldMapK @[f ()] ((:[]) . getConst) . liftK2With p (\a -> Const . f a) x
+    sequenceA_ . foldMapK @_ @[f ()] ((:[]) . getConst) . liftK2With p (\a -> Const . f a) x
