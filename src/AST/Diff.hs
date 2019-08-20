@@ -11,8 +11,9 @@ import AST.Class.Recursive
 import AST.Class.ZipMatch (ZipMatch(..))
 import Control.Lens (makeLenses, makePrisms)
 import Control.Lens.Operators
-import Data.Constraint (Constraint, withDict)
+import Data.Constraint (withDict)
 import Data.Proxy (Proxy(..))
+import Generics.OneLiner (Constraints)
 import GHC.Generics (Generic)
 
 import Prelude.Compat
@@ -53,17 +54,9 @@ diff x@(Ann xA xB) y@(Ann yA yB) =
                 mapKWith (Proxy @'[Recursively ZipMatch, RTraversable])
                 (\(Pair xC yC) -> diff xC yC) match
 
-type Deps c a b e =
-    (
-        ( c a, c b
-        , c (Node e (Ann a)), c (Node e (Ann b))
-        , c (Node e (Ann (a, b)))
-        , c (Node e (Diff a b))
-        ) :: Constraint
-    )
-deriving instance Deps Eq   a b e => Eq   (CommonBody a b e)
-deriving instance Deps Eq   a b e => Eq   (Diff a b e)
-deriving instance Deps Ord  a b e => Ord  (CommonBody a b e)
-deriving instance Deps Ord  a b e => Ord  (Diff a b e)
-deriving instance Deps Show a b e => Show (CommonBody a b e)
-deriving instance Deps Show a b e => Show (Diff a b e)
+deriving instance Constraints (CommonBody a b e) Eq   => Eq   (CommonBody a b e)
+deriving instance Constraints (CommonBody a b e) Ord  => Ord  (CommonBody a b e)
+deriving instance Constraints (CommonBody a b e) Show => Show (CommonBody a b e)
+deriving instance Constraints (Diff a b e) Eq   => Eq   (Diff a b e)
+deriving instance Constraints (Diff a b e) Ord  => Ord  (Diff a b e)
+deriving instance Constraints (Diff a b e) Show => Show (Diff a b e)

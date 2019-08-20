@@ -29,9 +29,10 @@ import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.Writer (WriterT(..), tell)
 import           Data.Binary (Binary)
-import           Data.Constraint (Constraint, withDict)
+import           Data.Constraint (withDict)
 import           Data.Monoid (All(..))
 import           Data.Proxy (Proxy(..))
+import           Generics.OneLiner (Constraints)
 import           GHC.Generics (Generic)
 
 import           Prelude.Compat
@@ -217,9 +218,8 @@ instantiate ::
     Tree (GTerm (UVarOf m)) t -> m (Tree (UVarOf m) t)
 instantiate g = instantiateWith (pure ()) UUnbound g <&> (^. Lens._1)
 
-type Deps c v t = ((c (v t), c (Node t (GTerm v))) :: Constraint)
-deriving instance Deps Eq   v t => Eq   (GTerm v t)
-deriving instance Deps Ord  v t => Ord  (GTerm v t)
-deriving instance Deps Show v t => Show (GTerm v t)
-instance Deps Binary v t => Binary (GTerm v t)
-instance Deps NFData v t => NFData (GTerm v t)
+deriving instance (Constraints (GTerm v t)) Eq   => Eq   (GTerm v t)
+deriving instance (Constraints (GTerm v t)) Ord  => Ord  (GTerm v t)
+deriving instance (Constraints (GTerm v t)) Show => Show (GTerm v t)
+instance (Constraints (GTerm v t)) Binary => Binary (GTerm v t)
+instance (Constraints (GTerm v t)) NFData => NFData (GTerm v t)

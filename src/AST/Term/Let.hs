@@ -13,8 +13,8 @@ import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
-import           Data.Constraint (Constraint)
 import           Data.Proxy (Proxy(..))
+import           Generics.OneLiner (Constraints)
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint (($+$), (<+>))
 import qualified Text.PrettyPrint as Pretty
@@ -34,9 +34,9 @@ instance KNodes (Let v e) where
 
 makeKTraversableAndBases ''Let
 
-type Deps v expr k cls = ((cls v, cls (Node k expr)) :: Constraint)
-
-instance Deps v expr k Pretty => Pretty (Let v expr k) where
+instance
+    Constraints (Let v expr k) Pretty =>
+    Pretty (Let v expr k) where
     pPrintPrec lvl p (Let v e i) =
         Pretty.text "let" <+> pPrintPrec lvl 0 v <+> Pretty.text "="
         <+> pPrintPrec lvl 0 e
@@ -71,8 +71,8 @@ instance
                 & localScopeType v eG
                 <&> \(InferredChild iI iR) -> InferRes (Let v eI iI) iR
 
-deriving instance Deps v expr k Eq   => Eq   (Let v expr k)
-deriving instance Deps v expr k Ord  => Ord  (Let v expr k)
-deriving instance Deps v expr k Show => Show (Let v expr k)
-instance Deps v expr k Binary => Binary (Let v expr k)
-instance Deps v expr k NFData => NFData (Let v expr k)
+deriving instance Constraints (Let v e k) Eq   => Eq   (Let v e k)
+deriving instance Constraints (Let v e k) Ord  => Ord  (Let v e k)
+deriving instance Constraints (Let v e k) Show => Show (Let v e k)
+instance Constraints (Let v e k) Binary => Binary (Let v e k)
+instance Constraints (Let v e k) NFData => NFData (Let v e k)

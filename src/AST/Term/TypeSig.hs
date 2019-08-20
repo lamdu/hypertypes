@@ -1,5 +1,4 @@
-{-# LANGUAGE FlexibleInstances, ScopedTypeVariables #-}
-{-# LANGUAGE UndecidableInstances, PolyKinds, TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances, ScopedTypeVariables #-}
 
 module AST.Term.TypeSig
     ( TypeSig(..), tsType, tsTerm
@@ -16,8 +15,8 @@ import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
-import           Data.Constraint
 import           Data.Proxy (Proxy(..))
+import           Generics.OneLiner (Constraints)
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
@@ -39,9 +38,9 @@ instance KNodes (TypeSig v t) where
 makeKApplicativeBases ''TypeSig
 makeKTraversableAndFoldable ''TypeSig
 
-type Deps vars term k cls = ((cls (Node k term), cls (Node k (Scheme vars (TypeOf term)))) :: Constraint)
-
-instance Deps vars term k Pretty => Pretty (TypeSig vars term k) where
+instance
+    Constraints (TypeSig vars term k) Pretty =>
+    Pretty (TypeSig vars term k) where
     pPrintPrec lvl p (TypeSig term typ) =
         pPrintPrec lvl 1 term <+> Pretty.text ":" <+> pPrintPrec lvl 1 typ
         & maybeParens (p > 1)
@@ -78,8 +77,8 @@ instance
                 <&> InferRes (TypeSig xI sI)
         & localLevel
 
-deriving instance Deps vars term k Eq   => Eq   (TypeSig vars term k)
-deriving instance Deps vars term k Ord  => Ord  (TypeSig vars term k)
-deriving instance Deps vars term k Show => Show (TypeSig vars term k)
-instance Deps vars term k Binary => Binary (TypeSig vars term k)
-instance Deps vars term k NFData => NFData (TypeSig vars term k)
+deriving instance Constraints (TypeSig v t k) Eq   => Eq   (TypeSig v t k)
+deriving instance Constraints (TypeSig v t k) Ord  => Ord  (TypeSig v t k)
+deriving instance Constraints (TypeSig v t k) Show => Show (TypeSig v t k)
+instance Constraints (TypeSig v t k) Binary => Binary (TypeSig v t k)
+instance Constraints (TypeSig v t k) NFData => NFData (TypeSig v t k)

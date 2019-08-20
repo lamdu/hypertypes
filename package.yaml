@@ -24,6 +24,7 @@ dependencies:
 - lens
 - monad-st
 - mtl
+- one-liner
 - transformers
 - pretty
 

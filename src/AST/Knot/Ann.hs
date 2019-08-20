@@ -19,9 +19,10 @@ import           Control.DeepSeq (NFData)
 import           Control.Lens (Traversal, makeLenses)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
-import           Data.Constraint (Constraint, Dict(..), withDict)
+import           Data.Constraint (Dict(..), withDict)
 import           Data.Functor.Product.PolyKinds (Product(..))
 import           Data.Proxy (Proxy(..))
+import           Generics.OneLiner (Constraints)
 import           GHC.Generics (Generic)
 import qualified Text.PrettyPrint as PP
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
@@ -50,7 +51,7 @@ instance Monoid a => KApply (Ann a) where
 
 instance c (Ann a) => Recursively c (Ann a)
 
-instance Deps Pretty a t => Pretty (Ann a t) where
+instance Constraints (Ann a t) Pretty => Pretty (Ann a t) where
     pPrintPrec lvl prec (Ann pl b)
         | PP.isEmpty plDoc || plDoc == PP.text "()" = pPrintPrec lvl prec b
         | otherwise =
@@ -97,9 +98,8 @@ addAnnotations ::
     Tree Pure k -> Tree (Ann a) k
 addAnnotations p getFunctor f = wrap p getFunctor (\x -> Ann (f x) x)
 
-type Deps c a t = ((c a, c (Node t (Ann a))) :: Constraint)
-deriving instance Deps Eq   a t => Eq   (Ann a t)
-deriving instance Deps Ord  a t => Ord  (Ann a t)
-deriving instance Deps Show a t => Show (Ann a t)
-instance Deps Binary a t => Binary (Ann a t)
-instance Deps NFData a t => NFData (Ann a t)
+deriving instance Constraints (Ann a t) Eq   => Eq   (Ann a t)
+deriving instance Constraints (Ann a t) Ord  => Ord  (Ann a t)
+deriving instance Constraints (Ann a t) Show => Show (Ann a t)
+instance Constraints (Ann a t) Binary => Binary (Ann a t)
+instance Constraints (Ann a t) NFData => NFData (Ann a t)

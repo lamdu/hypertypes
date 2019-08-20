@@ -22,11 +22,11 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad (when, foldM)
 import           Data.Binary (Binary)
-import           Data.Constraint (Constraint)
 import           Data.Foldable (sequenceA_)
 import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Data.Set (Set)
+import           Generics.OneLiner (Constraints)
 import           GHC.Generics (Generic)
 import           Text.Show.Combinators ((@|), showCon)
 
@@ -64,9 +64,9 @@ makeZipMatch ''RowExtend
 makeKTraversableAndBases ''RowExtend
 makeKTraversableAndBases ''FlatRowExtends
 
-type Deps c key val rest k = ((c key, c (Node k val), c (Node k rest)) :: Constraint)
-
-instance Deps Show key val rest k => Show (RowExtend key val rest k) where
+instance
+    Constraints (RowExtend key val rest k) Show =>
+    Show (RowExtend key val rest k) where
     showsPrec p (RowExtend k v r) = (showCon "RowExtend" @| k @| v @| r) p
 
 {-# INLINE flattenRowExtend #-}
@@ -174,13 +174,13 @@ rowElementInfer extendToRow k =
         whole <- RowExtend k part restVar & extendToRow & newTerm
         pure (part, whole)
 
-deriving instance Deps Eq   key val rest k => Eq   (RowExtend key val rest k)
-deriving instance Deps Ord  key val rest k => Ord  (RowExtend key val rest k)
-instance Deps Binary key val rest k => Binary (RowExtend key val rest k)
-instance Deps NFData key val rest k => NFData (RowExtend key val rest k)
+deriving instance Constraints (RowExtend i v r k) Eq   => Eq   (RowExtend i v r k)
+deriving instance Constraints (RowExtend i v r k) Ord  => Ord  (RowExtend i v r k)
+instance Constraints (RowExtend i v r k) Binary => Binary (RowExtend i v r k)
+instance Constraints (RowExtend i v r k) NFData => NFData (RowExtend i v r k)
 
-deriving instance Deps Eq   key val rest k => Eq   (FlatRowExtends key val rest k)
-deriving instance Deps Ord  key val rest k => Ord  (FlatRowExtends key val rest k)
-deriving instance Deps Show key val rest k => Show (FlatRowExtends key val rest k)
-instance Deps Binary key val rest k => Binary (FlatRowExtends key val rest k)
-instance Deps NFData key val rest k => NFData (FlatRowExtends key val rest k)
+deriving instance Constraints (FlatRowExtends i v r k) Eq   => Eq   (FlatRowExtends i v r k)
+deriving instance Constraints (FlatRowExtends i v r k) Ord  => Ord  (FlatRowExtends i v r k)
+deriving instance Constraints (FlatRowExtends i v r k) Show => Show (FlatRowExtends i v r k)
+instance Constraints (FlatRowExtends i v r k) Binary => Binary (FlatRowExtends i v r k)
+instance Constraints (FlatRowExtends i v r k) NFData => NFData (FlatRowExtends i v r k)

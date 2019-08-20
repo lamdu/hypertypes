@@ -14,8 +14,8 @@ import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
-import           Data.Constraint (Constraint)
 import           Data.Proxy (Proxy(..))
+import           Generics.OneLiner (Constraints)
 import           GHC.Generics (Generic)
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint ((<+>))
@@ -34,9 +34,9 @@ instance KNodes (Lam v e) where
 
 makeKTraversableAndBases ''Lam
 
-type Deps v expr k cls = ((cls v, cls (Node k expr)) :: Constraint)
-
-instance Deps v expr k Pretty => Pretty (Lam v expr k) where
+instance
+    Constraints (Lam v expr k) Pretty =>
+    Pretty (Lam v expr k) where
     pPrintPrec lvl p (Lam i o) =
         (Pretty.text "λ" <> pPrintPrec lvl 0 i)
         <+> Pretty.text "->" <+> pPrintPrec lvl 0 o
@@ -62,8 +62,8 @@ instance
                 (FuncType varType (rR ^# inferredType (Proxy @t)))
                 & pure
 
-deriving instance Deps v expr k Eq   => Eq   (Lam v expr k)
-deriving instance Deps v expr k Ord  => Ord  (Lam v expr k)
-deriving instance Deps v expr k Show => Show (Lam v expr k)
-instance Deps v expr k Binary => Binary (Lam v expr k)
-instance Deps v expr k NFData => NFData (Lam v expr k)
+deriving instance Constraints (Lam v e k) Eq   => Eq   (Lam v e k)
+deriving instance Constraints (Lam v e k) Ord  => Ord  (Lam v e k)
+deriving instance Constraints (Lam v e k) Show => Show (Lam v e k)
+instance Constraints (Lam v e k) Binary => Binary (Lam v e k)
+instance Constraints (Lam v e k) NFData => NFData (Lam v e k)

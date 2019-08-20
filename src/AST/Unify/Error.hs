@@ -14,6 +14,7 @@ import           Control.Lens (makePrisms)
 import           Data.Binary (Binary)
 import           Data.Constraint
 import           Data.Proxy
+import           Generics.OneLiner (Constraints)
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
@@ -90,9 +91,7 @@ instance
 
 makeKTraversableAndBases ''UnifyError
 
-type Deps c t k = ((c (Node k t), c (t k), c (TypeConstraintsOf t)) :: Constraint)
-
-instance Deps Pretty t k => Pretty (UnifyError t k) where
+instance Constraints (UnifyError t k) Pretty => Pretty (UnifyError t k) where
     pPrintPrec lvl p =
         maybeParens haveParens . \case
         SkolemUnified x y        -> Pretty.text "SkolemUnified" <+> r x <+> r y
@@ -108,8 +107,8 @@ instance Deps Pretty t k => Pretty (UnifyError t k) where
             r :: Pretty a => a -> Pretty.Doc
             r = pPrintPrec lvl 11
 
-deriving instance Deps Eq   t k => Eq   (UnifyError t k)
-deriving instance Deps Ord  t k => Ord  (UnifyError t k)
-deriving instance Deps Show t k => Show (UnifyError t k)
-instance Deps Binary t k => Binary (UnifyError t k)
-instance Deps NFData t k => NFData (UnifyError t k)
+deriving instance Constraints (UnifyError t k) Eq   => Eq   (UnifyError t k)
+deriving instance Constraints (UnifyError t k) Ord  => Ord  (UnifyError t k)
+deriving instance Constraints (UnifyError t k) Show => Show (UnifyError t k)
+instance Constraints (UnifyError t k) Binary => Binary (UnifyError t k)
+instance Constraints (UnifyError t k) NFData => NFData (UnifyError t k)

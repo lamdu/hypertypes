@@ -11,10 +11,10 @@ import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
-import           Data.Constraint (Constraint)
 import           Data.Functor.Product.PolyKinds (Product(..))
 import           Data.Map (Map)
 import qualified Data.Map as Map
+import           Generics.OneLiner (Constraints)
 import           GHC.Generics (Generic)
 
 import           Prelude.Compat
@@ -47,9 +47,8 @@ zipMatchList ((k0, v0) : xs) ((k1, v1) : ys)
         zipMatchList xs ys <&> ((k0, (v0, v1)) :)
 zipMatchList _ _ = Nothing
 
-type Deps c k e f = ((c k, c (Node f e)) :: Constraint)
-deriving instance Deps Eq   k e f => Eq   (TermMap k e f)
-deriving instance Deps Ord  k e f => Ord  (TermMap k e f)
-deriving instance Deps Show k e f => Show (TermMap k e f)
-instance Deps Binary k e f => Binary (TermMap k e f)
-instance Deps NFData k e f => NFData (TermMap k e f)
+deriving instance Constraints (TermMap k e f) Eq   => Eq   (TermMap k e f)
+deriving instance Constraints (TermMap k e f) Ord  => Ord  (TermMap k e f)
+deriving instance Constraints (TermMap k e f) Show => Show (TermMap k e f)
+instance Constraints (TermMap k e f) Binary => Binary (TermMap k e f)
+instance Constraints (TermMap k e f) NFData => NFData (TermMap k e f)

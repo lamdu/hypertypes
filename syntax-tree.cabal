@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8deac35b223ed18ea6d0244e8ae63cb695f683c3d6a00fb98004dbc38dfda455
+-- hash: b6b55e4889aa1aa4206326076a628e4bedaddd2b18a00774af9beac7508836d7
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -111,6 +111,7 @@ library
     , lens
     , monad-st
     , mtl
+    , one-liner
     , pretty
     , show-combinators
     , template-haskell
@@ -141,6 +142,7 @@ test-suite syntax-tree-test
     , lens
     , monad-st
     , mtl
+    , one-liner
     , pretty
     , syntax-tree
     , transformers
@@ -167,6 +169,7 @@ benchmark syntax-tree-bench
     , lens
     , monad-st
     , mtl
+    , one-liner
     , pretty
     , syntax-tree
     , transformers
