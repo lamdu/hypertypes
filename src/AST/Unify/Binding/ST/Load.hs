@@ -10,6 +10,7 @@ import           AST
 import           AST.Class.Has (HasChild(..))
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Unify.Binding (Binding(..), _Binding, UVar(..))
+import           AST.Unify.Binding.Save (Savable(..))
 import           AST.Unify.Binding.ST (STUVar)
 import           AST.Unify.Term (UTerm(..), uBody)
 import qualified Control.Lens as Lens
@@ -33,8 +34,7 @@ loadUTerm ::
     forall m typeVars t.
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
-    , Unify m t
-    , Recursively (HasChild typeVars) t
+    , Savable m typeVars t
     ) =>
     Tree typeVars Binding -> Tree typeVars (ConvertState (World m)) ->
     Tree (UTerm UVar) t -> m (Tree (UTerm (STUVar (World m))) t)
@@ -50,8 +50,7 @@ loadUTerm _ _ UInstantiated{} = error "loading during instantiation"
 loadVar ::
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
-    , Unify m t
-    , Recursively (HasChild typeVars) t
+    , Savable m typeVars t
     ) =>
     Tree typeVars Binding -> Tree typeVars (ConvertState (World m)) ->
     Tree UVar t -> m (Tree (STUVar (World m)) t)
@@ -74,24 +73,19 @@ loadBody ::
     forall m typeVars t.
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
-    , Unify m t
-    , Recursively (HasChild typeVars) t
+    , Savable m typeVars t
     ) =>
     Tree typeVars Binding -> Tree typeVars (ConvertState (World m)) ->
     Tree t UVar -> m (Tree t (STUVar (World m)))
 loadBody src conv =
-    withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
-    withDict (recursive @(HasChild typeVars) @t) $
-    traverseKWith
-    (Proxy @'[Unify m, Recursively (HasChild typeVars)])
-    (loadVar src conv)
+    withDict (savableRecursive (Proxy @m) (Proxy @typeVars) (Proxy @t)) $
+    traverseKWith (Proxy @'[Savable m typeVars]) (loadVar src conv)
 
 load ::
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
     , KTraversable typeVars
-    , Unify m t
-    , Recursively (HasChild typeVars) t
+    , Savable m typeVars t
     ) =>
     Tree typeVars Binding -> Tree t UVar -> m (Tree t (STUVar (World m)))
 load src collection =
