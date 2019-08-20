@@ -4,21 +4,21 @@ module AST.Unify.Term
     ( UTerm(..)
         , _UUnbound, _USkolem, _UToVar, _UTerm, _UInstantiated
         , _UResolving, _UResolved, _UConverted
-    , UTermDeps
     , UTermBody(..), uBody, uConstraints
     ) where
 
 import AST
 import AST.Unify.Constraints (TypeConstraintsOf)
 import Control.Lens (makeLenses, makePrisms)
-import Data.Constraint (Constraint)
+import Generics.OneLiner (Constraints)
+import GHC.Generics (Generic)
 
 import Prelude.Compat
 
 data UTermBody v ast = UTermBody
     { _uConstraints :: TypeConstraintsOf (RunKnot ast)
     , _uBody :: Node ast v
-    }
+    } deriving Generic
 makeLenses ''UTermBody
 
 -- | A unification term pointed by a unification variable
@@ -45,23 +45,13 @@ data UTerm v ast
     | UConverted Int
       -- ^ Temporary state used in "AST.Unify.Binding.ST.Save" while
       -- converting to a pure binding
+    deriving Generic
 makePrisms ''UTerm
 
-type UTermDeps c v ast =
-    (( BodyDeps c v ast
-     , c (v ast)
-     , c (Node ast Pure)
-     ) :: Constraint)
+deriving instance Constraints (UTerm v a) Eq   => Eq   (UTerm v a)
+deriving instance Constraints (UTerm v a) Ord  => Ord  (UTerm v a)
+deriving instance Constraints (UTerm v a) Show => Show (UTerm v a)
 
-deriving instance UTermDeps Eq v ast => Eq (UTerm v ast)
-deriving instance UTermDeps Ord v ast => Ord (UTerm v ast)
-deriving instance UTermDeps Show v ast => Show (UTerm v ast)
-
-type BodyDeps c v ast =
-    ( ( c (TypeConstraintsOf (RunKnot ast))
-      , c (Node ast v)
-      ) :: Constraint
-    )
-deriving instance BodyDeps Eq v ast => Eq (UTermBody v ast)
-deriving instance BodyDeps Ord v ast => Ord (UTermBody v ast)
-deriving instance BodyDeps Show v ast => Show (UTermBody v ast)
+deriving instance Constraints (UTermBody v a) Eq   => Eq   (UTermBody v a)
+deriving instance Constraints (UTermBody v a) Ord  => Ord  (UTermBody v a)
+deriving instance Constraints (UTermBody v a) Show => Show (UTermBody v a)

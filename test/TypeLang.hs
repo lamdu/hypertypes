@@ -23,10 +23,10 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Reader (MonadReader)
 import           Control.Monad.ST.Class (MonadST(..))
-import           Data.Constraint
 import           Data.STRef
 import           Data.Set (Set, singleton)
 import           Generic.Data
+import           Generics.OneLiner (Constraints)
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
@@ -42,6 +42,7 @@ data Typ k
     | TRec (Node k Row)
     | TVar Name
     | TNom (NominalInst Name Types k)
+    deriving Generic
 
 data Row k
     = REmpty
@@ -57,12 +58,13 @@ data RConstraints = RowConstraints
 data Types k = Types
     { _tTyp :: Node k Typ
     , _tRow :: Node k Row
-    }
+    } deriving Generic
 
 data TypeError k
     = TypError (UnifyError Typ k)
     | RowError (UnifyError Row k)
     | QVarNotInScope Name
+    deriving Generic
 
 Lens.makePrisms ''Typ
 Lens.makePrisms ''Row
@@ -92,8 +94,6 @@ makeKTraversableAndBases ''Row
 makeKApplicativeBases ''Types
 makeKTraversableAndFoldable ''Types
 
-type TypDeps cls k = ((cls (Node k Typ), cls (Node k Row)) :: Constraint)
-
 type instance NomVarTypes Typ = Types
 
 instance HasNominalInst Name Typ where nominalInst = _TNom
@@ -106,25 +106,25 @@ instance Pretty RConstraints where
         Pretty.text "Forbidden fields:" <+> pPrint (f ^.. Lens.folded)
         & maybeParens (p > 10)
 
-instance TypDeps Pretty k => Pretty (Types k) where
+instance Constraints (Types k) Pretty => Pretty (Types k) where
     pPrintPrec lvl p (Types typ row) =
         pPrintPrec lvl p typ <+>
         pPrintPrec lvl p row
 
-instance TypDeps Pretty k => Pretty (TypeError k) where
+instance Constraints (TypeError k) Pretty => Pretty (TypeError k) where
     pPrintPrec lvl p (TypError x) = pPrintPrec lvl p x
     pPrintPrec lvl p (RowError x) = pPrintPrec lvl p x
     pPrintPrec _ _ (QVarNotInScope x) =
         Pretty.text "quantified type variable not in scope" <+> pPrint x
 
-instance TypDeps Pretty k => Pretty (Typ k) where
+instance Constraints (Typ k) Pretty => Pretty (Typ k) where
     pPrintPrec _ _ TInt = Pretty.text "Int"
     pPrintPrec lvl p (TFun x) = pPrintPrec lvl p x
     pPrintPrec lvl p (TRec x) = pPrintPrec lvl p x
     pPrintPrec _ _ (TVar s) = pPrint s
     pPrintPrec _ _ (TNom n) = pPrint n
 
-instance TypDeps Pretty k => Pretty (Row k) where
+instance Constraints (Types k) Pretty => Pretty (Row k) where
     pPrintPrec _ _ REmpty = Pretty.text "{}"
     pPrintPrec lvl p (RExtend (RowExtend k v r)) =
         pPrintPrec lvl 20 k <+>
@@ -244,11 +244,11 @@ newStQuantified l =
     Lens.view (Lens.cloneLens l . Lens._Wrapped)
     >>= (`readModifySTRef` succ)
 
-deriving instance TypDeps Eq   k => Eq   (Typ k)
-deriving instance TypDeps Eq   k => Eq   (Row k)
-deriving instance TypDeps Eq   k => Eq   (Types k)
-deriving instance TypDeps Eq   k => Eq   (TypeError k)
-deriving instance TypDeps Show k => Show (Typ k)
-deriving instance TypDeps Show k => Show (Row k)
-deriving instance TypDeps Show k => Show (Types k)
-deriving instance TypDeps Show k => Show (TypeError k)
+deriving instance Constraints (Types k) Eq   => Eq   (Typ k)
+deriving instance Constraints (Types k) Eq   => Eq   (Row k)
+deriving instance Constraints (Types k) Eq   => Eq   (Types k)
+deriving instance Constraints (Types k) Eq   => Eq   (TypeError k)
+deriving instance Constraints (Types k) Show => Show (Typ k)
+deriving instance Constraints (Types k) Show => Show (Row k)
+deriving instance Constraints (Types k) Show => Show (Types k)
+deriving instance Constraints (Types k) Show => Show (TypeError k)

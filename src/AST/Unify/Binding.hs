@@ -16,6 +16,7 @@ import           Control.Lens.Operators
 import           Control.Monad.State (MonadState(..))
 import           Data.Sequence
 import qualified Data.Sequence as Sequence
+import           Generics.OneLiner (Constraints)
 
 import           Prelude.Compat
 
@@ -49,6 +50,6 @@ bindingDict l =
         Lens.cloneLens l . _Binding . Lens.ix k .= v
     }
 
-deriving instance UTermDeps Eq   UVar t => Eq   (Binding t)
-deriving instance UTermDeps Ord  UVar t => Ord  (Binding t)
-deriving instance UTermDeps Show UVar t => Show (Binding t)
+deriving instance Constraints (UTerm UVar t) Eq   => Eq   (Binding t)
+deriving instance Constraints (UTerm UVar t) Ord  => Ord  (Binding t)
+deriving instance Constraints (UTerm UVar t) Show => Show (Binding t)

@@ -38,11 +38,12 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Writer (execWriterT)
 import           Data.Binary (Binary)
-import           Data.Constraint (Constraint, Dict(..), withDict)
+import           Data.Constraint (Dict(..), withDict)
 import           Data.Foldable (traverse_)
 import           Data.Functor.Const (Const)
 import           Data.Proxy (Proxy(..))
 import qualified Data.Map as Map
+import           Generics.OneLiner (Constraints)
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
@@ -142,7 +143,7 @@ instance
                 )
             <&> NominalInst xId
 
-instance DepsT Pretty nomId term k => Pretty (ToNom nomId term k) where
+instance Constraints (ToNom nomId term k) Pretty => Pretty (ToNom nomId term k) where
     pPrintPrec lvl p (ToNom nomId term) =
         (pPrint nomId <> Pretty.text "#") <+> pPrintPrec lvl 11 term
         & maybeParens (p > 10)
@@ -305,34 +306,26 @@ instance
                 <&> (`FuncType` typ)
         <&> InferRes (FromNom nomId)
 
-type DepsD c t k = ((c (Tree (NomVarTypes t) QVars), c (Node k t)) :: Constraint)
-deriving instance DepsD Eq   t k => Eq   (NominalDecl t k)
-deriving instance DepsD Ord  t k => Ord  (NominalDecl t k)
-deriving instance DepsD Show t k => Show (NominalDecl t k)
-instance DepsD Binary t k => Binary (NominalDecl t k)
-instance DepsD NFData t k => NFData (NominalDecl t k)
+deriving instance Constraints (NominalDecl t k) Eq   => Eq   (NominalDecl t k)
+deriving instance Constraints (NominalDecl t k) Ord  => Ord  (NominalDecl t k)
+deriving instance Constraints (NominalDecl t k) Show => Show (NominalDecl t k)
+instance Constraints (NominalDecl t k) Binary => Binary (NominalDecl t k)
+instance Constraints (NominalDecl t k) NFData => NFData (NominalDecl t k)
 
-type DepsI c n v k = ((c n, c (Tree v (QVarInstances (RunKnot k)))) :: Constraint)
-deriving instance DepsI Eq   n v k => Eq   (NominalInst n v k)
-deriving instance DepsI Ord  n v k => Ord  (NominalInst n v k)
-deriving instance DepsI Show n v k => Show (NominalInst n v k)
-instance DepsI Binary n v k => Binary (NominalInst n v k)
-instance DepsI NFData n v k => NFData (NominalInst n v k)
+deriving instance Constraints (NominalInst n v k) Eq   => Eq   (NominalInst n v k)
+deriving instance Constraints (NominalInst n v k) Ord  => Ord  (NominalInst n v k)
+deriving instance Constraints (NominalInst n v k) Show => Show (NominalInst n v k)
+instance Constraints (NominalInst n v k) Binary => Binary (NominalInst n v k)
+instance Constraints (NominalInst n v k) NFData => NFData (NominalInst n v k)
 
-type DepsT c n t k = ((c n, c (Node k t)) :: Constraint)
-deriving instance DepsT Eq   n t k => Eq   (ToNom n t k)
-deriving instance DepsT Ord  n t k => Ord  (ToNom n t k)
-deriving instance DepsT Show n t k => Show (ToNom n t k)
-instance DepsT Binary n t k => Binary (ToNom n t k)
-instance DepsT NFData n t k => NFData (ToNom n t k)
+deriving instance Constraints (ToNom n t k) Eq   => Eq   (ToNom n t k)
+deriving instance Constraints (ToNom n t k) Ord  => Ord  (ToNom n t k)
+deriving instance Constraints (ToNom n t k) Show => Show (ToNom n t k)
+instance Constraints (ToNom n t k) Binary => Binary (ToNom n t k)
+instance Constraints (ToNom n t k) NFData => NFData (ToNom n t k)
 
-type DepsL c t k =
-    ( ( c (Tree (NomVarTypes t) (QVarInstances (RunKnot k)))
-      , c (Tree (GTerm (RunKnot k)) t)
-      ) :: Constraint
-    )
-deriving instance DepsL Eq   t k => Eq   (LoadedNominalDecl t k)
-deriving instance DepsL Ord  t k => Ord  (LoadedNominalDecl t k)
-deriving instance DepsL Show t k => Show (LoadedNominalDecl t k)
-instance DepsL Binary t k => Binary (LoadedNominalDecl t k)
-instance DepsL NFData t k => NFData (LoadedNominalDecl t k)
+deriving instance Constraints (LoadedNominalDecl t k) Eq   => Eq   (LoadedNominalDecl t k)
+deriving instance Constraints (LoadedNominalDecl t k) Ord  => Ord  (LoadedNominalDecl t k)
+deriving instance Constraints (LoadedNominalDecl t k) Show => Show (LoadedNominalDecl t k)
+instance Constraints (LoadedNominalDecl t k) Binary => Binary (LoadedNominalDecl t k)
+instance Constraints (LoadedNominalDecl t k) NFData => NFData (LoadedNominalDecl t k)
