@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts, ScopedTypeVariables, DefaultSignatures #-}
 
 module AST.Infer.Blame
     ( Blame(..), blame
@@ -22,6 +22,14 @@ import Data.Proxy
 
 import Prelude.Compat
 
+class (Infer m t, KApplicative (InferOf t)) => Blamable m t where
+    blamableRecursive :: Proxy m -> Proxy t -> Dict (NodesConstraint t $ Blamable m)
+    {-# INLINE blamableRecursive #-}
+    default blamableRecursive ::
+        NodesConstraint t $ Blamable m =>
+        Proxy m -> Proxy t -> Dict (NodesConstraint t $ Blamable m)
+    blamableRecursive _ _ = Dict
+
 data Blame = Ok | TypeMismatch
 
 data PrepAnn m a = PrepAnn
@@ -33,8 +41,7 @@ data PrepAnn m a = PrepAnn
 prepare ::
     forall err m exp a.
     ( MonadError err m
-    , Infer m exp
-    , Recursively (InferOfConstraint KApplicative) exp
+    , Blamable m exp
     ) =>
     Tree (InferOf exp) (UVarOf m) ->
     Tree (Ann a) exp ->
@@ -42,15 +49,9 @@ prepare ::
 prepare typeFromAbove (Ann a x) =
     withDict (traversableInferOf (Proxy @exp)) $
     withDict (inferredUnify (Proxy @m) (Proxy @exp)) $
-    withDict (inferRecursive (Proxy @m) (Proxy @exp)) $
-    withDict (recursive @(InferOfConstraint KApplicative) @exp) $
+    withDict (blamableRecursive (Proxy @m) (Proxy @exp)) $
     inferBody
-    (mapKWith
-        (Proxy ::
-            Proxy
-            '[ Infer m
-            , Recursively (InferOfConstraint KApplicative)
-            ])
+    (mapKWithConstraint (Proxy @(Blamable m))
         (\c ->
             let p :: Tree (Ann a) k -> Proxy k
                 p _ = Proxy
@@ -92,8 +93,7 @@ blame ::
     ( Ord priority
     , MonadError err m
     , RTraversable exp
-    , Infer m exp
-    , Recursively (InferOfConstraint KApplicative) exp
+    , Blamable m exp
     ) =>
     (a -> priority) ->
     Tree (InferOf exp) (UVarOf m) ->
