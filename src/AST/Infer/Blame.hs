@@ -23,11 +23,11 @@ import Data.Proxy
 import Prelude.Compat
 
 class (Infer m t, KApplicative (InferOf t)) => Blamable m t where
-    blamableRecursive :: Proxy m -> Proxy t -> Dict (NodesConstraint t $ Blamable m)
+    blamableRecursive :: Proxy m -> Proxy t -> Dict (NodesConstraint t (Blamable m))
     {-# INLINE blamableRecursive #-}
     default blamableRecursive ::
-        NodesConstraint t $ Blamable m =>
-        Proxy m -> Proxy t -> Dict (NodesConstraint t $ Blamable m)
+        NodesConstraint t (Blamable m) =>
+        Proxy m -> Proxy t -> Dict (NodesConstraint t (Blamable m))
     blamableRecursive _ _ = Dict
 
 data Blame = Ok | TypeMismatch
@@ -51,7 +51,7 @@ prepare typeFromAbove (Ann a x) =
     withDict (inferredUnify (Proxy @m) (Proxy @exp)) $
     withDict (blamableRecursive (Proxy @m) (Proxy @exp)) $
     inferBody
-    (mapKWithConstraint (Proxy @(Blamable m))
+    (mapKWith (Proxy @(Blamable m))
         (\c ->
             let p :: Tree (Ann a) k -> Proxy k
                 p _ = Proxy
@@ -70,8 +70,7 @@ prepare typeFromAbove (Ann a x) =
     { pAnn = a
     , pTryUnify =
         do
-            sequenceLiftK2With_
-                (Proxy @'[Unify m])
+            sequenceLiftK2With_ (Proxy @(Unify m))
                 (unify <&> mapped . mapped .~ ()) typeFromAbove t
             traverseKWith_ (Proxy @(Unify m)) occursCheck t
         & (`catchError` const (pure ()))

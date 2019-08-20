@@ -1,60 +1,78 @@
 {-# LANGUAGE RankNTypes, DefaultSignatures, TemplateHaskell #-}
-{-# LANGUAGE ScopedTypeVariables, UndecidableInstances, FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables, UndecidableInstances, TypeOperators #-}
 {-# LANGUAGE UndecidableSuperClasses, FlexibleInstances #-}
 
 module AST.Class.Recursive
     ( Recursive(..)
-    , RFunctor(..), RFoldable(..), RTraversable(..)
+    , RNodes(..), RFunctor(..), RFoldable(..), RTraversable(..)
     , RZipMatch(..), RZipMatchTraversable(..)
-    , Recursively(..), RecursiveContext, RecursiveDict, RecursiveConstraint
-    , RecursiveNodes(..), recSelf, recSub
+    , recurseBoth
     , wrap, wrapM, unwrap, unwrapM
     , fold, unfold
     ) where
 
 import AST.Class
-import AST.Class.Combinators
 import AST.Class.Foldable
 import AST.Class.Traversable
 import AST.Class.ZipMatch
-import AST.Combinator.Flip
 import AST.Knot
 import AST.Knot.Pure (Pure(..), _Pure)
-import Control.Lens (makeLenses)
 import Control.Lens.Operators
 import Data.Constraint (Dict(..), withDict)
+import Data.Constraint.List (And)
 import Data.Functor.Const (Const(..))
-import Data.Functor.Product.PolyKinds (Product(..))
-import Data.Kind (Type, Constraint)
+import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy(..))
-import Data.TyFun
 
 import Prelude.Compat
 
 class Recursive c where
-    recurse :: c k => Proxy (c k) -> Dict (NodesConstraint k $ c)
+    recurse :: (KNodes k, c k) => Proxy (c k) -> Dict (NodesConstraint k c)
 
-class (KFunctor k, Recursively KNodes k) => RFunctor k where
-    recursiveKFunctor :: Proxy k -> Dict (NodesConstraint k $ RFunctor)
-    {-# INLINE recursiveKFunctor #-}
-    default recursiveKFunctor ::
-        NodesConstraint k $ RFunctor =>
-        Proxy k -> Dict (NodesConstraint k $ RFunctor)
-    recursiveKFunctor _ = Dict
+instance (Recursive a, Recursive b) => Recursive (And a b) where
+    recurse p =
+        withDict (recurse (p0 p)) $
+        withDict (recurse (p1 p)) $
+        withDict (kCombineConstraints p) Dict
+        where
+            p0 :: Proxy (And a b k) -> Proxy (a k)
+            p0 _ = Proxy
+            p1 :: Proxy (And a b k) -> Proxy (b k)
+            p1 _ = Proxy
+
+class KNodes k => RNodes k where
+    recursiveKNodes :: Proxy k -> Dict (NodesConstraint k RNodes)
+    {-# INLINE recursiveKNodes #-}
+    default recursiveKNodes ::
+        NodesConstraint k RNodes =>
+        Proxy k -> Dict (NodesConstraint k RNodes)
+    recursiveKNodes _ = Dict
 
 argP :: Proxy (f k :: Constraint) -> Proxy (k :: Knot -> Type)
 argP _ = Proxy
+
+instance Recursive RNodes where
+    {-# INLINE recurse #-}
+    recurse = recursiveKNodes . argP
+
+class (KFunctor k, RNodes k) => RFunctor k where
+    recursiveKFunctor :: Proxy k -> Dict (NodesConstraint k RFunctor)
+    {-# INLINE recursiveKFunctor #-}
+    default recursiveKFunctor ::
+        NodesConstraint k RFunctor =>
+        Proxy k -> Dict (NodesConstraint k RFunctor)
+    recursiveKFunctor _ = Dict
 
 instance Recursive RFunctor where
     {-# INLINE recurse #-}
     recurse = recursiveKFunctor . argP
 
-class (KFoldable k, Recursively KNodes k) => RFoldable k where
-    recursiveKFoldable :: Proxy k -> Dict (NodesConstraint k $ RFoldable)
+class (KFoldable k, RNodes k) => RFoldable k where
+    recursiveKFoldable :: Proxy k -> Dict (NodesConstraint k RFoldable)
     {-# INLINE recursiveKFoldable #-}
     default recursiveKFoldable ::
-        NodesConstraint k $ RFoldable =>
-        Proxy k -> Dict (NodesConstraint k $ RFoldable)
+        NodesConstraint k RFoldable =>
+        Proxy k -> Dict (NodesConstraint k RFoldable)
     recursiveKFoldable _ = Dict
 
 instance Recursive RFoldable where
@@ -62,23 +80,23 @@ instance Recursive RFoldable where
     recurse = recursiveKFoldable . argP
 
 class (KTraversable k, RFunctor k, RFoldable k) => RTraversable k where
-    recursiveKTraversable :: Proxy k -> Dict (NodesConstraint k $ RTraversable)
+    recursiveKTraversable :: Proxy k -> Dict (NodesConstraint k RTraversable)
     {-# INLINE recursiveKTraversable #-}
     default recursiveKTraversable ::
-        NodesConstraint k $ RTraversable =>
-        Proxy k -> Dict (NodesConstraint k $ RTraversable)
+        NodesConstraint k RTraversable =>
+        Proxy k -> Dict (NodesConstraint k RTraversable)
     recursiveKTraversable _ = Dict
 
 instance Recursive RTraversable where
     {-# INLINE recurse #-}
     recurse = recursiveKTraversable . argP
 
-class ZipMatch k => RZipMatch k where
-    recursiveZipMatch :: Proxy k -> Dict (NodesConstraint k $ RZipMatch)
+class (ZipMatch k, RNodes k) => RZipMatch k where
+    recursiveZipMatch :: Proxy k -> Dict (NodesConstraint k RZipMatch)
     {-# INLINE recursiveZipMatch #-}
     default recursiveZipMatch ::
-        NodesConstraint k $ RZipMatch =>
-        Proxy k -> Dict (NodesConstraint k $ RZipMatch)
+        NodesConstraint k RZipMatch =>
+        Proxy k -> Dict (NodesConstraint k RZipMatch)
     recursiveZipMatch _ = Dict
 
 instance Recursive RZipMatch where
@@ -86,192 +104,96 @@ instance Recursive RZipMatch where
     recurse = recursiveZipMatch . argP
 
 class (RTraversable k, RZipMatch k) => RZipMatchTraversable k where
-    recursiveZipMatchTraversable :: Proxy k -> Dict (NodesConstraint k $ RZipMatchTraversable)
+    recursiveZipMatchTraversable :: Proxy k -> Dict (NodesConstraint k RZipMatchTraversable)
     {-# INLINE recursiveZipMatchTraversable #-}
     default recursiveZipMatchTraversable ::
-        NodesConstraint k $ RZipMatchTraversable =>
-        Proxy k -> Dict (NodesConstraint k $ RZipMatchTraversable)
+        NodesConstraint k RZipMatchTraversable =>
+        Proxy k -> Dict (NodesConstraint k RZipMatchTraversable)
     recursiveZipMatchTraversable _ = Dict
 
 instance Recursive RZipMatchTraversable where
     {-# INLINE recurse #-}
     recurse = recursiveZipMatchTraversable . argP
 
--- | `Recursively` carries a constraint to all of the descendant types
--- of an AST. As opposed to the `ChildrenConstraint` type family which
--- only carries a constraint to the direct children of an AST.
-class constraint expr => Recursively constraint expr where
-    recursive :: RecursiveDict expr constraint
-    {-# INLINE recursive #-}
-    -- | When an instance's constraints already imply
-    -- `RecursiveContext expr constraint`, the default
-    -- implementation can be used.
-    default recursive ::
-        RecursiveContext expr constraint => RecursiveDict expr constraint
-    recursive = Dict
-
-type RecursiveContext expr constraint =
-    ( constraint expr
-    , NodesConstraint expr $ Recursively constraint
-    )
-
-type RecursiveDict expr constraint = Dict (RecursiveContext expr constraint)
-
-data RecursiveConstraint :: (Knot -> Type) -> ((Knot -> Type) -> Constraint) ~> Constraint
-
-type instance Apply (RecursiveConstraint k) c = Recursively c k
-
-instance Recursive (Recursively c) where
-    {-# INLINE recurse #-}
-    recurse p =
-        withDict (r p) Dict
-        where
-            r :: Recursively c t => Proxy (Recursively c t) -> RecursiveDict t c
-            r _ = recursive
-
-data RecursiveNodes a k = RecursiveNodes
-    { _recSelf :: Node k a
-    , _recSub :: Tree (NodeTypesOf a) (Flip RecursiveNodes (RunKnot k))
-    }
-makeLenses ''RecursiveNodes
-
-instance
-    Recursively KNodes a =>
-    KNodes (RecursiveNodes a) where
-    type NodeTypesOf (RecursiveNodes a) = RecursiveNodes a
-    type NodesConstraint (RecursiveNodes a) = RecursiveConstraint a
-
-instance
-    Recursively KNodes a =>
-    KPointed (RecursiveNodes a) where
-
-    {-# INLINE pureK #-}
-    pureK f =
-        withDict (recursive @KNodes @a) $
-        withDict (kNodes (Proxy @a)) $
-        RecursiveNodes
-        { _recSelf = f
-        , _recSub = pureKWithConstraint (Proxy @(Recursively KNodes)) (_Flip # pureK f)
-        }
-
-    {-# INLINE pureKWithConstraint #-}
-    pureKWithConstraint p f =
-        withDict (recP p) $
-        withDict (recursive @KNodes @a) $
-        withDict (kNodes (Proxy @a)) $
-        RecursiveNodes
-        { _recSelf = f
-        , _recSub = pureKWith (mkP p) (_Flip # pureKWithConstraint p f)
-        }
-        where
-            recP :: Recursively c a => Proxy c -> RecursiveDict a c
-            recP _ = recursive
-            mkP :: Proxy c -> Proxy '[Recursively KNodes, Recursively c]
-            mkP _ = Proxy
-
-instance
-    Recursively KNodes a =>
-    KFunctor (RecursiveNodes a) where
-
-    {-# INLINE mapC #-}
-    mapC (RecursiveNodes fSelf fSub) (RecursiveNodes xSelf xSub) =
-        withDict (recursive @KNodes @a) $
-        withDict (kNodes (Proxy @a)) $
-        RecursiveNodes
-        { _recSelf = runMapK fSelf xSelf
-        , _recSub =
-            mapC
-            ( mapKWithConstraint (Proxy @(Recursively KNodes))
-                ((_MapK #) . (\(MkFlip sf) -> _Flip %~ mapC sf)) fSub
-            ) xSub
-        }
-
-instance
-    Recursively KNodes a =>
-    KApply (RecursiveNodes a) where
-
-    {-# INLINE zipK #-}
-    zipK (RecursiveNodes xSelf xSub) (RecursiveNodes ySelf ySub) =
-        withDict (recursive @KNodes @a) $
-        withDict (kNodes (Proxy @a)) $
-        RecursiveNodes
-        { _recSelf = Pair xSelf ySelf
-        , _recSub =
-            liftK2With (Proxy @'[Recursively KNodes])
-            (\(MkFlip x) -> _Flip %~ zipK x) xSub ySub
-        }
-
-instance constraint Pure => Recursively constraint Pure
+{-# INLINE recurseBoth #-}
+recurseBoth ::
+    forall a b k.
+    (KNodes k, Recursive a, Recursive b, a k, b k) =>
+    Proxy (And a b k) -> Dict (NodesConstraint k (a `And` b) )
+recurseBoth _ =
+    withDict (recurse (Proxy @(a k))) $
+    withDict (recurse (Proxy @(b k))) $
+    withDict (kCombineConstraints (Proxy @(And a b k))) Dict
 
 {-# INLINE wrapM #-}
 wrapM ::
     forall m k c w.
-    (Monad m, Recursive c, c k) =>
+    (Monad m, Recursive c, RNodes k, c k) =>
     Proxy c ->
     (forall n. c n => Dict (KTraversable n)) ->
     (forall n. c n => Tree n w -> m (Tree w n)) ->
     Tree Pure k ->
     m (Tree w k)
 wrapM p getTraversable f x =
-    withDict (recurse (Proxy @(c k))) $
+    withDict (recurseBoth (Proxy @(And RNodes c k))) $
     withDict (getTraversable @k) $
     x ^. _Pure
-    & traverseKWith (Proxy @'[c]) (wrapM p getTraversable f)
+    & traverseKWith (Proxy @(RNodes `And` c)) (wrapM p getTraversable f)
     >>= f
 
 {-# INLINE unwrapM #-}
 unwrapM ::
     forall m k c w.
-    (Monad m, Recursive c, c k) =>
+    (Monad m, Recursive c, RNodes k, c k) =>
     Proxy c ->
     (forall n. c n => Dict (KTraversable n)) ->
     (forall n. c n => Tree w n -> m (Tree n w)) ->
     Tree w k ->
     m (Tree Pure k)
 unwrapM p getTraversable f x =
-    withDict (recurse (Proxy @(c k))) $
+    withDict (recurseBoth (Proxy @(And RNodes c k))) $
     withDict (getTraversable @k) $
     f x
-    >>= traverseKWith (Proxy @'[c]) (unwrapM p getTraversable f)
+    >>= traverseKWith (Proxy @(RNodes `And` c)) (unwrapM p getTraversable f)
     <&> (_Pure #)
 
 {-# INLINE wrap #-}
 wrap ::
     forall k c w.
-    (Recursive c, c k) =>
+    (Recursive c, RNodes k, c k) =>
     Proxy c ->
     (forall n. c n => Dict (KFunctor n)) ->
     (forall n. c n => Tree n w -> Tree w n) ->
     Tree Pure k ->
     Tree w k
 wrap p getFunctor f x =
-    withDict (recurse (Proxy @(c k))) $
+    withDict (recurseBoth (Proxy @(And RNodes c k))) $
     withDict (getFunctor @k) $
     x ^. _Pure
-    & mapKWithConstraint (Proxy @c) (wrap p getFunctor f)
+    & mapKWith (Proxy @(RNodes `And` c)) (wrap p getFunctor f)
     & f
 
 {-# INLINE unwrap #-}
 unwrap ::
     forall k c w.
-    (Recursive c, c k) =>
+    (Recursive c, RNodes k, c k) =>
     Proxy c ->
     (forall n. c n => Dict (KFunctor n)) ->
     (forall n. c n => Tree w n -> Tree n w) ->
     Tree w k ->
     Tree Pure k
 unwrap p getFunctor f x =
-    withDict (recurse (Proxy @(c k))) $
+    withDict (recurseBoth (Proxy @(And RNodes c k))) $
     withDict (getFunctor @k) $
     f x
-    & mapKWithConstraint (Proxy @c) (unwrap p getFunctor f)
+    & mapKWith (Proxy @(RNodes `And` c)) (unwrap p getFunctor f)
     & MkPure
 
 -- | Recursively fold up a tree to produce a result.
 -- TODO: Is this a "cata-morphism"?
 {-# INLINE fold #-}
 fold ::
-    (Recursive c, c k) =>
+    (Recursive c, RNodes k, c k) =>
     Proxy c ->
     (forall n. c n => Dict (KFunctor n)) ->
     (forall n. c n => Tree n (Const a) -> a) ->
@@ -283,7 +205,7 @@ fold p getFunctor f = getConst . wrap p getFunctor (Const . f)
 -- TODO: Is this an "ana-morphism"?
 {-# INLINE unfold #-}
 unfold ::
-    (Recursive c, c k) =>
+    (Recursive c, RNodes k, c k) =>
     Proxy c ->
     (forall n. c n => Dict (KFunctor n)) ->
     (forall n. c n => a -> Tree n (Const a)) ->

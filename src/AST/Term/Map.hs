@@ -5,12 +5,12 @@ module AST.Term.Map
     ) where
 
 import           AST
-import           AST.Combinator.ANode (ANode)
 import           AST.Class.ZipMatch (ZipMatch(..))
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
+import           Data.Constraint (Dict(..))
 import           Data.Functor.Product.PolyKinds (Product(..))
 import           Data.Map (Map)
 import qualified Data.Map as Map
@@ -23,12 +23,12 @@ newtype TermMap k expr f = TermMap (Map k (Node f expr))
     deriving stock Generic
 
 instance KNodes (TermMap k e) where
-    type NodeTypesOf (TermMap k e) = ANode e
+    type NodesConstraint (TermMap k e) c = c e
+    {-# INLINE kCombineConstraints #-}
+    kCombineConstraints _ = Dict
 
 Lens.makePrisms ''TermMap
 makeKTraversableAndBases ''TermMap
-
-instance RecursiveContext (TermMap k expr) constraint => Recursively constraint (TermMap k expr)
 
 instance Eq k => ZipMatch (TermMap k expr) where
     {-# INLINE zipMatch #-}

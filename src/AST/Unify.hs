@@ -121,7 +121,7 @@ unifyUTerms xv (UTerm xt) yv (UTerm yt) =
     withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
     do
         bindVar binding yv (UToVar xv)
-        zipMatchWithA (Proxy @'[Unify m]) unify (xt ^. uBody) (yt ^. uBody)
+        zipMatchWithA (Proxy @(Unify m)) unify (xt ^. uBody) (yt ^. uBody)
             & fromMaybe (xt ^. uBody <$ structureMismatch unify xt yt)
             >>= bindVar binding xv . UTerm . UTermBody (xt ^. uConstraints <> yt ^. uConstraints)
         pure xv

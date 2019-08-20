@@ -8,10 +8,10 @@ module LangA where
 import           TypeLang
 
 import           AST
-import           AST.Class.Has
+-- import           AST.Class.Has
 import           AST.Class.Infer.Infer1
 import           AST.Class.Unify
-import           AST.Combinator.Flip
+-- import           AST.Combinator.Flip
 import           AST.Infer
 import           AST.Term.App
 import           AST.Term.NamelessScope
@@ -19,11 +19,11 @@ import           AST.Term.NamelessScope.InvDeBruijn
 import           AST.Term.Scheme
 import           AST.Term.TypeSig
 import           AST.Unify
-import           AST.Unify.Apply
+-- import           AST.Unify.Apply
 import           AST.Unify.Binding
 import           AST.Unify.Binding.ST
-import           AST.Unify.Generalize
-import           AST.Unify.New
+-- import           AST.Unify.Generalize
+-- import           AST.Unify.New
 import           AST.Unify.QuantifiedVar
 import           Control.Applicative
 import qualified Control.Lens as Lens
@@ -35,7 +35,7 @@ import           Control.Monad.ST
 import           Control.Monad.ST.Class (MonadST(..))
 import           Data.Constraint
 import           Data.Proxy (Proxy(..))
-import           Data.STRef
+-- import           Data.STRef
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
@@ -49,41 +49,22 @@ data LangA v k
     | ATypeSig (TypeSig Types (LangA v) k)
     | ALit Int
 
-data LangANodeTypes v k =
-    LangANodeTypes
-    { l0 :: Node k (LangA v)
-    , l1 :: Node k (LangA (Maybe v))
-    , _l2 :: Node k (Scheme Types Typ)
-    }
-
-instance KNodes (LangANodeTypes v) where
-    type NodeTypesOf (LangANodeTypes v) = LangANodeTypes v
-    type NodesConstraint (LangANodeTypes v) =
-        ConcatConstraintFuncs [On (LangA v), On (LangA (Maybe v)), On (Scheme Types Typ)]
-makeKApplicativeBases ''LangANodeTypes
-
-instance KHas (TypeSig Types (LangA v)) (LangANodeTypes v) where
-    hasK (LangANodeTypes e _ s) = TypeSig e s
-instance KHas (ANode (LangA v)) (LangANodeTypes v) where hasK = MkANode . l0
-instance KHas (ANode (LangA (Maybe v))) (LangANodeTypes v) where hasK = MkANode . l1
-
 instance KNodes (LangA v) where
-    type NodeTypesOf (LangA v) = LangANodeTypes v
+    type NodesConstraint (LangA v) c = (c (LangA v), c (LangA (Maybe v)), c (Scheme Types Typ))
+    kCombineConstraints _ = Dict
 
 makeKTraversableAndBases ''LangA
 
-instance Recursively KNodes (LangA v)
-instance RFoldable (LangA k)
-instance RFunctor (LangA k)
-instance RTraversable (LangA k)
-instance
-    (c (ANode Typ), c (ANode Row), c (Flip GTerm Typ))
-    => Recursively (InferOfConstraint c) (LangA k)
+-- instance RNodes (LangA v)
+-- instance RFoldable (LangA k)
+-- instance RFunctor (LangA k)
+-- instance RTraversable (LangA k)
 
-instance Inferrable (LangA k) where type InferOf (LangA k) = ANode Typ
+-- instance Inferrable (LangA k) where type InferOf (LangA k) = ANode Typ
+
 type instance TypeOf (LangA k) = Typ
 
-instance HasInferredType (LangA k) where inferredType _ = _ANode
+-- instance HasInferredType (LangA k) where inferredType _ = _ANode
 
 instance InvDeBruijnIndex v => Pretty (LangA v ('Knot Pure)) where
     pPrintPrec lvl p (ALam (Scope expr)) =
@@ -105,10 +86,10 @@ instance HasTypeOf1 LangA where
     type TypeOfIndexConstraint LangA = DeBruijnIndex
     typeAst _ = Dict
 
-instance HasInferOf1 LangA where
-    type InferOf1 LangA = ANode Typ
-    type InferOf1IndexConstraint LangA = DeBruijnIndex
-    hasInferOf1 _ = Dict
+-- instance HasInferOf1 LangA where
+--     type InferOf1 LangA = ANode Typ
+--     type InferOf1IndexConstraint LangA = DeBruijnIndex
+--     hasInferOf1 _ = Dict
 
 type TermInfer1Deps env m =
     ( MonadScopeLevel m
@@ -117,17 +98,17 @@ type TermInfer1Deps env m =
     , MonadInstantiate m Typ, MonadInstantiate m Row
     )
 
-instance TermInfer1Deps env m => Infer1 m LangA where
-    inferMonad = Sub Dict
+-- instance TermInfer1Deps env m => Infer1 m LangA where
+--     inferMonad = Sub Dict
 
-instance (DeBruijnIndex k, TermInfer1Deps env m) => Infer m (LangA k) where
-    inferBody (ALit x) = newTerm TInt <&> MkANode <&> InferRes (ALit x)
-    inferBody (AVar x) = inferBody x <&> inferResBody %~ AVar
-    inferBody (ALam x) =
-        inferBody x
-        >>= \(InferRes b t) -> TFun t & newTerm <&> InferRes (ALam b) . MkANode
-    inferBody (AApp x) = inferBody x <&> inferResBody %~ AApp
-    inferBody (ATypeSig x) = inferBody x <&> inferResBody %~ ATypeSig
+-- instance (DeBruijnIndex k, TermInfer1Deps env m) => Infer m (LangA k) where
+--     inferBody (ALit x) = newTerm TInt <&> MkANode <&> InferRes (ALit x)
+--     inferBody (AVar x) = inferBody x <&> inferResBody %~ AVar
+--     inferBody (ALam x) =
+--         inferBody x
+--         >>= \(InferRes b t) -> TFun t & newTerm <&> InferRes (ALam b) . MkANode
+--     inferBody (AApp x) = inferBody x <&> inferResBody %~ AApp
+--     inferBody (ATypeSig x) = inferBody x <&> inferResBody %~ ATypeSig
 
 -- Monads for inferring `LangA`:
 
@@ -138,10 +119,10 @@ data LangAInferEnv v = LangAInferEnv
     }
 Lens.makeLenses ''LangAInferEnv
 
-emptyLangAInferEnv :: LangAInferEnv v
-emptyLangAInferEnv =
-    LangAInferEnv mempty (ScopeLevel 0)
-    (pureKWithConstraint (Proxy @(QVarHasInstance Ord)) (QVarInstances mempty))
+-- emptyLangAInferEnv :: LangAInferEnv v
+-- emptyLangAInferEnv =
+--     LangAInferEnv mempty (ScopeLevel 0)
+--     (pureKWith (Proxy @(QVarHasInstance Ord)) (QVarInstances mempty))
 
 instance HasScopeTypes v Typ (LangAInferEnv v) where scopeTypes = iaScopeTypes
 
@@ -157,10 +138,10 @@ newtype PureInferA a =
     , MonadState PureInferState
     )
 
-execPureInferA :: PureInferA a -> Either (Tree TypeError Pure) a
-execPureInferA (PureInferA act) =
-    runRWST act emptyLangAInferEnv emptyPureInferState
-    <&> (^. Lens._1)
+-- execPureInferA :: PureInferA a -> Either (Tree TypeError Pure) a
+-- execPureInferA (PureInferA act) =
+--     runRWST act emptyLangAInferEnv emptyPureInferState
+--     <&> (^. Lens._1)
 
 type instance UVarOf PureInferA = UVar
 
@@ -181,32 +162,32 @@ instance MonadQuantify RConstraints Name PureInferA where
     newQuantifiedVariable _ =
         Lens._2 . tRow . _UVar <<+= 1 <&> Name . ('r':) . show
 
-instance Unify PureInferA Typ where
-    binding = bindingDict (Lens._1 . tTyp)
-    unifyError e =
-        traverseKWith (Proxy @'[Unify PureInferA]) applyBindings e
-        >>= throwError . TypError
+-- instance Unify PureInferA Typ where
+--     binding = bindingDict (Lens._1 . tTyp)
+--     unifyError e =
+--         traverseKWith (Proxy @(Unify PureInferA)) applyBindings e
+--         >>= throwError . TypError
 
-instance Unify PureInferA Row where
-    binding = bindingDict (Lens._1 . tRow)
-    structureMismatch = rStructureMismatch
-    unifyError e =
-        traverseKWith (Proxy @'[Unify PureInferA]) applyBindings e
-        >>= throwError . RowError
+-- instance Unify PureInferA Row where
+--     binding = bindingDict (Lens._1 . tRow)
+--     structureMismatch = rStructureMismatch
+--     unifyError e =
+--         traverseKWith (Proxy @(Unify PureInferA)) applyBindings e
+--         >>= throwError . RowError
 
-instance MonadInstantiate PureInferA Typ where
-    localInstantiations (QVarInstances x) =
-        local (iaInstantiations . tTyp . _QVarInstances %~ (x <>))
-    lookupQVar x =
-        Lens.view (iaInstantiations . tTyp . _QVarInstances . Lens.at x)
-        >>= maybe (throwError (QVarNotInScope x)) pure
+-- instance MonadInstantiate PureInferA Typ where
+--     localInstantiations (QVarInstances x) =
+--         local (iaInstantiations . tTyp . _QVarInstances %~ (x <>))
+--     lookupQVar x =
+--         Lens.view (iaInstantiations . tTyp . _QVarInstances . Lens.at x)
+--         >>= maybe (throwError (QVarNotInScope x)) pure
 
-instance MonadInstantiate PureInferA Row where
-    localInstantiations (QVarInstances x) =
-        local (iaInstantiations . tRow . _QVarInstances %~ (x <>))
-    lookupQVar x =
-        Lens.view (iaInstantiations . tRow . _QVarInstances . Lens.at x)
-        >>= maybe (throwError (QVarNotInScope x)) pure
+-- instance MonadInstantiate PureInferA Row where
+--     localInstantiations (QVarInstances x) =
+--         local (iaInstantiations . tRow . _QVarInstances %~ (x <>))
+--     lookupQVar x =
+--         Lens.view (iaInstantiations . tRow . _QVarInstances . Lens.at x)
+--         >>= maybe (throwError (QVarNotInScope x)) pure
 
 newtype STInferA s a =
     STInferA
@@ -219,11 +200,11 @@ newtype STInferA s a =
     , MonadReader (LangAInferEnv (STUVar s), STNameGen s)
     )
 
-execSTInferA :: STInferA s a -> ST s (Either (Tree TypeError Pure) a)
-execSTInferA (STInferA act) =
-    do
-        qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
-        runReaderT act (emptyLangAInferEnv, qvarGen) & runExceptT
+-- execSTInferA :: STInferA s a -> ST s (Either (Tree TypeError Pure) a)
+-- execSTInferA (STInferA act) =
+--     do
+--         qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
+--         runReaderT act (emptyLangAInferEnv, qvarGen) & runExceptT
 
 type instance UVarOf (STInferA s) = STUVar s
 
@@ -242,29 +223,29 @@ instance MonadQuantify ScopeLevel Name (STInferA s) where
 instance MonadQuantify RConstraints Name (STInferA s) where
     newQuantifiedVariable _ = newStQuantified (Lens._2 . tRow) <&> Name . ('r':) . show
 
-instance Unify (STInferA s) Typ where
-    binding = stBinding
-    unifyError e =
-        traverseKWith (Proxy @'[Unify (STInferA s)]) applyBindings e
-        >>= throwError . TypError
+-- instance Unify (STInferA s) Typ where
+--     binding = stBinding
+--     unifyError e =
+--         traverseKWith (Proxy @(Unify (STInferA s))) applyBindings e
+--         >>= throwError . TypError
 
-instance Unify (STInferA s) Row where
-    binding = stBinding
-    structureMismatch = rStructureMismatch
-    unifyError e =
-        traverseKWith (Proxy @'[Unify (STInferA s)]) applyBindings e
-        >>= throwError . RowError
+-- instance Unify (STInferA s) Row where
+--     binding = stBinding
+--     structureMismatch = rStructureMismatch
+--     unifyError e =
+--         traverseKWith (Proxy @(Unify (STInferA s))) applyBindings e
+--         >>= throwError . RowError
 
-instance MonadInstantiate (STInferA s) Typ where
-    localInstantiations (QVarInstances x) =
-        local (Lens._1 . iaInstantiations . tTyp . _QVarInstances %~ (x <>))
-    lookupQVar x =
-        Lens.view (Lens._1 . iaInstantiations . tTyp . _QVarInstances . Lens.at x)
-        >>= maybe (throwError (QVarNotInScope x)) pure
+-- instance MonadInstantiate (STInferA s) Typ where
+--     localInstantiations (QVarInstances x) =
+--         local (Lens._1 . iaInstantiations . tTyp . _QVarInstances %~ (x <>))
+--     lookupQVar x =
+--         Lens.view (Lens._1 . iaInstantiations . tTyp . _QVarInstances . Lens.at x)
+--         >>= maybe (throwError (QVarNotInScope x)) pure
 
-instance MonadInstantiate (STInferA s) Row where
-    localInstantiations (QVarInstances x) =
-        local (Lens._1 . iaInstantiations . tRow . _QVarInstances %~ (x <>))
-    lookupQVar x =
-        Lens.view (Lens._1 . iaInstantiations . tRow . _QVarInstances . Lens.at x)
-        >>= maybe (throwError (QVarNotInScope x)) pure
+-- instance MonadInstantiate (STInferA s) Row where
+--     localInstantiations (QVarInstances x) =
+--         local (Lens._1 . iaInstantiations . tRow . _QVarInstances %~ (x <>))
+--     lookupQVar x =
+--         Lens.view (Lens._1 . iaInstantiations . tRow . _QVarInstances . Lens.at x)
+--         >>= maybe (throwError (QVarNotInScope x)) pure

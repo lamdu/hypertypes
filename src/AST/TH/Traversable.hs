@@ -36,8 +36,8 @@ makeKTraversable typeName = makeTypeInfo typeName >>= makeKTraversableForType
 makeKTraversableForType :: TypeInfo -> DecsQ
 makeKTraversableForType info =
     instanceD (simplifyContext (makeContext info)) (appT (conT ''KTraversable) (pure (tiInstance info)))
-    [ InlineP 'sequenceC Inline FunLike AllPhases & PragmaD & pure
-    , funD 'sequenceC (tiCons info <&> pure . makeCons (tiVar info))
+    [ InlineP 'sequenceK Inline FunLike AllPhases & PragmaD & pure
+    , funD 'sequenceK (tiCons info <&> pure . makeCons (tiVar info))
     ]
     <&> (:[])
 
@@ -64,6 +64,6 @@ makeCons knot cons =
         consVars = makeConstructorVars "x" cons
         f (typ, name) = bodyForPat (matchType knot typ) `AppE` VarE name
         bodyForPat NodeFofX{} = VarE 'runContainedK
-        bodyForPat XofF{} = VarE 'sequenceC
+        bodyForPat XofF{} = VarE 'sequenceK
         bodyForPat (Tof _ pat) = VarE 'traverse `AppE` bodyForPat pat
         bodyForPat Other{} = VarE 'pure

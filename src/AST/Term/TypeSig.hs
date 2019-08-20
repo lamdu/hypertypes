@@ -16,6 +16,7 @@ import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
 import           Data.Proxy (Proxy(..))
+import           Data.Constraint (Dict(..))
 import           Generics.OneLiner (Constraints)
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
@@ -31,9 +32,9 @@ data TypeSig vars term k = TypeSig
 makeLenses ''TypeSig
 
 instance KNodes (TypeSig v t) where
-    type NodeTypesOf (TypeSig v t) = TypeSig v t
-    type NodesConstraint (TypeSig v t) =
-        ConcatConstraintFuncs [On t, On (Scheme v (TypeOf t))]
+    type NodesConstraint (TypeSig v t) c = (c t, c (Scheme v (TypeOf t)))
+    {-# INLINE kCombineConstraints #-}
+    kCombineConstraints _ = Dict
 
 makeKApplicativeBases ''TypeSig
 makeKTraversableAndFoldable ''TypeSig
@@ -60,9 +61,9 @@ instance
     , HasInferredValue (TypeOf term)
     , KTraversable vars
     , KTraversable (InferOf term)
-    , NodesConstraint (InferOf term) $ Unify m
-    , NodesConstraint vars $ MonadInstantiate m
-    , Recursively (Unify m) (TypeOf term)
+    , NodesConstraint (InferOf term) (Unify m)
+    , NodesConstraint vars (MonadInstantiate m)
+    , Unify m (TypeOf term)
     , Infer m (TypeOf term)
     , Infer m term
     ) =>

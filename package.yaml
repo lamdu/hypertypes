@@ -39,7 +39,6 @@ default-extensions:
 - TupleSections
 - TypeApplications
 - TypeFamilies
-- TypeOperators
 
 library:
   source-dirs: src

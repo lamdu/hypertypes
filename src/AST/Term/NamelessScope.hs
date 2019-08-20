@@ -1,4 +1,4 @@
-{-# LANGUAGE UndecidableInstances, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE UndecidableInstances, GeneralizedNewtypeDeriving, TypeOperators #-}
 {-# LANGUAGE ScopedTypeVariables, FlexibleInstances, TemplateHaskell, EmptyCase #-}
 
 module AST.Term.NamelessScope
@@ -11,7 +11,6 @@ module AST.Term.NamelessScope
 
 import           AST
 import           AST.Class.Infer.Infer1
-import           AST.Combinator.ANode (ANode)
 import           AST.Infer
 import           AST.Term.FuncType
 import           AST.Unify (Unify(..), UVarOf)
@@ -21,7 +20,6 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Reader (MonadReader, local)
 import           Data.Constraint
-import           Data.Functor.Const (Const)
 import           Data.Sequence (Seq)
 import qualified Data.Sequence as Sequence
 import           Data.Proxy (Proxy(..))
@@ -34,18 +32,22 @@ newtype Scope expr a k = Scope (Node k (expr (Maybe a)))
 Lens.makePrisms ''Scope
 
 instance KNodes (Scope e a) where
-    type NodeTypesOf (Scope e a) = ANode (e (Maybe a))
+    type NodesConstraint (Scope e a) c = c (e (Maybe a))
+    {-# INLINE kCombineConstraints #-}
+    kCombineConstraints _ = Dict
 
 newtype ScopeVar (expr :: * -> Knot -> *) a (k :: Knot) = ScopeVar a
 Lens.makePrisms ''ScopeVar
 
 instance KNodes (ScopeVar e a) where
-    type NodeTypesOf (ScopeVar e a) = Const ()
+    type NodesConstraint (ScopeVar e a) c = ()
+    {-# INLINE kCombineConstraints #-}
+    kCombineConstraints _ = Dict
 
-makeZipMatch ''Scope
+-- makeZipMatch ''Scope
 makeKApplicativeBases ''Scope
 makeKTraversableAndFoldable ''Scope
-makeZipMatch ''ScopeVar
+-- makeZipMatch ''ScopeVar
 makeKTraversableAndBases ''ScopeVar
 
 class DeBruijnIndex a where
@@ -68,7 +70,9 @@ newtype ScopeTypes t v = ScopeTypes (Seq (Node v t))
     deriving newtype (Semigroup, Monoid)
 
 instance KNodes (ScopeTypes t) where
-    type NodeTypesOf (ScopeTypes t) = ANode t
+    type NodesConstraint (ScopeTypes t) c = c t
+    {-# INLINE kCombineConstraints #-}
+    kCombineConstraints _ = Dict
 
 Lens.makePrisms ''ScopeTypes
 makeKTraversableAndBases ''ScopeTypes

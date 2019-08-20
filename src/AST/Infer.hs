@@ -27,7 +27,7 @@ infer ::
 infer (Ann a x) =
     withDict (inferRecursive (Proxy @m) (Proxy @t)) $
     inferBody
-        (mapKWithConstraint (Proxy @(Infer m))
+        (mapKWith (Proxy @(Infer m))
             (\c -> infer c <&> (\i -> InferredChild i (i ^. iRes)) & InferChild)
             x)
     <&> (\(InferRes xI t) -> ITerm a t xI)

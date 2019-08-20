@@ -3,21 +3,17 @@
 module AST.Class.Traversable
     ( KTraversable(..)
     , ContainedK(..), _ContainedK
-    , traverseK, traverseKWith
+    , traverseK, traverseKWith, traverseK1
     , sequencePureK, sequencePureKWith
     , sequenceLiftK2, sequenceLiftK2With
     ) where
 
 import AST.Class
-import AST.Class.Combinators
 import AST.Class.Foldable (KFoldable)
 import AST.Knot (Knot, Tree)
 import Control.Lens (Iso, iso)
-import Data.Constraint (withDict)
-import Data.Constraint.List (ApplyConstraints)
 import Data.Functor.Const (Const(..))
 import Data.Proxy (Proxy(..))
-import Data.TyFun
 
 import Prelude.Compat
 
@@ -32,14 +28,14 @@ _ContainedK ::
 _ContainedK = iso runContainedK MkContainedK
 
 class (KFunctor k, KFoldable k) => KTraversable k where
-    sequenceC ::
+    sequenceK ::
         Applicative f =>
         Tree k (ContainedK f l) ->
         f (Tree k l)
 
 instance KTraversable (Const a) where
-    {-# INLINE sequenceC #-}
-    sequenceC (Const x) = pure (Const x)
+    {-# INLINE sequenceK #-}
+    sequenceK (Const x) = pure (Const x)
 
 {-# INLINE traverseK #-}
 traverseK ::
@@ -47,35 +43,42 @@ traverseK ::
     (forall c. Tree m c -> f (Tree n c)) ->
     Tree k m ->
     f (Tree k n)
-traverseK f = sequenceC . mapK (MkContainedK . f)
+traverseK f = sequenceK . mapK (MkContainedK . f)
 
 {-# INLINE traverseKWith #-}
 traverseKWith ::
-    forall n constraints m f k.
-    (Applicative f, KTraversable k, KLiftConstraints constraints k) =>
-    Proxy constraints ->
-    (forall c. ApplyConstraints constraints c => Tree m c -> f (Tree n c)) ->
+    forall n constraint m f k.
+    (Applicative f, KTraversable k, NodesConstraint k constraint) =>
+    Proxy constraint ->
+    (forall c. constraint c => Tree m c -> f (Tree n c)) ->
     Tree k m ->
     f (Tree k n)
-traverseKWith p f =
-    withDict (kNodes (Proxy @k)) $
-    withDict (kLiftConstraintsNodeTypes (Proxy @k) p) $
-    sequenceC . mapKWith p (MkContainedK . f)
+traverseKWith p f = sequenceK . mapKWith p (MkContainedK . f)
+
+{-# INLINE traverseK1 #-}
+traverseK1 ::
+    ( Applicative f, KTraversable k
+    , NodesConstraint k ((~) c)
+    ) =>
+    (Tree m c -> f (Tree n c)) ->
+    Tree k m ->
+    f (Tree k n)
+traverseK1 f = sequenceK . mapK1 (MkContainedK . f)
 
 {-# INLINE sequencePureK #-}
 sequencePureK ::
     (Applicative f, KPointed k, KTraversable k) =>
     (forall c. f (Tree n c)) ->
     f (Tree k n)
-sequencePureK f = sequenceC (pureK (MkContainedK f))
+sequencePureK f = sequenceK (pureK (MkContainedK f))
 
 {-# INLINE sequencePureKWith #-}
 sequencePureKWith ::
-    (Applicative f, KApplicative k, KTraversable k, NodesConstraint k $ constraint) =>
+    (Applicative f, KApplicative k, KTraversable k, NodesConstraint k constraint) =>
     Proxy constraint ->
     (forall c. constraint c => f (Tree n c)) ->
     f (Tree k n)
-sequencePureKWith p f = sequenceC (pureKWithConstraint p (MkContainedK f))
+sequencePureKWith p f = sequenceK (pureKWith p (MkContainedK f))
 
 {-# INLINE sequenceLiftK2 #-}
 sequenceLiftK2 ::
@@ -84,14 +87,14 @@ sequenceLiftK2 ::
     Tree k l ->
     Tree k m ->
     f (Tree k n)
-sequenceLiftK2 f x = sequenceC . liftK2 (\a -> MkContainedK . f a) x
+sequenceLiftK2 f x = sequenceK . liftK2 (\a -> MkContainedK . f a) x
 
 {-# INLINE sequenceLiftK2With #-}
 sequenceLiftK2With ::
-    (Applicative f, KApply k, KTraversable k, KLiftConstraints constraints k) =>
-    Proxy constraints ->
-    (forall c. ApplyConstraints constraints c => Tree l c -> Tree m c -> f (Tree n c)) ->
+    (Applicative f, KApply k, KTraversable k, NodesConstraint k constraint) =>
+    Proxy constraint ->
+    (forall c. constraint c => Tree l c -> Tree m c -> f (Tree n c)) ->
     Tree k l ->
     Tree k m ->
     f (Tree k n)
-sequenceLiftK2With p f x = sequenceC . liftK2With p (\a -> MkContainedK . f a) x
+sequenceLiftK2With p f x = sequenceK . liftK2With p (\a -> MkContainedK . f a) x

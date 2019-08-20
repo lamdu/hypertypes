@@ -44,13 +44,13 @@ schemeToRestrictedType ::
     forall m varTypes typ.
     ( Monad m
     , KTraversable varTypes
-    , NodesConstraint varTypes $ Unify m
+    , NodesConstraint varTypes (Unify m)
     , HasScheme varTypes m typ
     ) =>
     Tree Pure (Scheme varTypes typ) -> m (Tree (UVarOf m) typ)
 schemeToRestrictedType (MkPure (Scheme vars typ)) =
     do
-        foralls <- traverseKWith (Proxy @'[Unify m]) makeQVarInstancesInScope vars
+        foralls <- traverseKWith (Proxy @(Unify m)) makeQVarInstancesInScope vars
         wrapM
             (Proxy @(HasScheme varTypes m))
             Dict (schemeBodyToType foralls) typ
@@ -100,7 +100,7 @@ goUVar xv yv =
 -- Check for alpha equality. Raises a `unifyError` when mismatches.
 alphaEq ::
     ( KTraversable varTypes
-    , NodesConstraint varTypes $ Unify m
+    , NodesConstraint varTypes (Unify m)
     , HasScheme varTypes m typ
     ) =>
     Tree Pure (Scheme varTypes typ) ->

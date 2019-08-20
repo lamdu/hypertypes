@@ -7,11 +7,11 @@ import           AST.Class (KNodes(..))
 import           AST.Knot (Tree, Node)
 import           AST.TH.Apply (makeKApplicativeBases)
 import           AST.TH.Traversable (makeKTraversableAndFoldable)
-import           AST.TH.ZipMatch (makeZipMatch)
+-- import           AST.TH.ZipMatch (makeZipMatch)
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Data.Binary (Binary)
-import           Data.TyFun
+import           Data.Constraint (Dict(..))
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 import           Text.Show.Combinators ((@|), showCon)
@@ -25,12 +25,13 @@ newtype Pure k = MkPure { getPure :: Node k Pure }
     deriving stock Generic
 
 instance KNodes Pure where
-    type NodeTypesOf Pure = Pure
-    type NodesConstraint Pure = On Pure
+    type NodesConstraint Pure c = c Pure
+    {-# INLINE kCombineConstraints #-}
+    kCombineConstraints _ = Dict
 
 makeKApplicativeBases ''Pure
 makeKTraversableAndFoldable ''Pure
-makeZipMatch ''Pure
+-- makeZipMatch ''Pure
 
 {-# INLINE _Pure #-}
 _Pure :: Lens.Iso (Tree Pure k) (Tree Pure j) (Tree k Pure) (Tree j Pure)

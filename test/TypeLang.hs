@@ -11,7 +11,6 @@ import           AST.Term.FuncType
 import           AST.Term.NamelessScope
 import           AST.Term.Nominal
 import           AST.Term.Row
-import           AST.Term.Scheme
 import           AST.Unify
 import           AST.Unify.Binding
 import           AST.Unify.QuantifiedVar
@@ -23,6 +22,7 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Reader (MonadReader)
 import           Control.Monad.ST.Class (MonadST(..))
+import           Data.Constraint
 import           Data.STRef
 import           Data.Set (Set, singleton)
 import           Generic.Data
@@ -79,18 +79,20 @@ instance KHas (Product (ANode Typ) (ANode Row)) Types where
     hasK (Types t0 r0) = Pair (MkANode t0) (MkANode r0)
 
 instance KNodes Types where
-    type NodeTypesOf Types = Types
-    type NodesConstraint Types = ConcatConstraintFuncs '[On Typ, On Row]
+    type NodesConstraint Types c = (c Typ, c Row)
+    kCombineConstraints _ = Dict
 instance KNodes Typ where
-    type NodeTypesOf Typ = Types
+    type NodesConstraint Typ c = (c Typ, c Row)
+    kCombineConstraints _ = Dict
 instance KNodes Row where
-    type NodeTypesOf Row = Types
+    type NodesConstraint Row c = (c Typ, c Row)
+    kCombineConstraints _ = Dict
 
-makeZipMatch ''Typ
-makeZipMatch ''Row
-makeZipMatch ''Types
+-- makeZipMatch ''Typ
+-- makeZipMatch ''Row
+-- makeZipMatch ''Types
 makeKTraversableAndBases ''Typ
-makeKTraversableAndBases ''Row
+-- makeKTraversableAndBases ''Row
 makeKApplicativeBases ''Types
 makeKTraversableAndFoldable ''Types
 
@@ -151,16 +153,16 @@ instance RowConstraints RConstraints where
 
 type instance TypeConstraintsOf Typ = ScopeLevel
 
-instance HasTypeConstraints Typ where
-    verifyConstraints _ _ _ TInt = pure TInt
-    verifyConstraints _ _ _ (TVar v) = TVar v & pure
-    verifyConstraints c _ u (TFun f) = traverseK1 (u c) f <&> TFun
-    verifyConstraints c _ u (TRec r) = u (RowConstraints mempty c) r <&> TRec
-    verifyConstraints c _ u (TNom (NominalInst n (Types t r))) =
-        Types
-        <$> (_QVarInstances . traverse) (u c) t
-        <*> (_QVarInstances . traverse) (u (RowConstraints mempty c)) r
-        <&> NominalInst n <&> TNom
+-- instance HasTypeConstraints Typ where
+--     verifyConstraints _ _ _ TInt = pure TInt
+--     verifyConstraints _ _ _ (TVar v) = TVar v & pure
+--     verifyConstraints c _ u (TFun f) = traverseK1 (u c) f <&> TFun
+--     verifyConstraints c _ u (TRec r) = u (RowConstraints mempty c) r <&> TRec
+--     verifyConstraints c _ u (TNom (NominalInst n (Types t r))) =
+--         Types
+--         <$> (_QVarInstances . traverse) (u c) t
+--         <*> (_QVarInstances . traverse) (u (RowConstraints mempty c)) r
+--         <&> NominalInst n <&> TNom
 
 type instance TypeConstraintsOf Row = RConstraints
 
@@ -180,15 +182,12 @@ emptyPureInferState =
 
 type STNameGen s = Tree Types (Const (STRef s Int))
 
-instance (c Typ, c Row) => Recursively c Typ
-instance (c Typ, c Row) => Recursively c Row
-
-instance RFoldable Typ
-instance RFoldable Row
-instance RFunctor Typ
-instance RFunctor Row
-instance RTraversable Typ
-instance RTraversable Row
+-- instance RFoldable Typ
+-- instance RFoldable Row
+-- instance RFunctor Typ
+-- instance RFunctor Row
+-- instance RTraversable Typ
+-- instance RTraversable Row
 
 instance HasQuantifiedVar Typ where
     type QVar Typ = Name
@@ -204,22 +203,20 @@ instance HasFuncType Typ where
 instance HasScopeTypes v Typ a => HasScopeTypes v Typ (a, x) where
     scopeTypes = Lens._1 . scopeTypes
 
-instance Inferrable Typ where type InferOf Typ = ANode Typ
-instance Inferrable Row where type InferOf Row = ANode Row
-instance HasInferredValue Typ where inferredValue = _ANode
-instance HasInferredValue Row where inferredValue = _ANode
+-- instance Inferrable Typ where type InferOf Typ = ANode Typ
+-- instance Inferrable Row where type InferOf Row = ANode Row
+-- instance HasInferredValue Typ where inferredValue = _ANode
+-- instance HasInferredValue Row where inferredValue = _ANode
 
-instance
-    (Monad m, MonadInstantiate m Typ, MonadInstantiate m Row) =>
-    Infer m Typ where
+-- instance
+--     (Monad m, MonadInstantiate m Typ, MonadInstantiate m Row) =>
+--     Infer m Typ where
+--     inferBody = inferType
 
-    inferBody = inferType
-
-instance
-    (Monad m, MonadInstantiate m Typ, MonadInstantiate m Row) =>
-    Infer m Row where
-
-    inferBody = inferType
+-- instance
+--     (Monad m, MonadInstantiate m Typ, MonadInstantiate m Row) =>
+--     Infer m Row where
+--     inferBody = inferType
 
 rStructureMismatch ::
     (Unify m Typ, Unify m Row) =>

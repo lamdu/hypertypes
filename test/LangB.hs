@@ -14,16 +14,16 @@ import           AST.Term.Lam
 import           AST.Term.Let
 import           AST.Term.Nominal
 import           AST.Term.Row
-import           AST.Term.Scheme
+-- import           AST.Term.Scheme
 import           AST.Term.Var
 import           AST.Unify
-import           AST.Unify.Apply
+-- import           AST.Unify.Apply
 import           AST.Unify.Binding
 import           AST.Unify.Binding.ST
 import           AST.Unify.Generalize
-import           AST.Unify.New
+-- import           AST.Unify.New
 import           AST.Unify.QuantifiedVar
-import           AST.Unify.Term
+-- import           AST.Unify.Term
 import           Control.Applicative
 import           Control.Lens (Traversal)
 import qualified Control.Lens as Lens
@@ -55,19 +55,19 @@ data LangB k
     | BToNom (ToNom Name LangB k)
 
 instance KNodes LangB where
-    type NodeTypesOf LangB = ANode LangB
+    type NodesConstraint LangB c = c LangB
+    kCombineConstraints _ = Dict
 
-makeKTraversableAndBases ''LangB
-instance c LangB => Recursively c LangB
-instance RFunctor LangB
-instance RFoldable LangB
-instance RTraversable LangB
+-- makeKTraversableAndBases ''LangB
+-- instance RFunctor LangB
+-- instance RFoldable LangB
+-- instance RTraversable LangB
 
-instance Inferrable LangB where type InferOf LangB = ANode Typ
+-- instance Inferrable LangB where type InferOf LangB = ANode Typ
 type instance TypeOf LangB = Typ
 type instance ScopeOf LangB = ScopeTypes
 
-instance HasInferredType LangB where inferredType _ = _ANode
+-- instance HasInferredType LangB where inferredType _ = _ANode
 
 instance Pretty (Tree LangB Pure) where
     pPrintPrec _ _ (BLit i) = pPrint i
@@ -98,45 +98,45 @@ instance VarType Name LangB where
                 withDict (unifyRecursive (Proxy @m) (Proxy @Typ)) $
                 x ^?! Lens.ix k & instantiate
 
-instance
-    ( MonadScopeLevel m
-    , LocalScopeType Name (Tree (UVarOf m) Typ) m
-    , LocalScopeType Name (Tree (GTerm (UVarOf m)) Typ) m
-    , Unify m Typ, Unify m Row
-    , HasScope m ScopeTypes
-    , MonadNominals Name Typ m
-    ) =>
-    Infer m LangB where
+-- instance
+--     ( MonadScopeLevel m
+--     , LocalScopeType Name (Tree (UVarOf m) Typ) m
+--     , LocalScopeType Name (Tree (GTerm (UVarOf m)) Typ) m
+--     , Unify m Typ, Unify m Row
+--     , HasScope m ScopeTypes
+--     , MonadNominals Name Typ m
+--     ) =>
+--     Infer m LangB where
 
-    inferBody (BApp x) = inferBody x <&> inferResBody %~ BApp
-    inferBody (BVar x) = inferBody x <&> inferResBody %~ BVar
-    inferBody (BLam x) =
-        inferBody x
-        >>= \(InferRes b t) -> TFun t & newTerm <&> InferRes (BLam b) . MkANode
-    inferBody (BLet x) = inferBody x <&> inferResBody %~ BLet
-    inferBody (BLit x) = newTerm TInt <&> InferRes (BLit x) . MkANode
-    inferBody (BToNom x) =
-        inferBody x
-        >>= \(InferRes b t) -> TNom t & newTerm <&> InferRes (BToNom b) . MkANode
-    inferBody (BRecExtend (RowExtend k v r)) =
-        do
-            InferredChild vI vT <- inferChild v
-            InferredChild rI rT <- inferChild r
-            restR <-
-                scopeConstraints <&> rForbiddenFields . Lens.contains k .~ True
-                >>= newVar binding . UUnbound
-            _ <- TRec restR & newTerm >>= unify (rT ^. _ANode)
-            RowExtend k (vT ^. _ANode) restR & RExtend & newTerm
-                >>= newTerm . TRec
-                <&> InferRes (BRecExtend (RowExtend k vI rI)) . MkANode
-    inferBody BRecEmpty =
-        newTerm REmpty >>= newTerm . TRec <&> InferRes BRecEmpty . MkANode
-    inferBody (BGetField w k) =
-        do
-            (rT, wR) <- rowElementInfer RExtend k
-            InferredChild wI wT <- inferChild w
-            InferRes (BGetField wI k) (_ANode # rT) <$
-                (newTerm (TRec wR) >>= unify (wT ^. _ANode))
+--     inferBody (BApp x) = inferBody x <&> inferResBody %~ BApp
+--     inferBody (BVar x) = inferBody x <&> inferResBody %~ BVar
+--     inferBody (BLam x) =
+--         inferBody x
+--         >>= \(InferRes b t) -> TFun t & newTerm <&> InferRes (BLam b) . MkANode
+--     inferBody (BLet x) = inferBody x <&> inferResBody %~ BLet
+--     inferBody (BLit x) = newTerm TInt <&> InferRes (BLit x) . MkANode
+--     inferBody (BToNom x) =
+--         inferBody x
+--         >>= \(InferRes b t) -> TNom t & newTerm <&> InferRes (BToNom b) . MkANode
+--     inferBody (BRecExtend (RowExtend k v r)) =
+--         do
+--             InferredChild vI vT <- inferChild v
+--             InferredChild rI rT <- inferChild r
+--             restR <-
+--                 scopeConstraints <&> rForbiddenFields . Lens.contains k .~ True
+--                 >>= newVar binding . UUnbound
+--             _ <- TRec restR & newTerm >>= unify (rT ^. _ANode)
+--             RowExtend k (vT ^. _ANode) restR & RExtend & newTerm
+--                 >>= newTerm . TRec
+--                 <&> InferRes (BRecExtend (RowExtend k vI rI)) . MkANode
+--     inferBody BRecEmpty =
+--         newTerm REmpty >>= newTerm . TRec <&> InferRes BRecEmpty . MkANode
+--     inferBody (BGetField w k) =
+--         do
+--             (rT, wR) <- rowElementInfer RExtend k
+--             InferredChild wI wT <- inferChild w
+--             InferRes (BGetField wI k) (_ANode # rT) <$
+--                 (newTerm (TRec wR) >>= unify (wT ^. _ANode))
 
 -- Monads for inferring `LangB`:
 
@@ -144,7 +144,8 @@ newtype ScopeTypes v = ScopeTypes (Map Name (Tree (GTerm (RunKnot v)) Typ))
     deriving newtype (Semigroup, Monoid)
 
 instance KNodes ScopeTypes where
-    type NodeTypesOf ScopeTypes = NodeTypesOf (Flip GTerm Typ)
+    type NodesConstraint ScopeTypes c = NodesConstraint (Flip GTerm Typ) c
+    kCombineConstraints _ = Dict
 
 Lens.makePrisms ''ScopeTypes
 
@@ -156,14 +157,14 @@ typesInScope ::
         (Tree (Flip GTerm Typ) v1)
 typesInScope = _ScopeTypes . traverse . Lens.from _Flip
 
-instance KFunctor ScopeTypes where
-    mapC f = typesInScope %~ mapC f
+-- instance KFunctor ScopeTypes where
+--     mapK f = typesInScope %~ mapK f
 
-instance KFoldable ScopeTypes where
-    foldMapC f = foldMap (foldMapC f) . (^.. typesInScope)
+-- instance KFoldable ScopeTypes where
+--     foldMapK f = foldMap (foldMapK f) . (^.. typesInScope)
 
-instance KTraversable ScopeTypes where
-    sequenceC = typesInScope sequenceC
+-- instance KTraversable ScopeTypes where
+--     sequenceK = typesInScope sequenceK
 
 data InferScope v = InferScope
     { _varSchemes :: Tree ScopeTypes v
@@ -225,21 +226,21 @@ instance MonadQuantify RConstraints Name PureInferB where
     newQuantifiedVariable _ =
         Lens._2 . tRow . _UVar <<+= 1 <&> Name . ('r':) . show
 
-instance Unify PureInferB Typ where
-    binding = bindingDict (Lens._1 . tTyp)
-    unifyError e =
-        traverseKWith (Proxy @'[Unify PureInferB]) applyBindings e
-        >>= throwError . TypError
+-- instance Unify PureInferB Typ where
+--     binding = bindingDict (Lens._1 . tTyp)
+--     unifyError e =
+--         traverseKWith (Proxy @(Unify PureInferB)) applyBindings e
+--         >>= throwError . TypError
 
-instance Unify PureInferB Row where
-    binding = bindingDict (Lens._1 . tRow)
-    structureMismatch = rStructureMismatch
-    unifyError e =
-        traverseKWith (Proxy @'[Unify PureInferB]) applyBindings e
-        >>= throwError . RowError
+-- instance Unify PureInferB Row where
+--     binding = bindingDict (Lens._1 . tRow)
+--     structureMismatch = rStructureMismatch
+--     unifyError e =
+--         traverseKWith (Proxy @(Unify PureInferB)) applyBindings e
+--         >>= throwError . RowError
 
-instance HasScheme Types PureInferB Typ
-instance HasScheme Types PureInferB Row
+-- instance HasScheme Types PureInferB Typ
+-- instance HasScheme Types PureInferB Row
 
 newtype STInferB s a =
     STInferB
@@ -288,21 +289,21 @@ instance MonadQuantify ScopeLevel Name (STInferB s) where
 instance MonadQuantify RConstraints Name (STInferB s) where
     newQuantifiedVariable _ = newStQuantified (Lens._2 . tRow) <&> Name . ('r':) . show
 
-instance Unify (STInferB s) Typ where
-    binding = stBinding
-    unifyError e =
-        traverseKWith (Proxy @'[Unify (STInferB s)]) applyBindings e
-        >>= throwError . TypError
+-- instance Unify (STInferB s) Typ where
+--     binding = stBinding
+--     unifyError e =
+--         traverseKWith (Proxy @(Unify (STInferB s))) applyBindings e
+--         >>= throwError . TypError
 
-instance Unify (STInferB s) Row where
-    binding = stBinding
-    structureMismatch = rStructureMismatch
-    unifyError e =
-        traverseKWith (Proxy @'[Unify (STInferB s)]) applyBindings e
-        >>= throwError . RowError
+-- instance Unify (STInferB s) Row where
+--     binding = stBinding
+--     structureMismatch = rStructureMismatch
+--     unifyError e =
+--         traverseKWith (Proxy @(Unify (STInferB s))) applyBindings e
+--         >>= throwError . RowError
 
-instance HasScheme Types (STInferB s) Typ
-instance HasScheme Types (STInferB s) Row
+-- instance HasScheme Types (STInferB s) Typ
+-- instance HasScheme Types (STInferB s) Row
 
 deriving instance Show (Node k LangB) => Show (LangB k)
 deriving instance (Show (Node k Typ), Show (Node k Row)) => Show (ScopeTypes k)

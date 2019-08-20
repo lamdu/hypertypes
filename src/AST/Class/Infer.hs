@@ -6,7 +6,7 @@ module AST.Class.Infer
     , InferredChild(..), inType, inRep
     , InferChild(..), _InferChild
     , InferRes(..), inferResVal, inferResBody
-    , Inferrable(..), InferOfConstraint
+    , Inferrable(..)
     , HasInferredValue(..)
     , HasInferredType(..), TypeOf
     ) where
@@ -21,14 +21,14 @@ import Data.Proxy (Proxy)
 
 import Prelude.Compat
 
-class KFunctor t => Inferrable t where
+class KTraversable t => Inferrable t where
     type family InferOf (t :: Knot -> Type) :: Knot -> Type
 
-    inferrableRecursive :: Proxy t -> Dict (NodesConstraint t $ Inferrable)
+    inferrableRecursive :: Proxy t -> Dict (NodesConstraint t Inferrable)
     {-# INLINE inferrableRecursive #-}
     default inferrableRecursive ::
-        NodesConstraint t $ Inferrable =>
-        Proxy t -> Dict (NodesConstraint t $ Inferrable)
+        NodesConstraint t Inferrable =>
+        Proxy t -> Dict (NodesConstraint t Inferrable)
     inferrableRecursive _ = Dict
 
     traversableInferOf :: Proxy t -> Dict (KTraversable (InferOf t))
@@ -37,9 +37,6 @@ class KFunctor t => Inferrable t where
         KTraversable (InferOf t) =>
         Proxy t -> Dict (KTraversable (InferOf t))
     traversableInferOf _ = Dict
-
-class    c (InferOf t) => InferOfConstraint c t
-instance c (InferOf t) => InferOfConstraint c t
 
 class HasInferredValue t where
     inferredValue :: Lens' (Tree (InferOf t) v) (Tree v t)
@@ -86,16 +83,16 @@ class (Monad m, Inferrable t) => Infer m t where
         Tree t (InferChild m k) ->
         m (InferRes (UVarOf m) k t)
 
-    inferRecursive :: Proxy m -> Proxy t -> Dict (NodesConstraint t $ Infer m)
+    inferRecursive :: Proxy m -> Proxy t -> Dict (NodesConstraint t (Infer m))
     {-# INLINE inferRecursive #-}
     default inferRecursive ::
-        NodesConstraint t $ Infer m =>
-        Proxy m -> Proxy t -> Dict (NodesConstraint t $ Infer m)
+        NodesConstraint t (Infer m) =>
+        Proxy m -> Proxy t -> Dict (NodesConstraint t (Infer m))
     inferRecursive _ _ = Dict
 
-    inferredUnify :: Proxy m -> Proxy t -> Dict (NodesConstraint (InferOf t) $ Unify m)
+    inferredUnify :: Proxy m -> Proxy t -> Dict (NodesConstraint (InferOf t) (Unify m))
     {-# INLINE inferredUnify #-}
     default inferredUnify ::
-        NodesConstraint (InferOf t) $ Unify m =>
-        Proxy m -> Proxy t -> Dict (NodesConstraint (InferOf t) $ Unify m)
+        NodesConstraint (InferOf t) (Unify m) =>
+        Proxy m -> Proxy t -> Dict (NodesConstraint (InferOf t) (Unify m))
     inferredUnify _ _ = Dict

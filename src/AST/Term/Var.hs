@@ -14,7 +14,7 @@ import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
-import           Data.Functor.Const (Const)
+import           Data.Constraint (Dict(..))
 import           Data.Kind (Type)
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
@@ -42,7 +42,9 @@ newtype Var v (expr :: Knot -> *) (k :: Knot) = Var v
     deriving stock (Show, Generic)
 
 instance KNodes (Var v e) where
-    type NodeTypesOf (Var v e) = Const ()
+    type NodesConstraint (Var v e) c = ()
+    {-# INLINE kCombineConstraints #-}
+    kCombineConstraints _ = Dict
 
 Lens.makePrisms ''Var
 makeKTraversableAndBases ''Var

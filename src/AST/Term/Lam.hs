@@ -5,7 +5,6 @@ module AST.Term.Lam
     ) where
 
 import           AST
-import           AST.Combinator.ANode (ANode)
 import           AST.Infer
 import           AST.Term.FuncType
 import           AST.Unify (Unify, UVarOf)
@@ -14,6 +13,7 @@ import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
+import           Data.Constraint (Dict(..))
 import           Data.Proxy (Proxy(..))
 import           Generics.OneLiner (Constraints)
 import           GHC.Generics (Generic)
@@ -30,7 +30,9 @@ data Lam v expr k = Lam
 makeLenses ''Lam
 
 instance KNodes (Lam v e) where
-    type NodeTypesOf (Lam v e) = ANode e
+    type NodesConstraint (Lam v e) c = c e
+    {-# INLINE kCombineConstraints #-}
+    kCombineConstraints _ = Dict
 
 makeKTraversableAndBases ''Lam
 

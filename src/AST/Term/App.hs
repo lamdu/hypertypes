@@ -6,7 +6,6 @@ module AST.Term.App
     ) where
 
 import AST
-import AST.Combinator.ANode (ANode)
 import AST.Infer
 import AST.Term.FuncType
 import AST.Unify (Unify, unify)
@@ -15,6 +14,7 @@ import Control.DeepSeq (NFData)
 import Control.Lens (Traversal, makeLenses)
 import Control.Lens.Operators
 import Data.Binary (Binary)
+import Data.Constraint (Dict(..))
 import Data.Proxy (Proxy(..))
 import GHC.Generics (Generic)
 import Text.PrettyPrint ((<+>))
@@ -28,10 +28,12 @@ data App expr k = App
     } deriving Generic
 
 instance KNodes (App e) where
-    type NodeTypesOf (App e) = ANode e
+    type NodesConstraint (App e) c = c e
+    {-# INLINE kCombineConstraints #-}
+    kCombineConstraints _ = Dict
 
 makeLenses ''App
-makeZipMatch ''App
+-- makeZipMatch ''App
 makeKApplicativeBases ''App
 makeKTraversableAndFoldable ''App
 

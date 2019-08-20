@@ -7,19 +7,15 @@ module AST.Class.ZipMatch
     ) where
 
 import           AST.Class
-import           AST.Class.Combinators
 import           AST.Class.Foldable
 import           AST.Class.Traversable (KTraversable, traverseKWith)
-import           AST.Combinator.ANode
 import           AST.Knot (Tree)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad (guard)
-import           Data.Constraint.List (ApplyConstraints)
 import           Data.Functor.Const (Const(..))
 import           Data.Functor.Product.PolyKinds (Product(..))
 import           Data.Proxy (Proxy(..))
-import           Data.TyFun
 
 import           Prelude.Compat
 
@@ -36,32 +32,32 @@ instance Eq a => ZipMatch (Const a) where
 
 {-# INLINE zipMatchWithA #-}
 zipMatchWithA ::
-    forall expr f constraints a b c.
+    forall expr f constraint a b c.
     ( Applicative f
     , ZipMatch expr, KTraversable expr
-    , KLiftConstraints constraints expr
+    , NodesConstraint expr constraint
     ) =>
-    Proxy constraints ->
-    (forall child. ApplyConstraints constraints child => Tree a child -> Tree b child -> f (Tree c child)) ->
+    Proxy constraint ->
+    (forall child. constraint child => Tree a child -> Tree b child -> f (Tree c child)) ->
     Tree expr a -> Tree expr b -> Maybe (f (Tree expr c))
 zipMatchWithA p f x y = zipMatch x y <&> traverseKWith p (\(Pair a b) -> f a b)
 
 {-# INLINE zipMatchWith #-}
 zipMatchWith ::
     ( ZipMatch expr, KFunctor expr
-    , NodesConstraint expr $ constraint
+    , NodesConstraint expr constraint
     ) =>
     Proxy constraint ->
     (forall child. constraint child => Tree a child -> Tree b child -> Tree c child) ->
     Tree expr a -> Tree expr b -> Maybe (Tree expr c)
-zipMatchWith p f x y = zipMatch x y <&> mapKWithConstraint p (\(Pair a b) -> f a b)
+zipMatchWith p f x y = zipMatch x y <&> mapKWith p (\(Pair a b) -> f a b)
 
 {-# INLINE zipMatchWith_ #-}
 zipMatchWith_ ::
     forall f expr constraint a b.
     ( Applicative f
     , ZipMatch expr, KFoldable expr
-    , NodesConstraint expr $ constraint
+    , NodesConstraint expr constraint
     ) =>
     Proxy constraint ->
     (forall child. constraint child => Tree a child -> Tree b child -> f ()) ->
@@ -72,7 +68,7 @@ zipMatchWith_ p f x y = zipMatch x y <&> traverseKWith_ p (\(Pair a b) -> f a b)
 zipMatch1_ ::
     ( Applicative f
     , ZipMatch k, KFoldable k
-    , NodeTypesOf k ~ ANode c
+    , NodesConstraint k ((~) c)
     ) =>
     (Tree a c -> Tree b c -> f ()) ->
     Tree k a -> Tree k b -> Maybe (f ())

@@ -15,7 +15,7 @@ import           AST
 import           AST.Class.Has (HasChild(..))
 import           AST.Class.Recursive
 import           AST.Combinator.ANode (ANode)
-import           AST.Combinator.Flip
+import           AST.Combinator.Flip (Flip(..))
 import           AST.Infer
 import           AST.Unify
 import           AST.Unify.Lookup (semiPruneLookup)
@@ -52,14 +52,15 @@ newtype QVars typ = QVars
     deriving stock Generic
 
 instance KNodes (Scheme v t) where
-    type NodeTypesOf (Scheme v t) = ANode t
+    type NodesConstraint (Scheme v t) c = c t
+    {-# INLINE kCombineConstraints #-}
+    kCombineConstraints _ = Dict
 
 Lens.makeLenses ''Scheme
 Lens.makePrisms ''QVars
 makeKTraversableAndBases ''Scheme
 
-instance (c (Scheme v t), Recursively c t) => Recursively c (Scheme v t)
-
+instance RNodes t => RNodes (Scheme v t)
 instance (KFoldable (Scheme v t), RFoldable t) => RFoldable (Scheme v t)
 instance (KFunctor (Scheme v t), RFunctor t) => RFunctor (Scheme v t)
 instance (KTraversable (Scheme v t), RTraversable t) => RTraversable (Scheme v t)
@@ -127,9 +128,9 @@ class Unify m t => MonadInstantiate m t where
 instance
     ( Monad m
     , HasInferredValue typ
-    , Recursively (Unify m) typ
+    , Unify m typ
     , KTraversable varTypes
-    , NodesConstraint varTypes $ MonadInstantiate m
+    , NodesConstraint varTypes (MonadInstantiate m)
     , RTraversable typ
     , Infer m typ
     ) =>
@@ -138,7 +139,7 @@ instance
     {-# INLINE inferBody #-}
     inferBody (Scheme vars typ) =
         do
-            foralls <- traverseKWith (Proxy @'[MonadInstantiate m]) makeQVarInstances vars
+            foralls <- traverseKWith (Proxy @(MonadInstantiate m)) makeQVarInstances vars
             let withForalls =
                     foldMapKWith (Proxy @(MonadInstantiate m)) ((:[]) . localInstantiations) foralls
                     & foldl (.) id
@@ -149,7 +150,7 @@ instance
 inferType ::
     ( InferOf t ~ ANode t
     , KTraversable t
-    , NodesConstraint t $ HasInferredValue
+    , NodesConstraint t HasInferredValue
     , Unify m t
     , MonadInstantiate m t
     ) =>
@@ -160,7 +161,7 @@ inferType x =
     Nothing ->
         do
             xI <- traverseK inferChild x
-            mapKWithConstraint (Proxy @HasInferredValue) (^. inType . inferredValue) xI
+            mapKWith (Proxy @HasInferredValue) (^. inType . inferredValue) xI
                 & newTerm
                 <&> InferRes (mapK (^. inRep) xI) . MkANode
 
@@ -196,12 +197,12 @@ class
 
     hasSchemeRecursive ::
         Proxy varTypes -> Proxy m -> Proxy t ->
-        Dict (NodesConstraint t $ HasScheme varTypes m)
+        Dict (NodesConstraint t (HasScheme varTypes m))
     {-# INLINE hasSchemeRecursive #-}
     default hasSchemeRecursive ::
-        NodesConstraint t $ HasScheme varTypes m =>
+        NodesConstraint t (HasScheme varTypes m) =>
         Proxy varTypes -> Proxy m -> Proxy t ->
-        Dict (NodesConstraint t $ HasScheme varTypes m)
+        Dict (NodesConstraint t (HasScheme varTypes m))
     hasSchemeRecursive _ _ _ = Dict
 
 instance Recursive (HasScheme varTypes m) where
@@ -219,14 +220,14 @@ loadScheme ::
     forall m varTypes typ.
     ( Monad m
     , KTraversable varTypes
-    , NodesConstraint varTypes $ Unify m
+    , NodesConstraint varTypes (Unify m)
     , HasScheme varTypes m typ
     ) =>
     Tree Pure (Scheme varTypes typ) ->
     m (Tree (GTerm (UVarOf m)) typ)
 loadScheme (MkPure (Scheme vars typ)) =
     do
-        foralls <- traverseKWith (Proxy @'[Unify m]) makeQVarInstances vars
+        foralls <- traverseKWith (Proxy @(Unify m)) makeQVarInstances vars
         wrapM (Proxy @(HasScheme varTypes m))
             Dict (loadBody foralls) typ
 
@@ -237,7 +238,7 @@ saveH ::
     StateT (Tree varTypes QVars, [m ()]) m (Tree Pure typ)
 saveH (GBody x) =
     withDict (hasSchemeRecursive (Proxy @varTypes) (Proxy @m) (Proxy @typ)) $
-    traverseKWith (Proxy @'[HasScheme varTypes m]) saveH x <&> (_Pure #)
+    traverseKWith (Proxy @(HasScheme varTypes m)) saveH x <&> (_Pure #)
 saveH (GMono x) =
     unwrapM (Proxy @(HasScheme varTypes m)) Dict f x & lift
     where
@@ -265,7 +266,7 @@ saveH (GPoly x) =
     _ -> error "unexpected state at saveScheme's forall"
 
 saveScheme ::
-    ( NodesConstraint varTypes $ QVarHasInstance Ord
+    ( NodesConstraint varTypes (QVarHasInstance Ord)
     , KPointed varTypes
     , HasScheme varTypes m typ
     ) =>
@@ -275,7 +276,7 @@ saveScheme x =
     do
         (t, (v, recover)) <-
             runStateT (saveH x)
-            ( pureKWithConstraint (Proxy @(QVarHasInstance Ord)) (QVars mempty)
+            ( pureKWith (Proxy @(QVarHasInstance Ord)) (QVars mempty)
             , []
             )
         _Pure # Scheme v t <$ sequence_ recover
