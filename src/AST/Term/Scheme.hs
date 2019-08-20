@@ -116,7 +116,7 @@ Lens.makePrisms ''QVarInstances
 instance (RTraversable t, Inferrable t) => Inferrable (Scheme v t) where
     type InferOf (Scheme v t) = Flip GTerm t
 
-class MonadInstantiate m t where
+class Unify m t => MonadInstantiate m t where
     localInstantiations ::
         Tree (QVarInstances (UVarOf m)) t ->
         m a ->
@@ -128,7 +128,6 @@ instance
     , HasInferredValue typ
     , Recursively (Unify m) typ
     , KTraversable varTypes
-    , NodesConstraint varTypes $ Unify m
     , NodesConstraint varTypes $ MonadInstantiate m
     , RTraversable typ
     , Infer m typ
@@ -138,7 +137,7 @@ instance
     {-# INLINE inferBody #-}
     inferBody (Scheme vars typ) =
         do
-            foralls <- traverseKWith (Proxy @'[Unify m]) makeQVarInstances vars
+            foralls <- traverseKWith (Proxy @'[MonadInstantiate m]) makeQVarInstances vars
             let withForalls =
                     foldMapKWith (Proxy @(MonadInstantiate m)) ((:[]) . localInstantiations) foralls
                     & foldl (.) id

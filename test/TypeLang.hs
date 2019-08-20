@@ -210,13 +210,13 @@ instance HasInferredValue Typ where inferredValue = _ANode
 instance HasInferredValue Row where inferredValue = _ANode
 
 instance
-    (Monad m, MonadInstantiate m Typ, MonadInstantiate m Row, Unify m Typ, Unify m Row) =>
+    (Monad m, MonadInstantiate m Typ, MonadInstantiate m Row) =>
     Infer m Typ where
 
     inferBody = inferType
 
 instance
-    (Monad m, MonadInstantiate m Typ, MonadInstantiate m Row, Unify m Typ, Unify m Row) =>
+    (Monad m, MonadInstantiate m Typ, MonadInstantiate m Row) =>
     Infer m Row where
 
     inferBody = inferType

@@ -114,7 +114,6 @@ type TermInfer1Deps env m =
     ( MonadScopeLevel m
     , MonadReader env m
     , HasScopeTypes (UVarOf m) Typ env
-    , Unify m Typ, Unify m Row
     , MonadInstantiate m Typ, MonadInstantiate m Row
     )
 
