@@ -33,9 +33,21 @@ instance KNodes (ANode c) where
     type NodesConstraint (ANode c) = On c
 
 makeKPointed ''ANode
-instance KApply (ANode c) where zipK = (_ANode %~) . (Pair . getANode)
-instance KFoldable (ANode c) where foldMapC f = (f ^. _ANode . _ConvertK) . getANode
-instance KFunctor (ANode c) where mapC = (_ANode %~) . (^. _ANode . _MapK)
+
+instance KApply (ANode c) where
+    {-# INLINE zipK #-}
+    zipK = (_ANode %~) . (Pair . getANode)
+
+instance KFoldable (ANode c) where
+    foldMapC f = (f ^. _ANode . _ConvertK) . getANode
+
+instance KFunctor (ANode c) where
+    mapC = (_ANode %~) . (^. _ANode . _MapK)
+    {-# INLINE mapK #-}
+    mapK = (_ANode %~)
+    {-# INLINE mapKWithConstraint #-}
+    mapKWithConstraint _ = (_ANode %~)
+
 instance KTraversable (ANode c) where sequenceC = _ANode runContainedK
 
 {-# INLINE foldMapK1 #-}

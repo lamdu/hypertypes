@@ -103,6 +103,10 @@ instance KFunctor v => KFunctor (NominalInst n v) where
         withDict (kNodes (Proxy @v)) $
         mapC (mapK (_MapK %~ (_QVarInstances . Lens.mapped %~)) f) v & NominalInst n
 
+    {-# INLINE mapK #-}
+    mapK f (NominalInst n v) =
+        mapK (_QVarInstances . Lens.mapped %~ f) v & NominalInst n
+
 instance KFoldable v => KFoldable (NominalInst n v) where
     foldMapC f (NominalInst _ v) =
         withDict (kNodes (Proxy @v)) $

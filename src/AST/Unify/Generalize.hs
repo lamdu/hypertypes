@@ -75,6 +75,17 @@ instance RFunctor ast => KFunctor (Flip GTerm ast) where
             ) x
             & GBody
 
+    {-# INLINE mapK #-}
+    mapK f =
+        _Flip %~
+        \case
+        GMono x -> f x & GMono
+        GPoly x -> f x & GPoly
+        GBody x ->
+            withDict (recursiveKFunctor (Proxy @ast)) $
+            mapKWithConstraint (Proxy @RFunctor) (Lens.from _Flip %~ mapK f) x
+            & GBody
+
 instance RFoldable ast => KFoldable (Flip GTerm ast) where
 
     {-# INLINE foldMapC #-}
