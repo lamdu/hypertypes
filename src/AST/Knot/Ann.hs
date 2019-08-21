@@ -7,7 +7,7 @@ module AST.Knot.Ann
     , strip, addAnnotations
     ) where
 
-import           AST.Class
+import           AST.Class.Functor (KFunctor(..))
 import           AST.Class.Recursive
 import           AST.Class.Traversable
 import           AST.Knot (Tree, Node)

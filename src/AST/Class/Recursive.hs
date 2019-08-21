@@ -11,6 +11,7 @@ module AST.Class.Recursive
 
 import AST.Class
 import AST.Class.Foldable
+import AST.Class.Functor (KFunctor(..))
 import AST.Class.Traversable
 import AST.Class.ZipMatch
 import AST.Knot

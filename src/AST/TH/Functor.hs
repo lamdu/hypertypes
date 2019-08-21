@@ -4,7 +4,7 @@ module AST.TH.Functor
     ( makeKFunctor
     ) where
 
-import           AST.Class
+import           AST.Class.Functor
 import           AST.TH.Internal
 import           Control.Lens.Operators
 import           Language.Haskell.TH

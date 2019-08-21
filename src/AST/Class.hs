@@ -3,8 +3,6 @@
 module AST.Class
     ( KNodes(..)
     , KPointed(..)
-    , KFunctor(..)
-    , mapK1
     ) where
 
 import AST.Knot (Knot, Tree)
@@ -39,19 +37,6 @@ class KNodes k => KPointed k where
         (forall child. constraint child => Tree n child) ->
         Tree k n
 
-class KNodes k => KFunctor k where
-    mapK ::
-        (forall c. Tree m c -> Tree n c) ->
-        Tree k m ->
-        Tree k n
-
-    mapKWith ::
-        NodesConstraint k constraint =>
-        Proxy constraint ->
-        (forall c. constraint c => Tree m c -> Tree n c) ->
-        Tree k m ->
-        Tree k n
-
 instance KNodes (Const a) where
     type NodesConstraint (Const a) x = ()
     {-# INLINE kCombineConstraints #-}
@@ -62,12 +47,6 @@ instance Monoid a => KPointed (Const a) where
     pureK _ = Const mempty
     {-# INLINE pureKWith #-}
     pureKWith _ _ = Const mempty
-
-instance KFunctor (Const a) where
-    {-# INLINE mapK #-}
-    mapK _ (Const x) = Const x
-    {-# INLINE mapKWith #-}
-    mapKWith _ _ (Const x) = Const x
 
 instance (KNodes a, KNodes b) => KNodes (Product a b) where
     type NodesConstraint (Product a b) x = (NodesConstraint a x, NodesConstraint b x)
@@ -86,19 +65,3 @@ instance (KPointed a, KPointed b) => KPointed (Product a b) where
     pureK f = Pair (pureK f) (pureK f)
     {-# INLINE pureKWith #-}
     pureKWith p f = Pair (pureKWith p f) (pureKWith p f)
-
-instance (KFunctor a, KFunctor b) => KFunctor (Product a b) where
-    {-# INLINE mapK #-}
-    mapK f (Pair x y) = Pair (mapK f x) (mapK f y)
-    {-# INLINE mapKWith #-}
-    mapKWith p f (Pair x y) =
-        Pair (mapKWith p f x) (mapKWith p f y)
-
-{-# INLINE mapK1 #-}
-mapK1 ::
-    forall k c m n.
-    (KFunctor k, NodesConstraint k ((~) c)) =>
-    (Tree m c -> Tree n c) ->
-    Tree k m ->
-    Tree k n
-mapK1 = mapKWith (Proxy @((~) c))

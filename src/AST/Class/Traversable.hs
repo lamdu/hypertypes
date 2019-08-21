@@ -11,6 +11,7 @@ module AST.Class.Traversable
 import AST.Class
 import AST.Class.Apply (KApply, KApplicative, liftK2, liftK2With)
 import AST.Class.Foldable (KFoldable)
+import AST.Class.Functor (KFunctor(..), mapK1)
 import AST.Knot (Knot, Tree)
 import Control.Lens (Iso, iso)
 import Data.Functor.Const (Const(..))

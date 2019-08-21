@@ -6,6 +6,7 @@ module AST.Class.Apply
     ) where
 
 import AST.Class
+import AST.Class.Functor (KFunctor(..))
 import AST.Knot
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
