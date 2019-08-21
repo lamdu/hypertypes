@@ -119,13 +119,13 @@ instance Recursive RZipMatchTraversable where
 
 {-# INLINE recurseBoth #-}
 recurseBoth ::
-    forall a b k.
+    forall a b k r.
     (KNodes k, Recursive a, Recursive b, a k, b k) =>
-    Proxy (And a b k) -> Dict (NodesConstraint k (And a b))
-recurseBoth _ =
+    Proxy (And a b k) -> (NodesConstraint k (And a b) => r) -> r
+recurseBoth _ x =
     withDict (recurse (Proxy @(a k))) $
     withDict (recurse (Proxy @(b k))) $
-    kCombineConstraints (Proxy @(And a b k)) Dict
+    kCombineConstraints (Proxy @(And a b k)) x
 
 {-# INLINE wrapM #-}
 wrapM ::
@@ -136,7 +136,7 @@ wrapM ::
     Tree Pure k ->
     m (Tree w k)
 wrapM p f x =
-    withDict (recurseBoth (Proxy @(And RTraversable c k))) $
+    recurseBoth (Proxy @(And RTraversable c k)) $
     x ^. _Pure
     & traverseKWith (Proxy @(And RTraversable c)) (wrapM p f)
     >>= f
@@ -150,7 +150,7 @@ unwrapM ::
     Tree w k ->
     m (Tree Pure k)
 unwrapM p f x =
-    withDict (recurseBoth (Proxy @(And RTraversable c k))) $
+    recurseBoth (Proxy @(And RTraversable c k)) $
     f x
     >>= traverseKWith (Proxy @(And RTraversable c)) (unwrapM p f)
     <&> (_Pure #)
@@ -164,7 +164,7 @@ wrap ::
     Tree Pure k ->
     Tree w k
 wrap p f x =
-    withDict (recurseBoth (Proxy @(And RFunctor c k))) $
+    recurseBoth (Proxy @(And RFunctor c k)) $
     x ^. _Pure
     & mapKWith (Proxy @(And RFunctor c)) (wrap p f)
     & f
@@ -178,7 +178,7 @@ unwrap ::
     Tree w k ->
     Tree Pure k
 unwrap p f x =
-    withDict (recurseBoth (Proxy @(And RFunctor c k))) $
+    recurseBoth (Proxy @(And RFunctor c k)) $
     f x
     & mapKWith (Proxy @(And RFunctor c)) (unwrap p f)
     & MkPure

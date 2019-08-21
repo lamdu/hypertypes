@@ -62,7 +62,7 @@ instance RFunctor ast => KFunctor (Flip GTerm ast) where
         GMono x -> f x & GMono
         GPoly x -> f x & GPoly
         GBody x ->
-            withDict (recurseBoth (p0 p)) $
+            recurseBoth (p0 p) $
             mapKWith (p1 p) (Lens.from _Flip %~ mapKWith p f) x
             & GBody
         where
@@ -78,7 +78,7 @@ instance RFoldable ast => KFoldable (Flip GTerm ast) where
         GMono x -> f x
         GPoly x -> f x
         GBody x ->
-            withDict (recurseBoth (p0 p)) $
+            recurseBoth (p0 p) $
             foldMapKWith (p1 p) (foldMapKWith p f . (_Flip #)) x
         . (^. _Flip)
         where
