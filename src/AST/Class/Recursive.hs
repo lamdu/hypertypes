@@ -1,5 +1,4 @@
-{-# LANGUAGE RankNTypes, DefaultSignatures, TemplateHaskell #-}
-{-# LANGUAGE ScopedTypeVariables, TypeOperators #-}
+{-# LANGUAGE RankNTypes, DefaultSignatures, ScopedTypeVariables, TypeOperators #-}
 
 module AST.Class.Recursive
     ( Recursive(..)
