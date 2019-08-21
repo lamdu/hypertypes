@@ -224,8 +224,7 @@ loadScheme ::
 loadScheme (MkPure (Scheme vars typ)) =
     do
         foralls <- traverseKWith (Proxy @(Unify m)) makeQVarInstances vars
-        wrapM (Proxy @(HasScheme varTypes m))
-            Dict (loadBody foralls) typ
+        wrapM (Proxy @(HasScheme varTypes m)) (loadBody foralls) typ
 
 saveH ::
     forall typ varTypes m.
@@ -236,7 +235,7 @@ saveH (GBody x) =
     withDict (hasSchemeRecursive (Proxy @varTypes) (Proxy @m) (Proxy @typ)) $
     traverseKWith (Proxy @(HasScheme varTypes m)) saveH x <&> (_Pure #)
 saveH (GMono x) =
-    unwrapM (Proxy @(HasScheme varTypes m)) Dict f x & lift
+    unwrapM (Proxy @(HasScheme varTypes m)) f x & lift
     where
         f v =
             semiPruneLookup v

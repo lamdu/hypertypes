@@ -14,7 +14,6 @@ import           Control.Lens.Operators
 import           Control.Monad.Except
 import           Control.Monad.RWS
 import           Control.Monad.ST
-import           Data.Constraint
 import qualified Data.Map as Map
 import           Data.Proxy
 import qualified Data.Set as Set
@@ -130,7 +129,7 @@ inferExpr ::
     Tree Pure t ->
     m (Tree Pure (TypeOf t))
 inferExpr x =
-    infer (wrap (Proxy @RTraversable) Dict (Ann ()) x)
+    infer (wrap (Proxy @RTraversable) (Ann ()) x)
     >>= traverseITermWith (Proxy @(Unify m)) applyBindings
     <&> (^# iRes . inferredType (Proxy @t))
 

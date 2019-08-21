@@ -51,9 +51,7 @@ schemeToRestrictedType ::
 schemeToRestrictedType (MkPure (Scheme vars typ)) =
     do
         foralls <- traverseKWith (Proxy @(Unify m)) makeQVarInstancesInScope vars
-        wrapM
-            (Proxy @(HasScheme varTypes m))
-            Dict (schemeBodyToType foralls) typ
+        wrapM (Proxy @(HasScheme varTypes m)) (schemeBodyToType foralls) typ
 
 goUTerm ::
     forall m t.

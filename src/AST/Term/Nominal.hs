@@ -252,7 +252,7 @@ loadNominalDecl (MkPure (NominalDecl params (Scheme foralls typ))) =
         paramsL <- traverseKWith (Proxy @(Unify m)) makeQVarInstances params
         forallsL <- traverseKWith (Proxy @(Unify m)) makeQVarInstances foralls
         wrapM (Proxy @(HasScheme (NomVarTypes typ) m))
-            Dict (loadBody paramsL forallsL) typ
+            (loadBody paramsL forallsL) typ
             <&> LoadedNominalDecl paramsL forallsL
 
 class MonadNominals nomId typ m where

@@ -7,7 +7,6 @@ import AST.Class.Recursive
 import AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import AST.Unify.Constraints (MonadScopeConstraints(..))
 import AST.Unify.Term (UTerm(..), UTermBody(..))
-import Data.Constraint (Dict(..))
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
@@ -26,4 +25,4 @@ unfreeze ::
     forall m t.
     Unify m t =>
     Tree Pure t -> m (Tree (UVarOf m) t)
-unfreeze = wrapM (Proxy @(Unify m)) Dict newTerm
+unfreeze = wrapM (Proxy @(Unify m)) newTerm

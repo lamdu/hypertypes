@@ -6,7 +6,6 @@ module AST.Knot.Ann
     , strip, addAnnotations
     ) where
 
-import           AST.Class.Functor (KFunctor(..))
 import           AST.Class.Recursive
 import           AST.Class.Traversable
 import           AST.Knot (Tree, Node)
@@ -17,7 +16,7 @@ import           Control.DeepSeq (NFData)
 import           Control.Lens (Traversal, makeLenses)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
-import           Data.Constraint (Dict(..), withDict)
+import           Data.Constraint (withDict)
 import           Data.Proxy (Proxy(..))
 import           Generics.OneLiner (Constraints)
 import           GHC.Generics (Generic)
@@ -59,18 +58,17 @@ annotations f (Ann pl x) =
     <*> traverseKWith (Proxy @RTraversable) (annotations f) x
 
 strip ::
-    RTraversable expr =>
+    RFunctor expr =>
     Tree (Ann a) expr ->
     Tree Pure expr
-strip = unwrap (Proxy @RTraversable) Dict (^. val)
+strip = unwrap (Proxy @RFunctor) (^. val)
 
 addAnnotations ::
-    (Recursive c, RNodes k, c k) =>
+    (Recursive c, RFunctor k, c k) =>
     Proxy c ->
-    (forall n. c n => Dict (KFunctor n)) ->
     (forall n. c n => Tree n (Ann a) -> a) ->
     Tree Pure k -> Tree (Ann a) k
-addAnnotations p getFunctor f = wrap p getFunctor (\x -> Ann (f x) x)
+addAnnotations p f = wrap p (\x -> Ann (f x) x)
 
 deriving instance Constraints (Ann a t) Eq   => Eq   (Ann a t)
 deriving instance Constraints (Ann a t) Ord  => Ord  (Ann a t)

@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes, DefaultSignatures, TypeOperators #-}
+{-# LANGUAGE RankNTypes, DefaultSignatures #-}
 
 module AST.Class.Recursive
     ( Recursive(..)
@@ -121,7 +121,7 @@ instance Recursive RZipMatchTraversable where
 recurseBoth ::
     forall a b k.
     (KNodes k, Recursive a, Recursive b, a k, b k) =>
-    Proxy (And a b k) -> Dict (NodesConstraint k (a `And` b) )
+    Proxy (And a b k) -> Dict (NodesConstraint k (And a b))
 recurseBoth _ =
     withDict (recurse (Proxy @(a k))) $
     withDict (recurse (Proxy @(b k))) $
@@ -130,87 +130,77 @@ recurseBoth _ =
 {-# INLINE wrapM #-}
 wrapM ::
     forall m k c w.
-    (Monad m, Recursive c, RNodes k, c k) =>
+    (Monad m, Recursive c, RTraversable k, c k) =>
     Proxy c ->
-    (forall n. c n => Dict (KTraversable n)) ->
     (forall n. c n => Tree n w -> m (Tree w n)) ->
     Tree Pure k ->
     m (Tree w k)
-wrapM p getTraversable f x =
-    withDict (recurseBoth (Proxy @(And RNodes c k))) $
-    withDict (getTraversable @k) $
+wrapM p f x =
+    withDict (recurseBoth (Proxy @(And RTraversable c k))) $
     x ^. _Pure
-    & traverseKWith (Proxy @(RNodes `And` c)) (wrapM p getTraversable f)
+    & traverseKWith (Proxy @(And RTraversable c)) (wrapM p f)
     >>= f
 
 {-# INLINE unwrapM #-}
 unwrapM ::
     forall m k c w.
-    (Monad m, Recursive c, RNodes k, c k) =>
+    (Monad m, Recursive c, RTraversable k, c k) =>
     Proxy c ->
-    (forall n. c n => Dict (KTraversable n)) ->
     (forall n. c n => Tree w n -> m (Tree n w)) ->
     Tree w k ->
     m (Tree Pure k)
-unwrapM p getTraversable f x =
-    withDict (recurseBoth (Proxy @(And RNodes c k))) $
-    withDict (getTraversable @k) $
+unwrapM p f x =
+    withDict (recurseBoth (Proxy @(And RTraversable c k))) $
     f x
-    >>= traverseKWith (Proxy @(RNodes `And` c)) (unwrapM p getTraversable f)
+    >>= traverseKWith (Proxy @(And RTraversable c)) (unwrapM p f)
     <&> (_Pure #)
 
 {-# INLINE wrap #-}
 wrap ::
     forall k c w.
-    (Recursive c, RNodes k, c k) =>
+    (Recursive c, RFunctor k, c k) =>
     Proxy c ->
-    (forall n. c n => Dict (KFunctor n)) ->
     (forall n. c n => Tree n w -> Tree w n) ->
     Tree Pure k ->
     Tree w k
-wrap p getFunctor f x =
-    withDict (recurseBoth (Proxy @(And RNodes c k))) $
-    withDict (getFunctor @k) $
+wrap p f x =
+    withDict (recurseBoth (Proxy @(And RFunctor c k))) $
     x ^. _Pure
-    & mapKWith (Proxy @(RNodes `And` c)) (wrap p getFunctor f)
+    & mapKWith (Proxy @(And RFunctor c)) (wrap p f)
     & f
 
 {-# INLINE unwrap #-}
 unwrap ::
     forall k c w.
-    (Recursive c, RNodes k, c k) =>
+    (Recursive c, RFunctor k, c k) =>
     Proxy c ->
-    (forall n. c n => Dict (KFunctor n)) ->
     (forall n. c n => Tree w n -> Tree n w) ->
     Tree w k ->
     Tree Pure k
-unwrap p getFunctor f x =
-    withDict (recurseBoth (Proxy @(And RNodes c k))) $
-    withDict (getFunctor @k) $
+unwrap p f x =
+    withDict (recurseBoth (Proxy @(And RFunctor c k))) $
     f x
-    & mapKWith (Proxy @(RNodes `And` c)) (unwrap p getFunctor f)
+    & mapKWith (Proxy @(And RFunctor c)) (unwrap p f)
     & MkPure
 
 -- | Recursively fold up a tree to produce a result.
 -- TODO: Is this a "cata-morphism"?
 {-# INLINE fold #-}
 fold ::
-    (Recursive c, RNodes k, c k) =>
+    (Recursive c, RFunctor k, c k) =>
     Proxy c ->
-    (forall n. c n => Dict (KFunctor n)) ->
     (forall n. c n => Tree n (Const a) -> a) ->
     Tree Pure k ->
     a
-fold p getFunctor f = getConst . wrap p getFunctor (Const . f)
+fold p f = getConst . wrap p (Const . f)
 
 -- | Build/load a tree from a seed value.
 -- TODO: Is this an "ana-morphism"?
 {-# INLINE unfold #-}
 unfold ::
-    (Recursive c, RNodes k, c k) =>
+    (Recursive c, RFunctor k, c k) =>
     Proxy c ->
-    (forall n. c n => Dict (KFunctor n)) ->
     (forall n. c n => a -> Tree n (Const a)) ->
     a ->
     Tree Pure k
-unfold p getFunctor f = unwrap p getFunctor (f . getConst) . Const
+unfold p f = unwrap p (f . getConst) . Const
