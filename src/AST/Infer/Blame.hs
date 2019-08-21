@@ -48,7 +48,7 @@ prepare ::
     m (Tree (Ann (PrepAnn m a)) exp)
 prepare typeFromAbove (Ann a x) =
     withDict (traversableInferOf (Proxy @exp)) $
-    withDict (inferredUnify (Proxy @m) (Proxy @exp)) $
+    inferredUnify (Proxy @m) (Proxy @exp) $
     withDict (blamableRecursive (Proxy @m) (Proxy @exp)) $
     inferBody
     (mapKWith (Proxy @(Blamable m))
@@ -56,7 +56,7 @@ prepare typeFromAbove (Ann a x) =
             let p :: Tree (Ann a) k -> Proxy k
                 p _ = Proxy
             in
-            withDict (inferredUnify (Proxy @m) (p c)) $
+            inferredUnify (Proxy @m) (p c) $
             withDict (traversableInferOf (p c)) $
             do
                 t <- sequencePureKWith (Proxy @(Unify m)) newUnbound

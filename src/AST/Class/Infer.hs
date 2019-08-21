@@ -1,4 +1,6 @@
 {-# LANGUAGE TemplateHaskell, RecordWildCards, FlexibleContexts, DefaultSignatures #-}
+{-# LANGUAGE RankNTypes #-}
+{-# OPTIONS -Wno-redundant-constraints #-} -- Work around false GHC warnings
 
 module AST.Class.Infer
     ( Infer(..), LocalScopeType(..)
@@ -75,16 +77,18 @@ class (Monad m, Inferrable t) => Infer m t where
         Tree t (InferChild m k) ->
         m (InferRes (UVarOf m) k t)
 
-    inferRecursive :: Proxy m -> Proxy t -> Dict (NodesConstraint t (Infer m))
+    inferRecursive ::
+        Proxy m -> Proxy t -> (NodesConstraint t (Infer m) => r) -> r
     {-# INLINE inferRecursive #-}
     default inferRecursive ::
         NodesConstraint t (Infer m) =>
-        Proxy m -> Proxy t -> Dict (NodesConstraint t (Infer m))
-    inferRecursive _ _ = Dict
+        Proxy m -> Proxy t -> (NodesConstraint t (Infer m) => r) -> r
+    inferRecursive _ _ = id
 
-    inferredUnify :: Proxy m -> Proxy t -> Dict (NodesConstraint (InferOf t) (Unify m))
+    inferredUnify ::
+        Proxy m -> Proxy t -> (NodesConstraint (InferOf t) (Unify m) => r) -> r
     {-# INLINE inferredUnify #-}
     default inferredUnify ::
         NodesConstraint (InferOf t) (Unify m) =>
-        Proxy m -> Proxy t -> Dict (NodesConstraint (InferOf t) (Unify m))
-    inferredUnify _ _ = Dict
+        Proxy m -> Proxy t -> (NodesConstraint (InferOf t) (Unify m) => r) -> r
+    inferredUnify _ _ = id
