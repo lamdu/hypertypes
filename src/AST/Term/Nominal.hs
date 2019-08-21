@@ -20,6 +20,7 @@ import           AST.Class.Foldable (foldMapKWith, traverseKWith_)
 import           AST.Class.Recursive
 import           AST.Class.Traversable (ContainedK(..))
 import           AST.Class.ZipMatch (ZipMatch(..))
+import           AST.Combinator.Flip (_Flip)
 import           AST.Infer
 import           AST.Term.FuncType (FuncType(..))
 import           AST.Term.Map (TermMap(..), _TermMap)
@@ -166,6 +167,53 @@ data LoadedNominalDecl typ v = LoadedNominalDecl
     , _lnForalls :: Tree (NomVarTypes typ) (QVarInstances (RunKnot v))
     , _lnType :: Tree (GTerm (RunKnot v)) typ
     } deriving Generic
+
+instance KNodes (NomVarTypes typ) => KNodes (LoadedNominalDecl typ) where
+    type NodesConstraint (LoadedNominalDecl typ) c =
+        ( NodesConstraint (NomVarTypes typ) c
+        , c typ
+        , Recursive c
+        )
+    {-# INLINE kNoConstraints #-}
+    kNoConstraints _ =
+        withDict (kNoConstraints (Proxy @(NomVarTypes typ))) Dict
+    {-# INLINE kCombineConstraints #-}
+    kCombineConstraints p =
+        withDict (kCombineConstraints (p0 p)) Dict
+        where
+            p0 :: Proxy (c (LoadedNominalDecl typ)) -> Proxy (c (NomVarTypes typ))
+            p0 _ = Proxy
+
+instance
+    (RFunctor typ, KFunctor (NomVarTypes typ)) =>
+    KFunctor (LoadedNominalDecl typ) where
+    {-# INLINE mapKWith #-}
+    mapKWith c f (LoadedNominalDecl mp mf t) =
+        LoadedNominalDecl (onMap mp) (onMap mf)
+        (t & Lens.from _Flip %~ mapKWith c f)
+        where
+            onMap = mapKWith c (_QVarInstances . Lens.mapped %~ f)
+
+instance
+    (RFoldable typ, KFoldable (NomVarTypes typ)) =>
+    KFoldable (LoadedNominalDecl typ) where
+    {-# INLINE foldMapKWith #-}
+    foldMapKWith c f (LoadedNominalDecl mp mf t) =
+        onMap mp <> onMap mf <> foldMapKWith c f (_Flip # t)
+        where
+            onMap = foldMapKWith c (^. _QVarInstances . Lens.folded . Lens.to f)
+
+instance
+    (RTraversable typ, KTraversable (NomVarTypes typ)) =>
+    KTraversable (LoadedNominalDecl typ) where
+    {-# INLINE sequenceK #-}
+    sequenceK (LoadedNominalDecl p f t) =
+        LoadedNominalDecl
+        <$> onMap p
+        <*> onMap f
+        <*> Lens.from _Flip sequenceK t
+        where
+            onMap = traverseK ((_QVarInstances . traverse) runContainedK)
 
 {-# INLINE loadBody #-}
 loadBody ::
