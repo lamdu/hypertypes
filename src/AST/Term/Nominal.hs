@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, UndecidableInstances #-}
-{-# LANGUAGE FlexibleContexts, TemplateHaskell, UndecidableSuperClasses, TypeOperators #-}
+{-# LANGUAGE FlexibleContexts, TemplateHaskell, TypeOperators #-}
 
 module AST.Term.Nominal
     ( NominalDecl(..), nParams, nScheme
@@ -27,7 +27,7 @@ import           AST.Term.Scheme
 import           AST.Unify
 import           AST.Unify.Generalize (GTerm(..), _GMono, instantiateWith, instantiateForAll)
 import           AST.Unify.New (newTerm)
-import           AST.Unify.QuantifiedVar (HasQuantifiedVar(..), QVarHasInstance)
+import           AST.Unify.QuantifiedVar (HasQuantifiedVar(..), OrdQVar)
 import           AST.Unify.Term (UTerm(..))
 import           Control.Applicative (Alternative(..))
 import           Control.DeepSeq (NFData)
@@ -114,7 +114,7 @@ instance
     , ZipMatch varTypes
     , KTraversable varTypes
     , NodesConstraint varTypes ZipMatch
-    , NodesConstraint varTypes (QVarHasInstance Ord)
+    , NodesConstraint varTypes OrdQVar
     ) =>
     ZipMatch (NominalInst nomId varTypes) where
 
@@ -122,9 +122,9 @@ instance
     zipMatch (NominalInst xId x) (NominalInst yId y)
         | xId /= yId = Nothing
         | otherwise =
-            withDict (kCombineConstraints (Proxy @(And ZipMatch (QVarHasInstance Ord) varTypes))) $
+            withDict (kCombineConstraints (Proxy @(And ZipMatch OrdQVar varTypes))) $
             zipMatch x y
-            >>= traverseKWith (Proxy @(ZipMatch `And` QVarHasInstance Ord))
+            >>= traverseKWith (Proxy @(ZipMatch `And` OrdQVar))
                 (\(Pair (QVarInstances c0) (QVarInstances c1)) ->
                     zipMatch (TermMap c0) (TermMap c1)
                     <&> (^. _TermMap)
@@ -137,20 +137,20 @@ instance Constraints (ToNom nomId term k) Pretty => Pretty (ToNom nomId term k) 
         (pPrint nomId <> Pretty.text "#") <+> pPrintPrec lvl 11 term
         & maybeParens (p > 10)
 
-class    constraint (Node outer k) => NodeHasConstraint constraint outer k
-instance constraint (Node outer k) => NodeHasConstraint constraint outer k
+class    (Pretty (QVar k), Pretty (Node outer k)) => PrettyConstraints outer k
+instance (Pretty (QVar k), Pretty (Node outer k)) => PrettyConstraints outer k
 
 instance
     ( Pretty nomId
     , KApply varTypes, KFoldable varTypes
-    , NodesConstraint varTypes (QVarHasInstance Pretty `And` NodeHasConstraint Pretty k)
+    , NodesConstraint varTypes (PrettyConstraints k)
     ) =>
     Pretty (NominalInst nomId varTypes k) where
 
     pPrint (NominalInst n vars) =
         pPrint n <>
         joinArgs
-        (foldMapKWith (Proxy @(QVarHasInstance Pretty `And` NodeHasConstraint Pretty k)) mkArgs vars)
+        (foldMapKWith (Proxy @(PrettyConstraints k)) mkArgs vars)
         where
             joinArgs [] = mempty
             joinArgs xs =

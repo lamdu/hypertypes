@@ -117,7 +117,7 @@ Lens.makeLenses ''LangAInferEnv
 emptyLangAInferEnv :: LangAInferEnv v
 emptyLangAInferEnv =
     LangAInferEnv mempty (ScopeLevel 0)
-    (pureKWith (Proxy @(QVarHasInstance Ord)) (QVarInstances mempty))
+    (pureKWith (Proxy @OrdQVar) (QVarInstances mempty))
 
 instance HasScopeTypes v Typ (LangAInferEnv v) where scopeTypes = iaScopeTypes
 

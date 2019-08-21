@@ -21,7 +21,7 @@ import           AST.Unify
 import           AST.Unify.Lookup (semiPruneLookup)
 import           AST.Unify.New (newTerm)
 import           AST.Unify.Generalize
-import           AST.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify(..), QVarHasInstance)
+import           AST.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify(..), OrdQVar)
 import           AST.Unify.Term (UTerm(..), uBody)
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
@@ -262,7 +262,7 @@ saveH (GPoly x) =
     _ -> error "unexpected state at saveScheme's forall"
 
 saveScheme ::
-    ( NodesConstraint varTypes (QVarHasInstance Ord)
+    ( NodesConstraint varTypes OrdQVar
     , KPointed varTypes
     , HasScheme varTypes m typ
     ) =>
@@ -272,7 +272,7 @@ saveScheme x =
     do
         (t, (v, recover)) <-
             runStateT (saveH x)
-            ( pureKWith (Proxy @(QVarHasInstance Ord)) (QVars mempty)
+            ( pureKWith (Proxy @OrdQVar) (QVars mempty)
             , []
             )
         _Pure # Scheme v t <$ sequence_ recover
