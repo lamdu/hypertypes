@@ -10,18 +10,24 @@ module AST.Class.Foldable
 import AST.Class.Apply (KApply, liftK2, liftK2With)
 import AST.Class.Nodes (KNodes(..))
 import AST.Knot (Tree)
+import Data.Constraint (withDict)
+import Data.Constraint.List (NoConstraint)
 import Data.Foldable (sequenceA_)
 import Data.Functor.Const (Const(..))
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
-class KFoldable k where
+class KNodes k => KFoldable k where
     foldMapK ::
         Monoid a =>
         (forall c. Tree l c -> a) ->
         Tree k l ->
         a
+    {-# INLINE foldMapK #-}
+    foldMapK f =
+        withDict (kNoConstraints (Proxy @k)) $
+        foldMapKWith (Proxy @NoConstraint) f
 
     foldMapKWith ::
         (Monoid a, NodesConstraint k constraint) =>
@@ -31,8 +37,6 @@ class KFoldable k where
         a
 
 instance KFoldable (Const a) where
-    {-# INLINE foldMapK #-}
-    foldMapK _ _ = mempty
     {-# INLINE foldMapKWith #-}
     foldMapKWith _ _ _ = mempty
 

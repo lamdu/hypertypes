@@ -4,7 +4,6 @@
 module AST.Infer.Term
     ( ITerm(..), iVal, iRes, iAnn
     , iAnnotations
-    , TraverseITerm(..), traverseITerm
     , TraverseITermWith(..), traverseITermWith
     ) where
 
@@ -42,26 +41,7 @@ iAnnotations f (ITerm pl r x) =
     <*> pure r
     <*> traverseKWith (Proxy @RTraversable) (iAnnotations f) x
 
-class (RTraversable e, KTraversable (InferOf e)) => TraverseITerm e where
-    traverseITermRecursive :: Proxy e -> Dict (NodesConstraint e TraverseITerm)
-    {-# INLINE traverseITermRecursive #-}
-    default traverseITermRecursive ::
-        NodesConstraint e TraverseITerm =>
-        Proxy e -> Dict (NodesConstraint e TraverseITerm)
-    traverseITermRecursive _ = Dict
-
-traverseITerm ::
-    forall e f v r a.
-    (TraverseITerm e, Applicative f) =>
-    (forall c. Tree v c -> f (Tree r c)) ->
-    Tree (ITerm a v) e -> f (Tree (ITerm a r) e)
-traverseITerm f (ITerm a r x) =
-    withDict (traverseITermRecursive (Proxy @e)) $
-    ITerm a
-    <$> traverseK f r
-    <*> traverseKWith (Proxy @TraverseITerm) (traverseITerm f) x
-
-class (TraverseITerm e, KTraversable (InferOf e)) => TraverseITermWith c e where
+class (RTraversable e, KTraversable (InferOf e)) => TraverseITermWith c e where
     traverseITermWithRecursive :: Proxy c -> Proxy e -> Dict (NodesConstraint e (TraverseITermWith c))
     {-# INLINE traverseITermWithRecursive #-}
     default traverseITermWithRecursive ::

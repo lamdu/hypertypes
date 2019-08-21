@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes, ScopedTypeVariables #-}
 
 module AST.Class.Pointed
     ( KPointed(..)
@@ -6,6 +6,8 @@ module AST.Class.Pointed
 
 import AST.Class.Nodes (KNodes(..))
 import AST.Knot (Tree)
+import Data.Constraint
+import Data.Constraint.List (NoConstraint)
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
 import Data.Proxy (Proxy(..))
@@ -17,6 +19,10 @@ class KNodes k => KPointed k where
     pureK ::
         (forall child. Tree n child) ->
         Tree k n
+    -- TODO: Move this out of class to method?
+    pureK f =
+        withDict (kNoConstraints (Proxy @k)) $
+        pureKWith (Proxy @NoConstraint) f
 
     -- | Construct a value from a higher ranked child value with a constraint
     pureKWith ::
@@ -26,13 +32,9 @@ class KNodes k => KPointed k where
         Tree k n
 
 instance Monoid a => KPointed (Const a) where
-    {-# INLINE pureK #-}
-    pureK _ = Const mempty
     {-# INLINE pureKWith #-}
     pureKWith _ _ = Const mempty
 
 instance (KPointed a, KPointed b) => KPointed (Product a b) where
-    {-# INLINE pureK #-}
-    pureK f = Pair (pureK f) (pureK f)
     {-# INLINE pureKWith #-}
     pureKWith p f = Pair (pureKWith p f) (pureKWith p f)

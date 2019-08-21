@@ -136,7 +136,6 @@ instance
             InferRes (BGetField wI k) (_ANode # rT) <$
                 (newTerm (TRec wR) >>= unify (wT ^. _ANode))
 
-instance TraverseITerm LangB
 instance c Typ => TraverseITermWith c LangB
 
 -- Monads for inferring `LangB`:

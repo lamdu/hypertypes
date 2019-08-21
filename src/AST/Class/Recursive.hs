@@ -18,7 +18,7 @@ import AST.Knot
 import AST.Knot.Pure (Pure(..), _Pure)
 import Control.Lens.Operators
 import Data.Constraint (Dict(..), withDict)
-import Data.Constraint.List (And)
+import Data.Constraint.List (NoConstraint, And)
 import Data.Functor.Const (Const(..))
 import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy(..))
@@ -27,6 +27,9 @@ import Prelude.Compat
 
 class Recursive c where
     recurse :: (KNodes k, c k) => Proxy (c k) -> Dict (NodesConstraint k c)
+
+instance Recursive NoConstraint where
+    recurse p = withDict (kNoConstraints (argP p)) Dict
 
 instance (Recursive a, Recursive b) => Recursive (And a b) where
     recurse p =

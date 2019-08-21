@@ -42,6 +42,7 @@ makePrisms ''UnifyError
 -- TODO: TH should be able to generate this
 instance KNodes t => KNodes (UnifyError t) where
     type NodesConstraint (UnifyError t) c = (c t, NodesConstraint t c)
+    kNoConstraints _ = withDict (kNoConstraints (Proxy @t)) Dict
     kCombineConstraints p =
         withDict (kCombineConstraints (p0 p)) Dict
         where

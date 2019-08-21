@@ -59,7 +59,6 @@ instance RNodes t => RNodes (Scheme v t)
 instance (KFoldable (Scheme v t), RFoldable t) => RFoldable (Scheme v t)
 instance (KFunctor (Scheme v t), RFunctor t) => RFunctor (Scheme v t)
 instance (KTraversable (Scheme v t), RTraversable t) => RTraversable (Scheme v t)
-instance TraverseITerm t => TraverseITerm (Scheme v t)
 instance (c t, Recursive c, TraverseITermWith c t) => TraverseITermWith c (Scheme v t)
 
 instance

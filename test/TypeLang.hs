@@ -173,8 +173,6 @@ instance RFunctor Typ
 instance RFunctor Row
 instance RTraversable Typ
 instance RTraversable Row
-instance TraverseITerm Typ
-instance TraverseITerm Row
 instance (c Typ, c Row) => TraverseITermWith c Typ
 instance (c Typ, c Row) => TraverseITermWith c Row
 

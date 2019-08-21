@@ -7,15 +7,23 @@ module AST.Class.Functor
 
 import AST.Class.Nodes (KNodes(..))
 import AST.Knot (Tree)
+import Data.Constraint (withDict)
+import Data.Constraint.List (NoConstraint)
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
 import Data.Proxy (Proxy(..))
+
+import Prelude.Compat
 
 class KNodes k => KFunctor k where
     mapK ::
         (forall c. Tree m c -> Tree n c) ->
         Tree k m ->
         Tree k n
+    {-# INLINE mapK #-}
+    mapK f =
+        withDict (kNoConstraints (Proxy @k)) $
+        mapKWith (Proxy @NoConstraint) f
 
     mapKWith ::
         NodesConstraint k constraint =>
@@ -25,14 +33,10 @@ class KNodes k => KFunctor k where
         Tree k n
 
 instance KFunctor (Const a) where
-    {-# INLINE mapK #-}
-    mapK _ (Const x) = Const x
     {-# INLINE mapKWith #-}
     mapKWith _ _ (Const x) = Const x
 
 instance (KFunctor a, KFunctor b) => KFunctor (Product a b) where
-    {-# INLINE mapK #-}
-    mapK f (Pair x y) = Pair (mapK f x) (mapK f y)
     {-# INLINE mapKWith #-}
     mapKWith p f (Pair x y) =
         Pair (mapKWith p f x) (mapKWith p f y)

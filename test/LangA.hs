@@ -103,7 +103,6 @@ instance (DeBruijnIndex k, TermInfer1Deps env m) => Infer m (LangA k) where
     inferBody (AApp x) = inferBody x <&> inferResBody %~ AApp
     inferBody (ATypeSig x) = inferBody x <&> inferResBody %~ ATypeSig
 
-instance TraverseITerm (LangA k)
 instance (c Typ, c Row, Recursive c) => TraverseITermWith c (LangA k)
 
 -- Monads for inferring `LangA`:

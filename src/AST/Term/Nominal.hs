@@ -76,6 +76,8 @@ newtype FromNom nomId (term :: Knot -> *) (k :: Knot) = FromNom nomId
 
 instance KNodes v => KNodes (NominalInst n v) where
     type NodesConstraint (NominalInst n v) c = NodesConstraint v c
+    {-# INLINE kNoConstraints #-}
+    kNoConstraints _ = withDict (kNoConstraints (Proxy @v)) Dict
     {-# INLINE kCombineConstraints #-}
     kCombineConstraints p =
         withDict (kCombineConstraints (p0 p)) Dict
@@ -92,16 +94,11 @@ makeKTraversableApplyAndBases ''ToNom
 makeKTraversableApplyAndBases ''FromNom
 
 instance KFunctor v => KFunctor (NominalInst n v) where
-    {-# INLINE mapK #-}
-    mapK f (NominalInst n v) =
-        mapK (_QVarInstances . Lens.mapped %~ f) v & NominalInst n
     {-# INLINE mapKWith #-}
     mapKWith p f (NominalInst n v) =
         mapKWith p (_QVarInstances . Lens.mapped %~ f) v & NominalInst n
 
 instance KFoldable v => KFoldable (NominalInst n v) where
-    {-# INLINE foldMapK #-}
-    foldMapK f = foldMapK (foldMap f . (^. _QVarInstances)) . (^. nArgs)
     {-# INLINE foldMapKWith #-}
     foldMapKWith p f = foldMapKWith p (foldMap f . (^. _QVarInstances)) . (^. nArgs)
 

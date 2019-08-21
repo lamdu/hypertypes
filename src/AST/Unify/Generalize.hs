@@ -52,21 +52,12 @@ Lens.makePrisms ''GTerm
 
 instance KNodes (Flip GTerm a) where
     type NodesConstraint (Flip GTerm a) c = (c a, Recursive c)
+    {-# INLINE kNoConstraints #-}
+    kNoConstraints _ = Dict
     {-# INLINE kCombineConstraints #-}
     kCombineConstraints _ = Dict
 
 instance RFunctor ast => KFunctor (Flip GTerm ast) where
-    {-# INLINE mapK #-}
-    mapK f =
-        _Flip %~
-        \case
-        GMono x -> f x & GMono
-        GPoly x -> f x & GPoly
-        GBody x ->
-            withDict (recursiveKFunctor (Proxy @ast)) $
-            mapKWith (Proxy @RFunctor) (Lens.from _Flip %~ mapK f) x
-            & GBody
-
     {-# INLINE mapKWith #-}
     mapKWith p f =
         _Flip %~
@@ -84,17 +75,6 @@ instance RFunctor ast => KFunctor (Flip GTerm ast) where
             p1 _ = Proxy
 
 instance RFoldable ast => KFoldable (Flip GTerm ast) where
-
-    {-# INLINE foldMapK #-}
-    foldMapK f =
-        \case
-        GMono x -> f x
-        GPoly x -> f x
-        GBody x ->
-            withDict (recursiveKFoldable (Proxy @ast)) $
-            foldMapKWith (Proxy @RFoldable) (foldMapK f . (_Flip #)) x
-        . (^. _Flip)
-
     {-# INLINE foldMapKWith #-}
     foldMapKWith p f =
         \case

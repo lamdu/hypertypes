@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables, DefaultSignatures #-}
 
 module AST.Class.Nodes (KNodes(..)) where
 
@@ -6,7 +6,7 @@ import AST.Knot (Knot)
 import Data.Constraint
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
-import Data.Constraint.List (And)
+import Data.Constraint.List (NoConstraint, And)
 import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
 
@@ -15,6 +15,13 @@ import Prelude.Compat
 class KNodes (k :: Knot -> Type) where
     -- | Lift a constraint to apply to the node types.
     type family NodesConstraint k (c :: ((Knot -> Type) -> Constraint)) :: Constraint
+
+    kNoConstraints :: Proxy k -> Dict (NodesConstraint k NoConstraint)
+    {-# INLINE kNoConstraints #-}
+    default kNoConstraints ::
+        NodesConstraint k NoConstraint =>
+        Proxy k -> Dict (NodesConstraint k NoConstraint)
+    kNoConstraints _ = Dict
 
     kCombineConstraints ::
         (NodesConstraint k a, NodesConstraint k b) =>
@@ -28,6 +35,10 @@ instance KNodes (Const a) where
 
 instance (KNodes a, KNodes b) => KNodes (Product a b) where
     type NodesConstraint (Product a b) x = (NodesConstraint a x, NodesConstraint b x)
+    {-# INLINE kNoConstraints #-}
+    kNoConstraints _ =
+        withDict (kNoConstraints (Proxy @a)) $
+        withDict (kNoConstraints (Proxy @b)) Dict
     {-# INLINE kCombineConstraints #-}
     kCombineConstraints p =
         withDict (kCombineConstraints (p0 p)) $
