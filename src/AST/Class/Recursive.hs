@@ -29,7 +29,7 @@ class Recursive c where
     recurse :: (KNodes k, c k) => Proxy (c k) -> Dict (NodesConstraint k c)
 
 instance Recursive NoConstraint where
-    recurse p = withDict (kNoConstraints (argP p)) Dict
+    recurse p = kNoConstraints (argP p) Dict
 
 instance (Recursive a, Recursive b) => Recursive (And a b) where
     recurse p =

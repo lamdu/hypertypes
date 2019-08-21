@@ -7,7 +7,6 @@ module AST.Class.Functor
 
 import AST.Class.Nodes (KNodes(..))
 import AST.Knot (Tree)
-import Data.Constraint (withDict)
 import Data.Constraint.List (NoConstraint)
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
@@ -22,7 +21,7 @@ class KNodes k => KFunctor k where
         Tree k n
     {-# INLINE mapK #-}
     mapK f =
-        withDict (kNoConstraints (Proxy @k)) $
+        kNoConstraints (Proxy @k) $
         mapKWith (Proxy @NoConstraint) f
 
     mapKWith ::

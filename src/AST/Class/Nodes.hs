@@ -1,4 +1,5 @@
 {-# LANGUAGE DefaultSignatures, RankNTypes #-}
+{-# OPTIONS -Wno-redundant-constraints #-} -- Work around false GHC warnings
 
 module AST.Class.Nodes (KNodes(..)) where
 
@@ -16,12 +17,12 @@ class KNodes (k :: Knot -> Type) where
     -- | Lift a constraint to apply to the node types.
     type family NodesConstraint k (c :: ((Knot -> Type) -> Constraint)) :: Constraint
 
-    kNoConstraints :: Proxy k -> Dict (NodesConstraint k NoConstraint)
+    kNoConstraints :: Proxy k -> (NodesConstraint k NoConstraint => r) -> r
     {-# INLINE kNoConstraints #-}
     default kNoConstraints ::
         NodesConstraint k NoConstraint =>
-        Proxy k -> Dict (NodesConstraint k NoConstraint)
-    kNoConstraints _ = Dict
+        Proxy k -> (NodesConstraint k NoConstraint => r) -> r
+    kNoConstraints _ = id
 
     kCombineConstraints ::
         (NodesConstraint k a, NodesConstraint k b) =>
@@ -37,9 +38,9 @@ instance KNodes (Const a) where
 instance (KNodes a, KNodes b) => KNodes (Product a b) where
     type NodesConstraint (Product a b) x = (NodesConstraint a x, NodesConstraint b x)
     {-# INLINE kNoConstraints #-}
-    kNoConstraints _ =
-        withDict (kNoConstraints (Proxy @a)) $
-        withDict (kNoConstraints (Proxy @b)) Dict
+    kNoConstraints _ x =
+        kNoConstraints (Proxy @a) $
+        kNoConstraints (Proxy @b) x
     {-# INLINE kCombineConstraints #-}
     kCombineConstraints p x =
         kCombineConstraints (p0 p) $

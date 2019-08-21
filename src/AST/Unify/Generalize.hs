@@ -26,7 +26,7 @@ import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.Writer (WriterT(..), tell)
 import           Data.Binary (Binary)
-import           Data.Constraint (Dict(..), withDict)
+import           Data.Constraint (withDict)
 import           Data.Monoid (All(..))
 import           Data.Proxy (Proxy(..))
 import           Generics.OneLiner (Constraints)

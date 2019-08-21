@@ -26,7 +26,7 @@ class KNodes k => KFoldable k where
         a
     {-# INLINE foldMapK #-}
     foldMapK f =
-        withDict (kNoConstraints (Proxy @k)) $
+        kNoConstraints (Proxy @k) $
         foldMapKWith (Proxy @NoConstraint) f
 
     foldMapKWith ::

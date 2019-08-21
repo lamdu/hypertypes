@@ -36,7 +36,6 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Writer (execWriterT)
 import           Data.Binary (Binary)
-import           Data.Constraint (Dict(..), withDict)
 import           Data.Foldable (traverse_)
 import           Data.Kind (Type)
 import           Data.Proxy (Proxy(..))
@@ -78,7 +77,7 @@ newtype FromNom nomId (term :: Knot -> *) (k :: Knot) = FromNom nomId
 instance KNodes v => KNodes (NominalInst n v) where
     type NodesConstraint (NominalInst n v) c = NodesConstraint v c
     {-# INLINE kNoConstraints #-}
-    kNoConstraints _ = withDict (kNoConstraints (Proxy @v)) Dict
+    kNoConstraints _ = kNoConstraints (Proxy @v)
     {-# INLINE kCombineConstraints #-}
     kCombineConstraints p =
         kCombineConstraints (p0 p)
@@ -175,8 +174,7 @@ instance KNodes (NomVarTypes typ) => KNodes (LoadedNominalDecl typ) where
         , Recursive c
         )
     {-# INLINE kNoConstraints #-}
-    kNoConstraints _ =
-        withDict (kNoConstraints (Proxy @(NomVarTypes typ))) Dict
+    kNoConstraints _ = kNoConstraints (Proxy @(NomVarTypes typ))
     {-# INLINE kCombineConstraints #-}
     kCombineConstraints p =
         kCombineConstraints (p0 p)
