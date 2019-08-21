@@ -11,7 +11,6 @@ import AST.Class.Recursive
 import AST.Class.ZipMatch (ZipMatch(..))
 import Control.Lens (makeLenses, makePrisms)
 import Control.Lens.Operators
-import Data.Constraint (withDict)
 import Data.Proxy (Proxy(..))
 import Generics.OneLiner (Constraints)
 import GHC.Generics (Generic)
@@ -41,7 +40,7 @@ diff ::
     RZipMatchTraversable t =>
     Tree (Ann a) t -> Tree (Ann b) t -> Tree (Diff a b) t
 diff x@(Ann xA xB) y@(Ann yA yB) =
-    withDict (recursiveZipMatchTraversable (Proxy @t)) $
+    recurse (Proxy @(RZipMatchTraversable t)) $
     case zipMatch xB yB of
     Nothing -> Different (Pair x y)
     Just match ->

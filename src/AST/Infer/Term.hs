@@ -9,7 +9,6 @@ module AST.Infer.Term
 
 import AST
 import AST.Class.Infer
-import AST.Class.Recursive
 import Control.Lens (Traversal, makeLenses)
 import Data.Constraint
 import Data.Proxy (Proxy(..))
@@ -35,7 +34,7 @@ iAnnotations ::
     (Tree (ITerm b v) e)
     a b
 iAnnotations f (ITerm pl r x) =
-    withDict (recursiveKTraversable (Proxy @e)) $
+    recurse (Proxy @(RTraversable e)) $
     ITerm
     <$> f pl
     <*> pure r

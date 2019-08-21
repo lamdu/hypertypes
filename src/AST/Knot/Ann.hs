@@ -16,7 +16,6 @@ import           Control.DeepSeq (NFData)
 import           Control.Lens (Traversal, makeLenses)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
-import           Data.Constraint (withDict)
 import           Data.Proxy (Proxy(..))
 import           Generics.OneLiner (Constraints)
 import           GHC.Generics (Generic)
@@ -52,7 +51,7 @@ annotations ::
     (Tree (Ann b) k)
     a b
 annotations f (Ann pl x) =
-    withDict (recurse (Proxy @(RTraversable k))) $
+    recurse (Proxy @(RTraversable k)) $
     Ann
     <$> f pl
     <*> traverseKWith (Proxy @RTraversable) (annotations f) x

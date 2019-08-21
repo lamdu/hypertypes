@@ -1,4 +1,5 @@
 {-# LANGUAGE RankNTypes, DefaultSignatures #-}
+{-# OPTIONS -Wno-redundant-constraints #-} -- Work around false GHC warnings
 
 module AST.Class.Recursive
     ( Recursive(..)
@@ -17,7 +18,6 @@ import AST.Class.ZipMatch
 import AST.Knot
 import AST.Knot.Pure (Pure(..), _Pure)
 import Control.Lens.Operators
-import Data.Constraint (Dict(..), withDict)
 import Data.Constraint.List (NoConstraint, And)
 import Data.Functor.Const (Const(..))
 import Data.Kind (Constraint, Type)
@@ -26,16 +26,18 @@ import Data.Proxy (Proxy(..))
 import Prelude.Compat
 
 class Recursive c where
-    recurse :: (KNodes k, c k) => Proxy (c k) -> Dict (NodesConstraint k c)
+    recurse ::
+        (KNodes k, c k) =>
+        Proxy (c k) -> (NodesConstraint k c => r) -> r
 
 instance Recursive NoConstraint where
-    recurse p = kNoConstraints (argP p) Dict
+    recurse p = kNoConstraints (argP p)
 
 instance (Recursive a, Recursive b) => Recursive (And a b) where
     recurse p =
-        withDict (recurse (p0 p)) $
-        withDict (recurse (p1 p)) $
-        kCombineConstraints p Dict
+        recurse (p0 p) $
+        recurse (p1 p) $
+        kCombineConstraints p
         where
             p0 :: Proxy (And a b k) -> Proxy (a k)
             p0 _ = Proxy
@@ -43,12 +45,12 @@ instance (Recursive a, Recursive b) => Recursive (And a b) where
             p1 _ = Proxy
 
 class KNodes k => RNodes k where
-    recursiveKNodes :: Proxy k -> Dict (NodesConstraint k RNodes)
+    recursiveKNodes :: Proxy k -> (NodesConstraint k RNodes => r) -> r
     {-# INLINE recursiveKNodes #-}
     default recursiveKNodes ::
         NodesConstraint k RNodes =>
-        Proxy k -> Dict (NodesConstraint k RNodes)
-    recursiveKNodes _ = Dict
+        Proxy k -> (NodesConstraint k RNodes => r) -> r
+    recursiveKNodes _ = id
 
 argP :: Proxy (f k :: Constraint) -> Proxy (k :: Knot -> Type)
 argP _ = Proxy
@@ -58,60 +60,61 @@ instance Recursive RNodes where
     recurse = recursiveKNodes . argP
 
 class (KFunctor k, RNodes k) => RFunctor k where
-    recursiveKFunctor :: Proxy k -> Dict (NodesConstraint k RFunctor)
+    recursiveKFunctor :: Proxy k -> (NodesConstraint k RFunctor => r) -> r
     {-# INLINE recursiveKFunctor #-}
     default recursiveKFunctor ::
         NodesConstraint k RFunctor =>
-        Proxy k -> Dict (NodesConstraint k RFunctor)
-    recursiveKFunctor _ = Dict
+        Proxy k -> (NodesConstraint k RFunctor => r) -> r
+    recursiveKFunctor _ = id
 
 instance Recursive RFunctor where
     {-# INLINE recurse #-}
     recurse = recursiveKFunctor . argP
 
 class (KFoldable k, RNodes k) => RFoldable k where
-    recursiveKFoldable :: Proxy k -> Dict (NodesConstraint k RFoldable)
+    recursiveKFoldable :: Proxy k -> (NodesConstraint k RFoldable => r) -> r
     {-# INLINE recursiveKFoldable #-}
     default recursiveKFoldable ::
         NodesConstraint k RFoldable =>
-        Proxy k -> Dict (NodesConstraint k RFoldable)
-    recursiveKFoldable _ = Dict
+        Proxy k -> (NodesConstraint k RFoldable => r) -> r
+    recursiveKFoldable _ = id
 
 instance Recursive RFoldable where
     {-# INLINE recurse #-}
     recurse = recursiveKFoldable . argP
 
 class (KTraversable k, RFunctor k, RFoldable k) => RTraversable k where
-    recursiveKTraversable :: Proxy k -> Dict (NodesConstraint k RTraversable)
+    recursiveKTraversable :: Proxy k -> (NodesConstraint k RTraversable => r) -> r
     {-# INLINE recursiveKTraversable #-}
     default recursiveKTraversable ::
         NodesConstraint k RTraversable =>
-        Proxy k -> Dict (NodesConstraint k RTraversable)
-    recursiveKTraversable _ = Dict
+        Proxy k -> (NodesConstraint k RTraversable => r) -> r
+    recursiveKTraversable _ = id
 
 instance Recursive RTraversable where
     {-# INLINE recurse #-}
     recurse = recursiveKTraversable . argP
 
 class (ZipMatch k, RNodes k) => RZipMatch k where
-    recursiveZipMatch :: Proxy k -> Dict (NodesConstraint k RZipMatch)
+    recursiveZipMatch :: Proxy k -> (NodesConstraint k RZipMatch => r) -> r
     {-# INLINE recursiveZipMatch #-}
     default recursiveZipMatch ::
         NodesConstraint k RZipMatch =>
-        Proxy k -> Dict (NodesConstraint k RZipMatch)
-    recursiveZipMatch _ = Dict
+        Proxy k -> (NodesConstraint k RZipMatch => r) -> r
+    recursiveZipMatch _ = id
 
 instance Recursive RZipMatch where
     {-# INLINE recurse #-}
     recurse = recursiveZipMatch . argP
 
 class (RTraversable k, RZipMatch k) => RZipMatchTraversable k where
-    recursiveZipMatchTraversable :: Proxy k -> Dict (NodesConstraint k RZipMatchTraversable)
+    recursiveZipMatchTraversable ::
+        Proxy k -> (NodesConstraint k RZipMatchTraversable => r) -> r
     {-# INLINE recursiveZipMatchTraversable #-}
     default recursiveZipMatchTraversable ::
         NodesConstraint k RZipMatchTraversable =>
-        Proxy k -> Dict (NodesConstraint k RZipMatchTraversable)
-    recursiveZipMatchTraversable _ = Dict
+        Proxy k -> (NodesConstraint k RZipMatchTraversable => r) -> r
+    recursiveZipMatchTraversable _ = id
 
 instance Recursive RZipMatchTraversable where
     {-# INLINE recurse #-}
@@ -123,8 +126,8 @@ recurseBoth ::
     (KNodes k, Recursive a, Recursive b, a k, b k) =>
     Proxy (And a b k) -> (NodesConstraint k (And a b) => r) -> r
 recurseBoth _ x =
-    withDict (recurse (Proxy @(a k))) $
-    withDict (recurse (Proxy @(b k))) $
+    recurse (Proxy @(a k)) $
+    recurse (Proxy @(b k)) $
     kCombineConstraints (Proxy @(And a b k)) x
 
 {-# INLINE wrapM #-}

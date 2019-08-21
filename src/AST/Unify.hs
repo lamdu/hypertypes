@@ -20,7 +20,6 @@ import AST.Unify.Lookup (semiPruneLookup)
 import AST.Unify.Occurs (occursError)
 import AST.Unify.Term (UTerm(..), UTermBody(..), uConstraints, uBody)
 import Control.Lens.Operators
-import Data.Constraint (withDict)
 import Data.Maybe (fromMaybe)
 import Data.Proxy (Proxy(..))
 
@@ -57,7 +56,7 @@ updateTermConstraints ::
 updateTermConstraints v t newConstraints
     | newConstraints `leq` (t ^. uConstraints) = pure ()
     | otherwise =
-        withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
+        unifyRecursive (Proxy @m) (Proxy @t) $
         do
             bindVar binding v (UResolving t)
             verifyConstraints newConstraints
@@ -118,7 +117,7 @@ unifyUTerms xv xt yv (UUnbound level) = unifyUnbound yv level xv xt
 unifyUTerms xv USkolem{} yv _ = xv <$ unifyError (SkolemUnified xv yv)
 unifyUTerms xv _ yv USkolem{} = yv <$ unifyError (SkolemUnified yv xv)
 unifyUTerms xv (UTerm xt) yv (UTerm yt) =
-    withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
+    unifyRecursive (Proxy @m) (Proxy @t) $
     do
         bindVar binding yv (UToVar xv)
         zipMatchWithA (Proxy @(Unify m)) unify (xt ^. uBody) (yt ^. uBody)

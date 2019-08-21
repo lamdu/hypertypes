@@ -12,7 +12,6 @@ import Control.Lens.Operators
 import Control.Monad (unless)
 import Control.Monad.Trans.Class (MonadTrans(..))
 import Control.Monad.Trans.State (runStateT, get, put)
-import Data.Constraint (withDict)
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
@@ -40,7 +39,7 @@ applyBindings v0 =
     UTerm b ->
         do
             (r, anyChild) <-
-                withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
+                unifyRecursive (Proxy @m) (Proxy @t) $
                 traverseKWith (Proxy @(Unify m))
                 ( \c ->
                     do

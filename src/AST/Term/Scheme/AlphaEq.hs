@@ -16,7 +16,6 @@ import           AST.Unify.QuantifiedVar
 import           AST.Unify.Term (UTerm(..), uBody)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Data.Constraint
 import           Data.Maybe (fromMaybe)
 import           Data.Proxy (Proxy(..))
 
@@ -81,7 +80,7 @@ goUTerm xv _ yv USkolem{} = unifyError (SkolemUnified yv xv)
 goUTerm xv UUnbound{} yv yu = goUTerm xv yu yv yu -- Term created in structure mismatch
 goUTerm xv xu yv UUnbound{} = goUTerm xv xu yv xu -- Term created in structure mismatch
 goUTerm _ (UTerm xt) _ (UTerm yt) =
-    withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
+    unifyRecursive (Proxy @m) (Proxy @t) $
     zipMatchWith_ (Proxy @(Unify m)) goUVar (xt ^. uBody) (yt ^. uBody)
     & fromMaybe (structureMismatch (\x y -> x <$ goUVar x y) xt yt)
 goUTerm _ _ _ _ = error "unexpected state at alpha-eq"

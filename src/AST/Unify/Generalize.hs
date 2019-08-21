@@ -26,7 +26,6 @@ import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.Writer (WriterT(..), tell)
 import           Data.Binary (Binary)
-import           Data.Constraint (withDict)
 import           Data.Monoid (All(..))
 import           Data.Proxy (Proxy(..))
 import           Generics.OneLiner (Constraints)
@@ -93,7 +92,7 @@ instance RTraversable ast => KTraversable (Flip GTerm ast) where
         GMono x -> runContainedK x <&> GMono
         GPoly x -> runContainedK x <&> GPoly
         GBody x ->
-            withDict (recursiveKTraversable (Proxy @ast)) $
+            recurse (Proxy @(RTraversable ast)) $
             -- KTraversable will be required when not implied by Recursively
             traverseKWith (Proxy @RTraversable)
             (Lens.from _Flip sequenceK) x
@@ -121,7 +120,7 @@ generalize v0 =
                 bindVar binding v1 (USkolem (generalizeConstraints l))
             USkolem l | toScopeConstraints l `leq` c -> pure (GPoly v1)
             UTerm t ->
-                withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
+                unifyRecursive (Proxy @m) (Proxy @t) $
                 do
                     bindVar binding v1 (UResolving t)
                     r <- traverseKWith (Proxy @(Unify m)) generalize (t ^. uBody)
@@ -164,7 +163,7 @@ instantiateH ::
 instantiateH _ (GMono x) = pure x
 instantiateH cons (GPoly x) = instantiateForAll cons x
 instantiateH cons (GBody x) =
-    withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
+    unifyRecursive (Proxy @m) (Proxy @t) $
     traverseKWith (Proxy @(Unify m)) (instantiateH cons) x >>= lift . newTerm
 
 {-# INLINE instantiateWith #-}

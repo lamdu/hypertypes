@@ -34,7 +34,6 @@ import           Control.Monad.RWS
 import           Control.Monad.Reader
 import           Control.Monad.ST
 import           Control.Monad.ST.Class (MonadST(..))
-import           Data.Constraint
 import           Data.Map (Map)
 import           Data.Proxy
 import           Data.STRef
@@ -93,7 +92,7 @@ instance VarType Name LangB where
                 Map Name (Tree (GTerm (UVarOf m)) Typ) ->
                 m (Tree (UVarOf m) Typ)
             r x =
-                withDict (unifyRecursive (Proxy @m) (Proxy @Typ)) $
+                unifyRecursive (Proxy @m) (Proxy @Typ) $
                 x ^?! Lens.ix k & instantiate
 
 instance

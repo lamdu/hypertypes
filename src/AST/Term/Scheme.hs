@@ -1,5 +1,6 @@
 {-# LANGUAGE TemplateHaskell, FlexibleContexts, DefaultSignatures #-}
-{-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances, RankNTypes #-}
+{-# OPTIONS -Wno-redundant-constraints #-} -- Work around false GHC warnings
 
 module AST.Term.Scheme
     ( Scheme(..), sForAlls, sTyp
@@ -29,7 +30,6 @@ import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.State (StateT(..))
 import           Data.Binary (Binary)
-import           Data.Constraint
 import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Data.Proxy (Proxy(..))
@@ -193,13 +193,13 @@ class
 
     hasSchemeRecursive ::
         Proxy varTypes -> Proxy m -> Proxy t ->
-        Dict (NodesConstraint t (HasScheme varTypes m))
+        (NodesConstraint t (HasScheme varTypes m) => r) -> r
     {-# INLINE hasSchemeRecursive #-}
     default hasSchemeRecursive ::
         NodesConstraint t (HasScheme varTypes m) =>
         Proxy varTypes -> Proxy m -> Proxy t ->
-        Dict (NodesConstraint t (HasScheme varTypes m))
-    hasSchemeRecursive _ _ _ = Dict
+        (NodesConstraint t (HasScheme varTypes m) => r) -> r
+    hasSchemeRecursive _ _ _ = id
 
 instance Recursive (HasScheme varTypes m) where
     recurse =
@@ -232,7 +232,7 @@ saveH ::
     Tree (GTerm (UVarOf m)) typ ->
     StateT (Tree varTypes QVars, [m ()]) m (Tree Pure typ)
 saveH (GBody x) =
-    withDict (hasSchemeRecursive (Proxy @varTypes) (Proxy @m) (Proxy @typ)) $
+    hasSchemeRecursive (Proxy @varTypes) (Proxy @m) (Proxy @typ) $
     traverseKWith (Proxy @(HasScheme varTypes m)) saveH x <&> (_Pure #)
 saveH (GMono x) =
     unwrapM (Proxy @(HasScheme varTypes m)) f x & lift
