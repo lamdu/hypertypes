@@ -6,7 +6,7 @@ module AST.TH.Apply
     , makeKApplicativeBases
     ) where
 
-import           AST.Class
+import           AST.Class.Apply
 import           AST.TH.Functor (makeKFunctor)
 import           AST.TH.Internal
 import           AST.TH.Nodes (makeKNodes)

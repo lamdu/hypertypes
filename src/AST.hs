@@ -1,9 +1,7 @@
 module AST (module X) where
 
-import AST.Class as X
-    ( KNodes(..), KPointed(..), KFunctor(..), KApply(..), KApplicative
-    , mapK, liftK2, liftK2With
-    )
+import AST.Class as X (KNodes(..), KPointed(..), KFunctor(..), mapK)
+import AST.Class.Apply as X (KApply(..), KApplicative, liftK2, liftK2With)
 import AST.Class.Foldable as X
     ( KFoldable(..)
     , foldMapK, foldMapKWith

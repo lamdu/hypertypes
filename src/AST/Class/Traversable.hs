@@ -9,6 +9,7 @@ module AST.Class.Traversable
     ) where
 
 import AST.Class
+import AST.Class.Apply (KApply, KApplicative, liftK2, liftK2With)
 import AST.Class.Foldable (KFoldable)
 import AST.Knot (Knot, Tree)
 import Control.Lens (Iso, iso)
