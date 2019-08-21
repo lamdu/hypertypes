@@ -81,7 +81,7 @@ instance KNodes v => KNodes (NominalInst n v) where
     kNoConstraints _ = withDict (kNoConstraints (Proxy @v)) Dict
     {-# INLINE kCombineConstraints #-}
     kCombineConstraints p =
-        withDict (kCombineConstraints (p0 p)) Dict
+        kCombineConstraints (p0 p)
         where
             p0 :: Proxy (And a b (NominalInst n v)) -> Proxy (And a b v)
             p0 _ = Proxy
@@ -122,7 +122,7 @@ instance
     zipMatch (NominalInst xId x) (NominalInst yId y)
         | xId /= yId = Nothing
         | otherwise =
-            withDict (kCombineConstraints (Proxy @(And ZipMatch OrdQVar varTypes))) $
+            kCombineConstraints (Proxy @(And ZipMatch OrdQVar varTypes)) $
             zipMatch x y
             >>= traverseKWith (Proxy @(ZipMatch `And` OrdQVar))
                 (\(Pair (QVarInstances c0) (QVarInstances c1)) ->
@@ -179,7 +179,7 @@ instance KNodes (NomVarTypes typ) => KNodes (LoadedNominalDecl typ) where
         withDict (kNoConstraints (Proxy @(NomVarTypes typ))) Dict
     {-# INLINE kCombineConstraints #-}
     kCombineConstraints p =
-        withDict (kCombineConstraints (p0 p)) Dict
+        kCombineConstraints (p0 p)
         where
             p0 :: Proxy (c (LoadedNominalDecl typ)) -> Proxy (c (NomVarTypes typ))
             p0 _ = Proxy

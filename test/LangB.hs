@@ -145,7 +145,7 @@ newtype ScopeTypes v = ScopeTypes (Map Name (Tree (GTerm (RunKnot v)) Typ))
 
 instance KNodes ScopeTypes where
     type NodesConstraint ScopeTypes c = (c Typ, Recursive c)
-    kCombineConstraints _ = Dict
+    kCombineConstraints _ = id
 
 Lens.makePrisms ''ScopeTypes
 

@@ -52,7 +52,7 @@ Lens.makePrisms ''GTerm
 instance KNodes (Flip GTerm a) where
     type NodesConstraint (Flip GTerm a) c = (c a, Recursive c)
     {-# INLINE kCombineConstraints #-}
-    kCombineConstraints _ = Dict
+    kCombineConstraints _ = id
 
 instance RFunctor ast => KFunctor (Flip GTerm ast) where
     {-# INLINE mapKWith #-}

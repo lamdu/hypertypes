@@ -1,4 +1,4 @@
-{-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE DefaultSignatures, RankNTypes #-}
 
 module AST.Class.Nodes (KNodes(..)) where
 
@@ -26,12 +26,13 @@ class KNodes (k :: Knot -> Type) where
     kCombineConstraints ::
         (NodesConstraint k a, NodesConstraint k b) =>
         Proxy (And a b k) ->
-        Dict (NodesConstraint k (And a b))
+        (NodesConstraint k (And a b) => r) ->
+        r
 
 instance KNodes (Const a) where
     type NodesConstraint (Const a) x = ()
     {-# INLINE kCombineConstraints #-}
-    kCombineConstraints _ = Dict
+    kCombineConstraints _ = id
 
 instance (KNodes a, KNodes b) => KNodes (Product a b) where
     type NodesConstraint (Product a b) x = (NodesConstraint a x, NodesConstraint b x)
@@ -40,9 +41,9 @@ instance (KNodes a, KNodes b) => KNodes (Product a b) where
         withDict (kNoConstraints (Proxy @a)) $
         withDict (kNoConstraints (Proxy @b)) Dict
     {-# INLINE kCombineConstraints #-}
-    kCombineConstraints p =
-        withDict (kCombineConstraints (p0 p)) $
-        withDict (kCombineConstraints (p1 p)) Dict
+    kCombineConstraints p x =
+        kCombineConstraints (p0 p) $
+        kCombineConstraints (p1 p) x
         where
             p0 :: Proxy (And c0 c1 (Product a b)) -> Proxy (And c0 c1 a)
             p0 _ = Proxy

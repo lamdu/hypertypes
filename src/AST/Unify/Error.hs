@@ -44,7 +44,7 @@ instance KNodes t => KNodes (UnifyError t) where
     type NodesConstraint (UnifyError t) c = (c t, NodesConstraint t c)
     kNoConstraints _ = withDict (kNoConstraints (Proxy @t)) Dict
     kCombineConstraints p =
-        withDict (kCombineConstraints (p0 p)) Dict
+        kCombineConstraints (p0 p)
         where
             p0 :: Proxy (And a b (UnifyError t)) -> Proxy (And a b t)
             p0 _ = Proxy

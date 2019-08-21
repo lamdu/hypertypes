@@ -35,7 +35,7 @@ instance (Recursive a, Recursive b) => Recursive (And a b) where
     recurse p =
         withDict (recurse (p0 p)) $
         withDict (recurse (p1 p)) $
-        withDict (kCombineConstraints p) Dict
+        kCombineConstraints p Dict
         where
             p0 :: Proxy (And a b k) -> Proxy (a k)
             p0 _ = Proxy
@@ -125,7 +125,7 @@ recurseBoth ::
 recurseBoth _ =
     withDict (recurse (Proxy @(a k))) $
     withDict (recurse (Proxy @(b k))) $
-    withDict (kCombineConstraints (Proxy @(And a b k))) Dict
+    kCombineConstraints (Proxy @(And a b k)) Dict
 
 {-# INLINE wrapM #-}
 wrapM ::
