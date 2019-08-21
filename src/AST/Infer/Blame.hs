@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, ScopedTypeVariables, DefaultSignatures #-}
+{-# LANGUAGE FlexibleContexts, DefaultSignatures #-}
 
 module AST.Infer.Blame
     ( Blamable(..), Blame(..), blame

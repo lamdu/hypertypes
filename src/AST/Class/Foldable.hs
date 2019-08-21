@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables, RankNTypes #-}
+{-# LANGUAGE RankNTypes #-}
 
 module AST.Class.Foldable
     ( KFoldable(..)

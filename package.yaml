@@ -35,6 +35,7 @@ default-extensions:
 - DerivingStrategies
 - LambdaCase
 - MultiParamTypeClasses
+- ScopedTypeVariables
 - StandaloneDeriving
 - TupleSections
 - TypeApplications

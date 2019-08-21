@@ -1,5 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables, FlexibleContexts #-}
-
 module AST.Unify.New
     ( newUnbound, newTerm, unfreeze
     ) where

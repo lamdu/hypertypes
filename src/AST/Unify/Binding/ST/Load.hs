@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables, FlexibleContexts, TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- | Load state from pure bindings to ST based bindings
 

@@ -1,5 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables, FlexibleContexts #-}
-
 module AST.Infer
     ( module AST.Class.Infer
     , module AST.Infer.ScopeLevel
@@ -26,7 +24,7 @@ infer ::
     m (Tree (ITerm a (UVarOf m)) t)
 infer (Ann a x) =
     withDict (inferRecursive (Proxy @m) (Proxy @t)) $
-    inferBody
+        inferBody
         (mapKWith (Proxy @(Infer m))
             (\c -> infer c <&> (\i -> InferredChild i (i ^. iRes)) & InferChild)
             x)

@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, BlockArguments, ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts, BlockArguments #-}
 
 import           AST
 import           AST.Class.Recursive

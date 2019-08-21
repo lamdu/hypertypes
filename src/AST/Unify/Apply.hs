@@ -1,5 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables, FlexibleContexts #-}
-
 module AST.Unify.Apply
     ( applyBindings
     ) where

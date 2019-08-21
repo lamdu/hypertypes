@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes, DefaultSignatures, ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts, RankNTypes, DefaultSignatures #-}
 
 module AST.Class.Unify
     ( Unify(..), UVarOf

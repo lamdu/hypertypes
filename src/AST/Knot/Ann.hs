@@ -1,5 +1,4 @@
 {-# LANGUAGE TemplateHaskell, RankNTypes, UndecidableInstances #-}
-{-# LANGUAGE FlexibleContexts, FlexibleInstances, ScopedTypeVariables #-}
 
 module AST.Knot.Ann
     ( Ann(..), ann, val

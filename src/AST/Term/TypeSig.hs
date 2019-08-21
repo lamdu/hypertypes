@@ -1,4 +1,4 @@
-{-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances, ScopedTypeVariables #-}
+{-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances #-}
 
 module AST.Term.TypeSig
     ( TypeSig(..), tsType, tsTerm

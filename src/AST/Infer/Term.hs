@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, FlexibleContexts, ScopedTypeVariables, RankNTypes #-}
+{-# LANGUAGE TemplateHaskell, FlexibleContexts, RankNTypes #-}
 {-# LANGUAGE UndecidableInstances, FlexibleInstances, DefaultSignatures #-}
 
 module AST.Infer.Term

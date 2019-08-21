@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, UndecidableInstances, ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell, UndecidableInstances #-}
 
 module AST.Unify.Error
     ( UnifyError(..)

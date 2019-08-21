@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables, FlexibleContexts, DefaultSignatures #-}
+{-# LANGUAGE DefaultSignatures #-}
 
 module AST.Unify.Binding.Save
     ( Savable(..), save

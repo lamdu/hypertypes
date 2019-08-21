@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, UndecidableInstances #-}
-{-# LANGUAGE FlexibleContexts, ScopedTypeVariables, TemplateHaskell #-}
-{-# LANGUAGE UndecidableSuperClasses, TypeOperators #-}
+{-# LANGUAGE FlexibleContexts, TemplateHaskell, UndecidableSuperClasses, TypeOperators #-}
 
 module AST.Term.Nominal
     ( NominalDecl(..), nParams, nScheme

@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables, DefaultSignatures #-}
+{-# LANGUAGE DefaultSignatures #-}
 
 module AST.Class.Nodes (KNodes(..)) where
 

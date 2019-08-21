@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, FlexibleContexts, ScopedTypeVariables, UndecidableInstances #-}
+{-# LANGUAGE TemplateHaskell, FlexibleContexts, UndecidableInstances #-}
 
 module AST.Diff
     ( Diff(..), _CommonBody, _CommonSubTree, _Different

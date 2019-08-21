@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes, DefaultSignatures, ScopedTypeVariables, TypeOperators #-}
+{-# LANGUAGE RankNTypes, DefaultSignatures, TypeOperators #-}
 
 module AST.Class.Recursive
     ( Recursive(..)

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0d20d6442371e23a6d2563d85ea27f1aef7c8f264ccc7989dead85810744c200
+-- hash: 9f7312e9fa429e57dc71b8d339fbe32d83b98fd5e85cf80dd332f80879d33bf7
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -95,7 +95,7 @@ library
       Paths_syntax_tree
   hs-source-dirs:
       src
-  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies LambdaCase MultiParamTypeClasses StandaloneDeriving TupleSections TypeApplications TypeFamilies NoImplicitPrelude
+  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies LambdaCase MultiParamTypeClasses ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies NoImplicitPrelude
   ghc-options: -O2 -fexpose-all-unfoldings -Wall -Wnoncanonical-monad-instances -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
   ghc-prof-options: -O2 -fexpose-all-unfoldings
   build-depends:
@@ -132,7 +132,7 @@ test-suite syntax-tree-test
       TypeLang.Pure
   hs-source-dirs:
       test
-  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies LambdaCase MultiParamTypeClasses StandaloneDeriving TupleSections TypeApplications TypeFamilies
+  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies LambdaCase MultiParamTypeClasses ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies
   ghc-options: -Wall -Wcompat -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base
@@ -158,7 +158,7 @@ benchmark syntax-tree-bench
       TypeLang.Pure
   hs-source-dirs:
       test
-  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies LambdaCase MultiParamTypeClasses StandaloneDeriving TupleSections TypeApplications TypeFamilies
+  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies LambdaCase MultiParamTypeClasses ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies
   ghc-options: -O2 -Wall -Wnoncanonical-monad-instances -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
   build-depends:
       base

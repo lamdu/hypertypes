@@ -1,5 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables, FlexibleContexts #-}
-
 module AST.Unify.Occurs
     ( occursCheck
     , -- Helper used for fused occurs-check in unification and apply bindings
