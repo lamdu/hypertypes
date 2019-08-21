@@ -23,13 +23,6 @@ import Prelude.Compat
 class KTraversable t => Inferrable t where
     type family InferOf (t :: Knot -> Type) :: Knot -> Type
 
-    inferrableRecursive :: Proxy t -> Dict (NodesConstraint t Inferrable)
-    {-# INLINE inferrableRecursive #-}
-    default inferrableRecursive ::
-        NodesConstraint t Inferrable =>
-        Proxy t -> Dict (NodesConstraint t Inferrable)
-    inferrableRecursive _ = Dict
-
     traversableInferOf :: Proxy t -> Dict (KTraversable (InferOf t))
     {-# INLINE traversableInferOf #-}
     default traversableInferOf ::
