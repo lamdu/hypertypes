@@ -10,7 +10,7 @@ import AST.Class.Functor as X (KFunctor(..), mapK)
 import AST.Class.Nodes as X (KNodes(..))
 import AST.Class.Pointed as X (KPointed(..))
 import AST.Class.Recursive as X
-    ( Recursive, RNodes, RFunctor, RFoldable, RTraversable
+    ( Recursive(..), RNodes, RFunctor, RFoldable, RTraversable
     )
 import AST.Class.Traversable as X (KTraversable(..), traverseK, traverseKWith, traverseK1)
 import AST.Combinator.ANode as X
