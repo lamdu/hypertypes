@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes, ScopedTypeVariables, FlexibleContexts #-}
+{-# LANGUAGE RankNTypes #-}
 
 module AST.Class.ZipMatch
     ( ZipMatch(..)
@@ -6,9 +6,9 @@ module AST.Class.ZipMatch
     , doesMatch
     ) where
 
-import           AST.Class
 import           AST.Class.Foldable
 import           AST.Class.Functor (KFunctor(..))
+import           AST.Class.Nodes (KNodes(..))
 import           AST.Class.Traversable (KTraversable, traverseKWith)
 import           AST.Knot (Tree)
 import qualified Control.Lens as Lens

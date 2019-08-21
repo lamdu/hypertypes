@@ -5,7 +5,7 @@ module AST.Class.Functor
     , mapK1
     ) where
 
-import AST.Class
+import AST.Class.Nodes (KNodes(..))
 import AST.Knot (Tree)
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))

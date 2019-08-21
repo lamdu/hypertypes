@@ -5,8 +5,9 @@ module AST.Class.Apply
     , liftK2, liftK2With
     ) where
 
-import AST.Class
 import AST.Class.Functor (KFunctor(..))
+import AST.Class.Nodes (KNodes(..))
+import AST.Class.Pointed (KPointed)
 import AST.Knot
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))

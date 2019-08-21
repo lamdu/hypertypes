@@ -7,8 +7,8 @@ module AST.Class.Foldable
     , sequenceLiftK2_, sequenceLiftK2With_
     ) where
 
-import AST.Class
 import AST.Class.Apply (KApply, liftK2, liftK2With)
+import AST.Class.Nodes (KNodes(..))
 import AST.Knot (Tree)
 import Data.Foldable (sequenceA_)
 import Data.Functor.Const (Const(..))

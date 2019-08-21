@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 38b04957143648e698164d212f2c1ae9c7b4162c4195359890227cf46a98d56e
+-- hash: 0d20d6442371e23a6d2563d85ea27f1aef7c8f264ccc7989dead85810744c200
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -30,13 +30,14 @@ source-repository head
 library
   exposed-modules:
       AST
-      AST.Class
       AST.Class.Apply
       AST.Class.Foldable
       AST.Class.Functor
       AST.Class.Has
       AST.Class.Infer
       AST.Class.Infer.Infer1
+      AST.Class.Nodes
+      AST.Class.Pointed
       AST.Class.Recursive
       AST.Class.Traversable
       AST.Class.Unify

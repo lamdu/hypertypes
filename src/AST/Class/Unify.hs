@@ -6,7 +6,7 @@ module AST.Class.Unify
     , HasTypeConstraints(..)
     ) where
 
-import AST.Class
+import AST.Class.Nodes (KNodes(..))
 import AST.Class.Recursive
 import AST.Class.Traversable
 import AST.Class.ZipMatch (ZipMatch)

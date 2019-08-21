@@ -11,7 +11,7 @@ module AST.TH.Internal
     , consPat, simplifyContext
     ) where
 
-import           AST.Class
+import           AST.Class.Nodes
 import           AST.Knot (Knot(..), RunKnot, Node)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators

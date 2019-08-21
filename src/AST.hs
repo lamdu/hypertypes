@@ -1,6 +1,5 @@
 module AST (module X) where
 
-import AST.Class as X (KNodes(..), KPointed(..))
 import AST.Class.Apply as X (KApply(..), KApplicative, liftK2, liftK2With)
 import AST.Class.Foldable as X
     ( KFoldable(..)
@@ -8,6 +7,8 @@ import AST.Class.Foldable as X
     , traverseK_, traverseKWith_, traverseK1_
     )
 import AST.Class.Functor as X (KFunctor(..), mapK)
+import AST.Class.Nodes as X (KNodes(..))
+import AST.Class.Pointed as X (KPointed(..))
 import AST.Class.Recursive as X
     ( Recursive, RNodes, RFunctor, RFoldable, RTraversable
     )

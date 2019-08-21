@@ -9,9 +9,9 @@ module AST.Class.Recursive
     , fold, unfold
     ) where
 
-import AST.Class
 import AST.Class.Foldable
 import AST.Class.Functor (KFunctor(..))
+import AST.Class.Nodes (KNodes(..))
 import AST.Class.Traversable
 import AST.Class.ZipMatch
 import AST.Knot

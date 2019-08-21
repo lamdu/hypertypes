@@ -1,11 +1,8 @@
-{-# LANGUAGE RankNTypes, ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
-module AST.Class
-    ( KNodes(..)
-    , KPointed(..)
-    ) where
+module AST.Class.Nodes (KNodes(..)) where
 
-import AST.Knot (Knot, Tree)
+import AST.Knot (Knot)
 import Data.Constraint
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
@@ -24,29 +21,10 @@ class KNodes (k :: Knot -> Type) where
         Proxy (And a b k) ->
         Dict (NodesConstraint k (And a b))
 
-class KNodes k => KPointed k where
-    -- | Construct a value from a higher ranked child value
-    pureK ::
-        (forall child. Tree n child) ->
-        Tree k n
-
-    -- | Construct a value from a higher ranked child value with a constraint
-    pureKWith ::
-        NodesConstraint k constraint =>
-        Proxy constraint ->
-        (forall child. constraint child => Tree n child) ->
-        Tree k n
-
 instance KNodes (Const a) where
     type NodesConstraint (Const a) x = ()
     {-# INLINE kCombineConstraints #-}
     kCombineConstraints _ = Dict
-
-instance Monoid a => KPointed (Const a) where
-    {-# INLINE pureK #-}
-    pureK _ = Const mempty
-    {-# INLINE pureKWith #-}
-    pureKWith _ _ = Const mempty
 
 instance (KNodes a, KNodes b) => KNodes (Product a b) where
     type NodesConstraint (Product a b) x = (NodesConstraint a x, NodesConstraint b x)
@@ -59,9 +37,3 @@ instance (KNodes a, KNodes b) => KNodes (Product a b) where
             p0 _ = Proxy
             p1 :: Proxy (And c0 c1 (Product a b)) -> Proxy (And c0 c1 b)
             p1 _ = Proxy
-
-instance (KPointed a, KPointed b) => KPointed (Product a b) where
-    {-# INLINE pureK #-}
-    pureK f = Pair (pureK f) (pureK f)
-    {-# INLINE pureKWith #-}
-    pureKWith p f = Pair (pureKWith p f) (pureKWith p f)

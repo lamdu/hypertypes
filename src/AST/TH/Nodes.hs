@@ -4,7 +4,7 @@ module AST.TH.Nodes
     ( makeKNodes
     ) where
 
-import           AST.Class
+import           AST.Class.Nodes
 import           AST.TH.Internal
 import           Control.Lens.Operators
 import           Data.Constraint (Dict(..))

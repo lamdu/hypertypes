@@ -4,7 +4,7 @@ module AST.TH.Pointed
     ( makeKPointed
     ) where
 
-import           AST.Class
+import           AST.Class.Pointed
 import           AST.TH.Internal
 import           Control.Lens.Operators
 import           Language.Haskell.TH
