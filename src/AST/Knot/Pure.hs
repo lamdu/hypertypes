@@ -3,12 +3,14 @@ module AST.Knot.Pure
     ( Pure(..), _Pure
     ) where
 
+import           AST.Class.Functor
 import           AST.Knot (Tree, Node)
 import           AST.TH.Traversable (makeKTraversableApplyAndBases)
 import           AST.TH.ZipMatch (makeZipMatch)
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Data.Binary (Binary)
+import           Data.Proxy
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 import           Text.Show.Combinators ((@|), showCon)
@@ -23,6 +25,14 @@ newtype Pure k = MkPure { getPure :: Node k Pure }
 
 makeKTraversableApplyAndBases ''Pure
 makeZipMatch ''Pure
+
+{-# RULES "mapKWith/Pure/Fixed"
+    forall
+    (constraintProxy::Proxy constraint)
+    (func::forall child. constraint child => Tree m child -> Tree n child).
+    mapKWith @Pure constraintProxy func =
+    \case MkPure x -> MkPure (func x)
+#-}
 
 {-# INLINE _Pure #-}
 _Pure :: Lens.Iso (Tree Pure k) (Tree Pure j) (Tree k Pure) (Tree j Pure)
