@@ -39,6 +39,7 @@ import           Control.Monad.Trans.Writer (execWriterT)
 import           Data.Binary (Binary)
 import           Data.Constraint (Dict(..), withDict)
 import           Data.Foldable (traverse_)
+import           Data.Kind (Type)
 import           Data.Proxy (Proxy(..))
 import qualified Data.Map as Map
 import           Generics.OneLiner (Constraints)
@@ -49,7 +50,7 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 import           Prelude.Compat
 
-type family NomVarTypes (typ :: Knot -> *) :: Knot -> *
+type family NomVarTypes (t :: Knot -> Type) :: Knot -> Type
 
 -- | A declaration of a nominal type.
 data NominalDecl typ k = NominalDecl

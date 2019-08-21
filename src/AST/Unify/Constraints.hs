@@ -24,4 +24,4 @@ class (PartialOrd c, Semigroup c) => TypeConstraints c where
 class Monad m => MonadScopeConstraints c m where
     scopeConstraints :: m c
 
-type family TypeConstraintsOf (ast :: Knot -> Type)
+type family TypeConstraintsOf (k :: Knot -> Type) :: Type

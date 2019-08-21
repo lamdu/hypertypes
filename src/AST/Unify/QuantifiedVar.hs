@@ -8,9 +8,10 @@ module AST.Unify.QuantifiedVar
 
 import AST.Knot (Knot)
 import Control.Lens (Prism')
+import Data.Kind (Type)
 
-class HasQuantifiedVar (t :: Knot -> *) where
-    type family QVar t
+class HasQuantifiedVar (t :: Knot -> Type) where
+    type family QVar t :: Type
     quantifiedVar :: Prism' (t f) (QVar t)
 
 class    (HasQuantifiedVar t, cls (QVar t)) => QVarHasInstance cls t
