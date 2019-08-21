@@ -30,7 +30,6 @@ import           Control.Monad.RWS
 import           Control.Monad.Reader
 import           Control.Monad.ST
 import           Control.Monad.ST.Class (MonadST(..))
-import           Data.Constraint
 import           Data.Proxy (Proxy(..))
 import           Data.STRef
 import           Text.PrettyPrint ((<+>))
@@ -76,12 +75,12 @@ instance InvDeBruijnIndex v => Pretty (LangA v ('Knot Pure)) where
 
 instance HasTypeOf1 LangA where
     type TypeOf1 LangA = Typ
-    typeAst _ = Dict
+    typeAst _ = id
 
 instance HasInferOf1 LangA where
     type InferOf1 LangA = ANode Typ
     type InferOf1IndexConstraint LangA = DeBruijnIndex
-    hasInferOf1 _ = Dict
+    hasInferOf1 _ = id
 
 type TermInfer1Deps env m =
     ( MonadScopeLevel m
@@ -91,7 +90,7 @@ type TermInfer1Deps env m =
     )
 
 instance TermInfer1Deps env m => Infer1 m LangA where
-    inferMonad = Sub Dict
+    inferMonad _ = id
 
 instance (DeBruijnIndex k, TermInfer1Deps env m) => Infer m (LangA k) where
     inferBody (ALit x) = newTerm TInt <&> MkANode <&> InferRes (ALit x)

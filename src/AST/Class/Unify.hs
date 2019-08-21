@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts, RankNTypes, DefaultSignatures #-}
+{-# OPTIONS -Wno-redundant-constraints #-} -- Work around false GHC warnings
 
 module AST.Class.Unify
     ( Unify(..), UVarOf
@@ -14,7 +15,6 @@ import AST.Unify.Constraints
 import AST.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify)
 import AST.Unify.Term (UTerm, UTermBody, uBody)
 import Control.Lens.Operators
-import Data.Constraint (Dict(..))
 import Data.Proxy (Proxy(..))
 import Data.Kind (Type)
 
@@ -63,12 +63,13 @@ class
         Tree (UTermBody (UVarOf m)) t -> Tree (UTermBody (UVarOf m)) t -> m ()
     structureMismatch _ x y = unifyError (Mismatch (x ^. uBody) (y ^. uBody))
 
-    unifyRecursive :: Proxy m -> Proxy t -> Dict (NodesConstraint t (Unify m))
+    unifyRecursive ::
+        Proxy m -> Proxy t -> (NodesConstraint t (Unify m) => r) -> r
     {-# INLINE unifyRecursive #-}
     default unifyRecursive ::
         NodesConstraint t (Unify m) =>
-        Proxy m -> Proxy t -> Dict (NodesConstraint t (Unify m))
-    unifyRecursive _ _ = Dict
+        Proxy m -> Proxy t -> (NodesConstraint t (Unify m) => r) -> r
+    unifyRecursive _ _ = id
 
 instance Recursive (Unify m) where
     {-# INLINE recurse #-}

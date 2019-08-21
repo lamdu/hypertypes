@@ -1,4 +1,5 @@
-{-# LANGUAGE FlexibleContexts, DefaultSignatures #-}
+{-# LANGUAGE FlexibleContexts, DefaultSignatures, RankNTypes #-}
+{-# OPTIONS -Wno-redundant-constraints #-} -- Work around false GHC warnings
 
 module AST.Infer.Blame
     ( Blamable(..), Blame(..), blame
@@ -15,7 +16,6 @@ import AST.Unify.Occurs
 import Control.Lens (mapped)
 import Control.Lens.Operators
 import Control.Monad.Except (MonadError(..))
-import Data.Constraint
 import Data.Foldable (traverse_)
 import Data.List (sortOn)
 import Data.Proxy
@@ -26,12 +26,12 @@ class
     (Infer m t, KApplicative (InferOf t), KTraversable (InferOf t)) =>
     Blamable m t where
 
-    blamableRecursive :: Proxy m -> Proxy t -> Dict (NodesConstraint t (Blamable m))
+    blamableRecursive :: Proxy m -> Proxy t -> (NodesConstraint t (Blamable m) => r) -> r
     {-# INLINE blamableRecursive #-}
     default blamableRecursive ::
         NodesConstraint t (Blamable m) =>
-        Proxy m -> Proxy t -> Dict (NodesConstraint t (Blamable m))
-    blamableRecursive _ _ = Dict
+        Proxy m -> Proxy t -> (NodesConstraint t (Blamable m) => r) -> r
+    blamableRecursive _ _ = id
 
 data Blame = Ok | TypeMismatch
 
@@ -50,15 +50,15 @@ prepare ::
     Tree (Ann a) exp ->
     m (Tree (Ann (PrepAnn m a)) exp)
 prepare typeFromAbove (Ann a x) =
-    withDict (inferredUnify (Proxy @m) (Proxy @exp)) $
-    withDict (blamableRecursive (Proxy @m) (Proxy @exp)) $
+    inferredUnify (Proxy @m) (Proxy @exp) $
+    blamableRecursive (Proxy @m) (Proxy @exp) $
     inferBody
     (mapKWith (Proxy @(Blamable m))
         (\c ->
             let p :: Tree (Ann a) k -> Proxy k
                 p _ = Proxy
             in
-            withDict (inferredUnify (Proxy @m) (p c)) $
+            inferredUnify (Proxy @m) (p c) $
             do
                 t <- sequencePureKWith (Proxy @(Unify m)) newUnbound
                 prepare t c <&> (`InferredChild` t)

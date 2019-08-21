@@ -7,7 +7,6 @@ module AST.TH.Nodes
 import           AST.Class.Nodes
 import           AST.TH.Internal
 import           Control.Lens.Operators
-import           Data.Constraint (Dict(..))
 import qualified Data.Set as Set
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
@@ -23,7 +22,7 @@ makeKNodesForType info =
     [ tySynInstD ''NodesConstraint
         (simplifyContext nodesConstraint <&> toTuple <&> TySynEqn [tiInstance info, VarT constraintVar])
     , InlineP 'kCombineConstraints Inline FunLike AllPhases & PragmaD & pure
-    , funD 'kCombineConstraints [pure (Clause [WildP] (NormalB (ConE 'Dict)) [])]
+    , funD 'kCombineConstraints [pure (Clause [WildP] (NormalB (VarE 'id)) [])]
     ]
     <&> (:[])
     where

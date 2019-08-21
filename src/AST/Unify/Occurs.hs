@@ -14,7 +14,6 @@ import Control.Lens.Operators
 import Control.Monad (unless, when)
 import Control.Monad.Trans.Class (MonadTrans(..))
 import Control.Monad.Trans.State (execStateT, get, put)
-import Data.Constraint (withDict)
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
@@ -43,7 +42,7 @@ occursCheck v0 =
     UUnbound{} -> pure ()
     USkolem{} -> pure ()
     UTerm b ->
-        withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
+        unifyRecursive (Proxy @m) (Proxy @t) $
         traverseKWith_ (Proxy @(Unify m))
         ( \c ->
             do

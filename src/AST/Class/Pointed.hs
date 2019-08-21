@@ -6,7 +6,6 @@ module AST.Class.Pointed
 
 import AST.Class.Nodes (KNodes(..))
 import AST.Knot (Tree)
-import Data.Constraint
 import Data.Constraint.List (NoConstraint)
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
@@ -21,7 +20,7 @@ class KNodes k => KPointed k where
         Tree k n
     -- TODO: Move this out of class to method?
     pureK f =
-        withDict (kNoConstraints (Proxy @k)) $
+        kNoConstraints (Proxy @k) $
         pureKWith (Proxy @NoConstraint) f
 
     -- | Construct a value from a higher ranked child value with a constraint

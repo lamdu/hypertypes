@@ -1,4 +1,5 @@
-{-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE DefaultSignatures, RankNTypes #-}
+{-# OPTIONS -Wno-redundant-constraints #-} -- Work around false GHC warnings
 
 module AST.Unify.Binding.Save
     ( Savable(..), save
@@ -13,7 +14,6 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.State (StateT(..))
-import           Data.Constraint (Dict(..), withDict)
 import           Data.Proxy (Proxy(..))
 import qualified Data.Sequence as Sequence
 
@@ -21,12 +21,12 @@ import           Prelude.Compat
 
 class (Unify m t, HasChild typeVars t) => Savable m typeVars t where
     savableRecursive ::
-        Proxy m -> Proxy typeVars -> Proxy t -> Dict (NodesConstraint t (Savable m typeVars))
+        Proxy m -> Proxy typeVars -> Proxy t -> (NodesConstraint t (Savable m typeVars) => r) -> r
     {-# INLINE savableRecursive #-}
     default savableRecursive ::
         NodesConstraint t (Savable m typeVars) =>
-        Proxy m -> Proxy typeVars -> Proxy t -> Dict (NodesConstraint t (Savable m typeVars))
-    savableRecursive _ _ _ = Dict
+        Proxy m -> Proxy typeVars -> Proxy t -> (NodesConstraint t (Savable m typeVars) => r) -> r
+    savableRecursive _ _ _ = id
 
 saveUTerm ::
     forall m typeVars t.
@@ -67,7 +67,7 @@ saveBody ::
     Tree t (UVarOf m) ->
     StateT (Tree typeVars Binding, [m ()]) m (Tree t UVar)
 saveBody =
-    withDict (savableRecursive (Proxy @m) (Proxy @typeVars) (Proxy @t)) $
+    savableRecursive (Proxy @m) (Proxy @typeVars) (Proxy @t) $
     traverseKWith (Proxy @(Savable m typeVars)) saveVar
 
 save ::

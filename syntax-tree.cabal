@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9f7312e9fa429e57dc71b8d339fbe32d83b98fd5e85cf80dd332f80879d33bf7
+-- hash: 134138d0d09cc74c270fd15174161c5e27f8dd8a249623cfca5d6c2a49c9ae39
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -104,7 +104,6 @@ library
     , base
     , base-compat
     , binary
-    , constraints
     , containers
     , deepseq
     , generic-data
@@ -136,7 +135,6 @@ test-suite syntax-tree-test
   ghc-options: -Wall -Wcompat -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base
-    , constraints
     , containers
     , generic-data
     , lattices
@@ -162,7 +160,6 @@ benchmark syntax-tree-bench
   ghc-options: -O2 -Wall -Wnoncanonical-monad-instances -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
   build-depends:
       base
-    , constraints
     , containers
     , criterion
     , generic-data

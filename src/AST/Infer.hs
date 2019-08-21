@@ -14,7 +14,6 @@ import AST.Infer.ScopeLevel
 import AST.Infer.Term
 import AST.Unify (UVarOf)
 import Control.Lens.Operators
-import Data.Constraint (withDict)
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
@@ -26,7 +25,7 @@ infer ::
     Tree (Ann a) t ->
     m (Tree (ITerm a (UVarOf m)) t)
 infer (Ann a x) =
-    withDict (inferRecursive (Proxy @m) (Proxy @t)) $
+    inferRecursive (Proxy @m) (Proxy @t) $
     inferBody (mapKWith (Proxy @(Infer m)) inferH x)
     <&> (\(InferRes xI t) -> ITerm a t xI)
 

@@ -17,7 +17,6 @@ description: Please see the README on GitHub at <https://github.com/lamdu/syntax
 
 dependencies:
 - base
-- constraints
 - containers
 - generic-data
 - lattices

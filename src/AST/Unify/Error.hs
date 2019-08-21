@@ -13,7 +13,6 @@ import           AST.TH.Traversable (makeKTraversableAndFoldable)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (makePrisms)
 import           Data.Binary (Binary)
-import           Data.Constraint (Dict(..), withDict)
 import           Data.Proxy (Proxy(..))
 import           Generics.OneLiner (Constraints)
 import           GHC.Generics (Generic)
@@ -42,9 +41,9 @@ makePrisms ''UnifyError
 -- TODO: TH should be able to generate this
 instance KNodes t => KNodes (UnifyError t) where
     type NodesConstraint (UnifyError t) c = (c t, NodesConstraint t c)
-    kNoConstraints _ = withDict (kNoConstraints (Proxy @t)) Dict
+    kNoConstraints _ = kNoConstraints (Proxy @t)
     kCombineConstraints p =
-        withDict (kCombineConstraints (p0 p)) Dict
+        kCombineConstraints (p0 p)
         where
             p0 :: Proxy (And a b (UnifyError t)) -> Proxy (And a b t)
             p0 _ = Proxy

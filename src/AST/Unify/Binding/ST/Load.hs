@@ -17,7 +17,6 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.ST.Class (MonadST(..))
 import           Data.Array.ST (STArray, newArray, readArray, writeArray)
-import           Data.Constraint (withDict)
 import           Data.Proxy (Proxy(..))
 import qualified Data.Sequence as Sequence
 
@@ -78,7 +77,7 @@ loadBody ::
     Tree typeVars Binding -> Tree typeVars (ConvertState (World m)) ->
     Tree t UVar -> m (Tree t (STUVar (World m)))
 loadBody src conv =
-    withDict (savableRecursive (Proxy @m) (Proxy @typeVars) (Proxy @t)) $
+    savableRecursive (Proxy @m) (Proxy @typeVars) (Proxy @t) $
     traverseKWith (Proxy @(Savable m typeVars)) (loadVar src conv)
 
 load ::

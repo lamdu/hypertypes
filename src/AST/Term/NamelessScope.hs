@@ -19,7 +19,6 @@ import           Control.Lens (Lens', Prism')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Reader (MonadReader, local)
-import           Data.Constraint
 import           Data.Sequence (Seq)
 import qualified Data.Sequence as Sequence
 import           Data.Proxy (Proxy(..))
@@ -78,7 +77,7 @@ type instance TypeOf (Scope t k) = TypeOf (t k)
 instance HasTypeOf1 t => HasTypeOf1 (Scope t) where
     type TypeOf1 (Scope t) = TypeOf1 t
     typeAst p =
-        withDict (typeAst (p0 p)) Dict
+        typeAst (p0 p)
         where
             p0 :: Proxy (Scope t k) -> Proxy (t k)
             p0 _ = Proxy
@@ -87,7 +86,7 @@ instance HasTypeOf1 t => HasInferOf1 (Scope t) where
     type InferOf1 (Scope t) = FuncType (TypeOf1 t)
     type InferOf1IndexConstraint (Scope t) = DeBruijnIndex
     hasInferOf1 p =
-        withDict (typeAst (p0 p)) Dict
+        typeAst (p0 p)
         where
             p0 :: Proxy (Scope t k) -> Proxy (t k)
             p0 _ = Proxy
@@ -105,8 +104,9 @@ instance
     Infer m (Scope t k) where
 
     inferBody (Scope x) =
-        withDict (hasInferOf1 (Proxy @(t k))) $
-        withDict (hasInferOf1 (Proxy @(t (Maybe k)))) $
+        hasInferOf1 (Proxy @(t k)) $
+        hasInferOf1 (Proxy @(t (Maybe k))) $
+        inferMonad (Proxy @(Infer m (t (Maybe k)))) $
         do
             varType <- newUnbound
             InferredChild xI xR <-
@@ -115,10 +115,8 @@ instance
             InferRes (Scope xI)
                 (FuncType varType (xR ^# inferredType (Proxy @(t k))))
                 & pure
-        \\ (inferMonad :: DeBruijnIndex (Maybe k) :- Infer m (t (Maybe k)))
 
-    inferRecursive _ _ =
-        Dict \\ inferMonad @m @t @(Maybe k)
+    inferRecursive _ _ = inferMonad (Proxy @(Infer m (t (Maybe k))))
 
 instance
     ( MonadReader env m

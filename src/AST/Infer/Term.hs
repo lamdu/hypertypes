@@ -1,5 +1,6 @@
 {-# LANGUAGE TemplateHaskell, FlexibleContexts, RankNTypes #-}
 {-# LANGUAGE UndecidableInstances, FlexibleInstances, DefaultSignatures #-}
+{-# OPTIONS -Wno-redundant-constraints #-} -- Work around false GHC warnings
 
 module AST.Infer.Term
     ( ITerm(..), iVal, iRes, iAnn
@@ -9,9 +10,7 @@ module AST.Infer.Term
 
 import AST
 import AST.Class.Infer
-import AST.Class.Recursive
 import Control.Lens (Traversal, makeLenses)
-import Data.Constraint
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
@@ -35,25 +34,27 @@ iAnnotations ::
     (Tree (ITerm b v) e)
     a b
 iAnnotations f (ITerm pl r x) =
-    withDict (recursiveKTraversable (Proxy @e)) $
+    recurse (Proxy @(RTraversable e)) $
     ITerm
     <$> f pl
     <*> pure r
     <*> traverseKWith (Proxy @RTraversable) (iAnnotations f) x
 
 class (RTraversable e, KTraversable (InferOf e)) => TraverseITermWith c e where
-    traverseITermWithRecursive :: Proxy c -> Proxy e -> Dict (NodesConstraint e (TraverseITermWith c))
+    traverseITermWithRecursive ::
+        Proxy c -> Proxy e -> (NodesConstraint e (TraverseITermWith c) => r) -> r
     {-# INLINE traverseITermWithRecursive #-}
     default traverseITermWithRecursive ::
         NodesConstraint e (TraverseITermWith c) =>
-        Proxy c -> Proxy e -> Dict (NodesConstraint e (TraverseITermWith c))
-    traverseITermWithRecursive _ _ = Dict
-    traverseITermWithConstraint :: Proxy c -> Proxy e -> Dict (NodesConstraint (InferOf e) c)
+        Proxy c -> Proxy e -> (NodesConstraint e (TraverseITermWith c) => r) -> r
+    traverseITermWithRecursive _ _ = id
+    traverseITermWithConstraint ::
+        Proxy c -> Proxy e -> (NodesConstraint (InferOf e) c => r) -> r
     {-# INLINE traverseITermWithConstraint #-}
     default traverseITermWithConstraint ::
         NodesConstraint (InferOf e) c =>
-        Proxy c -> Proxy e -> Dict (NodesConstraint (InferOf e) c)
-    traverseITermWithConstraint _ _ = Dict
+        Proxy c -> Proxy e -> (NodesConstraint (InferOf e) c => r) -> r
+    traverseITermWithConstraint _ _ = id
 
 traverseITermWith ::
     forall e f v r a constraint.
@@ -62,8 +63,8 @@ traverseITermWith ::
     (forall c. constraint c => Tree v c -> f (Tree r c)) ->
     Tree (ITerm a v) e -> f (Tree (ITerm a r) e)
 traverseITermWith p f (ITerm a r x) =
-    withDict (traverseITermWithRecursive p (Proxy @e)) $
-    withDict (traverseITermWithConstraint p (Proxy @e)) $
+    traverseITermWithRecursive p (Proxy @e) $
+    traverseITermWithConstraint p (Proxy @e) $
     ITerm a
     <$> traverseKWith p f r
     <*> traverseKWith (Proxy @(TraverseITermWith constraint)) (traverseITermWith p f) x
