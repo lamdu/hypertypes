@@ -3,6 +3,9 @@ module AST.Infer
     , module AST.Infer.ScopeLevel
     , module AST.Infer.Term
     , infer
+
+    , -- Exported for SPECIALIZE pragmas
+      inferH
     ) where
 
 import AST
@@ -24,8 +27,12 @@ infer ::
     m (Tree (ITerm a (UVarOf m)) t)
 infer (Ann a x) =
     withDict (inferRecursive (Proxy @m) (Proxy @t)) $
-        inferBody
-        (mapKWith (Proxy @(Infer m))
-            (\c -> infer c <&> (\i -> InferredChild i (i ^. iRes)) & InferChild)
-            x)
+    inferBody (mapKWith (Proxy @(Infer m)) inferH x)
     <&> (\(InferRes xI t) -> ITerm a t xI)
+
+{-# INLINE inferH #-}
+inferH ::
+    Infer m t =>
+    Tree (Ann a) t ->
+    Tree (InferChild m (ITerm a (UVarOf m))) t
+inferH c = infer c <&> (\i -> InferredChild i (i ^. iRes)) & InferChild
