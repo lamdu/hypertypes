@@ -73,10 +73,16 @@ instance Inferrable (Scope t k) where
 
 instance Inferrable (ScopeVar t k) where type InferOf (ScopeVar t k) = ANode (TypeOf (t k))
 
+type instance TypeOf (Scope t k) = TypeOf (t k)
+
 instance HasTypeOf1 t => HasTypeOf1 (Scope t) where
     type TypeOf1 (Scope t) = TypeOf1 t
     type TypeOfIndexConstraint (Scope t) = DeBruijnIndex
-    typeAst p = withDict (typeAst p) Dict
+    typeAst p =
+        withDict (typeAst (p0 p)) Dict
+        where
+            p0 :: Proxy (Scope t k) -> Proxy (t k)
+            p0 _ = Proxy
 
 instance HasTypeOf1 t => HasInferOf1 (Scope t) where
     type InferOf1 (Scope t) = FuncType (TypeOf1 t)
