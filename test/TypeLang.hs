@@ -24,7 +24,7 @@ import           Control.Lens.Operators
 import           Control.Monad.Reader (MonadReader)
 import           Control.Monad.ST.Class (MonadST(..))
 import           Data.STRef
-import           Data.Set (Set, singleton)
+import           Data.Set (Set)
 import           Generic.Data
 import           Generics.OneLiner (Constraints)
 import           GHC.Generics (Generic)
@@ -134,26 +134,24 @@ instance RowConstraints RConstraints where
     type RowConstraintsKey RConstraints = Name
     forbidden = rForbiddenFields
 
-type instance TypeConstraintsOf Typ = ScopeLevel
-
 instance HasTypeConstraints Typ where
-    verifyConstraints _ _ _ TInt = pure TInt
-    verifyConstraints _ _ _ (TVar v) = TVar v & pure
-    verifyConstraints c _ u (TFun f) = traverseK1 (u c) f <&> TFun
-    verifyConstraints c _ u (TRec r) = u (RowConstraints mempty c) r <&> TRec
-    verifyConstraints c _ u (TNom (NominalInst n (Types t r))) =
+    type instance TypeConstraintsOf Typ = ScopeLevel
+    verifyConstraints _ TInt = Just TInt
+    verifyConstraints _ (TVar v) = TVar v & Just
+    verifyConstraints c (TFun f) = mapK1 (WithConstraint c) f & TFun & Just
+    verifyConstraints c (TRec r) = WithConstraint (RowConstraints mempty c) r & TRec & Just
+    verifyConstraints c (TNom (NominalInst n (Types t r))) =
         Types
-        <$> (_QVarInstances . traverse) (u c) t
-        <*> (_QVarInstances . traverse) (u (RowConstraints mempty c)) r
-        <&> NominalInst n <&> TNom
-
-type instance TypeConstraintsOf Row = RConstraints
+        (t & _QVarInstances . traverse %~ WithConstraint c)
+        (r & _QVarInstances . traverse %~ WithConstraint (RowConstraints mempty c))
+        & NominalInst n & TNom & Just
 
 instance HasTypeConstraints Row where
-    verifyConstraints _ _ _ REmpty = pure REmpty
-    verifyConstraints _ _ _ (RVar x) = RVar x & pure
-    verifyConstraints c e u (RExtend x) =
-        applyRowExtendConstraints c (^. rScope) (e . (`RowConstraints` mempty) . singleton) u x <&> RExtend
+    type instance TypeConstraintsOf Row = RConstraints
+    verifyConstraints _ REmpty = Just REmpty
+    verifyConstraints _ (RVar x) = RVar x & Just
+    verifyConstraints c (RExtend x) =
+        verifyRowExtendConstraints (^. rScope) c x <&> RExtend
 
 type PureInferState = (Tree Types Binding, Tree Types UVar)
 

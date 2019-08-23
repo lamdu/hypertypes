@@ -12,9 +12,9 @@ module AST.Unify
 
 import Algebra.PartialOrd (PartialOrd(..))
 import AST
-import AST.Class.Unify (Unify(..), UVarOf, BindingDict(..), HasTypeConstraints(..))
+import AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import AST.Class.ZipMatch (zipMatchWithA)
-import AST.Unify.Constraints (TypeConstraints(..), MonadScopeConstraints(..), TypeConstraintsOf)
+import AST.Unify.Constraints
 import AST.Unify.Error (UnifyError(..))
 import AST.Unify.Lookup (semiPruneLookup)
 import AST.Unify.Occurs (occursError)
@@ -60,14 +60,14 @@ updateTermConstraints v t newConstraints
         withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
         do
             bindVar binding v (UResolving t)
-            verifyConstraints newConstraints
-                (unifyError . ConstraintsViolation (t ^. uBody))
-                f
-                (t ^. uBody)
-                >>= bindVar binding v . UTerm . UTermBody newConstraints
+            case verifyConstraints newConstraints (t ^. uBody) of
+                Nothing -> ConstraintsViolation (t ^. uBody) newConstraints & unifyError
+                Just prop ->
+                    do
+                        _ <- traverseKWith (Proxy @(Unify m)) f prop
+                        UTermBody newConstraints (t ^. uBody) & UTerm & bindVar binding v
     where
-        {-# INLINE f #-}
-        f !c var =
+        f (WithConstraint c var) =
             do
                 (v1, x) <- semiPruneLookup var
                 v1 <$ updateConstraints c v1 x

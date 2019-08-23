@@ -6,12 +6,11 @@ module AST.Term.Row
     , RowExtend(..), eKey, eVal, eRest
     , FlatRowExtends(..), freExtends, freRest
     , flattenRow, flattenRowExtend, unflattenRow
-    , applyRowExtendConstraints, rowExtendStructureMismatch
+    , verifyRowExtendConstraints, rowExtendStructureMismatch
     , rowElementInfer
     ) where
 
 import           AST
-import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Unify
 import           AST.Unify.Lookup (semiPruneLookup)
 import           AST.Unify.New (newTerm, newUnbound)
@@ -20,7 +19,7 @@ import           Control.DeepSeq (NFData)
 import           Control.Lens (Prism', Lens', makeLenses, contains)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Control.Monad (when, foldM)
+import           Control.Monad (foldM)
 import           Data.Binary (Binary)
 import           Data.Foldable (sequenceA_)
 import           Data.Map (Map)
@@ -96,25 +95,20 @@ unflattenRow mkExtend (FlatRowExtends fields rest) =
 
 -- Helpers for Unify instances of type-level RowExtends:
 
-{-# INLINE applyRowExtendConstraints #-}
-applyRowExtendConstraints ::
-    ( Applicative m
-    , Unify m valTyp, Unify m rowTyp
-    , RowConstraints (TypeConstraintsOf rowTyp)
-    ) =>
-    TypeConstraintsOf rowTyp ->
+{-# INLINE verifyRowExtendConstraints #-}
+verifyRowExtendConstraints ::
+    RowConstraints (TypeConstraintsOf rowTyp) =>
     (TypeConstraintsOf rowTyp -> TypeConstraintsOf valTyp) ->
-    (RowKey rowTyp -> m ()) ->
-    (forall child. Unify m child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
-    Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) p ->
-    m (Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) q)
-applyRowExtendConstraints c toChildC err update (RowExtend k v rest) =
-    when (c ^. forbidden . contains k) (err k)
-    *>
-    (RowExtend k
-        <$> update (c & forbidden .~ mempty & toChildC) v
-        <*> update (c & forbidden . contains k .~ True) rest
-    )
+    TypeConstraintsOf rowTyp ->
+    Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) k ->
+    Maybe (Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) (WithConstraint k))
+verifyRowExtendConstraints toChildC c (RowExtend k v rest)
+    | c ^. forbidden . contains k = Nothing
+    | otherwise =
+        RowExtend k
+        (WithConstraint (c & forbidden .~ mempty & toChildC) v)
+        (WithConstraint (c & forbidden . contains k .~ True) rest)
+        & Just
 
 {-# INLINE rowExtendStructureMismatch #-}
 rowExtendStructureMismatch ::

@@ -1,11 +1,15 @@
+{-# LANGUAGE FlexibleContexts, TemplateHaskell #-}
+
 module AST.Unify.Constraints
     ( TypeConstraints(..)
     , MonadScopeConstraints(..)
-    , TypeConstraintsOf
+    , HasTypeConstraints(..)
+    , WithConstraint(..), pConstraint, pBody
     ) where
 
 import Algebra.PartialOrd (PartialOrd(..))
-import AST (Knot)
+import AST (Tree, Knot, RunKnot)
+import Control.Lens (makeLenses)
 import Data.Kind (Type)
 
 import Prelude.Compat
@@ -24,4 +28,21 @@ class (PartialOrd c, Semigroup c) => TypeConstraints c where
 class Monad m => MonadScopeConstraints c m where
     scopeConstraints :: m c
 
-type family TypeConstraintsOf (k :: Knot -> Type) :: Type
+class
+    TypeConstraints (TypeConstraintsOf ast) =>
+    HasTypeConstraints (ast :: Knot -> *) where
+
+    type family TypeConstraintsOf (ast :: Knot -> Type) :: Type
+
+    -- | Verify constraints on the ast and apply the given child
+    -- verifier on children
+    verifyConstraints ::
+        TypeConstraintsOf ast ->
+        Tree ast k ->
+        Maybe (Tree ast (WithConstraint k))
+
+data WithConstraint k ast = WithConstraint
+    { _pConstraint :: TypeConstraintsOf (RunKnot ast)
+    , _pBody :: k ast
+    }
+makeLenses ''WithConstraint

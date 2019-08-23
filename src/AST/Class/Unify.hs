@@ -3,12 +3,10 @@
 module AST.Class.Unify
     ( Unify(..), UVarOf
     , BindingDict(..)
-    , HasTypeConstraints(..)
     ) where
 
 import AST.Class.Nodes (KNodes(..))
 import AST.Class.Recursive
-import AST.Class.Traversable
 import AST.Class.ZipMatch (ZipMatch)
 import AST.Knot (Tree, Knot)
 import AST.Unify.Error (UnifyError(..))
@@ -79,20 +77,3 @@ instance Recursive (Unify m) where
         where
             p :: Proxy (Unify m t) -> Proxy t
             p _ = Proxy
-
-class
-    TypeConstraints (TypeConstraintsOf ast) =>
-    HasTypeConstraints (ast :: Knot -> *) where
-
-    -- | Verify constraints on the ast and apply the given child
-    -- verifier on children
-    verifyConstraints ::
-        ( Applicative m
-        , KTraversable ast
-        , NodesConstraint ast (Unify m)
-        ) =>
-        TypeConstraintsOf ast ->
-        (TypeConstraintsOf ast -> m ()) ->
-        (forall child. Unify m child => TypeConstraintsOf child -> Tree p child -> m (Tree q child)) ->
-        Tree ast p ->
-        m (Tree ast q)

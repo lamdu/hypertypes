@@ -15,7 +15,7 @@ import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Class.Recursive
 import           AST.Class.Traversable
 import           AST.Combinator.Flip
-import           AST.Unify
+import           AST.Unify.Constraints
 import           AST.Unify.Lookup (semiPruneLookup)
 import           AST.Unify.New
 import           AST.Unify.Occurs (occursError)
