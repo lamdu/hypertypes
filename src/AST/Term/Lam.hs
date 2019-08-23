@@ -38,7 +38,7 @@ instance
         <+> Pretty.text "->" <+> pPrintPrec lvl 0 o
         & maybeParens (p > 0)
 
-instance Inferrable t => Inferrable (Lam v t) where
+instance Inferrable (Lam v t) where
     type InferOf (Lam v t) = FuncType (TypeOf t)
 
 instance

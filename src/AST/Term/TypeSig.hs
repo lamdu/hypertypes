@@ -40,11 +40,6 @@ instance
         & maybeParens (p > 1)
 
 instance
-    ( Inferrable t
-    , KTraversable (InferOf t)
-    , Inferrable (TypeOf t)
-    , RTraversable (TypeOf t)
-    ) =>
     Inferrable (TypeSig v t) where
     type InferOf (TypeSig v t) = InferOf t
 

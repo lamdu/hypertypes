@@ -22,7 +22,10 @@ import Data.Proxy
 
 import Prelude.Compat
 
-class (Infer m t, KApplicative (InferOf t)) => Blamable m t where
+class
+    (Infer m t, KApplicative (InferOf t), KTraversable (InferOf t)) =>
+    Blamable m t where
+
     blamableRecursive :: Proxy m -> Proxy t -> Dict (NodesConstraint t (Blamable m))
     {-# INLINE blamableRecursive #-}
     default blamableRecursive ::
@@ -47,7 +50,6 @@ prepare ::
     Tree (Ann a) exp ->
     m (Tree (Ann (PrepAnn m a)) exp)
 prepare typeFromAbove (Ann a x) =
-    withDict (traversableInferOf (Proxy @exp)) $
     withDict (inferredUnify (Proxy @m) (Proxy @exp)) $
     withDict (blamableRecursive (Proxy @m) (Proxy @exp)) $
     inferBody
@@ -57,7 +59,6 @@ prepare typeFromAbove (Ann a x) =
                 p _ = Proxy
             in
             withDict (inferredUnify (Proxy @m) (p c)) $
-            withDict (traversableInferOf (p c)) $
             do
                 t <- sequencePureKWith (Proxy @(Unify m)) newUnbound
                 prepare t c <&> (`InferredChild` t)

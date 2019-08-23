@@ -284,7 +284,6 @@ lookupParams =
             _ -> error "unexpected state at nominal's parameter"
 
 instance
-    (Inferrable e, KTraversable (NomVarTypes (TypeOf e))) =>
     Inferrable (ToNom n e) where
     type InferOf (ToNom n e) = NominalInst n (NomVarTypes (TypeOf e))
 

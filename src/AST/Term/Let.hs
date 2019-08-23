@@ -40,7 +40,6 @@ instance
         & maybeParens (p > 0)
 
 instance
-    (Inferrable e, KTraversable (InferOf e)) =>
     Inferrable (Let v e) where
     type InferOf (Let v e) = InferOf e
 

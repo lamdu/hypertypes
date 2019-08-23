@@ -20,15 +20,8 @@ import Data.Proxy (Proxy)
 
 import Prelude.Compat
 
-class KTraversable t => Inferrable t where
+class KFunctor t => Inferrable t where
     type family InferOf (t :: Knot -> Type) :: Knot -> Type
-
-    traversableInferOf :: Proxy t -> Dict (KTraversable (InferOf t))
-    {-# INLINE traversableInferOf #-}
-    default traversableInferOf ::
-        KTraversable (InferOf t) =>
-        Proxy t -> Dict (KTraversable (InferOf t))
-    traversableInferOf _ = Dict
 
 class HasInferredValue t where
     inferredValue :: Lens' (Tree (InferOf t) v) (Tree v t)
