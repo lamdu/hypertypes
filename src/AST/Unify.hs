@@ -7,7 +7,8 @@ module AST.Unify
     , unify
 
     , -- Exported for SPECIALIZE pragmas
-      updateConstraints, updateTermConstraints, unifyUTerms, unifyUnbound
+      updateConstraints, updateTermConstraints, updateTermConstraintsH
+    , unifyUTerms, unifyUnbound
     ) where
 
 import Algebra.PartialOrd (PartialOrd(..))
@@ -53,7 +54,10 @@ updateConstraints !newConstraints v x =
 updateTermConstraints ::
     forall m t.
     Unify m t =>
-    Tree (UVarOf m) t -> Tree (UTermBody (UVarOf m)) t -> TypeConstraintsOf t -> m ()
+    Tree (UVarOf m) t ->
+    Tree (UTermBody (UVarOf m)) t ->
+    TypeConstraintsOf t ->
+    m ()
 updateTermConstraints v t newConstraints
     | newConstraints `leq` (t ^. uConstraints) = pure ()
     | otherwise =
@@ -64,13 +68,18 @@ updateTermConstraints v t newConstraints
                 Nothing -> ConstraintsViolation (t ^. uBody) newConstraints & unifyError
                 Just prop ->
                     do
-                        _ <- traverseKWith (Proxy @(Unify m)) f prop
+                        traverseKWith_ (Proxy @(Unify m)) updateTermConstraintsH prop
                         UTermBody newConstraints (t ^. uBody) & UTerm & bindVar binding v
-    where
-        f (WithConstraint c var) =
-            do
-                (v1, x) <- semiPruneLookup var
-                v1 <$ updateConstraints c v1 x
+
+{-# INLINE updateTermConstraintsH #-}
+updateTermConstraintsH ::
+    Unify m t =>
+    Tree (WithConstraint (UVarOf m)) t ->
+    m ()
+updateTermConstraintsH (WithConstraint c v0) =
+    do
+        (v1, x) <- semiPruneLookup v0
+        updateConstraints c v1 x
 
 -- Note on usage of `semiPruneLookup`:
 --   Variables are pruned to point to other variables rather than terms,
