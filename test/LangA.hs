@@ -76,7 +76,6 @@ instance InvDeBruijnIndex v => Pretty (LangA v ('Knot Pure)) where
 
 instance HasTypeOf1 LangA where
     type TypeOf1 LangA = Typ
-    type TypeOfIndexConstraint LangA = DeBruijnIndex
     typeAst _ = Dict
 
 instance HasInferOf1 LangA where

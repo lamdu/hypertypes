@@ -77,7 +77,6 @@ type instance TypeOf (Scope t k) = TypeOf (t k)
 
 instance HasTypeOf1 t => HasTypeOf1 (Scope t) where
     type TypeOf1 (Scope t) = TypeOf1 t
-    type TypeOfIndexConstraint (Scope t) = DeBruijnIndex
     typeAst p =
         withDict (typeAst (p0 p)) Dict
         where
@@ -96,7 +95,7 @@ instance HasTypeOf1 t => HasInferOf1 (Scope t) where
 instance
     ( Infer1 m t
     , HasInferOf1 t
-    , TypeOfIndexConstraint t ~ DeBruijnIndex
+    , InferOf1IndexConstraint t ~ DeBruijnIndex
     , DeBruijnIndex k
     , Unify m (TypeOf (t k))
     , MonadReader env m
