@@ -1,22 +1,20 @@
-# syntax-tree
+# syntax-tree: Higher-Kinded Data all the way down!
 
-`syntax-tree` is a Haskell library that can be described in several ways:
+syntax-tree is a Haskell library for working with higher kinded data structures.
 
-* [`recursion-schemes`](https://github.com/ekmett/recursion-schemes/), super-powered
-* Tools for indexed indices
-* A library for representing and processing mutually recursive syntax trees via indexed variants of `Functor` and other classes
+It allows to describe nested data structures parameterised on how to store child nodes.
 
-Like `recursion-schemes`, `syntax-tree` allows parameterizing the "fix-point" of a syntax tree. Parameterized fix-points enabled useful combinators, conviniently "folding" the tree, annotating trees, pruning them, and more.
+## Comparison to simple HKD
 
-While `recursion-schemes` works best for ASTs with a single expression types, many ASTs are more complex and have several node types, for statements, expressions, types, etc. `syntax-tree` can represent these ASTs a single fix-point type parameter.
+[Higher-Kinded Data](http://reasonablypolymorphic.com/blog/higher-kinded-data) (aka HKD) enables parameterizing items in a record, allowing for example to represent a variant of the record which may have missing items.
 
-Not only are complex ASTs supported, the fix-points themselves may be equally rich. This allows for fix-points representing code diffs, and more.
+With HKD-all-the-way-down (aka nested-HKD), instead of containing simple values of kind `Type`, the structure contains similar nested-HKD structures.
 
-## Heterogeneous AST examples
+## Examples
 
-### Types and row types
+### Heterogeneous AST of types and row types
 
-Simple declaration of the AST without external fix-points:
+Let's consider the following AST:
 
 ```Haskell
 data Typ
@@ -31,7 +29,7 @@ data Row
 
 Note how `Typ`s has children of types `Typ` and `Row` (and `Row` also has children of both types). This makes it heterogeneous.
 
-Here's how such a tree can be represented with `syntax-tree` with parameterized fix-points:
+Here's how such a tree can be represented as nested-HKD with `syntax-tree`:
 
 ```Haskell
 data Typ k
@@ -44,22 +42,24 @@ data Row k
     | RExtend String (Node k Typ) (Node k Row)
 ```
 
-Differences:
+Differences from the simple type definition:
 
-* The child nodes are parameterized by a type variable "k"
-* Nodes are specified via the `Node` type-synonym which "ties the knot"
+* The types are parameterized by `k`
+* Nodes are specified via the `Node` type-synonym which "ties the knot", with `k` and the node type
 
-## What kind of processing does `syntax-tree` do for me
+## What can syntax-tree do for you
 
-* Helpers for recursive processing and transformation of ASTs
-* Provides existing structures for common terms and fix-points
+* HKD variants of standard classes like `Functor`
+* Helpers for recursive processing and transformation of nested structures
 * A generic implementation for unification of terms
 * A generic and fast implementation of a Hindley-Milner type inference algorithm (["Efficient generalization with levels"](http://okmij.org/ftp/ML/generalization.html#levels))
+* Implementations for common AST terms and useful fix-points
+
 
 ## The underlying principle: `Knot`s
 
 * We want ASTs to be parameterized by fix-points
-* We want fix-points to be parameterized by ASTs, too
+* Fix-points are parameterized by the ASTs, too
 * Therefore, ASTs and fix-points need to be mutually parameterized by each other
 * This results in infinite types, as the AST is parameterized by something which may be parameterized by the AST itself.
 
@@ -76,9 +76,53 @@ This allows representing the mutual parameterization:
 * `Knot -> Type` is also the kind of the type inside `Knot`, which is lifted to the type-level using `DataKinds`
 * Wrapping the AST and fix-point type parameters with `Knot`s thus enables the mutual parameterization / recursion
 
-### Relation to "Hyperfunctions"
+## How does syntax-tree compare to
 
-S. Krstic et al [KLP2001] have described the a type which they call a "Hyperfunction". Here is it's definition from the [`hyperfunctions`](http://hackage.haskell.org/package/hyperfunctions) package on Hackage:
+### recursion-schemes
+
+[recursion-schemes](http://hackage.haskell.org/package/recursion-schemes) offers combinators for processing homogeneous recursive types.
+
+The heterogeneous AST example above is an example for non-homogeneous, co-recursive types. syntax-tree offers combinators which are similar to those from recursion-schemes but which also work for heterogeneous structures.
+
+### rank2classes
+
+[rank2classes](https://hackage.haskell.org/package/rank2classes) offers rank-2 variants of common classes such as `Functor`:
+
+```Haskell
+class Rank2.Functor g where
+    (<$>) ::
+        (forall a. p a -> q a) ->
+        g p ->
+        g q
+```
+
+This is quite similar to syntax-tree's `KFunctor`:
+
+```Haskell
+class KNodes k => KFunctor k where
+    mapK ::
+        (forall c. Tree m c -> Tree n c) ->
+        Tree k m ->
+        Tree k n
+    mapKWith ::
+        NodesConstraint k constraint =>
+        Proxy constraint ->
+        (forall c. constraint c => Tree m c -> Tree n c) ->
+        Tree k m ->
+        Tree k n
+```
+
+`mapK` is similar to `Rank2.(<$>)`, but crucially `mapKWith` allows providing a mapping that requires a constraint on the child nodes it processes (and this constraint is lifted to the caller's context via the `NodesConstraint` type family).
+
+### unification-fd
+
+[unification-fd](http://hackage.haskell.org/package/unification-fd) provides a unification implementation for homogeneous recursive types.
+
+syntax-tree provides a unification implementation for heterogeneous ASTs. Furthermore, syntax-tree also provides an implementation for Hindley-Milner type inference, with the `Infer` type class and with implementations of common AST terms which one can re-use as components in their own AST types.
+
+### hyperfunctions
+
+S. Krstic et al [KLP2001] have described the a type which they call a "Hyperfunction". Here is it's definition from the [hyperfunctions](http://hackage.haskell.org/package/hyperfunctions) package on Hackage:
 
 ```Haskell
 newtype Hyper a b = Hyper { invoke :: Hyper b a -> b }
@@ -92,4 +136,3 @@ For more info on hyperfunctions and their use cases in the value level see [LKS2
 
 * [KLP2001] S. Krstic, J. Launchbury, and D. Pavlovic. Hyperfunctions. In Proceeding of Fixed Points in Computer Science, FICS 2001
 * [LKS2013] J. Launchbury, S. Krstic, T. E. Sauerwein. [Coroutining Folds with Hyperfunctions](https://arxiv.org/abs/1309.5135). In In Proceedings Festschrift for Dave Schmidt, EPTCS 2013
-* [`hyperfunctions`](http://hackage.haskell.org/package/hyperfunctions) package. E. A. Kmett. Hackage 2015
