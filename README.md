@@ -49,7 +49,7 @@ Differences from the simple type definition:
 
 ## What can syntax-tree do for you
 
-* HKD variants of standard classes like `Functor`
+* Nested-HKD variants of standard classes like `Functor`
 * Helpers for recursive processing and transformation of nested structures
 * A generic implementation for unification of terms
 * A generic and fast implementation of a Hindley-Milner type inference algorithm (["Efficient generalization with levels"](http://okmij.org/ftp/ML/generalization.html#levels))
