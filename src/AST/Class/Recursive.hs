@@ -50,6 +50,9 @@ class KNodes k => RNodes k where
         Proxy k -> Dict (NodesConstraint k RNodes)
     recursiveKNodes _ = Dict
 
+instance RNodes Pure
+instance RNodes (Const a)
+
 argP :: Proxy (f k :: Constraint) -> Proxy (k :: Knot -> Type)
 argP _ = Proxy
 
@@ -65,6 +68,9 @@ class (KFunctor k, RNodes k) => RFunctor k where
         Proxy k -> Dict (NodesConstraint k RFunctor)
     recursiveKFunctor _ = Dict
 
+instance RFunctor Pure
+instance RFunctor (Const a)
+
 instance Recursive RFunctor where
     {-# INLINE recurse #-}
     recurse = recursiveKFunctor . argP
@@ -76,6 +82,9 @@ class (KFoldable k, RNodes k) => RFoldable k where
         NodesConstraint k RFoldable =>
         Proxy k -> Dict (NodesConstraint k RFoldable)
     recursiveKFoldable _ = Dict
+
+instance RFoldable Pure
+instance RFoldable (Const a)
 
 instance Recursive RFoldable where
     {-# INLINE recurse #-}
@@ -89,6 +98,9 @@ class (KTraversable k, RFunctor k, RFoldable k) => RTraversable k where
         Proxy k -> Dict (NodesConstraint k RTraversable)
     recursiveKTraversable _ = Dict
 
+instance RTraversable Pure
+instance RTraversable (Const a)
+
 instance Recursive RTraversable where
     {-# INLINE recurse #-}
     recurse = recursiveKTraversable . argP
@@ -101,6 +113,9 @@ class (ZipMatch k, RNodes k) => RZipMatch k where
         Proxy k -> Dict (NodesConstraint k RZipMatch)
     recursiveZipMatch _ = Dict
 
+instance RZipMatch Pure
+instance Eq a => RZipMatch (Const a)
+
 instance Recursive RZipMatch where
     {-# INLINE recurse #-}
     recurse = recursiveZipMatch . argP
@@ -112,6 +127,9 @@ class (RTraversable k, RZipMatch k) => RZipMatchTraversable k where
         NodesConstraint k RZipMatchTraversable =>
         Proxy k -> Dict (NodesConstraint k RZipMatchTraversable)
     recursiveZipMatchTraversable _ = Dict
+
+instance RZipMatchTraversable Pure
+instance Eq a => RZipMatchTraversable (Const a)
 
 instance Recursive RZipMatchTraversable where
     {-# INLINE recurse #-}
