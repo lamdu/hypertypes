@@ -96,23 +96,25 @@ class Rank2.Functor g where
         g q
 ```
 
-This is quite similar to syntax-tree's `KFunctor`:
+This is very similar to syntax-tree's `KFunctor`:
 
 ```Haskell
-class KNodes k => KFunctor k where
+class KNodes g => KFunctor g where
     mapK ::
-        (forall c. Tree m c -> Tree n c) ->
-        Tree k m ->
-        Tree k n
+        (forall a. p a -> q a) ->
+        g ('Knot p) ->
+        g ('Knot q)
     mapKWith ::
-        NodesConstraint k constraint =>
-        Proxy constraint ->
-        (forall c. constraint c => Tree m c -> Tree n c) ->
-        Tree k m ->
-        Tree k n
+        NodesConstraint g c =>
+        Proxy c ->
+        (forall a. c a => p ('Knot a) -> q ('Knot a)) ->
+        g ('Knot p) ->
+        g ('Knot q)
 ```
 
-`mapK` is similar to `Rank2.(<$>)`, but crucially `mapKWith` allows providing a mapping that requires a constraint on the child nodes it processes (and this constraint is lifted to the caller's context via the `NodesConstraint` type family).
+`mapK` and `Rank2.(<$>)` are similar, but an important difference is that `g`'s parameters `p` and `q` are wrapped in `Knot`, because this is how syntax-tree's nested-HKD work. That is, knots can't be instances of `Rank2.Functor` and this is why the `KFunctor` variant is necessary.
+
+ Additionally, `mapKWith` is provided, which allows using a mapping that requires a constraint on the child nodes, and this constraint is lifted to the caller's context via the `NodesConstraint` type family.
 
 ### unification-fd
 
