@@ -35,6 +35,11 @@ makeLenses ''Ann
 makeKTraversableApplyAndBases ''Ann
 makeZipMatch ''Ann
 
+instance RNodes (Ann a)
+instance RFunctor (Ann a)
+instance RFoldable (Ann a)
+instance RTraversable (Ann a)
+
 instance Constraints (Ann a t) Pretty => Pretty (Ann a t) where
     pPrintPrec lvl prec (Ann pl b)
         | PP.isEmpty plDoc || plDoc == PP.text "()" = pPrintPrec lvl prec b

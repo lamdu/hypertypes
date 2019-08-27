@@ -4,6 +4,7 @@ module AST.Knot.Functor
     ( ToKnot(..), _ToKnot
     ) where
 
+import AST.Class.Recursive
 import AST.Knot (Tree, Node)
 import AST.TH.Traversable (makeKTraversableApplyAndBases)
 import Control.DeepSeq (NFData)
@@ -24,6 +25,11 @@ _ToKnot ::
 _ToKnot = iso (\(MkToKnot x) -> x) MkToKnot
 
 makeKTraversableApplyAndBases ''ToKnot
+
+instance RNodes (ToKnot f)
+instance Functor f => RFunctor (ToKnot f)
+instance Foldable f => RFoldable (ToKnot f)
+instance Traversable f => RTraversable (ToKnot f)
 
 type InToKnot f k = f (Node k (ToKnot f))
 deriving instance Eq     (InToKnot f k) => Eq     (ToKnot f k)
