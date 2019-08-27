@@ -7,6 +7,7 @@ module AST.Class.Recursive
     , recurseBoth
     , wrap, wrapM, unwrap, unwrapM
     , fold, unfold
+    , foldMapRecursive
     ) where
 
 import AST.Class.Foldable
@@ -222,3 +223,18 @@ unfold ::
     a ->
     Tree Pure k
 unfold p f = unwrap p (f . getConst) . Const
+
+{-# INLINE foldMapRecursive #-}
+foldMapRecursive ::
+    forall c k a f.
+    (Recursive c, RFoldable k, c k, RFoldable f, Monoid a) =>
+    Proxy c ->
+    (forall n g. c n => Tree n g -> a) ->
+    Tree k f ->
+    a
+foldMapRecursive p f x =
+    withDict (recurseBoth (Proxy @(And RFoldable c k))) $
+    withDict (recurse (Proxy @(RFoldable f))) $
+    f x <>
+    foldMapKWith (Proxy @(And RFoldable c))
+    (foldMapKWith (Proxy @RFoldable) (foldMapRecursive p f)) x
