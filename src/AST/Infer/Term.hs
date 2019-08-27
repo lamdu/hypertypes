@@ -10,9 +10,13 @@ module AST.Infer.Term
 import AST
 import AST.Class.Infer
 import AST.Class.Recursive
+import Control.DeepSeq (NFData)
 import Control.Lens (Traversal, makeLenses)
+import Data.Binary (Binary)
 import Data.Constraint
 import Data.Proxy (Proxy(..))
+import Generics.OneLiner (Constraints)
+import GHC.Generics (Generic)
 
 import Prelude.Compat
 
@@ -24,7 +28,7 @@ data ITerm a v e = ITerm
     { _iAnn :: a
     , _iRes :: !(Tree (InferOf (RunKnot e)) v)
     , _iVal :: Node e (ITerm a v)
-    }
+    } deriving Generic
 makeLenses ''ITerm
 
 iAnnotations ::
@@ -68,4 +72,8 @@ traverseITermWith p f (ITerm a r x) =
     <$> traverseKWith p f r
     <*> traverseKWith (Proxy @(TraverseITermWith constraint)) (traverseITermWith p f) x
 
-deriving instance (Show a, Show (Tree e (ITerm a v)), Show (Tree (InferOf e) v)) => Show (Tree (ITerm a v) e)
+deriving instance Constraints (ITerm a v e) Eq   => Eq   (ITerm a v e)
+deriving instance Constraints (ITerm a v e) Ord  => Ord  (ITerm a v e)
+deriving instance Constraints (ITerm a v e) Show => Show (ITerm a v e)
+instance Constraints (ITerm a v e) Binary => Binary (ITerm a v e)
+instance Constraints (ITerm a v e) NFData => NFData (ITerm a v e)
