@@ -11,6 +11,7 @@ module AST.Term.Row
     ) where
 
 import           AST
+import           AST.TH.Internal.Instances (makeCommonInstances)
 import           AST.Unify
 import           AST.Unify.Lookup (semiPruneLookup)
 import           AST.Unify.New (newTerm, newUnbound)
@@ -26,6 +27,7 @@ import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Data.Set (Set)
 import           Generics.OneLiner (Constraints)
+import           Generics.OneLiner.TH (makeDeriving, makeInstance)
 import           GHC.Generics (Generic)
 import           Text.Show.Combinators ((@|), showCon)
 
@@ -54,9 +56,14 @@ data FlatRowExtends key val rest k = FlatRowExtends
 
 makeLenses ''RowExtend
 makeLenses ''FlatRowExtends
+makeCommonInstances ''FlatRowExtends
 makeZipMatch ''RowExtend
 makeKTraversableApplyAndBases ''RowExtend
 makeKTraversableApplyAndBases ''FlatRowExtends
+makeDeriving ''Eq ''RowExtend
+makeDeriving ''Ord ''RowExtend
+makeInstance ''Binary ''RowExtend
+makeInstance ''NFData ''RowExtend
 
 instance
     Constraints (RowExtend key val rest k) Show =>
@@ -162,14 +169,3 @@ rowElementInfer extendToRow k =
         part <- newUnbound
         whole <- RowExtend k part restVar & extendToRow & newTerm
         pure (part, whole)
-
-deriving instance Constraints (RowExtend i v r k) Eq   => Eq   (RowExtend i v r k)
-deriving instance Constraints (RowExtend i v r k) Ord  => Ord  (RowExtend i v r k)
-instance Constraints (RowExtend i v r k) Binary => Binary (RowExtend i v r k)
-instance Constraints (RowExtend i v r k) NFData => NFData (RowExtend i v r k)
-
-deriving instance Constraints (FlatRowExtends i v r k) Eq   => Eq   (FlatRowExtends i v r k)
-deriving instance Constraints (FlatRowExtends i v r k) Ord  => Ord  (FlatRowExtends i v r k)
-deriving instance Constraints (FlatRowExtends i v r k) Show => Show (FlatRowExtends i v r k)
-instance Constraints (FlatRowExtends i v r k) Binary => Binary (FlatRowExtends i v r k)
-instance Constraints (FlatRowExtends i v r k) NFData => NFData (FlatRowExtends i v r k)

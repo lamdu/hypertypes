@@ -17,23 +17,21 @@ import           AST.Class.Recursive
 import           AST.Combinator.ANode (ANode)
 import           AST.Combinator.Flip (Flip(..))
 import           AST.Infer
+import           AST.TH.Internal.Instances (makeCommonInstances)
 import           AST.Unify
 import           AST.Unify.Lookup (semiPruneLookup)
 import           AST.Unify.New (newTerm)
 import           AST.Unify.Generalize
 import           AST.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify(..), OrdQVar)
 import           AST.Unify.Term (UTerm(..), uBody)
-import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.State (StateT(..))
-import           Data.Binary (Binary)
 import           Data.Constraint
 import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Data.Proxy (Proxy(..))
-import           Generics.OneLiner (Constraints)
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
@@ -53,6 +51,8 @@ newtype QVars typ = QVars
 
 Lens.makeLenses ''Scheme
 Lens.makePrisms ''QVars
+makeCommonInstances ''Scheme
+makeCommonInstances ''QVars
 makeKTraversableApplyAndBases ''Scheme
 
 instance RNodes t => RNodes (Scheme v t)
@@ -109,7 +109,9 @@ instance Ord (QVar (RunKnot typ)) => Lens.At (QVars typ) where
 
 newtype QVarInstances k typ = QVarInstances (Map (QVar (RunKnot typ)) (k typ))
     deriving stock Generic
+
 Lens.makePrisms ''QVarInstances
+makeCommonInstances ''QVarInstances
 
 instance Inferrable (Scheme v t) where
     type InferOf (Scheme v t) = Flip GTerm t
@@ -275,21 +277,3 @@ saveScheme x =
             , []
             )
         _Pure # Scheme v t <$ sequence_ recover
-
-deriving instance Constraints (Scheme v t k) Eq   => Eq   (Scheme v t k)
-deriving instance Constraints (Scheme v t k) Ord  => Ord  (Scheme v t k)
-deriving instance Constraints (Scheme v t k) Show => Show (Scheme v t k)
-instance Constraints (Scheme v t k) Binary => Binary (Scheme v t k)
-instance Constraints (Scheme v t k) NFData => NFData (Scheme v t k)
-
-deriving instance Constraints (QVars t) Eq   => Eq   (QVars t)
-deriving instance Constraints (QVars t) Ord  => Ord  (QVars t)
-deriving instance Constraints (QVars t) Show => Show (QVars t)
-instance Constraints (QVars t) Binary => Binary (QVars t)
-instance Constraints (QVars t) NFData => NFData (QVars t)
-
-deriving instance Constraints (QVarInstances k t) Eq   => Eq   (QVarInstances k t)
-deriving instance Constraints (QVarInstances k t) Ord  => Ord  (QVarInstances k t)
-deriving instance Constraints (QVarInstances k t) Show => Show (QVarInstances k t)
-instance Constraints (QVarInstances k t) Binary => Binary (QVarInstances k t)
-instance Constraints (QVarInstances k t) NFData => NFData (QVarInstances k t)

@@ -9,11 +9,11 @@ module AST.Diff
 import AST
 import AST.Class.Recursive
 import AST.Class.ZipMatch (ZipMatch(..))
+import AST.TH.Internal.Instances (makeCommonInstances)
 import Control.Lens (makeLenses, makePrisms)
 import Control.Lens.Operators
 import Data.Constraint (withDict)
 import Data.Proxy (Proxy(..))
-import Generics.OneLiner (Constraints)
 import GHC.Generics (Generic)
 
 import Prelude.Compat
@@ -33,6 +33,8 @@ data CommonBody a b e = MkCommonBody
     , _val :: Node e (Diff a b)
     } deriving Generic
 
+makeCommonInstances ''Diff
+makeCommonInstances ''CommonBody
 makePrisms ''Diff
 makeLenses ''CommonBody
 
@@ -52,10 +54,3 @@ diff x@(Ann xA xB) y@(Ann yA yB) =
             sub =
                 mapKWith (Proxy @RZipMatchTraversable)
                 (\(Pair xC yC) -> diff xC yC) match
-
-deriving instance Constraints (CommonBody a b e) Eq   => Eq   (CommonBody a b e)
-deriving instance Constraints (CommonBody a b e) Ord  => Ord  (CommonBody a b e)
-deriving instance Constraints (CommonBody a b e) Show => Show (CommonBody a b e)
-deriving instance Constraints (Diff a b e) Eq   => Eq   (Diff a b e)
-deriving instance Constraints (Diff a b e) Ord  => Ord  (Diff a b e)
-deriving instance Constraints (Diff a b e) Show => Show (Diff a b e)

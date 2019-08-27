@@ -8,10 +8,9 @@ import           AST
 import           AST.Class.Unify (Unify, UVarOf)
 import           AST.Infer
 import           AST.Unify.Generalize (GTerm, generalize)
-import           Control.DeepSeq (NFData)
+import           AST.TH.Internal.Instances (makeCommonInstances)
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
-import           Data.Binary (Binary)
 import           Data.Proxy (Proxy(..))
 import           Generics.OneLiner (Constraints)
 import           GHC.Generics (Generic)
@@ -26,8 +25,9 @@ data Let v expr k = Let
     , _letEquals :: Node k expr
     , _letIn :: Node k expr
     } deriving (Generic)
-makeLenses ''Let
 
+makeLenses ''Let
+makeCommonInstances ''Let
 makeKTraversableApplyAndBases ''Let
 
 instance
@@ -65,9 +65,3 @@ instance
             inferChild i
                 & localScopeType v eG
                 <&> \(InferredChild iI iR) -> InferRes (Let v eI iI) iR
-
-deriving instance Constraints (Let v e k) Eq   => Eq   (Let v e k)
-deriving instance Constraints (Let v e k) Ord  => Ord  (Let v e k)
-deriving instance Constraints (Let v e k) Show => Show (Let v e k)
-instance Constraints (Let v e k) Binary => Binary (Let v e k)
-instance Constraints (Let v e k) NFData => NFData (Let v e k)

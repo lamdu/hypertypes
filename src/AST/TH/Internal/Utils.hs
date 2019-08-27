@@ -2,7 +2,7 @@
 
 -- Helpers for TemplateHaskell instance generators
 
-module AST.TH.Internal
+module AST.TH.Internal.Utils
     ( -- Internals for use in TH for sub-classes
       TypeInfo(..), TypeContents(..), CtrTypePattern(..)
     , makeTypeInfo

@@ -5,7 +5,7 @@ module AST.TH.Nodes
     ) where
 
 import           AST.Class.Nodes
-import           AST.TH.Internal
+import           AST.TH.Internal.Utils
 import           Control.Lens.Operators
 import           Data.Constraint (Dict(..))
 import qualified Data.Set as Set

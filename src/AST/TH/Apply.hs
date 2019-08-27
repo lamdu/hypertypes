@@ -8,7 +8,7 @@ module AST.TH.Apply
 
 import           AST.Class.Apply
 import           AST.TH.Functor (makeKFunctor)
-import           AST.TH.Internal
+import           AST.TH.Internal.Utils
 import           AST.TH.Nodes (makeKNodes)
 import           AST.TH.Pointed (makeKPointed)
 import           Control.Applicative (liftA2)

@@ -7,12 +7,11 @@ module AST.Unify.Error
     ) where
 
 import           AST
-import           AST.Unify.Constraints (TypeConstraintsOf)
+import           AST.TH.Internal.Instances (makeCommonInstances)
 import           AST.TH.Functor (makeKFunctor)
 import           AST.TH.Traversable (makeKTraversableAndFoldable)
-import           Control.DeepSeq (NFData)
+import           AST.Unify.Constraints (TypeConstraintsOf)
 import           Control.Lens (makePrisms)
-import           Data.Binary (Binary)
 import           Data.Constraint (Dict(..), withDict)
 import           Data.Proxy (Proxy(..))
 import           Generics.OneLiner (Constraints)
@@ -37,7 +36,9 @@ data UnifyError t k
     | Mismatch (t k) (t k)
       -- ^ Unification between two mismatching type structures
     deriving Generic
+
 makePrisms ''UnifyError
+makeCommonInstances ''UnifyError
 
 -- TODO: TH should be able to generate this
 instance KNodes t => KNodes (UnifyError t) where
@@ -67,9 +68,3 @@ instance Constraints (UnifyError t k) Pretty => Pretty (UnifyError t k) where
                 | otherwise = pPrintPrec lvl p
             r :: Pretty a => a -> Pretty.Doc
             r = pPrintPrec lvl 11
-
-deriving instance Constraints (UnifyError t k) Eq   => Eq   (UnifyError t k)
-deriving instance Constraints (UnifyError t k) Ord  => Ord  (UnifyError t k)
-deriving instance Constraints (UnifyError t k) Show => Show (UnifyError t k)
-instance Constraints (UnifyError t k) Binary => Binary (UnifyError t k)
-instance Constraints (UnifyError t k) NFData => NFData (UnifyError t k)

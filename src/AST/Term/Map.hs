@@ -6,14 +6,12 @@ module AST.Term.Map
 
 import           AST
 import           AST.Class.ZipMatch (ZipMatch(..))
-import           Control.DeepSeq (NFData)
+import           AST.TH.Internal.Instances (makeCommonInstances)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Data.Binary (Binary)
 import           Data.Functor.Product.PolyKinds (Product(..))
 import           Data.Map (Map)
 import qualified Data.Map as Map
-import           Generics.OneLiner (Constraints)
 import           GHC.Generics (Generic)
 
 import           Prelude.Compat
@@ -22,6 +20,7 @@ newtype TermMap k expr f = TermMap (Map k (Node f expr))
     deriving stock Generic
 
 Lens.makePrisms ''TermMap
+makeCommonInstances ''TermMap
 makeKTraversableApplyAndBases ''TermMap
 
 instance Eq k => ZipMatch (TermMap k expr) where
@@ -40,9 +39,3 @@ zipMatchList ((k0, v0) : xs) ((k1, v1) : ys)
     | k0 == k1 =
         zipMatchList xs ys <&> ((k0, (v0, v1)) :)
 zipMatchList _ _ = Nothing
-
-deriving instance Constraints (TermMap k e f) Eq   => Eq   (TermMap k e f)
-deriving instance Constraints (TermMap k e f) Ord  => Ord  (TermMap k e f)
-deriving instance Constraints (TermMap k e f) Show => Show (TermMap k e f)
-instance Constraints (TermMap k e f) Binary => Binary (TermMap k e f)
-instance Constraints (TermMap k e f) NFData => NFData (TermMap k e f)

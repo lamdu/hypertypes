@@ -5,7 +5,7 @@ module AST.TH.ZipMatch
     ) where
 
 import           AST.Class.ZipMatch (ZipMatch(..))
-import           AST.TH.Internal
+import           AST.TH.Internal.Utils
 import           Control.Lens.Operators
 import           Data.Functor.Product.PolyKinds (Product(..))
 import           Language.Haskell.TH

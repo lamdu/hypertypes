@@ -6,11 +6,9 @@ module AST.Knot.Functor
 
 import AST.Class.Recursive
 import AST.Knot (Tree, Node)
+import AST.TH.Internal.Instances (makeCommonInstances)
 import AST.TH.Traversable (makeKTraversableApplyAndBases)
-import Control.DeepSeq (NFData)
 import Control.Lens (Iso, iso)
-import Data.Binary (Binary)
-import Generics.OneLiner (Constraints)
 import GHC.Generics (Generic)
 
 import Prelude.Compat
@@ -25,15 +23,10 @@ _ToKnot ::
         (f1 (Tree k1 (ToKnot f1)))
 _ToKnot = iso (\(MkToKnot x) -> x) MkToKnot
 
+makeCommonInstances ''ToKnot
 makeKTraversableApplyAndBases ''ToKnot
 
 instance RNodes (ToKnot f)
 instance Functor f => RFunctor (ToKnot f)
 instance Foldable f => RFoldable (ToKnot f)
 instance Traversable f => RTraversable (ToKnot f)
-
-deriving instance Constraints (ToKnot f k) Eq   => Eq   (ToKnot f k)
-deriving instance Constraints (ToKnot f k) Ord  => Ord  (ToKnot f k)
-deriving instance Constraints (ToKnot f k) Show => Show (ToKnot f k)
-instance Constraints (ToKnot f k) Binary => Binary (ToKnot f k)
-instance Constraints (ToKnot f k) NFData => NFData (ToKnot f k)

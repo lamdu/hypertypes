@@ -24,6 +24,7 @@ import           AST.Infer
 import           AST.Term.FuncType (FuncType(..))
 import           AST.Term.Map (TermMap(..), _TermMap)
 import           AST.Term.Scheme
+import           AST.TH.Internal.Instances (makeCommonInstances)
 import           AST.Unify
 import           AST.Unify.Generalize (GTerm(..), _GMono, instantiateWith, instantiateForAll)
 import           AST.Unify.New (newTerm)
@@ -90,6 +91,9 @@ makeLenses ''NominalDecl
 makeLenses ''NominalInst
 makeLenses ''ToNom
 makePrisms ''FromNom
+makeCommonInstances ''NominalDecl
+makeCommonInstances ''NominalInst
+makeCommonInstances ''ToNom
 makeKTraversableAndBases ''NominalDecl
 makeKTraversableApplyAndBases ''ToNom
 makeKTraversableApplyAndBases ''FromNom
@@ -167,6 +171,8 @@ data LoadedNominalDecl typ v = LoadedNominalDecl
     , _lnForalls :: Tree (NomVarTypes typ) (QVarInstances (RunKnot v))
     , _lnType :: Tree (GTerm (RunKnot v)) typ
     } deriving Generic
+
+makeCommonInstances ''LoadedNominalDecl
 
 instance KNodes (NomVarTypes typ) => KNodes (LoadedNominalDecl typ) where
     type NodesConstraint (LoadedNominalDecl typ) c =
@@ -336,27 +342,3 @@ instance
             nominalInst # NominalInst nomId paramsT & newTerm
                 <&> (`FuncType` typ)
         <&> InferRes (FromNom nomId)
-
-deriving instance Constraints (NominalDecl t k) Eq   => Eq   (NominalDecl t k)
-deriving instance Constraints (NominalDecl t k) Ord  => Ord  (NominalDecl t k)
-deriving instance Constraints (NominalDecl t k) Show => Show (NominalDecl t k)
-instance Constraints (NominalDecl t k) Binary => Binary (NominalDecl t k)
-instance Constraints (NominalDecl t k) NFData => NFData (NominalDecl t k)
-
-deriving instance Constraints (NominalInst n v k) Eq   => Eq   (NominalInst n v k)
-deriving instance Constraints (NominalInst n v k) Ord  => Ord  (NominalInst n v k)
-deriving instance Constraints (NominalInst n v k) Show => Show (NominalInst n v k)
-instance Constraints (NominalInst n v k) Binary => Binary (NominalInst n v k)
-instance Constraints (NominalInst n v k) NFData => NFData (NominalInst n v k)
-
-deriving instance Constraints (ToNom n t k) Eq   => Eq   (ToNom n t k)
-deriving instance Constraints (ToNom n t k) Ord  => Ord  (ToNom n t k)
-deriving instance Constraints (ToNom n t k) Show => Show (ToNom n t k)
-instance Constraints (ToNom n t k) Binary => Binary (ToNom n t k)
-instance Constraints (ToNom n t k) NFData => NFData (ToNom n t k)
-
-deriving instance Constraints (LoadedNominalDecl t k) Eq   => Eq   (LoadedNominalDecl t k)
-deriving instance Constraints (LoadedNominalDecl t k) Ord  => Ord  (LoadedNominalDecl t k)
-deriving instance Constraints (LoadedNominalDecl t k) Show => Show (LoadedNominalDecl t k)
-instance Constraints (LoadedNominalDecl t k) Binary => Binary (LoadedNominalDecl t k)
-instance Constraints (LoadedNominalDecl t k) NFData => NFData (LoadedNominalDecl t k)

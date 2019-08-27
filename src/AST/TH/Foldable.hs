@@ -5,7 +5,7 @@ module AST.TH.Foldable
     ) where
 
 import           AST.Class.Foldable
-import           AST.TH.Internal
+import           AST.TH.Internal.Utils
 import           Control.Lens.Operators
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D

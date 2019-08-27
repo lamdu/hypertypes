@@ -8,13 +8,12 @@ import           AST
 import           AST.Combinator.Flip (_Flip)
 import           AST.Infer
 import           AST.Term.Scheme
+import           AST.TH.Internal.Instances (makeCommonInstances)
 import           AST.Unify (Unify, unify)
 import           AST.Unify.Generalize (instantiateWith)
 import           AST.Unify.Term (UTerm(..))
-import           Control.DeepSeq (NFData)
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
-import           Data.Binary (Binary)
 import           Data.Proxy (Proxy(..))
 import           Generics.OneLiner (Constraints)
 import           GHC.Generics (Generic)
@@ -28,8 +27,9 @@ data TypeSig vars term k = TypeSig
     { _tsTerm :: Node k term
     , _tsType :: Node k (Scheme vars (TypeOf term))
     } deriving Generic
-makeLenses ''TypeSig
 
+makeLenses ''TypeSig
+makeCommonInstances ''TypeSig
 makeKTraversableApplyAndBases ''TypeSig
 
 instance
@@ -65,9 +65,3 @@ instance
             xR & inferredType (Proxy @term) #%%~ unify t
                 <&> InferRes (TypeSig xI sI)
         & localLevel
-
-deriving instance Constraints (TypeSig v t k) Eq   => Eq   (TypeSig v t k)
-deriving instance Constraints (TypeSig v t k) Ord  => Ord  (TypeSig v t k)
-deriving instance Constraints (TypeSig v t k) Show => Show (TypeSig v t k)
-instance Constraints (TypeSig v t k) Binary => Binary (TypeSig v t k)
-instance Constraints (TypeSig v t k) NFData => NFData (TypeSig v t k)

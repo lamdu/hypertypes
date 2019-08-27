@@ -5,7 +5,7 @@ module AST.TH.Pointed
     ) where
 
 import           AST.Class.Pointed
-import           AST.TH.Internal
+import           AST.TH.Internal.Utils
 import           Control.Lens.Operators
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D

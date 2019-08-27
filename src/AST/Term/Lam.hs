@@ -9,10 +9,9 @@ import           AST.Infer
 import           AST.Term.FuncType
 import           AST.Unify (Unify, UVarOf)
 import           AST.Unify.New (newUnbound)
-import           Control.DeepSeq (NFData)
+import           AST.TH.Internal.Instances (makeCommonInstances)
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
-import           Data.Binary (Binary)
 import           Data.Proxy (Proxy(..))
 import           Generics.OneLiner (Constraints)
 import           GHC.Generics (Generic)
@@ -26,8 +25,9 @@ data Lam v expr k = Lam
     { _lamIn :: v
     , _lamOut :: Node k expr
     } deriving Generic
-makeLenses ''Lam
 
+makeLenses ''Lam
+makeCommonInstances ''Lam
 makeKTraversableApplyAndBases ''Lam
 
 instance
@@ -57,9 +57,3 @@ instance
             InferRes (Lam p rI)
                 (FuncType varType (rR ^# inferredType (Proxy @t)))
                 & pure
-
-deriving instance Constraints (Lam v e k) Eq   => Eq   (Lam v e k)
-deriving instance Constraints (Lam v e k) Ord  => Ord  (Lam v e k)
-deriving instance Constraints (Lam v e k) Show => Show (Lam v e k)
-instance Constraints (Lam v e k) Binary => Binary (Lam v e k)
-instance Constraints (Lam v e k) NFData => NFData (Lam v e k)

@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, UndecidableInstances, TemplateHaskell #-}
+{-# LANGUAGE FlexibleContexts, UndecidableInstances, TemplateHaskell, GeneralizedNewtypeDeriving #-}
 
 module AST.Unify.Binding
     ( UVar(..), _UVar
@@ -9,6 +9,7 @@ module AST.Unify.Binding
 
 import           AST.Class.Unify (BindingDict(..))
 import           AST.Knot (Tree, Knot)
+import           AST.TH.Internal.Instances (makeCommonInstances)
 import           AST.Unify.Term
 import           Control.Lens (ALens')
 import qualified Control.Lens as Lens
@@ -16,16 +17,20 @@ import           Control.Lens.Operators
 import           Control.Monad.State (MonadState(..))
 import           Data.Sequence
 import qualified Data.Sequence as Sequence
-import           Generics.OneLiner (Constraints)
+import           GHC.Generics (Generic)
 
 import           Prelude.Compat
 
 newtype UVar (t :: Knot) = UVar Int
-    deriving stock (Eq, Ord, Show)
+    deriving stock (Generic, Show)
+    deriving newtype (Eq, Ord)
 Lens.makePrisms ''UVar
 
 newtype Binding t = Binding (Seq (UTerm UVar t))
+    deriving stock Generic
+
 Lens.makePrisms ''Binding
+makeCommonInstances ''Binding
 
 emptyBinding :: Binding t
 emptyBinding = Binding mempty
@@ -49,7 +54,3 @@ bindingDict l =
         \(UVar k) v ->
         Lens.cloneLens l . _Binding . Lens.ix k .= v
     }
-
-deriving instance Constraints (UTerm UVar t) Eq   => Eq   (Binding t)
-deriving instance Constraints (UTerm UVar t) Ord  => Ord  (Binding t)
-deriving instance Constraints (UTerm UVar t) Show => Show (Binding t)

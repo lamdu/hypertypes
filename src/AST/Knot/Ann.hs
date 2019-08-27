@@ -12,10 +12,9 @@ import           AST.Knot (Tree, Node)
 import           AST.Knot.Pure (Pure(..))
 import           AST.TH.Traversable (makeKTraversableApplyAndBases)
 import           AST.TH.ZipMatch (makeZipMatch)
-import           Control.DeepSeq (NFData)
+import           AST.TH.Internal.Instances (makeCommonInstances)
 import           Control.Lens (Traversal, makeLenses)
 import           Control.Lens.Operators
-import           Data.Binary (Binary)
 import           Data.Constraint (withDict)
 import           Data.Proxy (Proxy(..))
 import           Generics.OneLiner (Constraints)
@@ -32,6 +31,7 @@ data Ann a knot = Ann
     } deriving Generic
 makeLenses ''Ann
 
+makeCommonInstances ''Ann
 makeKTraversableApplyAndBases ''Ann
 makeZipMatch ''Ann
 
@@ -74,9 +74,3 @@ addAnnotations ::
     (forall n. c n => Tree n (Ann a) -> a) ->
     Tree Pure k -> Tree (Ann a) k
 addAnnotations p f = wrap p (\x -> Ann (f x) x)
-
-deriving instance Constraints (Ann a t) Eq   => Eq   (Ann a t)
-deriving instance Constraints (Ann a t) Ord  => Ord  (Ann a t)
-deriving instance Constraints (Ann a t) Show => Show (Ann a t)
-instance Constraints (Ann a t) Binary => Binary (Ann a t)
-instance Constraints (Ann a t) NFData => NFData (Ann a t)

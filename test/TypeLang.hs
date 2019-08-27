@@ -27,6 +27,7 @@ import           Data.STRef
 import           Data.Set (Set)
 import           Generic.Data
 import           Generics.OneLiner (Constraints)
+import           Generics.OneLiner.TH (makeDeriving)
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
@@ -48,6 +49,7 @@ data Row k
     = REmpty
     | RExtend (RowExtend Name Typ Row k)
     | RVar Name
+    deriving Generic
 
 data RConstraints = RowConstraints
     { _rForbiddenFields :: Set Name
@@ -78,6 +80,9 @@ makeZipMatch ''Row
 makeKTraversableApplyAndBases ''Types
 makeKTraversableAndBases ''Typ
 makeKTraversableAndBases ''Row
+
+makeDeriving <$> [''Eq, ''Ord, ''Show] <*> [''Typ, ''Row, ''Types, ''TypeError]
+    & sequence <&> mconcat
 
 type instance NomVarTypes Typ = Types
 
@@ -225,12 +230,3 @@ newStQuantified ::
 newStQuantified l =
     Lens.view (Lens.cloneLens l . Lens._Wrapped)
     >>= (`readModifySTRef` succ)
-
-deriving instance Constraints (Types k) Eq   => Eq   (Typ k)
-deriving instance Constraints (Types k) Eq   => Eq   (Row k)
-deriving instance Constraints (Types k) Eq   => Eq   (Types k)
-deriving instance Constraints (Types k) Eq   => Eq   (TypeError k)
-deriving instance Constraints (Types k) Show => Show (Typ k)
-deriving instance Constraints (Types k) Show => Show (Row k)
-deriving instance Constraints (Types k) Show => Show (Types k)
-deriving instance Constraints (Types k) Show => Show (TypeError k)

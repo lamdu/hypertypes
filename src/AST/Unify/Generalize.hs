@@ -15,21 +15,19 @@ import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Class.Recursive
 import           AST.Class.Traversable
 import           AST.Combinator.Flip
+import           AST.TH.Internal.Instances (makeCommonInstances)
 import           AST.Unify.Constraints
 import           AST.Unify.Lookup (semiPruneLookup)
 import           AST.Unify.New
 import           AST.Unify.Occurs (occursError)
 import           AST.Unify.Term (UTerm(..), uBody)
-import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.Writer (WriterT(..), tell)
-import           Data.Binary (Binary)
 import           Data.Constraint (Dict(..), withDict)
 import           Data.Monoid (All(..))
 import           Data.Proxy (Proxy(..))
-import           Generics.OneLiner (Constraints)
 import           GHC.Generics (Generic)
 
 import           Prelude.Compat
@@ -48,6 +46,7 @@ data GTerm v ast
     deriving Generic
 
 Lens.makePrisms ''GTerm
+makeCommonInstances ''GTerm
 
 instance KNodes (Flip GTerm a) where
     type NodesConstraint (Flip GTerm a) c = (c a, Recursive c)
@@ -189,9 +188,3 @@ instantiate ::
     Unify m t =>
     Tree (GTerm (UVarOf m)) t -> m (Tree (UVarOf m) t)
 instantiate g = instantiateWith (pure ()) UUnbound g <&> (^. Lens._1)
-
-deriving instance (Constraints (GTerm v t)) Eq   => Eq   (GTerm v t)
-deriving instance (Constraints (GTerm v t)) Ord  => Ord  (GTerm v t)
-deriving instance (Constraints (GTerm v t)) Show => Show (GTerm v t)
-instance (Constraints (GTerm v t)) Binary => Binary (GTerm v t)
-instance (Constraints (GTerm v t)) NFData => NFData (GTerm v t)

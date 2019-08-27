@@ -8,9 +8,9 @@ module AST.Unify.Term
     ) where
 
 import AST
+import AST.TH.Internal.Instances (makeCommonInstances)
 import AST.Unify.Constraints (TypeConstraintsOf)
 import Control.Lens (makeLenses, makePrisms)
-import Generics.OneLiner (Constraints)
 import GHC.Generics (Generic)
 
 import Prelude.Compat
@@ -19,7 +19,9 @@ data UTermBody v ast = UTermBody
     { _uConstraints :: TypeConstraintsOf (RunKnot ast)
     , _uBody :: Node ast v
     } deriving Generic
+
 makeLenses ''UTermBody
+makeCommonInstances ''UTermBody
 
 -- | A unification term pointed by a unification variable
 data UTerm v ast
@@ -46,12 +48,6 @@ data UTerm v ast
       -- ^ Temporary state used in "AST.Unify.Binding.ST.Save" while
       -- converting to a pure binding
     deriving Generic
+
 makePrisms ''UTerm
-
-deriving instance Constraints (UTerm v a) Eq   => Eq   (UTerm v a)
-deriving instance Constraints (UTerm v a) Ord  => Ord  (UTerm v a)
-deriving instance Constraints (UTerm v a) Show => Show (UTerm v a)
-
-deriving instance Constraints (UTermBody v a) Eq   => Eq   (UTermBody v a)
-deriving instance Constraints (UTermBody v a) Ord  => Ord  (UTermBody v a)
-deriving instance Constraints (UTermBody v a) Show => Show (UTermBody v a)
+makeCommonInstances ''UTerm

@@ -11,7 +11,7 @@ import           AST.Class.Traversable
 import           AST.TH.Apply (makeKApplicativeBases)
 import           AST.TH.Foldable (makeKFoldable)
 import           AST.TH.Functor (makeKFunctor)
-import           AST.TH.Internal
+import           AST.TH.Internal.Utils
 import           AST.TH.Nodes (makeKNodes)
 import           Control.Lens.Operators
 import           Language.Haskell.TH
