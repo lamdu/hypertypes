@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, DefaultSignatures #-}
+{-# LANGUAGE FlexibleContexts, DefaultSignatures, TemplateHaskell #-}
 
 module AST.Infer.Blame
     ( Blamable(..), Blame(..), blame
@@ -16,6 +16,7 @@ import Control.Lens (mapped)
 import Control.Lens.Operators
 import Control.Monad.Except (MonadError(..))
 import Data.Constraint
+import Data.Constraint.TH (defaultDict)
 import Data.Foldable (traverse_)
 import Data.List (sortOn)
 import Data.Proxy
@@ -27,11 +28,7 @@ class
     Blamable m t where
 
     blamableRecursive :: Proxy m -> Proxy t -> Dict (NodesConstraint t (Blamable m))
-    {-# INLINE blamableRecursive #-}
-    default blamableRecursive ::
-        NodesConstraint t (Blamable m) =>
-        Proxy m -> Proxy t -> Dict (NodesConstraint t (Blamable m))
-    blamableRecursive _ _ = Dict
+    $(defaultDict 'blamableRecursive)
 
 data Blame = Ok | TypeMismatch
 
