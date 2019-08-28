@@ -5,14 +5,10 @@ module AST.Infer.Blame
     ) where
 
 import AST
-import AST.Class.Foldable (sequenceLiftK2With_)
-import AST.Class.Traversable
+import AST.Class.Recursive
 import AST.Infer
 import AST.Unify
-import AST.Unify.Lookup
-import AST.Unify.New
 import AST.Unify.Occurs
-import Control.Lens (mapped)
 import Control.Lens.Operators
 import Control.Monad.Except (MonadError(..))
 import Data.Constraint
@@ -22,18 +18,44 @@ import Data.Proxy
 
 import Prelude.Compat
 
-class
-    (Infer m t, KApplicative (InferOf t), KTraversable (InferOf t)) =>
-    Blamable m t where
+data Blame = Ok | TypeMismatch
 
-    blamableRecursive :: Proxy m -> Proxy t -> Dict (NodesConstraint t (Blamable m))
+class
+    (RTraversable t, KTraversable (InferOf t)) =>
+    Blamable t where
+
+    inferOfNew ::
+        Infer m t =>
+        Proxy t ->
+        m (Tree (InferOf t) (UVarOf m))
+
+    inferOfUnify ::
+        Infer m t =>
+        Proxy t ->
+        Tree (InferOf t) (UVarOf m) ->
+        Tree (InferOf t) (UVarOf m) ->
+        m ()
+
+    inferOfUnified ::
+        Infer m t =>
+        Proxy t ->
+        Tree (InferOf t) (UVarOf m) ->
+        Tree (InferOf t) (UVarOf m) ->
+        m Blame
+
+    blamableRecursive :: Proxy t -> Dict (NodesConstraint t Blamable)
     {-# INLINE blamableRecursive #-}
     default blamableRecursive ::
-        NodesConstraint t (Blamable m) =>
-        Proxy m -> Proxy t -> Dict (NodesConstraint t (Blamable m))
-    blamableRecursive _ _ = Dict
+        NodesConstraint t Blamable =>
+        Proxy t -> Dict (NodesConstraint t Blamable)
+    blamableRecursive _ = Dict
 
-data Blame = Ok | TypeMismatch
+instance Recursive Blamable where
+    recurse =
+        blamableRecursive . p
+        where
+            p :: Proxy (Blamable k) -> Proxy k
+            p _ = Proxy
 
 data PrepAnn m a = PrepAnn
     { pAnn :: a
@@ -44,23 +66,25 @@ data PrepAnn m a = PrepAnn
 prepare ::
     forall err m exp a.
     ( MonadError err m
-    , Blamable m exp
+    , Blamable exp
+    , Infer m exp
     ) =>
     Tree (InferOf exp) (UVarOf m) ->
     Tree (Ann a) exp ->
     m (Tree (Ann (PrepAnn m a)) exp)
 prepare typeFromAbove (Ann a x) =
     withDict (inferredUnify (Proxy @m) (Proxy @exp)) $
-    withDict (blamableRecursive (Proxy @m) (Proxy @exp)) $
+    withDict (recurseBoth (Proxy @(And (Infer m) Blamable exp))) $
     inferBody
-    (mapKWith (Proxy @(Blamable m))
+    (mapKWith (Proxy @(And (Infer m) Blamable))
         (\c ->
-            let p :: Tree (Ann a) k -> Proxy k
-                p _ = Proxy
+            let mkP :: Tree (Ann a) k -> Proxy k
+                mkP _ = Proxy
+                p = mkP c
             in
-            withDict (inferredUnify (Proxy @m) (p c)) $
+            withDict (inferredUnify (Proxy @m) p) $
             do
-                t <- sequencePureKWith (Proxy @(Unify m)) newUnbound
+                t <- inferOfNew p
                 prepare t c <&> (`InferredChild` t)
             & InferChild
         )
@@ -71,17 +95,10 @@ prepare typeFromAbove (Ann a x) =
     { pAnn = a
     , pTryUnify =
         do
-            sequenceLiftK2With_ (Proxy @(Unify m))
-                (unify <&> mapped . mapped .~ ()) typeFromAbove t
+            inferOfUnify (Proxy @exp) typeFromAbove t
             traverseKWith_ (Proxy @(Unify m)) occursCheck t
         & (`catchError` const (pure ()))
-    , pFinalize =
-        foldMapKWith (Proxy @(Unify m))
-            (\(Pair t0 t1) -> [(==) <$> (semiPruneLookup t0 <&> fst) <*> (semiPruneLookup t1 <&> fst)])
-            (zipK typeFromAbove t)
-        & sequenceA
-        <&>
-        \xs -> if and xs then Ok else TypeMismatch
+    , pFinalize = inferOfUnified (Proxy @exp) typeFromAbove t
     } xI
 
 -- | Assign blame for type errors, given a prioritisation for the possible blame positions.
@@ -92,8 +109,8 @@ blame ::
     forall priority err m exp a.
     ( Ord priority
     , MonadError err m
-    , RTraversable exp
-    , Blamable m exp
+    , Blamable exp
+    , Infer m exp
     ) =>
     (a -> priority) ->
     Tree (InferOf exp) (UVarOf m) ->
