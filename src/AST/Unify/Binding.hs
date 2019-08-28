@@ -30,7 +30,7 @@ newtype Binding t = Binding (Seq (UTerm UVar t))
     deriving stock Generic
 
 Lens.makePrisms ''Binding
-makeCommonInstances ''Binding
+makeCommonInstances [''Binding]
 
 emptyBinding :: Binding t
 emptyBinding = Binding mempty

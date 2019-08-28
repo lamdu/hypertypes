@@ -31,7 +31,7 @@ data Ann a knot = Ann
     } deriving Generic
 makeLenses ''Ann
 
-makeCommonInstances ''Ann
+makeCommonInstances [''Ann]
 makeKTraversableApplyAndBases ''Ann
 makeZipMatch ''Ann
 

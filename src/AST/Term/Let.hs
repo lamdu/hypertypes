@@ -27,7 +27,7 @@ data Let v expr k = Let
     } deriving (Generic)
 
 makeLenses ''Let
-makeCommonInstances ''Let
+makeCommonInstances [''Let]
 makeKTraversableApplyAndBases ''Let
 
 instance

@@ -33,8 +33,7 @@ data CommonBody a b e = MkCommonBody
     , _val :: Node e (Diff a b)
     } deriving Generic
 
-makeCommonInstances ''Diff
-makeCommonInstances ''CommonBody
+makeCommonInstances [''Diff, ''CommonBody]
 makePrisms ''Diff
 makeLenses ''CommonBody
 

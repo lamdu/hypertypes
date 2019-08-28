@@ -49,10 +49,13 @@ newtype QVars typ = QVars
     (Map (QVar (RunKnot typ)) (TypeConstraintsOf (RunKnot typ)))
     deriving stock Generic
 
+newtype QVarInstances k typ = QVarInstances (Map (QVar (RunKnot typ)) (k typ))
+    deriving stock Generic
+
 Lens.makeLenses ''Scheme
 Lens.makePrisms ''QVars
-makeCommonInstances ''Scheme
-makeCommonInstances ''QVars
+Lens.makePrisms ''QVarInstances
+makeCommonInstances [''Scheme, ''QVars, ''QVarInstances]
 makeKTraversableApplyAndBases ''Scheme
 
 instance RNodes t => RNodes (Scheme v t)
@@ -106,12 +109,6 @@ instance Ord (QVar (RunKnot typ)) => Lens.Ixed (QVars typ)
 
 instance Ord (QVar (RunKnot typ)) => Lens.At (QVars typ) where
     at k = _QVars . Lens.at k
-
-newtype QVarInstances k typ = QVarInstances (Map (QVar (RunKnot typ)) (k typ))
-    deriving stock Generic
-
-Lens.makePrisms ''QVarInstances
-makeCommonInstances ''QVarInstances
 
 instance Inferrable (Scheme v t) where
     type InferOf (Scheme v t) = Flip GTerm t

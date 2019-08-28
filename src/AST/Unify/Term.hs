@@ -20,9 +20,6 @@ data UTermBody v ast = UTermBody
     , _uBody :: Node ast v
     } deriving Generic
 
-makeLenses ''UTermBody
-makeCommonInstances ''UTermBody
-
 -- | A unification term pointed by a unification variable
 data UTerm v ast
     = UUnbound (TypeConstraintsOf (RunKnot ast))
@@ -50,4 +47,5 @@ data UTerm v ast
     deriving Generic
 
 makePrisms ''UTerm
-makeCommonInstances ''UTerm
+makeLenses ''UTermBody
+makeCommonInstances [''UTerm, ''UTermBody]

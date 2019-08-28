@@ -38,7 +38,7 @@ data UnifyError t k
     deriving Generic
 
 makePrisms ''UnifyError
-makeCommonInstances ''UnifyError
+makeCommonInstances [''UnifyError]
 
 -- TODO: TH should be able to generate this
 instance KNodes t => KNodes (UnifyError t) where

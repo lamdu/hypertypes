@@ -46,7 +46,7 @@ data GTerm v ast
     deriving Generic
 
 Lens.makePrisms ''GTerm
-makeCommonInstances ''GTerm
+makeCommonInstances [''GTerm]
 
 instance KNodes (Flip GTerm a) where
     type NodesConstraint (Flip GTerm a) c = (c a, Recursive c)

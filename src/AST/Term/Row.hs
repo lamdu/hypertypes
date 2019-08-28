@@ -26,8 +26,7 @@ import           Data.Foldable (sequenceA_)
 import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Data.Set (Set)
-import           Generics.Constraints (Constraints)
-import           Generics.Constraints.TH (makeDeriving, makeInstance)
+import           Generics.Constraints (Constraints, makeDerivings, makeInstances)
 import           GHC.Generics (Generic)
 import           Text.Show.Combinators ((@|), showCon)
 
@@ -56,14 +55,12 @@ data FlatRowExtends key val rest k = FlatRowExtends
 
 makeLenses ''RowExtend
 makeLenses ''FlatRowExtends
-makeCommonInstances ''FlatRowExtends
+makeCommonInstances [''FlatRowExtends]
 makeZipMatch ''RowExtend
 makeKTraversableApplyAndBases ''RowExtend
 makeKTraversableApplyAndBases ''FlatRowExtends
-makeDeriving ''Eq ''RowExtend
-makeDeriving ''Ord ''RowExtend
-makeInstance ''Binary ''RowExtend
-makeInstance ''NFData ''RowExtend
+makeDerivings [''Eq, ''Ord] [''RowExtend]
+makeInstances [''Binary, ''NFData] [''RowExtend]
 
 instance
     Constraints (RowExtend key val rest k) Show =>

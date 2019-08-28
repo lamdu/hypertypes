@@ -76,6 +76,21 @@ newtype FromNom nomId (term :: Knot -> *) (k :: Knot) = FromNom nomId
     deriving newtype (Eq, Ord, Binary, NFData)
     deriving stock (Show, Generic)
 
+data LoadedNominalDecl typ v = LoadedNominalDecl
+    { _lnParams :: Tree (NomVarTypes typ) (QVarInstances (RunKnot v))
+    , _lnForalls :: Tree (NomVarTypes typ) (QVarInstances (RunKnot v))
+    , _lnType :: Tree (GTerm (RunKnot v)) typ
+    } deriving Generic
+
+makeLenses ''NominalDecl
+makeLenses ''NominalInst
+makeLenses ''ToNom
+makePrisms ''FromNom
+makeCommonInstances [''NominalDecl, ''NominalInst, ''ToNom, ''LoadedNominalDecl]
+makeKTraversableAndBases ''NominalDecl
+makeKTraversableApplyAndBases ''ToNom
+makeKTraversableApplyAndBases ''FromNom
+
 instance KNodes v => KNodes (NominalInst n v) where
     type NodesConstraint (NominalInst n v) c = NodesConstraint v c
     {-# INLINE kNoConstraints #-}
@@ -86,17 +101,6 @@ instance KNodes v => KNodes (NominalInst n v) where
         where
             p0 :: Proxy (And a b (NominalInst n v)) -> Proxy (And a b v)
             p0 _ = Proxy
-
-makeLenses ''NominalDecl
-makeLenses ''NominalInst
-makeLenses ''ToNom
-makePrisms ''FromNom
-makeCommonInstances ''NominalDecl
-makeCommonInstances ''NominalInst
-makeCommonInstances ''ToNom
-makeKTraversableAndBases ''NominalDecl
-makeKTraversableApplyAndBases ''ToNom
-makeKTraversableApplyAndBases ''FromNom
 
 instance KFunctor v => KFunctor (NominalInst n v) where
     {-# INLINE mapKWith #-}
@@ -165,14 +169,6 @@ instance
                 Map.toList m <&>
                 \(k, v) ->
                 (pPrint k <> Pretty.text ":") <+> pPrint v
-
-data LoadedNominalDecl typ v = LoadedNominalDecl
-    { _lnParams :: Tree (NomVarTypes typ) (QVarInstances (RunKnot v))
-    , _lnForalls :: Tree (NomVarTypes typ) (QVarInstances (RunKnot v))
-    , _lnType :: Tree (GTerm (RunKnot v)) typ
-    } deriving Generic
-
-makeCommonInstances ''LoadedNominalDecl
 
 instance KNodes (NomVarTypes typ) => KNodes (LoadedNominalDecl typ) where
     type NodesConstraint (LoadedNominalDecl typ) c =

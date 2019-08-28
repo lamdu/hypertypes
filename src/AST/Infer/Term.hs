@@ -28,7 +28,7 @@ data ITerm a v e = ITerm
     , _iVal :: Node e (ITerm a v)
     } deriving Generic
 makeLenses ''ITerm
-makeCommonInstances ''ITerm
+makeCommonInstances [''ITerm]
 
 iAnnotations ::
     forall e a b v.

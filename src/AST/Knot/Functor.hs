@@ -23,7 +23,7 @@ _ToKnot ::
         (f1 (Tree k1 (ToKnot f1)))
 _ToKnot = iso (\(MkToKnot x) -> x) MkToKnot
 
-makeCommonInstances ''ToKnot
+makeCommonInstances [''ToKnot]
 makeKTraversableApplyAndBases ''ToKnot
 
 instance RNodes (ToKnot f)

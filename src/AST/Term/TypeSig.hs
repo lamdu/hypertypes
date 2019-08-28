@@ -29,7 +29,7 @@ data TypeSig vars term k = TypeSig
     } deriving Generic
 
 makeLenses ''TypeSig
-makeCommonInstances ''TypeSig
+makeCommonInstances [''TypeSig]
 makeKTraversableApplyAndBases ''TypeSig
 
 instance

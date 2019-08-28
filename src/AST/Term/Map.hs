@@ -20,7 +20,7 @@ newtype TermMap k expr f = TermMap (Map k (Node f expr))
     deriving stock Generic
 
 Lens.makePrisms ''TermMap
-makeCommonInstances ''TermMap
+makeCommonInstances [''TermMap]
 makeKTraversableApplyAndBases ''TermMap
 
 instance Eq k => ZipMatch (TermMap k expr) where

@@ -26,8 +26,7 @@ import           Control.Monad.ST.Class (MonadST(..))
 import           Data.STRef
 import           Data.Set (Set)
 import           Generic.Data
-import           Generics.Constraints (Constraints)
-import           Generics.Constraints.TH (makeDeriving)
+import           Generics.Constraints (Constraints, makeDerivings)
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
@@ -81,8 +80,7 @@ makeKTraversableApplyAndBases ''Types
 makeKTraversableAndBases ''Typ
 makeKTraversableAndBases ''Row
 
-makeDeriving <$> [''Eq, ''Ord, ''Show] <*> [''Typ, ''Row, ''Types, ''TypeError]
-    & sequence <&> mconcat
+makeDerivings [''Eq, ''Ord, ''Show] [''Typ, ''Row, ''Types, ''TypeError]
 
 type instance NomVarTypes Typ = Types
 

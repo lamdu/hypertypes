@@ -27,7 +27,7 @@ data Lam v expr k = Lam
     } deriving Generic
 
 makeLenses ''Lam
-makeCommonInstances ''Lam
+makeCommonInstances [''Lam]
 makeKTraversableApplyAndBases ''Lam
 
 instance
