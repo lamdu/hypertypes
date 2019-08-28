@@ -4,10 +4,8 @@ module AST.Class.Foldable
     ( KFoldable(..)
     , foldMapK1
     , traverseK_, traverseKWith_, traverseK1_
-    , sequenceLiftK2_, sequenceLiftK2With_
     ) where
 
-import AST.Class.Apply (KApply, liftK2, liftK2With)
 import AST.Class.Nodes (KNodes(..))
 import AST.Knot (Tree)
 import Data.Constraint (withDict)
@@ -80,25 +78,3 @@ traverseK1_ ::
     Tree k m ->
     f ()
 traverseK1_ = traverseKWith_ (Proxy @((~) c))
-
-{-# INLINE sequenceLiftK2_ #-}
-sequenceLiftK2_ ::
-    (Applicative f, KApply k, KFoldable k) =>
-    (forall c. Tree l c -> Tree m c -> f ()) ->
-    Tree k l ->
-    Tree k m ->
-    f ()
-sequenceLiftK2_ f x =
-    sequenceA_ . foldMapK ((:[]) . getConst) . liftK2 (\a -> Const . f a) x
-
-{-# INLINE sequenceLiftK2With_ #-}
-sequenceLiftK2With_ ::
-    forall f k constraint l m.
-    (Applicative f, KApply k, KFoldable k, NodesConstraint k constraint) =>
-    Proxy constraint ->
-    (forall c. constraint c => Tree l c -> Tree m c -> f ()) ->
-    Tree k l ->
-    Tree k m ->
-    f ()
-sequenceLiftK2With_ p f x =
-    sequenceA_ . foldMapK @_ @[f ()] ((:[]) . getConst) . liftK2With p (\a -> Const . f a) x
