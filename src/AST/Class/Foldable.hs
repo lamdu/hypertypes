@@ -38,6 +38,7 @@ instance KFoldable (Const a) where
     {-# INLINE foldMapKWith #-}
     foldMapKWith _ _ _ = mempty
 
+-- TODO: Replace with `foldedK1` which is a `Fold`
 {-# INLINE foldMapK1 #-}
 foldMapK1 ::
     forall a k c l.

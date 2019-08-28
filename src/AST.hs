@@ -6,7 +6,7 @@ import AST.Class.Foldable as X
     , foldMapK, foldMapKWith
     , traverseK_, traverseKWith_, traverseK1_
     )
-import AST.Class.Functor as X (KFunctor(..), mapK, mapK1)
+import AST.Class.Functor as X (KFunctor(..), mapK, mappedK1)
 import AST.Class.Nodes as X (KNodes(..))
 import AST.Class.Pointed as X (KPointed(..))
 import AST.Class.Recursive as X

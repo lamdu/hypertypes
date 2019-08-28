@@ -2,11 +2,12 @@
 
 module AST.Class.Functor
     ( KFunctor(..)
-    , mapK1
+    , mappedK1
     ) where
 
 import AST.Class.Nodes (KNodes(..))
 import AST.Knot (Tree)
+import Control.Lens (Setter, sets)
 import Data.Constraint (withDict)
 import Data.Constraint.List (NoConstraint)
 import Data.Functor.Const (Const(..))
@@ -41,11 +42,9 @@ instance (KFunctor a, KFunctor b) => KFunctor (Product a b) where
     mapKWith p f (Pair x y) =
         Pair (mapKWith p f x) (mapKWith p f y)
 
-{-# INLINE mapK1 #-}
-mapK1 ::
+{-# INLINE mappedK1 #-}
+mappedK1 ::
     forall k c m n.
     (KFunctor k, NodesConstraint k ((~) c)) =>
-    (Tree m c -> Tree n c) ->
-    Tree k m ->
-    Tree k n
-mapK1 = mapKWith (Proxy @((~) c))
+    Setter (Tree k m) (Tree k n) (Tree m c) (Tree n c)
+mappedK1 = sets (mapKWith (Proxy @((~) c)))

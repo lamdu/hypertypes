@@ -143,7 +143,7 @@ instance HasTypeConstraints Typ where
     type instance TypeConstraintsOf Typ = ScopeLevel
     verifyConstraints _ TInt = Just TInt
     verifyConstraints _ (TVar v) = TVar v & Just
-    verifyConstraints c (TFun f) = mapK1 (WithConstraint c) f & TFun & Just
+    verifyConstraints c (TFun f) = f & mappedK1 %~ WithConstraint c & TFun & Just
     verifyConstraints c (TRec r) = WithConstraint (RowConstraints mempty c) r & TRec & Just
     verifyConstraints c (TNom (NominalInst n (Types t r))) =
         Types

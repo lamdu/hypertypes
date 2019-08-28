@@ -7,10 +7,11 @@ module AST.Class.Traversable
     ) where
 
 import AST.Class.Foldable (KFoldable)
-import AST.Class.Functor (KFunctor(..), mapK1)
+import AST.Class.Functor (KFunctor(..), mappedK1)
 import AST.Class.Nodes (KNodes(..))
 import AST.Knot (Knot, Tree)
 import Control.Lens (Traversal, Iso, iso)
+import Control.Lens.Operators
 import Data.Functor.Const (Const(..))
 import Data.Proxy (Proxy(..))
 
@@ -58,4 +59,4 @@ traverseKWith p f = sequenceK . mapKWith p (MkContainedK . f)
 traverseK1 ::
     (KTraversable k, NodesConstraint k ((~) c)) =>
     Traversal (Tree k m) (Tree k n) (Tree m c) (Tree n c)
-traverseK1 f = sequenceK . mapK1 (MkContainedK . f)
+traverseK1 f = sequenceK . (mappedK1 %~ (MkContainedK . f))
