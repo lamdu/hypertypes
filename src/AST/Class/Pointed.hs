@@ -20,6 +20,7 @@ class KNodes k => KPointed k where
         (forall child. Tree n child) ->
         Tree k n
     -- TODO: Move this out of class to method?
+    {-# INLINE pureK #-}
     pureK f =
         withDict (kNoConstraints (Proxy @k)) $
         pureKWith (Proxy @NoConstraint) f
