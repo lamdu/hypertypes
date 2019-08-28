@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 65eecb0e2ff02eacbf95747680f469baf53409685046df4ea9600f8a2bbf911d
+-- hash: 300260deb53bf260ab155cdc51a0f1b524885771b5c26217ec2d4feb659e94b2
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -92,7 +92,7 @@ library
       AST.Unify.Term
       Data.Constraint.List
       Data.Functor.Product.PolyKinds
-      Generics.OneLiner.TH
+      Generics.Constraints.TH
   other-modules:
       Paths_syntax_tree
   hs-source-dirs:
@@ -109,12 +109,12 @@ library
     , constraints
     , containers
     , deepseq
+    , generic-constraints
     , generic-data
     , lattices
     , lens
     , monad-st
     , mtl
-    , one-liner
     , pretty
     , show-combinators
     , template-haskell
@@ -140,12 +140,12 @@ test-suite syntax-tree-test
       base
     , constraints
     , containers
+    , generic-constraints
     , generic-data
     , lattices
     , lens
     , monad-st
     , mtl
-    , one-liner
     , pretty
     , syntax-tree
     , transformers
@@ -167,12 +167,12 @@ benchmark syntax-tree-bench
     , constraints
     , containers
     , criterion
+    , generic-constraints
     , generic-data
     , lattices
     , lens
     , monad-st
     , mtl
-    , one-liner
     , pretty
     , syntax-tree
     , transformers

@@ -1,11 +1,11 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
 
-module Generics.OneLiner.TH
+module Generics.Constraints.TH
     ( makeDeriving, makeInstance
     ) where
 
 import           Control.Lens.Operators
-import           Generics.OneLiner (Constraints)
+import           Generics.Constraints (Constraints)
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
 

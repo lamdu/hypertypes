@@ -15,7 +15,7 @@ import           AST.Unify.Term (UTerm(..))
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
 import           Data.Proxy (Proxy(..))
-import           Generics.OneLiner (Constraints)
+import           Generics.Constraints (Constraints)
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty

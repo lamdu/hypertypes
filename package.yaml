@@ -19,12 +19,12 @@ dependencies:
 - base
 - constraints
 - containers
+- generic-constraints
 - generic-data
 - lattices
 - lens
 - monad-st
 - mtl
-- one-liner
 - transformers
 - pretty
 

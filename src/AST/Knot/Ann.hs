@@ -17,7 +17,7 @@ import           Control.Lens (Traversal, makeLenses)
 import           Control.Lens.Operators
 import           Data.Constraint (withDict)
 import           Data.Proxy (Proxy(..))
-import           Generics.OneLiner (Constraints)
+import           Generics.Constraints (Constraints)
 import           GHC.Generics (Generic)
 import qualified Text.PrettyPrint as PP
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)

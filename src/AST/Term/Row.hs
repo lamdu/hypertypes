@@ -26,8 +26,8 @@ import           Data.Foldable (sequenceA_)
 import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Data.Set (Set)
-import           Generics.OneLiner (Constraints)
-import           Generics.OneLiner.TH (makeDeriving, makeInstance)
+import           Generics.Constraints (Constraints)
+import           Generics.Constraints.TH (makeDeriving, makeInstance)
 import           GHC.Generics (Generic)
 import           Text.Show.Combinators ((@|), showCon)
 

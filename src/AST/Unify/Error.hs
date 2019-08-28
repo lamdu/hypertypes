@@ -14,7 +14,7 @@ import           AST.Unify.Constraints (TypeConstraintsOf)
 import           Control.Lens (makePrisms)
 import           Data.Constraint (Dict(..), withDict)
 import           Data.Proxy (Proxy(..))
-import           Generics.OneLiner (Constraints)
+import           Generics.Constraints (Constraints)
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty

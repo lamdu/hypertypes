@@ -26,8 +26,8 @@ import           Control.Monad.ST.Class (MonadST(..))
 import           Data.STRef
 import           Data.Set (Set)
 import           Generic.Data
-import           Generics.OneLiner (Constraints)
-import           Generics.OneLiner.TH (makeDeriving)
+import           Generics.Constraints (Constraints)
+import           Generics.Constraints.TH (makeDeriving)
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty

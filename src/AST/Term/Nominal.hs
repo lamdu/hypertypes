@@ -42,7 +42,7 @@ import           Data.Foldable (traverse_)
 import           Data.Kind (Type)
 import           Data.Proxy (Proxy(..))
 import qualified Data.Map as Map
-import           Generics.OneLiner (Constraints)
+import           Generics.Constraints (Constraints)
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty

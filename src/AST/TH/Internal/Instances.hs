@@ -8,7 +8,7 @@ import Control.DeepSeq (NFData)
 import Data.Binary (Binary)
 import Control.Lens.Operators
 import Language.Haskell.TH (Name, DecsQ)
-import Generics.OneLiner.TH (makeDeriving, makeInstance)
+import Generics.Constraints.TH (makeDeriving, makeInstance)
 
 import Prelude.Compat
 
