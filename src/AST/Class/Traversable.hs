@@ -10,7 +10,7 @@ import AST.Class.Foldable (KFoldable)
 import AST.Class.Functor (KFunctor(..), mapK1)
 import AST.Class.Nodes (KNodes(..))
 import AST.Knot (Knot, Tree)
-import Control.Lens (Iso, iso)
+import Control.Lens (Traversal, Iso, iso)
 import Data.Functor.Const (Const(..))
 import Data.Proxy (Proxy(..))
 
@@ -56,10 +56,6 @@ traverseKWith p f = sequenceK . mapKWith p (MkContainedK . f)
 
 {-# INLINE traverseK1 #-}
 traverseK1 ::
-    ( Applicative f, KTraversable k
-    , NodesConstraint k ((~) c)
-    ) =>
-    (Tree m c -> f (Tree n c)) ->
-    Tree k m ->
-    f (Tree k n)
+    (KTraversable k, NodesConstraint k ((~) c)) =>
+    Traversal (Tree k m) (Tree k n) (Tree m c) (Tree n c)
 traverseK1 f = sequenceK . mapK1 (MkContainedK . f)
