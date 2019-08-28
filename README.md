@@ -104,17 +104,12 @@ class KNodes g => KFunctor g where
         (forall a. p a -> q a) ->
         g ('Knot p) ->
         g ('Knot q)
-    mapKWith ::
-        NodesConstraint g c =>
-        Proxy c ->
-        (forall a. c a => p ('Knot a) -> q ('Knot a)) ->
-        g ('Knot p) ->
-        g ('Knot q)
+    mapKWith :: ...
 ```
 
 `mapK` and `Rank2.(<$>)` are similar, but an important difference is that `g`'s parameters `p` and `q` are wrapped in `Knot`, because this is how syntax-tree's nested-HKD work. That is, knots can't be instances of `Rank2.Functor` and this is why the `KFunctor` variant is necessary.
 
- Additionally, `mapKWith` is provided, which allows using a mapping that requires a constraint on the child nodes, and this constraint is lifted to the caller's context via the `NodesConstraint` type family.
+ Additionally, `mapKWith` is provided, which allows using a mapping that requires a constraint on the child nodes, which is an extensively used feature.
 
 ### unification-fd
 
