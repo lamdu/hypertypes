@@ -119,7 +119,7 @@ syntax-tree provides a unification implementation for heterogeneous ASTs. Furthe
 
 ### hyperfunctions
 
-S. Krstic et al [KLP2001] have described the a type which they call a "Hyperfunction". Here is it's definition from the [hyperfunctions](http://hackage.haskell.org/package/hyperfunctions) package on Hackage:
+S. Krstic et al [KLP2001] have described the a type which they call a "Hyperfunction". Here is it's definition from the [hyperfunctions](http://hackage.haskell.org/package/hyperfunctions) package:
 
 ```Haskell
 newtype Hyper a b = Hyper { invoke :: Hyper b a -> b }
