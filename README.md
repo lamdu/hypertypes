@@ -76,7 +76,7 @@ This allows representing the mutual parameterization:
 * `Knot -> Type` is also the kind of the type inside `Knot`, which is lifted to the type-level using `DataKinds`
 * Wrapping the AST and fix-point type parameters with `Knot`s thus enables the mutual parameterization / recursion
 
-## How does syntax-tree compare to
+## How does syntax-tree compare/relate to
 
 ### recursion-schemes
 
@@ -133,3 +133,8 @@ For more info on hyperfunctions and their use cases in the value level see [LKS2
 
 * [KLP2001] S. Krstic, J. Launchbury, and D. Pavlovic. Hyperfunctions. In Proceeding of Fixed Points in Computer Science, FICS 2001
 * [LKS2013] J. Launchbury, S. Krstic, T. E. Sauerwein. [Coroutining Folds with Hyperfunctions](https://arxiv.org/abs/1309.5135). In In Proceedings Festschrift for Dave Schmidt, EPTCS 2013
+
+### lens
+
+syntax-tree strives to be maximally compatible with [lens](http://hackage.haskell.org/package/lens), and offers `Traversal`s and `Setter`s wherever possible. But unfortunately the `RankNTypes` nature of many combinators in syntax-tree makes them not composable with optics. For the special simpler cases when all child nodes have the same types the `traverseK1` traversal and `mappedK1` setter are available.
+
