@@ -3,7 +3,6 @@
 module AST.Class.ZipMatch
     ( ZipMatch(..)
     , zipMatchWith, zipMatchWithA, zipMatchWith_, zipMatch1_
-    , doesMatch
     ) where
 
 import           AST.Class.Foldable
@@ -11,7 +10,6 @@ import           AST.Class.Functor (KFunctor(..))
 import           AST.Class.Nodes (KNodes(..))
 import           AST.Class.Traversable (KTraversable, traverseKWith)
 import           AST.Knot (Tree)
-import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad (guard)
 import           Data.Functor.Const (Const(..))
@@ -80,7 +78,3 @@ zipMatch1_ ::
     (Tree a c -> Tree b c -> f ()) ->
     Tree k a -> Tree k b -> Maybe (f ())
 zipMatch1_ f x y = zipMatch x y <&> traverseK1_ (\(Pair a b) -> f a b)
-
-{-# INLINE doesMatch #-}
-doesMatch :: ZipMatch expr => Tree expr a -> Tree expr b -> Bool
-doesMatch x y = Lens.has Lens._Just (zipMatch x y)
