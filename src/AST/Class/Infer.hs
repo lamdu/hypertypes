@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, RecordWildCards, FlexibleContexts, DefaultSignatures #-}
+{-# LANGUAGE TemplateHaskell, DefaultSignatures #-}
 
 module AST.Class.Infer
     ( InferOf
@@ -12,8 +12,7 @@ module AST.Class.Infer
 
 import AST
 import AST.Class.Unify
-import Control.Lens (Lens, Lens', ALens', makeLenses, makePrisms)
-import Control.Lens.Operators
+import Control.Lens (Lens', ALens', makeLenses, makePrisms)
 import Data.Constraint (Dict(..), withDict)
 import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
@@ -30,7 +29,6 @@ import Prelude.Compat
 --
 -- * An inferred value (for types inside terms)
 -- * An inferred type together with a scope
-
 type family InferOf (t :: Knot -> Type) :: Knot -> Type
 
 -- | @HasInferredValue t@ represents that @InferOf t@ contains an inferred value for @t@.
@@ -38,24 +36,27 @@ class HasInferredValue t where
     -- | A 'Control.Lens.Lens' from an inference result to an inferred value
     inferredValue :: Lens' (Tree (InferOf t) v) (Tree v t)
 
+-- | @HasInferredType t@ represents that @InferOf t@ contains a @TypeOf t@, which represents its inferred type.
 class HasInferredType t where
+    -- | The type of @t@
     type TypeOf t :: Knot -> Type
+    -- A 'Control.Lens.Lens' from an inference result to an inferred type
     inferredType :: Proxy t -> ALens' (Tree (InferOf t) v) (Tree v (TypeOf t))
 
+-- | A 'Knot' containing an inferred child node
 data InferredChild v k t = InferredChild
-    { -- Representing the inferred child in the resulting node
-      __inRep :: !(k t)
+    { _inRep :: !(k t)
+        -- ^ Inferred node.
+        --
+        -- An 'inferBody' implementation needs to place this value in the corresponding child node of the inferred term body
     , _inType :: !(Tree (InferOf (RunKnot t)) v)
+        -- ^ The inference result for the child node.
+        --
+        -- An 'inferBody' implementation may use it to perform unifications with it.
     }
 makeLenses ''InferredChild
 
-inRep ::
-    InferOf (RunKnot t0) ~ InferOf (RunKnot t1) =>
-    Lens (InferredChild v k0 t0) (InferredChild v k1 t1) (k0 t0) (k1 t1)
-inRep f InferredChild{..} =
-    f __inRep <&> \__inRep -> InferredChild{..}
-
--- | A 'Knot' storing an inference action.
+-- | A 'Knot' containing an inference action.
 --
 -- The caller may modify the scope before invoking the action via
 -- 'localScopeType' or 'AST.Infer.ScopeLevel.localLevel'
