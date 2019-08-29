@@ -3,7 +3,7 @@
 module AST.Class.Recursive
     ( Recursive(..)
     , RNodes(..), RFunctor(..), RFoldable(..), RTraversable(..)
-    , RZipMatch(..), RZipMatchTraversable(..)
+    , RZipMatch(..)
     , recurseBoth
     , wrap, wrapM, unwrap, unwrapM
     , fold, unfold
@@ -127,21 +127,6 @@ instance Eq a => RZipMatch (Const a)
 instance Recursive RZipMatch where
     {-# INLINE recurse #-}
     recurse = recursiveZipMatch . argP
-
-class (RTraversable k, RZipMatch k) => RZipMatchTraversable k where
-    recursiveZipMatchTraversable :: Proxy k -> Dict (NodesConstraint k RZipMatchTraversable)
-    {-# INLINE recursiveZipMatchTraversable #-}
-    default recursiveZipMatchTraversable ::
-        NodesConstraint k RZipMatchTraversable =>
-        Proxy k -> Dict (NodesConstraint k RZipMatchTraversable)
-    recursiveZipMatchTraversable _ = Dict
-
-instance RZipMatchTraversable Pure
-instance Eq a => RZipMatchTraversable (Const a)
-
-instance Recursive RZipMatchTraversable where
-    {-# INLINE recurse #-}
-    recurse = recursiveZipMatchTraversable . argP
 
 {-# INLINE recurseBoth #-}
 recurseBoth ::
