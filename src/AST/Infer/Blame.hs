@@ -90,7 +90,7 @@ prepare typeFromAbove (Ann a x) =
         )
         x)
     <&>
-    \(InferRes xI t) ->
+    \(xI, t) ->
     Ann PrepAnn
     { pAnn = a
     , pTryUnify =

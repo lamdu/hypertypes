@@ -110,16 +110,16 @@ instance
     ) =>
     Infer m LangB where
 
-    inferBody (BApp x) = inferBody x <&> inferResBody %~ BApp
-    inferBody (BVar x) = inferBody x <&> inferResBody %~ BVar
+    inferBody (BApp x) = inferBody x <&> Lens._1 %~ BApp
+    inferBody (BVar x) = inferBody x <&> Lens._1 %~ BVar
     inferBody (BLam x) =
         inferBody x
-        >>= \(InferRes b t) -> TFun t & newTerm <&> InferRes (BLam b) . MkANode
-    inferBody (BLet x) = inferBody x <&> inferResBody %~ BLet
-    inferBody (BLit x) = newTerm TInt <&> InferRes (BLit x) . MkANode
+        >>= \(b, t) -> TFun t & newTerm <&> (BLam b, ) . MkANode
+    inferBody (BLet x) = inferBody x <&> Lens._1 %~ BLet
+    inferBody (BLit x) = newTerm TInt <&> (BLit x, ) . MkANode
     inferBody (BToNom x) =
         inferBody x
-        >>= \(InferRes b t) -> TNom t & newTerm <&> InferRes (BToNom b) . MkANode
+        >>= \(b, t) -> TNom t & newTerm <&> (BToNom b, ) . MkANode
     inferBody (BRecExtend (RowExtend k v r)) =
         do
             InferredChild vI vT <- inferChild v
@@ -130,14 +130,14 @@ instance
             _ <- TRec restR & newTerm >>= unify (rT ^. _ANode)
             RowExtend k (vT ^. _ANode) restR & RExtend & newTerm
                 >>= newTerm . TRec
-                <&> InferRes (BRecExtend (RowExtend k vI rI)) . MkANode
+                <&> (BRecExtend (RowExtend k vI rI), ) . MkANode
     inferBody BRecEmpty =
-        newTerm REmpty >>= newTerm . TRec <&> InferRes BRecEmpty . MkANode
+        newTerm REmpty >>= newTerm . TRec <&> (BRecEmpty, ) . MkANode
     inferBody (BGetField w k) =
         do
             (rT, wR) <- rowElementInfer RExtend k
             InferredChild wI wT <- inferChild w
-            InferRes (BGetField wI k) (_ANode # rT) <$
+            (BGetField wI k, _ANode # rT) <$
                 (newTerm (TRec wR) >>= unify (wT ^. _ANode))
 
 instance c Typ => TraverseITermWith c LangB

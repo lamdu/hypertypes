@@ -28,7 +28,7 @@ infer ::
 infer (Ann a x) =
     withDict (inferContext (Proxy @m) (Proxy @t)) $
     inferBody (mapKWith (Proxy @(Infer m)) inferH x)
-    <&> (\(InferRes xI t) -> ITerm a t xI)
+    <&> (\(xI, t) -> ITerm a t xI)
 
 {-# INLINE inferH #-}
 inferH ::

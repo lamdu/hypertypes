@@ -62,4 +62,4 @@ instance
                 & localLevel
             inferChild i
                 & localScopeType v eG
-                <&> \(InferredChild iI iR) -> InferRes (Let v eI iI) iR
+                <&> \(InferredChild iI iR) -> (Let v eI iI, iR)

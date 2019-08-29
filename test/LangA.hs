@@ -94,13 +94,13 @@ instance TermInfer1Deps env m => Infer1 m LangA where
     inferMonad = Sub Dict
 
 instance (DeBruijnIndex k, TermInfer1Deps env m) => Infer m (LangA k) where
-    inferBody (ALit x) = newTerm TInt <&> MkANode <&> InferRes (ALit x)
-    inferBody (AVar x) = inferBody x <&> inferResBody %~ AVar
+    inferBody (ALit x) = newTerm TInt <&> MkANode <&> (ALit x, )
+    inferBody (AVar x) = inferBody x <&> Lens._1 %~ AVar
     inferBody (ALam x) =
         inferBody x
-        >>= \(InferRes b t) -> TFun t & newTerm <&> InferRes (ALam b) . MkANode
-    inferBody (AApp x) = inferBody x <&> inferResBody %~ AApp
-    inferBody (ATypeSig x) = inferBody x <&> inferResBody %~ ATypeSig
+        >>= \(b, t) -> TFun t & newTerm <&> (ALam b, ) . MkANode
+    inferBody (AApp x) = inferBody x <&> Lens._1 %~ AApp
+    inferBody (ATypeSig x) = inferBody x <&> Lens._1 %~ ATypeSig
 
 instance (c Typ, c Row, Recursive c) => TraverseITermWith c (LangA k)
 

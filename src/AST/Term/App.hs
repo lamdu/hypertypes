@@ -58,7 +58,7 @@ instance
             InferredChild argI argR <- inferChild arg
             InferredChild funcI funcR <- inferChild func
             funcRes <- newUnbound
-            InferRes (App funcI argI) (MkANode funcRes) <$
+            (App funcI argI, MkANode funcRes) <$
                 (newTerm (funcType # FuncType (argR ^# l) funcRes) >>= unify (funcR ^# l))
         where
             l = inferredType (Proxy @expr)

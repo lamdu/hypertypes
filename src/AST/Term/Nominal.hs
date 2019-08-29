@@ -313,8 +313,8 @@ instance
                     (typ, paramsT) <- instantiateWith (lookupParams params) UUnbound gen
                     (v, typ, paramsT) <$ sequence_ recover
                 & localLevel
-            _ <- unify typ (valR ^# inferredType (Proxy @expr))
-            InferRes (ToNom nomId valI) (NominalInst nomId paramsT) & pure
+            (ToNom nomId valI, NominalInst nomId paramsT)
+                <$ unify typ (valR ^# inferredType (Proxy @expr))
 
 type instance InferOf (FromNom n e) = FuncType (TypeOf e)
 
@@ -335,4 +335,4 @@ instance
             (typ, paramsT) <- instantiateWith (lookupParams params) UUnbound gen
             nominalInst # NominalInst nomId paramsT & newTerm
                 <&> (`FuncType` typ)
-        <&> InferRes (FromNom nomId)
+        <&> (FromNom nomId, )

@@ -52,7 +52,9 @@ instance
     inferBody (Lam p r) =
         do
             varType <- newUnbound
-            InferredChild rI rR <- inferChild r & localScopeType p varType
-            InferRes (Lam p rI)
-                (FuncType varType (rR ^# inferredType (Proxy @t)))
-                & pure
+            inferChild r & localScopeType p varType
+                <&>
+                \(InferredChild rI rR) ->
+                ( Lam p rI
+                , FuncType varType (rR ^# inferredType (Proxy @t))
+                )

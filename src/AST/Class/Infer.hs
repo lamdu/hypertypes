@@ -3,7 +3,6 @@
 module AST.Class.Infer
     ( InferOf
     , Infer(..)
-    , InferRes(..), inferResVal, inferResBody
     , InferChild(..), _InferChild
     , InferredChild(..), inType, inRep
     , HasInferredValue(..)
@@ -64,22 +63,6 @@ newtype InferChild m k t =
     InferChild { inferChild :: m (InferredChild (UVarOf m) k t) }
 makePrisms ''InferChild
 
--- | An inferred expression body. The result of 'inferBody'
-data InferRes v k t = InferRes
-    { __inferResBody :: !(Tree t k)
-        -- ^ The expression body with inferred child nodes
-    , _inferResVal :: !(Tree (InferOf t) v)
-        -- ^ The inference result for the top-level expression
-    }
-makeLenses ''InferRes
-
--- | A type-changing 'Lens' from 'InferRes' to its body field
-inferResBody ::
-    InferOf t0 ~ InferOf t1 =>
-    Lens (InferRes v k0 t0) (InferRes v k1 t1) (Tree t0 k0) (Tree t1 k1)
-inferResBody f InferRes{..} =
-    f __inferResBody <&> \__inferResBody -> InferRes{..}
-
 -- | @Infer m t@ enables 'AST.Infer.infer' to perform type-inference for @t@ in the @m@ 'Monad'.
 --
 -- The 'inferContext' method represents the following constraints on @t@:
@@ -96,7 +79,7 @@ class (Monad m, KFunctor t) => Infer m t where
     -- | Infer the body of an expression given the inference actions for its child nodes.
     inferBody ::
         Tree t (InferChild m k) ->
-        m (InferRes (UVarOf m) k t)
+        m (Tree t k, Tree (InferOf t) (UVarOf m))
 
     -- TODO: Find how to move documentation to here without haddock duplicating it for the default method
     inferContext ::

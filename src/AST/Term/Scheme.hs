@@ -139,7 +139,7 @@ instance
                     & foldl (.) id
             InferredChild typI typR <- inferChild typ & withForalls
             generalize (typR ^. inferredValue)
-                <&> InferRes (Scheme vars typI) . MkFlip
+                <&> (Scheme vars typI, ) . MkFlip
 
 inferType ::
     ( InferOf t ~ ANode t
@@ -148,16 +148,17 @@ inferType ::
     , Unify m t
     , MonadInstantiate m t
     ) =>
-    Tree t (InferChild m k) -> m (InferRes (UVarOf m) k t)
+    Tree t (InferChild m k) ->
+    m (Tree t k, Tree (InferOf t) (UVarOf m))
 inferType x =
     case x ^? quantifiedVar of
-    Just q -> lookupQVar q <&> InferRes (quantifiedVar # q) . MkANode
+    Just q -> lookupQVar q <&> (quantifiedVar # q, ) . MkANode
     Nothing ->
         do
             xI <- traverseK inferChild x
             mapKWith (Proxy @HasInferredValue) (^. inType . inferredValue) xI
                 & newTerm
-                <&> InferRes (mapK (^. inRep) xI) . MkANode
+                <&> (mapK (^. inRep) xI, ) . MkANode
 
 {-# INLINE makeQVarInstances #-}
 makeQVarInstances ::

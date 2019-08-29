@@ -61,5 +61,5 @@ instance
             InferredChild sI sR <- inferChild s
             (t, ()) <- instantiateWith (pure ()) USkolem (sR ^. _Flip)
             xR & inferredType (Proxy @term) #%%~ unify t
-                <&> InferRes (TypeSig xI sI)
+                <&> (TypeSig xI sI, )
         & localLevel

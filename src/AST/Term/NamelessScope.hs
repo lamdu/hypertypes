@@ -97,12 +97,13 @@ instance
         withDict (hasInferOf1 (Proxy @(t (Maybe k)))) $
         do
             varType <- newUnbound
-            InferredChild xI xR <-
-                inferChild x
+            inferChild x
                 & local (scopeTypes . _ScopeTypes %~ (varType Sequence.<|))
-            InferRes (Scope xI)
-                (FuncType varType (xR ^# inferredType (Proxy @(t k))))
-                & pure
+                <&>
+                \(InferredChild xI xR) ->
+                ( Scope xI
+                , FuncType varType (xR ^# inferredType (Proxy @(t k)))
+                )
         \\ (inferMonad :: DeBruijnIndex (Maybe k) :- Infer m (t (Maybe k)))
 
     inferContext _ _ =
@@ -120,4 +121,4 @@ instance
         Lens.view (scopeTypes . _ScopeTypes)
         <&> (^?! Lens.ix (deBruijnIndex # v))
         <&> MkANode
-        <&> InferRes (ScopeVar v)
+        <&> (ScopeVar v, )

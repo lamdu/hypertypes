@@ -58,4 +58,4 @@ instance
 
     {-# INLINE inferBody #-}
     inferBody (Var x) =
-        getScope >>= varType (Proxy @expr) x <&> MkANode <&> InferRes (Var x)
+        getScope >>= varType (Proxy @expr) x <&> MkANode <&> (Var x, )
