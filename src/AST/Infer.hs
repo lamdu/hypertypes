@@ -1,10 +1,10 @@
 module AST.Infer
-    ( module AST.Class.Infer
+    ( infer
+    , module AST.Class.Infer
     , module AST.Infer.ScopeLevel
     , module AST.Infer.Term
-    , infer
 
-    , -- Exported for SPECIALIZE pragmas
+    , -- | Exported only for SPECIALIZE pragmas
       inferH
     ) where
 
@@ -19,6 +19,7 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
+-- | Perform Hindley-Milner type inference of a term
 {-# INLINE infer #-}
 infer ::
     forall m t a.

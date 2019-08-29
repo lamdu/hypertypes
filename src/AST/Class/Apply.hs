@@ -21,6 +21,9 @@ import Prelude.Compat
 -- which is the equivalent to the 'Applicative' class.
 class KFunctor k => KApply k where
     -- | Combine child values
+    --
+    -- >>> zipK (Person name0 age0) (Person name1 age1)
+    -- Person (Pair name0 name1) (Pair age0 age1)
     zipK ::
         Tree k a ->
         Tree k b ->

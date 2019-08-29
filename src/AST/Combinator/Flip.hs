@@ -5,10 +5,17 @@ module AST.Combinator.Flip
 import           AST.Knot (Tree, RunKnot)
 import qualified Control.Lens as Lens
 
--- Prefer _Flip to MkFlip because it has a friendlier type for
--- inference (without type families)
+-- | Flip the order of the last two type type parameters of a 'AST.Knot.Knot'.
+--
+-- Useful to use instances of classes such as 'AST.Class.Traversable.KTraversable' which
+-- are available on the flipped knot.
+-- For example 'AST.Unify.Generalize.GTerm' has instances when flipped.
 newtype Flip f x k = MkFlip (Tree (f (RunKnot k)) x)
 
+-- | An 'Iso' from 'Flip' to its content.
+--
+-- Using `_Flip` rather than the 'MkFlip' data constructor is recommended,
+-- because it helps the type inference know that @ANode c@ is parameterized with a 'AST.Knot.Knot'
 _Flip ::
     Lens.Iso
     (Tree (Flip f0 x0) k0)

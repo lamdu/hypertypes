@@ -1,9 +1,9 @@
 {-# LANGUAGE TemplateHaskell, FlexibleContexts, UndecidableInstances #-}
 
 module AST.Diff
-    ( Diff(..), _CommonBody, _CommonSubTree, _Different
-    , CommonBody(..), annPrev, annNew, val
-    , diff
+    ( diff
+    , Diff(..), _CommonBody, _CommonSubTree, _Different
+    , CommonBody(..), anns, val
     ) where
 
 import AST
@@ -18,18 +18,19 @@ import GHC.Generics (Generic)
 
 import Prelude.Compat
 
--- | Diff of two annotated ASTs.
--- The annotation types also function as tokens to describe which of the two ASTs a term comes from.
-
+-- | A 'Knot' which represents the difference between two annotated trees.
+-- The annotation types also function as tokens
+-- to describe which of the two trees a term comes from.
 data Diff a b e
     = CommonSubTree (Ann (a, b) e)
     | CommonBody (CommonBody a b e)
     | Different (Product (Ann a) (Ann b) e)
     deriving Generic
 
+-- | A 'Knot' which represents two trees which have the same top-level node,
+-- but their children may differ.
 data CommonBody a b e = MkCommonBody
-    { _annPrev :: a
-    , _annNew :: b
+    { _anns :: (a, b)
     , _val :: Node e (Diff a b)
     } deriving Generic
 
@@ -37,6 +38,7 @@ makeCommonInstances [''Diff, ''CommonBody]
 makePrisms ''Diff
 makeLenses ''CommonBody
 
+-- | Compute the difference of two annotated trees.
 diff ::
     forall t a b.
     (RZipMatch t, RTraversable t) =>
@@ -47,7 +49,7 @@ diff x@(Ann xA xB) y@(Ann yA yB) =
     Nothing -> Different (Pair x y)
     Just match ->
         case traverseK (^? _CommonSubTree) sub of
-        Nothing -> MkCommonBody xA yA sub & CommonBody
+        Nothing -> MkCommonBody (xA, yA) sub & CommonBody
         Just r -> Ann (xA, yA) r & CommonSubTree
         where
             sub =
