@@ -48,7 +48,7 @@ schemeToRestrictedType ::
     , HasScheme varTypes m typ
     ) =>
     Tree Pure (Scheme varTypes typ) -> m (Tree (UVarOf m) typ)
-schemeToRestrictedType (MkPure (Scheme vars typ)) =
+schemeToRestrictedType (Pure (Scheme vars typ)) =
     do
         foralls <- traverseKWith (Proxy @(Unify m)) makeQVarInstancesInScope vars
         wrapM (Proxy @(HasScheme varTypes m)) (schemeBodyToType foralls) typ

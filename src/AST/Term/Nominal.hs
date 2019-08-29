@@ -249,7 +249,7 @@ loadNominalDecl ::
     ) =>
     Tree Pure (NominalDecl typ) ->
     m (Tree (LoadedNominalDecl typ) (UVarOf m))
-loadNominalDecl (MkPure (NominalDecl params (Scheme foralls typ))) =
+loadNominalDecl (Pure (NominalDecl params (Scheme foralls typ))) =
     do
         paramsL <- traverseKWith (Proxy @(Unify m)) makeQVarInstances params
         forallsL <- traverseKWith (Proxy @(Unify m)) makeQVarInstances foralls

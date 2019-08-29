@@ -36,7 +36,7 @@ recExtend :: [(String, Tree Pure LangB)] -> Tree Pure LangB -> Tree Pure LangB
 recExtend fields rest = foldr (fmap (&# BRecExtend) . uncurry (RowExtend . Name)) rest fields
 
 closedRec :: [(String, Tree Pure LangB)] -> Tree Pure LangB
-closedRec fields = recExtend fields (MkPure BRecEmpty)
+closedRec fields = recExtend fields (_Pure # BRecEmpty)
 
 getField :: Tree Pure LangB -> String -> Tree Pure LangB
 getField w k = Name k &# BGetField w

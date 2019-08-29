@@ -220,7 +220,7 @@ loadScheme ::
     ) =>
     Tree Pure (Scheme varTypes typ) ->
     m (Tree (GTerm (UVarOf m)) typ)
-loadScheme (MkPure (Scheme vars typ)) =
+loadScheme (Pure (Scheme vars typ)) =
     do
         foralls <- traverseKWith (Proxy @(Unify m)) makeQVarInstances vars
         wrapM (Proxy @(HasScheme varTypes m)) (loadBody foralls) typ
