@@ -8,12 +8,11 @@ module AST.Term.App
 import AST
 import AST.Infer
 import AST.Term.FuncType
+import AST.TH.Internal.Instances (makeCommonInstances)
 import AST.Unify (Unify, unify)
 import AST.Unify.New (newTerm, newUnbound)
-import Control.DeepSeq (NFData)
 import Control.Lens (Traversal, makeLenses)
 import Control.Lens.Operators
-import Data.Binary (Binary)
 import Data.Proxy (Proxy(..))
 import GHC.Generics (Generic)
 import Text.PrettyPrint ((<+>))
@@ -29,6 +28,7 @@ data App expr k = App
 makeLenses ''App
 makeZipMatch ''App
 makeKTraversableApplyAndBases ''App
+makeCommonInstances [''App]
 
 instance Pretty (Node k expr) => Pretty (App expr k) where
     pPrintPrec lvl p (App f x) =
@@ -63,9 +63,3 @@ instance
                 (newTerm (funcType # FuncType (argR ^# l) funcRes) >>= unify (funcR ^# l))
         where
             l = inferredType (Proxy @expr)
-
-deriving instance Eq   (Node k expr) => Eq   (App expr k)
-deriving instance Ord  (Node k expr) => Ord  (App expr k)
-deriving instance Show (Node k expr) => Show (App expr k)
-instance Binary (Node k expr) => Binary (App expr k)
-instance NFData (Node k expr) => NFData (App expr k)

@@ -9,6 +9,7 @@ import           AST.TH.ZipMatch (makeZipMatch)
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Data.Binary (Binary)
+import           Generics.Constraints (makeDerivings, makeInstances)
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 import           Text.Show.Combinators ((@|), showCon)
@@ -23,6 +24,8 @@ newtype Pure k = MkPure { getPure :: Node k Pure }
 
 makeKTraversableApplyAndBases ''Pure
 makeZipMatch ''Pure
+makeDerivings [''Eq, ''Ord] [''Pure]
+makeInstances [''Binary, ''NFData] [''Pure]
 
 {-# INLINE _Pure #-}
 _Pure :: Lens.Iso (Tree Pure k) (Tree Pure j) (Tree k Pure) (Tree j Pure)
@@ -33,8 +36,3 @@ instance Show (Node k Pure) => Show (Pure k) where
 
 instance Pretty (Node k Pure) => Pretty (Pure k) where
     pPrintPrec lvl p (MkPure x) = pPrintPrec lvl p x
-
-deriving instance Eq  (Node k Pure) => Eq  (Pure k)
-deriving instance Ord (Node k Pure) => Ord (Pure k)
-instance Binary (Node k Pure) => Binary (Pure k)
-instance NFData (Node k Pure) => NFData (Pure k)

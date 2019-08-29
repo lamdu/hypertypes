@@ -38,6 +38,8 @@ import           Data.Constraint
 import           Data.Map (Map)
 import           Data.Proxy
 import           Data.STRef
+import           Generics.Constraints (makeDerivings)
+import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
@@ -54,6 +56,7 @@ data LangB k
     | BRecExtend (RowExtend Name LangB LangB k)
     | BGetField (Node k LangB) Name
     | BToNom (ToNom Name LangB k)
+    deriving Generic
 
 makeKTraversableAndBases ''LangB
 instance RNodes LangB
@@ -141,7 +144,10 @@ instance c Typ => TraverseITermWith c LangB
 -- Monads for inferring `LangB`:
 
 newtype ScopeTypes v = ScopeTypes (Map Name (Tree (GTerm (RunKnot v)) Typ))
+    deriving stock Generic
     deriving newtype (Semigroup, Monoid)
+
+makeDerivings [''Show] [''LangB, ''ScopeTypes]
 
 instance KNodes ScopeTypes where
     type NodesConstraint ScopeTypes c = (c Typ, Recursive c)
@@ -304,6 +310,3 @@ instance Unify (STInferB s) Row where
 
 instance HasScheme Types (STInferB s) Typ
 instance HasScheme Types (STInferB s) Row
-
-deriving instance Show (Node k LangB) => Show (LangB k)
-deriving instance (Show (Node k Typ), Show (Node k Row)) => Show (ScopeTypes k)

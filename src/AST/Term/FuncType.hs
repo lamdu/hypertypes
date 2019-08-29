@@ -10,6 +10,7 @@ import           Control.DeepSeq (NFData)
 import           Control.Lens (Prism', makeLenses)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
+import           Generics.Constraints (makeDerivings, makeInstances)
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
@@ -26,6 +27,8 @@ data FuncType typ k = FuncType
 makeLenses ''FuncType
 makeZipMatch ''FuncType
 makeKTraversableApplyAndBases ''FuncType
+makeDerivings [''Eq, ''Ord] [''FuncType]
+makeInstances [''Binary, ''NFData] [''FuncType]
 
 instance Pretty (Node k typ) => Pretty (FuncType typ k) where
     pPrintPrec lvl p (FuncType i o) =
@@ -37,8 +40,3 @@ instance Show (Node k typ) => Show (FuncType typ k) where
 
 class HasFuncType typ where
     funcType :: Prism' (Tree typ k) (Tree (FuncType typ) k)
-
-deriving instance Eq  (Node k typ) => Eq  (FuncType typ k)
-deriving instance Ord (Node k typ) => Ord (FuncType typ k)
-instance Binary (Node k typ) => Binary (FuncType typ k)
-instance NFData (Node k typ) => NFData (FuncType typ k)
