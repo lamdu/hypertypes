@@ -22,19 +22,19 @@ rowExtends =
     foldr extend
     where
         extend (name, typ) rest =
-            _Pure # RExtend (RowExtend (Name name) typ rest)
+            RowExtend (Name name) typ rest &# RExtend
 
 record :: [(String, Tree Pure Typ)] -> Tree Pure Typ
-record fields = _Pure # TRec (rowExtends (_Pure # REmpty) fields)
+record fields = rowExtends (_Pure # REmpty) fields &# TRec
 
 intA :: Tree Pure (Scheme Types Typ)
 intA = _Pure # TInt & uniType
 
 tVar :: String -> Tree Pure Typ
-tVar n = _Pure # TVar (Name n)
+tVar n = Name n &# TVar
 
 rVar :: String -> Tree Pure Row
-rVar n = _Pure # RVar (Name n)
+rVar n = Name n &# RVar
 
 uniType :: Tree Pure Typ -> Tree Pure (Scheme Types Typ)
 uniType typ =
@@ -77,4 +77,4 @@ forAll1r t body =
 
 infixr 2 ~>
 (~>) :: Tree Pure Typ -> Tree Pure Typ -> Tree Pure Typ
-a ~> b = _Pure # TFun (FuncType a b)
+a ~> b = FuncType a b &# TFun

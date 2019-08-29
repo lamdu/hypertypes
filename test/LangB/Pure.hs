@@ -19,30 +19,27 @@ import TypeLang.Pure
 import Prelude
 
 bVar :: String -> Tree Pure LangB
-bVar = MkPure . BVar . Var . Name
+bVar = (&# BVar) . Var . Name
 
 lam :: String -> (Tree Pure LangB -> Tree Pure LangB) -> Tree Pure LangB
-lam v mk = bVar v & mk & Lam (Name v) & BLam & MkPure
+lam v mk = bVar v & mk & Lam (Name v) &# BLam
 
 bLet ::
     String -> Tree Pure LangB -> (Tree Pure LangB -> Tree Pure LangB) -> Tree Pure LangB
-bLet v val body = Let (Name v) val (body (bVar v)) & BLet & MkPure
+bLet v val body = Let (Name v) val (body (bVar v)) &# BLet
 
 infixl 9 $$
 ($$) :: Tree Pure LangB -> Tree Pure LangB -> Tree Pure LangB
-x $$ y = App x y & BApp & MkPure
-
-bLit :: Int -> Tree Pure LangB
-bLit = MkPure . BLit
+x $$ y = App x y &# BApp
 
 recExtend :: [(String, Tree Pure LangB)] -> Tree Pure LangB -> Tree Pure LangB
-recExtend fields rest = foldr (fmap (MkPure . BRecExtend) . uncurry (RowExtend . Name)) rest fields
+recExtend fields rest = foldr (fmap (&# BRecExtend) . uncurry (RowExtend . Name)) rest fields
 
 closedRec :: [(String, Tree Pure LangB)] -> Tree Pure LangB
 closedRec fields = recExtend fields (MkPure BRecEmpty)
 
 getField :: Tree Pure LangB -> String -> Tree Pure LangB
-getField w k = Name k & BGetField w & MkPure
+getField w k = Name k &# BGetField w
 
 toNom :: String -> Tree Pure LangB -> Tree Pure LangB
-toNom name = MkPure . BToNom . ToNom (Name name)
+toNom name = (&# BToNom) . ToNom (Name name)

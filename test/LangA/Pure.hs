@@ -11,7 +11,6 @@ import AST.Term.App
 import AST.Term.NamelessScope.InvDeBruijn
 import AST.Term.Scheme
 import AST.Term.TypeSig
-import Control.Lens.Operators
 import LangA
 import TypeLang
 
@@ -23,18 +22,15 @@ aLam ::
         Tree Pure (LangA n)) -> Tree Pure (LangA (Maybe t))) ->
     Tree Pure (LangA t)
 aLam f =
-    _Pure # ALam (scope body)
+    scope body &# ALam
     where
         body x = f (var x)
 
 ($::) :: Tree Pure (LangA n) -> Tree Pure (Scheme Types Typ) -> Tree Pure (LangA n)
-v $:: t = _Pure # ATypeSig (v `TypeSig` t)
-
-aLit :: Int -> Tree Pure (LangA t)
-aLit i = _Pure # ALit i
+v $:: t = v `TypeSig` t &# ATypeSig
 
 aApp :: Tree Pure (LangA n) -> Tree Pure (LangA n) -> Tree Pure (LangA n)
-f `aApp` x = _Pure # AApp (App f x)
+f `aApp` x = App f x &# AApp
 
 var :: InvDeBruijnIndex k => Int -> Tree Pure (LangA k)
-var i = _Pure # AVar (scopeVar i)
+var i = scopeVar i &# AVar

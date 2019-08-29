@@ -16,7 +16,7 @@ import AST.Class.Nodes (KNodes(..))
 import AST.Class.Traversable
 import AST.Class.ZipMatch
 import AST.Knot
-import AST.Knot.Pure (Pure(..), _Pure)
+import AST.Knot.Pure (Pure(..), _Pure, (&#))
 import Control.Lens.Operators
 import Data.Constraint (Dict(..), withDict)
 import Data.Constraint.List (NoConstraint, And)
@@ -199,8 +199,7 @@ unwrap ::
 unwrap p f x =
     withDict (recurseBoth (Proxy @(And RFunctor c k))) $
     f x
-    & mapKWith (Proxy @(And RFunctor c)) (unwrap p f)
-    & MkPure
+    &# mapKWith (Proxy @(And RFunctor c)) (unwrap p f)
 
 -- | Recursively fold up a tree to produce a result.
 -- TODO: Is this a "cata-morphism"?

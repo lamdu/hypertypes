@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances, TemplateHaskell #-}
 module AST.Knot.Pure
-    ( Pure(..), _Pure
+    ( Pure(..), _Pure, (&#)
     ) where
 
 import           AST.Knot (Tree, Node)
@@ -30,6 +30,11 @@ makeInstances [''Binary, ''NFData] [''Pure]
 {-# INLINE _Pure #-}
 _Pure :: Lens.Iso (Tree Pure k) (Tree Pure j) (Tree k Pure) (Tree j Pure)
 _Pure = Lens.iso getPure MkPure
+
+infixl 1 &#
+{-# INLINE (&#) #-}
+(&#) :: a -> (a -> Tree k Pure) -> Tree Pure k
+x &# f = MkPure (f x)
 
 instance Show (Node k Pure) => Show (Pure k) where
     showsPrec p (MkPure x) = (showCon "Pure" @| x) p

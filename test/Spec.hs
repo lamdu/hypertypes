@@ -25,7 +25,7 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 import           TypeLang.Pure
 
 lamXYx5 :: Tree Pure (LangA EmptyScope)
-lamXYx5 = aLam \x -> aLam \_y -> x `aApp` (aLit 5 $:: intA)
+lamXYx5 = aLam \x -> aLam \_y -> x `aApp` ((5 &# ALit) $:: intA)
 
 infinite :: Tree Pure (LangA EmptyScope)
 infinite = aLam \x -> x `aApp` x
@@ -47,16 +47,15 @@ nomLam =
             & QVarInstances
             & (`Types` QVarInstances mempty)
             & NominalInst (Name "Map")
-            & TNom
-            & MkPure
+            &# TNom
             & uniType
 
 letGen0 :: Tree Pure LangB
-letGen0 = bLet "id" (lam "x" id) \i -> i $$ i $$ bLit 5
+letGen0 = bLet "id" (lam "x" id) \i -> i $$ i $$ (5 &# BLit)
 
 letGen1 :: Tree Pure LangB
 letGen1 =
-    bLet "five" (bLit 5) \five ->
+    bLet "five" (5 &# BLit) \five ->
     bLet "f" (lam "x" \x -> x $$ five $$ five) id
 
 letGen2 :: Tree Pure LangB
@@ -71,16 +70,16 @@ shouldNotGen :: Tree Pure LangB
 shouldNotGen = lam "x" \x -> bLet "y" x id
 
 simpleRec :: Tree Pure LangB
-simpleRec = closedRec [("a", bLit 5)]
+simpleRec = closedRec [("a", 5 &# BLit)]
 
 extendLit :: Tree Pure LangB
-extendLit = recExtend [("a", bLit 5)] (bLit 7)
+extendLit = recExtend [("a", 5 &# BLit)] (7 &# BLit)
 
 extendDup :: Tree Pure LangB
-extendDup = closedRec [("a", bLit 7), ("a", bLit 5)]
+extendDup = closedRec [("a", 7 &# BLit), ("a", 5 &# BLit)]
 
 extendGood :: Tree Pure LangB
-extendGood = closedRec [("b", bLit 7), ("a", bLit 5)]
+extendGood = closedRec [("b", 7 &# BLit), ("a", 5 &# BLit)]
 
 getAField :: Tree Pure LangB
 getAField = lam "x" \x -> getField x "a"
@@ -90,20 +89,20 @@ vecApp =
     lam "x" \x -> lam "y" \y -> closedRec [("x", x), ("y", y)] & toNom "Vec"
 
 usePhantom :: Tree Pure LangB
-usePhantom = bLit 5 & toNom "PhantomInt"
+usePhantom = 5 &# BLit & toNom "PhantomInt"
 
 unifyRows :: Tree Pure LangB
 unifyRows =
     -- \f -> f {a : 5, b : 7} (f {b : 5, a : 7} 12)
     lam "f" \f ->
-    (f $$ closedRec [("a", bLit 5), ("b", bLit 7)])
+    (f $$ closedRec [("a", 5 &# BLit), ("b", 7 &# BLit)])
     $$
-    ((f $$ closedRec [("b", bLit 5), ("a", bLit 7)]) $$ bLit 12)
+    ((f $$ closedRec [("b", 5 &# BLit), ("a", 7 &# BLit)]) $$ (12 &# BLit))
 
 return5 :: Tree Pure LangB
 return5 =
     -- return 5
-    bVar "return" $$ bLit 5
+    bVar "return" $$ (5 &# BLit)
 
 returnOk :: Tree Pure LangB
 returnOk =
@@ -170,7 +169,7 @@ mutType =
     { _tRow = mempty & Lens.at (Name "effects") ?~ rVar "effects" & QVarInstances
     , _tTyp = mempty & Lens.at (Name "value") ?~ tVar "value" & QVarInstances
     }
-    & TNom & MkPure
+    &# TNom
 
 -- A nominal type with foralls:
 -- "newtype LocalMut a = forall s. Mut s a"
@@ -313,8 +312,8 @@ main =
             , testAlphaEq (intsRecord ["a", "b", "c"]) (intsRecord ["b", "c", "a"]) True
             , testAlphaEq (forAll1 "a" id) (forAll1 "b" id) True
             , testAlphaEq (forAll1 "a" id) intA False
-            , testAlphaEq (forAll1r "a" (MkPure . TRec)) intA False
-            , testAlphaEq (forAll1r "a" (MkPure . TRec)) (forAll1r "b" (MkPure . TRec)) True
+            , testAlphaEq (forAll1r "a" (&# TRec)) intA False
+            , testAlphaEq (forAll1r "a" (&# TRec)) (forAll1r "b" (&# TRec)) True
             , testAlphaEq (mkOpenRec "a" "x" "y") (mkOpenRec "b" "y" "x") True
             ]
         mkOpenRec a x y =
@@ -322,4 +321,4 @@ main =
             Scheme
             (Types (QVars mempty)
                 (QVars (Map.fromList [(Name a, RowConstraints (Set.fromList [Name x, Name y]) mempty)])))
-            (_Pure # TRec (rowExtends (rVar a) [(x, _Pure # TInt), (y, _Pure # TInt)]))
+            (rowExtends (rVar a) [(x, _Pure # TInt), (y, _Pure # TInt)] &# TRec)
