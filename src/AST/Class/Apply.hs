@@ -8,13 +8,17 @@ module AST.Class.Apply
 import AST.Class.Functor (KFunctor(..))
 import AST.Class.Nodes (KNodes(..))
 import AST.Class.Pointed (KPointed)
-import AST.Knot
+import AST.Knot (Tree)
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
 import Data.Proxy (Proxy)
 
 import Prelude.Compat
 
+-- | A variant of 'Data.Functor.Apply.Apply' for 'AST.Knot.Knot's.
+--
+-- A type which has 'KApply' and 'KPointed' instances also has 'KApplicative',
+-- which is the equivalent to the 'Applicative' class.
 class KFunctor k => KApply k where
     -- | Combine child values
     zipK ::
@@ -22,6 +26,7 @@ class KFunctor k => KApply k where
         Tree k b ->
         Tree k (Product a b)
 
+-- | A variant of 'Applicative' for 'AST.Knot.Knot's.
 class    (KPointed k, KApply k) => KApplicative k
 instance (KPointed k, KApply k) => KApplicative k
 
@@ -33,6 +38,7 @@ instance (KApply a, KApply b) => KApply (Product a b) where
     {-# INLINE zipK #-}
     zipK (Pair a0 b0) (Pair a1 b1) = Pair (zipK a0 a1) (zipK b0 b1)
 
+-- | 'KApply' variant of 'Control.Applicative.liftA2'
 {-# INLINE liftK2 #-}
 liftK2 ::
     KApply k =>
@@ -42,6 +48,7 @@ liftK2 ::
     Tree k n
 liftK2 f x = mapK (\(Pair a b) -> f a b) . zipK x
 
+-- | 'KApply' variant of 'Control.Applicative.liftA2' for functions with context
 {-# INLINE liftK2With #-}
 liftK2With ::
     (KApply k, NodesConstraint k constraint) =>

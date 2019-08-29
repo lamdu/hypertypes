@@ -16,7 +16,9 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
+-- | A variant of 'Foldable' for 'AST.Knot.Knot's.
 class KNodes k => KFoldable k where
+    -- | 'KFoldable' variant of 'foldMap'
     foldMapK ::
         Monoid a =>
         (forall c. Tree l c -> a) ->
@@ -27,6 +29,7 @@ class KNodes k => KFoldable k where
         withDict (kNoConstraints (Proxy @k)) $
         foldMapKWith (Proxy @NoConstraint) f
 
+    -- | 'KFoldable' variant of 'foldMap' for functions with context
     foldMapKWith ::
         (Monoid a, NodesConstraint k constraint) =>
         Proxy constraint ->
@@ -38,7 +41,9 @@ instance KFoldable (Const a) where
     {-# INLINE foldMapKWith #-}
     foldMapKWith _ _ _ = mempty
 
--- TODO: Replace with `foldedK1` which is a `Fold`
+-- TODO: Replace `foldMapK1` with `foldedK1` which is a `Fold`
+
+-- | 'KFoldable' variant for 'foldMap' for 'AST.Knot.Knot's with a single node type (avoids using `RankNTypes`)
 {-# INLINE foldMapK1 #-}
 foldMapK1 ::
     forall a k c l.
@@ -50,6 +55,7 @@ foldMapK1 ::
     a
 foldMapK1 = foldMapKWith (Proxy @((~) c))
 
+-- | 'KFoldable' variant of 'Data.Foldable.traverse_'
 {-# INLINE traverseK_ #-}
 traverseK_ ::
     (Applicative f, KFoldable k) =>
@@ -58,6 +64,7 @@ traverseK_ ::
     f ()
 traverseK_ f = sequenceA_ . foldMapK ((:[]) . f)
 
+-- | 'KFoldable' variant of 'Data.Foldable.traverse_' for functions with context
 {-# INLINE traverseKWith_ #-}
 traverseKWith_ ::
     forall f k constraint m.
@@ -69,6 +76,7 @@ traverseKWith_ ::
 traverseKWith_ p f =
     sequenceA_ . foldMapKWith @_ @[f ()] p ((:[]) . f)
 
+-- | 'KFoldable' variant of 'Data.Foldable.traverse_' for 'AST.Knot.Knot's with a single node type (avoids using `RankNTypes`)
 {-# INLINE traverseK1_ #-}
 traverseK1_ ::
     forall f k c m.

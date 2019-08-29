@@ -16,7 +16,9 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
+-- | A variant of 'Functor' for 'AST.Knot.Knot's.
 class KNodes k => KFunctor k where
+    -- | 'KFunctor' variant of 'fmap'
     mapK ::
         (forall c. Tree m c -> Tree n c) ->
         Tree k m ->
@@ -26,6 +28,7 @@ class KNodes k => KFunctor k where
         withDict (kNoConstraints (Proxy @k)) $
         mapKWith (Proxy @NoConstraint) f
 
+    -- | 'KFunctor' variant of 'fmap' for functions with context
     mapKWith ::
         NodesConstraint k constraint =>
         Proxy constraint ->
@@ -42,6 +45,9 @@ instance (KFunctor a, KFunctor b) => KFunctor (Product a b) where
     mapKWith p f (Pair x y) =
         Pair (mapKWith p f x) (mapKWith p f y)
 
+-- | 'KFunctor' variant of 'Control.Lens.mapped' for 'AST.Knot.Knot's with a single node type.
+--
+-- Avoids using `RankNTypes` and thus can be composed with other optics.
 {-# INLINE mappedK1 #-}
 mappedK1 ::
     forall k c m n.
