@@ -88,27 +88,45 @@ The heterogeneous AST example above is an example for non-homogeneous, co-recurs
 [rank2classes](https://hackage.haskell.org/package/rank2classes) offers rank-2 variants of common classes such as `Functor`:
 
 ```Haskell
-class Rank2.Functor g where
+class Rank2.Functor f where
     (<$>) ::
         (forall a. p a -> q a) ->
-        g p ->
-        g q
+        f p ->
+        f q
 ```
 
 This is very similar to syntax-tree's `KFunctor`:
 
 ```Haskell
-class KNodes g => KFunctor g where
+class KNodes f => KFunctor f where
     mapK ::
         (forall a. p a -> q a) ->
-        g ('Knot p) ->
-        g ('Knot q)
+        f ('Knot p) ->
+        f ('Knot q)
     mapKWith :: ...
 ```
 
 `mapK` and `Rank2.(<$>)` are similar, but an important difference is that `g`'s parameters `p` and `q` are wrapped in `Knot`, because this is how syntax-tree's nested-HKD work. That is, knots can't be instances of `Rank2.Functor` and this is why the `KFunctor` variant is necessary.
 
  Additionally, `mapKWith` is provided, which allows using a mapping that requires a constraint on the child nodes, which is an extensively used feature.
+
+### compdata
+
+[compdata](http://hackage.haskell.org/package/compdata) also offers a method to describe heterogenous structures with external fixpoints and also offers variants of common classes such as `Functor`:
+
+```Haskell
+class HFunctor f where
+    hfmap ::
+        (forall a. p a -> q a) ->
+        f p b ->
+        f q b
+```
+
+Differences between compdata and syntax-tree:
+
+* compdata requires the nested structures to be described together in a single indexed data type (via `GADT`s or data familes). syntax-tree also allows structures to be split across separate data types, which allows for more modularity and code reusability
+* compdata's fix-points are the same functor in all the layers of the tree. In syntax-tree the fix points are themselves nested-HKDs, so they can have a different fix-point for theirs sub-nodes, which is actually useful. Some usage examples are `Diff` fix-point and the `Product` fix-point used by the `KApply` class (which has no equivalent in compdata)
+* syntax-tree's `KFunctor` also provides `mapKWith` which allows mappings to use constraints on child nodes, which is used extensively
 
 ### unification-fd
 
@@ -128,6 +146,8 @@ newtype Hyper a b = Hyper { invoke :: Hyper b a -> b }
 
 For more info on hyperfunctions and their use cases in the value level see [LKS2013]
 
+Note that hyperfunction composition is an important concept in the hyperfunction papers, while syntax-tree is currently lacking the `Compose` knot combinator along with the `KMonad` class, which were implemented in previous more complicated formulation of this library. syntax-tree is still searching for a simple way to implement `Compose`
+
 #### References
 
 * [KLP2001] S. Krstic, J. Launchbury, and D. Pavlovic. Hyperfunctions. In Proceeding of Fixed Points in Computer Science, FICS 2001
@@ -136,4 +156,3 @@ For more info on hyperfunctions and their use cases in the value level see [LKS2
 ### lens
 
 syntax-tree strives to be maximally compatible with [lens](http://hackage.haskell.org/package/lens), and offers `Traversal`s and `Setter`s wherever possible. But unfortunately the `RankNTypes` nature of many combinators in syntax-tree makes them not composable with optics. For the special simpler cases when all child nodes have the same types the `traverseK1` traversal and `mappedK1` setter are available.
-
