@@ -39,9 +39,7 @@ instance
         pPrintPrec lvl 1 term <+> Pretty.text ":" <+> pPrintPrec lvl 1 typ
         & maybeParens (p > 1)
 
-instance
-    Inferrable (TypeSig v t) where
-    type InferOf (TypeSig v t) = InferOf t
+type instance InferOf (TypeSig v t) = InferOf t
 
 instance
     ( MonadScopeLevel m

@@ -110,8 +110,7 @@ instance Ord (QVar (RunKnot typ)) => Lens.Ixed (QVars typ)
 instance Ord (QVar (RunKnot typ)) => Lens.At (QVars typ) where
     at k = _QVars . Lens.at k
 
-instance Inferrable (Scheme v t) where
-    type InferOf (Scheme v t) = Flip GTerm t
+type instance InferOf (Scheme v t) = Flip GTerm t
 
 class Unify m t => MonadInstantiate m t where
     localInstantiations ::

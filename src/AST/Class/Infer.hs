@@ -5,7 +5,7 @@ module AST.Class.Infer
     , InferredChild(..), inType, inRep
     , InferChild(..), _InferChild
     , InferRes(..), inferResVal, inferResBody
-    , Inferrable(..)
+    , InferOf
     , HasInferredValue(..)
     , HasInferredType(..), TypeOf
     ) where
@@ -20,8 +20,7 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
-class KFunctor t => Inferrable t where
-    type family InferOf (t :: Knot -> Type) :: Knot -> Type
+type family InferOf (t :: Knot -> Type) :: Knot -> Type
 
 class HasInferredValue t where
     inferredValue :: Lens' (Tree (InferOf t) v) (Tree v t)
@@ -63,7 +62,7 @@ inferResBody f InferRes{..} =
 class LocalScopeType var scheme m where
     localScopeType :: var -> scheme -> m a -> m a
 
-class (Monad m, Inferrable t) => Infer m t where
+class (Monad m, KFunctor t) => Infer m t where
     inferBody ::
         Tree t (InferChild m k) ->
         m (InferRes (UVarOf m) k t)

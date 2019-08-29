@@ -42,8 +42,7 @@ appChildren ::
     Traversal (App t0 f0) (App t1 f1) (Node f0 t0) (Node f1 t1)
 appChildren f (App x0 x1) = App <$> f x0 <*> f x1
 
-instance Inferrable (App e) where
-    type InferOf (App e) = ANode (TypeOf e)
+type instance InferOf (App e) = ANode (TypeOf e)
 
 instance
     ( Infer m expr

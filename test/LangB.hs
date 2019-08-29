@@ -64,7 +64,7 @@ instance RFunctor LangB
 instance RFoldable LangB
 instance RTraversable LangB
 
-instance Inferrable LangB where type InferOf LangB = ANode Typ
+type instance InferOf LangB = ANode Typ
 type instance TypeOf LangB = Typ
 type instance ScopeOf LangB = ScopeTypes
 

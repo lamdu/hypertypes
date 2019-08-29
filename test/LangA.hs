@@ -53,7 +53,7 @@ instance RFoldable (LangA k)
 instance RFunctor (LangA k)
 instance RTraversable (LangA k)
 
-instance Inferrable (LangA k) where type InferOf (LangA k) = ANode Typ
+type instance InferOf (LangA k) = ANode Typ
 
 type instance TypeOf (LangA k) = Typ
 

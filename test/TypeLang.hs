@@ -191,8 +191,8 @@ instance HasFuncType Typ where
 instance HasScopeTypes v Typ a => HasScopeTypes v Typ (a, x) where
     scopeTypes = Lens._1 . scopeTypes
 
-instance Inferrable Typ where type InferOf Typ = ANode Typ
-instance Inferrable Row where type InferOf Row = ANode Row
+type instance InferOf Typ = ANode Typ
+type instance InferOf Row = ANode Row
 instance HasInferredValue Typ where inferredValue = _ANode
 instance HasInferredValue Row where inferredValue = _ANode
 

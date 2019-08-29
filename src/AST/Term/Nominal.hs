@@ -285,9 +285,7 @@ lookupParams =
                 scopeConstraints <&> (<> l) >>= newVar binding . UUnbound
             _ -> error "unexpected state at nominal's parameter"
 
-instance
-    Inferrable (ToNom n e) where
-    type InferOf (ToNom n e) = NominalInst n (NomVarTypes (TypeOf e))
+type instance InferOf (ToNom n e) = NominalInst n (NomVarTypes (TypeOf e))
 
 instance
     ( MonadScopeLevel m
@@ -318,7 +316,7 @@ instance
             _ <- unify typ (valR ^# inferredType (Proxy @expr))
             InferRes (ToNom nomId valI) (NominalInst nomId paramsT) & pure
 
-instance Inferrable (FromNom n e) where type InferOf (FromNom n e) = FuncType (TypeOf e)
+type instance InferOf (FromNom n e) = FuncType (TypeOf e)
 
 instance
     ( Infer m expr

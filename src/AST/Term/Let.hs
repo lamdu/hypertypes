@@ -39,9 +39,7 @@ instance
         $+$ pPrintPrec lvl 0 i
         & maybeParens (p > 0)
 
-instance
-    Inferrable (Let v e) where
-    type InferOf (Let v e) = InferOf e
+type instance InferOf (Let v e) = InferOf e
 
 instance
     ( MonadScopeLevel m
