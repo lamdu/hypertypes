@@ -71,16 +71,6 @@ instance HasScopeTypes v t (Tree (ScopeTypes t) v) where
 type instance InferOf (Scope t k) = FuncType (TypeOf (t k))
 type instance InferOf (ScopeVar t k) = ANode (TypeOf (t k))
 
-type instance TypeOf (Scope t k) = TypeOf (t k)
-
-instance HasTypeOf1 t => HasTypeOf1 (Scope t) where
-    type TypeOf1 (Scope t) = TypeOf1 t
-    typeAst p =
-        withDict (typeAst (p0 p)) Dict
-        where
-            p0 :: Proxy (Scope t k) -> Proxy (t k)
-            p0 _ = Proxy
-
 instance HasTypeOf1 t => HasInferOf1 (Scope t) where
     type InferOf1 (Scope t) = FuncType (TypeOf1 t)
     type InferOf1IndexConstraint (Scope t) = DeBruijnIndex
