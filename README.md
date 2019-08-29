@@ -34,27 +34,26 @@ Here's how such a tree can be represented as nested-HKD with `syntax-tree`:
 ```Haskell
 data Typ k
     = TInt
-    | TFun (Node k Typ) (Node k Typ)
+    | TFun (k ('Knot Typ)) (k ('Knot Typ))
     | TRow (Row k)
 
 data Row k
     = REmpty
-    | RExtend String (Node k Typ) (Node k Row)
+    | RExtend String (k ('Knot Typ)) (k ('Knot Row))
 ```
 
 Differences from the simple type definition:
 
 * The types are parameterized by `k`
-* Nodes are specified via the `Node` type-synonym which "ties the knot", with `k` and the node type
+* Child nodes are constructed by applying `k` with the node type (wrapped by `'Knot`)
 
 ## What can syntax-tree do for you
 
-* Nested-HKD variants of standard classes like `Functor`
 * Helpers for recursive processing and transformation of nested structures
+* Nested-HKD variants of standard classes like `Functor`
 * A generic implementation for unification of terms
 * A generic and fast implementation of a Hindley-Milner type inference algorithm (["Efficient generalization with levels"](http://okmij.org/ftp/ML/generalization.html#levels))
 * Implementations for common AST terms and useful fix-points
-
 
 ## The underlying principle: `Knot`s
 
