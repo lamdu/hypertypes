@@ -3,9 +3,9 @@
 module AST.Class.Infer
     ( InferOf
     , Infer(..), LocalScopeType(..)
-    , InferredChild(..), inType, inRep
-    , InferChild(..), _InferChild
     , InferRes(..), inferResVal, inferResBody
+    , InferChild(..), _InferChild
+    , InferredChild(..), inType, inRep
     , HasInferredValue(..)
     , HasInferredType(..)
     ) where
@@ -26,7 +26,11 @@ import Prelude.Compat
 --
 -- > type instance InferOf MyTerm = ANode MyType
 --
--- But it may also be an inferred value (for types in terms) or a type together with a scope.
+-- But it may also be other things, for example:
+--
+-- * An inferred value (for types inside terms)
+-- * An inferred type together with a scope
+
 type family InferOf (t :: Knot -> Type) :: Knot -> Type
 
 -- | @HasInferredValue t@ represents that @InferOf t@ contains an inferred value for @t@.
@@ -55,9 +59,12 @@ newtype InferChild m k t =
     InferChild { inferChild :: m (InferredChild (UVarOf m) k t) }
 makePrisms ''InferChild
 
+-- | An inferred expression body. The result of 'inferBody'
 data InferRes v k t = InferRes
     { __inferResBody :: !(Tree t k)
+        -- ^ The expression body with inferred child nodes
     , _inferResVal :: !(Tree (InferOf t) v)
+        -- ^ The inference result for the top-level expression
     }
 makeLenses ''InferRes
 
@@ -70,7 +77,9 @@ inferResBody f InferRes{..} =
 class LocalScopeType var scheme m where
     localScopeType :: var -> scheme -> m a -> m a
 
+-- | @Infer m expr@ enables 'AST.Infer.infer' to perform type-inference for @expr@ in the @m@ 'Monad'.
 class (Monad m, KFunctor t) => Infer m t where
+    -- | Infer the body of an expression given the inference actions for its child nodes.
     inferBody ::
         Tree t (InferChild m k) ->
         m (InferRes (UVarOf m) k t)
