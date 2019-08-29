@@ -65,10 +65,11 @@ instance RFoldable LangB
 instance RTraversable LangB
 
 type instance InferOf LangB = ANode Typ
-type instance TypeOf LangB = Typ
 type instance ScopeOf LangB = ScopeTypes
 
-instance HasInferredType LangB where inferredType _ = _ANode
+instance HasInferredType LangB where
+    type TypeOf LangB = Typ
+    inferredType _ = _ANode
 
 instance Pretty (Tree LangB Pure) where
     pPrintPrec _ _ (BLit i) = pPrint i

@@ -55,9 +55,9 @@ instance RTraversable (LangA k)
 
 type instance InferOf (LangA k) = ANode Typ
 
-type instance TypeOf (LangA k) = Typ
-
-instance HasInferredType (LangA k) where inferredType _ = _ANode
+instance HasInferredType (LangA k) where
+    type TypeOf (LangA k) = Typ
+    inferredType _ = _ANode
 
 instance InvDeBruijnIndex v => Pretty (LangA v ('Knot Pure)) where
     pPrintPrec lvl p (ALam (Scope expr)) =

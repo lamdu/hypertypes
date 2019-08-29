@@ -7,7 +7,7 @@ module AST.Class.Infer
     , InferChild(..), _InferChild
     , InferRes(..), inferResVal, inferResBody
     , HasInferredValue(..)
-    , HasInferredType(..), TypeOf
+    , HasInferredType(..)
     ) where
 
 import AST
@@ -34,9 +34,8 @@ class HasInferredValue t where
     -- | A 'Control.Lens.Lens' from an inference result to an inferred value
     inferredValue :: Lens' (Tree (InferOf t) v) (Tree v t)
 
-type family TypeOf (t :: Knot -> Type) :: Knot -> Type
-
 class HasInferredType t where
+    type TypeOf t :: Knot -> Type
     inferredType :: Proxy t -> ALens' (Tree (InferOf t) v) (Tree v (TypeOf t))
 
 data InferredChild v k t = InferredChild
