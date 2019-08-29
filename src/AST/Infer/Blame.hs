@@ -73,7 +73,7 @@ prepare ::
     Tree (Ann a) exp ->
     m (Tree (Ann (PrepAnn m a)) exp)
 prepare typeFromAbove (Ann a x) =
-    withDict (inferredUnify (Proxy @m) (Proxy @exp)) $
+    withDict (inferContext (Proxy @m) (Proxy @exp)) $
     withDict (recurseBoth (Proxy @(And (Infer m) Blamable exp))) $
     inferBody
     (mapKWith (Proxy @(And (Infer m) Blamable))
@@ -82,7 +82,7 @@ prepare typeFromAbove (Ann a x) =
                 mkP _ = Proxy
                 p = mkP c
             in
-            withDict (inferredUnify (Proxy @m) p) $
+            withDict (inferContext (Proxy @m) p) $
             do
                 t <- inferOfNew p
                 prepare t c <&> (`InferredChild` t)

@@ -26,7 +26,7 @@ infer ::
     Tree (Ann a) t ->
     m (Tree (ITerm a (UVarOf m)) t)
 infer (Ann a x) =
-    withDict (inferRecursive (Proxy @m) (Proxy @t)) $
+    withDict (inferContext (Proxy @m) (Proxy @t)) $
     inferBody (mapKWith (Proxy @(Infer m)) inferH x)
     <&> (\(InferRes xI t) -> ITerm a t xI)
 

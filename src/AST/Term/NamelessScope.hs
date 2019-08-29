@@ -105,7 +105,7 @@ instance
                 & pure
         \\ (inferMonad :: DeBruijnIndex (Maybe k) :- Infer m (t (Maybe k)))
 
-    inferRecursive _ _ =
+    inferContext _ _ =
         Dict \\ inferMonad @m @t @(Maybe k)
 
 instance

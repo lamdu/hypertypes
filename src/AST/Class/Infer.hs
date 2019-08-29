@@ -14,7 +14,7 @@ import AST
 import AST.Class.Unify
 import Control.Lens (Lens, Lens', ALens', makeLenses, makePrisms)
 import Control.Lens.Operators
-import Data.Constraint (Dict(..))
+import Data.Constraint (Dict(..), withDict)
 import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
 
@@ -84,24 +84,22 @@ class (Monad m, KFunctor t) => Infer m t where
         Tree t (InferChild m k) ->
         m (InferRes (UVarOf m) k t)
 
-    inferRecursive :: Proxy m -> Proxy t -> Dict (NodesConstraint t (Infer m))
-    {-# INLINE inferRecursive #-}
-    default inferRecursive ::
-        NodesConstraint t (Infer m) =>
-        Proxy m -> Proxy t -> Dict (NodesConstraint t (Infer m))
-    inferRecursive _ _ = Dict
-
-    inferredUnify :: Proxy m -> Proxy t -> Dict (NodesConstraint (InferOf t) (Unify m))
-    {-# INLINE inferredUnify #-}
-    default inferredUnify ::
-        NodesConstraint (InferOf t) (Unify m) =>
-        Proxy m -> Proxy t -> Dict (NodesConstraint (InferOf t) (Unify m))
-    inferredUnify _ _ = Dict
+    inferContext ::
+        Proxy m ->
+        Proxy t ->
+        Dict (NodesConstraint t (Infer m), NodesConstraint (InferOf t) (Unify m))
+    {-# INLINE inferContext #-}
+    default inferContext ::
+        (NodesConstraint t (Infer m), NodesConstraint (InferOf t) (Unify m)) =>
+        Proxy m ->
+        Proxy t ->
+        Dict (NodesConstraint t (Infer m), NodesConstraint (InferOf t) (Unify m))
+    inferContext _ _ = Dict
 
 instance Recursive (Infer m) where
     {-# INLINE recurse #-}
     recurse p =
-        inferRecursive (p0 p) (p1 p)
+        withDict (inferContext (p0 p) (p1 p)) Dict
         where
             p0 :: Proxy (Infer m t) -> Proxy m
             p0 _ = Proxy
