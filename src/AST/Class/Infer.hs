@@ -1,11 +1,11 @@
 {-# LANGUAGE TemplateHaskell, RecordWildCards, FlexibleContexts, DefaultSignatures #-}
 
 module AST.Class.Infer
-    ( Infer(..), LocalScopeType(..)
+    ( InferOf
+    , Infer(..), LocalScopeType(..)
     , InferredChild(..), inType, inRep
     , InferChild(..), _InferChild
     , InferRes(..), inferResVal, inferResBody
-    , InferOf
     , HasInferredValue(..)
     , HasInferredType(..), TypeOf
     ) where
@@ -20,9 +20,18 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
+-- | @InferOf e@ is the inference result of @e@.
+--
+-- Most commonly it is an inferred type, using
+--
+-- > type instance InferOf MyTerm = ANode MyType
+--
+-- But it may also be an inferred value (for types in terms) or a type together with a scope.
 type family InferOf (t :: Knot -> Type) :: Knot -> Type
 
+-- | @HasInferredValue t@ represents that @InferOf t@ contains an inferred value for @t@.
 class HasInferredValue t where
+    -- | A 'Control.Lens.Lens' from an inference result to an inferred value
     inferredValue :: Lens' (Tree (InferOf t) v) (Tree v t)
 
 type family TypeOf (t :: Knot -> Type) :: Knot -> Type
