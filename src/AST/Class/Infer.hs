@@ -2,12 +2,13 @@
 
 module AST.Class.Infer
     ( InferOf
-    , Infer(..), LocalScopeType(..)
+    , Infer(..)
     , InferRes(..), inferResVal, inferResBody
     , InferChild(..), _InferChild
     , InferredChild(..), inType, inRep
     , HasInferredValue(..)
     , HasInferredType(..)
+    , LocalScopeType(..)
     ) where
 
 import AST
@@ -55,6 +56,10 @@ inRep ::
 inRep f InferredChild{..} =
     f __inRep <&> \__inRep -> InferredChild{..}
 
+-- | A 'Knot' storing an inference action.
+--
+-- The caller may modify the scope before invoking the action via
+-- 'localScopeType' or 'AST.Infer.ScopeLevel.localLevel'
 newtype InferChild m k t =
     InferChild { inferChild :: m (InferredChild (UVarOf m) k t) }
 makePrisms ''InferChild
@@ -68,22 +73,32 @@ data InferRes v k t = InferRes
     }
 makeLenses ''InferRes
 
+-- | A type-changing 'Lens' from 'InferRes' to its body field
 inferResBody ::
     InferOf t0 ~ InferOf t1 =>
     Lens (InferRes v k0 t0) (InferRes v k1 t1) (Tree t0 k0) (Tree t1 k1)
 inferResBody f InferRes{..} =
     f __inferResBody <&> \__inferResBody -> InferRes{..}
 
-class LocalScopeType var scheme m where
-    localScopeType :: var -> scheme -> m a -> m a
-
--- | @Infer m expr@ enables 'AST.Infer.infer' to perform type-inference for @expr@ in the @m@ 'Monad'.
+-- | @Infer m t@ enables 'AST.Infer.infer' to perform type-inference for @t@ in the @m@ 'Monad'.
+--
+-- The 'inferContext' method represents the following constraints on @t@:
+--
+-- * @NodesConstraint (InferOf t) (Unify m)@ - The child nodes of the inferrence can unify in the @m@ 'Monad'
+-- * @NodesConstraint t (Infer m)@ - @Infer m@ is also available for child nodes
+--
+-- It replaces context for the 'Infer' class to avoid @UndecidableSuperClasses@.
+--
+-- Instances usually don't need to implement this method as the default implementation works for them,
+-- but infinitely polymorphic trees such as 'AST.Term.NamelessScope.Scope' do need to implement the method,
+-- because the required context is infinite.
 class (Monad m, KFunctor t) => Infer m t where
     -- | Infer the body of an expression given the inference actions for its child nodes.
     inferBody ::
         Tree t (InferChild m k) ->
         m (InferRes (UVarOf m) k t)
 
+    -- TODO: Find how to move documentation to here without haddock duplicating it for the default method
     inferContext ::
         Proxy m ->
         Proxy t ->
@@ -105,3 +120,8 @@ instance Recursive (Infer m) where
             p0 _ = Proxy
             p1 :: Proxy (Infer m t) -> Proxy t
             p1 _ = Proxy
+
+-- | @LocalScopeType var scheme m@ represents that @m@ maintains a scope mapping variables of type @var@ to type schemes of type @scheme@
+class LocalScopeType var scheme m where
+    -- | Add a variable type into an action's scope
+    localScopeType :: var -> scheme -> m a -> m a
