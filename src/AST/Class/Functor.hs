@@ -16,7 +16,7 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
--- | A variant of 'Functor' for 'AST.Knot.Knot's.
+-- | A variant of 'Functor' for 'AST.Knot.Knot's
 class KNodes k => KFunctor k where
     -- | 'KFunctor' variant of 'fmap'
     mapK ::

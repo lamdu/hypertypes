@@ -17,6 +17,9 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
+-- | A 'Knot' containing a tree inside an action.
+--
+-- Used to express 'sequenceK'.
 newtype ContainedK f l (k :: Knot) = MkContainedK { runContainedK :: f (l k) }
 
 {-# INLINE _ContainedK #-}
@@ -27,7 +30,9 @@ _ContainedK ::
         (f1 (Tree l1 k1))
 _ContainedK = iso runContainedK MkContainedK
 
+-- | A variant of 'Traversable' for 'Knot's
 class (KFunctor k, KFoldable k) => KTraversable k where
+    -- | 'KTraversable' variant of 'sequenceA'
     sequenceK ::
         Applicative f =>
         Tree k (ContainedK f l) ->
@@ -37,6 +42,7 @@ instance KTraversable (Const a) where
     {-# INLINE sequenceK #-}
     sequenceK (Const x) = pure (Const x)
 
+-- | 'KTraversable' variant of 'traverse'
 {-# INLINE traverseK #-}
 traverseK ::
     (Applicative f, KTraversable k) =>
@@ -45,6 +51,7 @@ traverseK ::
     f (Tree k n)
 traverseK f = sequenceK . mapK (MkContainedK . f)
 
+-- | 'KTraversable' variant of 'traverse' for functions with context
 {-# INLINE traverseKWith #-}
 traverseKWith ::
     forall n constraint m f k.
@@ -55,6 +62,9 @@ traverseKWith ::
     f (Tree k n)
 traverseKWith p f = sequenceK . mapKWith p (MkContainedK . f)
 
+-- | 'KTraversable' variant of 'traverse' for 'Knot's with a single node type.
+--
+-- It is a valid 'Traversal' as it avoids using `RankNTypes`.
 {-# INLINE traverseK1 #-}
 traverseK1 ::
     (KTraversable k, NodesConstraint k ((~) c)) =>

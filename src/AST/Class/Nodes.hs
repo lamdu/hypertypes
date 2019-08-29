@@ -12,10 +12,24 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
+-- | 'KNodes' allows lifting a constraint to the child nodes of a 'Knot'
+-- by using the 'NodesConstraint' type family.
+--
+-- It also provides some methods to combine and process child node constraints.
+--
+-- Various classes like 'AST.Class.Functor.KFunctor' build upon 'KNodes'
+-- to provide methods such as 'AST.Class.Functor.mapKWith' which provide a rank-n function
+-- for processing child nodes which requires a constraint on the nodes.
+--
+-- The 'kNoConstraints' method represents the constraint that 'NoConstraint' applies to the child nodes.
+-- It replaces context for 'KNodes' to avoid `UndecidableSuperClasses`.
+-- Instances usually don't need to implement this method
+-- as the default implementation provide usually works for them.
 class KNodes (k :: Knot -> Type) where
-    -- | Lift a constraint to apply to the node types.
+    -- | Lift a constraint to apply to the child nodes
     type family NodesConstraint k (c :: ((Knot -> Type) -> Constraint)) :: Constraint
 
+    -- TODO: Putting documentation here causes duplication in the haddock documentation
     kNoConstraints :: Proxy k -> Dict (NodesConstraint k NoConstraint)
     {-# INLINE kNoConstraints #-}
     default kNoConstraints ::
@@ -23,6 +37,8 @@ class KNodes (k :: Knot -> Type) where
         Proxy k -> Dict (NodesConstraint k NoConstraint)
     kNoConstraints _ = Dict
 
+    -- | Combine two 'NodesConstraint' to allow
+    -- processing child nodes with functions that require both constraints
     kCombineConstraints ::
         (NodesConstraint k a, NodesConstraint k b) =>
         Proxy (And a b k) ->

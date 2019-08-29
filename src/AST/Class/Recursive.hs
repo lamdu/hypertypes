@@ -26,7 +26,9 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
+-- | A class of constraint constructors that apply to all recursive child nodes
 class Recursive c where
+    -- | Lift a recursive constraint to the next layer
     recurse :: (KNodes k, c k) => Proxy (c k) -> Dict (NodesConstraint k c)
 
 instance Recursive NoConstraint where
@@ -43,6 +45,7 @@ instance (Recursive a, Recursive b) => Recursive (And a b) where
             p1 :: Proxy (And a b k) -> Proxy (b k)
             p1 _ = Proxy
 
+-- | A class of 'Knot's which recursively implement 'KNodes'
 class KNodes k => RNodes k where
     recursiveKNodes :: Proxy k -> Dict (NodesConstraint k RNodes)
     {-# INLINE recursiveKNodes #-}
@@ -61,6 +64,7 @@ instance Recursive RNodes where
     {-# INLINE recurse #-}
     recurse = recursiveKNodes . argP
 
+-- | A class of 'Knot's which recursively implement 'KFunctor'
 class (KFunctor k, RNodes k) => RFunctor k where
     recursiveKFunctor :: Proxy k -> Dict (NodesConstraint k RFunctor)
     {-# INLINE recursiveKFunctor #-}
@@ -76,6 +80,7 @@ instance Recursive RFunctor where
     {-# INLINE recurse #-}
     recurse = recursiveKFunctor . argP
 
+-- | A class of 'Knot's which recursively implement 'KFoldable'
 class (KFoldable k, RNodes k) => RFoldable k where
     recursiveKFoldable :: Proxy k -> Dict (NodesConstraint k RFoldable)
     {-# INLINE recursiveKFoldable #-}
@@ -91,6 +96,7 @@ instance Recursive RFoldable where
     {-# INLINE recurse #-}
     recurse = recursiveKFoldable . argP
 
+-- | A class of 'Knot's which recursively implement 'KTraversable'
 class (KTraversable k, RFunctor k, RFoldable k) => RTraversable k where
     recursiveKTraversable :: Proxy k -> Dict (NodesConstraint k RTraversable)
     {-# INLINE recursiveKTraversable #-}
@@ -106,6 +112,7 @@ instance Recursive RTraversable where
     {-# INLINE recurse #-}
     recurse = recursiveKTraversable . argP
 
+-- | A class of 'Knot's which recursively implement 'KZipMatch'
 class (ZipMatch k, RNodes k) => RZipMatch k where
     recursiveZipMatch :: Proxy k -> Dict (NodesConstraint k RZipMatch)
     {-# INLINE recursiveZipMatch #-}

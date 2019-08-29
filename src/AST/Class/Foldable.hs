@@ -16,7 +16,7 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
--- | A variant of 'Foldable' for 'AST.Knot.Knot's.
+-- | A variant of 'Foldable' for 'AST.Knot.Knot's
 class KNodes k => KFoldable k where
     -- | 'KFoldable' variant of 'foldMap'
     foldMapK ::

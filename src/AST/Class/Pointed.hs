@@ -14,6 +14,7 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
+-- | A variant of 'Data.Pointed.Pointed' for 'AST.Knot.Knot's
 class KNodes k => KPointed k where
     -- | Construct a value from a higher ranked child value
     pureK ::

@@ -71,7 +71,7 @@ makePrisms ''InferChild
 -- * @NodesConstraint (InferOf t) (Unify m)@ - The child nodes of the inferrence can unify in the @m@ 'Monad'
 -- * @NodesConstraint t (Infer m)@ - @Infer m@ is also available for child nodes
 --
--- It replaces context for the 'Infer' class to avoid @UndecidableSuperClasses@.
+-- It replaces context for the 'Infer' class to avoid `UndecidableSuperClasses`.
 --
 -- Instances usually don't need to implement this method as the default implementation works for them,
 -- but infinitely polymorphic trees such as 'AST.Term.NamelessScope.Scope' do need to implement the method,
@@ -82,7 +82,7 @@ class (Monad m, KFunctor t) => Infer m t where
         Tree t (InferChild m k) ->
         m (Tree t k, Tree (InferOf t) (UVarOf m))
 
-    -- TODO: Find how to move documentation to here without haddock duplicating it for the default method
+    -- TODO: Putting documentation here causes duplication in the haddock documentation
     inferContext ::
         Proxy m ->
         Proxy t ->
