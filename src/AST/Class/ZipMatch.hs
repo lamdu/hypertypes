@@ -20,7 +20,9 @@ import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
 
+-- | A partial variant of 'AST.Class.Apply.Apply', where the structures do not always match
 class ZipMatch expr where
+    -- | A partial variant of 'AST.Class.Apply.zipK', where the result is wrapped with 'Maybe'
     zipMatch :: Tree expr a -> Tree expr b -> Maybe (Tree expr (Product a b))
 
 instance (ZipMatch a, ZipMatch b) => ZipMatch (Product a b) where
@@ -31,6 +33,7 @@ instance Eq a => ZipMatch (Const a) where
     {-# INLINE zipMatch #-}
     zipMatch (Const x) (Const y) = Const x <$ guard (x == y)
 
+-- | An 'Applicative' variant of 'zipMatchWith'
 {-# INLINE zipMatchWithA #-}
 zipMatchWithA ::
     forall expr f constraint a b c.
@@ -43,6 +46,7 @@ zipMatchWithA ::
     Tree expr a -> Tree expr b -> Maybe (f (Tree expr c))
 zipMatchWithA p f x y = zipMatch x y <&> traverseKWith p (\(Pair a b) -> f a b)
 
+-- | A partial variant of 'AST.Class.Apply.liftK2With'
 {-# INLINE zipMatchWith #-}
 zipMatchWith ::
     ( ZipMatch expr, KFunctor expr
@@ -53,6 +57,7 @@ zipMatchWith ::
     Tree expr a -> Tree expr b -> Maybe (Tree expr c)
 zipMatchWith p f x y = zipMatch x y <&> mapKWith p (\(Pair a b) -> f a b)
 
+-- | A variant of 'zipMatchWithA' where the 'Applicative' actions do not contain results
 {-# INLINE zipMatchWith_ #-}
 zipMatchWith_ ::
     forall f expr constraint a b.
@@ -65,6 +70,7 @@ zipMatchWith_ ::
     Tree expr a -> Tree expr b -> Maybe (f ())
 zipMatchWith_ p f x y = zipMatch x y <&> traverseKWith_ p (\(Pair a b) -> f a b)
 
+-- | A variant of 'zipMatchWith_' for 'Knot's with a single node type (avoids using `RankNTypes`)
 {-# INLINE zipMatch1_ #-}
 zipMatch1_ ::
     ( Applicative f

@@ -2,12 +2,12 @@
 
 module AST.Class.Recursive
     ( Recursive(..)
+    , fold, unfold
+    , wrap, wrapM, unwrap, unwrapM
+    , foldMapRecursive
     , RNodes(..), RFunctor(..), RFoldable(..), RTraversable(..)
     , RZipMatch(..)
     , recurseBoth
-    , wrap, wrapM, unwrap, unwrapM
-    , fold, unfold
-    , foldMapRecursive
     ) where
 
 import AST.Class.Foldable
@@ -128,6 +128,7 @@ instance Recursive RZipMatch where
     {-# INLINE recurse #-}
     recurse = recursiveZipMatch . argP
 
+-- | Lift a constraint of two `Recursive` classes to the next level
 {-# INLINE recurseBoth #-}
 recurseBoth ::
     forall a b k.
@@ -138,6 +139,7 @@ recurseBoth _ =
     withDict (recurse (Proxy @(b k))) $
     withDict (kCombineConstraints (Proxy @(And a b k))) Dict
 
+-- | Monadically convert a 'Pure' 'Tree' to a different 'Knot' from the bottom up
 {-# INLINE wrapM #-}
 wrapM ::
     forall m k c w.
@@ -152,6 +154,7 @@ wrapM p f x =
     & traverseKWith (Proxy @(And RTraversable c)) (wrapM p f)
     >>= f
 
+-- | Monadically unwrap a 'Tree' from the top down, replacing its 'Knot' with 'Pure'
 {-# INLINE unwrapM #-}
 unwrapM ::
     forall m k c w.
@@ -166,6 +169,7 @@ unwrapM p f x =
     >>= traverseKWith (Proxy @(And RTraversable c)) (unwrapM p f)
     <&> (_Pure #)
 
+-- | Wrap a 'Pure' 'Tree' to a different 'Knot' from the bottom up
 {-# INLINE wrap #-}
 wrap ::
     forall k c w.
@@ -180,6 +184,7 @@ wrap p f x =
     & mapKWith (Proxy @(And RFunctor c)) (wrap p f)
     & f
 
+-- | Unwrap a 'Tree' from the top down, replacing its 'Knot' with 'Pure'
 {-# INLINE unwrap #-}
 unwrap ::
     forall k c w.
@@ -193,8 +198,7 @@ unwrap p f x =
     f x
     &# mapKWith (Proxy @(And RFunctor c)) (unwrap p f)
 
--- | Recursively fold up a tree to produce a result.
--- TODO: Is this a "cata-morphism"?
+-- | Recursively fold up a tree to produce a result (aka catamorphism)
 {-# INLINE fold #-}
 fold ::
     (Recursive c, RFunctor k, c k) =>
@@ -204,8 +208,7 @@ fold ::
     a
 fold p f = getConst . wrap p (Const . f)
 
--- | Build/load a tree from a seed value.
--- TODO: Is this an "ana-morphism"?
+-- | Build/load a tree from a seed value (aka anamorphism)
 {-# INLINE unfold #-}
 unfold ::
     (Recursive c, RFunctor k, c k) =>
@@ -215,6 +218,7 @@ unfold ::
     Tree Pure k
 unfold p f = unwrap p (f . getConst) . Const
 
+-- | Fold over all of the recursive child nodes of a 'Tree' in pre-order
 {-# INLINE foldMapRecursive #-}
 foldMapRecursive ::
     forall c k a f.

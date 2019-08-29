@@ -20,25 +20,31 @@ import Data.Kind (Type)
 
 import Prelude.Compat
 
--- Unification variable type for a unification monad
+-- | Unification variable type for a unification monad
 type family UVarOf (m :: Type -> Type) :: Knot -> Type
 
--- | BindingDict, parameterized on:
+-- | BindingDict implements unification variables for a type in a unification monad.
 --
--- * `v`: unification variable type
--- * `m`: monad to bind in
--- * `t`: term type
+-- It is parameterized on:
+--
+-- * `v`: The unification variable 'Knot'
+-- * `m`: The 'Monad' to bind in
+-- * `t`: The unified term's 'Knot'
 --
 -- Has 2 implementations in syntax-tree:
 --
--- * "AST.Unify.Binding.Pure"
--- * "AST.Unify.Binding.ST"
+-- * 'AST.Unify.Binding.bindingDict' for pure state based unification
+-- * 'AST.Unify.Binding.ST.stBinding' for 'Control.Monad.ST.ST' based unification
 data BindingDict v m t = BindingDict
     { lookupVar :: Tree v t -> m (Tree (UTerm v) t)
     , newVar :: Tree (UTerm v) t -> m (Tree v t)
     , bindVar :: Tree v t -> Tree (UTerm v) t -> m ()
     }
 
+-- | @Unify m t@ enables 'AST.Unify.unify' to perform unification for @t@ in the 'Monad' @m@.
+--
+-- The 'unifyRecursive' method represents the constraint that @Unify m@ applies to all recursive child nodes.
+-- It replaces context for 'Unify' to avoid `UndecidableSuperClasses`.
 class
     ( Eq (Tree (UVarOf m) t)
     , RTraversable t
@@ -49,20 +55,28 @@ class
     , MonadQuantify (TypeConstraintsOf t) (QVar t) m
     ) => Unify m t where
 
+    -- | The implementation for unification variables binding and lookup
     binding :: BindingDict (UVarOf m) m t
 
+    -- | Handles a unification error.
+    --
+    -- If 'unifyError' is called then unification has failed.
+    -- A compiler implementation may present an error message based on the provided 'UnifyError' when this occurs.
     unifyError :: Tree (UnifyError t) (UVarOf m) -> m a
 
     -- | What to do when top-levels of terms being unified do not match.
-    -- Usually this will throw a failure,
-    -- but some AST terms could be equivalent despite not matching,
-    -- like record extends with fields ordered differently,
-    -- and these could still match.
+    --
+    -- Usually this will cause a 'unifyError'.
+    --
+    -- Some AST terms could be equivalent despite not matching structurally,
+    -- like record field extentions with the fields ordered differently.
+    -- Those would override the default implementation to handle the unification of mismatching structures.
     structureMismatch ::
         (forall c. Unify m c => Tree (UVarOf m) c -> Tree (UVarOf m) c -> m (Tree (UVarOf m) c)) ->
         Tree (UTermBody (UVarOf m)) t -> Tree (UTermBody (UVarOf m)) t -> m ()
     structureMismatch _ x y = unifyError (Mismatch (x ^. uBody) (y ^. uBody))
 
+    -- TODO: Putting documentation here causes duplication in the haddock documentation
     unifyRecursive :: Proxy m -> Proxy t -> Dict (NodesConstraint t (Unify m))
     {-# INLINE unifyRecursive #-}
     default unifyRecursive ::

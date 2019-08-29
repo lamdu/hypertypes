@@ -64,7 +64,7 @@ newtype InferChild m k t =
     InferChild { inferChild :: m (InferredChild (UVarOf m) k t) }
 makePrisms ''InferChild
 
--- | @Infer m t@ enables 'AST.Infer.infer' to perform type-inference for @t@ in the @m@ 'Monad'.
+-- | @Infer m t@ enables 'AST.Infer.infer' to perform type-inference for @t@ in the 'Monad' @m@.
 --
 -- The 'inferContext' method represents the following constraints on @t@:
 --
