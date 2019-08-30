@@ -4,7 +4,7 @@ module AST.Unify.Constraints
     ( TypeConstraints(..)
     , MonadScopeConstraints(..)
     , HasTypeConstraints(..)
-    , WithConstraint(..), pConstraint, pBody
+    , WithConstraint(..), wcConstraint, wcBody
     ) where
 
 import Algebra.PartialOrd (PartialOrd(..))
@@ -42,7 +42,7 @@ class
         Maybe (Tree ast (WithConstraint k))
 
 data WithConstraint k ast = WithConstraint
-    { _pConstraint :: TypeConstraintsOf (RunKnot ast)
-    , _pBody :: k ast
+    { _wcConstraint :: TypeConstraintsOf (RunKnot ast)
+    , _wcBody :: k ast
     }
 makeLenses ''WithConstraint
