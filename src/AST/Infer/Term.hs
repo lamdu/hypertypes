@@ -4,7 +4,7 @@
 module AST.Infer.Term
     ( ITerm(..), iVal, iRes, iAnn
     , iAnnotations, iTermToAnn
-    , TraverseITermWith(..), traverseITermWith
+    , traverseITermWith, TraverseITermWith(..)
     ) where
 
 import AST
@@ -18,18 +18,19 @@ import GHC.Generics (Generic)
 
 import Prelude.Compat
 
--- | Knot for terms, annotating them with inference results
---
--- 'e' may vary in different sub-terms, allowing differently typed
--- type annotations and scopes.
+-- | A 'Knot' for an inferred term - the output of 'AST.Infer.infer'
 data ITerm a v e = ITerm
     { _iAnn :: a
+        -- ^ The node's original annotation as passed to 'AST.Infer.infer'
     , _iRes :: !(Tree (InferOf (RunKnot e)) v)
+        -- ^ The node's inference result (such as an inferred type)
     , _iVal :: Node e (ITerm a v)
+        -- ^ The node's body and its inferred child nodes
     } deriving Generic
 makeLenses ''ITerm
 makeCommonInstances [''ITerm]
 
+-- | A 'Traversal' from an inferred term to the node annotations (not the inference results)
 iAnnotations ::
     forall e a b v.
     RTraversable e =>
@@ -44,6 +45,7 @@ iAnnotations f (ITerm pl r x) =
     <*> pure r
     <*> traverseKWith (Proxy @RTraversable) (iAnnotations f) x
 
+-- | Convert an 'ITerm' to a simple annotated tree with the same annotation type for all nodes
 iTermToAnn ::
     forall f e a v r c.
     (Applicative f, RTraversable e, c e, Recursive c) =>
@@ -57,20 +59,20 @@ iTermToAnn p f (ITerm a i x) =
     <$> f (Proxy @e) i
     <*> traverseKWith (Proxy @(And RTraversable c)) (iTermToAnn p f) x
 
+-- | A class representing the requirements of 'traverseITermWith'
 class (RTraversable e, KTraversable (InferOf e)) => TraverseITermWith c e where
-    traverseITermWithRecursive :: Proxy c -> Proxy e -> Dict (NodesConstraint e (TraverseITermWith c))
-    {-# INLINE traverseITermWithRecursive #-}
-    default traverseITermWithRecursive ::
-        NodesConstraint e (TraverseITermWith c) =>
-        Proxy c -> Proxy e -> Dict (NodesConstraint e (TraverseITermWith c))
-    traverseITermWithRecursive _ _ = Dict
-    traverseITermWithConstraint :: Proxy c -> Proxy e -> Dict (NodesConstraint (InferOf e) c)
-    {-# INLINE traverseITermWithConstraint #-}
-    default traverseITermWithConstraint ::
-        NodesConstraint (InferOf e) c =>
-        Proxy c -> Proxy e -> Dict (NodesConstraint (InferOf e) c)
-    traverseITermWithConstraint _ _ = Dict
+    traverseITermWithConstraints ::
+        Proxy c -> Proxy e -> Dict (NodesConstraint e (TraverseITermWith c), NodesConstraint (InferOf e) c)
+    {-# INLINE traverseITermWithConstraints #-}
+    default traverseITermWithConstraints ::
+        (NodesConstraint e (TraverseITermWith c), NodesConstraint (InferOf e) c) =>
+        Proxy c -> Proxy e -> Dict (NodesConstraint e (TraverseITermWith c), NodesConstraint (InferOf e) c)
+    traverseITermWithConstraints _ _ = Dict
 
+-- | 'traverseK' equivalent for 'ITerm', which applies on the unification variable knot
+-- (not the last type parameter as 'traverseK' normally does).
+--
+-- /TODO/: Possibly replace with a 'KTraversable' instance for @Flip (ITerm a) e@
 traverseITermWith ::
     forall e f v r a constraint.
     (TraverseITermWith constraint e, Applicative f) =>
@@ -78,8 +80,7 @@ traverseITermWith ::
     (forall c. constraint c => Tree v c -> f (Tree r c)) ->
     Tree (ITerm a v) e -> f (Tree (ITerm a r) e)
 traverseITermWith p f (ITerm a r x) =
-    withDict (traverseITermWithRecursive p (Proxy @e)) $
-    withDict (traverseITermWithConstraint p (Proxy @e)) $
+    withDict (traverseITermWithConstraints p (Proxy @e)) $
     ITerm a
     <$> traverseKWith p f r
     <*> traverseKWith (Proxy @(TraverseITermWith constraint)) (traverseITermWith p f) x

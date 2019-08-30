@@ -1,8 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module AST.Infer.ScopeLevel
-    ( MonadScopeLevel(..)
-    , ScopeLevel(..), _ScopeLevel
+    ( ScopeLevel(..), _ScopeLevel
+    , MonadScopeLevel(..)
     ) where
 
 import           Algebra.PartialOrd (PartialOrd(..))
@@ -16,11 +16,16 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 
 import           Prelude.Compat
 
-class Monad m => MonadScopeLevel m where
-    localLevel :: m a -> m a
-
--- | NOTE: The `Ord` instance is only for use as a `Map` key, not a
--- logical ordering
+-- | A representation of scope nesting level,
+-- for use in let-generalization and skolem escape detection.
+--
+-- See ["Efficient generalization with levels"](http://okmij.org/ftp/ML/generalization.html#levels)
+-- for a detailed explanation.
+--
+-- Commonly used as the 'AST.Unify.Constraints.TypeConstraintsOf' of terms.
+--
+-- /Note/: The `Ord` instance is only for use as a `Map` key, not a
+-- logical ordering, for which 'PartialOrd' is used.
 newtype ScopeLevel = ScopeLevel Int
     deriving stock (Eq, Ord, Show, Generic)
 makePrisms ''ScopeLevel
@@ -47,3 +52,8 @@ instance Pretty ScopeLevel where
 
 instance NFData ScopeLevel
 instance Binary ScopeLevel
+
+-- | A class of 'Monad's which maintain a scope level,
+-- where the level can be locally increased for computations.
+class Monad m => MonadScopeLevel m where
+    localLevel :: m a -> m a

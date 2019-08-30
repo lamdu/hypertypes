@@ -13,11 +13,11 @@
 -- which do have let-generalization, to provide better type errors
 -- in specific definitions which don't happen to use generalizing terms.
 --
--- [Lamdu](https://github.com/lamdu/lamdu) uses this algorithm for the "insist type" feature,
+-- [Lamdu](https://github.com/lamdu/lamdu) uses this algorithm for its "insist type" feature,
 -- which moves around the blame for type mismatches.
 --
 -- Note: If a similar algorithm already existed somewhere,
--- I ([@yairchu](https://github.com/yairchu/)) would very much like to know!
+-- [I](https://github.com/yairchu/) would very much like to know!
 
 {-# LANGUAGE FlexibleContexts, DefaultSignatures, TemplateHaskell, UndecidableInstances, RankNTypes #-}
 
@@ -154,7 +154,7 @@ data BTerm a v e = BTerm
     , _bRes :: Either (InferOf' e v, InferOf' e v) (InferOf' e v)
         -- ^ Either an infer result, or two conflicting results representing a type mismatch
     , _bVal :: Node e (BTerm a v)
-        -- ^ The node's body and inferred child nodes
+        -- ^ The node's body and its inferred child nodes
     } deriving Generic
 makeLenses ''BTerm
 makeCommonInstances [''BTerm]
@@ -198,7 +198,7 @@ blame order e =
         toUnifies p ^.. annotations & sortOn (order . fst) & traverse_ snd
         finalize p
 
--- | Convert a 'BTerm' to a simple annotated tree with the same annotation type for all nodes.
+-- | Convert a 'BTerm' to a simple annotated tree with the same annotation type for all nodes
 bTermToAnn ::
     forall f e a v r c.
     (Applicative f, RTraversable e, c e, Recursive c) =>

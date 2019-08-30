@@ -43,6 +43,9 @@ default-extensions:
 
 library:
   source-dirs: src
+  other-modules:
+  - AST.TH.Internal.Instances
+  - AST.TH.Internal.Utils
   dependencies:
   - array
   - base-compat

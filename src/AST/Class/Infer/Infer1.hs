@@ -1,4 +1,4 @@
--- | `Infer` for indexed AST types (such as `AST.Term.Scope.Scope`)
+-- | 'Infer' for indexed AST types (such as 'AST.Term.Scope.Scope')
 
 {-# LANGUAGE TypeOperators #-}
 

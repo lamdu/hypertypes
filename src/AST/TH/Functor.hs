@@ -12,6 +12,7 @@ import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
 
+-- | Generate a 'KFunctor' instance
 makeKFunctor :: Name -> DecsQ
 makeKFunctor typeName = makeTypeInfo typeName >>= makeKFunctorForType
 

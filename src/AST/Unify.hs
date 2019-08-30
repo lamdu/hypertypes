@@ -1,12 +1,12 @@
 {-# LANGUAGE FlexibleContexts, BangPatterns #-}
 
 module AST.Unify
-    ( module AST.Class.Unify
+    ( unify
+    , module AST.Class.Unify
     , module AST.Unify.Constraints
     , module AST.Unify.Error
-    , unify
 
-    , -- Exported for SPECIALIZE pragmas
+    , -- | Exported only for SPECIALIZE pragmas
       updateConstraints, updateTermConstraints, updateTermConstraintsH
     , unifyUTerms, unifyUnbound
     ) where
@@ -81,10 +81,7 @@ updateTermConstraintsH (WithConstraint c v0) =
         (v1, x) <- semiPruneLookup v0
         updateConstraints c v1 x
 
--- Note on usage of `semiPruneLookup`:
---   Variables are pruned to point to other variables rather than terms,
---   yielding comparison of (sometimes equal) variables,
---   rather than recursively unifying the terms that they would prune to.
+-- | Unification of terms
 {-# INLINE unify #-}
 unify ::
     forall m t.

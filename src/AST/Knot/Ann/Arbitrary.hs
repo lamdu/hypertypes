@@ -1,3 +1,5 @@
+-- | 'Arbirary' instance for annotated ASTs, respecting scopes.
+
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS -fno-warn-orphans #-} -- Arbitrary instances
 

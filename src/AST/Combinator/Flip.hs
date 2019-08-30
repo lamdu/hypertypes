@@ -15,7 +15,7 @@ newtype Flip f x k = MkFlip (Tree (f (RunKnot k)) x)
 -- | An 'Iso' from 'Flip' to its content.
 --
 -- Using `_Flip` rather than the 'MkFlip' data constructor is recommended,
--- because it helps the type inference know that @ANode c@ is parameterized with a 'AST.Knot.Knot'
+-- because it helps the type inference know that @ANode c@ is parameterized with a 'AST.Knot.Knot'.
 _Flip ::
     Lens.Iso
     (Tree (Flip f0 x0) k0)

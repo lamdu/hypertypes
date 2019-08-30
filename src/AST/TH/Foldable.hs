@@ -12,6 +12,7 @@ import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
 
+-- | Generate a 'KFoldable' instance
 makeKFoldable :: Name -> DecsQ
 makeKFoldable typeName = makeTypeInfo typeName >>= makeKFoldableForType
 

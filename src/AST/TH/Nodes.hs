@@ -14,6 +14,7 @@ import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
 
+-- | Generate a 'KNodes' instance
 makeKNodes :: Name -> DecsQ
 makeKNodes typeName = makeTypeInfo typeName >>= makeKNodesForType
 

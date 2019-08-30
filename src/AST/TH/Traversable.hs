@@ -19,6 +19,9 @@ import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
 
+-- | Generate 'KTraversable' and 'KApply' instances along with all of their base classes:
+-- 'AST.Class.Foldable.KFoldable', 'AST.Class.Functor.KFunctor',
+-- 'AST.Class.Pointed.KPointed', and 'AST.Class.Nodes.KNodes'.
 makeKTraversableApplyAndBases :: Name -> DecsQ
 makeKTraversableApplyAndBases x =
     sequenceA
@@ -26,6 +29,8 @@ makeKTraversableApplyAndBases x =
     , makeKTraversableAndFoldable x
     ] <&> concat
 
+-- | Generate a 'KTraversable' instance along with the instance of its base classes:
+-- 'AST.Class.Foldable.KFoldable', 'AST.Class.Functor.KFunctor', and 'AST.Class.Nodes.KNodes'.
 makeKTraversableAndBases :: Name -> DecsQ
 makeKTraversableAndBases x =
     sequenceA
@@ -34,6 +39,7 @@ makeKTraversableAndBases x =
     , makeKTraversableAndFoldable x
     ] <&> concat
 
+-- | Generate 'KTraversable' and 'AST.Class.Foldable.KFoldable' instances
 makeKTraversableAndFoldable :: Name -> DecsQ
 makeKTraversableAndFoldable x =
     sequenceA
@@ -41,6 +47,7 @@ makeKTraversableAndFoldable x =
     , makeKTraversable x
     ] <&> concat
 
+-- | Generate a 'KTraversable' instance
 makeKTraversable :: Name -> DecsQ
 makeKTraversable typeName = makeTypeInfo typeName >>= makeKTraversableForType
 

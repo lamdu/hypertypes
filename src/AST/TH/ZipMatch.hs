@@ -13,6 +13,7 @@ import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
 
+-- | Generate a 'ZipMatch' instance
 makeZipMatch :: Name -> DecsQ
 makeZipMatch typeName =
     do

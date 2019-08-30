@@ -1,4 +1,4 @@
--- `PolyKinds` variant of `base`'s `Data.Functor.Product`.
+-- | `PolyKinds` variant of `base`'s `Data.Functor.Product.Product`.
 --
 -- Note that to some extent `base`'s `Product` is already poly-kinded,
 -- but it has problematic type class instances which are not poly-kinded.
@@ -23,7 +23,10 @@ import GHC.Generics (Generic, Generic1)
 
 import Prelude.Compat
 
--- | Lifted product of functors.
+-- | A `PolyKinds` variant of 'Data.Functor.Product.Product'.
+--
+-- Note that the original 'Data.Functor.Product.Product' is poly-kinded
+-- in its type, but not in its instances such as 'Eq'.
 data Product f g a = Pair (f a) (g a)
     deriving (Data, Generic, Generic1, Eq, Ord, Read, Show)
 

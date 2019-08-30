@@ -24,10 +24,10 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 import           Prelude.Compat
 
--- Annotate tree nodes
-data Ann a knot = Ann
+-- | A 'AST.Knot.Knot' which adds an annotation to every node in a tree
+data Ann a k = Ann
     { _ann :: a
-    , _val :: Node knot (Ann a)
+    , _val :: Node k (Ann a)
     } deriving Generic
 makeLenses ''Ann
 
@@ -49,6 +49,7 @@ instance Constraints (Ann a t) Pretty => Pretty (Ann a t) where
         where
             plDoc = pPrintPrec lvl 0 pl
 
+-- | A 'Traversal' from an annotated tree to its annotations
 annotations ::
     forall k a b.
     RTraversable k =>
@@ -62,12 +63,14 @@ annotations f (Ann pl x) =
     <$> f pl
     <*> traverseKWith (Proxy @RTraversable) (annotations f) x
 
+-- | Remove a tree's annotations
 strip ::
     RFunctor expr =>
     Tree (Ann a) expr ->
     Tree Pure expr
 strip = unwrap (Proxy @RFunctor) (^. val)
 
+-- | Compute annotations for a tree from the bottom up
 addAnnotations ::
     (Recursive c, RFunctor k, c k) =>
     Proxy c ->

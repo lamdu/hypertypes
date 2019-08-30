@@ -12,6 +12,7 @@ import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
 
+-- | Generate a 'KPointed' instance
 makeKPointed :: Name -> DecsQ
 makeKPointed typeName = makeTypeInfo typeName >>= makeKPointedForType
 
