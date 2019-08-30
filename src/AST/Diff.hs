@@ -8,7 +8,7 @@ module AST.Diff
 
 import AST
 import AST.Class.Recursive
-import AST.Class.ZipMatch (ZipMatch(..))
+import AST.Class.ZipMatch (ZipMatch(..), RZipMatch)
 import AST.TH.Internal.Instances (makeCommonInstances)
 import Control.Lens (makeLenses, makePrisms)
 import Control.Lens.Operators

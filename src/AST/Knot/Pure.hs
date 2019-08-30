@@ -5,7 +5,6 @@ module AST.Knot.Pure
 
 import           AST.Knot (Tree, Node)
 import           AST.TH.Traversable (makeKTraversableApplyAndBases)
-import           AST.TH.ZipMatch (makeZipMatch)
 import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -24,7 +23,6 @@ newtype Pure k = Pure { getPure :: Node k Pure }
     deriving stock Generic
 
 makeKTraversableApplyAndBases ''Pure
-makeZipMatch ''Pure
 makeDerivings [''Eq, ''Ord] [''Pure]
 makeInstances [''Binary, ''NFData] [''Pure]
 

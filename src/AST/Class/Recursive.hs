@@ -6,7 +6,6 @@ module AST.Class.Recursive
     , wrap, wrapM, unwrap, unwrapM
     , foldMapRecursive
     , RNodes(..), RFunctor(..), RFoldable(..), RTraversable(..)
-    , RZipMatch(..)
     , recurseBoth
     ) where
 
@@ -14,7 +13,6 @@ import AST.Class.Foldable
 import AST.Class.Functor (KFunctor(..))
 import AST.Class.Nodes (KNodes(..))
 import AST.Class.Traversable
-import AST.Class.ZipMatch
 import AST.Knot
 import AST.Knot.Pure (Pure(..), _Pure, (&#))
 import Control.Lens.Operators
@@ -111,22 +109,6 @@ instance RTraversable (Const a)
 instance Recursive RTraversable where
     {-# INLINE recurse #-}
     recurse = recursiveKTraversable . argP
-
--- | A class of 'Knot's which recursively implement 'KZipMatch'
-class (ZipMatch k, RNodes k) => RZipMatch k where
-    recursiveZipMatch :: Proxy k -> Dict (NodesConstraint k RZipMatch)
-    {-# INLINE recursiveZipMatch #-}
-    default recursiveZipMatch ::
-        NodesConstraint k RZipMatch =>
-        Proxy k -> Dict (NodesConstraint k RZipMatch)
-    recursiveZipMatch _ = Dict
-
-instance RZipMatch Pure
-instance Eq a => RZipMatch (Const a)
-
-instance Recursive RZipMatch where
-    {-# INLINE recurse #-}
-    recurse = recursiveZipMatch . argP
 
 -- | Lift a constraint of two `Recursive` classes to the next level
 {-# INLINE recurseBoth #-}

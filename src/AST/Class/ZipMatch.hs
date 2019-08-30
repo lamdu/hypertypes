@@ -1,17 +1,20 @@
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes, DefaultSignatures #-}
 
 module AST.Class.ZipMatch
-    ( ZipMatch(..)
+    ( ZipMatch(..), RZipMatch
     , zipMatchWith, zipMatchWithA, zipMatchWith_, zipMatch1_
     ) where
 
 import           AST.Class.Foldable
 import           AST.Class.Functor (KFunctor(..))
 import           AST.Class.Nodes (KNodes(..))
+import           AST.Class.Recursive (Recursive(..), RNodes)
 import           AST.Class.Traversable (KTraversable, traverseKWith)
 import           AST.Knot (Tree)
+import           AST.Knot.Pure (Pure(..), _Pure)
 import           Control.Lens.Operators
 import           Control.Monad (guard)
+import           Data.Constraint (Dict(..))
 import           Data.Functor.Const (Const(..))
 import           Data.Functor.Product.PolyKinds (Product(..))
 import           Data.Proxy (Proxy(..))
@@ -27,9 +30,31 @@ instance (ZipMatch a, ZipMatch b) => ZipMatch (Product a b) where
     {-# INLINE zipMatch #-}
     zipMatch (Pair a0 b0) (Pair a1 b1) = Pair <$> zipMatch a0 a1 <*> zipMatch b0 b1
 
+instance ZipMatch Pure where
+    {-# INLINE zipMatch #-}
+    zipMatch (Pure x) (Pure y) = _Pure # Pair x y & Just
+
 instance Eq a => ZipMatch (Const a) where
     {-# INLINE zipMatch #-}
     zipMatch (Const x) (Const y) = Const x <$ guard (x == y)
+
+-- | A class of 'AST.Knot.Knot's which recursively implement 'ZipMatch'.
+--
+-- Can be used with the 'Recursive' combinators.
+class (ZipMatch k, RNodes k) => RZipMatch k where
+    recursiveZipMatch :: Proxy k -> Dict (NodesConstraint k RZipMatch)
+    {-# INLINE recursiveZipMatch #-}
+    default recursiveZipMatch ::
+        NodesConstraint k RZipMatch =>
+        Proxy k -> Dict (NodesConstraint k RZipMatch)
+    recursiveZipMatch _ = Dict
+
+instance RZipMatch Pure
+instance Eq a => RZipMatch (Const a)
+
+instance Recursive RZipMatch where
+    {-# INLINE recurse #-}
+    recurse = recursiveZipMatch . (const Proxy :: Proxy (RZipMatch k) -> Proxy k)
 
 -- | An 'Applicative' variant of 'zipMatchWith'
 {-# INLINE zipMatchWithA #-}
