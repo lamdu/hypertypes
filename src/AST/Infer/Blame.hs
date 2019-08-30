@@ -1,24 +1,27 @@
-{-# LANGUAGE FlexibleContexts, DefaultSignatures #-}
+{-# LANGUAGE FlexibleContexts, DefaultSignatures, TemplateHaskell, UndecidableInstances #-}
 
 module AST.Infer.Blame
-    ( Blamable(..), Blame(..), blame
+    ( blame
+    , BTerm(..), bAnn, bRes, bVal
+    , Blamable(..)
     ) where
 
 import AST
-import AST.Class.Recursive
+import AST.Class.Recursive (recurseBoth)
 import AST.Infer
+import AST.TH.Internal.Instances (makeCommonInstances)
 import AST.Unify
-import AST.Unify.Occurs
+import AST.Unify.Occurs (occursCheck)
+import Control.Lens (makeLenses)
 import Control.Lens.Operators
 import Control.Monad.Except (MonadError(..))
-import Data.Constraint
+import Data.Constraint (Dict(..), withDict)
 import Data.Foldable (traverse_)
 import Data.List (sortOn)
-import Data.Proxy
+import Data.Proxy (Proxy(..))
+import GHC.Generics (Generic)
 
 import Prelude.Compat
-
-data Blame = Ok | TypeMismatch
 
 class
     (RTraversable t, KTraversable (InferOf t)) =>
@@ -36,12 +39,12 @@ class
         Tree (InferOf t) (UVarOf m) ->
         m ()
 
-    inferOfUnified ::
+    inferOfIsUnified ::
         Infer m t =>
         Proxy t ->
         Tree (InferOf t) (UVarOf m) ->
         Tree (InferOf t) (UVarOf m) ->
-        m Blame
+        m Bool
 
     blamableRecursive :: Proxy t -> Dict (NodesConstraint t Blamable)
     {-# INLINE blamableRecursive #-}
@@ -57,49 +60,82 @@ instance Recursive Blamable where
             p :: Proxy (Blamable k) -> Proxy k
             p _ = Proxy
 
-data PrepAnn m a = PrepAnn
+type InferOf' e v = Tree (InferOf (RunKnot e)) v
+
+-- Internal Knot for the blame algorithm
+data PTerm a v e = PTerm
     { pAnn :: a
-    , pTryUnify :: m ()
-    , pFinalize :: m Blame
+    , pInferResultFromPos :: InferOf' e v
+    , pInferResultFromSelf :: InferOf' e v
+    , pBody :: Node e (PTerm a v)
     }
 
 prepare ::
-    forall err m exp a.
-    ( MonadError err m
-    , Blamable exp
-    , Infer m exp
-    ) =>
-    Tree (InferOf exp) (UVarOf m) ->
+    forall m exp a.
+    (Blamable exp, Infer m exp) =>
     Tree (Ann a) exp ->
-    m (Tree (Ann (PrepAnn m a)) exp)
-prepare typeFromAbove (Ann a x) =
-    withDict (inferContext (Proxy @m) (Proxy @exp)) $
-    withDict (recurseBoth (Proxy @(And (Infer m) Blamable exp))) $
-    inferBody
-    (mapKWith (Proxy @(And (Infer m) Blamable))
-        (\c ->
-            let mkP :: Tree (Ann a) k -> Proxy k
-                mkP _ = Proxy
-                p = mkP c
-            in
-            withDict (inferContext (Proxy @m) p) $
-            do
-                t <- inferOfNew p
-                prepare t c <&> (`InferredChild` t)
-            & InferChild
-        )
-        x)
-    <&>
-    \(xI, t) ->
-    Ann PrepAnn
-    { pAnn = a
-    , pTryUnify =
-        do
-            inferOfUnify (Proxy @exp) typeFromAbove t
-            traverseKWith_ (Proxy @(Unify m)) occursCheck t
-        & (`catchError` const (pure ()))
-    , pFinalize = inferOfUnified (Proxy @exp) typeFromAbove t
-    } xI
+    m (Tree (PTerm a (UVarOf m)) exp)
+prepare (Ann a x) =
+    withDict (recurseBoth (Proxy @(And Blamable (Infer m) exp))) $
+    do
+        resFromPosition <- inferOfNew (Proxy @exp)
+        (xI, r) <-
+            mapKWith (Proxy @(And Blamable (Infer m)))
+            (InferChild . fmap (\t -> InferredChild t (pInferResultFromPos t)) . prepare)
+            x
+            & inferBody
+        pure PTerm
+            { pAnn = a
+            , pInferResultFromPos = resFromPosition
+            , pInferResultFromSelf = r
+            , pBody = xI
+            }
+
+tryUnify ::
+    forall exp m.
+    (Blamable exp, Infer m exp) =>
+    Proxy exp ->
+    Tree (InferOf exp) (UVarOf m) ->
+    Tree (InferOf exp) (UVarOf m) ->
+    m ()
+tryUnify p i0 i1 =
+    withDict (inferContext (Proxy @m) p) $
+    do
+        inferOfUnify p i0 i1
+        traverseKWith_ (Proxy @(Unify m)) occursCheck i0
+
+toUnifies ::
+    forall a m exp.
+    (Blamable exp, Infer m exp) =>
+    Tree (PTerm a (UVarOf m)) exp ->
+    Tree (Ann (a, m ())) exp
+toUnifies (PTerm a i0 i1 b) =
+    withDict (recurseBoth (Proxy @(And Blamable (Infer m) exp))) $
+    mapKWith (Proxy @(And Blamable (Infer m))) toUnifies b
+    & Ann (a, tryUnify (Proxy @exp) i0 i1)
+
+data BTerm a v e = BTerm
+    { _bAnn :: a
+    , _bRes :: Either (InferOf' e v, InferOf' e v) (InferOf' e v)
+    , _bVal :: Node e (BTerm a v)
+    } deriving Generic
+makeLenses ''BTerm
+makeCommonInstances [''BTerm]
+
+finalize ::
+    forall a m exp.
+    (Blamable exp, Infer m exp) =>
+    Tree (PTerm a (UVarOf m)) exp ->
+    m (Tree (BTerm a (UVarOf m)) exp)
+finalize (PTerm a i0 i1 x) =
+    withDict (recurseBoth (Proxy @(And Blamable (Infer m) exp))) $
+    do
+        isUnified <- inferOfIsUnified (Proxy @exp) i0 i1
+        let result
+                | isUnified = Right i0
+                | otherwise = Left (i0, i1)
+        traverseKWith (Proxy @(And Blamable (Infer m))) finalize x
+            <&> BTerm a result
 
 -- | Assign blame for type errors, given a prioritisation for the possible blame positions.
 --
@@ -113,11 +149,10 @@ blame ::
     , Infer m exp
     ) =>
     (a -> priority) ->
-    Tree (InferOf exp) (UVarOf m) ->
     Tree (Ann a) exp ->
-    m (Tree (Ann (Blame, a)) exp)
-blame order topLevelType e =
+    m (Tree (BTerm a (UVarOf m)) exp)
+blame order e =
     do
-        p <- prepare topLevelType e
-        p ^.. annotations & sortOn (order . pAnn) & traverse_ pTryUnify
-        annotations (\x -> pFinalize x <&> (, pAnn x)) p
+        p <- prepare e
+        toUnifies p ^.. annotations & sortOn (order . fst) & traverse_ snd
+        finalize p
