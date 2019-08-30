@@ -21,9 +21,16 @@ import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
 
--- | A partial variant of 'AST.Class.Apply.Apply', where the structures do not always match
+-- | A class to match term structures.
+--
+-- Similar to a partial version of 'AST.Class.Apply.Apply' but the semantics are different -
+-- when the terms contain plain values, 'AST.Class.Apply.zipK' would append them,
+-- but 'zipMatch' would compare them and only produce a result if they match.
+--
+-- The `TemplateHaskell` generators 'AST.TH.Apply.makeKApply' and 'AST.TH.ZipMatch.makeZipMatch'
+-- create the instances according to these semantics.
 class ZipMatch expr where
-    -- | A partial variant of 'AST.Class.Apply.zipK', where the result is wrapped with 'Maybe'
+    -- | Compare two structures
     --
     -- >>> zipMatch (NewPerson p0) (NewPerson p1)
     -- Just (NewPerson (Pair p0 p1))
@@ -61,6 +68,17 @@ instance Recursive RZipMatch where
     {-# INLINE recurse #-}
     recurse = recursiveZipMatch . (const Proxy :: Proxy (RZipMatch k) -> Proxy k)
 
+-- | 'ZipMatch' variant of 'Control.Applicative.liftA2'
+{-# INLINE zipMatchWith #-}
+zipMatchWith ::
+    ( ZipMatch expr, KFunctor expr
+    , NodesConstraint expr constraint
+    ) =>
+    Proxy constraint ->
+    (forall child. constraint child => Tree a child -> Tree b child -> Tree c child) ->
+    Tree expr a -> Tree expr b -> Maybe (Tree expr c)
+zipMatchWith p f x y = zipMatch x y <&> mapKWith p (\(Pair a b) -> f a b)
+
 -- | An 'Applicative' variant of 'zipMatchWith'
 {-# INLINE zipMatchWithA #-}
 zipMatchWithA ::
@@ -73,17 +91,6 @@ zipMatchWithA ::
     (forall child. constraint child => Tree a child -> Tree b child -> f (Tree c child)) ->
     Tree expr a -> Tree expr b -> Maybe (f (Tree expr c))
 zipMatchWithA p f x y = zipMatch x y <&> traverseKWith p (\(Pair a b) -> f a b)
-
--- | A partial variant of 'AST.Class.Apply.liftK2With'
-{-# INLINE zipMatchWith #-}
-zipMatchWith ::
-    ( ZipMatch expr, KFunctor expr
-    , NodesConstraint expr constraint
-    ) =>
-    Proxy constraint ->
-    (forall child. constraint child => Tree a child -> Tree b child -> Tree c child) ->
-    Tree expr a -> Tree expr b -> Maybe (Tree expr c)
-zipMatchWith p f x y = zipMatch x y <&> mapKWith p (\(Pair a b) -> f a b)
 
 -- | A variant of 'zipMatchWithA' where the 'Applicative' actions do not contain results
 {-# INLINE zipMatchWith_ #-}
