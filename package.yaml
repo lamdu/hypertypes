@@ -16,7 +16,7 @@ category: Algorithms, Compilers/Interpreters, Language, Logic, Unification
 description: Please see the README on GitHub at <https://github.com/lamdu/syntax-tree#readme>
 
 dependencies:
-- base
+- base >= 4.9 && <5
 - constraints
 - containers
 - generic-constraints

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 04d12c57c0b35b3c27a551f4190380cc7448a961c4d0050c469c869a3981e95e
+-- hash: 181e8cae5eff974818fa4d1d78b7619dfe7b1a6361c13dad3d035c3b54162154
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -101,7 +101,7 @@ library
   build-depends:
       QuickCheck
     , array
-    , base
+    , base >=4.9 && <5
     , base-compat
     , binary
     , constraints
@@ -135,7 +135,7 @@ test-suite syntax-tree-test
   default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies LambdaCase MultiParamTypeClasses ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies
   ghc-options: -Wall -Wcompat -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base
+      base >=4.9 && <5
     , constraints
     , containers
     , generic-constraints
@@ -161,7 +161,7 @@ benchmark syntax-tree-bench
   default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies LambdaCase MultiParamTypeClasses ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies
   ghc-options: -O2 -Wall -Wnoncanonical-monad-instances -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
   build-depends:
-      base
+      base >=4.9 && <5
     , constraints
     , containers
     , criterion
