@@ -19,6 +19,12 @@ import           Text.Show.Combinators ((@|), showCon)
 
 import           Prelude.Compat
 
+-- | A term for the types of functions. Analogues to @(->)@ in Haskell.
+--
+-- @FuncType typ@s express types of functions of @typ@.
+--
+-- The data type comes along with the 'HasFuncType' class
+-- for code to be able to work for any type AST supporting the types of functions.
 data FuncType typ k = FuncType
     { _funcIn  :: Node k typ
     , _funcOut :: Node k typ
@@ -38,5 +44,9 @@ instance Pretty (Node k typ) => Pretty (FuncType typ k) where
 instance Show (Node k typ) => Show (FuncType typ k) where
     showsPrec p (FuncType i o) = (showCon "FuncType" @| i @| o) p
 
+-- | HasFuncType is a class of 'Knot's representing types that support the types of functions.
+--
+-- It is used by the 'AST.Class.Infer.Infer' instances of 'AST.Term.App.App' and 'AST.Term.Lam.Lam'
+-- to work for any AST which provides 'HasFuncType'.
 class HasFuncType typ where
     funcType :: Prism' (Tree typ k) (Tree (FuncType typ) k)

@@ -21,6 +21,11 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 import           Prelude.Compat
 
+-- | A term for lambda abstractions.
+--
+-- @Lam v expr@s express lambda abstractions with @v@s as variable names and @expr@s for bodies.
+--
+-- Apart from the data type, an 'Infer' instance is also provided.
 data Lam v expr k = Lam
     { _lamIn :: v
     , _lamOut :: Node k expr

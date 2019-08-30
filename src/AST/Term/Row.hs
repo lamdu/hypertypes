@@ -1,3 +1,5 @@
+-- | Row types
+
 {-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
 {-# LANGUAGE FlexibleContexts, RankNTypes, TemplateHaskell #-}
 

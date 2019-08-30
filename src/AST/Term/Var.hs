@@ -1,3 +1,5 @@
+-- | Variables.
+
 {-# LANGUAGE GeneralizedNewtypeDeriving, UndecidableInstances #-}
 {-# LANGUAGE FlexibleInstances, TemplateHaskell, FlexibleContexts #-}
 

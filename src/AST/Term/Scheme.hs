@@ -1,3 +1,5 @@
+-- | Type schemes
+
 {-# LANGUAGE TemplateHaskell, FlexibleContexts, DefaultSignatures #-}
 {-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
 

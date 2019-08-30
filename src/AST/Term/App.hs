@@ -20,6 +20,11 @@ import Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 import Prelude.Compat
 
+-- | A term for function applications.
+--
+-- @App expr@s express function applications of @expr@s.
+--
+-- Apart from the data type, an 'Infer' instance is also provided.
 data App expr k = App
     { _appFunc :: Node k expr
     , _appArg :: Node k expr
@@ -36,8 +41,7 @@ instance Pretty (Node k expr) => Pretty (App expr k) where
         pPrintPrec lvl 11 x
         & maybeParens (p > 10)
 
--- Type changing traversal.
--- TODO: Could the normal `Children` class support this?
+-- | Type changing traversal from 'App' to its child nodes
 appChildren ::
     Traversal (App t0 f0) (App t1 f1) (Node f0 t0) (Node f1 t1)
 appChildren f (App x0 x1) = App <$> f x0 <*> f x1

@@ -153,6 +153,16 @@ Note that hyperfunction composition is an important concept in the hyperfunction
 * [KLP2001] S. Krstic, J. Launchbury, and D. Pavlovic. Hyperfunctions. In Proceeding of Fixed Points in Computer Science, FICS 2001
 * [LKS2013] J. Launchbury, S. Krstic, T. E. Sauerwein. [Coroutining Folds with Hyperfunctions](https://arxiv.org/abs/1309.5135). In In Proceedings Festschrift for Dave Schmidt, EPTCS 2013
 
+### bound
+
+[bound](http://hackage.haskell.org/package/bound) is a library for expressing ASTs with type-safe De-Bruijn indices rather than parameter names, via an AST type constructor that is indexed on the variables in scope.
+
+An intereseting aspect of bound's ASTs is that recursively they are made of an infinite ammount of types.
+
+When implementing syntax-tree we had the explicit goal of making sure that such ASTs are expressible with it,
+and for this reason the `AST.Term.NamelessScope` module implementing it is provided, and the test suite includes
+a language implementation based on it (`LangA` in the tests).
+
 ### lens
 
 syntax-tree strives to be maximally compatible with [lens](http://hackage.haskell.org/package/lens), and offers `Traversal`s and `Setter`s wherever possible. But unfortunately the `RankNTypes` nature of many combinators in syntax-tree makes them not composable with optics. For the special simpler cases when all child nodes have the same types the `traverseK1` traversal and `mappedK1` setter are available.

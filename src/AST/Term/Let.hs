@@ -20,6 +20,11 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 import           Prelude.Compat
 
+-- | A term for let-expressions with let-generalization.
+--
+-- @Let v expr@s express let-expressions with @v@s as variable names and @expr@s for terms.
+--
+-- Apart from the data type, an 'Infer' instance is also provided.
 data Let v expr k = Let
     { _letVar :: v
     , _letEquals :: Node k expr

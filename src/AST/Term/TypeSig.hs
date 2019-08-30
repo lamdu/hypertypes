@@ -1,3 +1,5 @@
+-- | Type signatures
+
 {-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances #-}
 
 module AST.Term.TypeSig

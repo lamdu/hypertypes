@@ -1,3 +1,5 @@
+-- | Nominal (named) types declaration, instantiation, construction, and access.
+
 {-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, UndecidableInstances #-}
 {-# LANGUAGE FlexibleContexts, TemplateHaskell, TypeOperators #-}
 
@@ -65,17 +67,24 @@ data NominalInst nomId varTypes k = NominalInst
     } deriving Generic
 
 -- | Nominal data constructor.
--- Wraps the content of a nominal with its data constructor.
--- Introduces the nominal's forall type variables into the value's scope.
+--
+-- Wrap content with a data constructor
+-- (analogues to a data constructor of a Haskell `newtype`'s).
+--
+-- Introduces the nominal's foralled type variables into the value's scope.
 data ToNom nomId term k = ToNom
     { _tnId :: nomId
     , _tnVal :: Node k term
     } deriving Generic
 
+-- | Access the data in a nominally typed value.
+--
+-- Analogues to a getter of a Haskell `newtype`.
 newtype FromNom nomId (term :: Knot -> *) (k :: Knot) = FromNom nomId
     deriving newtype (Eq, Ord, Binary, NFData)
     deriving stock (Show, Generic)
 
+-- | A nominal declaration loaded into scope in an inference monad.
 data LoadedNominalDecl typ v = LoadedNominalDecl
     { _lnParams :: Tree (NomVarTypes typ) (QVarInstances (RunKnot v))
     , _lnForalls :: Tree (NomVarTypes typ) (QVarInstances (RunKnot v))
