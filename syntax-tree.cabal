@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 69331ecca403dad835515c5288b0408e8635545368ad623141dfbcc0c07e2897
+-- hash: 04d12c57c0b35b3c27a551f4190380cc7448a961c4d0050c469c869a3981e95e
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -96,8 +96,8 @@ library
   hs-source-dirs:
       src
   default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies LambdaCase MultiParamTypeClasses ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies NoImplicitPrelude
-  ghc-options: -O -fexpose-all-unfoldings -Wall -Wnoncanonical-monad-instances -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
-  ghc-prof-options: -O -fexpose-all-unfoldings
+  ghc-options: -fexpose-all-unfoldings -Wall -Wnoncanonical-monad-instances -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
+  ghc-prof-options: -fexpose-all-unfoldings
   build-depends:
       QuickCheck
     , array

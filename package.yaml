@@ -59,7 +59,6 @@ library:
   default-extensions:
   - NoImplicitPrelude
   ghc-options:
-  - -O
   - -fexpose-all-unfoldings
   - -Wall
   - -Wnoncanonical-monad-instances
@@ -68,7 +67,6 @@ library:
   - -Wincomplete-uni-patterns
   - -Wredundant-constraints
   ghc-prof-options:
-  - -O
   - -fexpose-all-unfoldings
 
 tests:
