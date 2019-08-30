@@ -25,9 +25,9 @@ import           Prelude.Compat
 class ZipMatch expr where
     -- | A partial variant of 'AST.Class.Apply.zipK', where the result is wrapped with 'Maybe'
     --
-    -- >>> zipK (NewPerson p0) (NewPerson p1)
+    -- >>> zipMatch (NewPerson p0) (NewPerson p1)
     -- Just (NewPerson (Pair p0 p1))
-    -- >>> zipK (NewPerson p) (NewCake c)
+    -- >>> zipMatch (NewPerson p) (NewCake c)
     -- Nothing
     zipMatch :: Tree expr a -> Tree expr b -> Maybe (Tree expr (Product a b))
 
