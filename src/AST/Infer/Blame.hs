@@ -19,12 +19,13 @@
 -- Note: If a similar algorithm already existed somewhere,
 -- I ([@yairchu](https://github.com/yairchu/)) would very much like to know!
 
-{-# LANGUAGE FlexibleContexts, DefaultSignatures, TemplateHaskell, UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts, DefaultSignatures, TemplateHaskell, UndecidableInstances, RankNTypes #-}
 
 module AST.Infer.Blame
     ( blame
-    , BTerm(..), InferOf', bAnn, bRes, bVal
     , Blamable(..)
+    , BTerm(..), InferOf', bAnn, bRes, bVal
+    , bTermToAnn
     ) where
 
 import AST
@@ -196,3 +197,17 @@ blame order e =
         p <- prepare e
         toUnifies p ^.. annotations & sortOn (order . fst) & traverse_ snd
         finalize p
+
+-- | Convert a 'BTerm' to a simple annotated tree with the same annotation type for all nodes.
+bTermToAnn ::
+    forall f e a v r c.
+    (Applicative f, RTraversable e, c e, Recursive c) =>
+    Proxy c ->
+    (forall n. c n => Proxy n -> Either (Tree (InferOf n) v, Tree (InferOf n) v) (Tree (InferOf n) v) -> f r) ->
+    Tree (BTerm a v) e ->
+    f (Tree (Ann (a, r)) e)
+bTermToAnn p f (BTerm a i x) =
+    withDict (recurseBoth (Proxy @(And RTraversable c e))) $
+    (\r b -> Ann (a, r) b)
+    <$> f (Proxy @e) i
+    <*> traverseKWith (Proxy @(And RTraversable c)) (bTermToAnn p f) x
