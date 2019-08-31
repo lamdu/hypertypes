@@ -208,14 +208,13 @@ blame order topLevelType e =
 
 -- | Convert a 'BTerm' to a simple annotated tree with the same annotation type for all nodes
 bTermToAnn ::
-    forall f e a v r c.
-    (Applicative f, RTraversable e, c e, Recursive c) =>
+    forall e a v r c.
+    (RFunctor e, c e, Recursive c) =>
     Proxy c ->
-    (forall n. c n => Proxy n -> Either (Tree (InferOf n) v, Tree (InferOf n) v) (Tree (InferOf n) v) -> f r) ->
+    (forall n. c n => Proxy n -> a -> Either (Tree (InferOf n) v, Tree (InferOf n) v) (Tree (InferOf n) v) -> r) ->
     Tree (BTerm a v) e ->
-    f (Tree (Ann (a, r)) e)
+    Tree (Ann r) e
 bTermToAnn p f (BTerm a i x) =
-    withDict (recurseBoth (Proxy @(And RTraversable c e))) $
-    (\r b -> Ann (a, r) b)
-    <$> f (Proxy @e) i
-    <*> traverseKWith (Proxy @(And RTraversable c)) (bTermToAnn p f) x
+    withDict (recurseBoth (Proxy @(And RFunctor c e))) $
+    mapKWith (Proxy @(And RFunctor c)) (bTermToAnn p f) x
+    & Ann (f (Proxy @e) a i)

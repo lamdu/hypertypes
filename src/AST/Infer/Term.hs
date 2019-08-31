@@ -3,7 +3,7 @@
 
 module AST.Infer.Term
     ( ITerm(..), iVal, iRes, iAnn
-    , iAnnotations, iTermToAnn
+    , iAnnotations
     , traverseITermWith, TraverseITermWith(..)
     ) where
 
@@ -44,20 +44,6 @@ iAnnotations f (ITerm pl r x) =
     <$> f pl
     <*> pure r
     <*> traverseKWith (Proxy @RTraversable) (iAnnotations f) x
-
--- | Convert an 'ITerm' to a simple annotated tree with the same annotation type for all nodes
-iTermToAnn ::
-    forall f e a v r c.
-    (Applicative f, RTraversable e, c e, Recursive c) =>
-    Proxy c ->
-    (forall n. c n => Proxy n -> Tree (InferOf n) v -> f r) ->
-    Tree (ITerm a v) e ->
-    f (Tree (Ann (a, r)) e)
-iTermToAnn p f (ITerm a i x) =
-    withDict (recurseBoth (Proxy @(And RTraversable c e))) $
-    (\r b -> Ann (a, r) b)
-    <$> f (Proxy @e) i
-    <*> traverseKWith (Proxy @(And RTraversable c)) (iTermToAnn p f) x
 
 -- | A class representing the requirements of 'traverseITermWith'
 class (RTraversable e, KTraversable (InferOf e)) => TraverseITermWith c e where
