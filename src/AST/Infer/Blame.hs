@@ -23,7 +23,7 @@
 
 module AST.Infer.Blame
     ( blame
-    , Blamable(..)
+    , Blame(..)
     , BTerm(..), InferOf', bAnn, bRes, bVal
     , bTermToAnn
     ) where
@@ -47,11 +47,11 @@ import Prelude.Compat
 
 -- | Class implementing some primitives needed by the 'blame' algorithm
 --
--- The 'blamableRecursive' method represents that 'Blamable' applies to all recursive child nodes.
--- It replaces context for 'Blamable' to avoid `UndecidableSuperClasses`.
+-- The 'blamableRecursive' method represents that 'Blame' applies to all recursive child nodes.
+-- It replaces context for 'Blame' to avoid `UndecidableSuperClasses`.
 class
     (Infer m t, RTraversable t, KTraversable (InferOf t)) =>
-    Blamable m t where
+    Blame m t where
 
     -- | Create a new unbound infer result.
     --
@@ -76,14 +76,14 @@ class
 
     -- TODO: Putting documentation here causes duplication in the haddock documentation
     blamableRecursive ::
-        Proxy m -> Proxy t -> Dict (NodesConstraint t (Blamable m))
+        Proxy m -> Proxy t -> Dict (NodesConstraint t (Blame m))
     {-# INLINE blamableRecursive #-}
     default blamableRecursive ::
-        NodesConstraint t (Blamable m) =>
-        Proxy m -> Proxy t -> Dict (NodesConstraint t (Blamable m))
+        NodesConstraint t (Blame m) =>
+        Proxy m -> Proxy t -> Dict (NodesConstraint t (Blame m))
     blamableRecursive _ _ = Dict
 
-instance Recursive (Blamable m) where
+instance Recursive (Blame m) where
     recurse p =
         blamableRecursive
         ((const Proxy :: p (b m t) -> Proxy m) p)
@@ -102,15 +102,15 @@ data PTerm a v e = PTerm
 
 prepare ::
     forall m exp a.
-    Blamable m exp =>
+    Blame m exp =>
     Tree (Ann a) exp ->
     m (Tree (PTerm a (UVarOf m)) exp)
 prepare (Ann a x) =
-    withDict (recurse (Proxy @(Blamable m exp))) $
+    withDict (recurse (Proxy @(Blame m exp))) $
     do
         resFromPosition <- inferOfNewUnbound (Proxy @exp)
         (xI, r) <-
-            mapKWith (Proxy @(Blamable m))
+            mapKWith (Proxy @(Blame m))
             (InferChild . fmap (\t -> InferredChild t (pInferResultFromPos t)) . prepare)
             x
             & inferBody
@@ -123,7 +123,7 @@ prepare (Ann a x) =
 
 tryUnify ::
     forall exp m.
-    Blamable m exp =>
+    Blame m exp =>
     Proxy exp ->
     Tree (InferOf exp) (UVarOf m) ->
     Tree (InferOf exp) (UVarOf m) ->
@@ -136,12 +136,12 @@ tryUnify p i0 i1 =
 
 toUnifies ::
     forall a m exp.
-    Blamable m exp =>
+    Blame m exp =>
     Tree (PTerm a (UVarOf m)) exp ->
     Tree (Ann (a, m ())) exp
 toUnifies (PTerm a i0 i1 b) =
-    withDict (recurse (Proxy @(Blamable m exp))) $
-    mapKWith (Proxy @(Blamable m)) toUnifies b
+    withDict (recurse (Proxy @(Blame m exp))) $
+    mapKWith (Proxy @(Blame m)) toUnifies b
     & Ann (a, tryUnify (Proxy @exp) i0 i1)
 
 -- | A 'Knot' for an inferred term with type mismatches - the output of 'blame'
@@ -158,17 +158,17 @@ makeCommonInstances [''BTerm]
 
 finalize ::
     forall a m exp.
-    Blamable m exp =>
+    Blame m exp =>
     Tree (PTerm a (UVarOf m)) exp ->
     m (Tree (BTerm a (UVarOf m)) exp)
 finalize (PTerm a i0 i1 x) =
-    withDict (recurse (Proxy @(Blamable m exp))) $
+    withDict (recurse (Proxy @(Blame m exp))) $
     do
         match <- inferOfMatches (Proxy @exp) i0 i1
         let result
                 | match = Right i0
                 | otherwise = Left (i0, i1)
-        traverseKWith (Proxy @(Blamable m)) finalize x
+        traverseKWith (Proxy @(Blame m)) finalize x
             <&> BTerm a result
 
 -- | Perform Hindley-Milner type inference with prioritised blame for type error,
@@ -183,7 +183,7 @@ blame ::
     forall priority err m exp a.
     ( Ord priority
     , MonadError err m
-    , Blamable m exp
+    , Blame m exp
     ) =>
     (a -> priority) ->
     Tree (Ann a) exp ->
