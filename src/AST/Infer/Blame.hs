@@ -100,18 +100,26 @@ data PTerm a v e = PTerm
     , pBody :: Node e (PTerm a v)
     }
 
-prepare ::
+prepareH ::
     forall m exp a.
     Blame m exp =>
     Tree (Ann a) exp ->
     m (Tree (PTerm a (UVarOf m)) exp)
-prepare (Ann a x) =
+prepareH t =
+    inferOfNewUnbound (Proxy @exp) >>= (`prepare` t)
+
+prepare ::
+    forall m exp a.
+    Blame m exp =>
+    Tree (InferOf exp) (UVarOf m) ->
+    Tree (Ann a) exp ->
+    m (Tree (PTerm a (UVarOf m)) exp)
+prepare resFromPosition (Ann a x) =
     withDict (recurse (Proxy @(Blame m exp))) $
     do
-        resFromPosition <- inferOfNewUnbound (Proxy @exp)
         (xI, r) <-
             mapKWith (Proxy @(Blame m))
-            (InferChild . fmap (\t -> InferredChild t (pInferResultFromPos t)) . prepare)
+            (InferChild . fmap (\t -> InferredChild t (pInferResultFromPos t)) . prepareH)
             x
             & inferBody
         pure PTerm
@@ -179,6 +187,9 @@ finalize (PTerm a i0 i1 x) =
 --
 -- The expected `MonadError` behavior is that catching errors rolls back their state changes
 -- (i.e @StateT s (Either e)@ is suitable but @EitherT e (State s)@ is not)
+--
+-- Gets the top-level type for the term for support of recursive definitions,
+-- where the top-level type of the term may be in the scope of the inference monad.
 blame ::
     forall priority err m exp a.
     ( Ord priority
@@ -186,11 +197,12 @@ blame ::
     , Blame m exp
     ) =>
     (a -> priority) ->
+    Tree (InferOf exp) (UVarOf m) ->
     Tree (Ann a) exp ->
     m (Tree (BTerm a (UVarOf m)) exp)
-blame order e =
+blame order topLevelType e =
     do
-        p <- prepare e
+        p <- prepare topLevelType e
         toUnifies p ^.. annotations & sortOn (order . fst) & traverse_ snd
         finalize p
 
