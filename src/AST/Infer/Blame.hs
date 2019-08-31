@@ -130,8 +130,8 @@ prepare resFromPosition (Ann a x) =
             }
 
 tryUnify ::
-    forall exp m.
-    Blame m exp =>
+    forall err m exp.
+    (MonadError err m, Blame m exp) =>
     Proxy exp ->
     Tree (InferOf exp) (UVarOf m) ->
     Tree (InferOf exp) (UVarOf m) ->
@@ -141,10 +141,11 @@ tryUnify p i0 i1 =
     do
         inferOfUnify p i0 i1
         traverseKWith_ (Proxy @(Unify m)) occursCheck i0
+    & (`catchError` const (pure ()))
 
 toUnifies ::
-    forall a m exp.
-    Blame m exp =>
+    forall err m exp a.
+    (MonadError err m, Blame m exp) =>
     Tree (PTerm a (UVarOf m)) exp ->
     Tree (Ann (a, m ())) exp
 toUnifies (PTerm a i0 i1 b) =
