@@ -48,4 +48,4 @@ liftK2 ::
     Tree k p ->
     Tree k q ->
     Tree k r
-liftK2 f x = mapK (\w -> (\(Pair a b) -> f w a b)) . zipK x
+liftK2 f x = mapK (\w (Pair a b) -> f w a b) . zipK x

@@ -145,8 +145,6 @@ newtype Hyper a b = Hyper { invoke :: Hyper b a -> b }
 
 For more info on hyperfunctions and their use cases in the value level see [LKS2013]
 
-Note that hyperfunction composition is an important concept in the hyperfunction papers, while syntax-tree is currently lacking the `Compose` knot combinator along with the `KMonad` class, which were implemented in previous more complicated formulation of this library. syntax-tree is still searching for a simple way to implement `Compose`
-
 #### References
 
 * [KLP2001] S. Krstic, J. Launchbury, and D. Pavlovic. Hyperfunctions. In Proceeding of Fixed Points in Computer Science, FICS 2001
