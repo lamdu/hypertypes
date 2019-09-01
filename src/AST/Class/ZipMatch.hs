@@ -27,7 +27,7 @@ import           Prelude.Compat
 -- when the terms contain plain values, 'AST.Class.Apply.zipK' would append them,
 -- but 'zipMatch' would compare them and only produce a result if they match.
 --
--- The `TemplateHaskell` generators 'AST.TH.Apply.makeKApply' and 'AST.TH.ZipMatch.makeZipMatch'
+-- The @TemplateHaskell@ generators 'AST.TH.Apply.makeKApply' and 'AST.TH.ZipMatch.makeZipMatch'
 -- create the instances according to these semantics.
 class ZipMatch expr where
     -- | Compare two structures
@@ -105,7 +105,7 @@ zipMatchWith_ ::
     Tree expr a -> Tree expr b -> Maybe (f ())
 zipMatchWith_ p f x y = zipMatch x y <&> traverseKWith_ p (\(Pair a b) -> f a b)
 
--- | A variant of 'zipMatchWith_' for 'Knot's with a single node type (avoids using `RankNTypes`)
+-- | A variant of 'zipMatchWith_' for 'AST.Knot.Knot's with a single node type (avoids using @RankNTypes@)
 {-# INLINE zipMatch1_ #-}
 zipMatch1_ ::
     ( Applicative f

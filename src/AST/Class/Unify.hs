@@ -27,9 +27,9 @@ type family UVarOf (m :: Type -> Type) :: Knot -> Type
 --
 -- It is parameterized on:
 --
--- * `v`: The unification variable 'Knot'
--- * `m`: The 'Monad' to bind in
--- * `t`: The unified term's 'Knot'
+-- * @v@: The unification variable 'Knot'
+-- * @m@: The 'Monad' to bind in
+-- * @t@: The unified term's 'Knot'
 --
 -- Has 2 implementations in syntax-tree:
 --
@@ -44,7 +44,7 @@ data BindingDict v m t = BindingDict
 -- | @Unify m t@ enables 'AST.Unify.unify' to perform unification for @t@ in the 'Monad' @m@.
 --
 -- The 'unifyRecursive' method represents the constraint that @Unify m@ applies to all recursive child nodes.
--- It replaces context for 'Unify' to avoid `UndecidableSuperClasses`.
+-- It replaces context for 'Unify' to avoid @UndecidableSuperClasses@.
 class
     ( Eq (Tree (UVarOf m) t)
     , RTraversable t

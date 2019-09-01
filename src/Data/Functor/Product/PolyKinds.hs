@@ -1,12 +1,12 @@
--- | `PolyKinds` variant of `base`'s `Data.Functor.Product.Product`.
+-- | @PolyKinds@ variant of base's `Data.Functor.Product.Product`.
 --
--- Note that to some extent `base`'s `Product` is already poly-kinded,
+-- Note that to some extent base's `Product` is already poly-kinded,
 -- but it has problematic type class instances which are not poly-kinded.
 -- Furthermore, the mere existence of the non poly-kinded instances disallows
 -- orphan instances declaration of proper poly-kinded instances.
 --
--- If/when `Product` from `base` will be fixed
--- (issue: https://gitlab.haskell.org/ghc/ghc/issues/17015)
+-- If/when `Product` from base will be fixed
+-- (see https://gitlab.haskell.org/ghc/ghc/issues/17015 for more details)
 -- this module will be removed and its uses will be replaced with `Product` from base.
 
 {-# LANGUAGE DeriveDataTypeable, PolyKinds, Safe #-}
@@ -23,7 +23,7 @@ import GHC.Generics (Generic, Generic1)
 
 import Prelude.Compat
 
--- | A `PolyKinds` variant of 'Data.Functor.Product.Product'.
+-- | A @PolyKinds@ variant of 'Data.Functor.Product.Product'.
 --
 -- Note that the original 'Data.Functor.Product.Product' is poly-kinded
 -- in its type, but not in its instances such as 'Eq'.

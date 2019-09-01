@@ -64,7 +64,7 @@ traverseKWith p f = sequenceK . mapKWith p (MkContainedK . f)
 
 -- | 'KTraversable' variant of 'traverse' for 'Knot's with a single node type.
 --
--- It is a valid 'Traversal' as it avoids using `RankNTypes`.
+-- It is a valid 'Traversal' as it avoids using @RankNTypes@.
 {-# INLINE traverseK1 #-}
 traverseK1 ::
     (KTraversable k, NodesConstraint k ((~) c)) =>

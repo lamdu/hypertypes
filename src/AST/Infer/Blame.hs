@@ -13,6 +13,19 @@
 -- which do have let-generalization, to provide better type errors
 -- in specific definitions which don't happen to use generalizing terms.
 --
+-- The algorithm is pretty simple:
+--
+-- * Invoke all the 'inferBody' calls as 'AST.Infer.infer' normally would,
+--   but with one important difference:
+--   where 'inferBody' would normally get the actual inference results of its child nodes,
+--   placeholders are generated in their place via 'inferOfNewUnbound'.
+-- * Globally sort all of the tree nodes according to a given node prioritization
+--   (this prioritization would be custom for each language)
+-- * According to the order of prioritization,
+--   attempt to unify each infer-result with its placeholder using 'inferOfUnify'.
+--   If a unification fails, roll back its state changes.
+--   The nodes whose unification failed are the ones assigned with type errors.
+--
 -- [Lamdu](https://github.com/lamdu/lamdu) uses this algorithm for its "insist type" feature,
 -- which moves around the blame for type mismatches.
 --
@@ -48,7 +61,7 @@ import Prelude.Compat
 -- | Class implementing some primitives needed by the 'blame' algorithm
 --
 -- The 'blamableRecursive' method represents that 'Blame' applies to all recursive child nodes.
--- It replaces context for 'Blame' to avoid `UndecidableSuperClasses`.
+-- It replaces context for 'Blame' to avoid @UndecidableSuperClasses@.
 class
     (Infer m t, RTraversable t, KTraversable (InferOf t)) =>
     Blame m t where

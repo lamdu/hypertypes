@@ -71,7 +71,7 @@ makePrisms ''InferChild
 -- * @NodesConstraint (InferOf t) (Unify m)@ - The child nodes of the inferrence can unify in the @m@ 'Monad'
 -- * @NodesConstraint t (Infer m)@ - @Infer m@ is also available for child nodes
 --
--- It replaces context for the 'Infer' class to avoid `UndecidableSuperClasses`.
+-- It replaces context for the 'Infer' class to avoid @UndecidableSuperClasses@.
 --
 -- Instances usually don't need to implement this method as the default implementation works for them,
 -- but infinitely polymorphic trees such as 'AST.Term.NamelessScope.Scope' do need to implement the method,

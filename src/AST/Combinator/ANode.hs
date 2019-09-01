@@ -10,7 +10,7 @@ import AST.TH.Traversable (makeKTraversableApplyAndBases)
 import Control.Lens (Iso, iso)
 import GHC.Generics (Generic)
 
--- | @ANode c@ is a 'Knot' with a single child node of type @c@
+-- | @ANode c@ is a 'AST.Knot.Knot' with a single child node of type @c@
 newtype ANode c k = MkANode (Node k c)
     deriving stock Generic
 

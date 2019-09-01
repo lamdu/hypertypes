@@ -24,7 +24,7 @@ import           Prelude.Compat
 --
 -- Commonly used as the 'AST.Unify.Constraints.TypeConstraintsOf' of terms.
 --
--- /Note/: The `Ord` instance is only for use as a `Map` key, not a
+-- /Note/: The 'Ord' instance is only for use as a 'Data.Map.Map' key, not a
 -- logical ordering, for which 'PartialOrd' is used.
 newtype ScopeLevel = ScopeLevel Int
     deriving stock (Eq, Ord, Show, Generic)

@@ -19,7 +19,8 @@ import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
 
--- | Generate instances of 'KApply', 'KFunctor', 'KPointed' and 'KNodes',
+-- | Generate instances of 'KApply',
+-- 'AST.Class.Functor.KFunctor', 'AST.Class.Pointed.KPointed' and 'AST.Class.Nodes.KNodes',
 -- which together form 'KApplicative'.
 makeKApplicativeBases :: Name -> DecsQ
 makeKApplicativeBases x =
@@ -28,7 +29,8 @@ makeKApplicativeBases x =
     , makeKApplyAndBases x
     ] <&> concat
 
--- | Generate an instance of 'KApply' along with its bases 'KFunctor' and 'KNodes'
+-- | Generate an instance of 'KApply'
+-- along with its bases 'AST.Class.Functor.KFunctor' and 'AST.Class.Nodes.KNodes'
 makeKApplyAndBases :: Name -> DecsQ
 makeKApplyAndBases x =
     sequenceA

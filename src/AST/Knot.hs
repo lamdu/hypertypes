@@ -19,10 +19,10 @@ newtype Knot = Knot (Knot -> Type)
 --
 -- Notes:
 --
--- * If `DataKinds` supported lifting field getters this would had been replaced with the type's getter.
+-- * If @DataKinds@ supported lifting field getters this would had been replaced with the type's getter.
 -- * 'RunKnot' is injective, but due to no support for constrained type families,
 --   [that's not expressible at the moment](https://ghc.haskell.org/trac/ghc/ticket/15691).
--- * Because `RunKnot` can't declared as bijective, uses of it may restrict inference.
+-- * Because 'RunKnot' can't declared as bijective, uses of it may restrict inference.
 --   In those cases wrapping terms with the 'asTree' helper assists Haskell's type inference
 --   as if Haskell knew that 'RunKnot' was bijective.
 type family RunKnot (k :: Knot) = (r :: Knot -> Type) where

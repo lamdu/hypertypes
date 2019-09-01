@@ -19,7 +19,7 @@ import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
 
--- | Generate 'KTraversable' and 'KApply' instances along with all of their base classes:
+-- | Generate 'KTraversable' and 'AST.Class.Apply.KApply' instances along with all of their base classes:
 -- 'AST.Class.Foldable.KFoldable', 'AST.Class.Functor.KFunctor',
 -- 'AST.Class.Pointed.KPointed', and 'AST.Class.Nodes.KNodes'.
 makeKTraversableApplyAndBases :: Name -> DecsQ

@@ -181,7 +181,7 @@ instantiateWith action cons g =
             & runWriterT
         action <* sequence_ recover <&> (r, )
 
--- | Instantiate a `Generalized` type with fresh unification variables
+-- | Instantiate a generalized type with fresh unification variables
 -- for the quantified variables
 {-# INLINE instantiate #-}
 instantiate ::

@@ -43,7 +43,7 @@ instance KFoldable (Const a) where
 
 -- TODO: Replace `foldMapK1` with `foldedK1` which is a `Fold`
 
--- | 'KFoldable' variant for 'foldMap' for 'AST.Knot.Knot's with a single node type (avoids using `RankNTypes`)
+-- | 'KFoldable' variant for 'foldMap' for 'AST.Knot.Knot's with a single node type (avoids using @RankNTypes@)
 {-# INLINE foldMapK1 #-}
 foldMapK1 ::
     forall a k c l.
@@ -76,7 +76,7 @@ traverseKWith_ ::
 traverseKWith_ p f =
     sequenceA_ . foldMapKWith @_ @[f ()] p ((:[]) . f)
 
--- | 'KFoldable' variant of 'Data.Foldable.traverse_' for 'AST.Knot.Knot's with a single node type (avoids using `RankNTypes`)
+-- | 'KFoldable' variant of 'Data.Foldable.traverse_' for 'AST.Knot.Knot's with a single node type (avoids using @RankNTypes@)
 {-# INLINE traverseK1_ #-}
 traverseK1_ ::
     forall f k c m.

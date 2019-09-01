@@ -47,7 +47,7 @@ instance (KFunctor a, KFunctor b) => KFunctor (Product a b) where
 
 -- | 'KFunctor' variant of 'Control.Lens.mapped' for 'AST.Knot.Knot's with a single node type.
 --
--- Avoids using `RankNTypes` and thus can be composed with other optics.
+-- Avoids using @RankNTypes@ and thus can be composed with other optics.
 {-# INLINE mappedK1 #-}
 mappedK1 ::
     forall k c m n.

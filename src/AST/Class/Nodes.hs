@@ -22,7 +22,7 @@ import Prelude.Compat
 -- for processing child nodes which requires a constraint on the nodes.
 --
 -- The 'kNoConstraints' method represents the constraint that 'NoConstraint' applies to the child nodes.
--- It replaces context for 'KNodes' to avoid `UndecidableSuperClasses`.
+-- It replaces context for 'KNodes' to avoid @UndecidableSuperClasses@.
 -- Instances usually don't need to implement this method
 -- as the default implementation provide usually works for them.
 class KNodes (k :: Knot -> Type) where
