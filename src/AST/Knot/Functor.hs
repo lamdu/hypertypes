@@ -1,10 +1,11 @@
 -- | Functors as Knots
-{-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances, GADTs #-}
 module AST.Knot.Functor
-    ( F(..), _F
+    ( F(..), _F, KWitness(..)
     ) where
 
-import AST.Class.Recursive
+import AST.Class.Nodes (KNodes(..))
+import AST.Class.Recursive (RNodes, RFunctor, RFoldable, RTraversable)
 import AST.Knot (Tree, Node)
 import AST.TH.Internal.Instances (makeCommonInstances)
 import AST.TH.Traversable (makeKTraversableApplyAndBases)

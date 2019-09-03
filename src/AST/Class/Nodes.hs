@@ -1,12 +1,14 @@
-{-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE DefaultSignatures, GADTs, RankNTypes, FlexibleInstances, EmptyCase #-}
 
-module AST.Class.Nodes (KNodes(..)) where
+module AST.Class.Nodes
+    ( KNodes(..), KWitness(..)
+    ) where
 
-import AST.Knot (Knot)
+import AST.Knot (Knot, Tree)
 import Data.Constraint
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
-import Data.Constraint.List (NoConstraint, And)
+import Data.Constraint.List (And)
 import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
 
@@ -20,22 +22,21 @@ import Prelude.Compat
 -- Various classes like 'AST.Class.Functor.KFunctor' build upon 'KNodes'
 -- to provide methods such as 'AST.Class.Functor.mapKWith' which provide a rank-n function
 -- for processing child nodes which requires a constraint on the nodes.
---
--- The 'kNoConstraints' method represents the constraint that 'NoConstraint' applies to the child nodes.
--- It replaces context for 'KNodes' to avoid @UndecidableSuperClasses@.
--- Instances usually don't need to implement this method
--- as the default implementation provide usually works for them.
 class KNodes (k :: Knot -> Type) where
     -- | Lift a constraint to apply to the child nodes
     type family NodesConstraint k (c :: ((Knot -> Type) -> Constraint)) :: Constraint
 
-    -- TODO: Putting documentation here causes duplication in the haddock documentation
-    kNoConstraints :: Proxy k -> Dict (NodesConstraint k NoConstraint)
-    {-# INLINE kNoConstraints #-}
-    default kNoConstraints ::
-        NodesConstraint k NoConstraint =>
-        Proxy k -> Dict (NodesConstraint k NoConstraint)
-    kNoConstraints _ = Dict
+    -- | @KWitness k n@ is a witness that @n@ is a node of @k@
+    data family KWitness k :: (Knot -> Type) -> Type
+
+    -- | Lift a rank-n value with a constraint which the child nodes satisfy
+    -- to a function from a node witness.
+    kLiftConstraint ::
+        NodesConstraint k c =>
+        Proxy c ->
+        (forall a. c a => Tree r a) ->
+        KWitness k n ->
+        Tree r n
 
     -- | Combine two 'NodesConstraint' to allow
     -- processing child nodes with functions that require both constraints
@@ -46,15 +47,20 @@ class KNodes (k :: Knot -> Type) where
 
 instance KNodes (Const a) where
     type NodesConstraint (Const a) x = ()
+    data KWitness (Const a) i
+    {-# INLINE kLiftConstraint #-}
+    kLiftConstraint _ _ = \case
     {-# INLINE kCombineConstraints #-}
     kCombineConstraints _ = Dict
 
 instance (KNodes a, KNodes b) => KNodes (Product a b) where
     type NodesConstraint (Product a b) x = (NodesConstraint a x, NodesConstraint b x)
-    {-# INLINE kNoConstraints #-}
-    kNoConstraints _ =
-        withDict (kNoConstraints (Proxy @a)) $
-        withDict (kNoConstraints (Proxy @b)) Dict
+    data KWitness (Product a b) n where
+        KWitness_Product_E0 :: KWitness a n -> KWitness (Product a b) n
+        KWitness_Product_E1 :: KWitness b n -> KWitness (Product a b) n
+    {-# INLINE kLiftConstraint #-}
+    kLiftConstraint p r (KWitness_Product_E0 w) = kLiftConstraint p r w
+    kLiftConstraint p r (KWitness_Product_E1 w) = kLiftConstraint p r w
     {-# INLINE kCombineConstraints #-}
     kCombineConstraints p =
         withDict (kCombineConstraints (p0 p)) $

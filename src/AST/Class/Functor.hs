@@ -2,14 +2,14 @@
 
 module AST.Class.Functor
     ( KFunctor(..)
+    , mapKWith, mapKWithWitness
     , mappedK1
     ) where
 
-import AST.Class.Nodes (KNodes(..))
-import AST.Knot (Tree)
+import AST.Class.Nodes
+import AST.Knot (Knot, RunKnot, Tree)
+import Control.Monad (join)
 import Control.Lens (Setter, sets)
-import Data.Constraint (withDict)
-import Data.Constraint.List (NoConstraint)
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
 import Data.Proxy (Proxy(..))
@@ -20,30 +20,40 @@ import Prelude.Compat
 class KNodes k => KFunctor k where
     -- | 'KFunctor' variant of 'fmap'
     mapK ::
-        (forall c. Tree m c -> Tree n c) ->
-        Tree k m ->
-        Tree k n
-    {-# INLINE mapK #-}
-    mapK f =
-        withDict (kNoConstraints (Proxy @k)) $
-        mapKWith (Proxy @NoConstraint) f
-
-    -- | 'KFunctor' variant of 'fmap' for functions with context
-    mapKWith ::
-        NodesConstraint k constraint =>
-        Proxy constraint ->
-        (forall c. constraint c => Tree m c -> Tree n c) ->
+        (forall c. KWitness k c -> Tree m c -> Tree n c) ->
         Tree k m ->
         Tree k n
 
 instance KFunctor (Const a) where
-    {-# INLINE mapKWith #-}
-    mapKWith _ _ (Const x) = Const x
+    {-# INLINE mapK #-}
+    mapK _ (Const x) = Const x
 
 instance (KFunctor a, KFunctor b) => KFunctor (Product a b) where
-    {-# INLINE mapKWith #-}
-    mapKWith p f (Pair x y) =
-        Pair (mapKWith p f x) (mapKWith p f y)
+    {-# INLINE mapK #-}
+    mapK f (Pair x y) =
+        Pair (mapK (f . KWitness_Product_E0) x) (mapK (f . KWitness_Product_E1) y)
+
+newtype MapK m n (c :: Knot) = MapK { getMapK :: m c -> n c }
+
+{-# INLINE mapKWith #-}
+mapKWith ::
+    (KFunctor k, NodesConstraint k constraint) =>
+    Proxy constraint ->
+    (forall c. constraint c => Tree m c -> Tree n c) ->
+    Tree k m ->
+    Tree k n
+mapKWith p f = mapK (getMapK . kLiftConstraint p (MapK f))
+
+newtype MapKW k m n c = MapKW { getMapKW :: KWitness k (RunKnot c) -> m c -> n c }
+
+{-# INLINE mapKWithWitness #-}
+mapKWithWitness ::
+    (KFunctor k, NodesConstraint k constraint) =>
+    Proxy constraint ->
+    (forall c. constraint c => KWitness k c -> Tree m c -> Tree n c) ->
+    Tree k m ->
+    Tree k n
+mapKWithWitness p f = mapK (join (getMapKW . kLiftConstraint p (MapKW f)))
 
 -- | 'KFunctor' variant of 'Control.Lens.mapped' for 'AST.Knot.Knot's with a single node type.
 --

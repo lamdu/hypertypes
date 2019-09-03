@@ -5,7 +5,7 @@ module AST.Class.Apply
     , liftK2, liftK2With
     ) where
 
-import AST.Class.Functor (KFunctor(..))
+import AST.Class.Functor (KFunctor(..), mapKWith)
 import AST.Class.Nodes (KNodes(..))
 import AST.Class.Pointed (KPointed)
 import AST.Knot (Tree)
@@ -49,7 +49,7 @@ liftK2 ::
     Tree k l ->
     Tree k m ->
     Tree k n
-liftK2 f x = mapK (\(Pair a b) -> f a b) . zipK x
+liftK2 f x = mapK (const (\(Pair a b) -> f a b)) . zipK x
 
 -- | 'KApply' variant of 'Control.Applicative.liftA2' for functions with context
 {-# INLINE liftK2With #-}

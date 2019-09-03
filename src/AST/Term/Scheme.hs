@@ -1,10 +1,10 @@
 -- | Type schemes
 
 {-# LANGUAGE TemplateHaskell, FlexibleContexts, DefaultSignatures #-}
-{-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances, GADTs #-}
 
 module AST.Term.Scheme
-    ( Scheme(..), sForAlls, sTyp
+    ( Scheme(..), sForAlls, sTyp, KWitness(..)
     , QVars(..), _QVars
     , HasScheme(..), loadScheme, saveScheme
     , MonadInstantiate(..), inferType
@@ -160,7 +160,7 @@ inferType x =
             xI <- traverseK inferChild x
             mapKWith (Proxy @HasInferredValue) (^. inType . inferredValue) xI
                 & newTerm
-                <&> (mapK (^. inRep) xI, ) . MkANode
+                <&> (mapK (const (^. inRep)) xI, ) . MkANode
 
 {-# INLINE makeQVarInstances #-}
 makeQVarInstances ::

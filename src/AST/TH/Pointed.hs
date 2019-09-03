@@ -25,13 +25,9 @@ makeKPointedForType info =
             _ -> fail "makeKPointed only supports types with a single constructor"
         instanceD (simplifyContext (makeContext info)) (appT (conT ''KPointed) (pure (tiInstance info)))
             [ InlineP 'pureK Inline FunLike AllPhases & PragmaD & pure
-            , funD 'pureK [makePureKCtr [] (VarE 'pureK) (tiVar info) cons & pure]
-            , InlineP 'pureKWith Inline FunLike AllPhases & PragmaD & pure
-            , funD 'pureKWith [makePureKCtr [VarP proxy] (VarE 'pureKWith `AppE` VarE proxy) (tiVar info) cons & pure]
+            , funD 'pureK [makePureKCtr info cons & pure]
             ]
     <&> (:[])
-    where
-        proxy = mkName "_p"
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
@@ -45,18 +41,19 @@ makeContext info =
         ctxForPat (Other t) = [ConT ''Monoid `AppT` t]
         ctxForPat _ = []
 
-makePureKCtr :: [Pat] -> Exp -> Name -> D.ConstructorInfo -> Clause
-makePureKCtr patBase inner knot info =
-    Clause (patBase <> [VarP varF]) body []
+makePureKCtr :: TypeInfo -> D.ConstructorInfo -> Clause
+makePureKCtr typeInfo ctrInfo =
+    Clause [VarP varF] body []
     where
         body =
-            D.constructorFields info
-            <&> matchType knot
+            D.constructorFields ctrInfo
+            <&> matchType (tiVar typeInfo)
             <&> bodyForPat
-            & foldl AppE (ConE (D.constructorName info))
+            & foldl AppE (ConE (D.constructorName ctrInfo))
             & NormalB
-        bodyForPat NodeFofX{} = VarE varF
-        bodyForPat XofF{} = inner `AppE` VarE varF
+        bodyForPat (NodeFofX t) = VarE varF `AppE` nodeWit wit t
+        bodyForPat (XofF t) = VarE 'pureK `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))
         bodyForPat (Tof _ pat) = bodyForPat pat & AppE (VarE 'pure)
         bodyForPat Other{} = VarE 'mempty
         varF = mkName "_f"
+        (_, wit) = makeNodeOf typeInfo

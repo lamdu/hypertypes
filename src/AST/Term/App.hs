@@ -1,7 +1,7 @@
-{-# LANGUAGE FlexibleInstances, UndecidableInstances, TemplateHaskell #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances, TemplateHaskell, GADTs #-}
 
 module AST.Term.App
-    ( App(..), appFunc, appArg
+    ( App(..), appFunc, appArg, KWitness(..)
     , appChildren
     ) where
 

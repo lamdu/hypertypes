@@ -20,13 +20,11 @@ makeKFoldableForType :: TypeInfo -> DecsQ
 makeKFoldableForType info =
     instanceD (simplifyContext (makeContext info)) (appT (conT ''KFoldable) (pure (tiInstance info)))
     [ InlineP 'foldMapK Inline FunLike AllPhases & PragmaD & pure
-    , funD 'foldMapK (tiCons info <&> pure . makeFoldMapKCtr [] (VarE 'foldMapK) (tiVar info))
-    , InlineP 'foldMapKWith Inline FunLike AllPhases & PragmaD & pure
-    , funD 'foldMapKWith (tiCons info <&> pure . makeFoldMapKCtr [VarP proxy] (VarE 'foldMapKWith `AppE` VarE proxy) (tiVar info))
+    , funD 'foldMapK (tiCons info <&> pure . makeFoldMapKCtr wit (tiVar info))
     ]
     <&> (:[])
     where
-        proxy = mkName "_p"
+        (_, wit) = makeNodeOf info
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
@@ -42,9 +40,9 @@ makeContext info =
 varF :: Name
 varF = mkName "_f"
 
-makeFoldMapKCtr :: [Pat] -> Exp -> Name -> D.ConstructorInfo -> Clause
-makeFoldMapKCtr patBase inner knot info =
-    Clause (patBase <> [VarP varF, ConP (D.constructorName info) (cVars <&> VarP)]) body []
+makeFoldMapKCtr :: NodeWitnesses -> Name -> D.ConstructorInfo -> Clause
+makeFoldMapKCtr wit knot info =
+    Clause [VarP varF, ConP (D.constructorName info) (cVars <&> VarP)] body []
     where
         cVars =
             [0::Int ..] <&> show <&> ("_x" <>) <&> mkName
@@ -61,7 +59,7 @@ makeFoldMapKCtr patBase inner knot info =
             & NormalB
         append x y = InfixE (Just x) (VarE '(<>)) (Just y)
         pats = D.constructorFields info <&> matchType knot
-        bodyForPat NodeFofX{} = [VarE varF]
-        bodyForPat XofF{} = [inner `AppE` VarE varF]
+        bodyForPat (NodeFofX t) = [VarE varF `AppE` nodeWit wit t]
+        bodyForPat (XofF t) = [VarE 'foldMapK `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))]
         bodyForPat (Tof _ pat) = bodyForPat pat <&> AppE (VarE 'foldMap)
         bodyForPat Other{} = []

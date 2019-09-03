@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell, FlexibleInstances, FlexibleContexts #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving, UndecidableInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, UndecidableInstances, GADTs #-}
 
 module LangB where
 
@@ -151,7 +151,9 @@ newtype ScopeTypes v = ScopeTypes (Map Name (Tree (GTerm (RunKnot v)) Typ))
 makeDerivings [''Show] [''LangB, ''ScopeTypes]
 
 instance KNodes ScopeTypes where
+    data KWitness ScopeTypes n = KWitness_ScopeTypes (KWitness (Flip GTerm Typ) n)
     type NodesConstraint ScopeTypes c = (c Typ, Recursive c)
+    kLiftConstraint p r (KWitness_ScopeTypes w) = kLiftConstraint p r w
     kCombineConstraints _ = Dict
 
 Lens.makePrisms ''ScopeTypes
@@ -167,8 +169,7 @@ typesInScope = _ScopeTypes . traverse . Lens.from _Flip
 makeKFoldable ''ScopeTypes
 
 instance KFunctor ScopeTypes where
-    mapK f = typesInScope %~ mapK f
-    mapKWith p f = typesInScope %~ mapKWith p f
+    mapK f = typesInScope %~ mapK (f . KWitness_ScopeTypes)
 
 instance KTraversable ScopeTypes where
     sequenceK = typesInScope sequenceK

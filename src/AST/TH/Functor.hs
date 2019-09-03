@@ -20,13 +20,11 @@ makeKFunctorForType :: TypeInfo -> DecsQ
 makeKFunctorForType info =
     instanceD (simplifyContext (makeContext info)) (appT (conT ''KFunctor) (pure (tiInstance info)))
     [ InlineP 'mapK Inline FunLike AllPhases & PragmaD & pure
-    , funD 'mapK (tiCons info <&> pure . makeMapKCtr [] (VarE 'mapK) (tiVar info))
-    , InlineP 'mapKWith Inline FunLike AllPhases & PragmaD & pure
-    , funD 'mapKWith (tiCons info <&> pure . makeMapKCtr [VarP proxy] (VarE 'mapKWith `AppE` VarE proxy) (tiVar info))
+    , funD 'mapK (tiCons info <&> pure . makeMapKCtr wit (tiVar info))
     ]
     <&> (:[])
     where
-        proxy = mkName "_p"
+        (_, wit) = makeNodeOf info
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
@@ -39,9 +37,9 @@ makeContext info =
         ctxForPat (XofF t) = [ConT ''KFunctor `AppT` t]
         ctxForPat _ = []
 
-makeMapKCtr :: [Pat] -> Exp -> Name -> D.ConstructorInfo -> Clause
-makeMapKCtr patBase inner knot info =
-    Clause (patBase <> [VarP varF, ConP (D.constructorName info) (cVars <&> VarP)]) body []
+makeMapKCtr :: NodeWitnesses -> Name -> D.ConstructorInfo -> Clause
+makeMapKCtr wit knot info =
+    Clause [VarP varF, ConP (D.constructorName info) (cVars <&> VarP)] body []
     where
         varF = mkName "_f"
         cVars =
@@ -54,7 +52,7 @@ makeMapKCtr patBase inner knot info =
             & foldl AppE (ConE (D.constructorName info))
             & NormalB
         pats = D.constructorFields info <&> matchType knot
-        bodyForPat NodeFofX{} = VarE varF
-        bodyForPat XofF{} = inner `AppE` VarE varF
+        bodyForPat (NodeFofX t) = VarE varF `AppE` nodeWit wit t
+        bodyForPat (XofF t) = VarE 'mapK `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))
         bodyForPat (Tof _ pat) = bodyForPat pat & AppE (VarE 'fmap)
         bodyForPat Other{} = VarE 'id

@@ -1,4 +1,5 @@
 {-# LANGUAGE UndecidableInstances, TemplateHaskell, RankNTypes, FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module AST.Unify.Generalize
     ( generalize, instantiate
@@ -6,11 +7,13 @@ module AST.Unify.Generalize
     , -- TODO: should these not be exported? (Internals)
       -- Exported also for specialization
       instantiateWith, instantiateForAll, instantiateH
-    , GTerm(..), _GMono, _GPoly, _GBody
+    , GTerm(..), _GMono, _GPoly, _GBody, KWitness(..)
     ) where
 
 import           Algebra.PartialOrd (PartialOrd(..))
 import           AST
+import           AST.Class.Foldable (foldMapKWithWitness)
+import           AST.Class.Functor (mapKWithWitness)
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Class.Recursive
 import           AST.Class.Traversable
@@ -48,45 +51,68 @@ data GTerm v ast
 Lens.makePrisms ''GTerm
 makeCommonInstances [''GTerm]
 
-instance KNodes (Flip GTerm a) where
+newtype KRecLiftConstraint r n c = KRecLiftConstraint
+    { getKRecLiftConstraint :: KRecWitness (RunKnot c) n -> Tree r n
+    }
+
+kLiftRecConstraint ::
+    (NodesConstraint k c, KNodes k) =>
+    (KRecWitness child n -> KWitness k n) ->
+    Proxy c ->
+    (forall z. c z => Tree r z) ->
+    Tree (KRecLiftConstraint r n) child
+kLiftRecConstraint makeWitness p r =
+    KRecLiftConstraint (\w -> kLiftConstraint p r (makeWitness w))
+
+instance RNodes a => KNodes (Flip GTerm a) where
     type NodesConstraint (Flip GTerm a) c = (c a, Recursive c)
+    data KWitness (Flip GTerm a) n = KWitness_Flip_GTerm (KRecWitness a n)
+    {-# INLINE kLiftConstraint #-}
+    kLiftConstraint _ r (KWitness_Flip_GTerm KRecSelf) = r
+    kLiftConstraint p r (KWitness_Flip_GTerm (KRecSub c n)) =
+        withDict (recurseBoth (p0 p)) $
+        getKRecLiftConstraint (kLiftConstraint (p1 p) (kLiftRecConstraint KWitness_Flip_GTerm p r) c) n
+        where
+            p0 :: Proxy c -> Proxy (And RNodes c a)
+            p0 _ = Proxy
+            p1 :: Proxy c -> Proxy (And RNodes c)
+            p1 _ = Proxy
     {-# INLINE kCombineConstraints #-}
     kCombineConstraints _ = Dict
 
 instance RFunctor ast => KFunctor (Flip GTerm ast) where
-    {-# INLINE mapKWith #-}
-    mapKWith p f =
+    {-# INLINE mapK #-}
+    mapK f =
         _Flip %~
         \case
-        GMono x -> f x & GMono
-        GPoly x -> f x & GPoly
+        GMono x -> f (KWitness_Flip_GTerm KRecSelf) x & GMono
+        GPoly x -> f (KWitness_Flip_GTerm KRecSelf) x & GPoly
         GBody x ->
-            withDict (recurseBoth (p0 p)) $
-            mapKWith (p1 p) (Lens.from _Flip %~ mapKWith p f) x
+            withDict (recurse (Proxy @(RFunctor ast))) $
+            mapKWithWitness (Proxy @RFunctor)
+            ( \cw ->
+                Lens.from _Flip %~
+                mapK (f . (\(KWitness_Flip_GTerm nw) -> KWitness_Flip_GTerm (KRecSub cw nw)))
+            ) x
             & GBody
-        where
-            p0 :: Proxy constraint -> Proxy (And RFunctor constraint ast)
-            p0 _ = Proxy
-            p1 :: Proxy constraint -> Proxy (And RFunctor constraint)
-            p1 _ = Proxy
 
 instance RFoldable ast => KFoldable (Flip GTerm ast) where
-    {-# INLINE foldMapKWith #-}
-    foldMapKWith p f =
+    {-# INLINE foldMapK #-}
+    foldMapK f =
         \case
-        GMono x -> f x
-        GPoly x -> f x
+        GMono x -> f (KWitness_Flip_GTerm KRecSelf) x
+        GPoly x -> f (KWitness_Flip_GTerm KRecSelf) x
         GBody x ->
-            withDict (recurseBoth (p0 p)) $
-            foldMapKWith (p1 p) (foldMapKWith p f . (_Flip #)) x
+            withDict (recurse (Proxy @(RFoldable ast))) $
+            foldMapKWithWitness (Proxy @RFoldable)
+            ( \cw ->
+                foldMapK (f . (\(KWitness_Flip_GTerm nw) -> KWitness_Flip_GTerm (KRecSub cw nw)))
+                . (_Flip #)
+            ) x
         . (^. _Flip)
-        where
-            p0 :: Proxy constraint -> Proxy (And RFoldable constraint ast)
-            p0 _ = Proxy
-            p1 :: Proxy constraint -> Proxy (And RFoldable constraint)
-            p1 _ = Proxy
 
 instance RTraversable ast => KTraversable (Flip GTerm ast) where
+    {-# INLINE sequenceK #-}
     sequenceK (MkFlip fx) =
         case fx of
         GMono x -> runContainedK x <&> GMono

@@ -4,8 +4,8 @@
 
 module AST.TH.Internal.Utils
     ( -- Internals for use in TH for sub-classes
-      TypeInfo(..), TypeContents(..), CtrTypePattern(..)
-    , makeTypeInfo
+      TypeInfo(..), TypeContents(..), CtrTypePattern(..), NodeWitnesses(..)
+    , makeTypeInfo, makeNodeOf
     , parts, toTuple, matchType
     , applicativeStyle, unapply, getVar, makeConstructorVars
     , consPat, simplifyContext
@@ -18,7 +18,10 @@ import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.State (StateT(..), evalStateT, execStateT, gets, modify)
 import           Data.Foldable (traverse_)
+import           Data.List (nub)
+import           Data.Map (Map)
 import qualified Data.Map as Map
+import           Data.Maybe (fromMaybe)
 import           Data.Set (Set)
 import qualified Data.Set as Set
 import           Generic.Data (Generically(..))
@@ -29,7 +32,8 @@ import qualified Language.Haskell.TH.Datatype as D
 import           Prelude.Compat
 
 data TypeInfo = TypeInfo
-    { tiInstance :: Type
+    { tiName :: Name
+    , tiInstance :: Type
     , tiVar :: Name
     , tiContents :: TypeContents
     , tiCons :: [D.ConstructorInfo]
@@ -49,7 +53,8 @@ makeTypeInfo name =
         (dst, var) <- parts info
         contents <- evalStateT (childrenTypes var (AppT dst (VarT var))) mempty
         pure TypeInfo
-            { tiInstance = dst
+            { tiName = name
+            , tiInstance = dst
             , tiVar = var
             , tiContents = contents
             , tiCons = D.datatypeCons info
@@ -236,3 +241,51 @@ simplifyContext preds =
                 key = (c, xs)
         go (c, xs) = yep c xs
         yep c xs = Lens._2 . Lens.contains (foldl AppT c xs) .= True
+
+data NodeWitnesses = NodeWitnesses
+    { nodeWit :: Type -> Exp
+    , embedWit :: Type -> Exp
+    , nodeWitCtrs :: [Name]
+    , embedWitCtrs :: [Name]
+    }
+
+makeNodeOf :: TypeInfo -> ([Con], NodeWitnesses)
+makeNodeOf info =
+    ( (nodes <&> Lens._1 %~ nodeGadtType) <> (embeds <&> Lens._1 %~ embedGadtType)
+        <&> \(t, n) -> GadtC [n] [] t
+    , NodeWitnesses
+        { nodeWit = nodes <&> Lens._2 %~ ConE & Map.fromList & getWit
+        , embedWit = embeds <&> Lens._2 %~ ConE & Map.fromList & getWit
+        , nodeWitCtrs = nodes <&> snd
+        , embedWitCtrs = embeds <&> snd
+        }
+    )
+    where
+        niceTypeName = tiName info & show & reverse & takeWhile (/= '.') & reverse
+        baseName = "KWitness_" <> niceTypeName <> "_"
+        pats =
+            tiCons info
+            >>= D.constructorFields
+            <&> matchType (tiVar info)
+        nodes =
+            zip (pats >>= nodesForPat & nub)
+            ([0 :: Int ..] <&> show <&> (baseName <>) <&> mkName)
+        nodesForPat (NodeFofX t) = [t]
+        nodesForPat (Tof _ pat) = nodesForPat pat
+        nodesForPat _ = []
+        nodeGadtType t = ConT ''KWitness `AppT` tiInstance info `AppT` t
+        embeds =
+            zip (pats >>= embedsForPat & nub)
+            ([0 :: Int ..] <&> show <&> ((baseName <> "E") <>) <&> mkName)
+        embedsForPat (XofF t) = [t]
+        embedsForPat (Tof _ pat) = embedsForPat pat
+        embedsForPat _ = []
+        embedGadtType t =
+            ArrowT
+            `AppT` (ConT ''KWitness `AppT` t `AppT` VarT nodeVar)
+            `AppT` (ConT ''KWitness `AppT` tiInstance info `AppT` VarT nodeVar)
+        nodeVar = mkName "node"
+        getWit :: Map Type Exp -> Type -> Exp
+        getWit m k =
+            m ^? Lens.ix k
+            & fromMaybe (LitE (StringL ("Cant find witness for " <> show k <> " in " <> show m)))

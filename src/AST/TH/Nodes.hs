@@ -23,11 +23,17 @@ makeKNodesForType info =
     instanceD (simplifyContext (makeContext info)) (appT (conT ''KNodes) (pure (tiInstance info)))
     [ tySynInstD ''NodesConstraint
         (simplifyContext nodesConstraint <&> toTuple <&> TySynEqn [tiInstance info, VarT constraintVar])
+    , dataInstD (pure []) ''KWitness
+        [pure (tiInstance info), pure (VarT (mkName "node"))]
+        Nothing (nodeOfCons <&> pure) []
+    , InlineP 'kLiftConstraint Inline FunLike AllPhases & PragmaD & pure
+    , funD 'kLiftConstraint (makeKLiftConstraints wit <&> pure)
     , InlineP 'kCombineConstraints Inline FunLike AllPhases & PragmaD & pure
     , funD 'kCombineConstraints [pure (Clause [WildP] (NormalB (ConE 'Dict)) [])]
     ]
     <&> (:[])
     where
+        (nodeOfCons, wit) = makeNodeOf info
         constraintVar :: Name
         constraintVar = mkName "constraint"
         contents = tiContents info
@@ -47,3 +53,26 @@ makeContext info =
         ctxForPat (Tof _ pat) = ctxForPat pat
         ctxForPat (XofF t) = [ConT ''KNodes `AppT` t]
         ctxForPat _ = []
+
+makeKLiftConstraints :: NodeWitnesses -> [Clause]
+makeKLiftConstraints wit
+    | null clauses = [Clause [WildP, WildP] (NormalB (LamCaseE [])) []]
+    | otherwise = clauses
+    where
+        clauses = (nodeWitCtrs wit <&> liftNode) <> (embedWitCtrs wit <&> liftEmbed)
+        liftNode x =
+            Clause [WildP, VarP valVar, ConP x []] (NormalB (VarE valVar)) []
+        liftEmbed x =
+            Clause [VarP proxyVar, VarP valVar, ConP x [VarP witVar]]
+            (NormalB (
+                VarE 'kLiftConstraint
+                `AppE` VarE proxyVar
+                `AppE` VarE valVar
+                `AppE` VarE witVar
+            )) []
+        valVar :: Name
+        valVar = mkName "value"
+        proxyVar :: Name
+        proxyVar = mkName "proxy"
+        witVar :: Name
+        witVar = mkName "witness"

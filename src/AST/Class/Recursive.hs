@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes, DefaultSignatures #-}
+{-# LANGUAGE RankNTypes, DefaultSignatures, GADTs, FlexibleContexts #-}
 
 module AST.Class.Recursive
     ( Recursive(..)
@@ -7,17 +7,18 @@ module AST.Class.Recursive
     , foldMapRecursive
     , RNodes(..), RFunctor(..), RFoldable(..), RTraversable(..)
     , recurseBoth
+    , KRecWitness(..)
     ) where
 
 import AST.Class.Foldable
-import AST.Class.Functor (KFunctor(..))
+import AST.Class.Functor (KFunctor(..), mapKWith)
 import AST.Class.Nodes (KNodes(..))
 import AST.Class.Traversable
 import AST.Knot
 import AST.Knot.Pure (Pure(..), _Pure, (&#))
 import Control.Lens.Operators
 import Data.Constraint (Dict(..), withDict)
-import Data.Constraint.List (NoConstraint, And)
+import Data.Constraint.List (And)
 import Data.Functor.Const (Const(..))
 import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy(..))
@@ -28,9 +29,6 @@ import Prelude.Compat
 class Recursive c where
     -- | Lift a recursive constraint to the next layer
     recurse :: (KNodes k, c k) => Proxy (c k) -> Dict (NodesConstraint k c)
-
-instance Recursive NoConstraint where
-    recurse p = withDict (kNoConstraints (argP p)) Dict
 
 instance (Recursive a, Recursive b) => Recursive (And a b) where
     recurse p =
@@ -120,6 +118,11 @@ recurseBoth _ =
     withDict (recurse (Proxy @(a k))) $
     withDict (recurse (Proxy @(b k))) $
     withDict (kCombineConstraints (Proxy @(And a b k))) Dict
+
+-- | @KRecWitness k n@ is a witness that @n@ is a recursive node of @k@
+data KRecWitness k n where
+    KRecSelf :: KRecWitness k k
+    KRecSub :: KWitness k c -> KRecWitness c n -> KRecWitness k n
 
 -- | Monadically convert a 'Pure' 'Tree' to a different 'Knot' from the bottom up
 {-# INLINE wrapM #-}

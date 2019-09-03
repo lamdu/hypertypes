@@ -1,9 +1,10 @@
-{-# LANGUAGE UndecidableInstances, TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances, TemplateHaskell, GADTs #-}
 module AST.Knot.Pure
-    ( Pure(..), _Pure
+    ( Pure(..), _Pure, KWitness(..)
     , (&#)
     ) where
 
+import AST.Class.Nodes (KNodes(..))
 import AST.Knot (Tree, Node)
 import AST.TH.Internal.Instances (makeCommonInstances)
 import AST.TH.Traversable (makeKTraversableApplyAndBases)

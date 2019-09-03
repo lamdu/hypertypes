@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, UndecidableInstances #-}
+{-# LANGUAGE TemplateHaskell, UndecidableInstances, GADTs, FlexibleInstances #-}
 
 module AST.Unify.Error
     ( UnifyError(..)
@@ -43,7 +43,11 @@ makeCommonInstances [''UnifyError]
 -- TODO: TH should be able to generate this
 instance KNodes t => KNodes (UnifyError t) where
     type NodesConstraint (UnifyError t) c = (c t, NodesConstraint t c)
-    kNoConstraints _ = withDict (kNoConstraints (Proxy @t)) Dict
+    data KWitness (UnifyError t) n where
+        KWitness_UnifyError_0 :: KWitness (UnifyError t) t
+        KWitness_UnifyError_E0 :: KWitness t n -> KWitness (UnifyError t) n
+    kLiftConstraint _ r KWitness_UnifyError_0 = r
+    kLiftConstraint p r (KWitness_UnifyError_E0 w) = kLiftConstraint p r w
     kCombineConstraints p =
         withDict (kCombineConstraints (p0 p)) Dict
         where

@@ -1,11 +1,11 @@
 -- | Row types
 
-{-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances, GADTs #-}
 {-# LANGUAGE FlexibleContexts, RankNTypes, TemplateHaskell #-}
 
 module AST.Term.Row
     ( RowConstraints(..), RowKey
-    , RowExtend(..), eKey, eVal, eRest
+    , RowExtend(..), eKey, eVal, eRest, KWitness(..)
     , FlatRowExtends(..), freExtends, freRest
     , flattenRow, flattenRowExtend, unflattenRow
     , verifyRowExtendConstraints, rowExtendStructureMismatch

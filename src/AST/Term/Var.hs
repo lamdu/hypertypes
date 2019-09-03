@@ -1,6 +1,6 @@
 -- | Variables.
 
-{-# LANGUAGE GeneralizedNewtypeDeriving, UndecidableInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, UndecidableInstances, EmptyCase #-}
 {-# LANGUAGE FlexibleInstances, TemplateHaskell, FlexibleContexts #-}
 
 module AST.Term.Var

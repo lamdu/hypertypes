@@ -6,7 +6,7 @@ module AST.Class.ZipMatch
     ) where
 
 import           AST.Class.Foldable
-import           AST.Class.Functor (KFunctor(..))
+import           AST.Class.Functor (KFunctor(..), mapKWith)
 import           AST.Class.Nodes (KNodes(..))
 import           AST.Class.Recursive (Recursive(..), RNodes)
 import           AST.Class.Traversable (KTraversable, traverseKWith)

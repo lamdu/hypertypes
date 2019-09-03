@@ -1,7 +1,7 @@
-{-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances, GADTs #-}
 
 module AST.Term.Map
-    ( TermMap(..), _TermMap
+    ( TermMap(..), _TermMap, KWitness(..)
     ) where
 
 import           AST

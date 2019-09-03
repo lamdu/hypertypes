@@ -1,13 +1,14 @@
-{-# LANGUAGE TemplateHaskell, RankNTypes, UndecidableInstances #-}
+{-# LANGUAGE TemplateHaskell, RankNTypes, UndecidableInstances, GADTs #-}
 
 module AST.Knot.Ann
-    ( Ann(..), ann, val
+    ( Ann(..), ann, val, KWitness(..)
     , annotations
     , strip, addAnnotations
     ) where
 
+import           AST.Class.Nodes (KNodes(..))
 import           AST.Class.Recursive
-import           AST.Class.Traversable
+import           AST.Class.Traversable (traverseKWith)
 import           AST.Knot (Tree, Node)
 import           AST.Knot.Pure (Pure(..))
 import           AST.TH.Traversable (makeKTraversableApplyAndBases)
