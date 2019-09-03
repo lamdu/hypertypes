@@ -125,7 +125,6 @@ class HFunctor f where
 Differences between compdata and syntax-tree:
 
 * compdata requires the nested structures to be described together in a single indexed data type (via `GADT`s or data familes). syntax-tree also allows structures to be split across separate data types, which allows for more modularity and code reusability
-* compdata's fix-points are the same functor in all the layers of the tree. In syntax-tree the fix points are themselves nested-HKDs, so they can have a different fix-point for theirs sub-nodes, which is actually useful. Some usage examples are `Diff` fix-point and the `Product` fix-point used by the `KApply` class (which has no equivalent in compdata)
 * syntax-tree's `KFunctor` also provides `mapKWith` which allows mappings to use constraints on child nodes, which is used extensively
 
 ### unification-fd
