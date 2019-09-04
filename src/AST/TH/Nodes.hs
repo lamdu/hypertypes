@@ -56,19 +56,19 @@ makeContext info =
 
 makeKLiftConstraints :: NodeWitnesses -> [Clause]
 makeKLiftConstraints wit
-    | null clauses = [Clause [WildP, WildP] (NormalB (LamCaseE [])) []]
+    | null clauses = [Clause [WildP] (NormalB (LamCaseE [])) []]
     | otherwise = clauses
     where
         clauses = (nodeWitCtrs wit <&> liftNode) <> (embedWitCtrs wit <&> liftEmbed)
         liftNode x =
-            Clause [WildP, VarP valVar, ConP x []] (NormalB (VarE valVar)) []
+            Clause [WildP, ConP x [], VarP valVar] (NormalB (VarE valVar)) []
         liftEmbed x =
-            Clause [VarP proxyVar, VarP valVar, ConP x [VarP witVar]]
+            Clause [VarP proxyVar, ConP x [VarP witVar], VarP valVar]
             (NormalB (
                 VarE 'kLiftConstraint
                 `AppE` VarE proxyVar
-                `AppE` VarE valVar
                 `AppE` VarE witVar
+                `AppE` VarE valVar
             )) []
         valVar :: Name
         valVar = mkName "value"

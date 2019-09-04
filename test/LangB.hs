@@ -153,7 +153,7 @@ makeDerivings [''Show] [''LangB, ''ScopeTypes]
 instance KNodes ScopeTypes where
     data KWitness ScopeTypes n = KWitness_ScopeTypes (KWitness (Flip GTerm Typ) n)
     type NodesConstraint ScopeTypes c = (c Typ, Recursive c)
-    kLiftConstraint p r (KWitness_ScopeTypes w) = kLiftConstraint p r w
+    kLiftConstraint p (KWitness_ScopeTypes w) = kLiftConstraint p w
     kCombineConstraints _ = Dict
 
 Lens.makePrisms ''ScopeTypes

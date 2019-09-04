@@ -8,7 +8,6 @@ module AST.Class.Functor
 
 import AST.Class.Nodes
 import AST.Knot (Knot, RunKnot, Tree)
-import Control.Monad (join)
 import Control.Lens (Setter, sets)
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
@@ -46,7 +45,7 @@ mapKWith ::
     (forall n. constraint n => Tree p n -> Tree q n) ->
     Tree k p ->
     Tree k q
-mapKWith p f = mapK (getMapK . kLiftConstraint p (MapK f))
+mapKWith p f = mapK (\w -> getMapK (kLiftConstraint p w (MapK f)))
 
 newtype MapKW k p q n = MapKW { getMapKW :: KWitness k (RunKnot n) -> p n -> q n }
 
@@ -58,7 +57,7 @@ mapKWithWitness ::
     (forall n. constraint n => KWitness k n -> Tree p n -> Tree q n) ->
     Tree k p ->
     Tree k q
-mapKWithWitness p f = mapK (join (getMapKW . kLiftConstraint p (MapKW f)))
+mapKWithWitness p f = mapK (\w -> getMapKW (kLiftConstraint p w (MapKW f)) w)
 
 -- | 'KFunctor' variant of 'Control.Lens.mapped' for 'AST.Knot.Knot's with a single node type.
 --

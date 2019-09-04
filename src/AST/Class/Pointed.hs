@@ -34,4 +34,4 @@ pureKWith ::
     Proxy constraint ->
     (forall n. constraint n => Tree p n) ->
     Tree k p
-pureKWith p f = pureK (kLiftConstraint p f)
+pureKWith p f = pureK (\w -> kLiftConstraint p w f)

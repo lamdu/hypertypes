@@ -34,8 +34,8 @@ class KNodes (k :: Knot -> Type) where
     kLiftConstraint ::
         NodesConstraint k c =>
         Proxy c ->
-        (c n => Tree r n) ->
         KWitness k n ->
+        (c n => Tree r n) ->
         Tree r n
 
     -- | Combine two 'NodesConstraint' to allow
@@ -49,7 +49,7 @@ instance KNodes (Const a) where
     type NodesConstraint (Const a) x = ()
     data KWitness (Const a) i
     {-# INLINE kLiftConstraint #-}
-    kLiftConstraint _ _ = \case
+    kLiftConstraint _ = \case
     {-# INLINE kCombineConstraints #-}
     kCombineConstraints _ = Dict
 
@@ -59,8 +59,8 @@ instance (KNodes a, KNodes b) => KNodes (Product a b) where
         KWitness_Product_E0 :: KWitness a n -> KWitness (Product a b) n
         KWitness_Product_E1 :: KWitness b n -> KWitness (Product a b) n
     {-# INLINE kLiftConstraint #-}
-    kLiftConstraint p r (KWitness_Product_E0 w) = kLiftConstraint p r w
-    kLiftConstraint p r (KWitness_Product_E1 w) = kLiftConstraint p r w
+    kLiftConstraint p (KWitness_Product_E0 w) = kLiftConstraint p w
+    kLiftConstraint p (KWitness_Product_E1 w) = kLiftConstraint p w
     {-# INLINE kCombineConstraints #-}
     kCombineConstraints p =
         withDict (kCombineConstraints (p0 p)) $

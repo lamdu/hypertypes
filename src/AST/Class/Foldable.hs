@@ -9,7 +9,6 @@ module AST.Class.Foldable
 
 import AST.Class.Nodes (KNodes(..))
 import AST.Knot (Knot, RunKnot, Tree)
-import Control.Monad (join)
 import Data.Foldable (sequenceA_)
 import Data.Functor.Const (Const(..))
 import Data.Proxy (Proxy(..))
@@ -42,7 +41,7 @@ foldMapKWith ::
     (forall n. constraint n => Tree p n -> a) ->
     Tree k p ->
     a
-foldMapKWith p f = foldMapK (getFoldMapK . kLiftConstraint p (FoldMapK f))
+foldMapKWith p f = foldMapK (\w -> getFoldMapK (kLiftConstraint p w (FoldMapK f)))
 
 newtype FoldMapKW k a m c = FoldMapKW { getFoldMapKW :: KWitness k (RunKnot c) -> m c -> a }
 
@@ -54,7 +53,7 @@ foldMapKWithWitness ::
     (forall n. constraint n => KWitness k n -> Tree p n -> a) ->
     Tree k p ->
     a
-foldMapKWithWitness p f = foldMapK (join (getFoldMapKW . kLiftConstraint p (FoldMapKW f)))
+foldMapKWithWitness p f = foldMapK (\w -> getFoldMapKW (kLiftConstraint p w (FoldMapKW f)) w)
 
 -- TODO: Replace `foldMapK1` with `foldedK1` which is a `Fold`
 
@@ -91,7 +90,7 @@ traverseKWith_ ::
     Tree k p ->
     f ()
 traverseKWith_ p f =
-    traverseK_ (getFoldMapK . kLiftConstraint p (FoldMapK f))
+    traverseK_ (\w -> getFoldMapK (kLiftConstraint p w (FoldMapK f)))
 
 -- | 'KFoldable' variant of 'Data.Foldable.traverse_' for 'AST.Knot.Knot's with a single node type (avoids using @RankNTypes@)
 {-# INLINE traverseK1_ #-}
