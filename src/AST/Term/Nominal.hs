@@ -105,7 +105,7 @@ instance KNodes v => KNodes (NominalInst n v) where
     type NodesConstraint (NominalInst n v) c = NodesConstraint v c
     data KWitness (NominalInst n v) c = KWitness_NominalInst (KWitness v c)
     {-# INLINE kLiftConstraint #-}
-    kLiftConstraint p (KWitness_NominalInst w) = kLiftConstraint p w
+    kLiftConstraint (KWitness_NominalInst w) = kLiftConstraint w
     {-# INLINE kCombineConstraints #-}
     kCombineConstraints p =
         withDict (kCombineConstraints (p0 p)) Dict
@@ -191,8 +191,8 @@ instance (RNodes typ, KNodes (NomVarTypes typ)) => KNodes (LoadedNominalDecl typ
         KWitness_LoadedNominalDecl_E0 :: KRecWitness typ n -> KWitness (LoadedNominalDecl typ) n
         KWitness_LoadedNominalDecl_E1 :: KWitness (NomVarTypes typ) n -> KWitness (LoadedNominalDecl typ) n
     {-# INLINE kLiftConstraint #-}
-    kLiftConstraint p (KWitness_LoadedNominalDecl_E0 w) = kLiftConstraint p (KWitness_Flip_GTerm w)
-    kLiftConstraint p (KWitness_LoadedNominalDecl_E1 w) = kLiftConstraint p w
+    kLiftConstraint (KWitness_LoadedNominalDecl_E0 w) = kLiftConstraint (KWitness_Flip_GTerm w)
+    kLiftConstraint (KWitness_LoadedNominalDecl_E1 w) = kLiftConstraint w
     {-# INLINE kCombineConstraints #-}
     kCombineConstraints p =
         withDict (kCombineConstraints (p0 p)) Dict

@@ -33,8 +33,8 @@ class KNodes (k :: Knot -> Type) where
     -- to a function from a node witness.
     kLiftConstraint ::
         NodesConstraint k c =>
-        Proxy c ->
         KWitness k n ->
+        Proxy c ->
         (c n => Tree r n) ->
         Tree r n
 
@@ -49,7 +49,7 @@ instance KNodes (Const a) where
     type NodesConstraint (Const a) x = ()
     data KWitness (Const a) i
     {-# INLINE kLiftConstraint #-}
-    kLiftConstraint _ = \case
+    kLiftConstraint = \case
     {-# INLINE kCombineConstraints #-}
     kCombineConstraints _ = Dict
 
@@ -59,8 +59,8 @@ instance (KNodes a, KNodes b) => KNodes (Product a b) where
         KWitness_Product_E0 :: KWitness a n -> KWitness (Product a b) n
         KWitness_Product_E1 :: KWitness b n -> KWitness (Product a b) n
     {-# INLINE kLiftConstraint #-}
-    kLiftConstraint p (KWitness_Product_E0 w) = kLiftConstraint p w
-    kLiftConstraint p (KWitness_Product_E1 w) = kLiftConstraint p w
+    kLiftConstraint (KWitness_Product_E0 w) = kLiftConstraint w
+    kLiftConstraint (KWitness_Product_E1 w) = kLiftConstraint w
     {-# INLINE kCombineConstraints #-}
     kCombineConstraints p =
         withDict (kCombineConstraints (p0 p)) $

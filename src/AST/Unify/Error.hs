@@ -46,8 +46,8 @@ instance KNodes t => KNodes (UnifyError t) where
     data KWitness (UnifyError t) n where
         KWitness_UnifyError_0 :: KWitness (UnifyError t) t
         KWitness_UnifyError_E0 :: KWitness t n -> KWitness (UnifyError t) n
-    kLiftConstraint _ KWitness_UnifyError_0 = id
-    kLiftConstraint p (KWitness_UnifyError_E0 w) = kLiftConstraint p w
+    kLiftConstraint KWitness_UnifyError_0 = const id
+    kLiftConstraint (KWitness_UnifyError_E0 w) = kLiftConstraint w
     kCombineConstraints p =
         withDict (kCombineConstraints (p0 p)) Dict
         where

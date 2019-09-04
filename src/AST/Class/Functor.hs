@@ -45,7 +45,7 @@ mapKWith ::
     (forall n. constraint n => Tree p n -> Tree q n) ->
     Tree k p ->
     Tree k q
-mapKWith p f = mapK (\w -> getMapK (kLiftConstraint p w (MapK f)))
+mapKWith p f = mapK (\w -> getMapK (kLiftConstraint w p (MapK f)))
 
 newtype MapKW k p q n = MapKW { getMapKW :: KWitness k (RunKnot n) -> p n -> q n }
 
@@ -57,7 +57,7 @@ mapKWithWitness ::
     (forall n. constraint n => KWitness k n -> Tree p n -> Tree q n) ->
     Tree k p ->
     Tree k q
-mapKWithWitness p f = mapK (\w -> getMapKW (kLiftConstraint p w (MapKW f)) w)
+mapKWithWitness p f = mapK (\w -> getMapKW (kLiftConstraint w p (MapKW f)) w)
 
 -- | 'KFunctor' variant of 'Control.Lens.mapped' for 'AST.Knot.Knot's with a single node type.
 --
