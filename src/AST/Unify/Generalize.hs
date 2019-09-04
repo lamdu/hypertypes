@@ -51,35 +51,23 @@ data GTerm v ast
 Lens.makePrisms ''GTerm
 makeCommonInstances [''GTerm]
 
-newtype KRecLiftConstraint r n c = KRecLiftConstraint
-    { getKRecLiftConstraint :: KRecWitness (RunKnot c) n -> Tree r n
-    }
-
-kLiftCH ::
-    forall c n r a b.
-    (Recursive c, c a, RNodes a) =>
-    KWitness a b ->
-    KRecWitness b n ->
-    Proxy c ->
-    (c n => Tree r n) ->
-    Tree r n
-kLiftCH c n p r =
-    withDict (recurseBoth (Proxy @(And RNodes c a))) $
-    getKRecLiftConstraint
-    ( kLiftConstraint c (Proxy @(And RNodes c))
-        ( KRecLiftConstraint
-            (\w -> kLiftConstraint (KWitness_Flip_GTerm w) p r)
-        )
-    ) n
-
 instance RNodes a => KNodes (Flip GTerm a) where
     type NodesConstraint (Flip GTerm a) c = (c a, Recursive c)
     data KWitness (Flip GTerm a) n = KWitness_Flip_GTerm (KRecWitness a n)
     {-# INLINE kLiftConstraint #-}
     kLiftConstraint (KWitness_Flip_GTerm KRecSelf) = const id
-    kLiftConstraint (KWitness_Flip_GTerm (KRecSub c n)) = kLiftCH c n
+    kLiftConstraint (KWitness_Flip_GTerm (KRecSub c n)) = kLiftConstraintH c n
     {-# INLINE kCombineConstraints #-}
     kCombineConstraints _ = Dict
+
+kLiftConstraintH ::
+    forall a c b n r.
+    (RNodes a, NodesConstraint (Flip GTerm a) c) =>
+    KWitness a b -> KRecWitness b n -> Proxy c -> (c n => r) -> r
+kLiftConstraintH c n =
+    withDict (recurseBoth (Proxy @(And RNodes c a))) $
+    kLiftConstraint c (Proxy @(And RNodes c))
+    (kLiftConstraint (KWitness_Flip_GTerm n))
 
 instance RFunctor ast => KFunctor (Flip GTerm ast) where
     {-# INLINE mapK #-}

@@ -4,7 +4,7 @@ module AST.Class.Nodes
     ( KNodes(..), KWitness(..)
     ) where
 
-import AST.Knot (Knot, Tree)
+import AST.Knot (Knot)
 import Data.Constraint
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
@@ -35,8 +35,8 @@ class KNodes (k :: Knot -> Type) where
         NodesConstraint k c =>
         KWitness k n ->
         Proxy c ->
-        (c n => Tree r n) ->
-        Tree r n
+        (c n => r) ->
+        r
 
     -- | Combine two 'NodesConstraint' to allow
     -- processing child nodes with functions that require both constraints
