@@ -37,7 +37,7 @@ instance (KFunctor a, KFunctor b) => KFunctor (Product a b) where
 -- | Variant of 'mapK' for functions with context instead of a witness parameter
 {-# INLINE mapKWith #-}
 mapKWith ::
-    (KFunctor k, NodesConstraint k constraint) =>
+    (KFunctor k, KNodesConstraint k constraint) =>
     Proxy constraint ->
     (forall n. constraint n => Tree p n -> Tree q n) ->
     Tree k p ->
@@ -50,6 +50,6 @@ mapKWith p f = mapK (\w -> kLiftConstraint w p f)
 {-# INLINE mappedK1 #-}
 mappedK1 ::
     forall k n p q.
-    (KFunctor k, NodesConstraint k ((~) n)) =>
+    (KFunctor k, KNodesConstraint k ((~) n)) =>
     Setter (Tree k p) (Tree k q) (Tree p n) (Tree q n)
 mappedK1 = sets (mapKWith (Proxy @((~) n)))

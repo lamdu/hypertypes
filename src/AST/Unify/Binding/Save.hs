@@ -21,11 +21,11 @@ import           Prelude.Compat
 
 class (Unify m t, HasChild typeVars t) => Savable m typeVars t where
     savableRecursive ::
-        Proxy m -> Proxy typeVars -> Proxy t -> Dict (NodesConstraint t (Savable m typeVars))
+        Proxy m -> Proxy typeVars -> Proxy t -> Dict (KNodesConstraint t (Savable m typeVars))
     {-# INLINE savableRecursive #-}
     default savableRecursive ::
-        NodesConstraint t (Savable m typeVars) =>
-        Proxy m -> Proxy typeVars -> Proxy t -> Dict (NodesConstraint t (Savable m typeVars))
+        KNodesConstraint t (Savable m typeVars) =>
+        Proxy m -> Proxy typeVars -> Proxy t -> Dict (KNodesConstraint t (Savable m typeVars))
     savableRecursive _ _ _ = Dict
 
 saveUTerm ::

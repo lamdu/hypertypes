@@ -15,7 +15,7 @@ import Data.Proxy (Proxy(..))
 import Prelude.Compat
 
 -- | 'KNodes' allows lifting a constraint to the child nodes of a 'Knot'
--- by using the 'NodesConstraint' type family.
+-- by using the 'KNodesConstraint' type family.
 --
 -- It also provides some methods to combine and process child node constraints.
 --
@@ -24,7 +24,7 @@ import Prelude.Compat
 -- for processing child nodes which requires a constraint on the nodes.
 class KNodes (k :: Knot -> Type) where
     -- | Lift a constraint to apply to the child nodes
-    type family NodesConstraint k (c :: ((Knot -> Type) -> Constraint)) :: Constraint
+    type family KNodesConstraint k (c :: ((Knot -> Type) -> Constraint)) :: Constraint
 
     -- | @KWitness k n@ is a witness that @n@ is a node of @k@
     data family KWitness k :: (Knot -> Type) -> Type
@@ -32,21 +32,21 @@ class KNodes (k :: Knot -> Type) where
     -- | Lift a rank-n value with a constraint which the child nodes satisfy
     -- to a function from a node witness.
     kLiftConstraint ::
-        NodesConstraint k c =>
+        KNodesConstraint k c =>
         KWitness k n ->
         Proxy c ->
         (c n => r) ->
         r
 
-    -- | Combine two 'NodesConstraint' to allow
+    -- | Combine two 'KNodesConstraint' to allow
     -- processing child nodes with functions that require both constraints
     kCombineConstraints ::
-        (NodesConstraint k a, NodesConstraint k b) =>
+        (KNodesConstraint k a, KNodesConstraint k b) =>
         Proxy (And a b k) ->
-        Dict (NodesConstraint k (And a b))
+        Dict (KNodesConstraint k (And a b))
 
 instance KNodes (Const a) where
-    type NodesConstraint (Const a) x = ()
+    type KNodesConstraint (Const a) x = ()
     data KWitness (Const a) i
     {-# INLINE kLiftConstraint #-}
     kLiftConstraint = \case
@@ -54,7 +54,7 @@ instance KNodes (Const a) where
     kCombineConstraints _ = Dict
 
 instance (KNodes a, KNodes b) => KNodes (Product a b) where
-    type NodesConstraint (Product a b) x = (NodesConstraint a x, NodesConstraint b x)
+    type KNodesConstraint (Product a b) x = (KNodesConstraint a x, KNodesConstraint b x)
     data KWitness (Product a b) n where
         KWitness_Product_E0 :: KWitness a n -> KWitness (Product a b) n
         KWitness_Product_E1 :: KWitness b n -> KWitness (Product a b) n

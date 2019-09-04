@@ -51,7 +51,7 @@ instance
     , LocalScopeType v (Tree (GTerm (UVarOf m)) (TypeOf expr)) m
     , Unify m (TypeOf expr)
     , HasInferredType expr
-    , NodesConstraint (InferOf expr) (Unify m)
+    , KNodesConstraint (InferOf expr) (Unify m)
     , KTraversable (InferOf expr)
     , Infer m expr
     ) =>

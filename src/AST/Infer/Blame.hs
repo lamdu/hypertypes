@@ -89,11 +89,11 @@ class
 
     -- TODO: Putting documentation here causes duplication in the haddock documentation
     blamableRecursive ::
-        Proxy m -> Proxy t -> Dict (NodesConstraint t (Blame m))
+        Proxy m -> Proxy t -> Dict (KNodesConstraint t (Blame m))
     {-# INLINE blamableRecursive #-}
     default blamableRecursive ::
-        NodesConstraint t (Blame m) =>
-        Proxy m -> Proxy t -> Dict (NodesConstraint t (Blame m))
+        KNodesConstraint t (Blame m) =>
+        Proxy m -> Proxy t -> Dict (KNodesConstraint t (Blame m))
     blamableRecursive _ _ = Dict
 
 instance Recursive (Blame m) where

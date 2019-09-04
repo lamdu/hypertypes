@@ -28,7 +28,7 @@ import Prelude.Compat
 -- | A class of constraint constructors that apply to all recursive child nodes
 class Recursive c where
     -- | Lift a recursive constraint to the next layer
-    recurse :: (KNodes k, c k) => Proxy (c k) -> Dict (NodesConstraint k c)
+    recurse :: (KNodes k, c k) => Proxy (c k) -> Dict (KNodesConstraint k c)
 
 instance (Recursive a, Recursive b) => Recursive (And a b) where
     recurse p =
@@ -43,11 +43,11 @@ instance (Recursive a, Recursive b) => Recursive (And a b) where
 
 -- | A class of 'Knot's which recursively implement 'KNodes'
 class KNodes k => RNodes k where
-    recursiveKNodes :: Proxy k -> Dict (NodesConstraint k RNodes)
+    recursiveKNodes :: Proxy k -> Dict (KNodesConstraint k RNodes)
     {-# INLINE recursiveKNodes #-}
     default recursiveKNodes ::
-        NodesConstraint k RNodes =>
-        Proxy k -> Dict (NodesConstraint k RNodes)
+        KNodesConstraint k RNodes =>
+        Proxy k -> Dict (KNodesConstraint k RNodes)
     recursiveKNodes _ = Dict
 
 instance RNodes Pure
@@ -62,11 +62,11 @@ instance Recursive RNodes where
 
 -- | A class of 'Knot's which recursively implement 'KFunctor'
 class (KFunctor k, RNodes k) => RFunctor k where
-    recursiveKFunctor :: Proxy k -> Dict (NodesConstraint k RFunctor)
+    recursiveKFunctor :: Proxy k -> Dict (KNodesConstraint k RFunctor)
     {-# INLINE recursiveKFunctor #-}
     default recursiveKFunctor ::
-        NodesConstraint k RFunctor =>
-        Proxy k -> Dict (NodesConstraint k RFunctor)
+        KNodesConstraint k RFunctor =>
+        Proxy k -> Dict (KNodesConstraint k RFunctor)
     recursiveKFunctor _ = Dict
 
 instance RFunctor Pure
@@ -78,11 +78,11 @@ instance Recursive RFunctor where
 
 -- | A class of 'Knot's which recursively implement 'KFoldable'
 class (KFoldable k, RNodes k) => RFoldable k where
-    recursiveKFoldable :: Proxy k -> Dict (NodesConstraint k RFoldable)
+    recursiveKFoldable :: Proxy k -> Dict (KNodesConstraint k RFoldable)
     {-# INLINE recursiveKFoldable #-}
     default recursiveKFoldable ::
-        NodesConstraint k RFoldable =>
-        Proxy k -> Dict (NodesConstraint k RFoldable)
+        KNodesConstraint k RFoldable =>
+        Proxy k -> Dict (KNodesConstraint k RFoldable)
     recursiveKFoldable _ = Dict
 
 instance RFoldable Pure
@@ -94,11 +94,11 @@ instance Recursive RFoldable where
 
 -- | A class of 'Knot's which recursively implement 'KTraversable'
 class (KTraversable k, RFunctor k, RFoldable k) => RTraversable k where
-    recursiveKTraversable :: Proxy k -> Dict (NodesConstraint k RTraversable)
+    recursiveKTraversable :: Proxy k -> Dict (KNodesConstraint k RTraversable)
     {-# INLINE recursiveKTraversable #-}
     default recursiveKTraversable ::
-        NodesConstraint k RTraversable =>
-        Proxy k -> Dict (NodesConstraint k RTraversable)
+        KNodesConstraint k RTraversable =>
+        Proxy k -> Dict (KNodesConstraint k RTraversable)
     recursiveKTraversable _ = Dict
 
 instance RTraversable Pure
@@ -113,7 +113,7 @@ instance Recursive RTraversable where
 recurseBoth ::
     forall a b k.
     (KNodes k, Recursive a, Recursive b, a k, b k) =>
-    Proxy (And a b k) -> Dict (NodesConstraint k (And a b))
+    Proxy (And a b k) -> Dict (KNodesConstraint k (And a b))
 recurseBoth _ =
     withDict (recurse (Proxy @(a k))) $
     withDict (recurse (Proxy @(b k))) $

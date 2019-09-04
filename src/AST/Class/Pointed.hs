@@ -30,7 +30,7 @@ instance (KPointed a, KPointed b) => KPointed (Product a b) where
 
 -- | Variant of 'pureK' for functions with context instead of a witness parameter
 pureKWith ::
-    (KPointed k, NodesConstraint k constraint) =>
+    (KPointed k, KNodesConstraint k constraint) =>
     Proxy constraint ->
     (forall n. constraint n => Tree p n) ->
     Tree k p

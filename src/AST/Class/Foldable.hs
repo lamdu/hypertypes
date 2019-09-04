@@ -33,7 +33,7 @@ instance KFoldable (Const a) where
 -- | Variant of 'foldMapK' for functions with a context instead of a witness parameter
 {-# INLINE foldMapKWith #-}
 foldMapKWith ::
-    (Monoid a, KFoldable k, NodesConstraint k constraint) =>
+    (Monoid a, KFoldable k, KNodesConstraint k constraint) =>
     Proxy constraint ->
     (forall n. constraint n => Tree p n -> a) ->
     Tree k p ->
@@ -47,7 +47,7 @@ foldMapKWith p f = foldMapK (\w -> kLiftConstraint w p f)
 foldMapK1 ::
     forall a k n p.
     ( Monoid a, KFoldable k
-    , NodesConstraint k ((~) n)
+    , KNodesConstraint k ((~) n)
     ) =>
     (Tree p n -> a) ->
     Tree k p ->
@@ -69,7 +69,7 @@ traverseK_ f = sequenceA_ . foldMapK (fmap (:[]) . f)
 -- | Variant of 'traverseK_' for functions with context rather than a witness parameter
 {-# INLINE traverseKWith_ #-}
 traverseKWith_ ::
-    (Applicative f, KFoldable k, NodesConstraint k constraint) =>
+    (Applicative f, KFoldable k, KNodesConstraint k constraint) =>
     Proxy constraint ->
     (forall n. constraint n => Tree p n -> f ()) ->
     Tree k p ->
@@ -81,7 +81,7 @@ traverseKWith_ p f = traverseK_ (\w -> kLiftConstraint w p f)
 traverseK1_ ::
     forall f k n p.
     ( Applicative f, KFoldable k
-    , NodesConstraint k ((~) n)
+    , KNodesConstraint k ((~) n)
     ) =>
     (Tree p n -> f ()) ->
     Tree k p ->

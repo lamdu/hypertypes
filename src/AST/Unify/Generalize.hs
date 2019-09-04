@@ -50,7 +50,7 @@ Lens.makePrisms ''GTerm
 makeCommonInstances [''GTerm]
 
 instance RNodes a => KNodes (Flip GTerm a) where
-    type NodesConstraint (Flip GTerm a) c = (c a, Recursive c)
+    type KNodesConstraint (Flip GTerm a) c = (c a, Recursive c)
     data KWitness (Flip GTerm a) n = KWitness_Flip_GTerm (KRecWitness a n)
     {-# INLINE kLiftConstraint #-}
     kLiftConstraint (KWitness_Flip_GTerm KRecSelf) = const id
@@ -60,7 +60,7 @@ instance RNodes a => KNodes (Flip GTerm a) where
 
 kLiftConstraintH ::
     forall a c b n r.
-    (RNodes a, NodesConstraint (Flip GTerm a) c) =>
+    (RNodes a, KNodesConstraint (Flip GTerm a) c) =>
     KWitness a b -> KRecWitness b n -> Proxy c -> (c n => r) -> r
 kLiftConstraintH c n =
     withDict (recurseBoth (Proxy @(And RNodes c a))) $

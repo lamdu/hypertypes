@@ -54,7 +54,7 @@ liftK2 f x = mapK (\w -> (\(Pair a b) -> f w a b)) . zipK x
 -- | Variant of 'liftK2' for functions with context
 {-# INLINE liftK2With #-}
 liftK2With ::
-    (KApply k, NodesConstraint k constraint) =>
+    (KApply k, KNodesConstraint k constraint) =>
     Proxy constraint ->
     (forall n. constraint n => Tree p n -> Tree q n -> Tree r n) ->
     Tree k p ->

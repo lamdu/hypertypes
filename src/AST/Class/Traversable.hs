@@ -54,7 +54,7 @@ traverseK f = sequenceK . mapK (fmap MkContainedK . f)
 -- | Variant of 'traverseK' for functions with context instead of a witness parameter
 {-# INLINE traverseKWith #-}
 traverseKWith ::
-    (Applicative f, KTraversable k, NodesConstraint k constraint) =>
+    (Applicative f, KTraversable k, KNodesConstraint k constraint) =>
     Proxy constraint ->
     (forall c. constraint c => Tree m c -> f (Tree n c)) ->
     Tree k m ->
@@ -66,6 +66,6 @@ traverseKWith p f = sequenceK . mapKWith p (MkContainedK . f)
 -- It is a valid 'Traversal' as it avoids using @RankNTypes@.
 {-# INLINE traverseK1 #-}
 traverseK1 ::
-    (KTraversable k, NodesConstraint k ((~) n)) =>
+    (KTraversable k, KNodesConstraint k ((~) n)) =>
     Traversal (Tree k p) (Tree k q) (Tree p n) (Tree q n)
 traverseK1 f = sequenceK . (mappedK1 %~ (MkContainedK . f))

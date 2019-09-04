@@ -42,7 +42,7 @@ makeCommonInstances [''UnifyError]
 
 -- TODO: TH should be able to generate this
 instance KNodes t => KNodes (UnifyError t) where
-    type NodesConstraint (UnifyError t) c = (c t, NodesConstraint t c)
+    type KNodesConstraint (UnifyError t) c = (c t, KNodesConstraint t c)
     data KWitness (UnifyError t) n where
         KWitness_UnifyError_0 :: KWitness (UnifyError t) t
         KWitness_UnifyError_E0 :: KWitness t n -> KWitness (UnifyError t) n

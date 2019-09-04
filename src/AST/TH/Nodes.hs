@@ -21,7 +21,7 @@ makeKNodes typeName = makeTypeInfo typeName >>= makeKNodesForType
 makeKNodesForType :: TypeInfo -> DecsQ
 makeKNodesForType info =
     instanceD (simplifyContext (makeContext info)) (appT (conT ''KNodes) (pure (tiInstance info)))
-    [ tySynInstD ''NodesConstraint
+    [ tySynInstD ''KNodesConstraint
         (simplifyContext nodesConstraint <&> toTuple <&> TySynEqn [tiInstance info, VarT constraintVar])
     , dataInstD (pure []) ''KWitness
         [pure (tiInstance info), pure (VarT (mkName "node"))]
@@ -40,7 +40,7 @@ makeKNodesForType info =
         nodesConstraint =
             (Set.toList (tcChildren contents) <&> (VarT constraintVar `AppT`))
             <> (Set.toList (tcEmbeds contents) <&>
-                \x -> ConT ''NodesConstraint `AppT` x `AppT` VarT constraintVar)
+                \x -> ConT ''KNodesConstraint `AppT` x `AppT` VarT constraintVar)
             <> Set.toList (tcOthers contents)
 
 makeContext :: TypeInfo -> [Pred]

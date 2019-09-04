@@ -126,7 +126,7 @@ instance
     , HasInferredValue typ
     , Unify m typ
     , KTraversable varTypes
-    , NodesConstraint varTypes (MonadInstantiate m)
+    , KNodesConstraint varTypes (MonadInstantiate m)
     , RTraversable typ
     , Infer m typ
     ) =>
@@ -146,7 +146,7 @@ instance
 inferType ::
     ( InferOf t ~ ANode t
     , KTraversable t
-    , NodesConstraint t HasInferredValue
+    , KNodesConstraint t HasInferredValue
     , Unify m t
     , MonadInstantiate m t
     ) =>
@@ -194,12 +194,12 @@ class
 
     hasSchemeRecursive ::
         Proxy varTypes -> Proxy m -> Proxy t ->
-        Dict (NodesConstraint t (HasScheme varTypes m))
+        Dict (KNodesConstraint t (HasScheme varTypes m))
     {-# INLINE hasSchemeRecursive #-}
     default hasSchemeRecursive ::
-        NodesConstraint t (HasScheme varTypes m) =>
+        KNodesConstraint t (HasScheme varTypes m) =>
         Proxy varTypes -> Proxy m -> Proxy t ->
-        Dict (NodesConstraint t (HasScheme varTypes m))
+        Dict (KNodesConstraint t (HasScheme varTypes m))
     hasSchemeRecursive _ _ _ = Dict
 
 instance Recursive (HasScheme varTypes m) where
@@ -217,7 +217,7 @@ loadScheme ::
     forall m varTypes typ.
     ( Monad m
     , KTraversable varTypes
-    , NodesConstraint varTypes (Unify m)
+    , KNodesConstraint varTypes (Unify m)
     , HasScheme varTypes m typ
     ) =>
     Tree Pure (Scheme varTypes typ) ->
@@ -262,7 +262,7 @@ saveH (GPoly x) =
     _ -> error "unexpected state at saveScheme's forall"
 
 saveScheme ::
-    ( NodesConstraint varTypes OrdQVar
+    ( KNodesConstraint varTypes OrdQVar
     , KPointed varTypes
     , HasScheme varTypes m typ
     ) =>

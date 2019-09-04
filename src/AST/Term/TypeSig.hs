@@ -49,8 +49,8 @@ instance
     , HasInferredValue (TypeOf term)
     , KTraversable vars
     , KTraversable (InferOf term)
-    , NodesConstraint (InferOf term) (Unify m)
-    , NodesConstraint vars (MonadInstantiate m)
+    , KNodesConstraint (InferOf term) (Unify m)
+    , KNodesConstraint vars (MonadInstantiate m)
     , Unify m (TypeOf term)
     , Infer m (TypeOf term)
     , Infer m term

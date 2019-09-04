@@ -131,7 +131,7 @@ getVar _ = Nothing
 childrenTypesFromTypeName ::
     Name -> [Type] -> StateT (Set Type) Q TypeContents
 childrenTypesFromTypeName name args =
-    reifyInstances ''NodesConstraint [typ, VarT constraintVar] & lift
+    reifyInstances ''KNodesConstraint [typ, VarT constraintVar] & lift
     >>=
     \case
     [] ->
@@ -157,7 +157,7 @@ childrenTypesFromTypeName name args =
             -- Not a datatype, so an embedded type family
             pure mempty { tcEmbeds = Set.singleton typ }
     [TySynInstD ccI (TySynEqn [typI, VarT cI] x)]
-        | ccI == ''NodesConstraint ->
+        | ccI == ''KNodesConstraint ->
             case unapply typI of
             (ConT n1, argsI) | n1 == name ->
                 case traverse getVar argsI of
@@ -183,7 +183,7 @@ childrenTypesFromChildrenConstraint c0 c@(AppT (VarT c1) x)
 childrenTypesFromChildrenConstraint c0 constraints =
     case unapply constraints of
     (ConT cc1, [x, VarT c1])
-        | cc1 == ''NodesConstraint && c0 == c1 ->
+        | cc1 == ''KNodesConstraint && c0 == c1 ->
             pure mempty { tcEmbeds = Set.singleton x }
     (TupleT{}, xs) ->
         traverse (childrenTypesFromChildrenConstraint c0) xs <&> mconcat

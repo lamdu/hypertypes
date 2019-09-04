@@ -47,11 +47,11 @@ iAnnotations f (ITerm pl r x) =
 -- | A class representing the requirements of 'traverseITermWith'
 class (RTraversable e, KTraversable (InferOf e)) => TraverseITermWith c e where
     traverseITermWithConstraints ::
-        Proxy c -> Proxy e -> Dict (NodesConstraint e (TraverseITermWith c), NodesConstraint (InferOf e) c)
+        Proxy c -> Proxy e -> Dict (KNodesConstraint e (TraverseITermWith c), KNodesConstraint (InferOf e) c)
     {-# INLINE traverseITermWithConstraints #-}
     default traverseITermWithConstraints ::
-        (NodesConstraint e (TraverseITermWith c), NodesConstraint (InferOf e) c) =>
-        Proxy c -> Proxy e -> Dict (NodesConstraint e (TraverseITermWith c), NodesConstraint (InferOf e) c)
+        (KNodesConstraint e (TraverseITermWith c), KNodesConstraint (InferOf e) c) =>
+        Proxy c -> Proxy e -> Dict (KNodesConstraint e (TraverseITermWith c), KNodesConstraint (InferOf e) c)
     traverseITermWithConstraints _ _ = Dict
 
 -- | 'traverseK' equivalent for 'ITerm', which applies on the unification variable knot

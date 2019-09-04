@@ -68,8 +68,8 @@ makePrisms ''InferChild
 --
 -- The 'inferContext' method represents the following constraints on @t@:
 --
--- * @NodesConstraint (InferOf t) (Unify m)@ - The child nodes of the inferrence can unify in the @m@ 'Monad'
--- * @NodesConstraint t (Infer m)@ - @Infer m@ is also available for child nodes
+-- * @KNodesConstraint (InferOf t) (Unify m)@ - The child nodes of the inferrence can unify in the @m@ 'Monad'
+-- * @KNodesConstraint t (Infer m)@ - @Infer m@ is also available for child nodes
 --
 -- It replaces context for the 'Infer' class to avoid @UndecidableSuperClasses@.
 --
@@ -86,13 +86,13 @@ class (Monad m, KFunctor t) => Infer m t where
     inferContext ::
         Proxy m ->
         Proxy t ->
-        Dict (NodesConstraint t (Infer m), NodesConstraint (InferOf t) (Unify m))
+        Dict (KNodesConstraint t (Infer m), KNodesConstraint (InferOf t) (Unify m))
     {-# INLINE inferContext #-}
     default inferContext ::
-        (NodesConstraint t (Infer m), NodesConstraint (InferOf t) (Unify m)) =>
+        (KNodesConstraint t (Infer m), KNodesConstraint (InferOf t) (Unify m)) =>
         Proxy m ->
         Proxy t ->
-        Dict (NodesConstraint t (Infer m), NodesConstraint (InferOf t) (Unify m))
+        Dict (KNodesConstraint t (Infer m), KNodesConstraint (InferOf t) (Unify m))
     inferContext _ _ = Dict
 
 instance Recursive (Infer m) where

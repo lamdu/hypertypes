@@ -77,11 +77,11 @@ class
     structureMismatch _ x y = unifyError (Mismatch (x ^. uBody) (y ^. uBody))
 
     -- TODO: Putting documentation here causes duplication in the haddock documentation
-    unifyRecursive :: Proxy m -> Proxy t -> Dict (NodesConstraint t (Unify m))
+    unifyRecursive :: Proxy m -> Proxy t -> Dict (KNodesConstraint t (Unify m))
     {-# INLINE unifyRecursive #-}
     default unifyRecursive ::
-        NodesConstraint t (Unify m) =>
-        Proxy m -> Proxy t -> Dict (NodesConstraint t (Unify m))
+        KNodesConstraint t (Unify m) =>
+        Proxy m -> Proxy t -> Dict (KNodesConstraint t (Unify m))
     unifyRecursive _ _ = Dict
 
 instance Recursive (Unify m) where

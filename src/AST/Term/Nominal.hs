@@ -102,7 +102,7 @@ makeKTraversableApplyAndBases ''ToNom
 makeKTraversableApplyAndBases ''FromNom
 
 instance KNodes v => KNodes (NominalInst n v) where
-    type NodesConstraint (NominalInst n v) c = NodesConstraint v c
+    type KNodesConstraint (NominalInst n v) c = KNodesConstraint v c
     data KWitness (NominalInst n v) c = KWitness_NominalInst (KWitness v c)
     {-# INLINE kLiftConstraint #-}
     kLiftConstraint (KWitness_NominalInst w) = kLiftConstraint w
@@ -132,8 +132,8 @@ instance
     ( Eq nomId
     , ZipMatch varTypes
     , KTraversable varTypes
-    , NodesConstraint varTypes ZipMatch
-    , NodesConstraint varTypes OrdQVar
+    , KNodesConstraint varTypes ZipMatch
+    , KNodesConstraint varTypes OrdQVar
     ) =>
     ZipMatch (NominalInst nomId varTypes) where
 
@@ -162,7 +162,7 @@ instance (Pretty (QVar k), Pretty (Node outer k)) => PrettyConstraints outer k
 instance
     ( Pretty nomId
     , KApply varTypes, KFoldable varTypes
-    , NodesConstraint varTypes (PrettyConstraints k)
+    , KNodesConstraint varTypes (PrettyConstraints k)
     ) =>
     Pretty (NominalInst nomId varTypes k) where
 
@@ -182,8 +182,8 @@ instance
                 (pPrint k <> Pretty.text ":") <+> pPrint v
 
 instance (RNodes typ, KNodes (NomVarTypes typ)) => KNodes (LoadedNominalDecl typ) where
-    type NodesConstraint (LoadedNominalDecl typ) c =
-        ( NodesConstraint (NomVarTypes typ) c
+    type KNodesConstraint (LoadedNominalDecl typ) c =
+        ( KNodesConstraint (NomVarTypes typ) c
         , c typ
         , Recursive c
         )
@@ -259,7 +259,7 @@ loadNominalDecl ::
     forall m typ.
     ( Monad m
     , KTraversable (NomVarTypes typ)
-    , NodesConstraint (NomVarTypes typ) (Unify m)
+    , KNodesConstraint (NomVarTypes typ) (Unify m)
     , HasScheme (NomVarTypes typ) m typ
     ) =>
     Tree Pure (NominalDecl typ) ->
@@ -283,7 +283,7 @@ lookupParams ::
     forall m varTypes.
     ( Applicative m
     , KTraversable varTypes
-    , NodesConstraint varTypes (Unify m)
+    , KNodesConstraint varTypes (Unify m)
     ) =>
     Tree varTypes (QVarInstances (UVarOf m)) ->
     m (Tree varTypes (QVarInstances (UVarOf m)))
@@ -306,7 +306,7 @@ instance
     ( MonadScopeLevel m
     , MonadNominals nomId (TypeOf expr) m
     , KTraversable (NomVarTypes (TypeOf expr))
-    , NodesConstraint (NomVarTypes (TypeOf expr)) (Unify m)
+    , KNodesConstraint (NomVarTypes (TypeOf expr)) (Unify m)
     , Unify m (TypeOf expr)
     , HasInferredType expr
     , Infer m expr
@@ -338,7 +338,7 @@ instance
     , HasNominalInst nomId (TypeOf expr)
     , MonadNominals nomId (TypeOf expr) m
     , KTraversable (NomVarTypes (TypeOf expr))
-    , NodesConstraint (NomVarTypes (TypeOf expr)) (Unify m)
+    , KNodesConstraint (NomVarTypes (TypeOf expr)) (Unify m)
     , Unify m (TypeOf expr)
     ) =>
     Infer m (FromNom nomId expr) where

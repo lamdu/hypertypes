@@ -56,11 +56,11 @@ instance Eq a => ZipMatch (Const a) where
 --
 -- Can be used with the combinators in "AST.Class.Recursive".
 class (ZipMatch k, RNodes k) => RZipMatch k where
-    recursiveZipMatch :: Proxy k -> Dict (NodesConstraint k RZipMatch)
+    recursiveZipMatch :: Proxy k -> Dict (KNodesConstraint k RZipMatch)
     {-# INLINE recursiveZipMatch #-}
     default recursiveZipMatch ::
-        NodesConstraint k RZipMatch =>
-        Proxy k -> Dict (NodesConstraint k RZipMatch)
+        KNodesConstraint k RZipMatch =>
+        Proxy k -> Dict (KNodesConstraint k RZipMatch)
     recursiveZipMatch _ = Dict
 
 instance RZipMatch Pure
@@ -81,7 +81,7 @@ zipMatch2 f x y = zipMatch x y <&> mapK (\w (Pair a b) -> f w a b)
 -- | Variant of 'zipMatch2' for functions with context instead of a witness parameter
 {-# INLINE zipMatch2With #-}
 zipMatch2With ::
-    (ZipMatch k, KFunctor k, NodesConstraint k constraint) =>
+    (ZipMatch k, KFunctor k, KNodesConstraint k constraint) =>
     Proxy constraint ->
     (forall n. constraint n => Tree p n -> Tree q n -> Tree r n) ->
     Tree k p -> Tree k q -> Maybe (Tree k r)
@@ -98,7 +98,7 @@ zipMatchA f x y = zipMatch x y <&> traverseK (\w (Pair a b) -> f w a b)
 -- | An 'Applicative' variant of 'zipMatch2With'
 {-# INLINE zipMatchWithA #-}
 zipMatchWithA ::
-    (Applicative f, ZipMatch k, KTraversable k, NodesConstraint k constraint) =>
+    (Applicative f, ZipMatch k, KTraversable k, KNodesConstraint k constraint) =>
     Proxy constraint ->
     (forall n. constraint n => Tree p n -> Tree q n -> f (Tree r n)) ->
     Tree k p -> Tree k q -> Maybe (f (Tree k r))
@@ -115,7 +115,7 @@ zipMatch_ f x y = zipMatch x y <&> traverseK_ (\w (Pair a b) -> f w a b)
 -- | A variant of 'zipMatchWithA' where the 'Applicative' actions do not contain results
 {-# INLINE zipMatchWith_ #-}
 zipMatchWith_ ::
-    (Applicative f, ZipMatch k, KFoldable k, NodesConstraint k constraint) =>
+    (Applicative f, ZipMatch k, KFoldable k, KNodesConstraint k constraint) =>
     Proxy constraint ->
     (forall n. constraint n => Tree p n -> Tree q n -> f ()) ->
     Tree k p -> Tree k q -> Maybe (f ())
@@ -124,7 +124,7 @@ zipMatchWith_ p f x y = zipMatch x y <&> traverseKWith_ p (\(Pair a b) -> f a b)
 -- | A variant of 'zipMatchWith_' for 'AST.Knot.Knot's with a single node type (avoids using @RankNTypes@)
 {-# INLINE zipMatch1_ #-}
 zipMatch1_ ::
-    (Applicative f, ZipMatch k, KFoldable k, NodesConstraint k ((~) n)) =>
+    (Applicative f, ZipMatch k, KFoldable k, KNodesConstraint k ((~) n)) =>
     (Tree p n -> Tree q n -> f ()) ->
     Tree k p -> Tree k q -> Maybe (f ())
 zipMatch1_ f x y = zipMatch x y <&> traverseK1_ (\(Pair a b) -> f a b)
