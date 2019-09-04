@@ -8,7 +8,7 @@ module AST.Class.Foldable
     ) where
 
 import AST.Class.Nodes (KNodes(..))
-import AST.Knot (Knot, RunKnot, Tree)
+import AST.Knot (Tree)
 import Data.Foldable (sequenceA_)
 import Data.Functor.Const (Const(..))
 import Data.Proxy (Proxy(..))
@@ -31,8 +31,6 @@ instance KFoldable (Const a) where
     {-# INLINE foldMapK #-}
     foldMapK _ _ = mempty
 
-newtype FoldMapK a m (c :: Knot) = FoldMapK { getFoldMapK :: m c -> a }
-
 -- | Variant of 'foldMapK' for functions with a context instead of a witness parameter
 {-# INLINE foldMapKWith #-}
 foldMapKWith ::
@@ -41,9 +39,7 @@ foldMapKWith ::
     (forall n. constraint n => Tree p n -> a) ->
     Tree k p ->
     a
-foldMapKWith p f = foldMapK (\w -> getFoldMapK (kLiftConstraint w p (FoldMapK f)))
-
-newtype FoldMapKW k a m c = FoldMapKW { getFoldMapKW :: KWitness k (RunKnot c) -> m c -> a }
+foldMapKWith p f = foldMapK (\w -> kLiftConstraint w p f)
 
 -- | Variant of 'foldMapKWith' which provides a witness parameter in addition to the context
 {-# INLINE foldMapKWithWitness #-}
@@ -53,7 +49,7 @@ foldMapKWithWitness ::
     (forall n. constraint n => KWitness k n -> Tree p n -> a) ->
     Tree k p ->
     a
-foldMapKWithWitness p f = foldMapK (\w -> getFoldMapKW (kLiftConstraint w p (FoldMapKW f)) w)
+foldMapKWithWitness p f = foldMapK (\w -> kLiftConstraint w p f w)
 
 -- TODO: Replace `foldMapK1` with `foldedK1` which is a `Fold`
 
@@ -89,8 +85,7 @@ traverseKWith_ ::
     (forall n. constraint n => Tree p n -> f ()) ->
     Tree k p ->
     f ()
-traverseKWith_ p f =
-    traverseK_ (\w -> getFoldMapK (kLiftConstraint w p (FoldMapK f)))
+traverseKWith_ p f = traverseK_ (\w -> kLiftConstraint w p f)
 
 -- | 'KFoldable' variant of 'Data.Foldable.traverse_' for 'AST.Knot.Knot's with a single node type (avoids using @RankNTypes@)
 {-# INLINE traverseK1_ #-}

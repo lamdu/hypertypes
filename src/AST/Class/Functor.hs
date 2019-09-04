@@ -7,7 +7,7 @@ module AST.Class.Functor
     ) where
 
 import AST.Class.Nodes
-import AST.Knot (Knot, RunKnot, Tree)
+import AST.Knot (Tree)
 import Control.Lens (Setter, sets)
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
@@ -35,8 +35,6 @@ instance (KFunctor a, KFunctor b) => KFunctor (Product a b) where
     mapK f (Pair x y) =
         Pair (mapK (f . KWitness_Product_E0) x) (mapK (f . KWitness_Product_E1) y)
 
-newtype MapK p q (c :: Knot) = MapK { getMapK :: p c -> q c }
-
 -- | Variant of 'mapK' for functions with context instead of a witness parameter
 {-# INLINE mapKWith #-}
 mapKWith ::
@@ -45,9 +43,7 @@ mapKWith ::
     (forall n. constraint n => Tree p n -> Tree q n) ->
     Tree k p ->
     Tree k q
-mapKWith p f = mapK (\w -> getMapK (kLiftConstraint w p (MapK f)))
-
-newtype MapKW k p q n = MapKW { getMapKW :: KWitness k (RunKnot n) -> p n -> q n }
+mapKWith p f = mapK (\w -> kLiftConstraint w p f)
 
 -- | Variant of 'mapKWith' which provides a witness parameter in addition to the context
 {-# INLINE mapKWithWitness #-}
@@ -57,7 +53,7 @@ mapKWithWitness ::
     (forall n. constraint n => KWitness k n -> Tree p n -> Tree q n) ->
     Tree k p ->
     Tree k q
-mapKWithWitness p f = mapK (\w -> getMapKW (kLiftConstraint w p (MapKW f)) w)
+mapKWithWitness p f = mapK (\w -> kLiftConstraint w p f w)
 
 -- | 'KFunctor' variant of 'Control.Lens.mapped' for 'AST.Knot.Knot's with a single node type.
 --
