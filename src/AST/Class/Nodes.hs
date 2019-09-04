@@ -56,11 +56,11 @@ instance KNodes (Const a) where
 instance (KNodes a, KNodes b) => KNodes (Product a b) where
     type KNodesConstraint (Product a b) x = (KNodesConstraint a x, KNodesConstraint b x)
     data KWitness (Product a b) n where
-        KWitness_Product_E0 :: KWitness a n -> KWitness (Product a b) n
-        KWitness_Product_E1 :: KWitness b n -> KWitness (Product a b) n
+        KW_Product_E0 :: KWitness a n -> KWitness (Product a b) n
+        KW_Product_E1 :: KWitness b n -> KWitness (Product a b) n
     {-# INLINE kLiftConstraint #-}
-    kLiftConstraint (KWitness_Product_E0 w) = kLiftConstraint w
-    kLiftConstraint (KWitness_Product_E1 w) = kLiftConstraint w
+    kLiftConstraint (KW_Product_E0 w) = kLiftConstraint w
+    kLiftConstraint (KW_Product_E1 w) = kLiftConstraint w
     {-# INLINE kCombineConstraints #-}
     kCombineConstraints p =
         withDict (kCombineConstraints (p0 p)) $

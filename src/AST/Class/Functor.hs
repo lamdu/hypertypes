@@ -32,7 +32,7 @@ instance KFunctor (Const a) where
 instance (KFunctor a, KFunctor b) => KFunctor (Product a b) where
     {-# INLINE mapK #-}
     mapK f (Pair x y) =
-        Pair (mapK (f . KWitness_Product_E0) x) (mapK (f . KWitness_Product_E1) y)
+        Pair (mapK (f . KW_Product_E0) x) (mapK (f . KW_Product_E1) y)
 
 -- | Variant of 'mapK' for functions with context instead of a witness parameter
 {-# INLINE mapKWith #-}

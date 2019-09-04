@@ -262,7 +262,7 @@ makeNodeOf info =
     )
     where
         niceTypeName = tiName info & show & reverse & takeWhile (/= '.') & reverse
-        baseName = "KWitness_" <> niceTypeName <> "_"
+        baseName = "KW_" <> niceTypeName <> "_"
         pats =
             tiCons info
             >>= D.constructorFields

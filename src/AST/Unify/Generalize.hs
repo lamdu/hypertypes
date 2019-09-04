@@ -51,10 +51,10 @@ makeCommonInstances [''GTerm]
 
 instance RNodes a => KNodes (Flip GTerm a) where
     type KNodesConstraint (Flip GTerm a) c = (c a, Recursive c)
-    data KWitness (Flip GTerm a) n = KWitness_Flip_GTerm (KRecWitness a n)
+    data KWitness (Flip GTerm a) n = KW_Flip_GTerm (KRecWitness a n)
     {-# INLINE kLiftConstraint #-}
-    kLiftConstraint (KWitness_Flip_GTerm KRecSelf) = const id
-    kLiftConstraint (KWitness_Flip_GTerm (KRecSub c n)) = kLiftConstraintH c n
+    kLiftConstraint (KW_Flip_GTerm KRecSelf) = const id
+    kLiftConstraint (KW_Flip_GTerm (KRecSub c n)) = kLiftConstraintH c n
     {-# INLINE kCombineConstraints #-}
     kCombineConstraints _ = Dict
 
@@ -65,22 +65,22 @@ kLiftConstraintH ::
 kLiftConstraintH c n =
     withDict (recurseBoth (Proxy @(And RNodes c a))) $
     kLiftConstraint c (Proxy @(And RNodes c))
-    (kLiftConstraint (KWitness_Flip_GTerm n))
+    (kLiftConstraint (KW_Flip_GTerm n))
 
 instance RFunctor ast => KFunctor (Flip GTerm ast) where
     {-# INLINE mapK #-}
     mapK f =
         _Flip %~
         \case
-        GMono x -> f (KWitness_Flip_GTerm KRecSelf) x & GMono
-        GPoly x -> f (KWitness_Flip_GTerm KRecSelf) x & GPoly
+        GMono x -> f (KW_Flip_GTerm KRecSelf) x & GMono
+        GPoly x -> f (KW_Flip_GTerm KRecSelf) x & GPoly
         GBody x ->
             withDict (recurse (Proxy @(RFunctor ast))) $
             mapK
             ( \cw ->
                 kLiftConstraint cw (Proxy @RFunctor) $
                 Lens.from _Flip %~
-                mapK (f . (\(KWitness_Flip_GTerm nw) -> KWitness_Flip_GTerm (KRecSub cw nw)))
+                mapK (f . (\(KW_Flip_GTerm nw) -> KW_Flip_GTerm (KRecSub cw nw)))
             ) x
             & GBody
 
@@ -88,14 +88,14 @@ instance RFoldable ast => KFoldable (Flip GTerm ast) where
     {-# INLINE foldMapK #-}
     foldMapK f =
         \case
-        GMono x -> f (KWitness_Flip_GTerm KRecSelf) x
-        GPoly x -> f (KWitness_Flip_GTerm KRecSelf) x
+        GMono x -> f (KW_Flip_GTerm KRecSelf) x
+        GPoly x -> f (KW_Flip_GTerm KRecSelf) x
         GBody x ->
             withDict (recurse (Proxy @(RFoldable ast))) $
             foldMapK
             ( \cw ->
                 kLiftConstraint cw (Proxy @RFoldable) $
-                foldMapK (f . (\(KWitness_Flip_GTerm nw) -> KWitness_Flip_GTerm (KRecSub cw nw)))
+                foldMapK (f . (\(KW_Flip_GTerm nw) -> KW_Flip_GTerm (KRecSub cw nw)))
                 . (_Flip #)
             ) x
         . (^. _Flip)
