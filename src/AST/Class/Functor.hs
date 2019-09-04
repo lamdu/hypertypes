@@ -19,10 +19,13 @@ import Prelude.Compat
 -- | A variant of 'Functor' for 'AST.Knot.Knot's
 class KNodes k => KFunctor k where
     -- | 'KFunctor' variant of 'fmap'
+    --
+    -- Applied a given mapping for @k@'s nodes (trees along witnesses that they are nodes of @k@)
+    -- to result with a new tree, potentially with a different fix-point.
     mapK ::
-        (forall c. KWitness k c -> Tree m c -> Tree n c) ->
-        Tree k m ->
-        Tree k n
+        (forall n. KWitness k n -> Tree p n -> Tree q n) ->
+        Tree k p ->
+        Tree k q
 
 instance KFunctor (Const a) where
     {-# INLINE mapK #-}
@@ -33,26 +36,28 @@ instance (KFunctor a, KFunctor b) => KFunctor (Product a b) where
     mapK f (Pair x y) =
         Pair (mapK (f . KWitness_Product_E0) x) (mapK (f . KWitness_Product_E1) y)
 
-newtype MapK m n (c :: Knot) = MapK { getMapK :: m c -> n c }
+newtype MapK p q (c :: Knot) = MapK { getMapK :: p c -> q c }
 
+-- | Variant of 'mapK' for functions with context instead of a witness parameter
 {-# INLINE mapKWith #-}
 mapKWith ::
     (KFunctor k, NodesConstraint k constraint) =>
     Proxy constraint ->
-    (forall c. constraint c => Tree m c -> Tree n c) ->
-    Tree k m ->
-    Tree k n
+    (forall n. constraint n => Tree p n -> Tree q n) ->
+    Tree k p ->
+    Tree k q
 mapKWith p f = mapK (getMapK . kLiftConstraint p (MapK f))
 
-newtype MapKW k m n c = MapKW { getMapKW :: KWitness k (RunKnot c) -> m c -> n c }
+newtype MapKW k p q n = MapKW { getMapKW :: KWitness k (RunKnot n) -> p n -> q n }
 
+-- | Variant of 'mapKWith' which provides a witness parameter in addition to the context
 {-# INLINE mapKWithWitness #-}
 mapKWithWitness ::
     (KFunctor k, NodesConstraint k constraint) =>
     Proxy constraint ->
-    (forall c. constraint c => KWitness k c -> Tree m c -> Tree n c) ->
-    Tree k m ->
-    Tree k n
+    (forall n. constraint n => KWitness k n -> Tree p n -> Tree q n) ->
+    Tree k p ->
+    Tree k q
 mapKWithWitness p f = mapK (join (getMapKW . kLiftConstraint p (MapKW f)))
 
 -- | 'KFunctor' variant of 'Control.Lens.mapped' for 'AST.Knot.Knot's with a single node type.
@@ -60,7 +65,7 @@ mapKWithWitness p f = mapK (join (getMapKW . kLiftConstraint p (MapKW f)))
 -- Avoids using @RankNTypes@ and thus can be composed with other optics.
 {-# INLINE mappedK1 #-}
 mappedK1 ::
-    forall k c m n.
-    (KFunctor k, NodesConstraint k ((~) c)) =>
-    Setter (Tree k m) (Tree k n) (Tree m c) (Tree n c)
-mappedK1 = sets (mapKWith (Proxy @((~) c)))
+    forall k n p q.
+    (KFunctor k, NodesConstraint k ((~) n)) =>
+    Setter (Tree k p) (Tree k q) (Tree p n) (Tree q n)
+mappedK1 = sets (mapKWith (Proxy @((~) n)))

@@ -48,7 +48,7 @@ diff x@(Ann xA xB) y@(Ann yA yB) =
     case zipMatch xB yB of
     Nothing -> Different (Pair x y)
     Just match ->
-        case traverseK (^? _CommonSubTree) sub of
+        case traverseK (const (^? _CommonSubTree)) sub of
         Nothing -> MkCommonBody (xA, yA) sub & CommonBody
         Just r -> Ann (xA, yA) r & CommonSubTree
         where

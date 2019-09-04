@@ -125,7 +125,7 @@ instance KFoldable v => KFoldable (NominalInst n v) where
 instance KTraversable v => KTraversable (NominalInst n v) where
     {-# INLINE sequenceK #-}
     sequenceK (NominalInst n v) =
-        traverseK (_QVarInstances (traverse runContainedK)) v
+        traverseK (const (_QVarInstances (traverse runContainedK))) v
         <&> NominalInst n
 
 instance
@@ -230,7 +230,7 @@ instance
         <*> onMap f
         <*> Lens.from _Flip sequenceK t
         where
-            onMap = traverseK ((_QVarInstances . traverse) runContainedK)
+            onMap = traverseK (const ((_QVarInstances . traverse) runContainedK))
 
 {-# INLINE loadBody #-}
 loadBody ::
@@ -246,7 +246,7 @@ loadBody params foralls x =
     case x ^? quantifiedVar >>= get of
     Just r -> GPoly r & pure
     Nothing ->
-        case traverseK (^? _GMono) x of
+        case traverseK (const (^? _GMono)) x of
         Just xm -> newTerm xm <&> GMono
         Nothing -> GBody x & pure
     where

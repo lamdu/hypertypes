@@ -29,14 +29,14 @@ import           Prelude.Compat
 --
 -- The @TemplateHaskell@ generators 'AST.TH.Apply.makeKApply' and 'AST.TH.ZipMatch.makeZipMatch'
 -- create the instances according to these semantics.
-class ZipMatch expr where
+class ZipMatch k where
     -- | Compare two structures
     --
     -- >>> zipMatch (NewPerson p0) (NewPerson p1)
     -- Just (NewPerson (Pair p0 p1))
     -- >>> zipMatch (NewPerson p) (NewCake c)
     -- Nothing
-    zipMatch :: Tree expr a -> Tree expr b -> Maybe (Tree expr (Product a b))
+    zipMatch :: Tree k p -> Tree k q -> Maybe (Tree k (Product p q))
 
 instance (ZipMatch a, ZipMatch b) => ZipMatch (Product a b) where
     {-# INLINE zipMatch #-}
@@ -71,47 +71,34 @@ instance Recursive RZipMatch where
 -- | 'ZipMatch' variant of 'Control.Applicative.liftA2'
 {-# INLINE zipMatchWith #-}
 zipMatchWith ::
-    ( ZipMatch expr, KFunctor expr
-    , NodesConstraint expr constraint
-    ) =>
+    (ZipMatch k, KFunctor k, NodesConstraint k constraint) =>
     Proxy constraint ->
-    (forall child. constraint child => Tree a child -> Tree b child -> Tree c child) ->
-    Tree expr a -> Tree expr b -> Maybe (Tree expr c)
+    (forall n. constraint n => Tree p n -> Tree q n -> Tree r n) ->
+    Tree k p -> Tree k q -> Maybe (Tree k r)
 zipMatchWith p f x y = zipMatch x y <&> mapKWith p (\(Pair a b) -> f a b)
 
 -- | An 'Applicative' variant of 'zipMatchWith'
 {-# INLINE zipMatchWithA #-}
 zipMatchWithA ::
-    forall expr f constraint a b c.
-    ( Applicative f
-    , ZipMatch expr, KTraversable expr
-    , NodesConstraint expr constraint
-    ) =>
+    (Applicative f, ZipMatch k, KTraversable k, NodesConstraint k constraint) =>
     Proxy constraint ->
-    (forall child. constraint child => Tree a child -> Tree b child -> f (Tree c child)) ->
-    Tree expr a -> Tree expr b -> Maybe (f (Tree expr c))
+    (forall n. constraint n => Tree p n -> Tree q n -> f (Tree r n)) ->
+    Tree k p -> Tree k q -> Maybe (f (Tree k r))
 zipMatchWithA p f x y = zipMatch x y <&> traverseKWith p (\(Pair a b) -> f a b)
 
 -- | A variant of 'zipMatchWithA' where the 'Applicative' actions do not contain results
 {-# INLINE zipMatchWith_ #-}
 zipMatchWith_ ::
-    forall f expr constraint a b.
-    ( Applicative f
-    , ZipMatch expr, KFoldable expr
-    , NodesConstraint expr constraint
-    ) =>
+    (Applicative f, ZipMatch k, KFoldable k, NodesConstraint k constraint) =>
     Proxy constraint ->
-    (forall child. constraint child => Tree a child -> Tree b child -> f ()) ->
-    Tree expr a -> Tree expr b -> Maybe (f ())
+    (forall n. constraint n => Tree p n -> Tree q n -> f ()) ->
+    Tree k p -> Tree k q -> Maybe (f ())
 zipMatchWith_ p f x y = zipMatch x y <&> traverseKWith_ p (\(Pair a b) -> f a b)
 
 -- | A variant of 'zipMatchWith_' for 'AST.Knot.Knot's with a single node type (avoids using @RankNTypes@)
 {-# INLINE zipMatch1_ #-}
 zipMatch1_ ::
-    ( Applicative f
-    , ZipMatch k, KFoldable k
-    , NodesConstraint k ((~) c)
-    ) =>
-    (Tree a c -> Tree b c -> f ()) ->
-    Tree k a -> Tree k b -> Maybe (f ())
+    (Applicative f, ZipMatch k, KFoldable k, NodesConstraint k ((~) n)) =>
+    (Tree p n -> Tree q n -> f ()) ->
+    Tree k p -> Tree k q -> Maybe (f ())
 zipMatch1_ f x y = zipMatch x y <&> traverseK1_ (\(Pair a b) -> f a b)

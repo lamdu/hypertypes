@@ -19,10 +19,13 @@ import Prelude.Compat
 -- | A variant of 'Foldable' for 'AST.Knot.Knot's
 class KNodes k => KFoldable k where
     -- | 'KFoldable' variant of 'foldMap'
+    --
+    -- Gets a function from @k@'s nodes (trees along witnesses that they are nodes of @k@)
+    -- into a monoid and concats its results for all nodes.
     foldMapK ::
         Monoid a =>
-        (forall c. KWitness k c -> Tree l c -> a) ->
-        Tree k l ->
+        (forall n. KWitness k n -> Tree p n -> a) ->
+        Tree k p ->
         a
 
 instance KFoldable (Const a) where
@@ -31,24 +34,25 @@ instance KFoldable (Const a) where
 
 newtype FoldMapK a m (c :: Knot) = FoldMapK { getFoldMapK :: m c -> a }
 
--- | 'KFoldable' variant of 'foldMap' for functions with context
+-- | Variant of 'foldMapK' for functions with a context instead of a witness parameter
 {-# INLINE foldMapKWith #-}
 foldMapKWith ::
     (Monoid a, KFoldable k, NodesConstraint k constraint) =>
     Proxy constraint ->
-    (forall child. constraint child => Tree n child -> a) ->
-    Tree k n ->
+    (forall n. constraint n => Tree p n -> a) ->
+    Tree k p ->
     a
 foldMapKWith p f = foldMapK (getFoldMapK . kLiftConstraint p (FoldMapK f))
 
 newtype FoldMapKW k a m c = FoldMapKW { getFoldMapKW :: KWitness k (RunKnot c) -> m c -> a }
 
+-- | Variant of 'foldMapKWith' which provides a witness parameter in addition to the context
 {-# INLINE foldMapKWithWitness #-}
 foldMapKWithWitness ::
     (Monoid a, KFoldable k, NodesConstraint k constraint) =>
     Proxy constraint ->
-    (forall child. constraint child => KWitness k child -> Tree n child -> a) ->
-    Tree k n ->
+    (forall n. constraint n => KWitness k n -> Tree p n -> a) ->
+    Tree k p ->
     a
 foldMapKWithWitness p f = foldMapK (join (getFoldMapKW . kLiftConstraint p (FoldMapKW f)))
 
@@ -57,44 +61,46 @@ foldMapKWithWitness p f = foldMapK (join (getFoldMapKW . kLiftConstraint p (Fold
 -- | 'KFoldable' variant for 'foldMap' for 'AST.Knot.Knot's with a single node type (avoids using @RankNTypes@)
 {-# INLINE foldMapK1 #-}
 foldMapK1 ::
-    forall a k c l.
+    forall a k n p.
     ( Monoid a, KFoldable k
-    , NodesConstraint k ((~) c)
+    , NodesConstraint k ((~) n)
     ) =>
-    (Tree l c -> a) ->
-    Tree k l ->
+    (Tree p n -> a) ->
+    Tree k p ->
     a
-foldMapK1 = foldMapKWith (Proxy @((~) c))
+foldMapK1 = foldMapKWith (Proxy @((~) n))
 
 -- | 'KFoldable' variant of 'Data.Foldable.traverse_'
+--
+-- Applise a given action on all subtrees
+-- (represented as trees along witnesses that they are nodes of @k@)
 {-# INLINE traverseK_ #-}
 traverseK_ ::
     (Applicative f, KFoldable k) =>
-    (forall c. Tree m c -> f ()) ->
+    (forall c. KWitness k c -> Tree m c -> f ()) ->
     Tree k m ->
     f ()
-traverseK_ f = sequenceA_ . foldMapK (const ((:[]) . f))
+traverseK_ f = sequenceA_ . foldMapK (fmap (:[]) . f)
 
--- | 'KFoldable' variant of 'Data.Foldable.traverse_' for functions with context
+-- | Variant of 'traverseK_' for functions with context rather than a witness parameter
 {-# INLINE traverseKWith_ #-}
 traverseKWith_ ::
-    forall f k constraint m.
     (Applicative f, KFoldable k, NodesConstraint k constraint) =>
     Proxy constraint ->
-    (forall c. constraint c => Tree m c -> f ()) ->
-    Tree k m ->
+    (forall n. constraint n => Tree p n -> f ()) ->
+    Tree k p ->
     f ()
 traverseKWith_ p f =
-    sequenceA_ . foldMapKWith @[f ()] p ((:[]) . f)
+    traverseK_ (getFoldMapK . kLiftConstraint p (FoldMapK f))
 
 -- | 'KFoldable' variant of 'Data.Foldable.traverse_' for 'AST.Knot.Knot's with a single node type (avoids using @RankNTypes@)
 {-# INLINE traverseK1_ #-}
 traverseK1_ ::
-    forall f k c m.
+    forall f k n p.
     ( Applicative f, KFoldable k
-    , NodesConstraint k ((~) c)
+    , NodesConstraint k ((~) n)
     ) =>
-    (Tree m c -> f ()) ->
-    Tree k m ->
+    (Tree p n -> f ()) ->
+    Tree k p ->
     f ()
-traverseK1_ = traverseKWith_ (Proxy @((~) c))
+traverseK1_ = traverseKWith_ (Proxy @((~) n))

@@ -25,9 +25,9 @@ class KFunctor k => KApply k where
     -- >>> zipK (Person name0 age0) (Person name1 age1)
     -- Person (Pair name0 name1) (Pair age0 age1)
     zipK ::
-        Tree k a ->
-        Tree k b ->
-        Tree k (Product a b)
+        Tree k p ->
+        Tree k q ->
+        Tree k (Product p q)
 
 -- | A variant of 'Applicative' for 'AST.Knot.Knot's.
 class    (KPointed k, KApply k) => KApplicative k
@@ -45,19 +45,19 @@ instance (KApply a, KApply b) => KApply (Product a b) where
 {-# INLINE liftK2 #-}
 liftK2 ::
     KApply k =>
-    (forall c. Tree l c -> Tree m c -> Tree n c) ->
-    Tree k l ->
-    Tree k m ->
-    Tree k n
-liftK2 f x = mapK (const (\(Pair a b) -> f a b)) . zipK x
+    (forall n. KWitness k n -> Tree p n -> Tree q n -> Tree r n) ->
+    Tree k p ->
+    Tree k q ->
+    Tree k r
+liftK2 f x = mapK (\w -> (\(Pair a b) -> f w a b)) . zipK x
 
--- | 'KApply' variant of 'Control.Applicative.liftA2' for functions with context
+-- | Variant of 'liftK2' for functions with context
 {-# INLINE liftK2With #-}
 liftK2With ::
     (KApply k, NodesConstraint k constraint) =>
     Proxy constraint ->
-    (forall c. constraint c => Tree l c -> Tree m c -> Tree n c) ->
-    Tree k l ->
-    Tree k m ->
-    Tree k n
+    (forall n. constraint n => Tree p n -> Tree q n -> Tree r n) ->
+    Tree k p ->
+    Tree k q ->
+    Tree k r
 liftK2With p f x = mapKWith p (\(Pair a b) -> f a b) . zipK x

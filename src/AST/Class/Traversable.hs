@@ -20,14 +20,14 @@ import Prelude.Compat
 -- | A 'Knot' containing a tree inside an action.
 --
 -- Used to express 'sequenceK'.
-newtype ContainedK f l (k :: Knot) = MkContainedK { runContainedK :: f (l k) }
+newtype ContainedK f p (k :: Knot) = MkContainedK { runContainedK :: f (p k) }
 
 {-# INLINE _ContainedK #-}
 _ContainedK ::
-    Iso (Tree (ContainedK f0 l0) k0)
-        (Tree (ContainedK f1 l1) k1)
-        (f0 (Tree l0 k0))
-        (f1 (Tree l1 k1))
+    Iso (Tree (ContainedK f0 p0) k0)
+        (Tree (ContainedK f1 p1) k1)
+        (f0 (Tree p0 k0))
+        (f1 (Tree p1 k1))
 _ContainedK = iso runContainedK MkContainedK
 
 -- | A variant of 'Traversable' for 'Knot's
@@ -35,8 +35,8 @@ class (KFunctor k, KFoldable k) => KTraversable k where
     -- | 'KTraversable' variant of 'sequenceA'
     sequenceK ::
         Applicative f =>
-        Tree k (ContainedK f l) ->
-        f (Tree k l)
+        Tree k (ContainedK f p) ->
+        f (Tree k p)
 
 instance KTraversable (Const a) where
     {-# INLINE sequenceK #-}
@@ -46,15 +46,14 @@ instance KTraversable (Const a) where
 {-# INLINE traverseK #-}
 traverseK ::
     (Applicative f, KTraversable k) =>
-    (forall c. Tree m c -> f (Tree n c)) ->
-    Tree k m ->
-    f (Tree k n)
-traverseK f = sequenceK . mapK (const (MkContainedK . f))
+    (forall n. KWitness k n -> Tree p n -> f (Tree q n)) ->
+    Tree k p ->
+    f (Tree k q)
+traverseK f = sequenceK . mapK (fmap MkContainedK . f)
 
--- | 'KTraversable' variant of 'traverse' for functions with context
+-- | Variant of 'traverseK' for functions with context instead of a witness parameter
 {-# INLINE traverseKWith #-}
 traverseKWith ::
-    forall n constraint m f k.
     (Applicative f, KTraversable k, NodesConstraint k constraint) =>
     Proxy constraint ->
     (forall c. constraint c => Tree m c -> f (Tree n c)) ->
@@ -67,6 +66,6 @@ traverseKWith p f = sequenceK . mapKWith p (MkContainedK . f)
 -- It is a valid 'Traversal' as it avoids using @RankNTypes@.
 {-# INLINE traverseK1 #-}
 traverseK1 ::
-    (KTraversable k, NodesConstraint k ((~) c)) =>
-    Traversal (Tree k m) (Tree k n) (Tree m c) (Tree n c)
+    (KTraversable k, NodesConstraint k ((~) n)) =>
+    Traversal (Tree k p) (Tree k q) (Tree p n) (Tree q n)
 traverseK1 f = sequenceK . (mappedK1 %~ (MkContainedK . f))

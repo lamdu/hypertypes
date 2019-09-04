@@ -157,7 +157,7 @@ inferType x =
     Just q -> lookupQVar q <&> (quantifiedVar # q, ) . MkANode
     Nothing ->
         do
-            xI <- traverseK inferChild x
+            xI <- traverseK (const inferChild) x
             mapKWith (Proxy @HasInferredValue) (^. inType . inferredValue) xI
                 & newTerm
                 <&> (mapK (const (^. inRep)) xI, ) . MkANode
@@ -182,7 +182,7 @@ loadBody foralls x =
     case x ^? quantifiedVar >>= getForAll of
     Just r -> GPoly r & pure
     Nothing ->
-        case traverseK (^? _GMono) x of
+        case traverseK (const (^? _GMono)) x of
         Just xm -> newTerm xm <&> GMono
         Nothing -> GBody x & pure
     where

@@ -90,5 +90,5 @@ load ::
     Tree typeVars Binding -> Tree t UVar -> m (Tree t (STUVar (World m)))
 load src collection =
     do
-        conv <- traverseK makeConvertState src
+        conv <- traverseK (const makeConvertState) src
         loadBody src conv collection

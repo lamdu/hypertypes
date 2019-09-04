@@ -14,10 +14,11 @@ import Prelude.Compat
 
 -- | A variant of 'Data.Pointed.Pointed' for 'AST.Knot.Knot's
 class KNodes k => KPointed k where
-    -- | Construct a value from a higher ranked child value
+    -- | Construct a value from a generator of @k@'s nodes
+    -- (a generator which can generate a tree of any type given a witness that it is a node of @k@)
     pureK ::
-        (forall c. KWitness k c -> Tree n c) ->
-        Tree k n
+        (forall n. KWitness k n -> Tree p n) ->
+        Tree k p
 
 instance Monoid a => KPointed (Const a) where
     {-# INLINE pureK #-}
@@ -27,10 +28,10 @@ instance (KPointed a, KPointed b) => KPointed (Product a b) where
     {-# INLINE pureK #-}
     pureK f = Pair (pureK (f . KWitness_Product_E0)) (pureK (f . KWitness_Product_E1))
 
--- | Construct a value from a higher ranked child value with a constraint
+-- | Variant of 'pureK' for functions with context instead of a witness parameter
 pureKWith ::
     (KPointed k, NodesConstraint k constraint) =>
     Proxy constraint ->
-    (forall child. constraint child => Tree n child) ->
-    Tree k n
+    (forall n. constraint n => Tree p n) ->
+    Tree k p
 pureKWith p f = pureK (kLiftConstraint p f)

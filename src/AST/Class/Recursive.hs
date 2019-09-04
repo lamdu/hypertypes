@@ -119,11 +119,6 @@ recurseBoth _ =
     withDict (recurse (Proxy @(b k))) $
     withDict (kCombineConstraints (Proxy @(And a b k))) Dict
 
--- | @KRecWitness k n@ is a witness that @n@ is a recursive node of @k@
-data KRecWitness k n where
-    KRecSelf :: KRecWitness k k
-    KRecSub :: KWitness k c -> KRecWitness c n -> KRecWitness k n
-
 -- | Monadically convert a 'Pure' 'Tree' to a different 'Knot' from the bottom up
 {-# INLINE wrapM #-}
 wrapM ::
@@ -218,3 +213,10 @@ foldMapRecursive p f x =
     f x <>
     foldMapKWith (Proxy @(And RFoldable c))
     (foldMapKWith (Proxy @RFoldable) (foldMapRecursive p f)) x
+
+-- TODO: Should KRecWitness be here?
+
+-- | @KRecWitness k n@ is a witness that @n@ is a recursive node of @k@
+data KRecWitness k n where
+    KRecSelf :: KRecWitness k k
+    KRecSub :: KWitness k c -> KRecWitness c n -> KRecWitness k n
