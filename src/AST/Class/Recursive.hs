@@ -5,7 +5,7 @@ module AST.Class.Recursive
     , fold, unfold
     , wrap, wrapM, unwrap, unwrapM
     , foldMapRecursive
-    , RNodes(..), RFunctor(..), RFoldable(..), RTraversable(..)
+    , RNodes, RFunctor, RFoldable, RTraversable
     , recurseBoth
     , KRecWitness(..)
     ) where

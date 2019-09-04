@@ -118,7 +118,7 @@ instance RTraversable ast => KTraversable (Flip GTerm ast) where
         GMono x -> runContainedK x <&> GMono
         GPoly x -> runContainedK x <&> GPoly
         GBody x ->
-            withDict (recursiveKTraversable (Proxy @ast)) $
+            withDict (recurse (Proxy @(RTraversable ast))) $
             -- KTraversable will be required when not implied by Recursively
             traverseKWith (Proxy @RTraversable)
             (Lens.from _Flip sequenceK) x
