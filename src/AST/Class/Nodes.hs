@@ -1,4 +1,4 @@
-{-# LANGUAGE DefaultSignatures, GADTs, RankNTypes, FlexibleInstances, EmptyCase #-}
+{-# LANGUAGE GADTs, RankNTypes, EmptyCase #-}
 
 module AST.Class.Nodes
     ( KNodes(..), KWitness(..)
@@ -34,7 +34,7 @@ class KNodes (k :: Knot -> Type) where
     kLiftConstraint ::
         NodesConstraint k c =>
         Proxy c ->
-        (forall a. c a => Tree r a) ->
+        (c n => Tree r n) ->
         KWitness k n ->
         Tree r n
 

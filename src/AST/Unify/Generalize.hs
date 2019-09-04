@@ -55,28 +55,29 @@ newtype KRecLiftConstraint r n c = KRecLiftConstraint
     { getKRecLiftConstraint :: KRecWitness (RunKnot c) n -> Tree r n
     }
 
-kLiftRecConstraint ::
-    (NodesConstraint k c, KNodes k) =>
-    (KRecWitness child n -> KWitness k n) ->
+kLiftCH ::
+    forall c n r a b.
+    (Recursive c, c a, RNodes a) =>
     Proxy c ->
-    (forall z. c z => Tree r z) ->
-    Tree (KRecLiftConstraint r n) child
-kLiftRecConstraint makeWitness p r =
-    KRecLiftConstraint (\w -> kLiftConstraint p r (makeWitness w))
+    (c n => Tree r n) ->
+    KWitness a b ->
+    KRecWitness b n ->
+    Tree r n
+kLiftCH p r c n =
+    withDict (recurseBoth (Proxy @(And RNodes c a))) $
+    getKRecLiftConstraint
+    ( kLiftConstraint (Proxy @(And RNodes c))
+        ( KRecLiftConstraint
+            (\w -> kLiftConstraint p r (KWitness_Flip_GTerm w))
+        ) c
+    ) n
 
 instance RNodes a => KNodes (Flip GTerm a) where
     type NodesConstraint (Flip GTerm a) c = (c a, Recursive c)
     data KWitness (Flip GTerm a) n = KWitness_Flip_GTerm (KRecWitness a n)
     {-# INLINE kLiftConstraint #-}
     kLiftConstraint _ r (KWitness_Flip_GTerm KRecSelf) = r
-    kLiftConstraint p r (KWitness_Flip_GTerm (KRecSub c n)) =
-        withDict (recurseBoth (p0 p)) $
-        getKRecLiftConstraint (kLiftConstraint (p1 p) (kLiftRecConstraint KWitness_Flip_GTerm p r) c) n
-        where
-            p0 :: Proxy c -> Proxy (And RNodes c a)
-            p0 _ = Proxy
-            p1 :: Proxy c -> Proxy (And RNodes c)
-            p1 _ = Proxy
+    kLiftConstraint p r (KWitness_Flip_GTerm (KRecSub c n)) = kLiftCH p r c n
     {-# INLINE kCombineConstraints #-}
     kCombineConstraints _ = Dict
 
