@@ -7,7 +7,6 @@ module AST.Diff
     ) where
 
 import AST
-import AST.Class.Recursive
 import AST.Class.ZipMatch (ZipMatch(..), RZipMatch)
 import AST.TH.Internal.Instances (makeCommonInstances)
 import Control.Lens (makeLenses, makePrisms)
@@ -44,7 +43,7 @@ diff ::
     (RZipMatch t, RTraversable t) =>
     Tree (Ann a) t -> Tree (Ann b) t -> Tree (Diff a b) t
 diff x@(Ann xA xB) y@(Ann yA yB) =
-    withDict (recurseBoth (Proxy @(And RZipMatch RTraversable t))) $
+    withDict (recurse (Proxy @(And RZipMatch RTraversable t))) $
     case zipMatch xB yB of
     Nothing -> Different (Pair x y)
     Just match ->

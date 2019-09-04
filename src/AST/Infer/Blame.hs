@@ -43,7 +43,6 @@ module AST.Infer.Blame
 
 import AST
 import AST.Class.Infer
-import AST.Class.Recursive (recurseBoth)
 import AST.Class.Unify (Unify, UVarOf)
 import AST.TH.Internal.Instances (makeCommonInstances)
 import AST.Unify.Occurs (occursCheck)
@@ -229,6 +228,6 @@ bTermToAnn ::
     Tree (BTerm a v) e ->
     Tree (Ann r) e
 bTermToAnn p f (BTerm a i x) =
-    withDict (recurseBoth (Proxy @(And RFunctor c e))) $
+    withDict (recurse (Proxy @(And RFunctor c e))) $
     mapKWith (Proxy @(And RFunctor c)) (bTermToAnn p f) x
     & Ann (f (Proxy @e) a i)

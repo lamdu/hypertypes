@@ -6,7 +6,6 @@ module AST.Class.Recursive
     , wrap, wrapM, unwrap, unwrapM
     , foldMapRecursive
     , RNodes, RFunctor, RFoldable, RTraversable
-    , recurseBoth
     , KRecWitness(..)
     ) where
 
@@ -108,17 +107,6 @@ instance Recursive RTraversable where
     {-# INLINE recurse #-}
     recurse = recursiveKTraversable . argP
 
--- | Lift a constraint of two `Recursive` classes to the next level
-{-# INLINE recurseBoth #-}
-recurseBoth ::
-    forall a b k.
-    (KNodes k, Recursive a, Recursive b, a k, b k) =>
-    Proxy (And a b k) -> Dict (KNodesConstraint k (And a b))
-recurseBoth _ =
-    withDict (recurse (Proxy @(a k))) $
-    withDict (recurse (Proxy @(b k))) $
-    withDict (kCombineConstraints (Proxy @(And a b k))) Dict
-
 -- | Monadically convert a 'Pure' 'Tree' to a different 'Knot' from the bottom up
 {-# INLINE wrapM #-}
 wrapM ::
@@ -129,7 +117,7 @@ wrapM ::
     Tree Pure k ->
     m (Tree w k)
 wrapM p f x =
-    withDict (recurseBoth (Proxy @(And RTraversable c k))) $
+    withDict (recurse (Proxy @(And RTraversable c k))) $
     x ^. _Pure
     & traverseKWith (Proxy @(And RTraversable c)) (wrapM p f)
     >>= f
@@ -144,7 +132,7 @@ unwrapM ::
     Tree w k ->
     m (Tree Pure k)
 unwrapM p f x =
-    withDict (recurseBoth (Proxy @(And RTraversable c k))) $
+    withDict (recurse (Proxy @(And RTraversable c k))) $
     f x
     >>= traverseKWith (Proxy @(And RTraversable c)) (unwrapM p f)
     <&> (_Pure #)
@@ -159,7 +147,7 @@ wrap ::
     Tree Pure k ->
     Tree w k
 wrap p f x =
-    withDict (recurseBoth (Proxy @(And RFunctor c k))) $
+    withDict (recurse (Proxy @(And RFunctor c k))) $
     x ^. _Pure
     & mapKWith (Proxy @(And RFunctor c)) (wrap p f)
     & f
@@ -174,7 +162,7 @@ unwrap ::
     Tree w k ->
     Tree Pure k
 unwrap p f x =
-    withDict (recurseBoth (Proxy @(And RFunctor c k))) $
+    withDict (recurse (Proxy @(And RFunctor c k))) $
     f x
     &# mapKWith (Proxy @(And RFunctor c)) (unwrap p f)
 
@@ -208,7 +196,7 @@ foldMapRecursive ::
     Tree k f ->
     a
 foldMapRecursive p f x =
-    withDict (recurseBoth (Proxy @(And RFoldable c k))) $
+    withDict (recurse (Proxy @(And RFoldable c k))) $
     withDict (recurse (Proxy @(RFoldable f))) $
     f x <>
     foldMapKWith (Proxy @(And RFoldable c))

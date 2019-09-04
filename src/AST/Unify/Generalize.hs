@@ -63,7 +63,7 @@ kLiftConstraintH ::
     (RNodes a, KNodesConstraint (Flip GTerm a) c) =>
     KWitness a b -> KRecWitness b n -> Proxy c -> (c n => r) -> r
 kLiftConstraintH c n =
-    withDict (recurseBoth (Proxy @(And RNodes c a))) $
+    withDict (recurse (Proxy @(And RNodes c a))) $
     kLiftConstraint c (Proxy @(And RNodes c))
     (kLiftConstraint (KW_Flip_GTerm n))
 
