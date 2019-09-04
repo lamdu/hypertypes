@@ -12,8 +12,6 @@ module AST.Unify.Generalize
 
 import           Algebra.PartialOrd (PartialOrd(..))
 import           AST
-import           AST.Class.Foldable (foldMapKWithWitness)
-import           AST.Class.Functor (mapKWithWitness)
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Class.Recursive
 import           AST.Class.Traversable
@@ -78,8 +76,9 @@ instance RFunctor ast => KFunctor (Flip GTerm ast) where
         GPoly x -> f (KWitness_Flip_GTerm KRecSelf) x & GPoly
         GBody x ->
             withDict (recurse (Proxy @(RFunctor ast))) $
-            mapKWithWitness (Proxy @RFunctor)
+            mapK
             ( \cw ->
+                kLiftConstraint cw (Proxy @RFunctor) $
                 Lens.from _Flip %~
                 mapK (f . (\(KWitness_Flip_GTerm nw) -> KWitness_Flip_GTerm (KRecSub cw nw)))
             ) x
@@ -93,8 +92,9 @@ instance RFoldable ast => KFoldable (Flip GTerm ast) where
         GPoly x -> f (KWitness_Flip_GTerm KRecSelf) x
         GBody x ->
             withDict (recurse (Proxy @(RFoldable ast))) $
-            foldMapKWithWitness (Proxy @RFoldable)
+            foldMapK
             ( \cw ->
+                kLiftConstraint cw (Proxy @RFoldable) $
                 foldMapK (f . (\(KWitness_Flip_GTerm nw) -> KWitness_Flip_GTerm (KRecSub cw nw)))
                 . (_Flip #)
             ) x

@@ -2,8 +2,7 @@
 
 module AST.Class.Functor
     ( KFunctor(..)
-    , mapKWith, mapKWithWitness
-    , mappedK1
+    , mapKWith, mappedK1
     ) where
 
 import AST.Class.Nodes
@@ -44,16 +43,6 @@ mapKWith ::
     Tree k p ->
     Tree k q
 mapKWith p f = mapK (\w -> kLiftConstraint w p f)
-
--- | Variant of 'mapKWith' which provides a witness parameter in addition to the context
-{-# INLINE mapKWithWitness #-}
-mapKWithWitness ::
-    (KFunctor k, NodesConstraint k constraint) =>
-    Proxy constraint ->
-    (forall n. constraint n => KWitness k n -> Tree p n -> Tree q n) ->
-    Tree k p ->
-    Tree k q
-mapKWithWitness p f = mapK (\w -> kLiftConstraint w p f w)
 
 -- | 'KFunctor' variant of 'Control.Lens.mapped' for 'AST.Knot.Knot's with a single node type.
 --

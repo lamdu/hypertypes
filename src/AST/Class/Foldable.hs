@@ -2,8 +2,7 @@
 
 module AST.Class.Foldable
     ( KFoldable(..)
-    , foldMapKWith, foldMapKWithWitness
-    , foldMapK1
+    , foldMapKWith, foldMapK1
     , traverseK_, traverseKWith_, traverseK1_
     ) where
 
@@ -40,16 +39,6 @@ foldMapKWith ::
     Tree k p ->
     a
 foldMapKWith p f = foldMapK (\w -> kLiftConstraint w p f)
-
--- | Variant of 'foldMapKWith' which provides a witness parameter in addition to the context
-{-# INLINE foldMapKWithWitness #-}
-foldMapKWithWitness ::
-    (Monoid a, KFoldable k, NodesConstraint k constraint) =>
-    Proxy constraint ->
-    (forall n. constraint n => KWitness k n -> Tree p n -> a) ->
-    Tree k p ->
-    a
-foldMapKWithWitness p f = foldMapK (\w -> kLiftConstraint w p f w)
 
 -- TODO: Replace `foldMapK1` with `foldedK1` which is a `Fold`
 
