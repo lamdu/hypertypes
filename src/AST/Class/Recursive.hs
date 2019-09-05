@@ -10,8 +10,8 @@ module AST.Class.Recursive
     ) where
 
 import AST.Class.Foldable
-import AST.Class.Functor (KFunctor(..), mapKWith)
-import AST.Class.Nodes (KNodes(..))
+import AST.Class.Functor (KFunctor(..))
+import AST.Class.Nodes (KNodes(..), (#>))
 import AST.Class.Traversable
 import AST.Knot
 import AST.Knot.Pure (Pure(..), _Pure, (&#))
@@ -119,7 +119,7 @@ wrapM ::
 wrapM p f x =
     withDict (recurse (Proxy @(And RTraversable c k))) $
     x ^. _Pure
-    & traverseKWith (Proxy @(And RTraversable c)) (wrapM p f)
+    & traverseK (Proxy @(And RTraversable c) #> wrapM p f)
     >>= f
 
 -- | Monadically unwrap a 'Tree' from the top down, replacing its 'Knot' with 'Pure'
@@ -134,7 +134,7 @@ unwrapM ::
 unwrapM p f x =
     withDict (recurse (Proxy @(And RTraversable c k))) $
     f x
-    >>= traverseKWith (Proxy @(And RTraversable c)) (unwrapM p f)
+    >>= traverseK (Proxy @(And RTraversable c) #> unwrapM p f)
     <&> (_Pure #)
 
 -- | Wrap a 'Pure' 'Tree' to a different 'Knot' from the bottom up
@@ -149,7 +149,7 @@ wrap ::
 wrap p f x =
     withDict (recurse (Proxy @(And RFunctor c k))) $
     x ^. _Pure
-    & mapKWith (Proxy @(And RFunctor c)) (wrap p f)
+    & mapK (Proxy @(And RFunctor c) #> wrap p f)
     & f
 
 -- | Unwrap a 'Tree' from the top down, replacing its 'Knot' with 'Pure'
@@ -164,7 +164,7 @@ unwrap ::
 unwrap p f x =
     withDict (recurse (Proxy @(And RFunctor c k))) $
     f x
-    &# mapKWith (Proxy @(And RFunctor c)) (unwrap p f)
+    &# mapK (Proxy @(And RFunctor c) #> unwrap p f)
 
 -- | Recursively fold up a tree to produce a result (aka catamorphism)
 {-# INLINE fold #-}
@@ -199,8 +199,10 @@ foldMapRecursive p f x =
     withDict (recurse (Proxy @(And RFoldable c k))) $
     withDict (recurse (Proxy @(RFoldable f))) $
     f x <>
-    foldMapKWith (Proxy @(And RFoldable c))
-    (foldMapKWith (Proxy @RFoldable) (foldMapRecursive p f)) x
+    foldMapK
+    ( Proxy @(And RFoldable c) #>
+        foldMapK (Proxy @RFoldable #> foldMapRecursive p f)
+    ) x
 
 -- TODO: Should KRecWitness be here?
 

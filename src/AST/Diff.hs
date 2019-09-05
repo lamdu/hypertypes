@@ -52,5 +52,7 @@ diff x@(Ann xA xB) y@(Ann yA yB) =
         Just r -> Ann (xA, yA) r & CommonSubTree
         where
             sub =
-                mapKWith (Proxy @(And RZipMatch RTraversable))
-                (\(Pair xC yC) -> diff xC yC) match
+                mapK
+                ( Proxy @(And RZipMatch RTraversable) #>
+                    \(Pair xC yC) -> diff xC yC
+                ) match

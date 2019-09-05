@@ -116,7 +116,7 @@ Lens.makeLenses ''LangAInferEnv
 emptyLangAInferEnv :: LangAInferEnv v
 emptyLangAInferEnv =
     LangAInferEnv mempty (ScopeLevel 0)
-    (pureKWith (Proxy @OrdQVar) (QVarInstances mempty))
+    (pureK (Proxy @OrdQVar #> QVarInstances mempty))
 
 instance HasScopeTypes v Typ (LangAInferEnv v) where scopeTypes = iaScopeTypes
 
@@ -159,14 +159,14 @@ instance MonadQuantify RConstraints Name PureInferA where
 instance Unify PureInferA Typ where
     binding = bindingDict (Lens._1 . tTyp)
     unifyError e =
-        traverseKWith (Proxy @(Unify PureInferA)) applyBindings e
+        traverseK (Proxy @(Unify PureInferA) #> applyBindings) e
         >>= throwError . TypError
 
 instance Unify PureInferA Row where
     binding = bindingDict (Lens._1 . tRow)
     structureMismatch = rStructureMismatch
     unifyError e =
-        traverseKWith (Proxy @(Unify PureInferA)) applyBindings e
+        traverseK (Proxy @(Unify PureInferA) #> applyBindings) e
         >>= throwError . RowError
 
 instance MonadInstantiate PureInferA Typ where
@@ -220,14 +220,14 @@ instance MonadQuantify RConstraints Name (STInferA s) where
 instance Unify (STInferA s) Typ where
     binding = stBinding
     unifyError e =
-        traverseKWith (Proxy @(Unify (STInferA s))) applyBindings e
+        traverseK (Proxy @(Unify (STInferA s)) #> applyBindings) e
         >>= throwError . TypError
 
 instance Unify (STInferA s) Row where
     binding = stBinding
     structureMismatch = rStructureMismatch
     unifyError e =
-        traverseKWith (Proxy @(Unify (STInferA s))) applyBindings e
+        traverseK (Proxy @(Unify (STInferA s)) #> applyBindings) e
         >>= throwError . RowError
 
 instance MonadInstantiate (STInferA s) Typ where

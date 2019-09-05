@@ -68,7 +68,7 @@ saveBody ::
     StateT (Tree typeVars Binding, [m ()]) m (Tree t UVar)
 saveBody =
     withDict (savableRecursive (Proxy @m) (Proxy @typeVars) (Proxy @t)) $
-    traverseKWith (Proxy @(Savable m typeVars)) saveVar
+    traverseK (Proxy @(Savable m typeVars) #> saveVar)
 
 save ::
     Savable m typeVars t =>

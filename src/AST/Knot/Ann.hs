@@ -6,9 +6,9 @@ module AST.Knot.Ann
     , strip, addAnnotations
     ) where
 
-import           AST.Class.Nodes (KNodes(..))
+import           AST.Class.Nodes (KNodes(..), (#>))
 import           AST.Class.Recursive
-import           AST.Class.Traversable (traverseKWith)
+import           AST.Class.Traversable (traverseK)
 import           AST.Knot (Tree, Node)
 import           AST.Knot.Pure (Pure(..))
 import           AST.TH.Traversable (makeKTraversableApplyAndBases)
@@ -62,7 +62,7 @@ annotations f (Ann pl x) =
     withDict (recurse (Proxy @(RTraversable k))) $
     Ann
     <$> f pl
-    <*> traverseKWith (Proxy @RTraversable) (annotations f) x
+    <*> traverseK (Proxy @RTraversable #> annotations f) x
 
 -- | Remove a tree's annotations
 strip ::

@@ -1,14 +1,13 @@
 {-# LANGUAGE RankNTypes #-}
 
 module AST.Class.Pointed
-    ( KPointed(..), pureKWith
+    ( KPointed(..)
     ) where
 
 import AST.Class.Nodes (KNodes(..), KWitness(..))
 import AST.Knot (Tree)
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
-import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
@@ -27,11 +26,3 @@ instance Monoid a => KPointed (Const a) where
 instance (KPointed a, KPointed b) => KPointed (Product a b) where
     {-# INLINE pureK #-}
     pureK f = Pair (pureK (f . KW_Product_E0)) (pureK (f . KW_Product_E1))
-
--- | Variant of 'pureK' for functions with context instead of a witness parameter
-pureKWith ::
-    (KPointed k, KNodesConstraint k constraint) =>
-    Proxy constraint ->
-    (forall n. constraint n => Tree p n) ->
-    Tree k p
-pureKWith p f = pureK (\w -> kLiftConstraint w p f)

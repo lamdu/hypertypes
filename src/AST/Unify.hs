@@ -14,7 +14,7 @@ module AST.Unify
 import Algebra.PartialOrd (PartialOrd(..))
 import AST
 import AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
-import AST.Class.ZipMatch (zipMatchWithA)
+import AST.Class.ZipMatch (zipMatchA)
 import AST.Unify.Constraints
 import AST.Unify.Error (UnifyError(..))
 import AST.Unify.Lookup (semiPruneLookup)
@@ -68,7 +68,7 @@ updateTermConstraints v t newConstraints
                 Nothing -> ConstraintsViolation (t ^. uBody) newConstraints & unifyError
                 Just prop ->
                     do
-                        traverseKWith_ (Proxy @(Unify m)) updateTermConstraintsH prop
+                        traverseK_ (Proxy @(Unify m) #> updateTermConstraintsH) prop
                         UTermBody newConstraints (t ^. uBody) & UTerm & bindVar binding v
 
 {-# INLINE updateTermConstraintsH #-}
@@ -127,7 +127,7 @@ unifyUTerms xv (UTerm xt) yv (UTerm yt) =
     withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
     do
         bindVar binding yv (UToVar xv)
-        zipMatchWithA (Proxy @(Unify m)) unify (xt ^. uBody) (yt ^. uBody)
+        zipMatchA (Proxy @(Unify m) #> unify) (xt ^. uBody) (yt ^. uBody)
             & fromMaybe (xt ^. uBody <$ structureMismatch unify xt yt)
             >>= bindVar binding xv . UTerm . UTermBody (xt ^. uConstraints <> yt ^. uConstraints)
         pure xv

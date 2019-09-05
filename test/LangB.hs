@@ -237,14 +237,14 @@ instance MonadQuantify RConstraints Name PureInferB where
 instance Unify PureInferB Typ where
     binding = bindingDict (Lens._1 . tTyp)
     unifyError e =
-        traverseKWith (Proxy @(Unify PureInferB)) applyBindings e
+        traverseK (Proxy @(Unify PureInferB) #> applyBindings) e
         >>= throwError . TypError
 
 instance Unify PureInferB Row where
     binding = bindingDict (Lens._1 . tRow)
     structureMismatch = rStructureMismatch
     unifyError e =
-        traverseKWith (Proxy @(Unify PureInferB)) applyBindings e
+        traverseK (Proxy @(Unify PureInferB) #> applyBindings) e
         >>= throwError . RowError
 
 instance HasScheme Types PureInferB Typ
@@ -300,14 +300,14 @@ instance MonadQuantify RConstraints Name (STInferB s) where
 instance Unify (STInferB s) Typ where
     binding = stBinding
     unifyError e =
-        traverseKWith (Proxy @(Unify (STInferB s))) applyBindings e
+        traverseK (Proxy @(Unify (STInferB s)) #> applyBindings) e
         >>= throwError . TypError
 
 instance Unify (STInferB s) Row where
     binding = stBinding
     structureMismatch = rStructureMismatch
     unifyError e =
-        traverseKWith (Proxy @(Unify (STInferB s))) applyBindings e
+        traverseK (Proxy @(Unify (STInferB s)) #> applyBindings) e
         >>= throwError . RowError
 
 instance HasScheme Types (STInferB s) Typ

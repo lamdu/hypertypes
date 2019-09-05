@@ -2,11 +2,11 @@
 
 module AST.Class.Foldable
     ( KFoldable(..)
-    , foldMapKWith, foldMapK1
-    , traverseK_, traverseKWith_, traverseK1_
+    , foldMapK1
+    , traverseK_, traverseK1_
     ) where
 
-import AST.Class.Nodes (KNodes(..))
+import AST.Class.Nodes (KNodes(..), (#>))
 import AST.Knot (Tree)
 import Data.Foldable (sequenceA_)
 import Data.Functor.Const (Const(..))
@@ -30,16 +30,6 @@ instance KFoldable (Const a) where
     {-# INLINE foldMapK #-}
     foldMapK _ _ = mempty
 
--- | Variant of 'foldMapK' for functions with a context instead of a witness parameter
-{-# INLINE foldMapKWith #-}
-foldMapKWith ::
-    (Monoid a, KFoldable k, KNodesConstraint k constraint) =>
-    Proxy constraint ->
-    (forall n. constraint n => Tree p n -> a) ->
-    Tree k p ->
-    a
-foldMapKWith p f = foldMapK (\w -> kLiftConstraint w p f)
-
 -- TODO: Replace `foldMapK1` with `foldedK1` which is a `Fold`
 
 -- | 'KFoldable' variant for 'foldMap' for 'AST.Knot.Knot's with a single node type (avoids using @RankNTypes@)
@@ -52,7 +42,7 @@ foldMapK1 ::
     (Tree p n -> a) ->
     Tree k p ->
     a
-foldMapK1 = foldMapKWith (Proxy @((~) n))
+foldMapK1 f = foldMapK (Proxy @((~) n) #> f)
 
 -- | 'KFoldable' variant of 'Data.Foldable.traverse_'
 --
@@ -66,16 +56,6 @@ traverseK_ ::
     f ()
 traverseK_ f = sequenceA_ . foldMapK (fmap (:[]) . f)
 
--- | Variant of 'traverseK_' for functions with context rather than a witness parameter
-{-# INLINE traverseKWith_ #-}
-traverseKWith_ ::
-    (Applicative f, KFoldable k, KNodesConstraint k constraint) =>
-    Proxy constraint ->
-    (forall n. constraint n => Tree p n -> f ()) ->
-    Tree k p ->
-    f ()
-traverseKWith_ p f = traverseK_ (\w -> kLiftConstraint w p f)
-
 -- | 'KFoldable' variant of 'Data.Foldable.traverse_' for 'AST.Knot.Knot's with a single node type (avoids using @RankNTypes@)
 {-# INLINE traverseK1_ #-}
 traverseK1_ ::
@@ -86,4 +66,4 @@ traverseK1_ ::
     (Tree p n -> f ()) ->
     Tree k p ->
     f ()
-traverseK1_ = traverseKWith_ (Proxy @((~) n))
+traverseK1_ f = traverseK_ (Proxy @((~) n) #> f)

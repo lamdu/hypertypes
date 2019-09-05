@@ -135,9 +135,11 @@ instance
     {-# INLINE inferBody #-}
     inferBody (Scheme vars typ) =
         do
-            foralls <- traverseKWith (Proxy @(MonadInstantiate m)) makeQVarInstances vars
+            foralls <- traverseK (Proxy @(MonadInstantiate m) #> makeQVarInstances) vars
             let withForalls =
-                    foldMapKWith (Proxy @(MonadInstantiate m)) ((:[]) . localInstantiations) foralls
+                    foldMapK
+                    (Proxy @(MonadInstantiate m) #> (:[]) . localInstantiations)
+                    foralls
                     & foldl (.) id
             InferredChild typI typR <- inferChild typ & withForalls
             generalize (typR ^. inferredValue)
@@ -158,7 +160,7 @@ inferType x =
     Nothing ->
         do
             xI <- traverseK (const inferChild) x
-            mapKWith (Proxy @HasInferredValue) (^. inType . inferredValue) xI
+            mapK (Proxy @HasInferredValue #> (^. inType . inferredValue)) xI
                 & newTerm
                 <&> (mapK (const (^. inRep)) xI, ) . MkANode
 
@@ -224,7 +226,7 @@ loadScheme ::
     m (Tree (GTerm (UVarOf m)) typ)
 loadScheme (Pure (Scheme vars typ)) =
     do
-        foralls <- traverseKWith (Proxy @(Unify m)) makeQVarInstances vars
+        foralls <- traverseK (Proxy @(Unify m) #> makeQVarInstances) vars
         wrapM (Proxy @(HasScheme varTypes m)) (loadBody foralls) typ
 
 saveH ::
@@ -234,7 +236,7 @@ saveH ::
     StateT (Tree varTypes QVars, [m ()]) m (Tree Pure typ)
 saveH (GBody x) =
     withDict (hasSchemeRecursive (Proxy @varTypes) (Proxy @m) (Proxy @typ)) $
-    traverseKWith (Proxy @(HasScheme varTypes m)) saveH x <&> (_Pure #)
+    traverseK (Proxy @(HasScheme varTypes m) #> saveH) x <&> (_Pure #)
 saveH (GMono x) =
     unwrapM (Proxy @(HasScheme varTypes m)) f x & lift
     where
@@ -272,7 +274,7 @@ saveScheme x =
     do
         (t, (v, recover)) <-
             runStateT (saveH x)
-            ( pureKWith (Proxy @OrdQVar) (QVars mempty)
+            ( pureK (Proxy @OrdQVar #> QVars mempty)
             , []
             )
         _Pure # Scheme v t <$ sequence_ recover

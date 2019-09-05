@@ -2,6 +2,7 @@
 
 module AST.Class.Nodes
     ( KNodes(..), KWitness(..)
+    , (#>)
     ) where
 
 import AST.Knot (Knot)
@@ -70,3 +71,11 @@ instance (KNodes a, KNodes b) => KNodes (Product a b) where
             p0 _ = Proxy
             p1 :: Proxy (And c0 c1 (Product a b)) -> Proxy (And c0 c1 b)
             p1 _ = Proxy
+
+infixr 0 #>
+
+{-# INLINE (#>) #-}
+(#>) ::
+    (KNodes k, KNodesConstraint k c) =>
+    Proxy c -> (c n => r) -> KWitness k n -> r
+(#>) p r w = kLiftConstraint w p r

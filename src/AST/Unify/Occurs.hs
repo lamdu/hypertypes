@@ -44,8 +44,9 @@ occursCheck v0 =
     USkolem{} -> pure ()
     UTerm b ->
         withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
-        traverseKWith_ (Proxy @(Unify m))
-        ( \c ->
+        traverseK_
+        ( Proxy @(Unify m) #>
+            \c ->
             do
                 get >>= lift . (`unless` bindVar binding v1 (UResolving b))
                 put True

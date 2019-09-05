@@ -18,7 +18,6 @@ module AST.Term.Nominal
 
 import           AST
 import           AST.Class.Has (HasChild(..))
-import           AST.Class.Foldable (foldMapKWith, traverseKWith_)
 import           AST.Class.Recursive
 import           AST.Class.Traversable (ContainedK(..))
 import           AST.Class.ZipMatch (ZipMatch(..))
@@ -143,8 +142,9 @@ instance
         | otherwise =
             withDict (kCombineConstraints (Proxy @(And ZipMatch OrdQVar varTypes))) $
             zipMatch x y
-            >>= traverseKWith (Proxy @(ZipMatch `And` OrdQVar))
-                (\(Pair (QVarInstances c0) (QVarInstances c1)) ->
+            >>= traverseK
+                ( Proxy @(ZipMatch `And` OrdQVar) #>
+                    \(Pair (QVarInstances c0) (QVarInstances c1)) ->
                     zipMatch (TermMap c0) (TermMap c1)
                     <&> (^. _TermMap)
                     <&> QVarInstances
@@ -169,7 +169,7 @@ instance
     pPrint (NominalInst n vars) =
         pPrint n <>
         joinArgs
-        (foldMapKWith (Proxy @(PrettyConstraints k)) mkArgs vars)
+        (foldMapK (Proxy @(PrettyConstraints k) #> mkArgs) vars)
         where
             joinArgs [] = mempty
             joinArgs xs =
@@ -266,8 +266,8 @@ loadNominalDecl ::
     m (Tree (LoadedNominalDecl typ) (UVarOf m))
 loadNominalDecl (Pure (NominalDecl params (Scheme foralls typ))) =
     do
-        paramsL <- traverseKWith (Proxy @(Unify m)) makeQVarInstances params
-        forallsL <- traverseKWith (Proxy @(Unify m)) makeQVarInstances foralls
+        paramsL <- traverseK (Proxy @(Unify m) #> makeQVarInstances) params
+        forallsL <- traverseK (Proxy @(Unify m) #> makeQVarInstances) foralls
         wrapM (Proxy @(HasScheme (NomVarTypes typ) m))
             (loadBody paramsL forallsL) typ
             <&> LoadedNominalDecl paramsL forallsL
@@ -288,7 +288,7 @@ lookupParams ::
     Tree varTypes (QVarInstances (UVarOf m)) ->
     m (Tree varTypes (QVarInstances (UVarOf m)))
 lookupParams =
-    traverseKWith (Proxy @(Unify m)) ((_QVarInstances . traverse) lookupParam)
+    traverseK (Proxy @(Unify m) #> (_QVarInstances . traverse) lookupParam)
     where
         lookupParam v =
             lookupVar binding v
@@ -321,9 +321,10 @@ instance
                     v <- inferChild val
                     LoadedNominalDecl params foralls gen <- getNominalDecl nomId
                     recover <-
-                        traverseKWith_ (Proxy @(Unify m))
-                        (traverse_ (instantiateForAll USkolem) . (^. _QVarInstances))
-                        foralls
+                        traverseK_
+                        ( Proxy @(Unify m) #>
+                            traverse_ (instantiateForAll USkolem) . (^. _QVarInstances)
+                        ) foralls
                         & execWriterT
                     (typ, paramsT) <- instantiateWith (lookupParams params) UUnbound gen
                     (v, typ, paramsT) <$ sequence_ recover

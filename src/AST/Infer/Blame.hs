@@ -130,8 +130,9 @@ prepare resFromPosition (Ann a x) =
     withDict (recurse (Proxy @(Blame m exp))) $
     do
         (xI, r) <-
-            mapKWith (Proxy @(Blame m))
-            (InferChild . fmap (\t -> InferredChild t (pInferResultFromPos t)) . prepareH)
+            mapK
+            (Proxy @(Blame m) #>
+                InferChild . fmap (\t -> InferredChild t (pInferResultFromPos t)) . prepareH)
             x
             & inferBody
         pure PTerm
@@ -152,7 +153,7 @@ tryUnify p i0 i1 =
     withDict (inferContext (Proxy @m) p) $
     do
         inferOfUnify p i0 i1
-        traverseKWith_ (Proxy @(Unify m)) occursCheck i0
+        traverseK_ (Proxy @(Unify m) #> occursCheck) i0
     & (`catchError` const (pure ()))
 
 toUnifies ::
@@ -162,7 +163,7 @@ toUnifies ::
     Tree (Ann (a, m ())) exp
 toUnifies (PTerm a i0 i1 b) =
     withDict (recurse (Proxy @(Blame m exp))) $
-    mapKWith (Proxy @(Blame m)) toUnifies b
+    mapK (Proxy @(Blame m) #> toUnifies) b
     & Ann (a, tryUnify (Proxy @exp) i0 i1)
 
 -- | A 'Knot' for an inferred term with type mismatches - the output of 'blame'
@@ -189,7 +190,7 @@ finalize (PTerm a i0 i1 x) =
         let result
                 | match = Right i0
                 | otherwise = Left (i0, i1)
-        traverseKWith (Proxy @(Blame m)) finalize x
+        traverseK (Proxy @(Blame m) #> finalize) x
             <&> BTerm a result
 
 -- | Perform Hindley-Milner type inference with prioritised blame for type error,
@@ -229,5 +230,5 @@ bTermToAnn ::
     Tree (Ann r) e
 bTermToAnn p f (BTerm a i x) =
     withDict (recurse (Proxy @(And RFunctor c e))) $
-    mapKWith (Proxy @(And RFunctor c)) (bTermToAnn p f) x
+    mapK (Proxy @(And RFunctor c) #> bTermToAnn p f) x
     & Ann (f (Proxy @e) a i)

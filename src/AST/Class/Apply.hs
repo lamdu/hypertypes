@@ -2,16 +2,15 @@
 
 module AST.Class.Apply
     ( KApply(..), KApplicative
-    , liftK2, liftK2With
+    , liftK2
     ) where
 
-import AST.Class.Functor (KFunctor(..), mapKWith)
+import AST.Class.Functor (KFunctor(..))
 import AST.Class.Nodes (KNodes(..))
 import AST.Class.Pointed (KPointed)
 import AST.Knot (Tree)
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
-import Data.Proxy (Proxy)
 
 import Prelude.Compat
 
@@ -50,14 +49,3 @@ liftK2 ::
     Tree k q ->
     Tree k r
 liftK2 f x = mapK (\w -> (\(Pair a b) -> f w a b)) . zipK x
-
--- | Variant of 'liftK2' for functions with context
-{-# INLINE liftK2With #-}
-liftK2With ::
-    (KApply k, KNodesConstraint k constraint) =>
-    Proxy constraint ->
-    (forall n. constraint n => Tree p n -> Tree q n -> Tree r n) ->
-    Tree k p ->
-    Tree k q ->
-    Tree k r
-liftK2With p f x = mapKWith p (\(Pair a b) -> f a b) . zipK x

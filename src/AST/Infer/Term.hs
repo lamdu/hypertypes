@@ -42,7 +42,7 @@ iAnnotations f (ITerm pl r x) =
     ITerm
     <$> f pl
     <*> pure r
-    <*> traverseKWith (Proxy @RTraversable) (iAnnotations f) x
+    <*> traverseK (Proxy @RTraversable #> iAnnotations f) x
 
 -- | A class representing the requirements of 'traverseITermWith'
 class (RTraversable e, KTraversable (InferOf e)) => TraverseITermWith c e where
@@ -67,5 +67,5 @@ traverseITermWith ::
 traverseITermWith p f (ITerm a r x) =
     withDict (traverseITermWithConstraints p (Proxy @e)) $
     ITerm a
-    <$> traverseKWith p f r
-    <*> traverseKWith (Proxy @(TraverseITermWith constraint)) (traverseITermWith p f) x
+    <$> traverseK (p #> f) r
+    <*> traverseK (Proxy @(TraverseITermWith constraint) #> traverseITermWith p f) x

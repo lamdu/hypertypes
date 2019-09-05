@@ -3,17 +3,16 @@
 module AST.Class.Traversable
     ( KTraversable(..)
     , ContainedK(..), _ContainedK
-    , traverseK, traverseKWith, traverseK1
+    , traverseK, traverseK1
     ) where
 
 import AST.Class.Foldable (KFoldable)
-import AST.Class.Functor (KFunctor(..), mapKWith, mappedK1)
+import AST.Class.Functor (KFunctor(..), mappedK1)
 import AST.Class.Nodes (KNodes(..))
 import AST.Knot (Knot, Tree)
 import Control.Lens (Traversal, Iso, iso)
 import Control.Lens.Operators
 import Data.Functor.Const (Const(..))
-import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
@@ -50,16 +49,6 @@ traverseK ::
     Tree k p ->
     f (Tree k q)
 traverseK f = sequenceK . mapK (fmap MkContainedK . f)
-
--- | Variant of 'traverseK' for functions with context instead of a witness parameter
-{-# INLINE traverseKWith #-}
-traverseKWith ::
-    (Applicative f, KTraversable k, KNodesConstraint k constraint) =>
-    Proxy constraint ->
-    (forall c. constraint c => Tree m c -> f (Tree n c)) ->
-    Tree k m ->
-    f (Tree k n)
-traverseKWith p f = sequenceK . mapKWith p (MkContainedK . f)
 
 -- | 'KTraversable' variant of 'traverse' for 'Knot's with a single node type.
 --

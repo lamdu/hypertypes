@@ -109,8 +109,9 @@ instance RTraversable ast => KTraversable (Flip GTerm ast) where
         GBody x ->
             withDict (recurse (Proxy @(RTraversable ast))) $
             -- KTraversable will be required when not implied by Recursively
-            traverseKWith (Proxy @RTraversable)
-            (Lens.from _Flip sequenceK) x
+            traverseK
+            ( Proxy @RTraversable #> Lens.from _Flip sequenceK
+            ) x
             <&> GBody
         <&> MkFlip
 
@@ -138,11 +139,11 @@ generalize v0 =
                 withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
                 do
                     bindVar binding v1 (UResolving t)
-                    r <- traverseKWith (Proxy @(Unify m)) generalize (t ^. uBody)
+                    r <- traverseK (Proxy @(Unify m) #> generalize) (t ^. uBody)
                     r <$ bindVar binding v1 (UTerm t)
                 <&>
                 \b ->
-                if foldMapKWith (Proxy @(Unify m)) (All . Lens.has _GMono) b ^. Lens._Wrapped
+                if foldMapK (Proxy @(Unify m) #> All . Lens.has _GMono) b ^. Lens._Wrapped
                 then GMono v1
                 else GBody b
             UResolving t -> GMono v1 <$ occursError v1 t
@@ -179,7 +180,7 @@ instantiateH _ (GMono x) = pure x
 instantiateH cons (GPoly x) = instantiateForAll cons x
 instantiateH cons (GBody x) =
     withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
-    traverseKWith (Proxy @(Unify m)) (instantiateH cons) x >>= lift . newTerm
+    traverseK (Proxy @(Unify m) #> instantiateH cons) x >>= lift . newTerm
 
 {-# INLINE instantiateWith #-}
 instantiateWith ::

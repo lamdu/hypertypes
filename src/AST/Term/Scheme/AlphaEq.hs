@@ -8,7 +8,7 @@ module AST.Term.Scheme.AlphaEq
 import           AST
 import           AST.Class.Has (HasChild(..))
 import           AST.Class.Recursive (wrapM)
-import           AST.Class.ZipMatch (zipMatchWith_)
+import           AST.Class.ZipMatch (zipMatch_)
 import           AST.Term.Scheme
 import           AST.Unify
 import           AST.Unify.New (newTerm)
@@ -50,7 +50,7 @@ schemeToRestrictedType ::
     Tree Pure (Scheme varTypes typ) -> m (Tree (UVarOf m) typ)
 schemeToRestrictedType (Pure (Scheme vars typ)) =
     do
-        foralls <- traverseKWith (Proxy @(Unify m)) makeQVarInstancesInScope vars
+        foralls <- traverseK (Proxy @(Unify m) #> makeQVarInstancesInScope) vars
         wrapM (Proxy @(HasScheme varTypes m)) (schemeBodyToType foralls) typ
 
 goUTerm ::
@@ -82,7 +82,7 @@ goUTerm xv UUnbound{} yv yu = goUTerm xv yu yv yu -- Term created in structure m
 goUTerm xv xu yv UUnbound{} = goUTerm xv xu yv xu -- Term created in structure mismatch
 goUTerm _ (UTerm xt) _ (UTerm yt) =
     withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
-    zipMatchWith_ (Proxy @(Unify m)) goUVar (xt ^. uBody) (yt ^. uBody)
+    zipMatch_ (Proxy @(Unify m) #> goUVar) (xt ^. uBody) (yt ^. uBody)
     & fromMaybe (structureMismatch (\x y -> x <$ goUVar x y) xt yt)
 goUTerm _ _ _ _ = error "unexpected state at alpha-eq"
 
