@@ -5,6 +5,7 @@ module AST.Infer.Term
     ( ITerm(..), iVal, iRes, iAnn
     , ITermVarsConstraint(..)
     , iAnnotations
+    , iTermToAnn
     ) where
 
 import AST
@@ -139,3 +140,23 @@ iAnnotations f (ITerm pl r x) =
     <$> f pl
     <*> pure r
     <*> traverseK (Proxy @RTraversable #> iAnnotations f) x
+
+iTermToAnn ::
+    forall a v e r t.
+    RFunctor e =>
+    ( forall n.
+        (KWitness (InferOf n) t -> KWitness (Flip (ITerm a) e) t) ->
+        Proxy n ->
+        a ->
+        Tree (InferOf n) v ->
+        r
+    ) ->
+    Tree (ITerm a v) e ->
+    Tree (Ann r) e
+iTermToAnn f (ITerm pl r x) =
+    withDict (recurse (Proxy @(RFunctor e))) $
+    mapK
+    ( Proxy @RFunctor #*#
+        \w0 -> iTermToAnn (\w1 -> f (KW_Flip_ITerm_E1 w0 . w1))
+    ) x
+    & Ann (f KW_Flip_ITerm_E0 (Proxy @e) pl r)
