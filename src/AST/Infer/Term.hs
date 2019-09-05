@@ -1,16 +1,19 @@
-{-# LANGUAGE TemplateHaskell, FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE TemplateHaskell, FlexibleContexts, RankNTypes, GADTs #-}
 {-# LANGUAGE UndecidableInstances, FlexibleInstances, DefaultSignatures #-}
 
 module AST.Infer.Term
     ( ITerm(..), iVal, iRes, iAnn
+    , ITermVarsConstraint(..), ITermSpineConstraint(..)
     , iAnnotations
-    , traverseITermWith, TraverseITermWith(..)
     ) where
 
 import AST
+import AST.Combinator.Flip
 import AST.Class.Infer
+import AST.Class.Traversable (ContainedK(..))
 import AST.TH.Internal.Instances (makeCommonInstances)
-import Control.Lens (Traversal, makeLenses)
+import Control.Lens (Traversal, makeLenses, from)
+import Control.Lens.Operators
 import Data.Constraint
 import Data.Proxy (Proxy(..))
 import GHC.Generics (Generic)
@@ -29,6 +32,129 @@ data ITerm a v e = ITerm
 makeLenses ''ITerm
 makeCommonInstances [''ITerm]
 
+type ITermVarsConstraintContext c e =
+    ( KNodes (InferOf e)
+    , KNodesConstraint (InferOf e) c
+    , KNodes e
+    , KNodesConstraint e (ITermVarsConstraint c)
+    )
+
+class ITermVarsConstraint c e where
+    iTermVarsConstraintCtx ::
+        Proxy c -> Proxy e ->
+        Dict (ITermVarsConstraintContext c e)
+    default iTermVarsConstraintCtx ::
+        ITermVarsConstraintContext c e =>
+        Proxy c -> Proxy e ->
+        Dict (ITermVarsConstraintContext c e)
+    iTermVarsConstraintCtx _ _ = Dict
+
+instance Recursive (ITermVarsConstraint c) where
+    recurse p =
+        withDict (r p) Dict
+        where
+            r ::
+                forall k.
+                ITermVarsConstraint c k =>
+                Proxy (ITermVarsConstraint c k) ->
+                Dict (ITermVarsConstraintContext c k)
+            r _ = iTermVarsConstraintCtx (Proxy @c) (Proxy @k)
+
+instance KNodes (Flip (ITerm a) e) where
+    type KNodesConstraint (Flip (ITerm a) e) c = ITermVarsConstraint c e
+    data KWitness (Flip (ITerm a) e) n where
+        KW_Flip_ITerm_E0 ::
+            KWitness (InferOf e) n ->
+            KWitness (Flip (ITerm a) e) n
+        KW_Flip_ITerm_E1 ::
+            KWitness e f ->
+            KWitness (Flip (ITerm a) f) n ->
+            KWitness (Flip (ITerm a) e) n
+    {-# INLINE kLiftConstraint #-}
+    kLiftConstraint w p =
+        withDict (iTermVarsConstraintCtx p (Proxy @e)) $
+        case w of
+        KW_Flip_ITerm_E0 w0 -> kLiftConstraint w0 p
+        KW_Flip_ITerm_E1 w0 w1 ->
+            kLiftConstraint w0 (p0 p) (kLiftConstraint w1 p)
+            where
+                p0 :: Proxy c -> Proxy (ITermVarsConstraint c)
+                p0 _ = Proxy
+
+type ITermSpineConstraintContext c e =
+    ( c (InferOf e)
+    , c e
+    , KNodesConstraint e (ITermSpineConstraint c)
+    )
+
+class ITermSpineConstraint c e where
+    iTermSpineCtx ::
+        Proxy (c e) ->
+        Dict (ITermSpineConstraintContext c e)
+    default iTermSpineCtx ::
+        ITermSpineConstraintContext c e =>
+        Proxy (c e) ->
+        Dict (ITermSpineConstraintContext c e)
+    iTermSpineCtx _ = Dict
+
+instance Recursive (ITermSpineConstraint c) where
+    recurse p =
+        withDict (r p) Dict
+        where
+            r ::
+                forall k.
+                ITermSpineConstraint c k =>
+                Proxy (ITermSpineConstraint c k) ->
+                Dict (ITermSpineConstraintContext c k)
+            r _ = iTermSpineCtx (Proxy @(c k))
+
+instance ITermSpineConstraint KFunctor e => KFunctor (Flip (ITerm a) e) where
+    {-# INLINE mapK #-}
+    mapK f =
+        withDict (iTermSpineCtx (Proxy @(KFunctor e))) $
+        _Flip %~
+        \(ITerm pl r x) ->
+        ITerm pl
+        (mapK (f . KW_Flip_ITerm_E0) r)
+        ( mapK
+            ( Proxy @(ITermSpineConstraint KFunctor) #*#
+                \w -> from _Flip %~ mapK (f . KW_Flip_ITerm_E1 w)
+            ) x
+        )
+
+instance ITermSpineConstraint KFoldable e => KFoldable (Flip (ITerm a) e) where
+    {-# INLINE foldMapK #-}
+    foldMapK f (MkFlip (ITerm _ r x)) =
+        withDict (iTermSpineCtx (Proxy @(KFoldable e))) $
+        foldMapK (f . KW_Flip_ITerm_E0) r <>
+        foldMapK
+        ( Proxy @(ITermSpineConstraint KFoldable) #*#
+            \w -> foldMapK (f . KW_Flip_ITerm_E1 w) . (_Flip #)
+        ) x
+
+instance
+    ( ITermSpineConstraint KFunctor e
+    , ITermSpineConstraint KFoldable e
+    , ITermSpineConstraint KTraversable e
+    ) =>
+    KTraversable (Flip (ITerm a) e) where
+    {-# INLINE sequenceK #-}
+    sequenceK =
+        withDict (iTermSpineCtx (Proxy @(KFunctor e))) $
+        withDict (iTermSpineCtx (Proxy @(KFoldable e))) $
+        withDict (iTermSpineCtx (Proxy @(KTraversable e))) $
+        _Flip
+        ( \(ITerm pl r x) ->
+            ITerm pl
+            <$> traverseK (const runContainedK) r
+            <*> traverseK
+                ( Proxy @(ITermSpineConstraint KFunctor) #*#
+                    Proxy @(ITermSpineConstraint KFoldable) #*#
+                    Proxy @(ITermSpineConstraint KTraversable) #>
+                    from _Flip sequenceK
+                ) x
+        )
+
 -- | A 'Traversal' from an inferred term to the node annotations (not the inference results)
 iAnnotations ::
     forall e a b v.
@@ -43,29 +169,3 @@ iAnnotations f (ITerm pl r x) =
     <$> f pl
     <*> pure r
     <*> traverseK (Proxy @RTraversable #> iAnnotations f) x
-
--- | A class representing the requirements of 'traverseITermWith'
-class (RTraversable e, KTraversable (InferOf e)) => TraverseITermWith c e where
-    traverseITermWithConstraints ::
-        Proxy c -> Proxy e -> Dict (KNodesConstraint e (TraverseITermWith c), KNodesConstraint (InferOf e) c)
-    {-# INLINE traverseITermWithConstraints #-}
-    default traverseITermWithConstraints ::
-        (KNodesConstraint e (TraverseITermWith c), KNodesConstraint (InferOf e) c) =>
-        Proxy c -> Proxy e -> Dict (KNodesConstraint e (TraverseITermWith c), KNodesConstraint (InferOf e) c)
-    traverseITermWithConstraints _ _ = Dict
-
--- | 'traverseK' equivalent for 'ITerm', which applies on the unification variable knot
--- (not the last type parameter as 'traverseK' normally does).
---
--- /TODO/: Possibly replace with a 'KTraversable' instance for @Flip (ITerm a) e@
-traverseITermWith ::
-    forall e f v r a constraint.
-    (TraverseITermWith constraint e, Applicative f) =>
-    Proxy constraint ->
-    (forall c. constraint c => Tree v c -> f (Tree r c)) ->
-    Tree (ITerm a v) e -> f (Tree (ITerm a r) e)
-traverseITermWith p f (ITerm a r x) =
-    withDict (traverseITermWithConstraints p (Proxy @e)) $
-    ITerm a
-    <$> traverseK (p #> f) r
-    <*> traverseK (Proxy @(TraverseITermWith constraint) #> traverseITermWith p f) x

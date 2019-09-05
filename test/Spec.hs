@@ -3,6 +3,7 @@
 import           AST
 import           AST.Class.Recursive
 import           AST.Class.Unify
+import           AST.Combinator.Flip
 import           AST.Infer
 import           AST.Term.NamelessScope (EmptyScope)
 import           AST.Term.Nominal
@@ -123,13 +124,17 @@ inferExpr ::
     forall m t.
     ( HasInferredType t
     , Infer m t
-    , TraverseITermWith (Unify m) t
+    , RTraversable t
+    , ITermSpineConstraint KFunctor t
+    , ITermSpineConstraint KFoldable t
+    , ITermSpineConstraint KTraversable t
+    , ITermVarsConstraint (Unify m) t
     ) =>
     Tree Pure t ->
     m (Tree Pure (TypeOf t))
 inferExpr x =
     infer (wrap (Proxy @RTraversable) (Ann ()) x)
-    >>= traverseITermWith (Proxy @(Unify m)) applyBindings
+    >>= Lens.from _Flip (traverseK (Proxy @(Unify m) #> applyBindings))
     <&> (^# iRes . inferredType (Proxy @t))
 
 vecNominalDecl :: Tree Pure (NominalDecl Typ)
