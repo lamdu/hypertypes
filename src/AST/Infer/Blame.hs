@@ -308,11 +308,10 @@ blame order topLevelType e =
         finalize p
 
 bTermToAnn ::
-    forall a v e r t.
+    forall a v e r.
     RFunctor e =>
     ( forall n.
-        (KWitness (InferOf n) t -> KWitness (Flip (BTerm a) e) t) ->
-        Proxy n ->
+        KRecWitness e n ->
         a ->
         Either (Tree (InferOf n) v, Tree (InferOf n) v) (Tree (InferOf n) v) ->
         r
@@ -323,6 +322,6 @@ bTermToAnn f (BTerm pl r x) =
     withDict (recurse (Proxy @(RFunctor e))) $
     mapK
     ( Proxy @RFunctor #*#
-        \w0 -> bTermToAnn (\w1 -> f (KW_Flip_BTerm_E1 w0 . w1))
+        \w -> bTermToAnn (f . KRecSub w)
     ) x
-    & Ann (f KW_Flip_BTerm_E0 (Proxy @e) pl r)
+    & Ann (f KRecSelf pl r)

@@ -13,7 +13,6 @@ module AST.Unify.Generalize
 import           Algebra.PartialOrd (PartialOrd(..))
 import           AST
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
-import           AST.Class.Recursive
 import           AST.Class.Traversable
 import           AST.Combinator.Flip
 import           AST.TH.Internal.Instances (makeCommonInstances)

@@ -12,6 +12,7 @@ import AST
 import AST.Combinator.Flip
 import AST.Class.Infer
 import AST.Class.Infer.Recursive (RFunctorInferOf, RFoldableInferOf, RTraversableInferOf)
+import AST.Class.Recursive (KRecWitness(..))
 import AST.Class.Traversable (ContainedK(..))
 import AST.TH.Internal.Instances (makeCommonInstances)
 import Control.Lens (Traversal, makeLenses, from)
@@ -142,11 +143,10 @@ iAnnotations f (ITerm pl r x) =
     <*> traverseK (Proxy @RTraversable #> iAnnotations f) x
 
 iTermToAnn ::
-    forall a v e r t.
+    forall a v e r.
     RFunctor e =>
     ( forall n.
-        (KWitness (InferOf n) t -> KWitness (Flip (ITerm a) e) t) ->
-        Proxy n ->
+        KRecWitness e n ->
         a ->
         Tree (InferOf n) v ->
         r
@@ -157,6 +157,6 @@ iTermToAnn f (ITerm pl r x) =
     withDict (recurse (Proxy @(RFunctor e))) $
     mapK
     ( Proxy @RFunctor #*#
-        \w0 -> iTermToAnn (\w1 -> f (KW_Flip_ITerm_E1 w0 . w1))
+        \w -> iTermToAnn (f . KRecSub w)
     ) x
-    & Ann (f KW_Flip_ITerm_E0 (Proxy @e) pl r)
+    & Ann (f KRecSelf pl r)
