@@ -154,7 +154,6 @@ instance KNodes ScopeTypes where
     data KWitness ScopeTypes n = KW_ScopeTypes (KWitness (Flip GTerm Typ) n)
     type KNodesConstraint ScopeTypes c = (c Typ, Recursive c)
     kLiftConstraint (KW_ScopeTypes w) = kLiftConstraint w
-    kCombineConstraints _ = Dict
 
 Lens.makePrisms ''ScopeTypes
 

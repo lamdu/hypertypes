@@ -39,7 +39,6 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Writer (execWriterT)
 import           Data.Binary (Binary)
-import           Data.Constraint (Dict(..), withDict)
 import           Data.Foldable (traverse_)
 import           Data.Kind (Type)
 import           Data.Proxy (Proxy(..))
@@ -105,12 +104,6 @@ instance KNodes v => KNodes (NominalInst n v) where
     data KWitness (NominalInst n v) c = KW_NominalInst (KWitness v c)
     {-# INLINE kLiftConstraint #-}
     kLiftConstraint (KW_NominalInst w) = kLiftConstraint w
-    {-# INLINE kCombineConstraints #-}
-    kCombineConstraints p =
-        withDict (kCombineConstraints (p0 p)) Dict
-        where
-            p0 :: Proxy (And a b (NominalInst n v)) -> Proxy (And a b v)
-            p0 _ = Proxy
 
 instance KFunctor v => KFunctor (NominalInst n v) where
     {-# INLINE mapK #-}
@@ -140,10 +133,9 @@ instance
     zipMatch (NominalInst xId x) (NominalInst yId y)
         | xId /= yId = Nothing
         | otherwise =
-            withDict (kCombineConstraints (Proxy @(And ZipMatch OrdQVar varTypes))) $
             zipMatch x y
             >>= traverseK
-                ( Proxy @(ZipMatch `And` OrdQVar) #>
+                ( Proxy @ZipMatch #*# Proxy @OrdQVar #>
                     \(Pair (QVarInstances c0) (QVarInstances c1)) ->
                     zipMatch (TermMap c0) (TermMap c1)
                     <&> (^. _TermMap)
@@ -193,12 +185,6 @@ instance (RNodes typ, KNodes (NomVarTypes typ)) => KNodes (LoadedNominalDecl typ
     {-# INLINE kLiftConstraint #-}
     kLiftConstraint (KW_LoadedNominalDecl_E0 w) = kLiftConstraint (KW_Flip_GTerm w)
     kLiftConstraint (KW_LoadedNominalDecl_E1 w) = kLiftConstraint w
-    {-# INLINE kCombineConstraints #-}
-    kCombineConstraints p =
-        withDict (kCombineConstraints (p0 p)) Dict
-        where
-            p0 :: Proxy (c (LoadedNominalDecl typ)) -> Proxy (c (NomVarTypes typ))
-            p0 _ = Proxy
 
 instance
     (RFunctor typ, KFunctor (NomVarTypes typ)) =>

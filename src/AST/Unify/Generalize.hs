@@ -26,7 +26,7 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.Writer (WriterT(..), tell)
-import           Data.Constraint (Dict(..), withDict)
+import           Data.Constraint (withDict)
 import           Data.Monoid (All(..))
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
@@ -55,17 +55,18 @@ instance RNodes a => KNodes (Flip GTerm a) where
     {-# INLINE kLiftConstraint #-}
     kLiftConstraint (KW_Flip_GTerm KRecSelf) = const id
     kLiftConstraint (KW_Flip_GTerm (KRecSub c n)) = kLiftConstraintH c n
-    {-# INLINE kCombineConstraints #-}
-    kCombineConstraints _ = Dict
 
 kLiftConstraintH ::
     forall a c b n r.
     (RNodes a, KNodesConstraint (Flip GTerm a) c) =>
     KWitness a b -> KRecWitness b n -> Proxy c -> (c n => r) -> r
 kLiftConstraintH c n =
-    withDict (recurse (Proxy @(And RNodes c a))) $
-    kLiftConstraint c (Proxy @(And RNodes c))
-    (kLiftConstraint (KW_Flip_GTerm n))
+    withDict (recurse (Proxy @(RNodes a))) $
+    withDict (recurse (Proxy @(c a))) $
+    kLiftConstraint c (Proxy @RNodes)
+    ( kLiftConstraint c (Proxy @c)
+        (kLiftConstraint (KW_Flip_GTerm n))
+    )
 
 instance RFunctor ast => KFunctor (Flip GTerm ast) where
     {-# INLINE mapK #-}

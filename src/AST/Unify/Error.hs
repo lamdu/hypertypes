@@ -12,8 +12,6 @@ import           AST.TH.Functor (makeKFunctor)
 import           AST.TH.Traversable (makeKTraversableAndFoldable)
 import           AST.Unify.Constraints (TypeConstraintsOf)
 import           Control.Lens (makePrisms)
-import           Data.Constraint (Dict(..), withDict)
-import           Data.Proxy (Proxy(..))
 import           Generics.Constraints (Constraints)
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
@@ -48,11 +46,6 @@ instance KNodes t => KNodes (UnifyError t) where
         KW_UnifyError_E0 :: KWitness t n -> KWitness (UnifyError t) n
     kLiftConstraint KW_UnifyError_0 = const id
     kLiftConstraint (KW_UnifyError_E0 w) = kLiftConstraint w
-    kCombineConstraints p =
-        withDict (kCombineConstraints (p0 p)) Dict
-        where
-            p0 :: Proxy (And a b (UnifyError t)) -> Proxy (And a b t)
-            p0 _ = Proxy
 
 makeKFunctor ''UnifyError
 makeKTraversableAndFoldable ''UnifyError

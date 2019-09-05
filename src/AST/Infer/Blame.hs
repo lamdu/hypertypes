@@ -229,6 +229,7 @@ bTermToAnn ::
     Tree (BTerm a v) e ->
     Tree (Ann r) e
 bTermToAnn p f (BTerm a i x) =
-    withDict (recurse (Proxy @(And RFunctor c e))) $
-    mapK (Proxy @(And RFunctor c) #> bTermToAnn p f) x
+    withDict (recurse (Proxy @(RFunctor e))) $
+    withDict (recurse (Proxy @(c e))) $
+    mapK (Proxy @RFunctor #*# Proxy @c #> bTermToAnn p f) x
     & Ann (f (Proxy @e) a i)

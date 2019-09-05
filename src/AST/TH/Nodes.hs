@@ -7,7 +7,6 @@ module AST.TH.Nodes
 import           AST.Class.Nodes
 import           AST.TH.Internal.Utils
 import           Control.Lens.Operators
-import           Data.Constraint (Dict(..))
 import qualified Data.Set as Set
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
@@ -28,8 +27,6 @@ makeKNodesForType info =
         Nothing (nodeOfCons <&> pure) []
     , InlineP 'kLiftConstraint Inline FunLike AllPhases & PragmaD & pure
     , funD 'kLiftConstraint (makeKLiftConstraints wit <&> pure)
-    , InlineP 'kCombineConstraints Inline FunLike AllPhases & PragmaD & pure
-    , funD 'kCombineConstraints [pure (Clause [WildP] (NormalB (ConE 'Dict)) [])]
     ]
     <&> (:[])
     where

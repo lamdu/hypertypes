@@ -5,7 +5,7 @@ import AST.Class.Foldable as X
     ( KFoldable(..), foldMapK, traverseK_, traverseK1_
     )
 import AST.Class.Functor as X (KFunctor(..), mappedK1)
-import AST.Class.Nodes as X (KNodes(..), (#>))
+import AST.Class.Nodes as X (KNodes(..), (#>), (#*#))
 import AST.Class.Pointed as X (KPointed(..))
 import AST.Class.Recursive as X
     ( Recursive(..), RNodes, RFunctor, RFoldable, RTraversable
@@ -18,5 +18,4 @@ import AST.Knot.Pure as X
 import AST.TH.Apply as X (makeKApplicativeBases)
 import AST.TH.Traversable as X (makeKTraversableApplyAndBases, makeKTraversableAndBases)
 import AST.TH.ZipMatch as X (makeZipMatch)
-import Data.Constraint.List as X (And)
 import Data.Functor.Product.PolyKinds as X (Product(..))

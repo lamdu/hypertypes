@@ -43,7 +43,8 @@ diff ::
     (RZipMatch t, RTraversable t) =>
     Tree (Ann a) t -> Tree (Ann b) t -> Tree (Diff a b) t
 diff x@(Ann xA xB) y@(Ann yA yB) =
-    withDict (recurse (Proxy @(And RZipMatch RTraversable t))) $
+    withDict (recurse (Proxy @(RZipMatch t))) $
+    withDict (recurse (Proxy @(RTraversable t))) $
     case zipMatch xB yB of
     Nothing -> Different (Pair x y)
     Just match ->
@@ -53,6 +54,6 @@ diff x@(Ann xA xB) y@(Ann yA yB) =
         where
             sub =
                 mapK
-                ( Proxy @(And RZipMatch RTraversable) #>
+                ( Proxy @RZipMatch #*# Proxy @RTraversable #>
                     \(Pair xC yC) -> diff xC yC
                 ) match

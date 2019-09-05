@@ -11,13 +11,12 @@ module AST.Class.Recursive
 
 import AST.Class.Foldable
 import AST.Class.Functor (KFunctor(..))
-import AST.Class.Nodes (KNodes(..), (#>))
+import AST.Class.Nodes (KNodes(..), (#>), (#*#))
 import AST.Class.Traversable
 import AST.Knot
 import AST.Knot.Pure (Pure(..), _Pure, (&#))
 import Control.Lens.Operators
 import Data.Constraint (Dict(..), withDict)
-import Data.Constraint.List (And)
 import Data.Functor.Const (Const(..))
 import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy(..))
@@ -28,17 +27,6 @@ import Prelude.Compat
 class Recursive c where
     -- | Lift a recursive constraint to the next layer
     recurse :: (KNodes k, c k) => Proxy (c k) -> Dict (KNodesConstraint k c)
-
-instance (Recursive a, Recursive b) => Recursive (And a b) where
-    recurse p =
-        withDict (recurse (p0 p)) $
-        withDict (recurse (p1 p)) $
-        withDict (kCombineConstraints p) Dict
-        where
-            p0 :: Proxy (And a b k) -> Proxy (a k)
-            p0 _ = Proxy
-            p1 :: Proxy (And a b k) -> Proxy (b k)
-            p1 _ = Proxy
 
 -- | A class of 'Knot's which recursively implement 'KNodes'
 class KNodes k => RNodes k where
@@ -117,9 +105,10 @@ wrapM ::
     Tree Pure k ->
     m (Tree w k)
 wrapM p f x =
-    withDict (recurse (Proxy @(And RTraversable c k))) $
+    withDict (recurse (Proxy @(RTraversable k))) $
+    withDict (recurse (Proxy @(c k))) $
     x ^. _Pure
-    & traverseK (Proxy @(And RTraversable c) #> wrapM p f)
+    & traverseK (Proxy @RTraversable #*# Proxy @c #> wrapM p f)
     >>= f
 
 -- | Monadically unwrap a 'Tree' from the top down, replacing its 'Knot' with 'Pure'
@@ -132,9 +121,10 @@ unwrapM ::
     Tree w k ->
     m (Tree Pure k)
 unwrapM p f x =
-    withDict (recurse (Proxy @(And RTraversable c k))) $
+    withDict (recurse (Proxy @(RTraversable k))) $
+    withDict (recurse (Proxy @(c k))) $
     f x
-    >>= traverseK (Proxy @(And RTraversable c) #> unwrapM p f)
+    >>= traverseK (Proxy @RTraversable #*# Proxy @c #> unwrapM p f)
     <&> (_Pure #)
 
 -- | Wrap a 'Pure' 'Tree' to a different 'Knot' from the bottom up
@@ -147,9 +137,10 @@ wrap ::
     Tree Pure k ->
     Tree w k
 wrap p f x =
-    withDict (recurse (Proxy @(And RFunctor c k))) $
+    withDict (recurse (Proxy @(RFunctor k))) $
+    withDict (recurse (Proxy @(c k))) $
     x ^. _Pure
-    & mapK (Proxy @(And RFunctor c) #> wrap p f)
+    & mapK (Proxy @RFunctor #*# Proxy @c #> wrap p f)
     & f
 
 -- | Unwrap a 'Tree' from the top down, replacing its 'Knot' with 'Pure'
@@ -162,9 +153,10 @@ unwrap ::
     Tree w k ->
     Tree Pure k
 unwrap p f x =
-    withDict (recurse (Proxy @(And RFunctor c k))) $
+    withDict (recurse (Proxy @(RFunctor k))) $
+    withDict (recurse (Proxy @(c k))) $
     f x
-    &# mapK (Proxy @(And RFunctor c) #> unwrap p f)
+    &# mapK (Proxy @RFunctor #*# Proxy @c #> unwrap p f)
 
 -- | Recursively fold up a tree to produce a result (aka catamorphism)
 {-# INLINE fold #-}
@@ -196,11 +188,12 @@ foldMapRecursive ::
     Tree k f ->
     a
 foldMapRecursive p f x =
-    withDict (recurse (Proxy @(And RFoldable c k))) $
+    withDict (recurse (Proxy @(RFoldable k))) $
+    withDict (recurse (Proxy @(c k))) $
     withDict (recurse (Proxy @(RFoldable f))) $
     f x <>
     foldMapK
-    ( Proxy @(And RFoldable c) #>
+    ( Proxy @RFoldable #*# Proxy @c #>
         foldMapK (Proxy @RFoldable #> foldMapRecursive p f)
     ) x
 

@@ -2,18 +2,14 @@
 
 module AST.Class.Nodes
     ( KNodes(..), KWitness(..)
-    , (#>)
+    , (#>), (#*#)
     ) where
 
 import AST.Knot (Knot)
-import Data.Constraint
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
-import Data.Constraint.List (And)
-import Data.Kind (Type)
+import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy(..))
-
-import Prelude.Compat
 
 -- | 'KNodes' allows lifting a constraint to the child nodes of a 'Knot'
 -- by using the 'KNodesConstraint' type family.
@@ -39,20 +35,11 @@ class KNodes (k :: Knot -> Type) where
         (c n => r) ->
         r
 
-    -- | Combine two 'KNodesConstraint' to allow
-    -- processing child nodes with functions that require both constraints
-    kCombineConstraints ::
-        (KNodesConstraint k a, KNodesConstraint k b) =>
-        Proxy (And a b k) ->
-        Dict (KNodesConstraint k (And a b))
-
 instance KNodes (Const a) where
     type KNodesConstraint (Const a) x = ()
     data KWitness (Const a) i
     {-# INLINE kLiftConstraint #-}
     kLiftConstraint = \case
-    {-# INLINE kCombineConstraints #-}
-    kCombineConstraints _ = Dict
 
 instance (KNodes a, KNodes b) => KNodes (Product a b) where
     type KNodesConstraint (Product a b) x = (KNodesConstraint a x, KNodesConstraint b x)
@@ -62,20 +49,17 @@ instance (KNodes a, KNodes b) => KNodes (Product a b) where
     {-# INLINE kLiftConstraint #-}
     kLiftConstraint (KW_Product_E0 w) = kLiftConstraint w
     kLiftConstraint (KW_Product_E1 w) = kLiftConstraint w
-    {-# INLINE kCombineConstraints #-}
-    kCombineConstraints p =
-        withDict (kCombineConstraints (p0 p)) $
-        withDict (kCombineConstraints (p1 p)) Dict
-        where
-            p0 :: Proxy (And c0 c1 (Product a b)) -> Proxy (And c0 c1 a)
-            p0 _ = Proxy
-            p1 :: Proxy (And c0 c1 (Product a b)) -> Proxy (And c0 c1 b)
-            p1 _ = Proxy
 
 infixr 0 #>
+infixr 0 #*#
 
 {-# INLINE (#>) #-}
 (#>) ::
     (KNodes k, KNodesConstraint k c) =>
     Proxy c -> (c n => r) -> KWitness k n -> r
 (#>) p r w = kLiftConstraint w p r
+
+(#*#) ::
+    (KNodes k, KNodesConstraint k c) =>
+    Proxy c -> (KWitness k n -> (c n => r)) -> KWitness k n -> r
+(#*#) p r w = kLiftConstraint w p r w
