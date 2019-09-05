@@ -1,6 +1,7 @@
 module AST.Infer
     ( infer
     , module AST.Class.Infer
+    , module AST.Class.Infer.Recursive
     , module AST.Infer.ScopeLevel
     , module AST.Infer.Term
 
@@ -10,6 +11,7 @@ module AST.Infer
 
 import AST
 import AST.Class.Infer
+import AST.Class.Infer.Recursive
 import AST.Infer.ScopeLevel
 import AST.Infer.Term
 import AST.Unify (UVarOf)

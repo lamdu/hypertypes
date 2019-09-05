@@ -175,11 +175,15 @@ instance RFunctor Row
 instance RTraversable Typ
 instance RTraversable Row
 
+instance RFunctorInferOf Typ
+instance RFunctorInferOf Row
+instance RFoldableInferOf Typ
+instance RFoldableInferOf Row
+instance RTraversableInferOf Typ
+instance RTraversableInferOf Row
+
 instance (c Typ, c Row, Recursive c) => ITermVarsConstraint c Typ
 instance (c Typ, c Row, Recursive c) => ITermVarsConstraint c Row
-
-instance (c (ANode Typ), c Typ, c (ANode Row), c Row) => ITermSpineConstraint c Typ
-instance (c (ANode Typ), c Typ, c (ANode Row), c Row) => ITermSpineConstraint c Row
 
 instance HasQuantifiedVar Typ where
     type QVar Typ = Name

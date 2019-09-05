@@ -3,13 +3,14 @@
 
 module AST.Infer.Term
     ( ITerm(..), iVal, iRes, iAnn
-    , ITermVarsConstraint(..), ITermSpineConstraint(..)
+    , ITermVarsConstraint(..)
     , iAnnotations
     ) where
 
 import AST
 import AST.Combinator.Flip
 import AST.Class.Infer
+import AST.Class.Infer.Recursive (RFunctorInferOf, RFoldableInferOf, RTraversableInferOf)
 import AST.Class.Traversable (ContainedK(..))
 import AST.TH.Internal.Instances (makeCommonInstances)
 import Control.Lens (Traversal, makeLenses, from)
@@ -81,76 +82,45 @@ instance KNodes (Flip (ITerm a) e) where
                 p0 :: Proxy c -> Proxy (ITermVarsConstraint c)
                 p0 _ = Proxy
 
-type ITermSpineConstraintContext c e =
-    ( c (InferOf e)
-    , c e
-    , KNodesConstraint e (ITermSpineConstraint c)
-    )
-
-class ITermSpineConstraint c e where
-    iTermSpineCtx ::
-        Proxy (c e) ->
-        Dict (ITermSpineConstraintContext c e)
-    default iTermSpineCtx ::
-        ITermSpineConstraintContext c e =>
-        Proxy (c e) ->
-        Dict (ITermSpineConstraintContext c e)
-    iTermSpineCtx _ = Dict
-
-instance Recursive (ITermSpineConstraint c) where
-    recurse p =
-        withDict (r p) Dict
-        where
-            r ::
-                forall k.
-                ITermSpineConstraint c k =>
-                Proxy (ITermSpineConstraint c k) ->
-                Dict (ITermSpineConstraintContext c k)
-            r _ = iTermSpineCtx (Proxy @(c k))
-
-instance ITermSpineConstraint KFunctor e => KFunctor (Flip (ITerm a) e) where
+instance (RFunctor e, RFunctorInferOf e) => KFunctor (Flip (ITerm a) e) where
     {-# INLINE mapK #-}
     mapK f =
-        withDict (iTermSpineCtx (Proxy @(KFunctor e))) $
+        withDict (recurse (Proxy @(RFunctor e))) $
+        withDict (recurse (Proxy @(RFunctorInferOf e))) $
         _Flip %~
         \(ITerm pl r x) ->
         ITerm pl
         (mapK (f . KW_Flip_ITerm_E0) r)
         ( mapK
-            ( Proxy @(ITermSpineConstraint KFunctor) #*#
+            ( Proxy @RFunctor #*# Proxy @RFunctorInferOf #*#
                 \w -> from _Flip %~ mapK (f . KW_Flip_ITerm_E1 w)
             ) x
         )
 
-instance ITermSpineConstraint KFoldable e => KFoldable (Flip (ITerm a) e) where
+instance (RFoldable e, RFoldableInferOf e) => KFoldable (Flip (ITerm a) e) where
     {-# INLINE foldMapK #-}
     foldMapK f (MkFlip (ITerm _ r x)) =
-        withDict (iTermSpineCtx (Proxy @(KFoldable e))) $
+        withDict (recurse (Proxy @(RFoldable e))) $
+        withDict (recurse (Proxy @(RFoldableInferOf e))) $
         foldMapK (f . KW_Flip_ITerm_E0) r <>
         foldMapK
-        ( Proxy @(ITermSpineConstraint KFoldable) #*#
+        ( Proxy @RFoldable #*# Proxy @RFoldableInferOf #*#
             \w -> foldMapK (f . KW_Flip_ITerm_E1 w) . (_Flip #)
         ) x
 
 instance
-    ( ITermSpineConstraint KFunctor e
-    , ITermSpineConstraint KFoldable e
-    , ITermSpineConstraint KTraversable e
-    ) =>
+    (RTraversable e, RTraversableInferOf e) =>
     KTraversable (Flip (ITerm a) e) where
     {-# INLINE sequenceK #-}
     sequenceK =
-        withDict (iTermSpineCtx (Proxy @(KFunctor e))) $
-        withDict (iTermSpineCtx (Proxy @(KFoldable e))) $
-        withDict (iTermSpineCtx (Proxy @(KTraversable e))) $
+        withDict (recurse (Proxy @(RTraversable e))) $
+        withDict (recurse (Proxy @(RTraversableInferOf e))) $
         _Flip
         ( \(ITerm pl r x) ->
             ITerm pl
             <$> traverseK (const runContainedK) r
             <*> traverseK
-                ( Proxy @(ITermSpineConstraint KFunctor) #*#
-                    Proxy @(ITermSpineConstraint KFoldable) #*#
-                    Proxy @(ITermSpineConstraint KTraversable) #>
+                ( Proxy @RTraversable #*# Proxy @RTraversableInferOf #>
                     from _Flip sequenceK
                 ) x
         )

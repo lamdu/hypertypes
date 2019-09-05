@@ -125,9 +125,7 @@ inferExpr ::
     ( HasInferredType t
     , Infer m t
     , RTraversable t
-    , ITermSpineConstraint KFunctor t
-    , ITermSpineConstraint KFoldable t
-    , ITermSpineConstraint KTraversable t
+    , RTraversableInferOf t
     , ITermVarsConstraint (Unify m) t
     ) =>
     Tree Pure t ->

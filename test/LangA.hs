@@ -102,11 +102,10 @@ instance (DeBruijnIndex k, TermInfer1Deps env m) => Infer m (LangA k) where
     inferBody (AApp x) = inferBody x <&> Lens._1 %~ AApp
     inferBody (ATypeSig x) = inferBody x <&> Lens._1 %~ ATypeSig
 
+instance RFunctorInferOf (LangA k)
+instance RFoldableInferOf (LangA k)
+instance RTraversableInferOf (LangA k)
 instance (c Typ, c Row, Recursive c) => ITermVarsConstraint c (LangA k)
-
-instance ITermSpineConstraint KFunctor (LangA k)
-instance ITermSpineConstraint KFoldable (LangA k)
-instance ITermSpineConstraint KTraversable (LangA k)
 
 -- Monads for inferring `LangA`:
 

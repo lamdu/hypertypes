@@ -65,12 +65,13 @@ instance (KFoldable (Scheme v t), RFoldable t) => RFoldable (Scheme v t)
 instance (KFunctor (Scheme v t), RFunctor t) => RFunctor (Scheme v t)
 instance (KTraversable (Scheme v t), RTraversable t) => RTraversable (Scheme v t)
 
+instance (RFunctor t, RFunctorInferOf t) => RFunctorInferOf (Scheme v t)
+instance (RFoldable t, RFoldableInferOf t) => RFoldableInferOf (Scheme v t)
+instance (RTraversable t, RTraversableInferOf t) => RTraversableInferOf (Scheme v t)
+
 instance
     (RNodes t, c t, Recursive c, ITermVarsConstraint c t) =>
     ITermVarsConstraint c (Scheme v t)
-instance
-    (c (Flip GTerm t), c (Scheme v t), ITermSpineConstraint c t) =>
-    ITermSpineConstraint c (Scheme v t)
 
 instance
     ( Ord (QVar (RunKnot typ))
