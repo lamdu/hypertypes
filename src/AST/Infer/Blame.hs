@@ -32,7 +32,8 @@
 -- Note: If a similar algorithm already existed somewhere,
 -- [I](https://github.com/yairchu/) would very much like to know!
 
-{-# LANGUAGE FlexibleContexts, DefaultSignatures, TemplateHaskell, UndecidableInstances, RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, DefaultSignatures, TemplateHaskell #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances, RankNTypes, GADTs #-}
 
 module AST.Infer.Blame
     ( blame
@@ -43,10 +44,14 @@ module AST.Infer.Blame
 
 import AST
 import AST.Class.Infer
+import AST.Class.Infer.Recursive
+import AST.Class.Traversable (ContainedK(..))
 import AST.Class.Unify (Unify, UVarOf)
+import AST.Combinator.Flip
+import AST.Infer.Term (ITermVarsConstraint(..))
 import AST.TH.Internal.Instances (makeCommonInstances)
 import AST.Unify.Occurs (occursCheck)
-import Control.Lens (makeLenses)
+import Control.Lens (makeLenses, from)
 import Control.Lens.Operators
 import Control.Monad.Except (MonadError(..))
 import Data.Constraint (Dict(..), withDict)
@@ -178,6 +183,88 @@ data BTerm a v e = BTerm
 makeLenses ''BTerm
 makeCommonInstances [''BTerm]
 
+instance KNodes (Flip (BTerm a) e) where
+    type KNodesConstraint (Flip (BTerm a) e) c = ITermVarsConstraint c e
+    data KWitness (Flip (BTerm a) e) n where
+        KW_Flip_BTerm_E0 ::
+            KWitness (InferOf e) n ->
+            KWitness (Flip (BTerm a) e) n
+        KW_Flip_BTerm_E1 ::
+            KWitness e f ->
+            KWitness (Flip (BTerm a) f) n ->
+            KWitness (Flip (BTerm a) e) n
+    {-# INLINE kLiftConstraint #-}
+    kLiftConstraint w p =
+        withDict (iTermVarsConstraintCtx p (Proxy @e)) $
+        case w of
+        KW_Flip_BTerm_E0 w0 -> kLiftConstraint w0 p
+        KW_Flip_BTerm_E1 w0 w1 ->
+            kLiftConstraint w0 (p0 p) (kLiftConstraint w1 p)
+            where
+                p0 :: Proxy c -> Proxy (ITermVarsConstraint c)
+                p0 _ = Proxy
+
+instance (RFunctor e, RFunctorInferOf e) => KFunctor (Flip (BTerm a) e) where
+    {-# INLINE mapK #-}
+    mapK f =
+        withDict (recurse (Proxy @(RFunctor e))) $
+        withDict (recurse (Proxy @(RFunctorInferOf e))) $
+        _Flip %~
+        \(BTerm pl r x) ->
+        BTerm pl
+        ( case r of
+            Left (r0, r1) -> Left (mapRes r0, mapRes r1)
+            Right r0 -> Right (mapRes r0)
+        )
+        ( mapK
+            ( Proxy @RFunctor #*# Proxy @RFunctorInferOf #*#
+                \w -> from _Flip %~ mapK (f . KW_Flip_BTerm_E1 w)
+            ) x
+        )
+        where
+            mapRes = mapK (f . KW_Flip_BTerm_E0)
+
+instance (RFoldable e, RFoldableInferOf e) => KFoldable (Flip (BTerm a) e) where
+    {-# INLINE foldMapK #-}
+    foldMapK f (MkFlip (BTerm _ r x)) =
+        withDict (recurse (Proxy @(RFoldable e))) $
+        withDict (recurse (Proxy @(RFoldableInferOf e))) $
+        case r of
+        Left (r0, r1) -> foldRes r0 <> foldRes r1
+        Right r0 -> foldRes r0
+        <>
+        foldMapK
+        ( Proxy @RFoldable #*# Proxy @RFoldableInferOf #*#
+            \w -> foldMapK (f . KW_Flip_BTerm_E1 w) . (_Flip #)
+        ) x
+        where
+            foldRes = foldMapK (f . KW_Flip_BTerm_E0)
+
+instance
+    (RTraversable e, RTraversableInferOf e) =>
+    KTraversable (Flip (BTerm a) e) where
+    {-# INLINE sequenceK #-}
+    sequenceK =
+        withDict (recurse (Proxy @(RTraversable e))) $
+        withDict (recurse (Proxy @(RTraversableInferOf e))) $
+        _Flip
+        ( \(BTerm pl r x) ->
+            BTerm pl
+            <$> ( case r of
+                    Left (r0, r1) -> (,) <$> seqRes r0 <*> seqRes r1 <&> Left
+                    Right r0 -> seqRes r0 <&> Right
+                )
+            <*> traverseK
+                ( Proxy @RTraversable #*# Proxy @RTraversableInferOf #>
+                    from _Flip sequenceK
+                ) x
+        )
+        where
+            seqRes ::
+                (KTraversable k, Applicative f) =>
+                Tree k (ContainedK f p) -> f (Tree k p)
+            seqRes = traverseK (const runContainedK)
+
 finalize ::
     forall a m exp.
     Blame m exp =>
@@ -220,16 +307,22 @@ blame order topLevelType e =
         toUnifies p ^.. annotations & sortOn (order . fst) & traverse_ snd
         finalize p
 
--- | Convert a 'BTerm' to a simple annotated tree with the same annotation type for all nodes
 bTermToAnn ::
-    forall e a v r c.
-    (RFunctor e, c e, Recursive c) =>
-    Proxy c ->
-    (forall n. c n => Proxy n -> a -> Either (Tree (InferOf n) v, Tree (InferOf n) v) (Tree (InferOf n) v) -> r) ->
+    forall a v e r t.
+    RFunctor e =>
+    ( forall n.
+        (KWitness (InferOf n) t -> KWitness (Flip (BTerm a) e) t) ->
+        Proxy n ->
+        a ->
+        Either (Tree (InferOf n) v, Tree (InferOf n) v) (Tree (InferOf n) v) ->
+        r
+    ) ->
     Tree (BTerm a v) e ->
     Tree (Ann r) e
-bTermToAnn p f (BTerm a i x) =
+bTermToAnn f (BTerm pl r x) =
     withDict (recurse (Proxy @(RFunctor e))) $
-    withDict (recurse (Proxy @(c e))) $
-    mapK (Proxy @RFunctor #*# Proxy @c #> bTermToAnn p f) x
-    & Ann (f (Proxy @e) a i)
+    mapK
+    ( Proxy @RFunctor #*#
+        \w0 -> bTermToAnn (\w1 -> f (KW_Flip_BTerm_E1 w0 . w1))
+    ) x
+    & Ann (f KW_Flip_BTerm_E0 (Proxy @e) pl r)
