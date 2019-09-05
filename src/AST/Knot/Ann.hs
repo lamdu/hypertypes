@@ -6,9 +6,12 @@ module AST.Knot.Ann
     , strip, addAnnotations
     ) where
 
+import           AST.Class.Functor (mapK)
+import           AST.Class.Monad
 import           AST.Class.Nodes (KNodes(..), (#>))
 import           AST.Class.Recursive
 import           AST.Class.Traversable (traverseK)
+import           AST.Combinator.Compose
 import           AST.Knot (Tree, Node)
 import           AST.Knot.Pure (Pure(..))
 import           AST.TH.Traversable (makeKTraversableApplyAndBases)
@@ -40,6 +43,19 @@ instance RNodes (Ann a)
 instance RFunctor (Ann a)
 instance RFoldable (Ann a)
 instance RTraversable (Ann a)
+
+instance Monoid a => KMonad (Ann a) where
+    joinK (MkCompose (Ann a0 (MkCompose (Ann a1 (MkCompose x))))) =
+        Ann (a0 <> a1) (t x)
+        where
+            t ::
+                forall p.
+                RFunctor p =>
+                Tree p (Compose (Ann a) (Ann a)) ->
+                Tree p (Ann a)
+            t =
+                withDict (recurse (Proxy @(RFunctor p))) $
+                mapK (Proxy @RFunctor #> joinK)
 
 instance Constraints (Ann a t) Pretty => Pretty (Ann a t) where
     pPrintPrec lvl prec (Ann pl b)

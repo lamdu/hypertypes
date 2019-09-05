@@ -1,15 +1,22 @@
 -- | Functors as Knots
-{-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances, GADTs #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances, FlexibleContexts #-}
+{-# LANGUAGE UndecidableInstances, GeneralizedNewtypeDeriving, GADTs #-}
 module AST.Knot.Functor
     ( F(..), _F, KWitness(..)
     ) where
 
-import AST.Class.Nodes (KNodes(..))
-import AST.Class.Recursive (RNodes, RFunctor, RFoldable, RTraversable)
+import AST.Class.Nodes (KNodes(..), (#>))
+import AST.Class.Functor (KFunctor(..))
+import AST.Class.Monad (KMonad(..))
+import AST.Class.Recursive (Recursive(..), RNodes, RFunctor, RFoldable, RTraversable)
+import AST.Combinator.Compose
 import AST.Knot (Tree, Node)
 import AST.TH.Internal.Instances (makeCommonInstances)
 import AST.TH.Traversable (makeKTraversableApplyAndBases)
-import Control.Lens (Iso, iso)
+import Control.Lens (Iso, iso, mapped)
+import Control.Lens.Operators
+import Data.Constraint (withDict)
+import Data.Proxy (Proxy(..))
 import GHC.Generics (Generic)
 
 import Prelude.Compat
@@ -35,6 +42,24 @@ _F = iso (\(F x) -> x) F
 
 makeCommonInstances [''F]
 makeKTraversableApplyAndBases ''F
+
+instance Monad f => KMonad (F f) where
+    joinK =
+        ( _F %~
+            ( >>=
+                ( mapped %~ t . (^. _Compose)
+                ) . (^. _Compose . _F)
+            )
+        ) . (^. _Compose)
+        where
+            t ::
+                forall p.
+                RFunctor p =>
+                Tree p (Compose (F f) (F f)) ->
+                Tree p (F f)
+            t =
+                withDict (recurse (Proxy @(RFunctor p))) $
+                mapK (Proxy @RFunctor #> joinK)
 
 instance RNodes (F f)
 instance Functor f => RFunctor (F f)
