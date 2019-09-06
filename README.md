@@ -1,141 +1,260 @@
-# syntax-tree: Higher-Kinded Data all the way down!
+# syntax-tree: Higher-Kinded Data + recursion-schemes
 
-syntax-tree is a Haskell library for working with higher kinded data structures.
+Parameterizing data types by a "field constructor" is a widely used technique,
+used by
+the ["Higher-Kinded Data"](https://reasonablypolymorphic.com/blog/higher-kinded-data/) pattern and
+by [`recursion-schemes`](http://hackage.haskell.org/package/recursion-schemes),
+but these two approaches do not work well together and each one of them has its limitations.
 
-It allows to describe nested data structures parameterised on how to store child nodes.
+* HKD parameterizes records on a functor to hold their fields.
+  This pattern supports simple records but doesn't support nested structures.
+* `recursion-schemes` parameterizes recursive structures by a fix-point.
+  It doesn't support structures with several different types.
+* [`multirec`](http://hackage.haskell.org/package/multirec)
+  does allow encoding nested and mutually recursive types with fix-points,
+  by each family of nested types as a single GADT.
+  But using a single type imposes limitation on composabilty and modularity.
 
-## Comparison to simple HKD
+`syntax-tree` is a Haskell library for describing rich nested and mutually recursive types with
+the "field constructor" parameter pattern, in a modular and composable manner.
 
-[Higher-Kinded Data](http://reasonablypolymorphic.com/blog/higher-kinded-data) (aka HKD) enables parameterizing items in a record, allowing for example to represent a variant of the record which may have missing items.
+## Introduction to the "field constructor" pattern and the status-quo
 
-With HKD-all-the-way-down (aka nested-HKD), instead of containing simple values of kind `Type`, the structure contains similar nested-HKD structures.
+### `Type`: Simple type, simple functionality
 
-## Examples
-
-### Heterogeneous AST of types and row types
-
-Let's consider the following AST:
+Suppose we have the following type in an application:
 
 ```Haskell
+data Person = Person
+    { height :: Double
+    , weight :: Double
+    }
+```
+
+Let's imagine that we want to let a user fill in a `Person` via a form,
+where during the process the record may have missing fields.
+
+We may want a way to represent a state with missing fields,
+but this type doesn't allow for it.
+
+We can either create an additional type for that, or augment `Person` to provide more functionality. Augmenting `Person` is preferred because it will result in less boiler-plate and less types to maintain as we make changes to it.
+
+### `Type -> Type`: Adding a type parameter
+
+A possible solution is to parameterize `Person` on the field type:
+
+```Haskell
+data Person a = Person
+    { height :: a
+    , weight :: a
+    }
+```
+
+This would solve our problem.
+
+We can parameterize with `Double` for the normal structure,
+and with `Maybe Double` for the variant with missing fields!
+
+This approach reaches its limits when the fields have multiple different types, as in:
+
+```Haskell
+data Person = Person
+    { height :: Double
+    , weight :: Double
+    , name :: Text
+    }
+```
+
+We would now need an additional parameter to parameterize how to store the fields of type `Text`!
+Is there a way to use a single type parameter for both types of fields? Yes, there is:
+
+### `(Type -> Type) -> Type`: Higher-Kinded Data
+
+We could represent `Person` like so:
+
+```Haskell
+data Person f = Person
+    { height :: f Double
+    , weight :: f Double
+    , name :: f Text
+    }
+```
+
+For the plain case we would use `Person Identity` (from `Data.Functor.Identity`),
+and for the missing fields case we would use `Person Maybe`.
+
+The benefit of this parameterization over the previous one is that `Person`'s kind
+doesn't need to change when adding more field types, so such changes don't propagate all over the code.
+
+Note that various helper classes such as
+[`Rank2.Functor`](https://hackage.haskell.org/package/rank2classes-1.3/docs/Rank2.html#t:Functor)
+and `Rank2.Traversable` (from the `rank2classes` package)
+allow us to do conversions between `Person Identity` and `Person Maybe`.
+
+#### HKD for nested structures
+
+Let's employ the same transformation we did for `Person` to a more complicated data structure:
+
+```Haskell
+data Expr
+    = Const Int
+    | Add Expr Expr
+    | Mul Expr Expr
+```
+
+The HKD form of `Expr` would be:
+
+```Haskell
+data Expr f
+    = Const (f Int)
+    | Add (f (Expr f)) (f (Expr f))
+    | Mul (f (Expr f)) (f (Expr f))
+```
+
+This does allow representing nested structures with missing elements.
+But classes like `Rank2.Functor` may no longer work for it.
+To understand why let's look at its definition
+
+```Haskell
+class Functor f where
+    (<$>) :: (forall a. p a -> q a) -> f p -> f q
+```
+
+The rank-2 function argument expects the field type `a` to stay the same when it changes `p` to `q`,
+however in the above formulation of `Expr` the field types `Expr p` change to `Expr q` when changing the type parameter.
+
+### `Type -> Type`: The `recursion-schemes` approach
+
+The `recursion-schemes` formulation of `Expr` is:
+
+```Haskell
+data Expr a
+    = Const Int
+    | Add a a
+    | Mul a a
+```
+
+Note that `recursion-schemes` can generate it for us from the simple definition of `Expr` using `TemplateHaskell`.
+
+As in our very first example, we only have one parameterized field type (we gave up on parameterizing over the `Int` in `Const`).
+This is the big limintation of this approach, but in return, we get several advantages.
+
+We can represent an expression as `Fix Expr`, using:
+
+```Haskell
+newtype Fix f = Fix (f Fix)
+```
+
+We can then use useful combinators from `recursion-schemes` for folding and conversion.
+
+[`unification-fd`](http://hackage.haskell.org/package/unification-fd)
+is a good example for the power of this approach.
+It implements unification for ASTs,
+where it uses the parameterization to store unification variables standing for terms.
+
+We can also use rich fix-points which store several different fix-points within, like the `Diff` fixpoint:
+
+```Haskell
+data Diff f
+    = Same (f Fix)
+    | SameTopLevel (f Diff)
+    | Different (f Fix) (f Fix)
+```
+
+(Note how `Diff` parameterizes `f` by both `Fix` and `Diff`)
+
+The main drawback of this approach is that in practice, ASTs are usually mutually recursive datatypes. For example:
+
+```Haskell
+data Expr
+    = Var Text
+    | App Expr Expr
+    | Lam Text Typ Expr
 data Typ
-    = TInt
-    | TFun Typ Typ
-    | TRow Row
-
-data Row
-    = REmpty
-    | RExtend String Typ Row
+    = IntT
+    | FuncT Typ Typ
 ```
 
-Note how `Typ`s has children of types `Typ` and `Row` (and `Row` also has children of both types). This makes it heterogeneous.
+This type is an example for an AST which `recursion-schemes` can't help us with.
 
-Here's how such a tree can be represented as nested-HKD with `syntax-tree`:
+Is there a way to present this structure? Yes:
+
+### `(Index -> Type) -> Index -> Type`: The `multirec` approach
+
+[`multirec`](http://hackage.haskell.org/package/multirec)'s way to define the above AST:
 
 ```Haskell
-data Typ k
-    = TInt
-    | TFun (k ('Knot Typ)) (k ('Knot Typ))
-    | TRow (Row k)
+data Expr :: Index
+data Typ :: Index
 
-data Row k
-    = REmpty
-    | RExtend String (k ('Knot Typ)) (k ('Knot Row))
+data AST :: (Index -> Type) -> Index -> Type where
+    Var :: Text -> AST r Expr
+    App :: r Expr -> r Expr -> AST r Expr
+    Lam :: Text -> r Typ -> r Expr -> AST r Expr
+    IntT :: AST r Typ
+    FuncT :: r Typ -> r Typ -> AST r Typ
 ```
 
-Differences from the simple type definition:
+*(this is an variant of `multirec`'s actual presentation, which makes `Index` an explicit kind)*
 
-* The types are parameterized by `k`
-* Child nodes are constructed by applying `k` with the node type (wrapped by `'Knot`)
+`multirec` offers various utilities to process such data types.
+It offers type classes such as
+[`HFunctor`](http://hackage.haskell.org/package/multirec-0.7.9/docs/Generics-MultiRec-HFunctor.html)
+and various recursive combinators.
 
-## What can syntax-tree do for you
+`multirec` has several limitations:
 
-* Helpers for recursive processing and transformation of nested structures
-* Nested-HKD variants of standard classes like `Functor`
-* A generic implementation for unification of terms
-* A generic and fast implementation of a Hindley-Milner type inference algorithm (["Efficient generalization with levels"](http://okmij.org/ftp/ML/generalization.html#levels))
-* Implementations for common AST terms and useful fix-points
+* Using a single GADT for the data type limits composition and modularity.
+* Invocations of `HFunctor` for an `AST r Typ` need to support transforming all indices,
+  including `Expr`, even though `Typ` doesn't have `Expr` child nodes.
 
-## The underlying principle: `Knot`s
+## `Knot -> Type`: `syntax-tree`'s approach
 
-* We want ASTs to be parameterized by fix-points
-* Fix-points are parameterized by the ASTs, too
-* Therefore, ASTs and fix-points need to be mutually parameterized by each other
-* This results in infinite types, as the AST is parameterized by something which may be parameterized by the AST itself.
+The `syntax-tree` representation of the above AST example:
 
-To represent these infinite types we break the cycle with a `newtype`:
+```Haskell
+data Expr k
+    = Var Text
+    | App (k ('Knot Expr)) (k ('Knot Expr))
+    | Lam Text (k ('Knot Typ)) (k ('Knot Expr))
+data Typ k
+    = IntT
+    | FuncT (k ('Knot Typ)) (k ('Knot Typ))
+```
+
+Where `Knot` is defined as so:
 
 ```Haskell
 newtype Knot = Knot (Knot -> Type)
 ```
 
-This allows representing the mutual parameterization:
+For this representation, `syntax-tree` offers the power and functionality of both HKD and `recursion-schemes`:
 
-* ASTs and fix-points are types parameterized by `Knot`s
-* Their kind is therefore `Knot -> Type`
-* `Knot -> Type` is also the kind of the type inside `Knot`, which is lifted to the type-level using `DataKinds`
-* Wrapping the AST and fix-point type parameters with `Knot`s thus enables the mutual parameterization / recursion
+* Helpers for recursive processing and transformation of nested structures.
+* Implementations for common AST terms and useful fix-points.
+* Variants of standard classes like `Functor`.
+  Unlike `multirec`'s `HFunctor`, only the actual child types of each type need to be handled.
+* A `unification-fd` inspired unification implementation for mutually recursive types.
+* A generic and fast implementation of a Hindley-Milner type inference algorithm (["Efficient generalization with levels"](http://okmij.org/ftp/ML/generalization.html#levels)).
+
+## Both ASTs and their fix-points are `Knot`s
+
+* We want ASTs to be parameterized by fix-points
+* Fix-points are parameterized by the ASTs, too
+* Therefore, ASTs and fix-points need to be parameterized by each other
+* This results in infinite types, as the AST is parameterized by something which may be parameterized by the AST itself.
+
+`multirec` ties the knot by using indices to represent types. `syntax-tree` does this by using `DataKinds` and the `Knot` `newtype`.
 
 ## How does syntax-tree compare/relate to
 
-### recursion-schemes
+Note that comparisons to HKD, `recursion-schemes`, `multirec`, and `unification-fd` were discussed in depth above.
 
-[recursion-schemes](http://hackage.haskell.org/package/recursion-schemes) offers combinators for processing homogeneous recursive types.
-
-The heterogeneous AST example above is an example for non-homogeneous, co-recursive types. syntax-tree offers combinators which are similar to those from recursion-schemes but which also work for heterogeneous structures.
-
-### rank2classes
-
-[rank2classes](https://hackage.haskell.org/package/rank2classes) offers rank-2 variants of common classes such as `Functor`:
-
-```Haskell
-class Rank2.Functor f where
-    (<$>) ::
-        (forall a. p a -> q a) ->
-        f p ->
-        f q
-```
-
-This is very similar to syntax-tree's `KFunctor`:
-
-```Haskell
-class KNodes f => KFunctor f where
-    mapK ::
-        (forall a. p a -> q a) ->
-        f ('Knot p) ->
-        f ('Knot q)
-    mapKWith :: ...
-```
-
-`mapK` and `Rank2.(<$>)` are similar, but an important difference is that `g`'s parameters `p` and `q` are wrapped in `Knot`, because this is how syntax-tree's nested-HKD work. That is, knots can't be instances of `Rank2.Functor` and this is why the `KFunctor` variant is necessary.
-
- Additionally, `mapKWith` is provided, which allows using a mapping that requires a constraint on the child nodes, which is an extensively used feature.
-
-### compdata
-
-[compdata](http://hackage.haskell.org/package/compdata) also offers a method to describe heterogenous structures with external fixpoints and also offers variants of common classes such as `Functor`:
-
-```Haskell
-class HFunctor f where
-    hfmap ::
-        (forall a. p a -> q a) ->
-        f p b ->
-        f q b
-```
-
-Differences between compdata and syntax-tree:
-
-* compdata requires the nested structures to be described together in a single indexed data type (via `GADT`s or data familes). syntax-tree also allows structures to be split across separate data types, which allows for more modularity and code reusability
-* syntax-tree's `KFunctor` also provides `mapKWith` which allows mappings to use constraints on child nodes, which is used extensively
-
-### unification-fd
-
-[unification-fd](http://hackage.haskell.org/package/unification-fd) provides a unification implementation for homogeneous recursive types.
-
-syntax-tree provides a unification implementation for heterogeneous ASTs. Furthermore, syntax-tree also provides an implementation for Hindley-Milner type inference, with the `Infer` type class and with implementations of common AST terms which one can re-use as components in their own AST types.
+In addition:
 
 ### hyperfunctions
 
-S. Krstic et al [KLP2001] have described the a type which they call a "Hyperfunction". Here is it's definition from the [hyperfunctions](http://hackage.haskell.org/package/hyperfunctions) package:
+S. Krstic et al [KLP2001] have described the a type which they call a "Hyperfunction". Here is it's definition from the [`hyperfunctions`](http://hackage.haskell.org/package/hyperfunctions) package:
 
 ```Haskell
 newtype Hyper a b = Hyper { invoke :: Hyper b a -> b }
@@ -152,14 +271,14 @@ For more info on hyperfunctions and their use cases in the value level see [LKS2
 
 ### bound
 
-[bound](http://hackage.haskell.org/package/bound) is a library for expressing ASTs with type-safe De-Bruijn indices rather than parameter names, via an AST type constructor that is indexed on the variables in scope.
+[`bound`](http://hackage.haskell.org/package/bound) is a library for expressing ASTs with type-safe De-Bruijn indices rather than parameter names, via an AST type constructor that is indexed on the variables in scope.
 
-An intereseting aspect of bound's ASTs is that recursively they are made of an infinite ammount of types.
+An intereseting aspect of `bound`'s ASTs is that recursively they are made of an infinite ammount of types.
 
-When implementing syntax-tree we had the explicit goal of making sure that such ASTs are expressible with it,
+When implementing `syntax-tree` we had the explicit goal of making sure that such ASTs are expressible with it,
 and for this reason the `AST.Term.NamelessScope` module implementing it is provided, and the test suite includes
 a language implementation based on it (`LangA` in the tests).
 
 ### lens
 
-syntax-tree strives to be maximally compatible with [lens](http://hackage.haskell.org/package/lens), and offers `Traversal`s and `Setter`s wherever possible. But unfortunately the `RankNTypes` nature of many combinators in syntax-tree makes them not composable with optics. For the special simpler cases when all child nodes have the same types the `traverseK1` traversal and `mappedK1` setter are available.
+`syntax-tree` strives to be maximally compatible with [`lens`](http://hackage.haskell.org/package/lens), and offers `Traversal`s and `Setter`s wherever possible. But unfortunately the `RankNTypes` nature of many combinators in syntax-tree makes them not composable with optics. For the special simpler cases when all child nodes have the same types the `traverseK1` traversal and `mappedK1` setter are available.
