@@ -278,7 +278,7 @@ For more info on hyperfunctions and their use cases in the value level see [LKS2
 
 [`bound`](http://hackage.haskell.org/package/bound) is a library for expressing ASTs with type-safe De-Bruijn indices rather than parameter names, via an AST type constructor that is indexed on the variables in scope.
 
-An intereseting aspect of `bound`'s ASTs is that recursively they are made of an infinite ammount of types.
+An intereseting aspect of `bound`'s ASTs is that recursively they are made of an infinite amount of types.
 
 When implementing `syntax-tree` we had the explicit goal of making sure that such ASTs are expressible with it,
 and for this reason the `AST.Term.NamelessScope` module implementing it is provided, and the test suite includes
