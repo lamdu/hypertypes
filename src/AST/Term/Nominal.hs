@@ -1,8 +1,7 @@
 -- | Nominal (named) types declaration, instantiation, construction, and access.
 
 {-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, UndecidableInstances #-}
-{-# LANGUAGE FlexibleContexts, TemplateHaskell, TypeOperators, GADTs, EmptyCase #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE FlexibleContexts, TemplateHaskell, GADTs, EmptyCase #-}
 
 module AST.Term.Nominal
     ( NominalDecl(..), nParams, nScheme, KWitness(..)
