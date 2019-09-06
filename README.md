@@ -227,7 +227,7 @@ data Typ k
     | FuncT (k # Typ) (k # Typ)
 ```
 
-The `(#)` type synonym used above requires some explaining:
+The `#` type operator used above requires some explaining:
 
 ```Haskell
 type k # p = (GetKnot k) ('Knot p)
