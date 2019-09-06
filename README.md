@@ -10,7 +10,7 @@ but these two approaches do not work well together and each one of them has its 
   This pattern supports simple records but doesn't support nested structures.
 * `recursion-schemes` parameterizes recursive structures by a fix-point.
   It doesn't support structures with several different types.
-* A third approach, [`multirec`](http://hackage.haskell.org/package/multirec)
+* A third approach, [`multirec`](http://hackage.haskell.org/package/multirec),
   does allow encoding nested and mutually recursive types with fix-points,
   by each family of nested types as a single GADT.
   But using a single type imposes limitation on composabilty and modularity.
