@@ -234,12 +234,12 @@ type knot # ast = (GetKnot knot) ('Knot ast)
 
 newtype Knot = Knot (Knot -> Type)
 
+-- GetKnot unwraps the Knot newtype in the type level
 type family GetKnot k where
     GetKnot ('Knot t) = t
 ```
 
-* `'Knot` is a use of the `Knot` data constructor in types using `DataKinds`.
-* `GetKnot` unwraps the `Knot` `newtype` in the type-level.
+(the `'Knot` syntax is `DataKinds` syntax for using the `Knot` data constructor in types)
 
 For this representation, `syntax-tree` offers the power and functionality of both HKD and `recursion-schemes`:
 
