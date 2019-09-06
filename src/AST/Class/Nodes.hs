@@ -39,7 +39,7 @@ instance KNodes (Const a) where
     type KNodesConstraint (Const a) x = ()
     data KWitness (Const a) i
     {-# INLINE kLiftConstraint #-}
-    kLiftConstraint = \case
+    kLiftConstraint = \case{}
 
 instance (KNodes a, KNodes b) => KNodes (Product a b) where
     type KNodesConstraint (Product a b) x = (KNodesConstraint a x, KNodesConstraint b x)
