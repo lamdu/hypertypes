@@ -4,14 +4,14 @@ module AST.Combinator.ANode
     ( ANode(..), _ANode
     ) where
 
-import AST.Knot (Tree, Node)
+import AST.Knot (Tree, type (#))
 import AST.TH.Internal.Instances (makeCommonInstances)
 import AST.TH.Traversable (makeKTraversableApplyAndBases)
 import Control.Lens (Iso, iso)
 import GHC.Generics (Generic)
 
 -- | @ANode c@ is a 'AST.Knot.Knot' with a single child node of type @c@
-newtype ANode c k = MkANode (Node k c)
+newtype ANode c k = MkANode (k # c)
     deriving stock Generic
 
 -- | An 'Iso' from 'ANode' its child node.

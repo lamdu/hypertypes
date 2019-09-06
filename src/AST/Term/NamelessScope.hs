@@ -3,7 +3,7 @@
 -- and the technique from Bird & Paterson's
 -- ["de Bruijn notation as a nested datatype"](https://www.semanticscholar.org/paper/De-Bruijn-Notation-as-a-Nested-Datatype-Bird-Paterson/254b3b01651c5e325d9b3cd15c106fbec40e53ea)
 
-{-# LANGUAGE UndecidableInstances, GeneralizedNewtypeDeriving, TypeOperators #-}
+{-# LANGUAGE UndecidableInstances, GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleInstances, TemplateHaskell, EmptyCase, GADTs #-}
 
 module AST.Term.NamelessScope
@@ -33,7 +33,7 @@ import           Prelude.Compat
 
 data EmptyScope
 
-newtype Scope expr a k = Scope (Node k (expr (Maybe a)))
+newtype Scope expr a k = Scope (k # expr (Maybe a))
 Lens.makePrisms ''Scope
 
 newtype ScopeVar (expr :: * -> Knot -> *) a (k :: Knot) = ScopeVar a
@@ -60,7 +60,7 @@ instance DeBruijnIndex a => DeBruijnIndex (Maybe a) where
                 | x == 0 = Just Nothing
                 | otherwise = (x - 1) ^? deBruijnIndex <&> Just
 
-newtype ScopeTypes t v = ScopeTypes (Seq (Node v t))
+newtype ScopeTypes t v = ScopeTypes (Seq (v # t))
     deriving newtype (Semigroup, Monoid)
 
 Lens.makePrisms ''ScopeTypes

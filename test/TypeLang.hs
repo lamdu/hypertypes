@@ -39,7 +39,7 @@ newtype Name = Name String deriving stock (Eq, Ord, Show)
 data Typ k
     = TInt
     | TFun (FuncType Typ k)
-    | TRec (Node k Row)
+    | TRec (k # Row)
     | TVar Name
     | TNom (NominalInst Name Types k)
     deriving Generic
@@ -57,8 +57,8 @@ data RConstraints = RowConstraints
     deriving (Semigroup, Monoid) via Generically RConstraints
 
 data Types k = Types
-    { _tTyp :: Node k Typ
-    , _tRow :: Node k Row
+    { _tTyp :: k # Typ
+    , _tRow :: k # Row
     } deriving Generic
 
 data TypeError k

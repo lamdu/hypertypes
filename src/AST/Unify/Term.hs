@@ -16,15 +16,15 @@ import GHC.Generics (Generic)
 import Prelude.Compat
 
 data UTermBody v ast = UTermBody
-    { _uConstraints :: TypeConstraintsOf (RunKnot ast)
-    , _uBody :: Node ast v
+    { _uConstraints :: TypeConstraintsOf (GetKnot ast)
+    , _uBody :: ast # v
     } deriving Generic
 
 -- | A unification term pointed by a unification variable
 data UTerm v ast
-    = UUnbound (TypeConstraintsOf (RunKnot ast))
+    = UUnbound (TypeConstraintsOf (GetKnot ast))
       -- ^ Unbound variable with at least the given constraints
-    | USkolem (TypeConstraintsOf (RunKnot ast))
+    | USkolem (TypeConstraintsOf (GetKnot ast))
       -- ^ A variable bound by a rigid quantified variable with
       -- *exactly* the given constraints
     | UToVar (v ast)

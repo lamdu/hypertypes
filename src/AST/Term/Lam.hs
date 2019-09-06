@@ -28,7 +28,7 @@ import           Prelude.Compat
 -- Apart from the data type, an 'Infer' instance is also provided.
 data Lam v expr k = Lam
     { _lamIn :: v
-    , _lamOut :: Node k expr
+    , _lamOut :: k # expr
     } deriving Generic
 
 makeLenses ''Lam

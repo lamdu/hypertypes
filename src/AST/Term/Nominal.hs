@@ -61,7 +61,7 @@ data NominalDecl typ k = NominalDecl
 -- | An instantiation of a nominal type
 data NominalInst nomId varTypes k = NominalInst
     { _nId :: nomId
-    , _nArgs :: Tree varTypes (QVarInstances (RunKnot k))
+    , _nArgs :: Tree varTypes (QVarInstances (GetKnot k))
     } deriving Generic
 
 -- | Nominal data constructor.
@@ -72,7 +72,7 @@ data NominalInst nomId varTypes k = NominalInst
 -- Introduces the nominal's foralled type variables into the value's scope.
 data ToNom nomId term k = ToNom
     { _tnId :: nomId
-    , _tnVal :: Node k term
+    , _tnVal :: k # term
     } deriving Generic
 
 -- | Access the data in a nominally typed value.
@@ -84,9 +84,9 @@ newtype FromNom nomId (term :: Knot -> *) (k :: Knot) = FromNom nomId
 
 -- | A nominal declaration loaded into scope in an inference monad.
 data LoadedNominalDecl typ v = LoadedNominalDecl
-    { _lnParams :: Tree (NomVarTypes typ) (QVarInstances (RunKnot v))
-    , _lnForalls :: Tree (NomVarTypes typ) (QVarInstances (RunKnot v))
-    , _lnType :: Tree (GTerm (RunKnot v)) typ
+    { _lnParams :: Tree (NomVarTypes typ) (QVarInstances (GetKnot v))
+    , _lnForalls :: Tree (NomVarTypes typ) (QVarInstances (GetKnot v))
+    , _lnType :: Tree (GTerm (GetKnot v)) typ
     } deriving Generic
 
 makeLenses ''NominalDecl
@@ -147,8 +147,8 @@ instance Constraints (ToNom nomId term k) Pretty => Pretty (ToNom nomId term k) 
         (pPrint nomId <> Pretty.text "#") <+> pPrintPrec lvl 11 term
         & maybeParens (p > 10)
 
-class    (Pretty (QVar k), Pretty (Node outer k)) => PrettyConstraints outer k
-instance (Pretty (QVar k), Pretty (Node outer k)) => PrettyConstraints outer k
+class    (Pretty (QVar k), Pretty (outer # k)) => PrettyConstraints outer k
+instance (Pretty (QVar k), Pretty (outer # k)) => PrettyConstraints outer k
 
 instance
     ( Pretty nomId

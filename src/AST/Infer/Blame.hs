@@ -107,14 +107,14 @@ instance Recursive (Blame m) where
         ((const Proxy :: p (b m t) -> Proxy t) p)
 
 -- | A type synonym to help 'BTerm' be more succinct
-type InferOf' e v = Tree (InferOf (RunKnot e)) v
+type InferOf' e v = Tree (InferOf (GetKnot e)) v
 
 -- Internal Knot for the blame algorithm
 data PTerm a v e = PTerm
     { pAnn :: a
     , pInferResultFromPos :: InferOf' e v
     , pInferResultFromSelf :: InferOf' e v
-    , pBody :: Node e (PTerm a v)
+    , pBody :: e # PTerm a v
     }
 
 prepareH ::
@@ -177,7 +177,7 @@ data BTerm a v e = BTerm
         -- ^ The node's original annotation as passed to 'blame'
     , _bRes :: Either (InferOf' e v, InferOf' e v) (InferOf' e v)
         -- ^ Either an infer result, or two conflicting results representing a type mismatch
-    , _bVal :: Node e (BTerm a v)
+    , _bVal :: e # BTerm a v
         -- ^ The node's body and its inferred child nodes
     } deriving Generic
 makeLenses ''BTerm

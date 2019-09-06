@@ -44,14 +44,14 @@ import           Prelude.Compat
 -- | A type scheme representing a polymorphic type.
 data Scheme varTypes typ k = Scheme
     { _sForAlls :: Tree varTypes QVars
-    , _sTyp :: Node k typ
+    , _sTyp :: k # typ
     } deriving Generic
 
 newtype QVars typ = QVars
-    (Map (QVar (RunKnot typ)) (TypeConstraintsOf (RunKnot typ)))
+    (Map (QVar (GetKnot typ)) (TypeConstraintsOf (GetKnot typ)))
     deriving stock Generic
 
-newtype QVarInstances k typ = QVarInstances (Map (QVar (RunKnot typ)) (k typ))
+newtype QVarInstances k typ = QVarInstances (Map (QVar (GetKnot typ)) (k typ))
     deriving stock Generic
 
 Lens.makeLenses ''Scheme
@@ -74,21 +74,21 @@ instance
     ITermVarsConstraint c (Scheme v t)
 
 instance
-    ( Ord (QVar (RunKnot typ))
-    , Semigroup (TypeConstraintsOf (RunKnot typ))
+    ( Ord (QVar (GetKnot typ))
+    , Semigroup (TypeConstraintsOf (GetKnot typ))
     ) =>
     Semigroup (QVars typ) where
     QVars m <> QVars n = QVars (Map.unionWith (<>) m n)
 
 instance
-    ( Ord (QVar (RunKnot typ))
-    , Semigroup (TypeConstraintsOf (RunKnot typ))
+    ( Ord (QVar (GetKnot typ))
+    , Semigroup (TypeConstraintsOf (GetKnot typ))
     ) =>
     Monoid (QVars typ) where
     mempty = QVars Map.empty
 
 instance
-    (Pretty (Tree varTypes QVars), Pretty (Node k typ)) =>
+    (Pretty (Tree varTypes QVars), Pretty (k # typ)) =>
     Pretty (Scheme varTypes typ k) where
 
     pPrintPrec lvl p (Scheme forAlls typ) =
@@ -111,12 +111,12 @@ instance
                 where
                     cP = pPrint c
 
-type instance Lens.Index (QVars typ) = QVar (RunKnot typ)
-type instance Lens.IxValue (QVars typ) = TypeConstraintsOf (RunKnot typ)
+type instance Lens.Index (QVars typ) = QVar (GetKnot typ)
+type instance Lens.IxValue (QVars typ) = TypeConstraintsOf (GetKnot typ)
 
-instance Ord (QVar (RunKnot typ)) => Lens.Ixed (QVars typ)
+instance Ord (QVar (GetKnot typ)) => Lens.Ixed (QVars typ)
 
-instance Ord (QVar (RunKnot typ)) => Lens.At (QVars typ) where
+instance Ord (QVar (GetKnot typ)) => Lens.At (QVars typ) where
     at k = _QVars . Lens.at k
 
 type instance InferOf (Scheme v t) = Flip GTerm t

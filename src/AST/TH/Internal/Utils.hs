@@ -12,7 +12,7 @@ module AST.TH.Internal.Utils
     ) where
 
 import           AST.Class.Nodes
-import           AST.Knot (Knot(..), RunKnot, Node)
+import           AST.Knot (Knot(..), GetKnot, type (#))
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
@@ -101,13 +101,13 @@ unapply =
 
 matchType :: Name -> Type -> CtrTypePattern
 matchType var (ConT runKnot `AppT` VarT k `AppT` (PromotedT knot `AppT` ast))
-    | runKnot == ''RunKnot && knot == 'Knot && k == var =
+    | runKnot == ''GetKnot && knot == 'Knot && k == var =
         NodeFofX ast
 matchType var (ConT tie `AppT` VarT k `AppT` ast)
-    | tie == ''Node && k == var =
+    | tie == ''(#) && k == var =
         NodeFofX ast
 matchType var (ast `AppT` VarT knot)
-    | knot == var && ast /= ConT ''RunKnot =
+    | knot == var && ast /= ConT ''GetKnot =
         XofF ast
 matchType var x@(AppT t typ) =
     -- TODO: check if applied over a functor-kinded type.

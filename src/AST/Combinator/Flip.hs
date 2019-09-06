@@ -2,7 +2,7 @@ module AST.Combinator.Flip
     ( Flip(..), _Flip
     ) where
 
-import AST.Knot (Tree, RunKnot)
+import AST.Knot (Tree, GetKnot)
 import Control.Lens (Iso, iso)
 
 -- | Flip the order of the last two type type parameters of a 'AST.Knot.Knot'.
@@ -10,7 +10,7 @@ import Control.Lens (Iso, iso)
 -- Useful to use instances of classes such as 'AST.Class.Traversable.KTraversable' which
 -- are available on the flipped knot.
 -- For example 'AST.Unify.Generalize.GTerm' has instances when flipped.
-newtype Flip f x k = MkFlip (Tree (f (RunKnot k)) x)
+newtype Flip f x k = MkFlip (Tree (f (GetKnot k)) x)
 
 -- | An 'Iso' from 'Flip' to its content.
 --

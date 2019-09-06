@@ -26,8 +26,8 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 import           Prelude.Compat
 
 data TypeSig vars term k = TypeSig
-    { _tsTerm :: Node k term
-    , _tsType :: Node k (Scheme vars (TypeOf term))
+    { _tsTerm :: k # term
+    , _tsType :: k # Scheme vars (TypeOf term)
     } deriving Generic
 
 makeLenses ''TypeSig

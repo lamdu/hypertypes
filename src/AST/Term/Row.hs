@@ -46,13 +46,13 @@ type RowKey typ = RowConstraintsKey (TypeConstraintsOf typ)
 -- | Row-extend primitive for use in both value-level and type-level
 data RowExtend key val rest k = RowExtend
     { _eKey :: key
-    , _eVal :: Node k val
-    , _eRest :: Node k rest
+    , _eVal :: k # val
+    , _eRest :: k # rest
     } deriving Generic
 
 data FlatRowExtends key val rest k = FlatRowExtends
-    { _freExtends :: Map key (Node k val)
-    , _freRest :: Node k rest
+    { _freExtends :: Map key (k # val)
+    , _freRest :: k # rest
     } deriving Generic
 
 makeLenses ''RowExtend

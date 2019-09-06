@@ -23,7 +23,7 @@ import           GHC.Generics (Generic)
 
 import           Prelude.Compat
 
-newtype Compose a b k = MkCompose { getCompose :: Tree a (Compose b (RunKnot k)) }
+newtype Compose a b k = MkCompose { getCompose :: Tree a (Compose b (GetKnot k)) }
     deriving stock Generic
 
 {-# INLINE _Compose #-}
@@ -118,7 +118,7 @@ instance
             )
         <&> (_Compose #)
 
-type InCompose a b k = Tree a (Compose b (RunKnot k))
+type InCompose a b k = Tree a (Compose b (GetKnot k))
 deriving instance Eq   (InCompose a b k) => Eq   (Compose a b k)
 deriving instance Ord  (InCompose a b k) => Ord  (Compose a b k)
 deriving instance Show (InCompose a b k) => Show (Compose a b k)

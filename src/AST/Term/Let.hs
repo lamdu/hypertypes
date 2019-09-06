@@ -27,8 +27,8 @@ import           Prelude.Compat
 -- Apart from the data type, an 'Infer' instance is also provided.
 data Let v expr k = Let
     { _letVar :: v
-    , _letEquals :: Node k expr
-    , _letIn :: Node k expr
+    , _letEquals :: k # expr
+    , _letIn :: k # expr
     } deriving (Generic)
 
 makeLenses ''Let

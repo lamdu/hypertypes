@@ -12,7 +12,7 @@ import           AST.Class.Nodes (KNodes(..), (#>))
 import           AST.Class.Recursive
 import           AST.Class.Traversable (traverseK)
 import           AST.Combinator.Compose
-import           AST.Knot (Tree, Node)
+import           AST.Knot (Tree, type (#))
 import           AST.Knot.Pure (Pure(..))
 import           AST.TH.Traversable (makeKTraversableApplyAndBases)
 import           AST.TH.ZipMatch (makeZipMatch)
@@ -31,7 +31,7 @@ import           Prelude.Compat
 -- | A 'AST.Knot.Knot' which adds an annotation to every node in a tree
 data Ann a k = Ann
     { _ann :: a
-    , _val :: Node k (Ann a)
+    , _val :: k # Ann a
     } deriving Generic
 makeLenses ''Ann
 

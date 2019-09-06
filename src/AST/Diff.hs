@@ -30,7 +30,7 @@ data Diff a b e
 -- but their children may differ.
 data CommonBody a b e = MkCommonBody
     { _anns :: (a, b)
-    , _val :: Node e (Diff a b)
+    , _val :: e # Diff a b
     } deriving Generic
 
 makeCommonInstances [''Diff, ''CommonBody]

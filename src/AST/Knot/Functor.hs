@@ -10,7 +10,7 @@ import AST.Class.Functor (KFunctor(..))
 import AST.Class.Monad (KMonad(..))
 import AST.Class.Recursive (Recursive(..), RNodes, RFunctor, RFoldable, RTraversable)
 import AST.Combinator.Compose
-import AST.Knot (Tree, Node)
+import AST.Knot (Tree, type (#))
 import AST.TH.Internal.Instances (makeCommonInstances)
 import AST.TH.Traversable (makeKTraversableApplyAndBases)
 import Control.Lens (Iso, iso, mapped)
@@ -26,7 +26,7 @@ import Prelude.Compat
 -- * @F Maybe@ can be used to encode structures with missing values
 -- * @F (Either Text)@ can be used to encode results of parsing where structure components
 --   may fail to parse.
-newtype F f k = F (f (Node k (F f)))
+newtype F f k = F (f (k # F f))
     deriving stock Generic
 
 -- | An 'Iso' from 'F' to its content.

@@ -5,7 +5,7 @@ module AST.Knot.Pure
     ) where
 
 import AST.Class.Nodes (KNodes(..))
-import AST.Knot (Tree, Node)
+import AST.Knot (Tree, type (#))
 import AST.TH.Internal.Instances (makeCommonInstances)
 import AST.TH.Traversable (makeKTraversableApplyAndBases)
 import Control.Lens (Iso, iso)
@@ -18,7 +18,7 @@ import Text.PrettyPrint.HughesPJClass (Pretty(..))
 -- The value level [hyperfunctions](http://hackage.haskell.org/package/hyperfunctions)
 -- equivalent of 'Pure' is called @self@ in
 -- [Hyperfunctions papers](https://arxiv.org/abs/1309.5135).
-newtype Pure k = Pure (Node k Pure)
+newtype Pure k = Pure (k # Pure)
     deriving stock Generic
 
 makeKTraversableApplyAndBases ''Pure
@@ -45,5 +45,5 @@ infixl 1 &#
 (&#) :: a -> (a -> Tree k Pure) -> Tree Pure k
 x &# f = _Pure # f x
 
-instance Pretty (Node k Pure) => Pretty (Pure k) where
+instance Pretty (k # Pure) => Pretty (Pure k) where
     pPrintPrec lvl p (Pure x) = pPrintPrec lvl p x

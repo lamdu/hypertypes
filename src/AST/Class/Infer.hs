@@ -49,7 +49,7 @@ data InferredChild v k t = InferredChild
         -- ^ Inferred node.
         --
         -- An 'inferBody' implementation needs to place this value in the corresponding child node of the inferred term body
-    , _inType :: !(Tree (InferOf (RunKnot t)) v)
+    , _inType :: !(Tree (InferOf (GetKnot t)) v)
         -- ^ The inference result for the child node.
         --
         -- An 'inferBody' implementation may use it to perform unifications with it.

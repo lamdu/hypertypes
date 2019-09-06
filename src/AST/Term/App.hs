@@ -26,8 +26,8 @@ import Prelude.Compat
 --
 -- Apart from the data type, an 'Infer' instance is also provided.
 data App expr k = App
-    { _appFunc :: Node k expr
-    , _appArg :: Node k expr
+    { _appFunc :: k # expr
+    , _appArg :: k # expr
     } deriving Generic
 
 makeLenses ''App
@@ -35,7 +35,7 @@ makeZipMatch ''App
 makeKTraversableApplyAndBases ''App
 makeCommonInstances [''App]
 
-instance Pretty (Node k expr) => Pretty (App expr k) where
+instance Pretty (k # expr) => Pretty (App expr k) where
     pPrintPrec lvl p (App f x) =
         pPrintPrec lvl 10 f <+>
         pPrintPrec lvl 11 x
@@ -43,7 +43,7 @@ instance Pretty (Node k expr) => Pretty (App expr k) where
 
 -- | Type changing traversal from 'App' to its child nodes
 appChildren ::
-    Traversal (App t0 f0) (App t1 f1) (Node f0 t0) (Node f1 t1)
+    Traversal (App t0 f0) (App t1 f1) (f0 # t0) (f1 # t1)
 appChildren f (App x0 x1) = App <$> f x0 <*> f x1
 
 type instance InferOf (App e) = ANode (TypeOf e)

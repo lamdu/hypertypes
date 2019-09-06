@@ -8,7 +8,7 @@ module AST.Unify.Constraints
     ) where
 
 import Algebra.PartialOrd (PartialOrd(..))
-import AST (Tree, Knot, RunKnot)
+import AST (Tree, Knot, GetKnot)
 import Control.Lens (makeLenses)
 import Data.Kind (Type)
 
@@ -42,7 +42,7 @@ class
         Maybe (Tree ast (WithConstraint k))
 
 data WithConstraint k ast = WithConstraint
-    { _wcConstraint :: TypeConstraintsOf (RunKnot ast)
+    { _wcConstraint :: TypeConstraintsOf (GetKnot ast)
     , _wcBody :: k ast
     }
 makeLenses ''WithConstraint

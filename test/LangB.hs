@@ -54,7 +54,7 @@ data LangB k
     | BLet (Let Name LangB k)
     | BRecEmpty
     | BRecExtend (RowExtend Name LangB LangB k)
-    | BGetField (Node k LangB) Name
+    | BGetField (k # LangB) Name
     | BToNom (ToNom Name LangB k)
     deriving Generic
 
@@ -147,7 +147,7 @@ instance c Typ => ITermVarsConstraint c LangB
 
 -- Monads for inferring `LangB`:
 
-newtype ScopeTypes v = ScopeTypes (Map Name (Tree (GTerm (RunKnot v)) Typ))
+newtype ScopeTypes v = ScopeTypes (Map Name (Tree (GTerm (GetKnot v)) Typ))
     deriving stock Generic
     deriving newtype (Semigroup, Monoid)
 

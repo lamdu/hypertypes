@@ -27,9 +27,9 @@ import Prelude.Compat
 data ITerm a v e = ITerm
     { _iAnn :: a
         -- ^ The node's original annotation as passed to 'AST.Infer.infer'
-    , _iRes :: !(Tree (InferOf (RunKnot e)) v)
+    , _iRes :: !(Tree (InferOf (GetKnot e)) v)
         -- ^ The node's inference result (such as an inferred type)
-    , _iVal :: Node e (ITerm a v)
+    , _iVal :: e # ITerm a v
         -- ^ The node's body and its inferred child nodes
     } deriving Generic
 makeLenses ''ITerm

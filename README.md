@@ -220,18 +220,26 @@ The `syntax-tree` representation of the above AST example:
 ```Haskell
 data Expr k
     = Var Text
-    | App (k ('Knot Expr)) (k ('Knot Expr))
-    | Lam Text (k ('Knot Typ)) (k ('Knot Expr))
+    | App (k # Expr) (k # Expr)
+    | Lam Text (k # Typ) (k # Expr)
 data Typ k
     = IntT
-    | FuncT (k ('Knot Typ)) (k ('Knot Typ))
+    | FuncT (k # Typ) (k # Typ)
 ```
 
-`'Knot` is a usage of the `Knot` data constructor in types using `DataKinds`, where `Knot`'s definition is:
+The `(#)` type synonym used above requires some explaining:
 
 ```Haskell
+type knot # ast = (GetKnot knot) ('Knot ast)
+
 newtype Knot = Knot (Knot -> Type)
+
+type family GetKnot k where
+    GetKnot ('Knot t) = t
 ```
+
+* `'Knot` is a use of the `Knot` data constructor in types using `DataKinds`.
+* `GetKnot` unwraps the `Knot` `newtype` in the type-level.
 
 For this representation, `syntax-tree` offers the power and functionality of both HKD and `recursion-schemes`:
 

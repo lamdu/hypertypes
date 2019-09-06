@@ -26,8 +26,8 @@ import           Prelude.Compat
 -- The data type comes along with the 'HasFuncType' class
 -- for code to be able to work for any type AST supporting the types of functions.
 data FuncType typ k = FuncType
-    { _funcIn  :: Node k typ
-    , _funcOut :: Node k typ
+    { _funcIn  :: k # typ
+    , _funcOut :: k # typ
     } deriving Generic
 
 makeLenses ''FuncType
@@ -36,12 +36,12 @@ makeKTraversableApplyAndBases ''FuncType
 makeDerivings [''Eq, ''Ord] [''FuncType]
 makeInstances [''Binary, ''NFData] [''FuncType]
 
-instance Pretty (Node k typ) => Pretty (FuncType typ k) where
+instance Pretty (k # typ) => Pretty (FuncType typ k) where
     pPrintPrec lvl p (FuncType i o) =
         pPrintPrec lvl 11 i <+> Pretty.text "->" <+> pPrintPrec lvl 10 o
         & maybeParens (p > 10)
 
-instance Show (Node k typ) => Show (FuncType typ k) where
+instance Show (k # typ) => Show (FuncType typ k) where
     showsPrec p (FuncType i o) = (showCon "FuncType" @| i @| o) p
 
 -- | HasFuncType is a class of 'Knot's representing types that support the types of functions.
