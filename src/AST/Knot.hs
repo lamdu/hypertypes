@@ -29,10 +29,10 @@ type family GetKnot k where
     GetKnot ('Knot t) = t
 
 -- | A type synonym to express nested-HKD structures
-type Tree k t = (k ('Knot t) :: Type)
+type Tree k p = (k ('Knot p) :: Type)
 
 -- | A type synonym to express child nodes in nested-HKDs
-type knot # ast = Tree (GetKnot knot) ast
+type k # p = Tree (GetKnot k) p
 
 -- | An 'id' variant which tells the type checker that its argument is a 'Tree'.
 --
@@ -40,5 +40,5 @@ type knot # ast = Tree (GetKnot knot) ast
 --
 -- Note that 'asTree' may often be used during development to assist the inference of incomplete code,
 -- but removed once the code is complete.
-asTree :: Tree p q -> Tree p q
+asTree :: Tree k p -> Tree k p
 asTree = id

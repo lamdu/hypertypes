@@ -230,7 +230,7 @@ data Typ k
 The `(#)` type synonym used above requires some explaining:
 
 ```Haskell
-type knot # ast = (GetKnot knot) ('Knot ast)
+type k # p = (GetKnot k) ('Knot p)
 
 newtype Knot = Knot (Knot -> Type)
 
