@@ -12,8 +12,8 @@ but these two approaches do not work well together and each one of them has its 
   It doesn't support structures with several different types.
 * A third approach, [`multirec`](http://hackage.haskell.org/package/multirec),
   does allow encoding nested and mutually recursive types with fix-points,
-  by each family of nested types as a single GADT.
-  But using a single type imposes limitation on composabilty and modularity.
+  by encoding each family of nested types as a single GADT.
+  But using a single type imposes limitations on composabilty and modularity.
 
 `syntax-tree` is a Haskell library for describing rich nested and mutually recursive types with
 the "field constructor" parameter pattern, in a modular and composable manner.
@@ -80,16 +80,22 @@ data Person f = Person
     }
 ```
 
-For the plain case we would use `Person Identity` (from `Data.Functor.Identity`),
-and for the missing fields case we would use `Person Maybe`.
+For the plain case we would use `Person Identity`.
+`Identity` from `Data.Functor.Identity` is defined as so:
+
+```Haskell
+data Identity a = Identity a
+```
+
+And for the variant with missing fields we would use `Person Maybe`.
 
 The benefit of this parameterization over the previous one is that `Person`'s kind
-doesn't need to change when adding more field types, so such changes don't propagate all over the code.
+doesn't need to change when adding more field types, so such changes don't propagate all over the code base.
 
 Note that various helper classes such as
-[`Rank2.Functor`](https://hackage.haskell.org/package/rank2classes-1.3/docs/Rank2.html#t:Functor)
-and `Rank2.Traversable` (from the `rank2classes` package)
-allow us to do conversions between `Person Identity` and `Person Maybe`.
+`Rank2.Functor`
+and `Rank2.Traversable` (from the [`rank2classes`](https://hackage.haskell.org/package/rank2classes) package)
+allow us to conviniently convert between `Person Identity` and `Person Maybe`.
 
 #### HKD for nested structures
 
@@ -112,8 +118,8 @@ data Expr f
 ```
 
 This does allow representing nested structures with missing elements.
-But classes like `Rank2.Functor` may no longer work for it.
-To understand why let's look at its definition
+But classes like `Rank2.Functor` no longer work for it.
+To understand why let's look at `Rank2.Functor`'s definition
 
 ```Haskell
 class Functor f where
@@ -121,7 +127,7 @@ class Functor f where
 ```
 
 The rank-2 function argument expects the field type `a` to stay the same when it changes `p` to `q`,
-however in the above formulation of `Expr` the field types `Expr p` change to `Expr q` when changing the type parameter.
+however in the above formulation of `Expr` the field type `Expr p` change to `Expr q` when changing the type parameter.
 
 ### `Type -> Type`: The `recursion-schemes` approach
 
@@ -134,7 +140,7 @@ data Expr a
     | Mul a a
 ```
 
-Note that `recursion-schemes` can generate it for us from the simple definition of `Expr` using `TemplateHaskell`.
+(Note that `recursion-schemes` can generate it for us from the simple definition of `Expr` using `TemplateHaskell`)
 
 As in our very first example, we only have one parameterized field type (we gave up on parameterizing over the `Int` in `Const`).
 This is the big limintation of this approach, but in return, we get several advantages.
@@ -145,14 +151,14 @@ We can represent an expression as `Fix Expr`, using:
 newtype Fix f = Fix (f Fix)
 ```
 
-We can then use useful combinators from `recursion-schemes` for folding and conversion.
+We can then use useful combinators from `recursion-schemes` for folding and processing of `Expr`s.
 
 [`unification-fd`](http://hackage.haskell.org/package/unification-fd)
 is a good example for the power of this approach.
 It implements unification for ASTs,
 where it uses the parameterization to store unification variables standing for terms.
 
-We can also use rich fix-points which store several different fix-points within, like the `Diff` fixpoint:
+In constrast to the HKD approach, we can also use rich fix-points which store several different fix-points within, like the `Diff` fixpoint:
 
 ```Haskell
 data Diff f
@@ -195,14 +201,13 @@ data AST :: (Index -> Type) -> Index -> Type where
     FuncT :: r Typ -> r Typ -> AST r Typ
 ```
 
-*(this is an variant of `multirec`'s actual presentation, which makes `Index` an explicit kind)*
+(this is an variant of `multirec`'s actual presentation, where `Index` replaces `Type` for explicitness and improved legibility)
 
 `multirec` offers various utilities to process such data types.
-It offers type classes such as
-[`HFunctor`](http://hackage.haskell.org/package/multirec-0.7.9/docs/Generics-MultiRec-HFunctor.html)
-and various recursive combinators.
+It offers [`HFunctor`](http://hackage.haskell.org/package/multirec-0.7.9/docs/Generics-MultiRec-HFunctor.html),
+a variant of `Functor` for these structures, and various recursive combinators.
 
-`multirec` has several limitations:
+But `multirec` has several limitations:
 
 * Using a single GADT for the data type limits composition and modularity.
 * Invocations of `HFunctor` for an `AST r Typ` need to support transforming all indices,
@@ -222,7 +227,7 @@ data Typ k
     | FuncT (k ('Knot Typ)) (k ('Knot Typ))
 ```
 
-Where `Knot` is defined as so:
+`'Knot` is a usage of the `Knot` data constructor in types using `DataKinds`, where `Knot`'s definition is:
 
 ```Haskell
 newtype Knot = Knot (Knot -> Type)
@@ -248,7 +253,7 @@ For this representation, `syntax-tree` offers the power and functionality of bot
 
 ## How does syntax-tree compare/relate to
 
-Note that comparisons to HKD, `recursion-schemes`, `multirec`, and `unification-fd` were discussed in depth above.
+Note that comparisons to HKD, `recursion-schemes`, `multirec`, `rank2classes`, and `unification-fd` were discussed in depth above.
 
 In addition:
 
