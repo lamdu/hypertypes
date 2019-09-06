@@ -131,7 +131,7 @@ however in the above formulation of `Expr` the field type `Expr p` change to `Ex
 
 ### `Type -> Type`: The `recursion-schemes` approach
 
-The `recursion-schemes` formulation of `Expr` is:
+The `recursion-schemes` formulation of `Expr` is the same as the `Type -> Type` approach discussed above:
 
 ```Haskell
 data Expr a
@@ -142,8 +142,8 @@ data Expr a
 
 (Note that `recursion-schemes` can generate it for us from the simple definition of `Expr` using `TemplateHaskell`)
 
-As in our very first example, we only have one parameterized field type (we gave up on parameterizing over the `Int` in `Const`).
-This is the big limintation of this approach, but in return, we get several advantages.
+This approach does have the single node type limitation, so we gave up on parameterizing over the `Int` in `Const`.
+This is a big limitation, but we do get several advantages.
 
 We can represent an expression as `Fix Expr`, using:
 
@@ -158,7 +158,7 @@ is a good example for the power of this approach.
 It implements unification for ASTs,
 where it uses the parameterization to store unification variables standing for terms.
 
-In constrast to the HKD approach, we can also use rich fix-points which store several different fix-points within, like the `Diff` fixpoint:
+In constrast to the HKD approach, we can also use rich fix-points which store several different fix-points within, like `Diff`:
 
 ```Haskell
 data Diff f
@@ -169,7 +169,7 @@ data Diff f
 
 (Note how `Diff` parameterizes `f` by both `Fix` and `Diff`)
 
-The main drawback of this approach is that in practice, ASTs are usually mutually recursive datatypes. For example:
+The main drawback of this approach is that in practice ASTs tend to be mutually recursive datatypes. For example:
 
 ```Haskell
 data Expr
