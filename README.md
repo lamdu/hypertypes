@@ -148,7 +148,7 @@ This is a big limitation, but we do get several advantages.
 We can represent an expression as `Fix Expr`, using:
 
 ```Haskell
-newtype Fix f = Fix (f Fix)
+newtype Fix f = Fix (f (Fix f))
 ```
 
 We can then use useful combinators from `recursion-schemes` for folding and processing of `Expr`s.
@@ -162,9 +162,9 @@ In constrast to the HKD approach, we can also use rich fix-points which store se
 
 ```Haskell
 data Diff f
-    = Same (f Fix)
-    | SameTopLevel (f Diff)
-    | Different (f Fix) (f Fix)
+    = Same (f (Fix f))
+    | SameTopLevel (f (Diff f))
+    | Different (f (Fix f)) (f (Fix f))
 ```
 
 (Note how `Diff` parameterizes `f` by both `Fix` and `Diff`)
