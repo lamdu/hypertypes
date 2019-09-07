@@ -85,12 +85,12 @@ strip ::
     RFunctor expr =>
     Tree (Ann a) expr ->
     Tree Pure expr
-strip = unwrap (Proxy @RFunctor) (^. val)
+strip = unwrap (const (^. val))
 
 -- | Compute annotations for a tree from the bottom up
 addAnnotations ::
-    (Recursive c, RFunctor k, c k) =>
-    Proxy c ->
-    (forall n. c n => Tree n (Ann a) -> a) ->
-    Tree Pure k -> Tree (Ann a) k
-addAnnotations p f = wrap p (\x -> Ann (f x) x)
+    RFunctor k =>
+    (forall n. KRecWitness k n -> Tree n (Ann a) -> a) ->
+    Tree Pure k ->
+    Tree (Ann a) k
+addAnnotations f = wrap (\w x -> Ann (f w x) x)

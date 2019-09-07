@@ -131,7 +131,7 @@ inferExpr ::
     Tree Pure t ->
     m (Tree Pure (TypeOf t))
 inferExpr x =
-    infer (wrap (Proxy @RTraversable) (Ann ()) x)
+    infer (wrap (const (Ann ())) x)
     >>= Lens.from _Flip (traverseK (Proxy @(Unify m) #> applyBindings))
     <&> (^# iRes . inferredType (Proxy @t))
 

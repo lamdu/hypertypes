@@ -6,7 +6,7 @@ module AST.Class.Recursive
     , wrap, wrapM, unwrap, unwrapM
     , foldMapRecursive
     , RNodes, RFunctor, RFoldable, RTraversable
-    , KRecWitness(..)
+    , KRecWitness(..), (#>>), (#**#)
     ) where
 
 import AST.Class.Foldable
@@ -95,111 +95,117 @@ instance Recursive RTraversable where
     {-# INLINE recurse #-}
     recurse = recursiveKTraversable . argP
 
+-- | @KRecWitness k n@ is a witness that @n@ is a recursive node of @k@
+data KRecWitness k n where
+    KRecSelf :: KRecWitness k k
+    KRecSub :: KWitness k c -> KRecWitness c n -> KRecWitness k n
+
 -- | Monadically convert a 'Pure' 'Tree' to a different 'Knot' from the bottom up
 {-# INLINE wrapM #-}
 wrapM ::
-    forall m k c w.
-    (Monad m, Recursive c, RTraversable k, c k) =>
-    Proxy c ->
-    (forall n. c n => Tree n w -> m (Tree w n)) ->
+    forall m k w.
+    (Monad m, RTraversable k) =>
+    (forall n. KRecWitness k n -> Tree n w -> m (Tree w n)) ->
     Tree Pure k ->
     m (Tree w k)
-wrapM p f x =
+wrapM f x =
     withDict (recurse (Proxy @(RTraversable k))) $
-    withDict (recurse (Proxy @(c k))) $
     x ^. _Pure
-    & traverseK (Proxy @RTraversable #*# Proxy @c #> wrapM p f)
-    >>= f
+    & traverseK (Proxy @RTraversable #*# \w -> wrapM (f . KRecSub w))
+    >>= f KRecSelf
 
 -- | Monadically unwrap a 'Tree' from the top down, replacing its 'Knot' with 'Pure'
 {-# INLINE unwrapM #-}
 unwrapM ::
-    forall m k c w.
-    (Monad m, Recursive c, RTraversable k, c k) =>
-    Proxy c ->
-    (forall n. c n => Tree w n -> m (Tree n w)) ->
+    forall m k w.
+    (Monad m, RTraversable k) =>
+    (forall n. KRecWitness k n -> Tree w n -> m (Tree n w)) ->
     Tree w k ->
     m (Tree Pure k)
-unwrapM p f x =
+unwrapM f x =
     withDict (recurse (Proxy @(RTraversable k))) $
-    withDict (recurse (Proxy @(c k))) $
-    f x
-    >>= traverseK (Proxy @RTraversable #*# Proxy @c #> unwrapM p f)
+    f KRecSelf x
+    >>= traverseK (Proxy @RTraversable #*# \w -> unwrapM (f . KRecSub w))
     <&> (_Pure #)
 
 -- | Wrap a 'Pure' 'Tree' to a different 'Knot' from the bottom up
 {-# INLINE wrap #-}
 wrap ::
-    forall k c w.
-    (Recursive c, RFunctor k, c k) =>
-    Proxy c ->
-    (forall n. c n => Tree n w -> Tree w n) ->
+    forall k w.
+    RFunctor k =>
+    (forall n. KRecWitness k n -> Tree n w -> Tree w n) ->
     Tree Pure k ->
     Tree w k
-wrap p f x =
+wrap f x =
     withDict (recurse (Proxy @(RFunctor k))) $
-    withDict (recurse (Proxy @(c k))) $
     x ^. _Pure
-    & mapK (Proxy @RFunctor #*# Proxy @c #> wrap p f)
-    & f
+    & mapK (Proxy @RFunctor #*# \w -> wrap (f . KRecSub w))
+    & f KRecSelf
 
 -- | Unwrap a 'Tree' from the top down, replacing its 'Knot' with 'Pure'
 {-# INLINE unwrap #-}
 unwrap ::
-    forall k c w.
-    (Recursive c, RFunctor k, c k) =>
-    Proxy c ->
-    (forall n. c n => Tree w n -> Tree n w) ->
+    forall k w.
+    RFunctor k =>
+    (forall n. KRecWitness k n -> Tree w n -> Tree n w) ->
     Tree w k ->
     Tree Pure k
-unwrap p f x =
+unwrap f x =
     withDict (recurse (Proxy @(RFunctor k))) $
-    withDict (recurse (Proxy @(c k))) $
-    f x
-    &# mapK (Proxy @RFunctor #*# Proxy @c #> unwrap p f)
+    f KRecSelf x
+    &# mapK (Proxy @RFunctor #*# \w -> unwrap (f . KRecSub w))
 
 -- | Recursively fold up a tree to produce a result (aka catamorphism)
 {-# INLINE fold #-}
 fold ::
-    (Recursive c, RFunctor k, c k) =>
-    Proxy c ->
-    (forall n. c n => Tree n (Const a) -> a) ->
+    RFunctor k =>
+    (forall n. KRecWitness k n -> Tree n (Const a) -> a) ->
     Tree Pure k ->
     a
-fold p f = getConst . wrap p (Const . f)
+fold f = getConst . wrap (fmap Const . f)
 
 -- | Build/load a tree from a seed value (aka anamorphism)
 {-# INLINE unfold #-}
 unfold ::
-    (Recursive c, RFunctor k, c k) =>
-    Proxy c ->
-    (forall n. c n => a -> Tree n (Const a)) ->
+    RFunctor k =>
+    (forall n. KRecWitness k n -> a -> Tree n (Const a)) ->
     a ->
     Tree Pure k
-unfold p f = unwrap p (f . getConst) . Const
+unfold f = unwrap (fmap (. getConst) f) . Const
 
 -- | Fold over all of the recursive child nodes of a 'Tree' in pre-order
 {-# INLINE foldMapRecursive #-}
 foldMapRecursive ::
-    forall c k a f.
-    (Recursive c, RFoldable k, c k, RFoldable f, Monoid a) =>
-    Proxy c ->
-    (forall n g. c n => Tree n g -> a) ->
-    Tree k f ->
+    forall k p a.
+    (RFoldable k, RFoldable p, Monoid a) =>
+    (forall n q. KRecWitness k n -> Tree n q -> a) ->
+    Tree k p ->
     a
-foldMapRecursive p f x =
+foldMapRecursive f x =
     withDict (recurse (Proxy @(RFoldable k))) $
-    withDict (recurse (Proxy @(c k))) $
-    withDict (recurse (Proxy @(RFoldable f))) $
-    f x <>
+    withDict (recurse (Proxy @(RFoldable p))) $
+    f KRecSelf x <>
     foldMapK
-    ( Proxy @RFoldable #*# Proxy @c #>
-        foldMapK (Proxy @RFoldable #> foldMapRecursive p f)
+    ( Proxy @RFoldable #*#
+        \w -> foldMapK (Proxy @RFoldable #> foldMapRecursive (f . KRecSub w))
     ) x
 
--- TODO: Should KRecWitness be here?
+infixr 0 #>>
+infixr 0 #**#
 
--- | @KRecWitness k n@ is a witness that @n@ is a recursive node of @k@
-data KRecWitness k n where
-    KRecSelf :: KRecWitness k k
-    KRecSub :: KWitness k c -> KRecWitness c n -> KRecWitness k n
+{-# INLINE (#>>) #-}
+(#>>) ::
+    forall c k n r.
+    (Recursive c, c k, RNodes k) =>
+    Proxy c -> (c n => r) -> KRecWitness k n -> r
+(#>>) _ r KRecSelf = r
+(#>>) p r (KRecSub w0 w1) =
+    withDict (recurse (Proxy @(RNodes k))) $
+    withDict (recurse (Proxy @(c k))) $
+    (Proxy @RNodes #*# p #> (p #>> r) w1) w0
+
+{-# INLINE (#**#) #-}
+(#**#) ::
+    (Recursive c, c k, RNodes k) =>
+    Proxy c -> (KRecWitness k n -> (c n => r)) -> KRecWitness k n -> r
+(#**#) p r w = (p #>> r) w w

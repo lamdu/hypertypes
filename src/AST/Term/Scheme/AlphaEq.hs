@@ -7,7 +7,7 @@ module AST.Term.Scheme.AlphaEq
 
 import           AST
 import           AST.Class.Has (HasChild(..))
-import           AST.Class.Recursive (wrapM)
+import           AST.Class.Recursive (wrapM, (#>>))
 import           AST.Class.ZipMatch (zipMatch_)
 import           AST.Term.Scheme
 import           AST.Unify
@@ -51,7 +51,7 @@ schemeToRestrictedType ::
 schemeToRestrictedType (Pure (Scheme vars typ)) =
     do
         foralls <- traverseK (Proxy @(Unify m) #> makeQVarInstancesInScope) vars
-        wrapM (Proxy @(HasScheme varTypes m)) (schemeBodyToType foralls) typ
+        wrapM (Proxy @(HasScheme varTypes m) #>> schemeBodyToType foralls) typ
 
 goUTerm ::
     forall m t.

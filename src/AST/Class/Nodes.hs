@@ -59,7 +59,8 @@ infixr 0 #*#
     Proxy c -> (c n => r) -> KWitness k n -> r
 (#>) p r w = kLiftConstraint w p r
 
+{-# INLINE (#*#) #-}
 (#*#) ::
     (KNodes k, KNodesConstraint k c) =>
     Proxy c -> (KWitness k n -> (c n => r)) -> KWitness k n -> r
-(#*#) p r w = kLiftConstraint w p r w
+(#*#) p r w = (p #> r) w w

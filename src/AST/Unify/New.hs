@@ -25,4 +25,4 @@ unfreeze ::
     forall m t.
     Unify m t =>
     Tree Pure t -> m (Tree (UVarOf m) t)
-unfreeze = wrapM (Proxy @(Unify m)) newTerm
+unfreeze = wrapM (Proxy @(Unify m) #>> newTerm)
