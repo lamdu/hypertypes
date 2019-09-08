@@ -25,4 +25,4 @@ instance Monoid a => KPointed (Const a) where
 
 instance (KPointed a, KPointed b) => KPointed (Product a b) where
     {-# INLINE pureK #-}
-    pureK f = Pair (pureK (f . KW_Product_E0)) (pureK (f . KW_Product_E1))
+    pureK f = Pair (pureK (f . E_Product_a)) (pureK (f . E_Product_b))

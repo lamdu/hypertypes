@@ -42,10 +42,10 @@ makeCommonInstances [''UnifyError]
 instance KNodes t => KNodes (UnifyError t) where
     type KNodesConstraint (UnifyError t) c = (c t, KNodesConstraint t c)
     data KWitness (UnifyError t) n where
-        KW_UnifyError_0 :: KWitness (UnifyError t) t
-        KW_UnifyError_E0 :: KWitness t n -> KWitness (UnifyError t) n
-    kLiftConstraint KW_UnifyError_0 = const id
-    kLiftConstraint (KW_UnifyError_E0 w) = kLiftConstraint w
+        W_UnifyError_t :: KWitness (UnifyError t) t
+        E_UnifyError_t :: KWitness t n -> KWitness (UnifyError t) n
+    kLiftConstraint W_UnifyError_t = const id
+    kLiftConstraint (E_UnifyError_t w) = kLiftConstraint w
 
 makeKFunctor ''UnifyError
 makeKTraversableAndFoldable ''UnifyError

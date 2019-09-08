@@ -66,10 +66,10 @@ instance Recursive (ITermVarsConstraint c) where
 instance KNodes (Flip (ITerm a) e) where
     type KNodesConstraint (Flip (ITerm a) e) c = ITermVarsConstraint c e
     data KWitness (Flip (ITerm a) e) n where
-        KW_Flip_ITerm_E0 ::
+        E_Flip_ITerm_InferOf_e ::
             KWitness (InferOf e) n ->
             KWitness (Flip (ITerm a) e) n
-        KW_Flip_ITerm_E1 ::
+        E_Flip_ITerm_e ::
             KWitness e f ->
             KWitness (Flip (ITerm a) f) n ->
             KWitness (Flip (ITerm a) e) n
@@ -77,8 +77,8 @@ instance KNodes (Flip (ITerm a) e) where
     kLiftConstraint w p =
         withDict (iTermVarsConstraintCtx p (Proxy @e)) $
         case w of
-        KW_Flip_ITerm_E0 w0 -> kLiftConstraint w0 p
-        KW_Flip_ITerm_E1 w0 w1 ->
+        E_Flip_ITerm_InferOf_e w0 -> kLiftConstraint w0 p
+        E_Flip_ITerm_e w0 w1 ->
             kLiftConstraint w0 (p0 p) (kLiftConstraint w1 p)
             where
                 p0 :: Proxy c -> Proxy (ITermVarsConstraint c)
@@ -92,10 +92,10 @@ instance (RFunctor e, RFunctorInferOf e) => KFunctor (Flip (ITerm a) e) where
         _Flip %~
         \(ITerm pl r x) ->
         ITerm pl
-        (mapK (f . KW_Flip_ITerm_E0) r)
+        (mapK (f . E_Flip_ITerm_InferOf_e) r)
         ( mapK
             ( Proxy @RFunctor #*# Proxy @RFunctorInferOf #*#
-                \w -> from _Flip %~ mapK (f . KW_Flip_ITerm_E1 w)
+                \w -> from _Flip %~ mapK (f . E_Flip_ITerm_e w)
             ) x
         )
 
@@ -104,10 +104,10 @@ instance (RFoldable e, RFoldableInferOf e) => KFoldable (Flip (ITerm a) e) where
     foldMapK f (MkFlip (ITerm _ r x)) =
         withDict (recurse (Proxy @(RFoldable e))) $
         withDict (recurse (Proxy @(RFoldableInferOf e))) $
-        foldMapK (f . KW_Flip_ITerm_E0) r <>
+        foldMapK (f . E_Flip_ITerm_InferOf_e) r <>
         foldMapK
         ( Proxy @RFoldable #*# Proxy @RFoldableInferOf #*#
-            \w -> foldMapK (f . KW_Flip_ITerm_E1 w) . (_Flip #)
+            \w -> foldMapK (f . E_Flip_ITerm_e w) . (_Flip #)
         ) x
 
 instance

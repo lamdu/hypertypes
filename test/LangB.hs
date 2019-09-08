@@ -154,9 +154,9 @@ newtype ScopeTypes v = ScopeTypes (Map Name (Tree (GTerm (GetKnot v)) Typ))
 makeDerivings [''Show] [''LangB, ''ScopeTypes]
 
 instance KNodes ScopeTypes where
-    data KWitness ScopeTypes n = KW_ScopeTypes (KWitness (Flip GTerm Typ) n)
+    data KWitness ScopeTypes n = E_ScopeTypes (KWitness (Flip GTerm Typ) n)
     type KNodesConstraint ScopeTypes c = (c Typ, Recursive c)
-    kLiftConstraint (KW_ScopeTypes w) = kLiftConstraint w
+    kLiftConstraint (E_ScopeTypes w) = kLiftConstraint w
 
 Lens.makePrisms ''ScopeTypes
 
@@ -171,7 +171,7 @@ typesInScope = _ScopeTypes . traverse . Lens.from _Flip
 makeKFoldable ''ScopeTypes
 
 instance KFunctor ScopeTypes where
-    mapK f = typesInScope %~ mapK (f . KW_ScopeTypes)
+    mapK f = typesInScope %~ mapK (f . E_ScopeTypes)
 
 instance KTraversable ScopeTypes where
     sequenceK = typesInScope sequenceK

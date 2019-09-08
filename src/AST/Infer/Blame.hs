@@ -186,10 +186,10 @@ makeCommonInstances [''BTerm]
 instance KNodes (Flip (BTerm a) e) where
     type KNodesConstraint (Flip (BTerm a) e) c = ITermVarsConstraint c e
     data KWitness (Flip (BTerm a) e) n where
-        KW_Flip_BTerm_E0 ::
+        E_Flip_BTerm_InferOf_e ::
             KWitness (InferOf e) n ->
             KWitness (Flip (BTerm a) e) n
-        KW_Flip_BTerm_E1 ::
+        E_Flip_BTerm_e ::
             KWitness e f ->
             KWitness (Flip (BTerm a) f) n ->
             KWitness (Flip (BTerm a) e) n
@@ -197,8 +197,8 @@ instance KNodes (Flip (BTerm a) e) where
     kLiftConstraint w p =
         withDict (iTermVarsConstraintCtx p (Proxy @e)) $
         case w of
-        KW_Flip_BTerm_E0 w0 -> kLiftConstraint w0 p
-        KW_Flip_BTerm_E1 w0 w1 ->
+        E_Flip_BTerm_InferOf_e w0 -> kLiftConstraint w0 p
+        E_Flip_BTerm_e w0 w1 ->
             kLiftConstraint w0 (p0 p) (kLiftConstraint w1 p)
             where
                 p0 :: Proxy c -> Proxy (ITermVarsConstraint c)
@@ -218,11 +218,11 @@ instance (RFunctor e, RFunctorInferOf e) => KFunctor (Flip (BTerm a) e) where
         )
         ( mapK
             ( Proxy @RFunctor #*# Proxy @RFunctorInferOf #*#
-                \w -> from _Flip %~ mapK (f . KW_Flip_BTerm_E1 w)
+                \w -> from _Flip %~ mapK (f . E_Flip_BTerm_e w)
             ) x
         )
         where
-            mapRes = mapK (f . KW_Flip_BTerm_E0)
+            mapRes = mapK (f . E_Flip_BTerm_InferOf_e)
 
 instance (RFoldable e, RFoldableInferOf e) => KFoldable (Flip (BTerm a) e) where
     {-# INLINE foldMapK #-}
@@ -235,10 +235,10 @@ instance (RFoldable e, RFoldableInferOf e) => KFoldable (Flip (BTerm a) e) where
         <>
         foldMapK
         ( Proxy @RFoldable #*# Proxy @RFoldableInferOf #*#
-            \w -> foldMapK (f . KW_Flip_BTerm_E1 w) . (_Flip #)
+            \w -> foldMapK (f . E_Flip_BTerm_e w) . (_Flip #)
         ) x
         where
-            foldRes = foldMapK (f . KW_Flip_BTerm_E0)
+            foldRes = foldMapK (f . E_Flip_BTerm_InferOf_e)
 
 instance
     (RTraversable e, RTraversableInferOf e) =>

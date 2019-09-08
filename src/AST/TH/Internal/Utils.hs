@@ -261,22 +261,28 @@ makeNodeOf info =
         }
     )
     where
-        niceTypeName = tiName info & show & reverse & takeWhile (/= '.') & reverse
-        baseName = "KW_" <> niceTypeName <> "_"
+        niceTypeName = tiName info & show & makeNiceName
+        makeNiceName = reverse . takeWhile (/= '.') . reverse
+        nodeBase = "W_" <> niceTypeName <> "_"
+        embedBase = "E_" <> niceTypeName <> "_"
         pats =
             tiCons info
             >>= D.constructorFields
             <&> matchType (tiVar info)
+        makeNiceType (ConT x) = makeNiceName (show x)
+        makeNiceType (AppT x y) = makeNiceType x <> "_" <> makeNiceType y
+        makeNiceType (VarT x) = takeWhile (/= '_') (show x)
+        makeNiceType x = error ("TODO: Witness name generator is partial! Need to support " <> show x)
         nodes =
-            zip (pats >>= nodesForPat & nub)
-            ([0 :: Int ..] <&> show <&> (baseName <>) <&> mkName)
+            pats >>= nodesForPat & nub
+            <&> \t -> (t, mkName (nodeBase <> makeNiceType t))
         nodesForPat (NodeFofX t) = [t]
         nodesForPat (Tof _ pat) = nodesForPat pat
         nodesForPat _ = []
         nodeGadtType t = ConT ''KWitness `AppT` tiInstance info `AppT` t
         embeds =
-            zip (pats >>= embedsForPat & nub)
-            ([0 :: Int ..] <&> show <&> ((baseName <> "E") <>) <&> mkName)
+            pats >>= embedsForPat & nub
+            <&> \t -> (t, mkName (embedBase <> makeNiceType t))
         embedsForPat (XofF t) = [t]
         embedsForPat (Tof _ pat) = embedsForPat pat
         embedsForPat _ = []

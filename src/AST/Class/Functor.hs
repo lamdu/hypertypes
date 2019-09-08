@@ -32,7 +32,7 @@ instance KFunctor (Const a) where
 instance (KFunctor a, KFunctor b) => KFunctor (Product a b) where
     {-# INLINE mapK #-}
     mapK f (Pair x y) =
-        Pair (mapK (f . KW_Product_E0) x) (mapK (f . KW_Product_E1) y)
+        Pair (mapK (f . E_Product_a) x) (mapK (f . E_Product_b) y)
 
 -- | 'KFunctor' variant of 'Control.Lens.mapped' for 'AST.Knot.Knot's with a single node type.
 --

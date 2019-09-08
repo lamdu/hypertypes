@@ -100,18 +100,18 @@ makeKTraversableApplyAndBases ''FromNom
 
 instance KNodes v => KNodes (NominalInst n v) where
     type KNodesConstraint (NominalInst n v) c = KNodesConstraint v c
-    data KWitness (NominalInst n v) c = KW_NominalInst (KWitness v c)
+    data KWitness (NominalInst n v) c = E_NominalInst_k (KWitness v c)
     {-# INLINE kLiftConstraint #-}
-    kLiftConstraint (KW_NominalInst w) = kLiftConstraint w
+    kLiftConstraint (E_NominalInst_k w) = kLiftConstraint w
 
 instance KFunctor v => KFunctor (NominalInst n v) where
     {-# INLINE mapK #-}
-    mapK f = nArgs %~ mapK (\w -> _QVarInstances . Lens.mapped %~ f (KW_NominalInst w))
+    mapK f = nArgs %~ mapK (\w -> _QVarInstances . Lens.mapped %~ f (E_NominalInst_k w))
 
 instance KFoldable v => KFoldable (NominalInst n v) where
     {-# INLINE foldMapK #-}
     foldMapK f =
-        foldMapK (\w -> foldMap (f (KW_NominalInst w)) . (^. _QVarInstances)) . (^. nArgs)
+        foldMapK (\w -> foldMap (f (E_NominalInst_k w)) . (^. _QVarInstances)) . (^. nArgs)
 
 instance KTraversable v => KTraversable (NominalInst n v) where
     {-# INLINE sequenceK #-}
@@ -172,18 +172,18 @@ instance
                 \(k, v) ->
                 (pPrint k <> Pretty.text ":") <+> pPrint v
 
-instance (RNodes typ, KNodes (NomVarTypes typ)) => KNodes (LoadedNominalDecl typ) where
-    type KNodesConstraint (LoadedNominalDecl typ) c =
-        ( KNodesConstraint (NomVarTypes typ) c
-        , c typ
+instance (RNodes t, KNodes (NomVarTypes t)) => KNodes (LoadedNominalDecl t) where
+    type KNodesConstraint (LoadedNominalDecl t) c =
+        ( KNodesConstraint (NomVarTypes t) c
+        , c t
         , Recursive c
         )
-    data KWitness (LoadedNominalDecl typ) n where
-        KW_LoadedNominalDecl_E0 :: KRecWitness typ n -> KWitness (LoadedNominalDecl typ) n
-        KW_LoadedNominalDecl_E1 :: KWitness (NomVarTypes typ) n -> KWitness (LoadedNominalDecl typ) n
+    data KWitness (LoadedNominalDecl t) n where
+        E_LoadedNominalDecl_Body :: KRecWitness t n -> KWitness (LoadedNominalDecl t) n
+        E_LoadedNominalDecl_NomVarTypes :: KWitness (NomVarTypes t) n -> KWitness (LoadedNominalDecl t) n
     {-# INLINE kLiftConstraint #-}
-    kLiftConstraint (KW_LoadedNominalDecl_E0 w) = kLiftConstraint (KW_Flip_GTerm w)
-    kLiftConstraint (KW_LoadedNominalDecl_E1 w) = kLiftConstraint w
+    kLiftConstraint (E_LoadedNominalDecl_Body w) = kLiftConstraint (E_Flip_GTerm w)
+    kLiftConstraint (E_LoadedNominalDecl_NomVarTypes w) = kLiftConstraint w
 
 instance
     (RFunctor typ, KFunctor (NomVarTypes typ)) =>
@@ -191,9 +191,9 @@ instance
     {-# INLINE mapK #-}
     mapK f (LoadedNominalDecl mp mf t) =
         LoadedNominalDecl (onMap mp) (onMap mf)
-        (t & Lens.from _Flip %~ mapK (\(KW_Flip_GTerm w) -> f (KW_LoadedNominalDecl_E0 w)))
+        (t & Lens.from _Flip %~ mapK (\(E_Flip_GTerm w) -> f (E_LoadedNominalDecl_Body w)))
         where
-            onMap = mapK (\w -> _QVarInstances . Lens.mapped %~ f (KW_LoadedNominalDecl_E1 w))
+            onMap = mapK (\w -> _QVarInstances . Lens.mapped %~ f (E_LoadedNominalDecl_NomVarTypes w))
 
 instance
     (RFoldable typ, KFoldable (NomVarTypes typ)) =>
@@ -201,9 +201,9 @@ instance
     {-# INLINE foldMapK #-}
     foldMapK f (LoadedNominalDecl mp mf t) =
         onMap mp <> onMap mf <>
-        foldMapK (\(KW_Flip_GTerm w) -> f (KW_LoadedNominalDecl_E0 w)) (_Flip # t)
+        foldMapK (\(E_Flip_GTerm w) -> f (E_LoadedNominalDecl_Body w)) (_Flip # t)
         where
-            onMap = foldMapK (\w -> foldMap (f (KW_LoadedNominalDecl_E1 w)) . (^. _QVarInstances))
+            onMap = foldMapK (\w -> foldMap (f (E_LoadedNominalDecl_NomVarTypes w)) . (^. _QVarInstances))
 
 instance
     (RTraversable typ, KTraversable (NomVarTypes typ)) =>
