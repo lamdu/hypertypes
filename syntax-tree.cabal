@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a2643d9be1102a87398eb348af9168fdf00e319f7e3c8cb184448782cf6b5a24
+-- hash: 45eb50dd98966f7024b160be05a02ab5d4d1462bc74db3be0f863f9fe565f71e
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -130,6 +130,7 @@ test-suite syntax-tree-test
       LangA.Pure
       LangB
       LangB.Pure
+      ReadMeExamples
       TypeLang
       TypeLang.Pure
   hs-source-dirs:
@@ -148,6 +149,7 @@ test-suite syntax-tree-test
     , mtl
     , pretty
     , syntax-tree
+    , text
     , transformers
   default-language: Haskell2010
 

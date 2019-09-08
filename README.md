@@ -201,7 +201,7 @@ data AST :: (Index -> Type) -> Index -> Type where
     FuncT :: r Typ -> r Typ -> AST r Typ
 ```
 
-(this is an variant of `multirec`'s actual presentation, where `Index` replaces `Type` for explicitness and improved legibility)
+(this is a slight variant of `multirec`'s actual presentation, where for improved legibility `Index` is used rather than `Type`)
 
 `multirec` offers various utilities to process such data types.
 It offers [`HFunctor`](http://hackage.haskell.org/package/multirec-0.7.9/docs/Generics-MultiRec-HFunctor.html),
@@ -210,7 +210,7 @@ a variant of `Functor` for these structures, and various recursive combinators.
 But `multirec` has several limitations:
 
 * Using a single GADT for the data type limits composition and modularity.
-* Invocations of `HFunctor` for an `AST r Typ` need to support transforming all indices,
+* Invocations of `HFunctor` for a `Typ` node need to support transforming all indices of `AST`,
   including `Expr`, even though `Typ` doesn't have `Expr` child nodes.
 
 ## `Knot -> Type`: `syntax-tree`'s approach
@@ -227,37 +227,41 @@ data Typ k
     | FuncT (k # Typ) (k # Typ)
 ```
 
-The `#` type operator used above requires some explaining:
+The `#` type operator used above requires introduction:
 
 ```Haskell
 type k # p = (GetKnot k) ('Knot p)
 
 newtype Knot = Knot (Knot -> Type)
 
--- GetKnot unwraps the Knot newtype in the type level
+-- GetKnot is a getter from the Knot newtype lifted to the type level
 type family GetKnot k where
     GetKnot ('Knot t) = t
 ```
 
-(the `'Knot` syntax is `DataKinds` syntax for using the `Knot` data constructor in types)
+(`'Knot` is `DataKinds` syntax for using the `Knot` data constructor in types)
 
-For this representation, `syntax-tree` offers the power and functionality of both HKD and `recursion-schemes`:
+For this representation, `syntax-tree` offers the power and functionality of HKD, `recursion-schemes`, `multirec`, and some useful helpers:
 
-* Helpers for recursive processing and transformation of nested structures.
-* Implementations for common AST terms and useful fix-points.
-* Variants of standard classes like `Functor`.
-  Unlike `multirec`'s `HFunctor`, only the actual child types of each type need to be handled.
-* A `unification-fd` inspired unification implementation for mutually recursive types.
-* A generic and fast implementation of a Hindley-Milner type inference algorithm (["Efficient generalization with levels"](http://okmij.org/ftp/ML/generalization.html#levels)).
+* Variants of standard classes like `Functor` with `TemplateHaskell` derivations for them.
+  (Unlike in `multirec`'s `HFunctor`, only the actual child node types of each node need to be handled)
+* Combinators for recursive processing and transformation of nested structures
+* Implementations for common AST terms and useful fix-points
+* A `unification-fd` inspired unification implementation for mutually recursive types
+* A generic and fast implementation of a Hindley-Milner type inference algorithm (["Efficient generalization with levels"](http://okmij.org/ftp/ML/generalization.html#levels))
 
-## Both ASTs and their fix-points are `Knot`s
+## Usage examples
 
-* We want ASTs to be parameterized by fix-points
-* Fix-points are parameterized by the ASTs, too
-* Therefore, ASTs and fix-points need to be parameterized by each other
-* This results in infinite types, as the AST is parameterized by something which may be parameterized by the AST itself.
 
-`multirec` ties the knot by using indices to represent types. `syntax-tree` does this by using `DataKinds` and the `Knot` `newtype`.
+
+## Understanding `Knot`s
+
+* We want structures to be parameterized by fix-points
+* Fix-points are parameterized by the structures, too
+* Therefore, structures and their fix-points need to be parameterized by each other
+* This results in infinite types, as the structure is parameterized by something which may be parameterized by the structure itself.
+
+`multirec` ties this knot by using indices to represent types. `syntax-tree` does this by using `DataKinds` and the `Knot` `newtype` which is used for both structures and their fix-points An implication of the two being the same is that the same classes and combinators are re-used for both.
 
 ## How does syntax-tree compare/relate to
 

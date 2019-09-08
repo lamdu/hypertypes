@@ -20,6 +20,7 @@ import           Data.Proxy
 import qualified Data.Set as Set
 import           LangA.Pure
 import           LangB.Pure
+import           ReadMeExamples ()
 import           System.Exit (exitFailure)
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))

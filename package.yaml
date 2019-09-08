@@ -79,6 +79,7 @@ tests:
     - LangA.Pure
     - LangB
     - LangB.Pure
+    - ReadMeExamples
     - TypeLang
     - TypeLang.Pure
     ghc-options:
@@ -89,6 +90,7 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - syntax-tree
+    - text
 
 benchmarks:
   syntax-tree-bench:
