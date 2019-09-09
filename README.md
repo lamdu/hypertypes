@@ -351,7 +351,41 @@ This is `KRecWitness k n` in the type of `foldDiffsP` above. It is a witness arg
 
 ## Witness parameters
 
+*First, I want to give thanks and credit: We learned of this elegant solution from `multirec`!*
 
+What are witness parameters?
+
+Let's look at how `KFunctor` is defined:
+
+```Haskell
+class KNodes k => KFunctor k where
+    -- | 'KFunctor' variant of 'fmap'
+    mapK ::
+        (forall n. KWitness k n -> Tree p n -> Tree q n) ->
+        Tree k p ->
+        Tree k q
+```
+
+`KFunctor` can change the tree of `k`'s fix-point from `p` to `q` given a rank-n-function that transforms an element in `p` to an element in `q` given a witness that it's node `n` it a node of `k`.
+
+`KWitness` is a data family which comes from the `KNodes` instance of `k`.
+
+For an example of one let's see how `KWitness Expr` (from the examples above) is defined:
+
+```Haskell
+data instance KWitness Expr n where
+    W_Expr_Expr :: KWitness Expr Expr
+    W_Expr_Typ :: KWitness Expr Typ
+```
+
+Note that this witness GADT gets automatically derived via a `TemplateHaskell` generator.
+
+What does this give us?
+When mapping over an `Expr` we can:
+
+* Ignore the witness and use a mapping from a `p` of any `n` to a `q` of it
+* Pattern match on the witness to handle `Expr`'s specific node types
+* Use the `#>` operator to lift a class constraint of `Expr`'s nodes into scope. `Proxy @c #> ...` replaces the witness parameter with a constraint `c n`.
 
 ## Understanding `Knot`s
 
