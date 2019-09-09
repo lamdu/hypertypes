@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes, FlexibleContexts #-}
 
 module AST.Class.Monad
     ( KMonad(..), bindK
@@ -7,7 +7,7 @@ module AST.Class.Monad
 import AST.Class.Apply (KApplicative)
 import AST.Class.Functor (KFunctor(..))
 import AST.Class.Nodes (KNodes(..), (#>))
-import AST.Class.Recursive (Recursive(..), RFunctor)
+import AST.Class.Recursive (Recursively(..))
 import AST.Combinator.Compose (Compose, _Compose)
 import AST.Knot (Tree)
 import AST.Knot.Pure (Pure(..), _Pure)
@@ -19,22 +19,22 @@ import Prelude.Compat
 
 class KApplicative k => KMonad k where
     joinK ::
-        RFunctor p =>
+        Recursively KFunctor p =>
         Tree (Compose k k) p ->
         Tree k p
 
 instance KMonad Pure where
     joinK x =
-        withDict (recurse (p x)) $
+        withDict (recursively (p x)) $
         _Pure #
-        mapK (Proxy @RFunctor #> joinK)
+        mapK (Proxy @(Recursively KFunctor) #> joinK)
         (x ^. _Compose . _Pure . _Compose . _Pure . _Compose)
         where
-            p :: Tree (Compose Pure Pure) p -> Proxy (RFunctor p)
+            p :: Tree (Compose Pure Pure) p -> Proxy (KFunctor p)
             p _ = Proxy
 
 bindK ::
-    (KMonad k, RFunctor p) =>
+    (KMonad k, Recursively KFunctor p) =>
     Tree k p ->
     (forall n. KWitness k n -> Tree p n -> Tree (Compose k p) n) ->
     Tree k p

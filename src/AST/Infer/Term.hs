@@ -84,17 +84,17 @@ instance KNodes (Flip (ITerm a) e) where
                 p0 :: Proxy c -> Proxy (ITermVarsConstraint c)
                 p0 _ = Proxy
 
-instance (RFunctor e, RFunctorInferOf e) => KFunctor (Flip (ITerm a) e) where
+instance (Recursively KFunctor e, RFunctorInferOf e) => KFunctor (Flip (ITerm a) e) where
     {-# INLINE mapK #-}
     mapK f =
-        withDict (recurse (Proxy @(RFunctor e))) $
+        withDict (recursively (Proxy @(KFunctor e))) $
         withDict (recurse (Proxy @(RFunctorInferOf e))) $
         _Flip %~
         \(ITerm pl r x) ->
         ITerm pl
         (mapK (f . E_Flip_ITerm_InferOf_e) r)
         ( mapK
-            ( Proxy @RFunctor #*# Proxy @RFunctorInferOf #*#
+            ( Proxy @(Recursively KFunctor) #*# Proxy @RFunctorInferOf #*#
                 \w -> from _Flip %~ mapK (f . E_Flip_ITerm_e w)
             ) x
         )
@@ -144,7 +144,7 @@ iAnnotations f (ITerm pl r x) =
 
 iTermToAnn ::
     forall a v e r.
-    RFunctor e =>
+    Recursively KFunctor e =>
     ( forall n.
         KRecWitness e n ->
         a ->
@@ -154,9 +154,9 @@ iTermToAnn ::
     Tree (ITerm a v) e ->
     Tree (Ann r) e
 iTermToAnn f (ITerm pl r x) =
-    withDict (recurse (Proxy @(RFunctor e))) $
+    withDict (recursively (Proxy @(KFunctor e))) $
     mapK
-    ( Proxy @RFunctor #*#
+    ( Proxy @(Recursively KFunctor) #*#
         \w -> iTermToAnn (f . KRecSub w)
     ) x
     & Ann (f KRecSelf pl r)

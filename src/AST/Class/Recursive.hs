@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes, DefaultSignatures, GADTs, FlexibleContexts #-}
+{-# LANGUAGE RankNTypes, DefaultSignatures, GADTs, FlexibleContexts, FlexibleInstances #-}
 
 module AST.Class.Recursive
     ( Recursive(..)
@@ -6,7 +6,7 @@ module AST.Class.Recursive
     , wrap, wrapM, unwrap, unwrapM
     , foldMapRecursive
     , Recursively(..)
-    , RNodes, RFunctor, RFoldable, RTraversable
+    , RNodes, RFoldable, RTraversable
     , KRecWitness(..), (#>>), (#**#)
     ) where
 
@@ -29,28 +29,6 @@ class Recursive c where
     -- | Lift a recursive constraint to the next layer
     recurse :: (KNodes k, c k) => Proxy (c k) -> Dict (KNodesConstraint k c)
 
--- | A constraint lifted to apply recursively.
---
--- Note that in cases where a constraint has dependencies other than 'KNodes',
--- one will want to create a class such as RTraversable to capture the dependencies,
--- otherwise using it in class contexts will be quite unergonomic.
-class KNodes k => Recursively c k where
-    recursively ::
-        Proxy (c k) -> Dict (c k, KNodesConstraint k (Recursively c))
-    {-# INLINE recursively #-}
-    default recursively ::
-        (c k, KNodesConstraint k (Recursively c)) =>
-        Proxy (c k) -> Dict (c k, KNodesConstraint k (Recursively c))
-    recursively _ = Dict
-
-instance Recursive (Recursively c) where
-    {-# INLINE recurse #-}
-    recurse p =
-        withDict (recursively (p0 p)) Dict
-        where
-            p0 :: Proxy (Recursively c k) -> Proxy (c k)
-            p0 _ = Proxy
-
 -- | A class of 'Knot's which recursively implement 'KNodes'
 class KNodes k => RNodes k where
     recursiveKNodes :: Proxy k -> Dict (KNodesConstraint k RNodes)
@@ -70,21 +48,30 @@ instance Recursive RNodes where
     {-# INLINE recurse #-}
     recurse = recursiveKNodes . argP
 
--- | A class of 'Knot's which recursively implement 'KFunctor'
-class (KFunctor k, RNodes k) => RFunctor k where
-    recursiveKFunctor :: Proxy k -> Dict (KNodesConstraint k RFunctor)
-    {-# INLINE recursiveKFunctor #-}
-    default recursiveKFunctor ::
-        KNodesConstraint k RFunctor =>
-        Proxy k -> Dict (KNodesConstraint k RFunctor)
-    recursiveKFunctor _ = Dict
+-- | A constraint lifted to apply recursively.
+--
+-- Note that in cases where a constraint has dependencies other than 'RNodes',
+-- one will want to create a class such as RTraversable to capture the dependencies,
+-- otherwise using it in class contexts will be quite unergonomic.
+class RNodes k => Recursively c k where
+    recursively ::
+        Proxy (c k) -> Dict (c k, KNodesConstraint k (Recursively c))
+    {-# INLINE recursively #-}
+    default recursively ::
+        (c k, KNodesConstraint k (Recursively c)) =>
+        Proxy (c k) -> Dict (c k, KNodesConstraint k (Recursively c))
+    recursively _ = Dict
 
-instance RFunctor Pure
-instance RFunctor (Const a)
-
-instance Recursive RFunctor where
+instance Recursive (Recursively c) where
     {-# INLINE recurse #-}
-    recurse = recursiveKFunctor . argP
+    recurse p =
+        withDict (recursively (p0 p)) Dict
+        where
+            p0 :: Proxy (Recursively c k) -> Proxy (c k)
+            p0 _ = Proxy
+
+instance c Pure => Recursively c Pure
+instance c (Const a) => Recursively c (Const a)
 
 -- | A class of 'Knot's which recursively implement 'KFoldable'
 class (KFoldable k, RNodes k) => RFoldable k where
@@ -103,7 +90,7 @@ instance Recursive RFoldable where
     recurse = recursiveKFoldable . argP
 
 -- | A class of 'Knot's which recursively implement 'KTraversable'
-class (KTraversable k, RFunctor k, RFoldable k) => RTraversable k where
+class (KTraversable k, Recursively KFunctor k, RFoldable k) => RTraversable k where
     recursiveKTraversable :: Proxy k -> Dict (KNodesConstraint k RTraversable)
     {-# INLINE recursiveKTraversable #-}
     default recursiveKTraversable ::
@@ -155,33 +142,33 @@ unwrapM f x =
 {-# INLINE wrap #-}
 wrap ::
     forall k w.
-    RFunctor k =>
+    Recursively KFunctor k =>
     (forall n. KRecWitness k n -> Tree n w -> Tree w n) ->
     Tree Pure k ->
     Tree w k
 wrap f x =
-    withDict (recurse (Proxy @(RFunctor k))) $
+    withDict (recursively (Proxy @(KFunctor k))) $
     x ^. _Pure
-    & mapK (Proxy @RFunctor #*# \w -> wrap (f . KRecSub w))
+    & mapK (Proxy @(Recursively KFunctor) #*# \w -> wrap (f . KRecSub w))
     & f KRecSelf
 
 -- | Unwrap a 'Tree' from the top down, replacing its 'Knot' with 'Pure'
 {-# INLINE unwrap #-}
 unwrap ::
     forall k w.
-    RFunctor k =>
+    Recursively KFunctor k =>
     (forall n. KRecWitness k n -> Tree w n -> Tree n w) ->
     Tree w k ->
     Tree Pure k
 unwrap f x =
-    withDict (recurse (Proxy @(RFunctor k))) $
+    withDict (recursively (Proxy @(KFunctor k))) $
     f KRecSelf x
-    &# mapK (Proxy @RFunctor #*# \w -> unwrap (f . KRecSub w))
+    &# mapK (Proxy @(Recursively KFunctor) #*# \w -> unwrap (f . KRecSub w))
 
 -- | Recursively fold up a tree to produce a result (aka catamorphism)
 {-# INLINE fold #-}
 fold ::
-    RFunctor k =>
+    Recursively KFunctor k =>
     (forall n. KRecWitness k n -> Tree n (Const a) -> a) ->
     Tree Pure k ->
     a
@@ -190,7 +177,7 @@ fold f = getConst . wrap (fmap Const . f)
 -- | Build/load a tree from a seed value (aka anamorphism)
 {-# INLINE unfold #-}
 unfold ::
-    RFunctor k =>
+    Recursively KFunctor k =>
     (forall n. KRecWitness k n -> a -> Tree n (Const a)) ->
     a ->
     Tree Pure k

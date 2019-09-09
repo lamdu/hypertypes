@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell, RankNTypes, UndecidableInstances, GADTs #-}
+{-# LANGUAGE FlexibleInstances, FlexibleContexts #-}
 
 module AST.Knot.Ann
     ( Ann(..), ann, val, KWitness(..)
@@ -6,7 +7,7 @@ module AST.Knot.Ann
     , strip, addAnnotations
     ) where
 
-import           AST.Class.Functor (mapK)
+import           AST.Class.Functor (KFunctor(..))
 import           AST.Class.Monad
 import           AST.Class.Nodes (KNodes(..), (#>))
 import           AST.Class.Recursive
@@ -39,8 +40,9 @@ makeCommonInstances [''Ann]
 makeKTraversableApplyAndBases ''Ann
 makeZipMatch ''Ann
 
+instance c (Ann a) => Recursively c (Ann a)
+
 instance RNodes (Ann a)
-instance RFunctor (Ann a)
 instance RFoldable (Ann a)
 instance RTraversable (Ann a)
 
@@ -50,12 +52,12 @@ instance Monoid a => KMonad (Ann a) where
         where
             t ::
                 forall p.
-                RFunctor p =>
+                Recursively KFunctor p =>
                 Tree p (Compose (Ann a) (Ann a)) ->
                 Tree p (Ann a)
             t =
-                withDict (recurse (Proxy @(RFunctor p))) $
-                mapK (Proxy @RFunctor #> joinK)
+                withDict (recursively (Proxy @(KFunctor p))) $
+                mapK (Proxy @(Recursively KFunctor) #> joinK)
 
 instance Constraints (Ann a t) Pretty => Pretty (Ann a t) where
     pPrintPrec lvl prec (Ann pl b)
@@ -82,14 +84,14 @@ annotations f (Ann pl x) =
 
 -- | Remove a tree's annotations
 strip ::
-    RFunctor expr =>
+    Recursively KFunctor expr =>
     Tree (Ann a) expr ->
     Tree Pure expr
 strip = unwrap (const (^. val))
 
 -- | Compute annotations for a tree from the bottom up
 addAnnotations ::
-    RFunctor k =>
+    Recursively KFunctor k =>
     (forall n. KRecWitness k n -> Tree n (Ann a) -> a) ->
     Tree Pure k ->
     Tree (Ann a) k

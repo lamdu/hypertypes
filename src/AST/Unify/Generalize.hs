@@ -67,7 +67,7 @@ kLiftConstraintH c n =
         (kLiftConstraint (E_Flip_GTerm n))
     )
 
-instance RFunctor ast => KFunctor (Flip GTerm ast) where
+instance Recursively KFunctor ast => KFunctor (Flip GTerm ast) where
     {-# INLINE mapK #-}
     mapK f =
         _Flip %~
@@ -75,10 +75,10 @@ instance RFunctor ast => KFunctor (Flip GTerm ast) where
         GMono x -> f (E_Flip_GTerm KRecSelf) x & GMono
         GPoly x -> f (E_Flip_GTerm KRecSelf) x & GPoly
         GBody x ->
-            withDict (recurse (Proxy @(RFunctor ast))) $
+            withDict (recursively (Proxy @(KFunctor ast))) $
             mapK
             ( \cw ->
-                kLiftConstraint cw (Proxy @RFunctor) $
+                kLiftConstraint cw (Proxy @(Recursively KFunctor)) $
                 Lens.from _Flip %~
                 mapK (f . (\(E_Flip_GTerm nw) -> E_Flip_GTerm (KRecSub cw nw)))
             ) x

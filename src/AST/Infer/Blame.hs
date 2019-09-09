@@ -204,10 +204,10 @@ instance KNodes (Flip (BTerm a) e) where
                 p0 :: Proxy c -> Proxy (ITermVarsConstraint c)
                 p0 _ = Proxy
 
-instance (RFunctor e, RFunctorInferOf e) => KFunctor (Flip (BTerm a) e) where
+instance (Recursively KFunctor e, RFunctorInferOf e) => KFunctor (Flip (BTerm a) e) where
     {-# INLINE mapK #-}
     mapK f =
-        withDict (recurse (Proxy @(RFunctor e))) $
+        withDict (recursively (Proxy @(KFunctor e))) $
         withDict (recurse (Proxy @(RFunctorInferOf e))) $
         _Flip %~
         \(BTerm pl r x) ->
@@ -217,7 +217,7 @@ instance (RFunctor e, RFunctorInferOf e) => KFunctor (Flip (BTerm a) e) where
             Right r0 -> Right (mapRes r0)
         )
         ( mapK
-            ( Proxy @RFunctor #*# Proxy @RFunctorInferOf #*#
+            ( Proxy @(Recursively KFunctor) #*# Proxy @RFunctorInferOf #*#
                 \w -> from _Flip %~ mapK (f . E_Flip_BTerm_e w)
             ) x
         )
@@ -309,7 +309,7 @@ blame order topLevelType e =
 
 bTermToAnn ::
     forall a v e r.
-    RFunctor e =>
+    Recursively KFunctor e =>
     ( forall n.
         KRecWitness e n ->
         a ->
@@ -319,9 +319,9 @@ bTermToAnn ::
     Tree (BTerm a v) e ->
     Tree (Ann r) e
 bTermToAnn f (BTerm pl r x) =
-    withDict (recurse (Proxy @(RFunctor e))) $
+    withDict (recursively (Proxy @(KFunctor e))) $
     mapK
-    ( Proxy @RFunctor #*#
+    ( Proxy @(Recursively KFunctor) #*#
         \w -> bTermToAnn (f . KRecSub w)
     ) x
     & Ann (f KRecSelf pl r)

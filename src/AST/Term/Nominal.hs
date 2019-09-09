@@ -186,7 +186,7 @@ instance (RNodes t, KNodes (NomVarTypes t)) => KNodes (LoadedNominalDecl t) wher
     kLiftConstraint (E_LoadedNominalDecl_NomVarTypes w) = kLiftConstraint w
 
 instance
-    (RFunctor typ, KFunctor (NomVarTypes typ)) =>
+    (Recursively KFunctor typ, KFunctor (NomVarTypes typ)) =>
     KFunctor (LoadedNominalDecl typ) where
     {-# INLINE mapK #-}
     mapK f (LoadedNominalDecl mp mf t) =

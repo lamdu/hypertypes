@@ -50,7 +50,7 @@ makeKTraversableAndBases ''LangA
 
 instance RNodes (LangA v)
 instance RFoldable (LangA k)
-instance RFunctor (LangA k)
+instance Recursively KFunctor (LangA k)
 instance RTraversable (LangA k)
 
 type instance InferOf (LangA k) = ANode Typ
