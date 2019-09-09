@@ -329,7 +329,7 @@ diffP ::
 Now, let's format this diff better:
 
 ```Haskell
-> let formatDiff _ x y = "- " <> show x <> "\n+ " <> show y
+> let formatDiff _ x y = "- " <> show x <> "\n+ " <> show y <> "\n"
 
 > putStrLn (foldDiffsP formatDiff d)
 - IntTP

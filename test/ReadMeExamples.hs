@@ -44,3 +44,6 @@ exprB = LamP "x" (FuncTP IntTP IntTP) (VarP "x")
 
 d :: Tree DiffP Expr
 d = diffP exprA exprB
+
+formatDiff :: (Show a, Show b) => w -> a -> b -> String
+formatDiff _ x y = "- " <> show x <> "\n+ " <> show y <> "\n"
