@@ -172,7 +172,6 @@ instance RNodes Typ
 instance RNodes Row
 instance RTraversable Typ
 instance RTraversable Row
-
 instance RTraversableInferOf Typ
 instance RTraversableInferOf Row
 

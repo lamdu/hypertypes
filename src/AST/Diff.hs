@@ -4,6 +4,8 @@ module AST.Diff
     ( diff
     , Diff(..), _CommonBody, _CommonSubTree, _Different
     , CommonBody(..), anns, val
+    , diffP
+    , DiffP(..), _CommonBodyP, _CommonSubTreeP, _DifferentP
     ) where
 
 import AST
@@ -33,7 +35,6 @@ data CommonBody a b e = MkCommonBody
     , _val :: e # Diff a b
     } deriving Generic
 
-makeCommonInstances [''Diff, ''CommonBody]
 makePrisms ''Diff
 makeLenses ''CommonBody
 
@@ -57,3 +58,43 @@ diff x@(Ann xA xB) y@(Ann yA yB) =
                 ( Proxy @(Recursively ZipMatch) #*# Proxy @RTraversable #>
                     \(Pair xC yC) -> diff xC yC
                 ) match
+
+data DiffP k
+    = CommonSubTreeP (KPlain (GetKnot k))
+    | CommonBodyP (k # DiffP)
+    | DifferentP (KPlain (GetKnot k)) (KPlain (GetKnot k))
+    deriving Generic
+makePrisms ''DiffP
+
+diffP ::
+    forall k.
+    (Recursively ZipMatch k, Recursively KHasPlain k, RTraversable k) =>
+    KPlain k -> KPlain k -> Tree DiffP k
+diffP x y =
+    withDict (recursively (Proxy @(KHasPlain k))) $
+    diffPH (x ^. kPlain) (y ^. kPlain)
+
+diffPH ::
+    forall k.
+    (Recursively ZipMatch k, Recursively KHasPlain k, RTraversable k) =>
+    Tree Pure k -> Tree Pure k -> Tree DiffP k
+diffPH x y =
+    withDict (recursively (Proxy @(ZipMatch k))) $
+    withDict (recursively (Proxy @(KHasPlain k))) $
+    withDict (recurse (Proxy @(RTraversable k))) $
+    case zipMatch (x ^. _Pure) (y ^. _Pure) of
+    Nothing -> DifferentP (kPlain # x) (kPlain # y)
+    Just match ->
+        case traverseK_ (const ((() <$) . (^? _CommonSubTreeP))) sub of
+        Nothing -> CommonBodyP sub
+        Just () -> _CommonSubTreeP . kPlain # x
+        where
+            sub =
+                mapK
+                ( Proxy @(Recursively ZipMatch) #*#
+                    Proxy @(Recursively KHasPlain) #*#
+                    Proxy @RTraversable #>
+                    \(Pair xC yC) -> diffPH xC yC
+                ) match
+
+makeCommonInstances [''Diff, ''CommonBody, ''DiffP]
