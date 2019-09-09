@@ -59,9 +59,8 @@ data LangB k
     deriving Generic
 
 makeKTraversableAndBases ''LangB
-instance Recursively KFunctor LangB
+instance c LangB => Recursively c LangB
 instance RNodes LangB
-instance RFoldable LangB
 instance RTraversable LangB
 
 type instance InferOf LangB = ANode Typ

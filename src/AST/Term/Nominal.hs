@@ -196,7 +196,7 @@ instance
             onMap = mapK (\w -> _QVarInstances . Lens.mapped %~ f (E_LoadedNominalDecl_NomVarTypes w))
 
 instance
-    (RFoldable typ, KFoldable (NomVarTypes typ)) =>
+    (Recursively KFoldable typ, KFoldable (NomVarTypes typ)) =>
     KFoldable (LoadedNominalDecl typ) where
     {-# INLINE foldMapK #-}
     foldMapK f (LoadedNominalDecl mp mf t) =

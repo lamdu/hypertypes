@@ -170,8 +170,6 @@ instance (c Typ, c Row) => Recursively c Typ
 instance (c Typ, c Row) => Recursively c Row
 instance RNodes Typ
 instance RNodes Row
-instance RFoldable Typ
-instance RFoldable Row
 instance RTraversable Typ
 instance RTraversable Row
 

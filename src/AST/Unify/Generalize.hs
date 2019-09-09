@@ -84,17 +84,17 @@ instance Recursively KFunctor ast => KFunctor (Flip GTerm ast) where
             ) x
             & GBody
 
-instance RFoldable ast => KFoldable (Flip GTerm ast) where
+instance Recursively KFoldable ast => KFoldable (Flip GTerm ast) where
     {-# INLINE foldMapK #-}
     foldMapK f =
         \case
         GMono x -> f (E_Flip_GTerm KRecSelf) x
         GPoly x -> f (E_Flip_GTerm KRecSelf) x
         GBody x ->
-            withDict (recurse (Proxy @(RFoldable ast))) $
+            withDict (recursively (Proxy @(KFoldable ast))) $
             foldMapK
             ( \cw ->
-                kLiftConstraint cw (Proxy @RFoldable) $
+                kLiftConstraint cw (Proxy @(Recursively KFoldable)) $
                 foldMapK (f . (\(E_Flip_GTerm nw) -> E_Flip_GTerm (KRecSub cw nw)))
                 . (_Flip #)
             ) x

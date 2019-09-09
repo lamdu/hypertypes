@@ -6,7 +6,7 @@ module AST.Class.Recursive
     , wrap, wrapM, unwrap, unwrapM
     , foldMapRecursive
     , Recursively(..)
-    , RNodes, RFoldable, RTraversable
+    , RNodes, RTraversable
     , KRecWitness(..), (#>>), (#**#)
     ) where
 
@@ -73,24 +73,8 @@ instance Recursive (Recursively c) where
 instance c Pure => Recursively c Pure
 instance c (Const a) => Recursively c (Const a)
 
--- | A class of 'Knot's which recursively implement 'KFoldable'
-class (KFoldable k, RNodes k) => RFoldable k where
-    recursiveKFoldable :: Proxy k -> Dict (KNodesConstraint k RFoldable)
-    {-# INLINE recursiveKFoldable #-}
-    default recursiveKFoldable ::
-        KNodesConstraint k RFoldable =>
-        Proxy k -> Dict (KNodesConstraint k RFoldable)
-    recursiveKFoldable _ = Dict
-
-instance RFoldable Pure
-instance RFoldable (Const a)
-
-instance Recursive RFoldable where
-    {-# INLINE recurse #-}
-    recurse = recursiveKFoldable . argP
-
 -- | A class of 'Knot's which recursively implement 'KTraversable'
-class (KTraversable k, Recursively KFunctor k, RFoldable k) => RTraversable k where
+class (KTraversable k, Recursively KFunctor k, Recursively KFoldable k) => RTraversable k where
     recursiveKTraversable :: Proxy k -> Dict (KNodesConstraint k RTraversable)
     {-# INLINE recursiveKTraversable #-}
     default recursiveKTraversable ::
@@ -187,17 +171,17 @@ unfold f = unwrap (fmap (. getConst) f) . Const
 {-# INLINE foldMapRecursive #-}
 foldMapRecursive ::
     forall k p a.
-    (RFoldable k, RFoldable p, Monoid a) =>
+    (Recursively KFoldable k, Recursively KFoldable p, Monoid a) =>
     (forall n q. KRecWitness k n -> Tree n q -> a) ->
     Tree k p ->
     a
 foldMapRecursive f x =
-    withDict (recurse (Proxy @(RFoldable k))) $
-    withDict (recurse (Proxy @(RFoldable p))) $
+    withDict (recursively (Proxy @(KFoldable k))) $
+    withDict (recursively (Proxy @(KFoldable p))) $
     f KRecSelf x <>
     foldMapK
-    ( Proxy @RFoldable #*#
-        \w -> foldMapK (Proxy @RFoldable #> foldMapRecursive (f . KRecSub w))
+    ( Proxy @(Recursively KFoldable) #*#
+        \w -> foldMapK (Proxy @(Recursively KFoldable) #> foldMapRecursive (f . KRecSub w))
     ) x
 
 infixr 0 #>>

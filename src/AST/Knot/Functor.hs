@@ -8,7 +8,7 @@ module AST.Knot.Functor
 import AST.Class.Nodes (KNodes(..), (#>))
 import AST.Class.Functor (KFunctor(..))
 import AST.Class.Monad (KMonad(..))
-import AST.Class.Recursive (RNodes, Recursively(..), RFoldable, RTraversable)
+import AST.Class.Recursive (RNodes, Recursively(..), RTraversable)
 import AST.Combinator.Compose
 import AST.Knot (Tree, type (#))
 import AST.TH.Internal.Instances (makeCommonInstances)
@@ -63,5 +63,4 @@ instance Monad f => KMonad (F f) where
 
 instance RNodes (F f)
 instance c (F f) => Recursively c (F f)
-instance Foldable f => RFoldable (F f)
 instance Traversable f => RTraversable (F f)

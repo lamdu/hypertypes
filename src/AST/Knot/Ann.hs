@@ -41,9 +41,7 @@ makeKTraversableApplyAndBases ''Ann
 makeZipMatch ''Ann
 
 instance c (Ann a) => Recursively c (Ann a)
-
 instance RNodes (Ann a)
-instance RFoldable (Ann a)
 instance RTraversable (Ann a)
 
 instance Monoid a => KMonad (Ann a) where

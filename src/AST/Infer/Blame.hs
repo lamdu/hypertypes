@@ -224,17 +224,17 @@ instance (Recursively KFunctor e, RFunctorInferOf e) => KFunctor (Flip (BTerm a)
         where
             mapRes = mapK (f . E_Flip_BTerm_InferOf_e)
 
-instance (RFoldable e, RFoldableInferOf e) => KFoldable (Flip (BTerm a) e) where
+instance (Recursively KFoldable e, RFoldableInferOf e) => KFoldable (Flip (BTerm a) e) where
     {-# INLINE foldMapK #-}
     foldMapK f (MkFlip (BTerm _ r x)) =
-        withDict (recurse (Proxy @(RFoldable e))) $
+        withDict (recursively (Proxy @(KFoldable e))) $
         withDict (recurse (Proxy @(RFoldableInferOf e))) $
         case r of
         Left (r0, r1) -> foldRes r0 <> foldRes r1
         Right r0 -> foldRes r0
         <>
         foldMapK
-        ( Proxy @RFoldable #*# Proxy @RFoldableInferOf #*#
+        ( Proxy @(Recursively KFoldable) #*# Proxy @RFoldableInferOf #*#
             \w -> foldMapK (f . E_Flip_BTerm_e w) . (_Flip #)
         ) x
         where

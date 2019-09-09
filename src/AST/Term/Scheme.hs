@@ -62,11 +62,10 @@ makeKTraversableApplyAndBases ''Scheme
 
 instance (c (Scheme v t), Recursively c t) => Recursively c (Scheme v t)
 instance RNodes t => RNodes (Scheme v t)
-instance (KFoldable (Scheme v t), RFoldable t) => RFoldable (Scheme v t)
 instance (KTraversable (Scheme v t), RTraversable t) => RTraversable (Scheme v t)
 
 instance (Recursively KFunctor t, RFunctorInferOf t) => RFunctorInferOf (Scheme v t)
-instance (RFoldable t, RFoldableInferOf t) => RFoldableInferOf (Scheme v t)
+instance (Recursively KFoldable t, RFoldableInferOf t) => RFoldableInferOf (Scheme v t)
 instance (RTraversable t, RTraversableInferOf t) => RTraversableInferOf (Scheme v t)
 
 instance

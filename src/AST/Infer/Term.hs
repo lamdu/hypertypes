@@ -99,14 +99,14 @@ instance (Recursively KFunctor e, RFunctorInferOf e) => KFunctor (Flip (ITerm a)
             ) x
         )
 
-instance (RFoldable e, RFoldableInferOf e) => KFoldable (Flip (ITerm a) e) where
+instance (Recursively KFoldable e, RFoldableInferOf e) => KFoldable (Flip (ITerm a) e) where
     {-# INLINE foldMapK #-}
     foldMapK f (MkFlip (ITerm _ r x)) =
-        withDict (recurse (Proxy @(RFoldable e))) $
+        withDict (recursively (Proxy @(KFoldable e))) $
         withDict (recurse (Proxy @(RFoldableInferOf e))) $
         foldMapK (f . E_Flip_ITerm_InferOf_e) r <>
         foldMapK
-        ( Proxy @RFoldable #*# Proxy @RFoldableInferOf #*#
+        ( Proxy @(Recursively KFoldable) #*# Proxy @RFoldableInferOf #*#
             \w -> foldMapK (f . E_Flip_ITerm_e w) . (_Flip #)
         ) x
 
