@@ -1,7 +1,7 @@
-{-# LANGUAGE RankNTypes, DefaultSignatures #-}
+{-# LANGUAGE RankNTypes #-}
 
 module AST.Class.ZipMatch
-    ( ZipMatch(..), RZipMatch
+    ( ZipMatch(..)
     , zipMatch2
     , zipMatchA
     , zipMatch_, zipMatch1_
@@ -10,16 +10,13 @@ module AST.Class.ZipMatch
 import           AST.Class.Foldable
 import           AST.Class.Functor (KFunctor(..))
 import           AST.Class.Nodes (KNodes(..))
-import           AST.Class.Recursive (Recursive(..), RNodes)
 import           AST.Class.Traversable (KTraversable, traverseK)
 import           AST.Knot (Tree)
 import           AST.Knot.Pure (Pure(..), _Pure)
 import           Control.Lens.Operators
 import           Control.Monad (guard)
-import           Data.Constraint (Dict(..))
 import           Data.Functor.Const (Const(..))
 import           Data.Functor.Product.PolyKinds (Product(..))
-import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
 
@@ -51,24 +48,6 @@ instance ZipMatch Pure where
 instance Eq a => ZipMatch (Const a) where
     {-# INLINE zipMatch #-}
     zipMatch (Const x) (Const y) = Const x <$ guard (x == y)
-
--- | A class of 'AST.Knot.Knot's which recursively implement 'ZipMatch'.
---
--- Can be used with the combinators in "AST.Class.Recursive".
-class (ZipMatch k, RNodes k) => RZipMatch k where
-    recursiveZipMatch :: Proxy k -> Dict (KNodesConstraint k RZipMatch)
-    {-# INLINE recursiveZipMatch #-}
-    default recursiveZipMatch ::
-        KNodesConstraint k RZipMatch =>
-        Proxy k -> Dict (KNodesConstraint k RZipMatch)
-    recursiveZipMatch _ = Dict
-
-instance RZipMatch Pure
-instance Eq a => RZipMatch (Const a)
-
-instance Recursive RZipMatch where
-    {-# INLINE recurse #-}
-    recurse = recursiveZipMatch . (const Proxy :: Proxy (RZipMatch k) -> Proxy k)
 
 -- | 'ZipMatch' variant of 'Control.Applicative.liftA2'
 {-# INLINE zipMatch2 #-}

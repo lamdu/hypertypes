@@ -5,6 +5,7 @@ module AST.Class.Recursive
     , fold, unfold
     , wrap, wrapM, unwrap, unwrapM
     , foldMapRecursive
+    , Recursively(..)
     , RNodes, RFunctor, RFoldable, RTraversable
     , KRecWitness(..), (#>>), (#**#)
     ) where
@@ -27,6 +28,28 @@ import Prelude.Compat
 class Recursive c where
     -- | Lift a recursive constraint to the next layer
     recurse :: (KNodes k, c k) => Proxy (c k) -> Dict (KNodesConstraint k c)
+
+-- | A constraint lifted to apply recursively.
+--
+-- Note that in cases where a constraint has dependencies other than 'KNodes',
+-- one will want to create a class such as RTraversable to capture the dependencies,
+-- otherwise using it in class contexts will be quite unergonomic.
+class KNodes k => Recursively c k where
+    recursively ::
+        Proxy (c k) -> Dict (c k, KNodesConstraint k (Recursively c))
+    {-# INLINE recursively #-}
+    default recursively ::
+        (c k, KNodesConstraint k (Recursively c)) =>
+        Proxy (c k) -> Dict (c k, KNodesConstraint k (Recursively c))
+    recursively _ = Dict
+
+instance Recursive (Recursively c) where
+    {-# INLINE recurse #-}
+    recurse p =
+        withDict (recursively (p0 p)) Dict
+        where
+            p0 :: Proxy (Recursively c k) -> Proxy (c k)
+            p0 _ = Proxy
 
 -- | A class of 'Knot's which recursively implement 'KNodes'
 class KNodes k => RNodes k where

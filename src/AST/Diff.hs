@@ -7,7 +7,7 @@ module AST.Diff
     ) where
 
 import AST
-import AST.Class.ZipMatch (ZipMatch(..), RZipMatch)
+import AST.Class.ZipMatch (ZipMatch(..))
 import AST.TH.Internal.Instances (makeCommonInstances)
 import Control.Lens (makeLenses, makePrisms)
 import Control.Lens.Operators
@@ -40,10 +40,10 @@ makeLenses ''CommonBody
 -- | Compute the difference of two annotated trees.
 diff ::
     forall t a b.
-    (RZipMatch t, RTraversable t) =>
+    (Recursively ZipMatch t, RTraversable t) =>
     Tree (Ann a) t -> Tree (Ann b) t -> Tree (Diff a b) t
 diff x@(Ann xA xB) y@(Ann yA yB) =
-    withDict (recurse (Proxy @(RZipMatch t))) $
+    withDict (recursively (Proxy @(ZipMatch t))) $
     withDict (recurse (Proxy @(RTraversable t))) $
     case zipMatch xB yB of
     Nothing -> Different (Pair x y)
@@ -54,6 +54,6 @@ diff x@(Ann xA xB) y@(Ann yA yB) =
         where
             sub =
                 mapK
-                ( Proxy @RZipMatch #*# Proxy @RTraversable #>
+                ( Proxy @(Recursively ZipMatch) #*# Proxy @RTraversable #>
                     \(Pair xC yC) -> diff xC yC
                 ) match
