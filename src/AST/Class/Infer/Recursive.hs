@@ -1,7 +1,7 @@
-{-# LANGUAGE DefaultSignatures, FlexibleContexts #-}
+{-# LANGUAGE DefaultSignatures, FlexibleContexts, FlexibleInstances, UndecidableInstances #-}
 
 module AST.Class.Infer.Recursive
-    ( RFunctorInferOf, RFoldableInferOf, RTraversableInferOf
+    ( KFunctorInferOf, KFoldableInferOf, RTraversableInferOf
     ) where
 
 import AST.Class.Nodes (KNodes(..))
@@ -9,45 +9,19 @@ import AST.Class.Foldable (KFoldable)
 import AST.Class.Functor (KFunctor)
 import AST.Class.Traversable (KTraversable)
 import AST.Class.Infer (InferOf)
-import AST.Class.Recursive (Recursive(..))
-import AST.Knot (Knot)
+import AST.Class.Recursive (Recursive(..), Recursively)
 import Data.Constraint (Dict(..))
-import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
-class KFunctor (InferOf k) => RFunctorInferOf k where
-    rFunctorInferOfRec ::
-        Proxy k -> Dict (KNodesConstraint k RFunctorInferOf)
-    {-# INLINE rFunctorInferOfRec #-}
-    default rFunctorInferOfRec ::
-        KNodesConstraint k RFunctorInferOf =>
-        Proxy k -> Dict (KNodesConstraint k RFunctorInferOf)
-    rFunctorInferOfRec _ = Dict
-
-instance Recursive RFunctorInferOf where
-    {-# INLINE recurse #-}
-    recurse = rFunctorInferOfRec . argP
-
-argP :: Proxy (f k :: Constraint) -> Proxy (k :: Knot -> Type)
-argP _ = Proxy
-
-class KFoldable (InferOf k) => RFoldableInferOf k where
-    rFoldableInferOfRec ::
-        Proxy k -> Dict (KNodesConstraint k RFoldableInferOf)
-    {-# INLINE rFoldableInferOfRec #-}
-    default rFoldableInferOfRec ::
-        KNodesConstraint k RFoldableInferOf =>
-        Proxy k -> Dict (KNodesConstraint k RFoldableInferOf)
-    rFoldableInferOfRec _ = Dict
-
-instance Recursive RFoldableInferOf where
-    {-# INLINE recurse #-}
-    recurse = rFoldableInferOfRec . argP
+class    KFunctor (InferOf k) => KFunctorInferOf k
+instance KFunctor (InferOf k) => KFunctorInferOf k
+class    KFoldable (InferOf k) => KFoldableInferOf k
+instance KFoldable (InferOf k) => KFoldableInferOf k
 
 class
-    (KTraversable (InferOf k), RFunctorInferOf k, RFoldableInferOf k) =>
+    (KTraversable (InferOf k), Recursively KFunctorInferOf k, Recursively KFoldableInferOf k) =>
     RTraversableInferOf k where
     rTraversableInferOfRec ::
         Proxy k -> Dict (KNodesConstraint k RTraversableInferOf)
@@ -59,4 +33,8 @@ class
 
 instance Recursive RTraversableInferOf where
     {-# INLINE recurse #-}
-    recurse = rTraversableInferOfRec . argP
+    recurse =
+        rTraversableInferOfRec . p
+        where
+            p :: Proxy (RTraversableInferOf k) -> Proxy k
+            p _ = Proxy

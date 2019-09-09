@@ -139,8 +139,6 @@ instance
             (BGetField wI k, _ANode # rT) <$
                 (newTerm (TRec wR) >>= unify (wT ^. _ANode))
 
-instance RFunctorInferOf LangB
-instance RFoldableInferOf LangB
 instance RTraversableInferOf LangB
 instance c Typ => ITermVarsConstraint c LangB
 

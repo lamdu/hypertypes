@@ -204,11 +204,13 @@ instance KNodes (Flip (BTerm a) e) where
                 p0 :: Proxy c -> Proxy (ITermVarsConstraint c)
                 p0 _ = Proxy
 
-instance (Recursively KFunctor e, RFunctorInferOf e) => KFunctor (Flip (BTerm a) e) where
+instance (Recursively KFunctor e, Recursively KFunctorInferOf e) => KFunctor (Flip (BTerm a) e) where
     {-# INLINE mapK #-}
     mapK f =
         withDict (recursively (Proxy @(KFunctor e))) $
-        withDict (recurse (Proxy @(RFunctorInferOf e))) $
+        withDict (recursively (Proxy @(KFunctorInferOf e))) $
+        let mapRes = mapK (f . E_Flip_BTerm_InferOf_e)
+        in
         _Flip %~
         \(BTerm pl r x) ->
         BTerm pl
@@ -217,28 +219,26 @@ instance (Recursively KFunctor e, RFunctorInferOf e) => KFunctor (Flip (BTerm a)
             Right r0 -> Right (mapRes r0)
         )
         ( mapK
-            ( Proxy @(Recursively KFunctor) #*# Proxy @RFunctorInferOf #*#
+            ( Proxy @(Recursively KFunctor) #*# Proxy @(Recursively KFunctorInferOf) #*#
                 \w -> from _Flip %~ mapK (f . E_Flip_BTerm_e w)
             ) x
         )
-        where
-            mapRes = mapK (f . E_Flip_BTerm_InferOf_e)
 
-instance (Recursively KFoldable e, RFoldableInferOf e) => KFoldable (Flip (BTerm a) e) where
+instance (Recursively KFoldable e, Recursively KFoldableInferOf e) => KFoldable (Flip (BTerm a) e) where
     {-# INLINE foldMapK #-}
     foldMapK f (MkFlip (BTerm _ r x)) =
         withDict (recursively (Proxy @(KFoldable e))) $
-        withDict (recurse (Proxy @(RFoldableInferOf e))) $
+        withDict (recursively (Proxy @(KFoldableInferOf e))) $
+        let foldRes = foldMapK (f . E_Flip_BTerm_InferOf_e)
+        in
         case r of
         Left (r0, r1) -> foldRes r0 <> foldRes r1
         Right r0 -> foldRes r0
         <>
         foldMapK
-        ( Proxy @(Recursively KFoldable) #*# Proxy @RFoldableInferOf #*#
+        ( Proxy @(Recursively KFoldable) #*# Proxy @(Recursively KFoldableInferOf) #*#
             \w -> foldMapK (f . E_Flip_BTerm_e w) . (_Flip #)
         ) x
-        where
-            foldRes = foldMapK (f . E_Flip_BTerm_InferOf_e)
 
 instance
     (RTraversable e, RTraversableInferOf e) =>

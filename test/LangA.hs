@@ -55,6 +55,11 @@ instance RTraversable (LangA k)
 
 type instance InferOf (LangA k) = ANode Typ
 
+instance Recursively KFunctorInferOf (LangA k)
+instance Recursively KFoldableInferOf (LangA k)
+instance RTraversableInferOf (LangA k)
+instance (c Typ, c Row, Recursive c) => ITermVarsConstraint c (LangA k)
+
 instance HasInferredType (LangA k) where
     type TypeOf (LangA k) = Typ
     inferredType _ = _ANode
@@ -101,11 +106,6 @@ instance (DeBruijnIndex k, TermInfer1Deps env m) => Infer m (LangA k) where
         >>= \(b, t) -> TFun t & newTerm <&> (ALam b, ) . MkANode
     inferBody (AApp x) = inferBody x <&> Lens._1 %~ AApp
     inferBody (ATypeSig x) = inferBody x <&> Lens._1 %~ ATypeSig
-
-instance RFunctorInferOf (LangA k)
-instance RFoldableInferOf (LangA k)
-instance RTraversableInferOf (LangA k)
-instance (c Typ, c Row, Recursive c) => ITermVarsConstraint c (LangA k)
 
 -- Monads for inferring `LangA`:
 

@@ -11,7 +11,7 @@ module AST.Infer.Term
 import AST
 import AST.Combinator.Flip
 import AST.Class.Infer
-import AST.Class.Infer.Recursive (RFunctorInferOf, RFoldableInferOf, RTraversableInferOf)
+import AST.Class.Infer.Recursive (KFunctorInferOf, KFoldableInferOf, RTraversableInferOf)
 import AST.Class.Recursive (KRecWitness(..))
 import AST.Class.Traversable (ContainedK(..))
 import AST.TH.Internal.Instances (makeCommonInstances)
@@ -84,29 +84,29 @@ instance KNodes (Flip (ITerm a) e) where
                 p0 :: Proxy c -> Proxy (ITermVarsConstraint c)
                 p0 _ = Proxy
 
-instance (Recursively KFunctor e, RFunctorInferOf e) => KFunctor (Flip (ITerm a) e) where
+instance (Recursively KFunctor e, Recursively KFunctorInferOf e) => KFunctor (Flip (ITerm a) e) where
     {-# INLINE mapK #-}
     mapK f =
         withDict (recursively (Proxy @(KFunctor e))) $
-        withDict (recurse (Proxy @(RFunctorInferOf e))) $
+        withDict (recursively (Proxy @(KFunctorInferOf e))) $
         _Flip %~
         \(ITerm pl r x) ->
         ITerm pl
         (mapK (f . E_Flip_ITerm_InferOf_e) r)
         ( mapK
-            ( Proxy @(Recursively KFunctor) #*# Proxy @RFunctorInferOf #*#
+            ( Proxy @(Recursively KFunctor) #*# Proxy @(Recursively KFunctorInferOf) #*#
                 \w -> from _Flip %~ mapK (f . E_Flip_ITerm_e w)
             ) x
         )
 
-instance (Recursively KFoldable e, RFoldableInferOf e) => KFoldable (Flip (ITerm a) e) where
+instance (Recursively KFoldable e, Recursively KFoldableInferOf e) => KFoldable (Flip (ITerm a) e) where
     {-# INLINE foldMapK #-}
     foldMapK f (MkFlip (ITerm _ r x)) =
         withDict (recursively (Proxy @(KFoldable e))) $
-        withDict (recurse (Proxy @(RFoldableInferOf e))) $
+        withDict (recursively (Proxy @(KFoldableInferOf e))) $
         foldMapK (f . E_Flip_ITerm_InferOf_e) r <>
         foldMapK
-        ( Proxy @(Recursively KFoldable) #*# Proxy @RFoldableInferOf #*#
+        ( Proxy @(Recursively KFoldable) #*# Proxy @(Recursively KFoldableInferOf) #*#
             \w -> foldMapK (f . E_Flip_ITerm_e w) . (_Flip #)
         ) x
 

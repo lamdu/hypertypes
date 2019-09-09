@@ -173,10 +173,6 @@ instance RNodes Row
 instance RTraversable Typ
 instance RTraversable Row
 
-instance RFunctorInferOf Typ
-instance RFunctorInferOf Row
-instance RFoldableInferOf Typ
-instance RFoldableInferOf Row
 instance RTraversableInferOf Typ
 instance RTraversableInferOf Row
 
