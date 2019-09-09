@@ -35,10 +35,11 @@ instance c Typ => Recursively c Typ
 instance RTraversable Expr
 instance RTraversable Typ
 
-exprA :: KPlain Expr
-exprA = LamP "x" IntTP (VarP "x")
+verboseExpr :: Tree Pure Expr
+verboseExpr = Pure (Lam "x" (Pure IntT) (Pure (Var "x")))
 
-exprB :: KPlain Expr
+exprA, exprB :: KPlain Expr
+exprA = LamP "x" IntTP (VarP "x")
 exprB = LamP "x" (FuncTP IntTP IntTP) (VarP "x")
 
 d :: Tree DiffP Expr

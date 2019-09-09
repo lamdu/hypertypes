@@ -1,11 +1,14 @@
-{-# LANGUAGE TemplateHaskell, FlexibleContexts, UndecidableInstances #-}
+{-# LANGUAGE TemplateHaskell, FlexibleContexts, UndecidableInstances, RankNTypes #-}
 
 module AST.Diff
     ( diff
     , Diff(..), _CommonBody, _CommonSubTree, _Different
     , CommonBody(..), anns, val
+    , foldDiffs
+
     , diffP
     , DiffP(..), _CommonBodyP, _CommonSubTreeP, _DifferentP
+    , foldDiffsP
     ) where
 
 import AST
@@ -59,6 +62,21 @@ diff x@(Ann xA xB) y@(Ann yA yB) =
                     \(Pair xC yC) -> diff xC yC
                 ) match
 
+foldDiffs ::
+    forall r k a b.
+    (Monoid r, Recursively KFoldable k) =>
+    (forall n. KRecWitness k n -> Tree (Ann a) n -> Tree (Ann b) n -> r) ->
+    Tree (Diff a b) k ->
+    r
+foldDiffs _ CommonSubTree{} = mempty
+foldDiffs f (Different (Pair x y)) = f KRecSelf x y
+foldDiffs f (CommonBody (MkCommonBody _ x)) =
+    withDict (recursively (Proxy @(KFoldable k))) $
+    foldMapK
+    ( Proxy @(Recursively KFoldable) #*#
+        \w -> foldDiffs (f . KRecSub w)
+    ) x
+
 data DiffP k
     = CommonSubTreeP (KPlain (GetKnot k))
     | CommonBodyP (k # DiffP)
@@ -98,3 +116,21 @@ diffPH x y =
                 ) match
 
 makeCommonInstances [''Diff, ''CommonBody, ''DiffP]
+
+foldDiffsP ::
+    forall r k.
+    (Monoid r, Recursively KFoldable k, Recursively KHasPlain k) =>
+    (forall n. KHasPlain n => KRecWitness k n -> KPlain n -> KPlain n -> r) ->
+    Tree DiffP k ->
+    r
+foldDiffsP f =
+    withDict (recursively (Proxy @(KHasPlain k))) $
+    \case
+    CommonSubTreeP{} -> mempty
+    DifferentP x y -> f KRecSelf x y
+    CommonBodyP x ->
+        withDict (recursively (Proxy @(KFoldable k))) $
+        foldMapK
+        ( Proxy @(Recursively KFoldable) #*# Proxy @(Recursively KHasPlain) #*#
+            \w -> foldDiffsP (f . KRecSub w)
+        ) x

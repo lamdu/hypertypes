@@ -252,6 +252,105 @@ For this representation, `syntax-tree` offers the power and functionality of HKD
 
 ## Usage examples
 
+First, how do we represent an example expression of the example language declared above? Let's start with a verbose way:
+
+```Haskell
+verboseExpr :: Tree Pure Expr
+verboseExpr =
+    Pure (Lam "x" (Pure IntT) (Pure (Var "x")))
+```
+
+Explanations for the above:
+
+* `Tree Pure Expr` is a type synonym for `Pure ('Knot Expr)`
+* `Pure` is the simple pass-through/identtiy fix-point
+* The above is quite verbose with a lot of `Pure` and parentheses
+
+To write examples and tests more consicely, the `KHasPlain` class, along with a `TemplateHaskell` generator for it, exists:
+
+```Haskell
+> let e = kPlain # verboseExpr
+
+> e
+LamP "x" IntTP (VarP "x")
+
+> :t e
+e :: KPlain Expr
+```
+
+It's now easier to see that `e` represents `\(x:Int). x`
+
+`KPlain` is a data family of "plain versions" of expressions. These are generated automatically via `TemplateHaskell`.
+
+This is similar to how `recursion-tree` can derive a parameterized version of an AST, but in the other way around: the parameterized type is the source and the plain one is generated. We believe this is a good choice because the parameterized type will be used more often in application code.
+
+So now, let's define some example expressions in the shorter way:
+
+```Haskell
+exprA, exprB :: KPlain Expr
+
+exprA = LamP "x" IntTP (VarP "x")
+
+exprB = LamP "x" (FuncTP IntTP IntTP) (VarP "x")
+```
+
+What can we do with these expressions?
+Let's calculate a diff:
+
+```Haskell
+> let d = diffP exprA exprB
+
+> d
+CommonBodyP
+(Lam "x"
+    (DifferentP IntTP (FuncTP IntTP IntTP))
+    (CommonSubTreeP (VarP "x"))
+)
+
+> :t d
+d :: Tree DiffP Expr
+-- (An Expr with the DiffP fix-point)
+```
+
+Let's see the type of `diffP`
+
+```Haskell
+> :t diffP
+diffP ::
+    ( RTraversable k
+    , Recursively ZipMatch k
+    , Recursively KHasPlain k
+    ) =>
+    KPlain k -> KPlain k -> Tree DiffP k
+```
+
+`diffP` can calculate the diff for any AST that is recursively traversable, can be matched, and has a plain representation.
+
+Now, let's format this diff better:
+
+```Haskell
+> let formatDiff _ x y = "- " <> show x <> "\n+ " <> show y
+
+> putStrLn (foldDiffsP formatDiff d)
+- IntTP
++ FuncTP IntTP IntTP
+
+> :t foldDiffsP
+foldDiffsP ::
+    ( Monoid r
+    , Recursively KFoldable k
+    , Recursively KHasPlain k
+    ) =>
+    (forall n. KHasPlain n => KRecWitness k n -> KPlain n -> KPlain n -> r) ->
+    Tree DiffP k ->
+    r
+```
+
+What is does the ignored argument of `formatDiff` stand for?
+This is `KRecWitness k n` in the type of `foldDiffsP` above. It is a witness argument that "proves" that the folded node `n` is a recursive node of `k` (a type parameter from `foldDiffsP`'s type).
+
+## Witness parameters
+
 
 
 ## Understanding `Knot`s

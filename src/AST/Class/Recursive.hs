@@ -7,7 +7,8 @@ module AST.Class.Recursive
     , foldMapRecursive
     , Recursively(..)
     , RNodes, RTraversable
-    , KRecWitness(..), (#>>), (#**#)
+    , KRecWitness(..)
+    , (#>>), (#**#), (##>>)
     ) where
 
 import AST.Class.Foldable
@@ -203,3 +204,14 @@ infixr 0 #**#
     (Recursive c, c k, RNodes k) =>
     Proxy c -> (KRecWitness k n -> (c n => r)) -> KRecWitness k n -> r
 (#**#) p r w = (p #>> r) w w
+
+{-# INLINE (##>>) #-}
+(##>>) ::
+    forall c k n r.
+    Recursively c k =>
+    Proxy c -> (c n => r) -> KRecWitness k n -> r
+(##>>) p r =
+    withDict (recursively (Proxy @(c k))) $
+    \case
+    KRecSelf -> r
+    KRecSub w0 w1 -> (Proxy @(Recursively c) #> (p ##>> r) w1) w0

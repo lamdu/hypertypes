@@ -11,6 +11,7 @@ import AST.Class.Pointed as X (KPointed(..))
 import AST.Class.Recursive as X
     ( Recursive(..), Recursively(..), RNodes, RTraversable
     , KRecWitness(..)
+    , (#>>), (#**#), (##>>)
     )
 import AST.Class.Traversable as X (KTraversable(..), traverseK, traverseK1)
 import AST.Combinator.ANode as X
