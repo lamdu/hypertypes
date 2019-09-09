@@ -282,7 +282,7 @@ It's now easier to see that `e` represents `\(x:Int). x`
 
 `KPlain` is a data family of "plain versions" of expressions. These are generated automatically via `TemplateHaskell`.
 
-This is similar to how `recursion-tree` can derive a parameterized version of an AST, but in the other way around: the parameterized type is the source and the plain one is generated. We believe this is a good choice because the parameterized type will be used more often in application code.
+This is similar to how `recursion-schemes` can derive a parameterized version of an AST, but in the other way around: the parameterized type is the source and the plain one is generated. We believe this is a good choice because the parameterized type will be used more often in application code.
 
 So now, let's define some example expressions in the shorter way:
 
