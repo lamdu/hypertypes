@@ -186,6 +186,7 @@ foldMapRecursive f x =
     ) x
 
 infixr 0 #>>
+infixr 0 ##>>
 infixr 0 #**#
 
 {-# INLINE (#>>) #-}
@@ -199,12 +200,6 @@ infixr 0 #**#
     withDict (recurse (Proxy @(c k))) $
     (Proxy @RNodes #*# p #> (p #>> r) w1) w0
 
-{-# INLINE (#**#) #-}
-(#**#) ::
-    (Recursive c, c k, RNodes k) =>
-    Proxy c -> (KRecWitness k n -> (c n => r)) -> KRecWitness k n -> r
-(#**#) p r w = (p #>> r) w w
-
 {-# INLINE (##>>) #-}
 (##>>) ::
     forall c k n r.
@@ -215,3 +210,9 @@ infixr 0 #**#
     \case
     KRecSelf -> r
     KRecSub w0 w1 -> (Proxy @(Recursively c) #> (p ##>> r) w1) w0
+
+{-# INLINE (#**#) #-}
+(#**#) ::
+    (Recursive c, c k, RNodes k) =>
+    Proxy c -> (KRecWitness k n -> (c n => r)) -> KRecWitness k n -> r
+(#**#) p r w = (p #>> r) w w

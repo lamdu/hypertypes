@@ -272,6 +272,7 @@ makeNodeOf info =
         makeNiceType (ConT x) = makeNiceName (show x)
         makeNiceType (AppT x y) = makeNiceType x <> "_" <> makeNiceType y
         makeNiceType (VarT x) = takeWhile (/= '_') (show x)
+        makeNiceType (SigT x _) = makeNiceType x
         makeNiceType x = error ("TODO: Witness name generator is partial! Need to support " <> show x)
         nodes =
             pats >>= nodesForPat & nub
