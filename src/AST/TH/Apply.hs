@@ -1,5 +1,7 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
 
+-- | Generate 'KApply' and related instances via @TemplateHaskell@
+
 module AST.TH.Apply
     ( makeKApply
     , makeKApplyAndBases

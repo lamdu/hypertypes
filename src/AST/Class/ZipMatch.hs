@@ -1,3 +1,5 @@
+-- | A class to match term structures
+
 module AST.Class.ZipMatch
     ( ZipMatch(..)
     , zipMatch2
@@ -79,7 +81,7 @@ zipMatch_ ::
     Tree k p -> Tree k q -> Maybe (f ())
 zipMatch_ f x y = zipMatch x y <&> traverseK_ (\w (Pair a b) -> f w a b)
 
--- | A variant of 'zipMatchWith_' for 'AST.Knot.Knot's with a single node type (avoids using @RankNTypes@)
+-- | A variant of 'zipMatch_' for 'AST.Knot.Knot's with a single node type (avoids using @RankNTypes@)
 {-# INLINE zipMatch1_ #-}
 zipMatch1_ ::
     (Applicative f, ZipMatch k, KFoldable k, KNodesConstraint k ((~) n)) =>

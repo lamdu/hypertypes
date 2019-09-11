@@ -1,5 +1,7 @@
 {-# LANGUAGE EmptyCase #-}
 
+-- | A class for lifting constraints to child nodes of a 'Knot'.
+
 module AST.Class.Nodes
     ( KNodes(..), KWitness(..)
     , (#>), (#*#)
@@ -63,12 +65,16 @@ instance (KNodes a, KNodes b) => KNodes (Sum a b) where
 infixr 0 #>
 infixr 0 #*#
 
+-- | @Proxy @c #> r@ replaces the witness parameter of @r@ with a constraint on the witnessed node.
 {-# INLINE (#>) #-}
 (#>) ::
     (KNodes k, KNodesConstraint k c) =>
     Proxy c -> (c n => r) -> KWitness k n -> r
 (#>) p r w = kLiftConstraint w p r
 
+-- | A variant of '#>' which does not consume the witness parameter.
+--
+-- @Proxy @c0 #*# Proxy @c1 #> r@ brings into context both the @c0 n@ and @c1 n@ constraints.
 {-# INLINE (#*#) #-}
 (#*#) ::
     (KNodes k, KNodesConstraint k c) =>

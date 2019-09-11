@@ -1,3 +1,5 @@
+-- | A variant of 'Foldable' for 'AST.Knot.Knot's
+
 module AST.Class.Foldable
     ( KFoldable(..)
     , foldMapK1

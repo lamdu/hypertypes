@@ -1,5 +1,7 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
 
+-- | Generate 'KTraversable' and related instances via @TemplateHaskell@
+
 module AST.TH.Traversable
     ( makeKTraversable
     , makeKTraversableAndFoldable

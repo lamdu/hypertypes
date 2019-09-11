@@ -1,3 +1,5 @@
+-- | A variant of 'Data.Pointed.Pointed' for 'AST.Knot.Knot's
+
 module AST.Class.Pointed
     ( KPointed(..)
     ) where

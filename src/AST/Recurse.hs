@@ -28,7 +28,7 @@ data KRecWitness k n where
     KRecSelf :: KRecWitness k k
     KRecSub :: KWitness k c -> KRecWitness c n -> KRecWitness k n
 
--- | Monadically convert a 'Pure' 'Tree' to a different 'Knot' from the bottom up
+-- | Monadically convert a 'Pure' 'Tree' to a different 'AST.Knot.Knot' from the bottom up
 {-# INLINE wrapM #-}
 wrapM ::
     forall m k w.

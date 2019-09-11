@@ -1,3 +1,9 @@
+-- | 'Knot' is the 'Data.Kind.Kind' for nested higher-kinded data.
+--
+-- This library revolves around 'Knot's, which enable encoding many rich recursive structures.
+--
+-- For more information see the [README](https://github.com/lamdu/syntax-tree/blob/master/README.md).
+
 module AST.Knot
     ( Knot(..), GetKnot
     , Tree, type (#)
@@ -9,10 +15,6 @@ import Data.Kind (Type)
 import Prelude.Compat
 
 -- | A 'Data.Kind.Kind' for nested higher-kinded data.
---
--- This library revolves around 'Knot's, which enable encoding many rich recursive structures.
---
--- For more information see the [README](https://github.com/lamdu/syntax-tree/blob/master/README.md).
 newtype Knot = Knot (Knot -> Type)
 
 -- | A type-level getter for the type constructor encoded in 'Knot'.

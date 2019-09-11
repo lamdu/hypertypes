@@ -1,4 +1,8 @@
-{-# LANGUAGE UndecidableSuperClasses, UndecidableInstances, FlexibleInstances #-}
+-- | Compose two knots.
+--
+-- Inspired by [hyperfunctions' @Category@ instance](http://hackage.haskell.org/package/hyperfunctions-0/docs/Control-Monad-Hyper.html).
+
+{-# LANGUAGE UndecidableSuperClasses, UndecidableInstances, FlexibleInstances, TemplateHaskell #-}
 
 module AST.Combinator.Compose
     ( Compose(..), _Compose
@@ -13,19 +17,22 @@ import           AST.Class.Pointed
 import           AST.Class.Traversable
 import           AST.Class.ZipMatch (ZipMatch(..))
 import           AST.Knot
-import           Control.DeepSeq (NFData)
+import           AST.TH.Internal.Instances (makeCommonInstances)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Data.Binary (Binary)
 import           Data.Functor.Product.PolyKinds (Product(..))
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 
 import           Prelude.Compat
 
+-- | Compose two knots as an external and internal layer.
 newtype Compose a b k = MkCompose { getCompose :: Tree a (Compose b (GetKnot k)) }
     deriving stock Generic
 
+makeCommonInstances [''Compose]
+
+-- | An 'Control.Lens.Iso' for the 'Compose' @newtype@
 {-# INLINE _Compose #-}
 _Compose ::
     Lens.Iso
@@ -117,10 +124,3 @@ instance
                 <&> (_Compose #)
             )
         <&> (_Compose #)
-
-type InCompose a b k = Tree a (Compose b (GetKnot k))
-deriving instance Eq   (InCompose a b k) => Eq   (Compose a b k)
-deriving instance Ord  (InCompose a b k) => Ord  (Compose a b k)
-deriving instance Show (InCompose a b k) => Show (Compose a b k)
-instance Binary (InCompose a b k) => Binary (Compose a b k)
-instance NFData (InCompose a b k) => NFData (Compose a b k)

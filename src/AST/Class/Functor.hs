@@ -1,3 +1,5 @@
+-- | A variant of 'Functor' for 'AST.Knot.Knot's
+
 module AST.Class.Functor
     ( KFunctor(..)
     , mappedK1

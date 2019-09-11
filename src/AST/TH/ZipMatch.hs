@@ -1,5 +1,7 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
 
+-- | Generate 'ZipMatch' instances via @TemplateHaskell@
+
 module AST.TH.ZipMatch
     ( makeZipMatch
     ) where

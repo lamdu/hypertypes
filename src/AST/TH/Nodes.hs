@@ -1,5 +1,7 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
 
+-- | Generate 'KNodes' instances via @TemplateHaskell@
+
 module AST.TH.Nodes
     ( makeKNodes
     ) where

@@ -1,5 +1,7 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
 
+-- | Generate 'KFunctor' instances via @TemplateHaskell@
+
 module AST.TH.Functor
     ( makeKFunctor
     ) where

@@ -1,5 +1,7 @@
 {-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances #-}
 
+-- | A simple 'AST.Knot.Knot' with a single child node
+
 module AST.Combinator.ANode
     ( ANode(..), _ANode
     ) where

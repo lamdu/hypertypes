@@ -1,3 +1,9 @@
+-- | A 'AST.Knot.Knot' to express the simplest plain form of a nested higher-kinded data structure.
+--
+-- The value level [hyperfunctions](http://hackage.haskell.org/package/hyperfunctions)
+-- equivalent of 'Pure' is called @self@ in
+-- [Hyperfunctions papers](https://arxiv.org/abs/1309.5135).
+
 {-# LANGUAGE UndecidableInstances, TemplateHaskell #-}
 module AST.Knot.Pure
     ( Pure(..), _Pure, KWitness(..)
@@ -13,11 +19,7 @@ import Control.Lens.Operators
 import GHC.Generics (Generic)
 import Text.PrettyPrint.HughesPJClass (Pretty(..))
 
--- | A 'AST.Knot.Knot' to express the simplest plain form of a nested higher-kinded data structure.
---
--- The value level [hyperfunctions](http://hackage.haskell.org/package/hyperfunctions)
--- equivalent of 'Pure' is called @self@ in
--- [Hyperfunctions papers](https://arxiv.org/abs/1309.5135).
+-- | A 'AST.Knot.Knot' to express the simplest plain form of a nested higher-kinded data structure
 newtype Pure k = Pure (k # Pure)
     deriving stock Generic
 

@@ -1,5 +1,7 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
 
+-- | Generate 'KHasPlain' instances via @TemplateHaskell@
+
 module AST.TH.HasPlain
     ( makeKHasPlain
     ) where

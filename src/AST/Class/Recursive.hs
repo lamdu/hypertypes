@@ -1,3 +1,5 @@
+-- | Classes applying on 'Knot's' recursively
+
 {-# LANGUAGE DefaultSignatures, FlexibleContexts, FlexibleInstances #-}
 
 module AST.Class.Recursive

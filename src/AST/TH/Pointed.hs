@@ -1,5 +1,7 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
 
+-- | Generate 'KPointed' instances via @TemplateHaskell@
+
 module AST.TH.Pointed
     ( makeKPointed
     ) where

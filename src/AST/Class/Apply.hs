@@ -1,3 +1,5 @@
+-- | A variant of 'Data.Functor.Apply.Apply' for 'AST.Knot.Knot's
+
 {-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
 
 module AST.Class.Apply

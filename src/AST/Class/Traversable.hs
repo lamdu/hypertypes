@@ -1,3 +1,5 @@
+-- | A variant of 'Traversable' for 'Knot's
+
 module AST.Class.Traversable
     ( KTraversable(..)
     , ContainedK(..), _ContainedK
@@ -21,6 +23,7 @@ import Prelude.Compat
 -- Used to express 'sequenceK'.
 newtype ContainedK f p (k :: Knot) = MkContainedK { runContainedK :: f (p k) }
 
+-- | An 'Iso' for the 'ContainedK' @newtype@
 {-# INLINE _ContainedK #-}
 _ContainedK ::
     Iso (Tree (ContainedK f0 p0) k0)

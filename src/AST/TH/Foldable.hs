@@ -1,5 +1,7 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
 
+-- | Generate 'KFoldable' instances via @TemplateHaskell@
+
 module AST.TH.Foldable
     ( makeKFoldable
     ) where

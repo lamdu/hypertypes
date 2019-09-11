@@ -1,3 +1,5 @@
+-- | A combinator to flip the order of the last two type parameters of a 'AST.Knot.Knot'.
+
 module AST.Combinator.Flip
     ( Flip(..), _Flip
     ) where
@@ -5,7 +7,7 @@ module AST.Combinator.Flip
 import AST.Knot (Tree, GetKnot)
 import Control.Lens (Iso, iso)
 
--- | Flip the order of the last two type type parameters of a 'AST.Knot.Knot'.
+-- | Flip the order of the last two type parameters of a 'AST.Knot.Knot'.
 --
 -- Useful to use instances of classes such as 'AST.Class.Traversable.KTraversable' which
 -- are available on the flipped knot.
