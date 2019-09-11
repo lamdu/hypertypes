@@ -5,7 +5,6 @@ module AST.Class.Infer
     , Infer(..)
     , InferChild(..), _InferChild
     , InferredChild(..), inType, inRep
-    , LocalScopeType(..)
     ) where
 
 import           AST
@@ -106,8 +105,3 @@ instance (InferOf a ~ InferOf b, Infer m a, Infer m b) => Infer m (Sum a b) wher
     inferContext p _ =
         withDict (inferContext p (Proxy @a)) $
         withDict (inferContext p (Proxy @b)) Dict
-
--- | @LocalScopeType var scheme m@ represents that @m@ maintains a scope mapping variables of type @var@ to type schemes of type @scheme@
-class LocalScopeType var scheme m where
-    -- | Add a variable type into an action's scope
-    localScopeType :: var -> scheme -> m a -> m a
