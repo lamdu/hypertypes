@@ -14,6 +14,7 @@ import           AST
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           AST.Class.Traversable
 import           AST.Combinator.Flip
+import           AST.Recurse
 import           AST.TH.Internal.Instances (makeCommonInstances)
 import           AST.Unify.Constraints
 import           AST.Unify.Lookup (semiPruneLookup)

@@ -7,6 +7,7 @@ import           AST
 import           AST.Class.Has
 import           AST.Class.Unify
 import           AST.Infer
+import           AST.Recurse
 import           AST.Term.FuncType
 import           AST.Term.NamelessScope
 import           AST.Term.Nominal

@@ -12,6 +12,7 @@ module AST.Class.Infer
 
 import           AST
 import           AST.Class.Unify
+import           AST.Recurse
 import           Control.Lens (Lens', ALens', makeLenses, makePrisms)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators

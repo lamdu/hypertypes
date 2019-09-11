@@ -19,6 +19,7 @@ import           AST.Class.Recursive
 import           AST.Combinator.ANode (ANode)
 import           AST.Combinator.Flip (Flip(..))
 import           AST.Infer
+import           AST.Recurse
 import           AST.TH.Internal.Instances (makeCommonInstances)
 import           AST.Unify
 import           AST.Unify.Lookup (semiPruneLookup)

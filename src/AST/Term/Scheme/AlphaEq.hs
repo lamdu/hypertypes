@@ -7,8 +7,8 @@ module AST.Term.Scheme.AlphaEq
 
 import           AST
 import           AST.Class.Has (HasChild(..))
-import           AST.Class.Recursive (wrapM, (#>>))
 import           AST.Class.ZipMatch (zipMatch_)
+import           AST.Recurse (wrapM, (#>>))
 import           AST.Term.Scheme
 import           AST.Unify
 import           AST.Unify.New (newTerm)

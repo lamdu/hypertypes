@@ -9,6 +9,7 @@ import           AST
 import           AST.Class.Unify
 import           AST.Combinator.Flip
 import           AST.Infer
+import           AST.Recurse
 import           AST.Term.App
 import           AST.Term.Lam
 import           AST.Term.Let

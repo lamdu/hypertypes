@@ -11,6 +11,7 @@ import           AST
 import           AST.Class.Infer.Infer1
 import           AST.Class.Unify
 import           AST.Infer
+import           AST.Recurse
 import           AST.Term.App
 import           AST.Term.NamelessScope
 import           AST.Term.NamelessScope.InvDeBruijn

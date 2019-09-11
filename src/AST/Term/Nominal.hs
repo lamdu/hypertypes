@@ -17,11 +17,11 @@ module AST.Term.Nominal
 
 import           AST
 import           AST.Class.Has (HasChild(..))
-import           AST.Class.Recursive
 import           AST.Class.Traversable (ContainedK(..))
 import           AST.Class.ZipMatch (ZipMatch(..))
 import           AST.Combinator.Flip (_Flip)
 import           AST.Infer
+import           AST.Recurse
 import           AST.Term.FuncType (FuncType(..))
 import           AST.Term.Map (TermMap(..), _TermMap)
 import           AST.Term.Scheme

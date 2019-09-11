@@ -3,8 +3,8 @@ module AST.Unify.New
     ) where
 
 import AST (Tree, Pure)
-import AST.Class.Recursive
 import AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
+import AST.Recurse (wrapM, (#>>))
 import AST.Unify.Constraints (MonadScopeConstraints(..))
 import AST.Unify.Term (UTerm(..), UTermBody(..))
 import Data.Proxy (Proxy(..))

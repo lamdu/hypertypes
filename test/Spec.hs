@@ -1,10 +1,10 @@
 {-# LANGUAGE FlexibleContexts, BlockArguments #-}
 
 import           AST
-import           AST.Class.Recursive
 import           AST.Class.Unify
 import           AST.Combinator.Flip
 import           AST.Infer
+import           AST.Recurse
 import           AST.Term.NamelessScope (EmptyScope)
 import           AST.Term.Nominal
 import           AST.Term.Scheme

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e656f0bc0188bdf130f65081832d79e1b5e8108a8064097a9f0957b503767b34
+-- hash: 2d4cd2fd9001096fbcc3eed9d93f375c4fdaef16caaa2c9ec538f1f7531ba328
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -58,6 +58,7 @@ library
       AST.Knot.Ann.Arbitrary
       AST.Knot.Functor
       AST.Knot.Pure
+      AST.Recurse
       AST.Term.App
       AST.Term.FuncType
       AST.Term.Lam

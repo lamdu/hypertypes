@@ -9,11 +9,11 @@ module AST.Knot.Ann
 import           AST.Class.Functor (KFunctor(..))
 import           AST.Class.Monad
 import           AST.Class.Nodes (KNodes(..), (#>))
-import           AST.Class.Recursive
 import           AST.Class.Traversable (traverseK)
 import           AST.Combinator.Compose
 import           AST.Knot (Tree, type (#))
 import           AST.Knot.Pure (Pure(..))
+import           AST.Recurse
 import           AST.TH.Traversable (makeKTraversableApplyAndBases)
 import           AST.TH.ZipMatch (makeZipMatch)
 import           AST.TH.Internal.Instances (makeCommonInstances)

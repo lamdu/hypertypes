@@ -49,6 +49,7 @@ import AST.Class.Traversable (ContainedK(..))
 import AST.Class.Unify (Unify, UVarOf)
 import AST.Combinator.Flip
 import AST.Infer.Term (ITermVarsConstraint(..))
+import AST.Recurse
 import AST.TH.Internal.Instances (makeCommonInstances)
 import AST.Unify.Occurs (occursCheck)
 import Control.Lens (makeLenses, from)

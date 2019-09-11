@@ -13,6 +13,7 @@ module AST.Diff
 
 import AST
 import AST.Class.ZipMatch (ZipMatch(..))
+import AST.Recurse
 import AST.TH.Internal.Instances (makeCommonInstances)
 import Control.Lens (makeLenses, makePrisms)
 import Control.Lens.Operators
