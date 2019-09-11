@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, TemplateHaskell, UndecidableInstances, GADTs, FlexibleInstances #-}
+{-# LANGUAGE OverloadedStrings, TemplateHaskell, UndecidableInstances, FlexibleInstances #-}
 
 module ReadMeExamples where
 

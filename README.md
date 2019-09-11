@@ -395,6 +395,29 @@ When mapping over an `Expr` we can:
 
 `multirec` ties this knot by using indices to represent types. `syntax-tree` does this by using `DataKinds` and the `Knot` `newtype` which is used for both structures and their fix-points An implication of the two being the same is that the same classes and combinators are re-used for both.
 
+## What Haskell is this
+
+`syntax-tree` is implemented with GHC and heavily relies on quite a few language extensions:
+
+* `ConstraintKinds` and `TypeFamilies` are needed for the `KNodesConstraint` type family which lifts a constraint to apply over a value's nodes. Type families are also used to encode term's results in type inference.
+* `DataKinds` allows parameterizing types over `Knot`s
+* `DefaultSignatures` is used for default methods that return `Dict`s to avoid undecidable super-classes
+* `DeriveGeneric`, `DerivingVia`, `GeneralizedNewtypeDeriving`, `StandaloneDeriving` and `TemplateHaskell` are used to derive type-class instances
+* `EmptyCase` is needed for instances of leaf nodes
+* `FlexibleContexts`, `FlexibleInstances` and `UndecidableInstances` are required to specify many constraints
+* `GADTs` and `RankNTypes` enable functions like `mapK` which get `forall`ed functions with witness parameters
+* `MultiParamTypeClasses` is needed for the `Unify` and `Infer` type classes
+* `PolyKinds` is used for re-using combinators such as `Product` and `Sum` rather than defining specifically kinded variants of them
+* `ScopedTypeVariables` and `TypeApplications` assist writing short code that type checks
+
+Many harmless syntactic extensions are also used:
+
+* `DerivingStrategies`, `LambdaCase`, `TupleSections`, `TypeOperators`
+
+Some extensions we use but would like to avoid (we're looking for alternative solutions but haven't found them):
+
+* `UndecidableSuperClasses` is currently in use in `AST.Combinator.Compose`
+
 ## How does syntax-tree compare/relate to
 
 Note that comparisons to HKD, `recursion-schemes`, `multirec`, `rank2classes`, and `unification-fd` were discussed in depth above.
@@ -417,6 +440,53 @@ For more info on hyperfunctions and their use cases in the value level see [LKS2
 
 * [KLP2001] S. Krstic, J. Launchbury, and D. Pavlovic. Hyperfunctions. In Proceeding of Fixed Points in Computer Science, FICS 2001
 * [LKS2013] J. Launchbury, S. Krstic, T. E. Sauerwein. [Coroutining Folds with Hyperfunctions](https://arxiv.org/abs/1309.5135). In In Proceedings Festschrift for Dave Schmidt, EPTCS 2013
+
+### Data Types a la Carte
+
+[Data Types a la Carte](http://www.staff.science.uu.nl/~swier004/publications/2008-jfp.pdf) (DTALC) describes how to define ASTs structurally.
+
+I.e, rather than having
+
+```Haskell
+data Expr a
+    = Val Int
+    | Add a a -- "a" stands for a sub-expression (recursion-schemes style)
+```
+
+We can have
+
+```Haskell
+newtype Val a = Val Int
+
+data Add a = Add a a
+
+-- Expr is a structural sum of Val and Add
+type Expr = Val :+: Add
+```
+
+This enables re-usability of the AST elements `Val` and `Add` in various ASTs, where the functionality is shared via type classes. Code using these type classes can work generically for different ASTs.
+
+Like DTALC, `syntax-tree` has:
+
+* Instances for combinators such as `Product` and `Sum`, so that these can be used to build ASTs
+* Implementations of common AST terms in the `AST.Term` module hierarchy (`App`, `Lam`, `Let`, `Var`, `TypeSig` and others)
+* Classes like `KFunctor`, `KTraversable`, `Unify`, `Infer` with instances for the provided AST terms
+
+As an example of a reusable term let's look at the definition of `App`:
+
+```Haskell
+-- | A term for function applications.
+data App expr k = App
+    { _appFunc :: k # expr
+    , _appArg :: k # expr
+    }
+```
+
+Unlike a DTALC-based apply, which would be parameterized by a single type parameter `(a :: Type)`, `App` is parameterized on two type parameters, `(expr :: Knot -> Type)` and `(k :: Knot)`. `expr` represents the node type of `App expr`'s child nodes and `k` is the tree's fix-point. This enables using `App` in mutually recursive ASTs where it may be parameterized by several different `expr`s.
+
+Unlike the original DTALC paper which isn't suitable for mutually recursive ASTs, in `syntax-tree` one would have to declare an explicit expression type for each expression type for use as `App`'s `expr` type parameter. Similarly, `multirec`'s DTALC variant also requires explicitly declaring type indices.
+
+While it is possible to declare ASTs as `newtype`s wrapping `Sum`s and `Product`s of existing terms and deriving all the instances via `GeneralizedNewtypeDeriving`, our usage and examples declare types in the straight forward way, with named data constructors, as we think results in more readable and performant code.
 
 ### bound
 

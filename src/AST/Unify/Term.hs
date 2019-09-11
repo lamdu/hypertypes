@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, FlexibleContexts, UndecidableInstances #-}
+{-# LANGUAGE TemplateHaskell, UndecidableInstances #-}
 
 module AST.Unify.Term
     ( UTerm(..)

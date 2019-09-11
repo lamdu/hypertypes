@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 15fce14ebc07c9a0c333a7537a9a19476de2d466759c164935f1be8986afeeff
+-- hash: e656f0bc0188bdf130f65081832d79e1b5e8108a8064097a9f0957b503767b34
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -100,7 +100,7 @@ library
       AST.TH.Internal.Utils
   hs-source-dirs:
       src
-  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies LambdaCase MultiParamTypeClasses ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeOperators TypeFamilies NoImplicitPrelude
+  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies GADTs LambdaCase MultiParamTypeClasses RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeOperators TypeFamilies NoImplicitPrelude
   ghc-options: -fexpose-all-unfoldings -Wall -Wnoncanonical-monad-instances -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
   ghc-prof-options: -fexpose-all-unfoldings
   build-depends:
@@ -138,7 +138,7 @@ test-suite syntax-tree-test
       TypeLang.Pure
   hs-source-dirs:
       test
-  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies LambdaCase MultiParamTypeClasses ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeOperators TypeFamilies
+  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies GADTs LambdaCase MultiParamTypeClasses RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeOperators TypeFamilies
   ghc-options: -Wall -Wcompat -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.9 && <5
@@ -165,7 +165,7 @@ benchmark syntax-tree-bench
       TypeLang.Pure
   hs-source-dirs:
       test
-  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies LambdaCase MultiParamTypeClasses ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeOperators TypeFamilies
+  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies GADTs LambdaCase MultiParamTypeClasses RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeOperators TypeFamilies
   ghc-options: -O2 -Wall -Wnoncanonical-monad-instances -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
   build-depends:
       base >=4.9 && <5

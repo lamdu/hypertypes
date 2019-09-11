@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances, GADTs #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances #-}
 
 module AST.Term.Lam
     ( Lam(..), lamIn, lamOut, KWitness(..)

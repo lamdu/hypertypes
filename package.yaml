@@ -33,8 +33,10 @@ default-extensions:
 - DataKinds
 - DeriveGeneric
 - DerivingStrategies
+- GADTs
 - LambdaCase
 - MultiParamTypeClasses
+- RankNTypes
 - ScopedTypeVariables
 - StandaloneDeriving
 - TupleSections

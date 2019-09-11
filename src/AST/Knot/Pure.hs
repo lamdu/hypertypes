@@ -1,4 +1,4 @@
-{-# LANGUAGE UndecidableInstances, TemplateHaskell, GADTs #-}
+{-# LANGUAGE UndecidableInstances, TemplateHaskell #-}
 module AST.Knot.Pure
     ( Pure(..), _Pure, KWitness(..)
     , (&#)

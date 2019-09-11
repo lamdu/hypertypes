@@ -1,6 +1,6 @@
 -- | Type signatures
 
-{-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances, GADTs #-}
+{-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances #-}
 
 module AST.Term.TypeSig
     ( TypeSig(..), tsType, tsTerm, KWitness(..)

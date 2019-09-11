@@ -1,4 +1,4 @@
-{-# LANGUAGE UndecidableInstances, TemplateHaskell, GADTs, FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances #-}
 
 module AST.Combinator.ANode
     ( ANode(..), _ANode

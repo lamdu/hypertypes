@@ -1,5 +1,4 @@
-{-# LANGUAGE TemplateHaskell, RankNTypes, UndecidableInstances, GADTs #-}
-{-# LANGUAGE FlexibleInstances, FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances, FlexibleContexts #-}
 
 module AST.Knot.Ann
     ( Ann(..), ann, val, KWitness(..)

@@ -1,7 +1,6 @@
 -- | Row types
 
-{-# LANGUAGE FlexibleInstances, UndecidableInstances, GADTs #-}
-{-# LANGUAGE FlexibleContexts, RankNTypes, TemplateHaskell #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances, FlexibleContexts, TemplateHaskell #-}
 
 module AST.Term.Row
     ( RowConstraints(..), RowKey

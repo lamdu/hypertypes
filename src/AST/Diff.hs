@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, FlexibleContexts, UndecidableInstances, RankNTypes #-}
+{-# LANGUAGE TemplateHaskell, FlexibleContexts, UndecidableInstances #-}
 
 module AST.Diff
     ( diff

@@ -1,6 +1,6 @@
 -- | Functors as Knots
 {-# LANGUAGE TemplateHaskell, FlexibleInstances, FlexibleContexts #-}
-{-# LANGUAGE UndecidableInstances, GeneralizedNewtypeDeriving, GADTs #-}
+{-# LANGUAGE UndecidableInstances, GeneralizedNewtypeDeriving #-}
 module AST.Knot.Functor
     ( F(..), _F, KWitness(..)
     ) where

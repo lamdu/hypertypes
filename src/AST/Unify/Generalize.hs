@@ -1,5 +1,4 @@
-{-# LANGUAGE UndecidableInstances, TemplateHaskell, RankNTypes, FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances #-}
 
 module AST.Unify.Generalize
     ( generalize, instantiate

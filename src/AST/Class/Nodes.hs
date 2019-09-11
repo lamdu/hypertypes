@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs, RankNTypes, EmptyCase #-}
+{-# LANGUAGE EmptyCase #-}
 
 module AST.Class.Nodes
     ( KNodes(..), KWitness(..)

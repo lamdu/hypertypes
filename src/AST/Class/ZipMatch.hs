@@ -1,5 +1,3 @@
-{-# LANGUAGE RankNTypes #-}
-
 module AST.Class.ZipMatch
     ( ZipMatch(..)
     , zipMatch2

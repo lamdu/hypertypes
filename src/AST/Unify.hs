@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, BangPatterns #-}
+{-# LANGUAGE BangPatterns #-}
 
 module AST.Unify
     ( unify

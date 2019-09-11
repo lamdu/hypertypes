@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
 
 module AST.Class.Apply
     ( KApply(..), KApplicative

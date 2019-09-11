@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, UndecidableInstances, TemplateHaskell, GADTs #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances, TemplateHaskell #-}
 
 module AST.Term.App
     ( App(..), appFunc, appArg, KWitness(..)

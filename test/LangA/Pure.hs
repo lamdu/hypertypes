@@ -1,4 +1,3 @@
-{-# LANGUAGE RankNTypes #-}
 -- | Pure combinators for LangA
 
 module LangA.Pure

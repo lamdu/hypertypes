@@ -1,5 +1,3 @@
-{-# LANGUAGE RankNTypes #-}
-
 module AST.Class.Foldable
     ( KFoldable(..)
     , foldMapK1

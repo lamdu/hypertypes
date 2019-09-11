@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell, FlexibleInstances, FlexibleContexts #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving, UndecidableInstances, GADTs #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, UndecidableInstances #-}
 
 module LangB where
 

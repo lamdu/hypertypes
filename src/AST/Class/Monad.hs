@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes, FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module AST.Class.Monad
     ( KMonad(..), bindK

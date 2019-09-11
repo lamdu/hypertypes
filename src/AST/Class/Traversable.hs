@@ -1,5 +1,3 @@
-{-# LANGUAGE RankNTypes #-}
-
 module AST.Class.Traversable
     ( KTraversable(..)
     , ContainedK(..), _ContainedK

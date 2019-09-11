@@ -33,7 +33,7 @@
 -- [I](https://github.com/yairchu/) would very much like to know!
 
 {-# LANGUAGE FlexibleContexts, DefaultSignatures, TemplateHaskell #-}
-{-# LANGUAGE FlexibleInstances, UndecidableInstances, RankNTypes, GADTs #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
 
 module AST.Infer.Blame
     ( blame

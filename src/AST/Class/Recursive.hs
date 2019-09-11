@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes, DefaultSignatures, GADTs, FlexibleContexts, FlexibleInstances #-}
+{-# LANGUAGE DefaultSignatures, FlexibleContexts, FlexibleInstances #-}
 
 module AST.Class.Recursive
     ( Recursive(..)

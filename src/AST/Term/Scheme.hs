@@ -1,7 +1,7 @@
 -- | Type schemes
 
 {-# LANGUAGE TemplateHaskell, FlexibleContexts, DefaultSignatures #-}
-{-# LANGUAGE FlexibleInstances, UndecidableInstances, GADTs #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
 
 module AST.Term.Scheme
     ( Scheme(..), sForAlls, sTyp, KWitness(..)

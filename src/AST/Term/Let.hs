@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances, GADTs #-}
+{-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances #-}
 
 module AST.Term.Let
     ( Let(..), letVar, letEquals, letIn, KWitness(..)

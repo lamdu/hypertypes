@@ -1,5 +1,3 @@
-{-# LANGUAGE RankNTypes #-}
-
 module AST.Class.Functor
     ( KFunctor(..)
     , mappedK1

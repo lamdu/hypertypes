@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, UndecidableInstances, TemplateHaskell, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE UndecidableInstances, TemplateHaskell, GeneralizedNewtypeDeriving #-}
 
 module AST.Unify.Binding
     ( UVar(..), _UVar

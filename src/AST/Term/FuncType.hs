@@ -1,4 +1,4 @@
-{-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances, GADTs #-}
+{-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances #-}
 
 module AST.Term.FuncType
     ( FuncType(..), funcIn, funcOut, KWitness(..)

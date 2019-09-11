@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, UndecidableInstances, GADTs, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances #-}
 
 module AST.Unify.Error
     ( UnifyError(..)

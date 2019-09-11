@@ -1,4 +1,4 @@
-{-# LANGUAGE UndecidableSuperClasses, UndecidableInstances, FlexibleInstances, GADTs #-}
+{-# LANGUAGE UndecidableSuperClasses, UndecidableInstances, FlexibleInstances #-}
 
 module AST.Combinator.Compose
     ( Compose(..), _Compose
