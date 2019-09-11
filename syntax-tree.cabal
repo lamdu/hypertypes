@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f87ab5d1ddff9d5eed7079ddec32fb95fec6a4dcab2b8c2659b8adc08bf850d4
+-- hash: 15fce14ebc07c9a0c333a7537a9a19476de2d466759c164935f1be8986afeeff
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -94,6 +94,7 @@ library
       AST.Unify.QuantifiedVar
       AST.Unify.Term
       Data.Functor.Product.PolyKinds
+      Data.Functor.Sum.PolyKinds
   other-modules:
       AST.TH.Internal.Instances
       AST.TH.Internal.Utils
