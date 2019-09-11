@@ -1,6 +1,6 @@
-{-# LANGUAGE TemplateHaskell, FlexibleContexts #-}
+-- | Load serialized a binding state to 'Control.Monad.ST.ST' based bindings
 
--- | Load state from pure bindings to ST based bindings
+{-# LANGUAGE TemplateHaskell, FlexibleContexts #-}
 
 module AST.Unify.Binding.ST.Load
     ( load
@@ -90,6 +90,9 @@ loadBody src conv =
         #> loadVar src conv
     )
 
+-- | Load a given serialized unification
+-- and a value with serialized unification variable identifiers
+-- to a value with 'Control.Monad.ST.ST' unification variables.
 load ::
     ( MonadST m
     , UVarOf m ~ STUVar (World m)

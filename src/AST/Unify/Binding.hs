@@ -1,3 +1,5 @@
+-- | A pure data structures implementation of unification variables state
+
 {-# LANGUAGE UndecidableInstances, TemplateHaskell, GeneralizedNewtypeDeriving #-}
 
 module AST.Unify.Binding
@@ -21,20 +23,24 @@ import           GHC.Generics (Generic)
 
 import           Prelude.Compat
 
+-- | A unification variable identifier pure state based unification
 newtype UVar (t :: Knot) = UVar Int
     deriving stock (Generic, Show)
     deriving newtype (Eq, Ord)
 Lens.makePrisms ''UVar
 
+-- | The state of unification variables implemented in a pure data structure
 newtype Binding t = Binding (Seq (UTerm UVar t))
     deriving stock Generic
 
 Lens.makePrisms ''Binding
 makeCommonInstances [''Binding]
 
+-- | An empty 'Binding'
 emptyBinding :: Binding t
 emptyBinding = Binding mempty
 
+-- | A 'BindingDict' for 'UVar's in a 'MonadState' whose state contains a 'Binding'
 {-# INLINE bindingDict #-}
 bindingDict ::
     MonadState s m =>

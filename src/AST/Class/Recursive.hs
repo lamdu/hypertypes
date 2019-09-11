@@ -1,4 +1,4 @@
--- | Classes applying on 'Knot's' recursively
+-- | Classes applying on 'Knot's recursively
 
 {-# LANGUAGE DefaultSignatures, FlexibleContexts, FlexibleInstances #-}
 

@@ -50,7 +50,7 @@ makeLenses ''InferredChild
 -- | A 'Knot' containing an inference action.
 --
 -- The caller may modify the scope before invoking the action via
--- 'localScopeType' or 'AST.Infer.ScopeLevel.localLevel'
+-- 'AST.Class.Infer.Env.localScopeType' or 'AST.Infer.ScopeLevel.localLevel'
 newtype InferChild m k t =
     InferChild { inferChild :: m (InferredChild (UVarOf m) k t) }
 makePrisms ''InferChild

@@ -1,3 +1,5 @@
+-- | Resolve terms from unification variables.
+
 module AST.Unify.Apply
     ( applyBindings
     ) where
@@ -17,6 +19,11 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
+-- | Resolve a term from a unification variable.
+--
+-- Note that this must be done after
+-- all unifications involving the term and its children are done,
+-- as it replaces unification state with cached resolved terms.
 {-# INLINE applyBindings #-}
 applyBindings ::
     forall m t.

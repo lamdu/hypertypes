@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
--- | Unification variables binding in the 'Data.ST.ST' monad
+-- | Unification variables binding in the 'Control.Monad.ST.ST' monad
 
 module AST.Unify.Binding.ST
     ( STUVar(..), _STUVar
@@ -16,7 +16,7 @@ import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 
 import           Prelude.Compat
 
--- | A unification variable in the 'Data.ST.ST' monad
+-- | A unification variable in the 'Control.Monad.ST.ST' monad
 newtype STUVar s t = STUVar (STRef s (UTerm (STUVar s) t))
     deriving stock Eq
 Lens.makePrisms ''STUVar

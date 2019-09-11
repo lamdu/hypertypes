@@ -1,3 +1,5 @@
+-- | Unification
+
 {-# LANGUAGE BangPatterns #-}
 
 module AST.Unify
@@ -81,7 +83,7 @@ updateTermConstraintsH (WithConstraint c v0) =
         (v1, x) <- semiPruneLookup v0
         updateConstraints c v1 x
 
--- | Unification of terms
+-- | Unify unification variables
 {-# INLINE unify #-}
 unify ::
     forall m t.

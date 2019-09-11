@@ -1,4 +1,4 @@
--- | Serialize the state of unification.
+-- | Serialize the state of unification
 
 {-# LANGUAGE FlexibleContexts #-}
 
@@ -70,6 +70,10 @@ saveBody =
         #> saveVar
     )
 
+-- | Serialize the state of unification for
+-- the unification variables in a given value,
+-- and transform the value's unification variables
+-- to their serialized identifiers.
 save ::
     (Unify m t, Recursively (HasChild typeVars) t) =>
     Tree t (UVarOf m) ->

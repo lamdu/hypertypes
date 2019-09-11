@@ -18,7 +18,7 @@
 -- * Invoke all the 'inferBody' calls as 'AST.Infer.infer' normally would,
 --   but with one important difference:
 --   where 'inferBody' would normally get the actual inference results of its child nodes,
---   placeholders are generated in their place via 'inferOfNewUnbound'.
+--   placeholders are generated in their place
 -- * Globally sort all of the tree nodes according to a given node prioritization
 --   (this prioritization would be custom for each language)
 -- * According to the order of prioritization,
