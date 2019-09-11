@@ -5,15 +5,13 @@ module AST.Class.Infer
     , Infer(..)
     , InferChild(..), _InferChild
     , InferredChild(..), inType, inRep
-    , HasInferredValue(..)
-    , HasInferredType(..)
     , LocalScopeType(..)
     ) where
 
 import           AST
 import           AST.Class.Unify
 import           AST.Recurse
-import           Control.Lens (Lens', ALens', makeLenses, makePrisms)
+import           Control.Lens (makeLenses, makePrisms)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Constraint (Dict(..), withDict)
@@ -36,18 +34,6 @@ import           Prelude.Compat
 type family InferOf (t :: Knot -> Type) :: Knot -> Type
 
 type instance InferOf (Sum a b) = InferOf a
-
--- | @HasInferredValue t@ represents that @InferOf t@ contains an inferred value for @t@.
-class HasInferredValue t where
-    -- | A 'Control.Lens.Lens' from an inference result to an inferred value
-    inferredValue :: Lens' (Tree (InferOf t) v) (Tree v t)
-
--- | @HasInferredType t@ represents that @InferOf t@ contains a @TypeOf t@, which represents its inferred type.
-class HasInferredType t where
-    -- | The type of @t@
-    type TypeOf t :: Knot -> Type
-    -- A 'Control.Lens.Lens' from an inference result to an inferred type
-    inferredType :: Proxy t -> ALens' (Tree (InferOf t) v) (Tree v (TypeOf t))
 
 -- | A 'Knot' containing an inferred child node
 data InferredChild v k t = InferredChild
