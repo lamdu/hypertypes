@@ -51,6 +51,7 @@ import AST.Combinator.Flip
 import AST.Infer.Term (ITermVarsConstraint(..))
 import AST.Recurse
 import AST.TH.Internal.Instances (makeCommonInstances)
+import AST.Unify.New (newUnbound)
 import AST.Unify.Occurs (occursCheck)
 import Control.Lens (makeLenses, from)
 import Control.Lens.Operators
@@ -68,15 +69,8 @@ import Prelude.Compat
 -- The 'blamableRecursive' method represents that 'Blame' applies to all recursive child nodes.
 -- It replaces context for 'Blame' to avoid @UndecidableSuperClasses@.
 class
-    (Infer m t, RTraversable t, KFoldable (InferOf t)) =>
+    (Infer m t, RTraversable t, KTraversable (InferOf t), KPointed (InferOf t)) =>
     Blame m t where
-
-    -- | Create a new unbound infer result.
-    --
-    -- The type or values within should be unbound unification variables.
-    inferOfNewUnbound ::
-        Proxy t ->
-        m (Tree (InferOf t) (UVarOf m))
 
     -- | Unify the types/values in infer results
     inferOfUnify ::
@@ -124,7 +118,9 @@ prepareH ::
     Tree (Ann a) exp ->
     m (Tree (PTerm a (UVarOf m)) exp)
 prepareH t =
-    inferOfNewUnbound (Proxy @exp) >>= (`prepare` t)
+    withDict (inferContext (Proxy @m) (Proxy @exp)) $
+    sequenceK (pureK (Proxy @(Unify m) #> MkContainedK newUnbound))
+    >>= (`prepare` t)
 
 prepare ::
     forall m exp a.
