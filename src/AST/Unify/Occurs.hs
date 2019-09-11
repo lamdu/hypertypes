@@ -1,3 +1,5 @@
+-- | Occurs check (check whether unification terms recursively contains themselves)
+
 module AST.Unify.Occurs
     ( occursCheck
     , -- Helper used for fused occurs-check in unification and apply bindings
@@ -19,6 +21,7 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
+-- | Format and throw an occurs check error
 occursError ::
     Unify m t =>
     Tree (UVarOf m) t -> Tree (UTermBody (UVarOf m)) t -> m a
@@ -28,6 +31,7 @@ occursError v (UTermBody c b) =
         bindVar binding v (UResolved (_Pure . quantifiedVar # q))
         unifyError (Occurs (quantifiedVar # q) b)
 
+-- | Occurs check
 {-# INLINE occursCheck #-}
 occursCheck ::
     forall m t.

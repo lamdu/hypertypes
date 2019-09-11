@@ -1,3 +1,5 @@
+-- | A type for unification errors
+
 {-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances #-}
 
 module AST.Unify.Error

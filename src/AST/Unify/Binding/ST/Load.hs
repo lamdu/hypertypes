@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell, FlexibleContexts #-}
 
 -- | Load state from pure bindings to ST based bindings
 
@@ -9,8 +9,8 @@ module AST.Unify.Binding.ST.Load
 import           AST
 import           AST.Class.Has (HasChild(..))
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
+import           AST.Recurse
 import           AST.Unify.Binding (Binding(..), _Binding, UVar(..))
-import           AST.Unify.Binding.Save (Savable(..))
 import           AST.Unify.Binding.ST (STUVar)
 import           AST.Unify.Term (UTerm(..), uBody)
 import qualified Control.Lens as Lens
@@ -34,7 +34,8 @@ loadUTerm ::
     forall m typeVars t.
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
-    , Savable m typeVars t
+    , Unify m t
+    , Recursively (HasChild typeVars) t
     ) =>
     Tree typeVars Binding -> Tree typeVars (ConvertState (World m)) ->
     Tree (UTerm UVar) t -> m (Tree (UTerm (STUVar (World m))) t)
@@ -48,13 +49,18 @@ loadUTerm _ _ UConverted{} = error "loading while saving?"
 loadUTerm _ _ UInstantiated{} = error "loading during instantiation"
 
 loadVar ::
+    forall m t typeVars.
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
-    , Savable m typeVars t
+    , Unify m t
+    , Recursively (HasChild typeVars) t
     ) =>
     Tree typeVars Binding -> Tree typeVars (ConvertState (World m)) ->
     Tree UVar t -> m (Tree (STUVar (World m)) t)
 loadVar src conv (UVar v) =
+    withDict (recursively (Proxy @(HasChild typeVars t))) $
+    let tConv = conv ^. getChild . _ConvertState
+    in
     readArray tConv v & liftST
     >>=
     \case
@@ -66,26 +72,30 @@ loadVar src conv (UVar v) =
                 (src ^?! getChild . _Binding . Lens.ix v)
             r <- newVar binding u
             r <$ liftST (writeArray tConv v (Just r))
-    where
-        tConv = conv ^. getChild . _ConvertState
 
 loadBody ::
     forall m typeVars t.
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
-    , Savable m typeVars t
+    , Unify m t
+    , Recursively (HasChild typeVars) t
     ) =>
     Tree typeVars Binding -> Tree typeVars (ConvertState (World m)) ->
     Tree t UVar -> m (Tree t (STUVar (World m)))
 loadBody src conv =
-    withDict (savableRecursive (Proxy @m) (Proxy @typeVars) (Proxy @t)) $
-    traverseK (Proxy @(Savable m typeVars) #> loadVar src conv)
+    withDict (recurse (Proxy @(Unify m t))) $
+    withDict (recursively (Proxy @(HasChild typeVars t))) $
+    traverseK
+    ( Proxy @(Unify m) #*# Proxy @(Recursively (HasChild typeVars))
+        #> loadVar src conv
+    )
 
 load ::
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
     , KTraversable typeVars
-    , Savable m typeVars t
+    , Unify m t
+    , Recursively (HasChild typeVars) t
     ) =>
     Tree typeVars Binding -> Tree t UVar -> m (Tree t (STUVar (World m)))
 load src collection =

@@ -1,3 +1,5 @@
+-- | A class for unification
+
 {-# LANGUAGE FlexibleContexts, DefaultSignatures #-}
 
 module AST.Class.Unify

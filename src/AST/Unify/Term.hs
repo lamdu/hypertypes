@@ -1,3 +1,7 @@
+-- | Unification terms.
+--
+-- These represent the known state of a unification variable.
+
 {-# LANGUAGE TemplateHaskell, UndecidableInstances #-}
 
 module AST.Unify.Term
@@ -15,6 +19,7 @@ import GHC.Generics (Generic)
 
 import Prelude.Compat
 
+-- | A unification term with a known body
 data UTermBody v ast = UTermBody
     { _uConstraints :: TypeConstraintsOf (GetKnot ast)
     , _uBody :: ast # v

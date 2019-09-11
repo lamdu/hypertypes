@@ -1,36 +1,30 @@
-{-# LANGUAGE DefaultSignatures #-}
+-- | Serialize the state of unification.
+
+{-# LANGUAGE FlexibleContexts #-}
 
 module AST.Unify.Binding.Save
-    ( Savable(..), save
+    ( save
     ) where
 
 import           AST
 import           AST.Class.Has (HasChild(..))
 import           AST.Class.Unify (Unify(..), UVarOf, BindingDict(..))
+import           AST.Recurse
 import           AST.Unify.Binding (Binding, _Binding, UVar(..))
 import           AST.Unify.Term (UTerm(..), uBody)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.State (StateT(..))
-import           Data.Constraint (Dict(..), withDict)
+import           Data.Constraint (withDict)
 import           Data.Proxy (Proxy(..))
 import qualified Data.Sequence as Sequence
 
 import           Prelude.Compat
 
-class (Unify m t, HasChild typeVars t) => Savable m typeVars t where
-    savableRecursive ::
-        Proxy m -> Proxy typeVars -> Proxy t -> Dict (KNodesConstraint t (Savable m typeVars))
-    {-# INLINE savableRecursive #-}
-    default savableRecursive ::
-        KNodesConstraint t (Savable m typeVars) =>
-        Proxy m -> Proxy typeVars -> Proxy t -> Dict (KNodesConstraint t (Savable m typeVars))
-    savableRecursive _ _ _ = Dict
-
 saveUTerm ::
     forall m typeVars t.
-    Savable m typeVars t =>
+    (Unify m t, Recursively (HasChild typeVars) t) =>
     Tree (UTerm (UVarOf m)) t ->
     StateT (Tree typeVars Binding, [m ()]) m (Tree (UTerm UVar) t)
 saveUTerm (UUnbound c) = UUnbound c & pure
@@ -43,10 +37,12 @@ saveUTerm UResolved{} = error "converting bindings after resolution"
 saveUTerm UConverted{} = error "converting variable again"
 
 saveVar ::
-    Savable m typeVars t =>
+    forall m t typeVars.
+    (Unify m t, Recursively (HasChild typeVars) t) =>
     Tree (UVarOf m) t ->
     StateT (Tree typeVars Binding, [m ()]) m (Tree UVar t)
 saveVar v =
+    withDict (recursively (Proxy @(HasChild typeVars t))) $
     lookupVar binding v & lift
     >>=
     \case
@@ -63,15 +59,19 @@ saveVar v =
 
 saveBody ::
     forall m typeVars t.
-    Savable m typeVars t =>
+    (Unify m t, Recursively (HasChild typeVars) t) =>
     Tree t (UVarOf m) ->
     StateT (Tree typeVars Binding, [m ()]) m (Tree t UVar)
 saveBody =
-    withDict (savableRecursive (Proxy @m) (Proxy @typeVars) (Proxy @t)) $
-    traverseK (Proxy @(Savable m typeVars) #> saveVar)
+    withDict (recurse (Proxy @(Unify m t))) $
+    withDict (recursively (Proxy @(HasChild typeVars t))) $
+    traverseK
+    ( Proxy @(Unify m) #*# Proxy @(Recursively (HasChild typeVars))
+        #> saveVar
+    )
 
 save ::
-    Savable m typeVars t =>
+    (Unify m t, Recursively (HasChild typeVars) t) =>
     Tree t (UVarOf m) ->
     StateT (Tree typeVars Binding) m (Tree t UVar)
 save collection =

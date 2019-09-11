@@ -1,12 +1,16 @@
+-- | Generalization of type schemes
+
 {-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances #-}
 
 module AST.Unify.Generalize
     ( generalize, instantiate
 
-    , -- TODO: should these not be exported? (Internals)
-      -- Exported also for specialization
-      instantiateWith, instantiateForAll, instantiateH
     , GTerm(..), _GMono, _GPoly, _GBody, KWitness(..)
+
+    , instantiateWith, instantiateForAll
+
+    , -- | Exports for @SPECIALIZE@ pragmas.
+      instantiateH
     ) where
 
 import           Algebra.PartialOrd (PartialOrd(..))

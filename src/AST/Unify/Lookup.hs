@@ -1,3 +1,5 @@
+-- | Union-find lookup of unification variables
+
 module AST.Unify.Lookup
     ( semiPruneLookup
     ) where

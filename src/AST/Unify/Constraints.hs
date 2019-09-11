@@ -1,3 +1,5 @@
+-- | A class for constraints for unification variables
+
 {-# LANGUAGE FlexibleContexts, TemplateHaskell #-}
 
 module AST.Unify.Constraints
@@ -14,8 +16,9 @@ import Data.Kind (Type)
 
 import Prelude.Compat
 
+-- | A class for constraints for unification variables.
 class (PartialOrd c, Semigroup c) => TypeConstraints c where
-    -- | Remove scope constraints
+    -- | Remove scope constraints.
     --
     -- When generalizing unification variables into universally
     -- quantified variables, and then into fresh unification variables
@@ -23,11 +26,19 @@ class (PartialOrd c, Semigroup c) => TypeConstraints c where
     -- and the "scope" constraints need to be erased.
     generalizeConstraints :: c -> c
 
+    -- | Remove all constraints other than the scope constraints
+    --
+    -- Useful for comparing constraints to the current scope constraints
     toScopeConstraints :: c -> c
 
+-- | A class for unification monads with scope levels
 class Monad m => MonadScopeConstraints c m where
+    -- | Get the current scope constraint
     scopeConstraints :: m c
 
+-- | A class for terms that have constraints.
+--
+-- A dependency of `AST.Class.Unify.Unify`
 class
     TypeConstraints (TypeConstraintsOf ast) =>
     HasTypeConstraints (ast :: Knot -> *) where
@@ -41,6 +52,9 @@ class
         Tree ast k ->
         Maybe (Tree ast (WithConstraint k))
 
+-- | A 'Knot' to represent a term alongside a constraint.
+--
+-- Used for 'verifyConstraints'.
 data WithConstraint k ast = WithConstraint
     { _wcConstraint :: TypeConstraintsOf (GetKnot ast)
     , _wcBody :: k ast
