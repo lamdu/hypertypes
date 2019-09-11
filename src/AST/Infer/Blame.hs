@@ -67,7 +67,7 @@ import Prelude.Compat
 -- The 'blamableRecursive' method represents that 'Blame' applies to all recursive child nodes.
 -- It replaces context for 'Blame' to avoid @UndecidableSuperClasses@.
 class
-    (Infer m t, RTraversable t, KTraversable (InferOf t)) =>
+    (Infer m t, RTraversable t, KFoldable (InferOf t)) =>
     Blame m t where
 
     -- | Create a new unbound infer result.
