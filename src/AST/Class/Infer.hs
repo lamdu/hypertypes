@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, DefaultSignatures #-}
+{-# LANGUAGE TemplateHaskell, DefaultSignatures, FlexibleInstances #-}
 
 module AST.Class.Infer
     ( InferOf
@@ -10,14 +10,17 @@ module AST.Class.Infer
     , LocalScopeType(..)
     ) where
 
-import AST
-import AST.Class.Unify
-import Control.Lens (Lens', ALens', makeLenses, makePrisms)
-import Data.Constraint (Dict(..), withDict)
-import Data.Kind (Type)
-import Data.Proxy (Proxy(..))
+import           AST
+import           AST.Class.Unify
+import           Control.Lens (Lens', ALens', makeLenses, makePrisms)
+import qualified Control.Lens as Lens
+import           Control.Lens.Operators
+import           Data.Constraint (Dict(..), withDict)
+import           Data.Functor.Sum.PolyKinds (Sum(..))
+import           Data.Kind (Type)
+import           Data.Proxy (Proxy(..))
 
-import Prelude.Compat
+import           Prelude.Compat
 
 -- | @InferOf e@ is the inference result of @e@.
 --
@@ -30,6 +33,8 @@ import Prelude.Compat
 -- * An inferred value (for types inside terms)
 -- * An inferred type together with a scope
 type family InferOf (t :: Knot -> Type) :: Knot -> Type
+
+type instance InferOf (Sum a b) = InferOf a
 
 -- | @HasInferredValue t@ represents that @InferOf t@ contains an inferred value for @t@.
 class HasInferredValue t where
@@ -104,6 +109,16 @@ instance Recursive (Infer m) where
             p0 _ = Proxy
             p1 :: Proxy (Infer m t) -> Proxy t
             p1 _ = Proxy
+
+instance (InferOf a ~ InferOf b, Infer m a, Infer m b) => Infer m (Sum a b) where
+    {-# INLINE inferBody #-}
+    inferBody (InL x) = inferBody x <&> Lens._1 %~ InL
+    inferBody (InR x) = inferBody x <&> Lens._1 %~ InR
+
+    {-# INLINE inferContext #-}
+    inferContext p _ =
+        withDict (inferContext p (Proxy @a)) $
+        withDict (inferContext p (Proxy @b)) Dict
 
 -- | @LocalScopeType var scheme m@ represents that @m@ maintains a scope mapping variables of type @var@ to type schemes of type @scheme@
 class LocalScopeType var scheme m where

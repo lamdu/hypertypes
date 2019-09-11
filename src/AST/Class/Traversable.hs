@@ -13,6 +13,8 @@ import AST.Knot (Knot, Tree)
 import Control.Lens (Traversal, Iso, iso)
 import Control.Lens.Operators
 import Data.Functor.Const (Const(..))
+import Data.Functor.Product.PolyKinds (Product(..))
+import Data.Functor.Sum.PolyKinds (Sum(..))
 
 import Prelude.Compat
 
@@ -40,6 +42,15 @@ class (KFunctor k, KFoldable k) => KTraversable k where
 instance KTraversable (Const a) where
     {-# INLINE sequenceK #-}
     sequenceK (Const x) = pure (Const x)
+
+instance (KTraversable a, KTraversable b) => KTraversable (Product a b) where
+    {-# INLINE sequenceK #-}
+    sequenceK (Pair x y) = Pair <$> sequenceK x <*> sequenceK y
+
+instance (KTraversable a, KTraversable b) => KTraversable (Sum a b) where
+    {-# INLINE sequenceK #-}
+    sequenceK (InL x) = sequenceK x <&> InL
+    sequenceK (InR x) = sequenceK x <&> InR
 
 -- | 'KTraversable' variant of 'traverse'
 {-# INLINE traverseK #-}

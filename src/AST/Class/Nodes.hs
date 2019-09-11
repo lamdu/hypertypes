@@ -8,6 +8,7 @@ module AST.Class.Nodes
 import AST.Knot (Knot)
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
+import Data.Functor.Sum.PolyKinds (Sum(..))
 import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy(..))
 
@@ -49,6 +50,15 @@ instance (KNodes a, KNodes b) => KNodes (Product a b) where
     {-# INLINE kLiftConstraint #-}
     kLiftConstraint (E_Product_a w) = kLiftConstraint w
     kLiftConstraint (E_Product_b w) = kLiftConstraint w
+
+instance (KNodes a, KNodes b) => KNodes (Sum a b) where
+    type KNodesConstraint (Sum a b) x = (KNodesConstraint a x, KNodesConstraint b x)
+    data KWitness (Sum a b) n where
+        E_Sum_a :: KWitness a n -> KWitness (Sum a b) n
+        E_Sum_b :: KWitness b n -> KWitness (Sum a b) n
+    {-# INLINE kLiftConstraint #-}
+    kLiftConstraint (E_Sum_a w) = kLiftConstraint w
+    kLiftConstraint (E_Sum_b w) = kLiftConstraint w
 
 infixr 0 #>
 infixr 0 #*#

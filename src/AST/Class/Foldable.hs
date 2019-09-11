@@ -6,11 +6,13 @@ module AST.Class.Foldable
     , traverseK_, traverseK1_
     ) where
 
-import AST.Class.Nodes (KNodes(..), (#>))
+import AST.Class.Nodes (KNodes(..), KWitness(..), (#>))
 import AST.Knot (Tree)
 import Data.Foldable (sequenceA_)
 import Data.Functor.Const (Const(..))
 import Data.Proxy (Proxy(..))
+import Data.Functor.Product.PolyKinds (Product(..))
+import Data.Functor.Sum.PolyKinds (Sum(..))
 
 import Prelude.Compat
 
@@ -29,6 +31,15 @@ class KNodes k => KFoldable k where
 instance KFoldable (Const a) where
     {-# INLINE foldMapK #-}
     foldMapK _ _ = mempty
+
+instance (KFoldable a, KFoldable b) => KFoldable (Product a b) where
+    {-# INLINE foldMapK #-}
+    foldMapK f (Pair x y) = foldMapK (f . E_Product_a) x <> foldMapK (f . E_Product_b) y
+
+instance (KFoldable a, KFoldable b) => KFoldable (Sum a b) where
+    {-# INLINE foldMapK #-}
+    foldMapK f (InL x) = foldMapK (f . E_Sum_a) x
+    foldMapK f (InR x) = foldMapK (f . E_Sum_b) x
 
 -- TODO: Replace `foldMapK1` with `foldedK1` which is a `Fold`
 

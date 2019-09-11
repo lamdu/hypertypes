@@ -17,6 +17,7 @@ import           Control.Lens.Operators
 import           Control.Monad (guard)
 import           Data.Functor.Const (Const(..))
 import           Data.Functor.Product.PolyKinds (Product(..))
+import           Data.Functor.Sum.PolyKinds (Sum(..))
 
 import           Prelude.Compat
 
@@ -37,17 +38,24 @@ class ZipMatch k where
     -- Nothing
     zipMatch :: Tree k p -> Tree k q -> Maybe (Tree k (Product p q))
 
+instance Eq a => ZipMatch (Const a) where
+    {-# INLINE zipMatch #-}
+    zipMatch (Const x) (Const y) = Const x <$ guard (x == y)
+
 instance (ZipMatch a, ZipMatch b) => ZipMatch (Product a b) where
     {-# INLINE zipMatch #-}
     zipMatch (Pair a0 b0) (Pair a1 b1) = Pair <$> zipMatch a0 a1 <*> zipMatch b0 b1
 
+instance (ZipMatch a, ZipMatch b) => ZipMatch (Sum a b) where
+    {-# INLINE zipMatch #-}
+    zipMatch (InL x) (InL y) = zipMatch x y <&> InL
+    zipMatch (InR x) (InR y) = zipMatch x y <&> InR
+    zipMatch InL{} InR{} = Nothing
+    zipMatch InR{} InL{} = Nothing
+
 instance ZipMatch Pure where
     {-# INLINE zipMatch #-}
     zipMatch (Pure x) (Pure y) = _Pure # Pair x y & Just
-
-instance Eq a => ZipMatch (Const a) where
-    {-# INLINE zipMatch #-}
-    zipMatch (Const x) (Const y) = Const x <$ guard (x == y)
 
 -- | 'ZipMatch' variant of 'Control.Applicative.liftA2'
 {-# INLINE zipMatch2 #-}

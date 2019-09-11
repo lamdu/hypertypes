@@ -10,6 +10,7 @@ import AST.Knot (Tree)
 import Control.Lens (Setter, sets)
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
+import Data.Functor.Sum.PolyKinds (Sum(..))
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
@@ -33,6 +34,11 @@ instance (KFunctor a, KFunctor b) => KFunctor (Product a b) where
     {-# INLINE mapK #-}
     mapK f (Pair x y) =
         Pair (mapK (f . E_Product_a) x) (mapK (f . E_Product_b) y)
+
+instance (KFunctor a, KFunctor b) => KFunctor (Sum a b) where
+    {-# INLINE mapK #-}
+    mapK f (InL x) = InL (mapK (f . E_Sum_a) x)
+    mapK f (InR x) = InR (mapK (f . E_Sum_b) x)
 
 -- | 'KFunctor' variant of 'Control.Lens.mapped' for 'AST.Knot.Knot's with a single node type.
 --
