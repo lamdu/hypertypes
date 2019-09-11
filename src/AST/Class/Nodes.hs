@@ -65,7 +65,7 @@ instance (KNodes a, KNodes b) => KNodes (Sum a b) where
 infixr 0 #>
 infixr 0 #*#
 
--- | @Proxy @c #> r@ replaces the witness parameter of @r@ with a constraint on the witnessed node.
+-- | @Proxy @c #> r@ replaces the witness parameter of @r@ with a constraint on the witnessed node
 {-# INLINE (#>) #-}
 (#>) ::
     (KNodes k, KNodesConstraint k c) =>

@@ -1,3 +1,5 @@
+-- | A convinience module which re-exports common basic functionality of `syntax-tree`
+
 module AST (module X) where
 
 import AST.Class.Apply as X (KApply(..), KApplicative, liftK2)

@@ -1,3 +1,5 @@
+-- | Combinators for processing/constructing trees recursively
+
 {-# LANGUAGE FlexibleContexts #-}
 
 module AST.Recurse
@@ -42,7 +44,7 @@ wrapM f x =
     & traverseK (Proxy @RTraversable #*# \w -> wrapM (f . KRecSub w))
     >>= f KRecSelf
 
--- | Monadically unwrap a 'Tree' from the top down, replacing its 'Knot' with 'Pure'
+-- | Monadically unwrap a 'Tree' from the top down, replacing its 'AST.Knot.Knot' with 'Pure'
 {-# INLINE unwrapM #-}
 unwrapM ::
     forall m k w.
@@ -56,7 +58,7 @@ unwrapM f x =
     >>= traverseK (Proxy @RTraversable #*# \w -> unwrapM (f . KRecSub w))
     <&> (_Pure #)
 
--- | Wrap a 'Pure' 'Tree' to a different 'Knot' from the bottom up
+-- | Wrap a 'Pure' 'Tree' to a different 'AST.Knot.Knot' from the bottom up
 {-# INLINE wrap #-}
 wrap ::
     forall k w.
@@ -70,7 +72,7 @@ wrap f x =
     & mapK (Proxy @(Recursively KFunctor) #*# \w -> wrap (f . KRecSub w))
     & f KRecSelf
 
--- | Unwrap a 'Tree' from the top down, replacing its 'Knot' with 'Pure'
+-- | Unwrap a 'Tree' from the top down, replacing its 'AST.Knot.Knot' with 'Pure'
 {-# INLINE unwrap #-}
 unwrap ::
     forall k w.
@@ -122,6 +124,7 @@ infixr 0 #>>
 infixr 0 ##>>
 infixr 0 #**#
 
+-- | @Proxy @c #> r@ replaces a recursive witness parameter of @r@ with a constraint on the witnessed node
 {-# INLINE (#>>) #-}
 (#>>) ::
     forall c k n r.
@@ -133,6 +136,7 @@ infixr 0 #**#
     withDict (recurse (Proxy @(c k))) $
     (Proxy @RNodes #*# p #> (p #>> r) w1) w0
 
+-- | @Proxy @c #> r@ replaces a recursive witness parameter of @r@ with a @Recursively c@ constraint on the witnessed node
 {-# INLINE (##>>) #-}
 (##>>) ::
     forall c k n r.
@@ -144,6 +148,9 @@ infixr 0 #**#
     KRecSelf -> r
     KRecSub w0 w1 -> (Proxy @(Recursively c) #> (p ##>> r) w1) w0
 
+-- | A variant of '#>>' which does not consume the witness parameter.
+--
+-- @Proxy @c0 #**# Proxy @c1 #>> r@ brings into context both the @c0 n@ and @c1 n@ constraints.
 {-# INLINE (#**#) #-}
 (#**#) ::
     (Recursive c, c k, RNodes k) =>

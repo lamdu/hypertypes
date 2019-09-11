@@ -1,3 +1,5 @@
+-- | A 'AST.Knot.Knot' which adds an annotation to every node in a tree
+
 {-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances, FlexibleContexts #-}
 
 module AST.Knot.Ann
