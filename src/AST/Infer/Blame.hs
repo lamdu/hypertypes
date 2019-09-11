@@ -119,7 +119,8 @@ prepareH ::
     m (Tree (PTerm a (UVarOf m)) exp)
 prepareH t =
     withDict (inferContext (Proxy @m) (Proxy @exp)) $
-    sequenceK (pureK (Proxy @(Unify m) #> MkContainedK newUnbound))
+    pureK (Proxy @(Unify m) #> MkContainedK newUnbound)
+    & sequenceK
     >>= (`prepare` t)
 
 prepare ::

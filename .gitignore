@@ -9,3 +9,4 @@
 /.dir-locals.el
 /.ghcid
 /dumps/
+stack.yaml.lock
