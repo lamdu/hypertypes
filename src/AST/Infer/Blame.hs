@@ -44,7 +44,7 @@ module AST.Infer.Blame
 
 import AST
 import AST.Class.Infer
-import AST.Class.Infer.Recursive
+import AST.Class.Infer.InferOf
 import AST.Class.Traversable (ContainedK(..))
 import AST.Class.Unify (Unify, UVarOf)
 import AST.Combinator.Flip

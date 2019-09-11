@@ -1,6 +1,6 @@
 {-# LANGUAGE DefaultSignatures, FlexibleContexts, FlexibleInstances, UndecidableInstances #-}
 
-module AST.Class.Infer.Recursive
+module AST.Class.Infer.InferOf
     ( KFunctorInferOf, KFoldableInferOf, RTraversableInferOf
     ) where
 

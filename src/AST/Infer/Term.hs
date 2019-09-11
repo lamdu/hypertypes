@@ -11,7 +11,7 @@ module AST.Infer.Term
 import AST
 import AST.Combinator.Flip
 import AST.Class.Infer
-import AST.Class.Infer.Recursive (KFunctorInferOf, KFoldableInferOf, RTraversableInferOf)
+import AST.Class.Infer.InferOf (KFunctorInferOf, KFoldableInferOf, RTraversableInferOf)
 import AST.Class.Traversable (ContainedK(..))
 import AST.Recurse
 import AST.TH.Internal.Instances (makeCommonInstances)
