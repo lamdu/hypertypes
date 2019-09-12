@@ -6,6 +6,7 @@ module AST.Combinator.ANode
     ( ANode(..), _ANode
     ) where
 
+import AST.Class.Has (HasChild(..))
 import AST.Knot (Tree, type (#))
 import AST.TH.Internal.Instances (makeCommonInstances)
 import AST.TH.Traversable (makeKTraversableApplyAndBases)
@@ -26,3 +27,7 @@ _ANode = iso (\(MkANode x) -> x) MkANode
 
 makeKTraversableApplyAndBases ''ANode
 makeCommonInstances [''ANode]
+
+instance HasChild (ANode c) c where
+    {-# INLINE getChild #-}
+    getChild = _ANode
