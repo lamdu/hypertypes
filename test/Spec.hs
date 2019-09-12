@@ -26,6 +26,8 @@ import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 import           TypeLang.Pure
 
+import           Prelude
+
 lamXYx5 :: Tree Pure (LangA EmptyScope)
 lamXYx5 = aLam \x -> aLam \_y -> x `aApp` ((5 &# ALit) $:: intA)
 
@@ -195,7 +197,7 @@ returnScheme =
     \(Lens.Identity val) _ -> val ~> mutType
 
 withEnv ::
-    ( Unify m Row, Unify m Typ, MonadReader env m
+    ( Unify m Row, MonadReader env m
     , HasScheme Types m Typ
     ) =>
     Lens.LensLike' Lens.Identity env (InferScope (UVarOf m)) -> m a -> m a

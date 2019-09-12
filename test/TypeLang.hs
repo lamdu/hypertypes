@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell, FlexibleInstances, FlexibleContexts #-}
-{-# LANGUAGE DerivingVia, UndecidableInstances #-}
+{-# LANGUAGE DerivingVia, UndecidableInstances, GeneralizedNewtypeDeriving #-}
 
 module TypeLang where
 
@@ -26,6 +26,7 @@ import           Control.Monad.Reader (MonadReader)
 import           Control.Monad.ST.Class (MonadST(..))
 import           Data.STRef
 import           Data.Set (Set)
+import           Data.String (IsString)
 import           Generic.Data
 import           Generics.Constraints (Constraints, makeDerivings)
 import           GHC.Generics (Generic)
@@ -35,7 +36,10 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 import           Prelude
 
-newtype Name = Name String deriving stock (Eq, Ord, Show)
+newtype Name =
+    Name String
+    deriving stock Show
+    deriving newtype (Eq, Ord, IsString)
 
 data Typ k
     = TInt
@@ -82,6 +86,8 @@ makeKTraversableAndBases ''Typ
 makeKTraversableAndBases ''Row
 
 makeDerivings [''Eq, ''Ord, ''Show] [''Typ, ''Row, ''Types, ''TypeError]
+
+makeKHasPlain [''Typ, ''Row]
 
 type instance NomVarTypes Typ = Types
 
