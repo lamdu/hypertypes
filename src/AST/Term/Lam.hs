@@ -40,7 +40,7 @@ instance
     Pretty (Lam v expr k) where
     pPrintPrec lvl p (Lam i o) =
         (Pretty.text "λ" <> pPrintPrec lvl 0 i)
-        <+> Pretty.text "->" <+> pPrintPrec lvl 0 o
+        <+> Pretty.text "→" <+> pPrintPrec lvl 0 o
         & maybeParens (p > 0)
 
 type instance InferOf (Lam v t) = FuncType (TypeOf t)

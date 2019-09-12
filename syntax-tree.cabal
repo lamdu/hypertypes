@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.31.1.
+-- This file has been generated from package.yaml by hpack version 0.31.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: da886678c5e3e4d91b9f2878ca4c8d7ecbf906c88ca96eaa4f57858d87415fd9
+-- hash: 73b734efc8010fbb74e8c2b3604ebd299e20663c8745d35819fe6b23016bc1cf
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -72,6 +72,7 @@ library
       AST.Term.Row
       AST.Term.Scheme
       AST.Term.Scheme.AlphaEq
+      AST.Term.TypedLam
       AST.Term.TypeSig
       AST.Term.Var
       AST.TH.Apply
