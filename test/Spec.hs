@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, BlockArguments #-}
+{-# LANGUAGE FlexibleContexts, BlockArguments, OverloadedStrings #-}
 
 import           AST
 import           AST.Class.Unify
@@ -29,7 +29,7 @@ import           TypeLang.Pure
 import           Prelude
 
 lamXYx5 :: Tree Pure (LangA EmptyScope)
-lamXYx5 = aLam \x -> aLam \_y -> x `aApp` ((5 &# ALit) $:: intA)
+lamXYx5 = aLam \x -> aLam \_y -> x `aApp` ((5 &# ALit) $:: uniType TIntP)
 
 infinite :: Tree Pure (LangA EmptyScope)
 infinite = aLam \x -> x `aApp` x
@@ -46,12 +46,11 @@ nomLam =
     where
         s =
             mempty
-            & Lens.at (Name "key") ?~ _Pure # TInt
-            & Lens.at (Name "value") ?~ _Pure # TInt
+            & Lens.at "key" ?~ _Pure # TInt
+            & Lens.at "value" ?~ _Pure # TInt
             & QVarInstances
             & (`Types` QVarInstances mempty)
-            & NominalInst (Name "Map")
-            &# TNom
+            & TNomP "Map"
             & uniType
 
 letGen0 :: Tree Pure LangB
@@ -64,7 +63,7 @@ letGen1 =
 
 letGen2 :: Tree Pure LangB
 letGen2 =
-    bLet "f" (lam "x" (getField ?? "a")) \f ->
+    bLet "f" (lam "x" (\x -> "a" &# BGetField x)) \f ->
     lam "x" \x -> f $$ (f $$ x)
 
 genInf :: Tree Pure LangB
@@ -86,7 +85,7 @@ extendGood :: Tree Pure LangB
 extendGood = closedRec [("b", 7 &# BLit), ("a", 5 &# BLit)]
 
 getAField :: Tree Pure LangB
-getAField = lam "x" \x -> getField x "a"
+getAField = lam "x" \x -> "a" &# BGetField x
 
 vecApp :: Tree Pure LangB
 vecApp =
@@ -144,12 +143,12 @@ vecNominalDecl =
     { _nParams =
         Types
         { _tRow = mempty
-        , _tTyp = mempty & Lens.at (Name "elem") ?~ mempty
+        , _tTyp = mempty & Lens.at "elem" ?~ mempty
         }
     , _nScheme =
         Scheme
         { _sForAlls = Types mempty mempty
-        , _sTyp = record [("x", tVar "elem"), ("y", tVar "elem")]
+        , _sTyp = record [("x", "elem" &# TVar), ("y", "elem" &# TVar)]
         }
     }
 
@@ -159,7 +158,7 @@ phantomIntNominalDecl =
     { _nParams =
         Types
         { _tRow = mempty
-        , _tTyp = mempty & Lens.at (Name "phantom") ?~ mempty
+        , _tTyp = mempty & Lens.at "phantom" ?~ mempty
         }
     , _nScheme =
         Scheme
@@ -170,10 +169,10 @@ phantomIntNominalDecl =
 
 mutType :: Tree Pure Typ
 mutType =
-    NominalInst (Name "Mut")
+    NominalInst "Mut"
     Types
-    { _tRow = mempty & Lens.at (Name "effects") ?~ rVar "effects" & QVarInstances
-    , _tTyp = mempty & Lens.at (Name "value") ?~ tVar "value" & QVarInstances
+    { _tRow = mempty & Lens.at "effects" ?~ ("effects" &# RVar) & QVarInstances
+    , _tTyp = mempty & Lens.at "value" ?~ ("value" &# TVar) & QVarInstances
     }
     &# TNom
 
@@ -185,7 +184,7 @@ localMutNominalDecl =
     { _nParams =
         Types
         { _tRow = mempty
-        , _tTyp = mempty & Lens.at (Name "value") ?~ mempty
+        , _tTyp = mempty & Lens.at "value" ?~ mempty
         }
     , _nScheme =
         forAll (Lens.Const ()) (Lens.Identity "effects") (\_ _ -> mutType) ^. _Pure
@@ -208,14 +207,14 @@ withEnv l act =
         localMut <- loadNominalDecl localMutNominalDecl
         let addNoms x =
                 x
-                & Lens.at (Name "Vec") ?~ vec
-                & Lens.at (Name "PhantomInt") ?~ phantom
-                & Lens.at (Name "LocalMut") ?~ localMut
+                & Lens.at "Vec" ?~ vec
+                & Lens.at "PhantomInt" ?~ phantom
+                & Lens.at "LocalMut" ?~ localMut
         ret <- loadScheme returnScheme
         let addEnv x =
                 x
                 & nominals %~ addNoms
-                & varSchemes . _ScopeTypes . Lens.at (Name "return") ?~ ret
+                & varSchemes . _ScopeTypes . Lens.at "return" ?~ ret
         local (l %~ addEnv) act
 
 prettyPrint :: Pretty a => a -> IO ()
@@ -270,11 +269,11 @@ testAlphaEq x y expect =
         pureRes = Lens.has Lens._Right (execPureInferB (alphaEq x y))
         stRes = Lens.has Lens._Right (runST (execSTInferB (alphaEq x y)))
 
-intsRecord :: [String] -> Tree Pure (Scheme Types Typ)
-intsRecord = uniType . record . map (, _Pure # TInt)
+intsRecord :: [Name] -> Tree Pure (Scheme Types Typ)
+intsRecord = uniType . (kPlain #) . record . map (, _Pure # TInt)
 
 intToInt :: Tree Pure (Scheme Types Typ)
-intToInt = (_Pure # TInt) ~> (_Pure # TInt) & uniType
+intToInt = TFunP TIntP TIntP & uniType
 
 main :: IO ()
 main =
@@ -309,16 +308,16 @@ main =
             , testB returnOk     "Right LocalMut[value: Int]"
             , testB nomSkolem0   "Left (SkolemEscape: r0)"
             , testB nomSkolem1   "Left (SkolemEscape: r0)"
-            , testAlphaEq intA intA True
-            , testAlphaEq intA intToInt False
+            , testAlphaEq (uniType TIntP) (uniType TIntP) True
+            , testAlphaEq (uniType TIntP) intToInt False
             , testAlphaEq intToInt intToInt True
             , testAlphaEq (intsRecord ["a", "b"]) (intsRecord ["b", "a"]) True
             , testAlphaEq (intsRecord ["a", "b"]) (intsRecord ["b"]) False
             , testAlphaEq (intsRecord ["a", "b", "c"]) (intsRecord ["c", "b", "a"]) True
             , testAlphaEq (intsRecord ["a", "b", "c"]) (intsRecord ["b", "c", "a"]) True
             , testAlphaEq (forAll1 "a" id) (forAll1 "b" id) True
-            , testAlphaEq (forAll1 "a" id) intA False
-            , testAlphaEq (forAll1r "a" (&# TRec)) intA False
+            , testAlphaEq (forAll1 "a" id) (uniType TIntP) False
+            , testAlphaEq (forAll1r "a" (&# TRec)) (uniType TIntP) False
             , testAlphaEq (forAll1r "a" (&# TRec)) (forAll1r "b" (&# TRec)) True
             , testAlphaEq (mkOpenRec "a" "x" "y") (mkOpenRec "b" "y" "x") True
             ]
@@ -326,5 +325,5 @@ main =
             _Pure #
             Scheme
             (Types (QVars mempty)
-                (QVars (Map.fromList [(Name a, RowConstraints (Set.fromList [Name x, Name y]) mempty)])))
-            (rowExtends (rVar a) [(x, _Pure # TInt), (y, _Pure # TInt)] &# TRec)
+                (QVars (Map.fromList [(a, RowConstraints (Set.fromList [x, y]) mempty)])))
+            (rowExtends (a &# RVar) [(x, _Pure # TInt), (y, _Pure # TInt)] &# TRec)

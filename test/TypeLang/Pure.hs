@@ -17,60 +17,51 @@ import           TypeLang
 
 import           Prelude
 
-rowExtends :: Tree Pure Row -> [(String, Tree Pure Typ)] -> Tree Pure Row
+rowExtends :: Tree Pure Row -> [(Name, Tree Pure Typ)] -> Tree Pure Row
 rowExtends =
     foldr extend
     where
         extend (name, typ) rest =
-            RowExtend (Name name) typ rest &# RExtend
+            RowExtend (name) typ rest &# RExtend
 
-record :: [(String, Tree Pure Typ)] -> Tree Pure Typ
+record :: [(Name, Tree Pure Typ)] -> Tree Pure Typ
 record fields = rowExtends (_Pure # REmpty) fields &# TRec
 
-intA :: Tree Pure (Scheme Types Typ)
-intA = _Pure # TInt & uniType
-
-tVar :: String -> Tree Pure Typ
-tVar n = Name n &# TVar
-
-rVar :: String -> Tree Pure Row
-rVar n = Name n &# RVar
-
-uniType :: Tree Pure Typ -> Tree Pure (Scheme Types Typ)
+uniType :: KPlain Typ -> Tree Pure (Scheme Types Typ)
 uniType typ =
     _Pure # Scheme
     { _sForAlls = Types (QVars mempty) (QVars mempty)
-    , _sTyp = typ
+    , _sTyp = typ ^. kPlain
     }
 
 forAll ::
     (Traversable t, Traversable u) =>
-    t String -> u String ->
+    t Name -> u Name ->
     (t (Tree Pure Typ) -> u (Tree Pure Row) -> Tree Pure typ) ->
     Tree Pure (Scheme Types typ)
 forAll tvs rvs body =
     _Pure #
     Scheme (Types (foralls tvs) (foralls rvs))
-    (body (tvs <&> tVar) (rvs <&> rVar))
+    (body (tvs <&> (&# TVar)) (rvs <&> (&# RVar)))
     where
         foralls ::
             ( Foldable f
             , QVar typ ~ Name
             , Monoid (TypeConstraintsOf typ)
             ) =>
-            f String -> Tree QVars typ
+            f Name -> Tree QVars typ
         foralls xs =
-            xs ^.. Lens.folded <&> Name <&> (, mempty)
+            xs ^.. Lens.folded <&> (, mempty)
             & Map.fromList & QVars
 
 forAll1 ::
-    String -> (Tree Pure Typ -> Tree Pure typ) ->
+    Name -> (Tree Pure Typ -> Tree Pure typ) ->
     Tree Pure (Scheme Types typ)
 forAll1 t body =
     forAll (Lens.Identity t) (Lens.Const ()) $ \(Lens.Identity tv) _ -> body tv
 
 forAll1r ::
-    String -> (Tree Pure Row -> Tree Pure typ) ->
+    Name -> (Tree Pure Row -> Tree Pure typ) ->
     Tree Pure (Scheme Types typ)
 forAll1r t body =
     forAll (Lens.Const ()) (Lens.Identity t) $ \_ (Lens.Identity tv) -> body tv

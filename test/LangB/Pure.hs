@@ -18,15 +18,15 @@ import TypeLang.Pure
 
 import Prelude
 
-bVar :: String -> Tree Pure LangB
-bVar = (&# BVar) . Var . Name
+bVar :: Name -> Tree Pure LangB
+bVar = (&# BVar) . Var
 
-lam :: String -> (Tree Pure LangB -> Tree Pure LangB) -> Tree Pure LangB
-lam v mk = bVar v & mk & Lam (Name v) &# BLam
+lam :: Name -> (Tree Pure LangB -> Tree Pure LangB) -> Tree Pure LangB
+lam v mk = bVar v & mk & Lam v &# BLam
 
 bLet ::
-    String -> Tree Pure LangB -> (Tree Pure LangB -> Tree Pure LangB) -> Tree Pure LangB
-bLet v val body = Let (Name v) val (body (bVar v)) &# BLet
+    Name -> Tree Pure LangB -> (Tree Pure LangB -> Tree Pure LangB) -> Tree Pure LangB
+bLet v val body = Let v val (body (bVar v)) &# BLet
 
 infixl 9 $$
 ($$) :: Tree Pure LangB -> Tree Pure LangB -> Tree Pure LangB
@@ -38,8 +38,5 @@ recExtend fields rest = foldr (fmap (&# BRecExtend) . uncurry (RowExtend . Name)
 closedRec :: [(String, Tree Pure LangB)] -> Tree Pure LangB
 closedRec fields = recExtend fields (_Pure # BRecEmpty)
 
-getField :: Tree Pure LangB -> String -> Tree Pure LangB
-getField w k = Name k &# BGetField w
-
-toNom :: String -> Tree Pure LangB -> Tree Pure LangB
-toNom name = (&# BToNom) . ToNom (Name name)
+toNom :: Name -> Tree Pure LangB -> Tree Pure LangB
+toNom name = (&# BToNom) . ToNom name
