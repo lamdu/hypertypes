@@ -39,6 +39,7 @@ import           Data.Constraint
 import           Data.Map (Map)
 import           Data.Proxy
 import           Data.STRef
+import           Data.String (IsString(..))
 import           Generics.Constraints (makeDerivings)
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
@@ -150,6 +151,10 @@ newtype ScopeTypes v = ScopeTypes (Map Name (Tree (GTerm (GetKnot v)) Typ))
     deriving newtype (Semigroup, Monoid)
 
 makeDerivings [''Show] [''LangB, ''ScopeTypes]
+
+makeKHasPlain [''LangB]
+instance IsString (KPlain LangB) where
+    fromString = BVarP . fromString
 
 instance KNodes ScopeTypes where
     data KWitness ScopeTypes n = E_ScopeTypes (KWitness (Flip GTerm Typ) n)

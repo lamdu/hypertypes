@@ -19,7 +19,7 @@ import qualified Data.Map as Map
 import           Data.Proxy
 import qualified Data.Set as Set
 import           LangA.Pure
-import           LangB.Pure
+import           LangB
 import           ReadMeExamples ()
 import           System.Exit (exitFailure)
 import qualified Text.PrettyPrint as Pretty
@@ -53,74 +53,97 @@ nomLam =
             & TNomP "Map"
             & uniType
 
-letGen0 :: Tree Pure LangB
-letGen0 = bLet "id" (lam "x" id) \i -> i $$ i $$ (5 &# BLit)
+letGen0 :: KPlain LangB
+letGen0 =
+    BLetP "id" (BLamP "x" "x") $
+    "id" `BAppP` "id" `BAppP` BLitP 5
 
-letGen1 :: Tree Pure LangB
+letGen1 :: KPlain LangB
 letGen1 =
-    bLet "five" (5 &# BLit) \five ->
-    bLet "f" (lam "x" \x -> x $$ five $$ five) id
+    BLetP "five" (BLitP 5) $
+    BLetP "f" (BLamP "x" ("x" `BAppP` "five" `BAppP` "five")) $
+    "f"
 
-letGen2 :: Tree Pure LangB
+letGen2 :: KPlain LangB
 letGen2 =
-    bLet "f" (lam "x" (\x -> "a" &# BGetField x)) \f ->
-    lam "x" \x -> f $$ (f $$ x)
+    BLetP "f" (BLamP "x" (BGetFieldP "x" "a")) $
+    BLamP "x" ("f" `BAppP` ("f" `BAppP` "x"))
 
-genInf :: Tree Pure LangB
-genInf = bLet "f" (lam "x" \x -> x $$ x) id
+genInf :: KPlain LangB
+genInf =
+    BLetP "f" (BLamP "x" ("x" `BAppP` "x"))
+    "f"
 
-shouldNotGen :: Tree Pure LangB
-shouldNotGen = lam "x" \x -> bLet "y" x id
+shouldNotGen :: KPlain LangB
+shouldNotGen =
+    BLamP "x"
+    ( BLetP "y" "x"
+        "y"
+    )
 
-simpleRec :: Tree Pure LangB
-simpleRec = closedRec [("a", 5 &# BLit)]
+simpleRec :: KPlain LangB
+simpleRec =
+    BRecExtendP "a" (BLitP 5) $
+    BRecEmptyP
 
-extendLit :: Tree Pure LangB
-extendLit = recExtend [("a", 5 &# BLit)] (7 &# BLit)
+extendLit :: KPlain LangB
+extendLit =
+    BRecExtendP "a" (BLitP 5) $
+    BLitP 7
 
-extendDup :: Tree Pure LangB
-extendDup = closedRec [("a", 7 &# BLit), ("a", 5 &# BLit)]
+extendDup :: KPlain LangB
+extendDup =
+    BRecExtendP "a" (BLitP 7) $
+    BRecExtendP "a" (BLitP 5) $
+    BRecEmptyP
 
-extendGood :: Tree Pure LangB
-extendGood = closedRec [("b", 7 &# BLit), ("a", 5 &# BLit)]
+extendGood :: KPlain LangB
+extendGood =
+    BRecExtendP "b" (BLitP 7) $
+    BRecExtendP "a" (BLitP 5) $
+    BRecEmptyP
 
-getAField :: Tree Pure LangB
-getAField = lam "x" \x -> "a" &# BGetField x
+getAField :: KPlain LangB
+getAField = BLamP "x" (BGetFieldP "x" "a")
 
-vecApp :: Tree Pure LangB
+vecApp :: KPlain LangB
 vecApp =
-    lam "x" \x -> lam "y" \y -> closedRec [("x", x), ("y", y)] & toNom "Vec"
+    BLamP "x"
+    ( BLamP "y"
+        ( BToNomP "Vec" $
+            BRecExtendP "x" "x" $
+            BRecExtendP "y" "y" $
+            BRecEmptyP
+        )
+    )
 
-usePhantom :: Tree Pure LangB
-usePhantom = 5 &# BLit & toNom "PhantomInt"
+usePhantom :: KPlain LangB
+usePhantom = BToNomP "PhantomInt" (BLitP 5)
 
-unifyRows :: Tree Pure LangB
+unifyRows :: KPlain LangB
 unifyRows =
-    -- \f -> f {a : 5, b : 7} (f {b : 5, a : 7} 12)
-    lam "f" \f ->
-    (f $$ closedRec [("a", 5 &# BLit), ("b", 7 &# BLit)])
-    $$
-    ((f $$ closedRec [("b", 5 &# BLit), ("a", 7 &# BLit)]) $$ (12 &# BLit))
+    BLamP "f" ("f" `BAppP` r0 `BAppP` ("f" `BAppP` r1 `BAppP` BLitP 12))
+    where
+        r0 =
+            BRecExtendP "a" (BLitP 5) $
+            BRecExtendP "b" (BLitP 7) $
+            BRecEmptyP
+        r1 =
+            BRecExtendP "b" (BLitP 5) $
+            BRecExtendP "a" (BLitP 7) $
+            BRecEmptyP
 
-return5 :: Tree Pure LangB
-return5 =
-    -- return 5
-    bVar "return" $$ (5 &# BLit)
+return5 :: KPlain LangB
+return5 = "return" `BAppP` BLitP 5
 
-returnOk :: Tree Pure LangB
-returnOk =
-    -- LocalMut[ return 5 ]
-    toNom "LocalMut" return5
+returnOk :: KPlain LangB
+returnOk = BToNomP "LocalMut" return5
 
-nomSkolem0 :: Tree Pure LangB
-nomSkolem0 =
-    -- (\x -> LocalMut[ x ])
-    lam "x" (\x -> toNom "LocalMut" x)
+nomSkolem0 :: KPlain LangB
+nomSkolem0 = BLamP "x" (BToNomP "LocalMut" "x")
 
-nomSkolem1 :: Tree Pure LangB
-nomSkolem1 =
-    -- (\x -> LocalMut[ x ]) (return 5)
-    nomSkolem0 $$ return5
+nomSkolem1 :: KPlain LangB
+nomSkolem1 = nomSkolem0 `BAppP` return5
 
 inferExpr ::
     forall m t.
@@ -248,10 +271,11 @@ testA expr expect =
         pureRes = execPureInferA (inferExpr expr)
         stRes = runST (execSTInferA (inferExpr expr))
 
-testB :: Tree Pure LangB -> String -> IO Bool
-testB expr expect =
+testB :: KPlain LangB -> String -> IO Bool
+testB p expect =
     testCommon expr expect pureRes stRes
     where
+        expr = p ^. kPlain
         pureRes = execPureInferB (withEnv id (inferExpr expr))
         stRes = runST (execSTInferB (withEnv Lens._1 (inferExpr expr)))
 

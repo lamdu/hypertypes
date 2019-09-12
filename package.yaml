@@ -80,7 +80,6 @@ tests:
     - LangA
     - LangA.Pure
     - LangB
-    - LangB.Pure
     - ReadMeExamples
     - TypeLang
     - TypeLang.Pure

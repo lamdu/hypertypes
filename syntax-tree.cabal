@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 73b734efc8010fbb74e8c2b3604ebd299e20663c8745d35819fe6b23016bc1cf
+-- hash: 50da56b6150a16c70dca7a4d1d9652dad35de1ca369e591f93d60b6552d65462
 
 name:           syntax-tree
 version:        0.1.0.0
@@ -136,7 +136,6 @@ test-suite syntax-tree-test
       LangA
       LangA.Pure
       LangB
-      LangB.Pure
       ReadMeExamples
       TypeLang
       TypeLang.Pure
