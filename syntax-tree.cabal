@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 50da56b6150a16c70dca7a4d1d9652dad35de1ca369e591f93d60b6552d65462
+-- hash: 128cc98f1ad1a2b0db2f58c3ba4fc2da6a5590957949357300e6f7b5007231ec
 
 name:           syntax-tree
-version:        0.1.0.0
+version:        0.1.0.1
 synopsis:       Typed ASTs
 description:    Please see the README on GitHub at <https://github.com/lamdu/syntax-tree#readme>
 category:       Algorithms, Compilers/Interpreters, Language, Logic, Unification
