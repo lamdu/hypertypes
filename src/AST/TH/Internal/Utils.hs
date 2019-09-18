@@ -103,6 +103,9 @@ matchType :: Name -> Type -> CtrTypePattern
 matchType var (ConT runKnot `AppT` VarT k `AppT` (PromotedT knot `AppT` ast))
     | runKnot == ''GetKnot && knot == 'Knot && k == var =
         NodeFofX ast
+matchType var (InfixT (VarT k) tie ast)
+    | tie == ''(#) && k == var =
+        NodeFofX ast
 matchType var (ConT tie `AppT` VarT k `AppT` ast)
     | tie == ''(#) && k == var =
         NodeFofX ast

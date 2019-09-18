@@ -7,7 +7,7 @@ module AST.TH.HasPlain
     ) where
 
 import           AST.Class.HasPlain
-import           AST.Knot (GetKnot)
+import           AST.Knot (GetKnot, type (#))
 import           AST.Knot.Pure (Pure, _Pure)
 import           AST.TH.Internal.Utils
 import qualified Control.Lens as Lens
@@ -124,13 +124,18 @@ makeCtr knot info =
             , fieldToPlain = VarE 'id
             , fieldFromPlain = VarE 'id
             } & pure
-        forPat (XofF t) =
+        forPat (XofF t) = embed t (VarT knot)
+        forPat (Tof t p) = embed t (patType p)
+        embed t arg =
             case unapply t of
             (ConT c, args) ->
                 do
                     inner <- D.reifyDatatype c
                     let innerVars = D.datatypeVars inner <&> D.tvName
-                    let subst = zip innerVars (args <> [VarT knot]) & Map.fromList
+                    let subst =
+                            args <> [arg]
+                            & zip innerVars
+                            & Map.fromList
                     case D.datatypeCons inner of
                         [x] ->
                             D.constructorFields x
@@ -141,7 +146,10 @@ makeCtr knot info =
                             <&> Embed
                         _ -> fail "TODO: makeKHAsPlain missing support 0"
             _ -> fail "TODO: makeKHAsPlain missing support 1"
-        forPat _ = error "TODO: makeKHAsPlain missing support 2"
+        patType (Other t) = t
+        patType (NodeFofX x) = InfixT (VarT knot) ''(#) x
+        patType (XofF x) = x `AppT` VarT knot
+        patType (Tof t p) = t `AppT` patType p
         normalizeType (ConT g `AppT` VarT v)
             | g == ''GetKnot && v == knot = ConT ''Pure
         normalizeType (x `AppT` y) = normalizeType x `AppT` normalizeType y
