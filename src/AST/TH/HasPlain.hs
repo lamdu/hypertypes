@@ -130,19 +130,19 @@ makeCtr knot info =
                 do
                     inner <- D.reifyDatatype c
                     let innerVars = D.datatypeVars inner <&> D.tvName
-                    let subst = Map.fromList (zip innerVars args)
+                    let subst = zip innerVars (args <> [VarT knot]) & Map.fromList
                     case D.datatypeCons inner of
                         [x] ->
                             D.constructorFields x
                             <&> D.applySubstitution subst
-                            <&> matchType (last innerVars)
+                            <&> matchType knot
                             & traverse forPat
                             <&> EmbedInfo (D.constructorName x)
                             <&> Embed
                         _ -> fail "TODO: makeKHAsPlain missing support 0"
             _ -> fail "TODO: makeKHAsPlain missing support 1"
         forPat _ = error "TODO: makeKHAsPlain missing support 2"
-        normalizeType (ConT g `AppT` VarT{})
-            | g == ''GetKnot = ConT ''Pure
+        normalizeType (ConT g `AppT` VarT v)
+            | g == ''GetKnot && v == knot = ConT ''Pure
         normalizeType (x `AppT` y) = normalizeType x `AppT` normalizeType y
         normalizeType x = x
