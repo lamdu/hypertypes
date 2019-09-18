@@ -22,7 +22,7 @@ rowExtends =
     foldr extend
     where
         extend (name, typ) rest =
-            RowExtend (name) typ rest &# RExtend
+            RowExtend name typ rest &# RExtend
 
 record :: [(Name, Tree Pure Typ)] -> Tree Pure Typ
 record fields = rowExtends (_Pure # REmpty) fields &# TRec
