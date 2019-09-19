@@ -97,6 +97,8 @@ makeCommonInstances [''NominalDecl, ''NominalInst, ''ToNom, ''LoadedNominalDecl]
 makeKTraversableAndBases ''NominalDecl
 makeKTraversableApplyAndBases ''ToNom
 makeKTraversableApplyAndBases ''FromNom
+makeZipMatch ''ToNom
+makeZipMatch ''FromNom
 
 instance KNodes v => KNodes (NominalInst n v) where
     type KNodesConstraint (NominalInst n v) c = KNodesConstraint v c

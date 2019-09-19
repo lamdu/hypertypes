@@ -44,6 +44,7 @@ newtype Var v (expr :: Knot -> *) (k :: Knot) = Var v
 
 Lens.makePrisms ''Var
 makeKTraversableApplyAndBases ''Var
+makeZipMatch ''Var
 
 instance Pretty v => Pretty (Var v expr k) where
     pPrintPrec lvl p (Var v) = pPrintPrec lvl p v

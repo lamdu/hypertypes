@@ -34,6 +34,7 @@ data Let v expr k = Let
 makeLenses ''Let
 makeCommonInstances [''Let]
 makeKTraversableApplyAndBases ''Let
+makeZipMatch ''Let
 
 instance
     Constraints (Let v expr k) Pretty =>

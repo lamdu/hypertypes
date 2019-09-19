@@ -34,6 +34,7 @@ data Lam v expr k = Lam
 makeLenses ''Lam
 makeCommonInstances [''Lam]
 makeKTraversableApplyAndBases ''Lam
+makeZipMatch ''Lam
 
 instance
     Constraints (Lam v expr k) Pretty =>

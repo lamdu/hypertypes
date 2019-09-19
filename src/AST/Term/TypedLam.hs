@@ -30,6 +30,7 @@ data TypedLam var typ expr k = TypedLam
 makeLenses ''TypedLam
 makeCommonInstances [''TypedLam]
 makeKTraversableApplyAndBases ''TypedLam
+makeZipMatch ''TypedLam
 
 instance
     Constraints (TypedLam var typ expr k) Pretty =>
