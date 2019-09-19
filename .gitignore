@@ -10,3 +10,5 @@
 /.ghcid
 /dumps/
 stack.yaml.lock
+/dist-newstyle/
+.ghc.environment.*
