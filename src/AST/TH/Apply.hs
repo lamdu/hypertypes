@@ -67,10 +67,10 @@ makeKApplyForType info =
             ]
             <&> (:[])
     where
-        bodyForPat NodeFofX{} = ConE 'Pair
-        bodyForPat XofF{} = VarE 'zipK
-        bodyForPat (Tof _ pat) = VarE 'liftA2 `AppE` bodyForPat pat
-        bodyForPat Other{} = VarE '(<>)
+        bodyForPat Node{} = ConE 'Pair
+        bodyForPat Embed{} = VarE 'zipK
+        bodyForPat (InContainer _ pat) = VarE 'liftA2 `AppE` bodyForPat pat
+        bodyForPat PlainData{} = VarE '(<>)
         f (typ, x) (_, y) =
             bodyForPat (matchType (tiVar info) typ) `AppE` VarE x `AppE` VarE y
 
@@ -81,7 +81,7 @@ makeContext info =
     <&> matchType (tiVar info)
     >>= ctxForPat
     where
-        ctxForPat (Tof t pat) = (ConT ''Applicative `AppT` t) : ctxForPat pat
-        ctxForPat (XofF t) = [ConT ''KApply `AppT` t]
-        ctxForPat (Other t) = [ConT ''Semigroup `AppT` t]
+        ctxForPat (InContainer t pat) = (ConT ''Applicative `AppT` t) : ctxForPat pat
+        ctxForPat (Embed t) = [ConT ''KApply `AppT` t]
+        ctxForPat (PlainData t) = [ConT ''Semigroup `AppT` t]
         ctxForPat _ = []

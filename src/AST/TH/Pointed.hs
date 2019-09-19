@@ -38,9 +38,9 @@ makeContext info =
     <&> matchType (tiVar info)
     >>= ctxForPat
     where
-        ctxForPat (Tof t pat) = (ConT ''Applicative `AppT` t) : ctxForPat pat
-        ctxForPat (XofF t) = [ConT ''KPointed `AppT` t]
-        ctxForPat (Other t) = [ConT ''Monoid `AppT` t]
+        ctxForPat (InContainer t pat) = (ConT ''Applicative `AppT` t) : ctxForPat pat
+        ctxForPat (Embed t) = [ConT ''KPointed `AppT` t]
+        ctxForPat (PlainData t) = [ConT ''Monoid `AppT` t]
         ctxForPat _ = []
 
 makePureKCtr :: TypeInfo -> D.ConstructorInfo -> Clause
@@ -53,9 +53,9 @@ makePureKCtr typeInfo ctrInfo =
             <&> bodyForPat
             & foldl AppE (ConE (D.constructorName ctrInfo))
             & NormalB
-        bodyForPat (NodeFofX t) = VarE varF `AppE` nodeWit wit t
-        bodyForPat (XofF t) = VarE 'pureK `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))
-        bodyForPat (Tof _ pat) = bodyForPat pat & AppE (VarE 'pure)
-        bodyForPat Other{} = VarE 'mempty
+        bodyForPat (Node t) = VarE varF `AppE` nodeWit wit t
+        bodyForPat (Embed t) = VarE 'pureK `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))
+        bodyForPat (InContainer _ pat) = bodyForPat pat & AppE (VarE 'pure)
+        bodyForPat PlainData{} = VarE 'mempty
         varF = mkName "_f"
         (_, wit) = makeNodeOf typeInfo

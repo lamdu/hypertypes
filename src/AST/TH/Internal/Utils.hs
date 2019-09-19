@@ -46,6 +46,13 @@ data TypeContents = TypeContents
     } deriving (Show, Generic)
     deriving (Semigroup, Monoid) via Generically TypeContents
 
+data CtrTypePattern
+    = Node Type
+    | Embed Type
+    | InContainer Type CtrTypePattern
+    | PlainData Type
+    deriving Show
+
 makeTypeInfo :: Name -> Q TypeInfo
 makeTypeInfo name =
     do
@@ -82,14 +89,14 @@ childrenTypes var typ =
             then pure mempty
             else modify (Lens.contains typ .~ True) *> add (matchType var typ)
     where
-        add (NodeFofX ast) = pure mempty { tcChildren = Set.singleton ast }
-        add (XofF ast) =
+        add (Node ast) = pure mempty { tcChildren = Set.singleton ast }
+        add (Embed ast) =
             case unapply ast of
             (ConT name, as) -> childrenTypesFromTypeName name as
             (x@VarT{}, as) -> pure mempty { tcEmbeds = Set.singleton (foldl AppT x as) }
             _ -> pure mempty
-        add (Tof _ pat) = add pat
-        add Other{} = pure mempty
+        add (InContainer _ pat) = add pat
+        add PlainData{} = pure mempty
 
 unapply :: Type -> (Type, [Type])
 unapply =
@@ -102,29 +109,22 @@ unapply =
 matchType :: Name -> Type -> CtrTypePattern
 matchType var (ConT runKnot `AppT` VarT k `AppT` (PromotedT knot `AppT` ast))
     | runKnot == ''GetKnot && knot == 'Knot && k == var =
-        NodeFofX ast
+        Node ast
 matchType var (InfixT (VarT k) tie ast)
     | tie == ''(#) && k == var =
-        NodeFofX ast
+        Node ast
 matchType var (ConT tie `AppT` VarT k `AppT` ast)
     | tie == ''(#) && k == var =
-        NodeFofX ast
+        Node ast
 matchType var (ast `AppT` VarT knot)
     | knot == var && ast /= ConT ''GetKnot =
-        XofF ast
+        Embed ast
 matchType var x@(AppT t typ) =
     -- TODO: check if applied over a functor-kinded type.
     case matchType var typ of
-    Other{} -> Other x
-    pat -> Tof t pat
-matchType _ t = Other t
-
-data CtrTypePattern
-    = NodeFofX Type
-    | XofF Type
-    | Tof Type CtrTypePattern
-    | Other Type
-    deriving Show
+    PlainData{} -> PlainData x
+    pat -> InContainer t pat
+matchType _ t = PlainData t
 
 getVar :: Type -> Maybe Name
 getVar (VarT x) = Just x
@@ -280,15 +280,15 @@ makeNodeOf info =
         nodes =
             pats >>= nodesForPat & nub
             <&> \t -> (t, mkName (nodeBase <> makeNiceType t))
-        nodesForPat (NodeFofX t) = [t]
-        nodesForPat (Tof _ pat) = nodesForPat pat
+        nodesForPat (Node t) = [t]
+        nodesForPat (InContainer _ pat) = nodesForPat pat
         nodesForPat _ = []
         nodeGadtType t = ConT ''KWitness `AppT` tiInstance info `AppT` t
         embeds =
             pats >>= embedsForPat & nub
             <&> \t -> (t, mkName (embedBase <> makeNiceType t))
-        embedsForPat (XofF t) = [t]
-        embedsForPat (Tof _ pat) = embedsForPat pat
+        embedsForPat (Embed t) = [t]
+        embedsForPat (InContainer _ pat) = embedsForPat pat
         embedsForPat _ = []
         embedGadtType t =
             ArrowT

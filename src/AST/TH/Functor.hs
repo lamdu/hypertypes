@@ -35,8 +35,8 @@ makeContext info =
     <&> matchType (tiVar info)
     >>= ctxForPat
     where
-        ctxForPat (Tof t pat) = (ConT ''Functor `AppT` t) : ctxForPat pat
-        ctxForPat (XofF t) = [ConT ''KFunctor `AppT` t]
+        ctxForPat (InContainer t pat) = (ConT ''Functor `AppT` t) : ctxForPat pat
+        ctxForPat (Embed t) = [ConT ''KFunctor `AppT` t]
         ctxForPat _ = []
 
 makeMapKCtr :: NodeWitnesses -> Name -> D.ConstructorInfo -> Clause
@@ -54,7 +54,7 @@ makeMapKCtr wit knot info =
             & foldl AppE (ConE (D.constructorName info))
             & NormalB
         pats = D.constructorFields info <&> matchType knot
-        bodyForPat (NodeFofX t) = VarE varF `AppE` nodeWit wit t
-        bodyForPat (XofF t) = VarE 'mapK `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))
-        bodyForPat (Tof _ pat) = bodyForPat pat & AppE (VarE 'fmap)
-        bodyForPat Other{} = VarE 'id
+        bodyForPat (Node t) = VarE varF `AppE` nodeWit wit t
+        bodyForPat (Embed t) = VarE 'mapK `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))
+        bodyForPat (InContainer _ pat) = bodyForPat pat & AppE (VarE 'fmap)
+        bodyForPat PlainData{} = VarE 'id

@@ -58,20 +58,20 @@ makeZipMatchCtr var info =
         mkAnd x y = InfixE (Just x) (VarE '(&&)) (Just y)
         fieldParts = zipWith field cVars (D.constructorFields info <&> matchType var)
         bodyExp = applicativeStyle (ConE (D.constructorName info)) (fieldParts <&> zmfResult)
-        field (x, y) NodeFofX{} =
+        field (x, y) Node{} =
             ZipMatchField
             { zmfResult = ConE 'Just `AppE` (ConE 'Pair `AppE` VarE x `AppE` VarE y)
             , zmfConds = []
             , zmfContext = []
             }
-        field (x, y) (XofF t) =
+        field (x, y) (Embed t) =
             ZipMatchField
             { zmfResult = VarE 'zipMatch `AppE` VarE x `AppE` VarE y
             , zmfConds = []
             , zmfContext = [ConT ''ZipMatch `AppT` t]
             }
-        field _ Tof{} = error "TODO"
-        field (x, y) (Other t) =
+        field _ InContainer{} = error "TODO"
+        field (x, y) (PlainData t) =
             ZipMatchField
             { zmfResult = ConE 'Just `AppE` VarE x
             , zmfConds = [InfixE (Just (VarE x)) (VarE '(==)) (Just (VarE y))]

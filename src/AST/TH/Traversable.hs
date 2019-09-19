@@ -68,8 +68,8 @@ makeContext info =
     <&> matchType (tiVar info)
     >>= ctxForPat
     where
-        ctxForPat (Tof t pat) = (ConT ''Traversable `AppT` t) : ctxForPat pat
-        ctxForPat (XofF t) = [ConT ''KTraversable `AppT` t]
+        ctxForPat (InContainer t pat) = (ConT ''Traversable `AppT` t) : ctxForPat pat
+        ctxForPat (Embed t) = [ConT ''KTraversable `AppT` t]
         ctxForPat _ = []
 
 makeCons ::
@@ -83,7 +83,7 @@ makeCons knot cons =
             & NormalB
         consVars = makeConstructorVars "x" cons
         f (typ, name) = bodyForPat (matchType knot typ) `AppE` VarE name
-        bodyForPat NodeFofX{} = VarE 'runContainedK
-        bodyForPat XofF{} = VarE 'sequenceK
-        bodyForPat (Tof _ pat) = VarE 'traverse `AppE` bodyForPat pat
-        bodyForPat Other{} = VarE 'pure
+        bodyForPat Node{} = VarE 'runContainedK
+        bodyForPat Embed{} = VarE 'sequenceK
+        bodyForPat (InContainer _ pat) = VarE 'traverse `AppE` bodyForPat pat
+        bodyForPat PlainData{} = VarE 'pure

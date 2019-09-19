@@ -49,8 +49,8 @@ makeContext info =
     <&> matchType (tiVar info)
     >>= ctxForPat
     where
-        ctxForPat (Tof _ pat) = ctxForPat pat
-        ctxForPat (XofF t) = [ConT ''KNodes `AppT` t]
+        ctxForPat (InContainer _ pat) = ctxForPat pat
+        ctxForPat (Embed t) = [ConT ''KNodes `AppT` t]
         ctxForPat _ = []
 
 makeKLiftConstraints :: NodeWitnesses -> [Clause]

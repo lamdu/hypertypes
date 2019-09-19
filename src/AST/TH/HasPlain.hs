@@ -64,7 +64,7 @@ data EmbedInfo = EmbedInfo
 
 data Field
     = NodeField FieldInfo
-    | Embed EmbedInfo
+    | EmbedFields EmbedInfo
 
 makeCtr :: Name -> D.ConstructorInfo -> Q (Con, Clause, Clause)
 makeCtr knot info =
@@ -90,12 +90,12 @@ makeCtr knot info =
     )
     where
         plainFieldTypes (NodeField x) = [fieldPlainType x]
-        plainFieldTypes (Embed x) = embedFields x >>= plainFieldTypes
+        plainFieldTypes (EmbedFields x) = embedFields x >>= plainFieldTypes
         toPlainFields (NodeField x) = [fieldToPlain x]
-        toPlainFields (Embed x) = embedFields x >>= toPlainFields
+        toPlainFields (EmbedFields x) = embedFields x >>= toPlainFields
         toPlainPat cs [] = ([], cs)
         toPlainPat (c:cs) (NodeField{} : xs) = toPlainPat cs xs & Lens._1 %~ (VarP c :)
-        toPlainPat cs0 (Embed x : xs) =
+        toPlainPat cs0 (EmbedFields x : xs) =
             toPlainPat cs1 xs & Lens._1 %~ (ConP (embedCtr x) r :)
             where
                 (r, cs1) = toPlainPat cs0 (embedFields x)
@@ -103,7 +103,7 @@ makeCtr knot info =
         fromPlainFields cs [] = ([], cs)
         fromPlainFields (c:cs) (NodeField x : xs) =
             fromPlainFields cs xs & Lens._1 %~ (fieldFromPlain x `AppE` VarE c :)
-        fromPlainFields cs0 (Embed x : xs) =
+        fromPlainFields cs0 (EmbedFields x : xs) =
             fromPlainFields cs1 xs & Lens._1 %~ (foldl AppE (ConE (embedCtr x)) r :)
             where
                 (r, cs1) = fromPlainFields cs0 (embedFields x)
@@ -112,20 +112,20 @@ makeCtr knot info =
             D.constructorName info
             & show & reverse & takeWhile (/= '.') & reverse
             & (<> "P") & mkName
-        forPat (NodeFofX x) =
+        forPat (Node x) =
             NodeField FieldInfo
             { fieldPlainType = ConT ''KPlain `AppT` x
             , fieldToPlain = InfixE (Just (VarE 'kPlain)) (VarE '(#)) Nothing
             , fieldFromPlain = InfixE Nothing (VarE '(^.)) (Just (VarE 'kPlain))
             } & pure
-        forPat (Other t) =
+        forPat (PlainData t) =
             NodeField FieldInfo
             { fieldPlainType = normalizeType t
             , fieldToPlain = VarE 'id
             , fieldFromPlain = VarE 'id
             } & pure
-        forPat (XofF t) = embed t (VarT knot)
-        forPat (Tof t p) = embed t (patType p)
+        forPat (Embed t) = embed t (VarT knot)
+        forPat (InContainer t p) = embed t (patType p)
         embed t arg =
             case unapply t of
             (ConT c, args) ->
@@ -143,13 +143,13 @@ makeCtr knot info =
                             <&> matchType knot
                             & traverse forPat
                             <&> EmbedInfo (D.constructorName x)
-                            <&> Embed
+                            <&> EmbedFields
                         _ -> fail "TODO: makeKHAsPlain missing support 0"
             _ -> fail "TODO: makeKHAsPlain missing support 1"
-        patType (Other t) = t
-        patType (NodeFofX x) = InfixT (VarT knot) ''(#) x
-        patType (XofF x) = x `AppT` VarT knot
-        patType (Tof t p) = t `AppT` patType p
+        patType (PlainData t) = t
+        patType (Node x) = InfixT (VarT knot) ''(#) x
+        patType (Embed x) = x `AppT` VarT knot
+        patType (InContainer t p) = t `AppT` patType p
         normalizeType (ConT g `AppT` VarT v)
             | g == ''GetKnot && v == knot = ConT ''Pure
         normalizeType (x `AppT` y) = normalizeType x `AppT` normalizeType y

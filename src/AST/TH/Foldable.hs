@@ -35,8 +35,8 @@ makeContext info =
     <&> matchType (tiVar info)
     >>= ctxForPat
     where
-        ctxForPat (Tof t pat) = (ConT ''Foldable `AppT` t) : ctxForPat pat
-        ctxForPat (XofF t) = [ConT ''KFoldable `AppT` t]
+        ctxForPat (InContainer t pat) = (ConT ''Foldable `AppT` t) : ctxForPat pat
+        ctxForPat (Embed t) = [ConT ''KFoldable `AppT` t]
         ctxForPat _ = []
 
 varF :: Name
@@ -61,7 +61,7 @@ makeFoldMapKCtr wit knot info =
             & NormalB
         append x y = InfixE (Just x) (VarE '(<>)) (Just y)
         pats = D.constructorFields info <&> matchType knot
-        bodyForPat (NodeFofX t) = [VarE varF `AppE` nodeWit wit t]
-        bodyForPat (XofF t) = [VarE 'foldMapK `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))]
-        bodyForPat (Tof _ pat) = bodyForPat pat <&> AppE (VarE 'foldMap)
-        bodyForPat Other{} = []
+        bodyForPat (Node t) = [VarE varF `AppE` nodeWit wit t]
+        bodyForPat (Embed t) = [VarE 'foldMapK `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))]
+        bodyForPat (InContainer _ pat) = bodyForPat pat <&> AppE (VarE 'foldMap)
+        bodyForPat PlainData{} = []
