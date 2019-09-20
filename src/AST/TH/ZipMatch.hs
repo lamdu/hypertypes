@@ -11,7 +11,6 @@ import           AST.TH.Internal.Utils
 import           Control.Lens.Operators
 import           Data.Functor.Product.PolyKinds (Product(..))
 import           Language.Haskell.TH
-import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
 
@@ -19,12 +18,12 @@ import           Prelude.Compat
 makeZipMatch :: Name -> DecsQ
 makeZipMatch typeName =
     do
-        info <- D.reifyDatatype typeName
-        (dst, var) <- parts info
-        let ctrs = D.datatypeCons info <&> makeZipMatchCtr var
+        info <- makeTypeInfo typeName
+        -- (dst, var) <- parts info
+        let ctrs = tiConstructors info <&> uncurry makeZipMatchCtr
         instanceD
             (simplifyContext (ctrs >>= ccContext))
-            (appT (conT ''ZipMatch) (pure dst))
+            (appT (conT ''ZipMatch) (pure (tiInstance info)))
             [ InlineP 'zipMatch Inline FunLike AllPhases & PragmaD & pure
             , funD 'zipMatch
                 ( (ctrs <&> pure . ccClause) ++ [pure tailClause]
@@ -40,24 +39,24 @@ data CtrCase =
     , ccContext :: [Pred]
     }
 
-makeZipMatchCtr :: Name -> D.ConstructorInfo -> CtrCase
-makeZipMatchCtr var info =
+makeZipMatchCtr :: Name -> [CtrTypePattern] -> CtrCase
+makeZipMatchCtr cName cFields =
     CtrCase
     { ccClause = Clause [con fst, con snd] body []
     , ccContext = fieldParts >>= zmfContext
     }
     where
-        con f = ConP (D.constructorName info) (cVars <&> f <&> VarP)
+        con f = ConP cName (cVars <&> f <&> VarP)
         cVars =
             [0::Int ..] <&> show <&> (\n -> (mkName ('x':n), mkName ('y':n)))
-            & take (length (D.constructorFields info))
+            & take (length cFields)
         body
             | null checks = NormalB bodyExp
             | otherwise = GuardedB [(NormalG (foldl1 mkAnd checks), bodyExp)]
         checks = fieldParts >>= zmfConds
         mkAnd x y = InfixE (Just x) (VarE '(&&)) (Just y)
-        fieldParts = zipWith field cVars (D.constructorFields info <&> matchType var)
-        bodyExp = applicativeStyle (ConE (D.constructorName info)) (fieldParts <&> zmfResult)
+        fieldParts = zipWith field cVars cFields
+        bodyExp = applicativeStyle (ConE cName) (fieldParts <&> zmfResult)
         field (x, y) Node{} =
             ZipMatchField
             { zmfResult = ConE 'Just `AppE` (ConE 'Pair `AppE` VarE x `AppE` VarE y)

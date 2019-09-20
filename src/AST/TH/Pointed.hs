@@ -10,7 +10,6 @@ import           AST.Class.Pointed
 import           AST.TH.Internal.Utils
 import           Control.Lens.Operators
 import           Language.Haskell.TH
-import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
 
@@ -22,7 +21,7 @@ makeKPointedForType :: TypeInfo -> DecsQ
 makeKPointedForType info =
     do
         cons <-
-            case tiCons info of
+            case tiConstructors info of
             [x] -> pure x
             _ -> fail "makeKPointed only supports types with a single constructor"
         instanceD (simplifyContext (makeContext info)) (appT (conT ''KPointed) (pure (tiInstance info)))
@@ -33,25 +32,21 @@ makeKPointedForType info =
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
-    tiCons info
-    >>= D.constructorFields
-    <&> matchType (tiKnotParam info)
-    >>= ctxForPat
+    tiConstructors info >>= snd >>= ctxForPat
     where
         ctxForPat (InContainer t pat) = (ConT ''Applicative `AppT` t) : ctxForPat pat
         ctxForPat (Embed t) = [ConT ''KPointed `AppT` t]
         ctxForPat (PlainData t) = [ConT ''Monoid `AppT` t]
         ctxForPat _ = []
 
-makePureKCtr :: TypeInfo -> D.ConstructorInfo -> Clause
-makePureKCtr typeInfo ctrInfo =
+makePureKCtr :: TypeInfo -> (Name, [CtrTypePattern]) -> Clause
+makePureKCtr typeInfo (cName, cFields) =
     Clause [VarP varF] body []
     where
         body =
-            D.constructorFields ctrInfo
-            <&> matchType (tiKnotParam typeInfo)
+            cFields
             <&> bodyForPat
-            & foldl AppE (ConE (D.constructorName ctrInfo))
+            & foldl AppE (ConE cName)
             & NormalB
         bodyForPat (Node t) = VarE varF `AppE` nodeWit wit t
         bodyForPat (Embed t) = VarE 'pureK `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))

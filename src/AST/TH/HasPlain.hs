@@ -27,7 +27,7 @@ makeOne typeName = makeTypeInfo typeName >>= makeKHasPlainForType
 
 makeKHasPlainForType :: TypeInfo -> Q Dec
 makeKHasPlainForType info =
-    traverse (makeCtr (tiKnotParam info)) (tiCons info)
+    traverse (makeCtr (tiKnotParam info)) (tiConstructors info)
     <&>
     \ctrs ->
     InstanceD Nothing [] (ConT ''KHasPlain `AppT` tiInstance info)
@@ -66,10 +66,9 @@ data Field
     = NodeField FieldInfo
     | EmbedFields EmbedInfo
 
-makeCtr :: Name -> D.ConstructorInfo -> Q (Con, Clause, Clause)
-makeCtr knot info =
-    D.constructorFields info <&> matchType knot
-    & traverse forPat
+makeCtr :: Name -> (Name, [CtrTypePattern]) -> Q (Con, Clause, Clause)
+makeCtr knot (cName, cFields) =
+    traverse forPat cFields
     <&>
     \xs ->
     let plainTypes = xs >>= plainFieldTypes
@@ -82,9 +81,9 @@ makeCtr knot info =
         & foldl AppE (ConE pcon)
         & NormalB
         & \x ->
-            Clause [ConP (D.constructorName info) (toPlainPat cVars xs ^. Lens._1)] x []
+            Clause [ConP cName (toPlainPat cVars xs ^. Lens._1)] x []
     , fromPlainFields cVars xs ^. Lens._1
-        & foldl AppE (ConE (D.constructorName info))
+        & foldl AppE (ConE cName)
         & NormalB
         & \x -> Clause [ConP pcon (cVars <&> VarP)] x []
     )
@@ -109,8 +108,7 @@ makeCtr knot info =
                 (r, cs1) = fromPlainFields cs0 (embedFields x)
         fromPlainFields [] _ = error "out of variables"
         pcon =
-            D.constructorName info
-            & show & reverse & takeWhile (/= '.') & reverse
+            show cName & reverse & takeWhile (/= '.') & reverse
             & (<> "P") & mkName
         forPat (Node x) =
             NodeField FieldInfo

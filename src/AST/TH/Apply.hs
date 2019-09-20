@@ -17,7 +17,6 @@ import           Control.Applicative (liftA2)
 import           Control.Lens.Operators
 import           Data.Functor.Product.PolyKinds (Product(..))
 import           Language.Haskell.TH
-import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
 
@@ -48,20 +47,19 @@ makeKApply typeName = makeTypeInfo typeName >>= makeKApplyForType
 makeKApplyForType :: TypeInfo -> DecsQ
 makeKApplyForType info =
     do
-        cons <-
-            case tiCons info of
+        (name, fields) <-
+            case tiConstructors info of
             [x] -> pure x
             _ -> fail "makeKApply only supports types with a single constructor"
-        let xVars = makeConstructorVars "x" cons
-        let yVars = makeConstructorVars "y" cons
-        let fields = zipWith f xVars yVars
+        let xVars = makeConstructorVars "x" fields
+        let yVars = makeConstructorVars "y" fields
         instanceD (simplifyContext (makeContext info)) (appT (conT ''KApply) (pure (tiInstance info)))
             [ InlineP 'zipK Inline FunLike AllPhases & PragmaD & pure
             , funD 'zipK
                 [ Clause
-                    [ consPat cons xVars
-                    , consPat cons yVars
-                    ] (NormalB (foldl AppE (ConE (D.constructorName cons)) fields)) []
+                    [ consPat name xVars
+                    , consPat name yVars
+                    ] (NormalB (foldl AppE (ConE name) (zipWith f xVars yVars))) []
                     & pure
                 ]
             ]
@@ -71,15 +69,12 @@ makeKApplyForType info =
         bodyForPat Embed{} = VarE 'zipK
         bodyForPat (InContainer _ pat) = VarE 'liftA2 `AppE` bodyForPat pat
         bodyForPat PlainData{} = VarE '(<>)
-        f (typ, x) (_, y) =
-            bodyForPat (matchType (tiKnotParam info) typ) `AppE` VarE x `AppE` VarE y
+        f (p, x) (_, y) =
+            bodyForPat p `AppE` VarE x `AppE` VarE y
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
-    tiCons info
-    >>= D.constructorFields
-    <&> matchType (tiKnotParam info)
-    >>= ctxForPat
+    tiConstructors info >>= snd >>= ctxForPat
     where
         ctxForPat (InContainer t pat) = (ConT ''Applicative `AppT` t) : ctxForPat pat
         ctxForPat (Embed t) = [ConT ''KApply `AppT` t]

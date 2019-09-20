@@ -17,7 +17,6 @@ import           AST.TH.Internal.Utils
 import           AST.TH.Nodes (makeKNodes)
 import           Control.Lens.Operators
 import           Language.Haskell.TH
-import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
 
@@ -57,32 +56,29 @@ makeKTraversableForType :: TypeInfo -> DecsQ
 makeKTraversableForType info =
     instanceD (simplifyContext (makeContext info)) (appT (conT ''KTraversable) (pure (tiInstance info)))
     [ InlineP 'sequenceK Inline FunLike AllPhases & PragmaD & pure
-    , funD 'sequenceK (tiCons info <&> pure . makeCons (tiKnotParam info))
+    , funD 'sequenceK (tiConstructors info <&> pure . uncurry makeCons)
     ]
     <&> (:[])
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
-    tiCons info
-    >>= D.constructorFields
-    <&> matchType (tiKnotParam info)
-    >>= ctxForPat
+    tiConstructors info >>= snd >>= ctxForPat
     where
         ctxForPat (InContainer t pat) = (ConT ''Traversable `AppT` t) : ctxForPat pat
         ctxForPat (Embed t) = [ConT ''KTraversable `AppT` t]
         ctxForPat _ = []
 
 makeCons ::
-    Name -> D.ConstructorInfo -> Clause
-makeCons knot cons =
-    Clause [consPat cons consVars] body []
+    Name -> [CtrTypePattern] -> Clause
+makeCons cName cFields =
+    Clause [consPat cName consVars] body []
     where
         body =
             consVars <&> f
-            & applicativeStyle (ConE (D.constructorName cons))
+            & applicativeStyle (ConE cName)
             & NormalB
-        consVars = makeConstructorVars "x" cons
-        f (typ, name) = bodyForPat (matchType knot typ) `AppE` VarE name
+        consVars = makeConstructorVars "x" cFields
+        f (pat, name) = bodyForPat pat `AppE` VarE name
         bodyForPat Node{} = VarE 'runContainedK
         bodyForPat Embed{} = VarE 'sequenceK
         bodyForPat (InContainer _ pat) = VarE 'traverse `AppE` bodyForPat pat

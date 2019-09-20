@@ -10,7 +10,6 @@ import           AST.Class.Foldable
 import           AST.TH.Internal.Utils
 import           Control.Lens.Operators
 import           Language.Haskell.TH
-import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
 
@@ -22,7 +21,7 @@ makeKFoldableForType :: TypeInfo -> DecsQ
 makeKFoldableForType info =
     instanceD (simplifyContext (makeContext info)) (appT (conT ''KFoldable) (pure (tiInstance info)))
     [ InlineP 'foldMapK Inline FunLike AllPhases & PragmaD & pure
-    , funD 'foldMapK (tiCons info <&> pure . makeFoldMapKCtr wit (tiKnotParam info))
+    , funD 'foldMapK (tiConstructors info <&> pure . uncurry (makeFoldMapKCtr wit))
     ]
     <&> (:[])
     where
@@ -30,10 +29,7 @@ makeKFoldableForType info =
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
-    tiCons info
-    >>= D.constructorFields
-    <&> matchType (tiKnotParam info)
-    >>= ctxForPat
+    tiConstructors info >>= snd >>= ctxForPat
     where
         ctxForPat (InContainer t pat) = (ConT ''Foldable `AppT` t) : ctxForPat pat
         ctxForPat (Embed t) = [ConT ''KFoldable `AppT` t]
@@ -42,16 +38,16 @@ makeContext info =
 varF :: Name
 varF = mkName "_f"
 
-makeFoldMapKCtr :: NodeWitnesses -> Name -> D.ConstructorInfo -> Clause
-makeFoldMapKCtr wit knot info =
-    Clause [VarP varF, ConP (D.constructorName info) (cVars <&> VarP)] body []
+makeFoldMapKCtr :: NodeWitnesses -> Name -> [CtrTypePattern] -> Clause
+makeFoldMapKCtr wit cName cFields =
+    Clause [VarP varF, ConP cName (cVars <&> VarP)] body []
     where
         cVars =
             [0::Int ..] <&> show <&> ("_x" <>) <&> mkName
-            & take (length (D.constructorFields info))
+            & take (length cFields)
         bodyParts =
             zipWith (\x y -> x <&> (`AppE` y))
-            (pats <&> bodyForPat)
+            (cFields <&> bodyForPat)
             (cVars <&> VarE)
             & concat
         body =
@@ -60,7 +56,6 @@ makeFoldMapKCtr wit knot info =
             _ -> foldl1 append bodyParts
             & NormalB
         append x y = InfixE (Just x) (VarE '(<>)) (Just y)
-        pats = D.constructorFields info <&> matchType knot
         bodyForPat (Node t) = [VarE varF `AppE` nodeWit wit t]
         bodyForPat (Embed t) = [VarE 'foldMapK `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))]
         bodyForPat (InContainer _ pat) = bodyForPat pat <&> AppE (VarE 'foldMap)

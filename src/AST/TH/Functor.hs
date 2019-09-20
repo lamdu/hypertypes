@@ -10,7 +10,6 @@ import           AST.Class.Functor
 import           AST.TH.Internal.Utils
 import           Control.Lens.Operators
 import           Language.Haskell.TH
-import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
 
@@ -22,7 +21,7 @@ makeKFunctorForType :: TypeInfo -> DecsQ
 makeKFunctorForType info =
     instanceD (simplifyContext (makeContext info)) (appT (conT ''KFunctor) (pure (tiInstance info)))
     [ InlineP 'mapK Inline FunLike AllPhases & PragmaD & pure
-    , funD 'mapK (tiCons info <&> pure . makeMapKCtr wit (tiKnotParam info))
+    , funD 'mapK (tiConstructors info <&> pure . makeMapKCtr wit)
     ]
     <&> (:[])
     where
@@ -30,30 +29,26 @@ makeKFunctorForType info =
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
-    tiCons info
-    >>= D.constructorFields
-    <&> matchType (tiKnotParam info)
-    >>= ctxForPat
+    tiConstructors info >>= snd >>= ctxForPat
     where
         ctxForPat (InContainer t pat) = (ConT ''Functor `AppT` t) : ctxForPat pat
         ctxForPat (Embed t) = [ConT ''KFunctor `AppT` t]
         ctxForPat _ = []
 
-makeMapKCtr :: NodeWitnesses -> Name -> D.ConstructorInfo -> Clause
-makeMapKCtr wit knot info =
-    Clause [VarP varF, ConP (D.constructorName info) (cVars <&> VarP)] body []
+makeMapKCtr :: NodeWitnesses -> (Name, [CtrTypePattern]) -> Clause
+makeMapKCtr wit (cName, cFields) =
+    Clause [VarP varF, ConP cName (cVars <&> VarP)] body []
     where
         varF = mkName "_f"
         cVars =
             [0::Int ..] <&> show <&> ('x':) <&> mkName
-            & take (length (D.constructorFields info))
+            & take (length cFields)
         body =
             zipWith AppE
-            (pats <&> bodyForPat)
+            (cFields <&> bodyForPat)
             (cVars <&> VarE)
-            & foldl AppE (ConE (D.constructorName info))
+            & foldl AppE (ConE cName)
             & NormalB
-        pats = D.constructorFields info <&> matchType knot
         bodyForPat (Node t) = VarE varF `AppE` nodeWit wit t
         bodyForPat (Embed t) = VarE 'mapK `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))
         bodyForPat (InContainer _ pat) = bodyForPat pat & AppE (VarE 'fmap)

@@ -11,7 +11,6 @@ import           AST.TH.Internal.Utils
 import           Control.Lens.Operators
 import qualified Data.Set as Set
 import           Language.Haskell.TH
-import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
 
@@ -44,10 +43,7 @@ makeKNodesForType info =
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
-    tiCons info
-    >>= D.constructorFields
-    <&> matchType (tiKnotParam info)
-    >>= ctxForPat
+    tiConstructors info >>= snd >>= ctxForPat
     where
         ctxForPat (InContainer _ pat) = ctxForPat pat
         ctxForPat (Embed t) = [ConT ''KNodes `AppT` t]

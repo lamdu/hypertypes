@@ -36,7 +36,7 @@ data TypeInfo = TypeInfo
     , tiInstance :: Type
     , tiKnotParam :: Name
     , tiContents :: TypeContents
-    , tiCons :: [D.ConstructorInfo]
+    , tiConstructors :: [(Name, [CtrTypePattern])]
     } deriving Show
 
 data TypeContents = TypeContents
@@ -64,7 +64,9 @@ makeTypeInfo name =
             , tiInstance = dst
             , tiKnotParam = var
             , tiContents = contents
-            , tiCons = D.datatypeCons info
+            , tiConstructors =
+                D.datatypeCons info
+                <&> \x -> (D.constructorName x, D.constructorFields x <&> matchType var)
             }
 
 parts :: D.DatatypeInfo -> Q (Type, Name)
@@ -203,14 +205,14 @@ applicativeStyle f =
     where
         ap x y = InfixE (Just x) (VarE '(<*>)) (Just y)
 
-makeConstructorVars :: String -> D.ConstructorInfo -> [(Type, Name)]
-makeConstructorVars prefix cons =
+makeConstructorVars :: String -> [a] -> [(a, Name)]
+makeConstructorVars prefix fields =
     [0::Int ..] <&> show <&> (('_':prefix) <>) <&> mkName
-    & zip (D.constructorFields cons)
+    & zip fields
 
-consPat :: D.ConstructorInfo -> [(Type, Name)] -> Pat
-consPat cons vars =
-    ConP (D.constructorName cons) (vars <&> snd <&> VarP)
+consPat :: Name -> [(a, Name)] -> Pat
+consPat c vars =
+    ConP c (vars <&> snd <&> VarP)
 
 simplifyContext :: [Pred] -> CxtQ
 simplifyContext preds =
@@ -268,10 +270,7 @@ makeNodeOf info =
         makeNiceName = reverse . takeWhile (/= '.') . reverse
         nodeBase = "W_" <> niceTypeName <> "_"
         embedBase = "E_" <> niceTypeName <> "_"
-        pats =
-            tiCons info
-            >>= D.constructorFields
-            <&> matchType (tiKnotParam info)
+        pats = tiConstructors info >>= snd
         makeNiceType (ConT x) = makeNiceName (show x)
         makeNiceType (AppT x y) = makeNiceType x <> "_" <> makeNiceType y
         makeNiceType (VarT x) = takeWhile (/= '_') (show x)
