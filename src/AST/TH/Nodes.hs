@@ -35,7 +35,7 @@ makeKNodesForType info =
         (nodeOfCons, wit) = makeNodeOf info
         constraintVar :: Name
         constraintVar = mkName "constraint"
-        contents = tiContents info
+        contents = childrenTypes info
         nodesConstraint =
             (Set.toList (tcChildren contents) <&> (VarT constraintVar `AppT`))
             <> (Set.toList (tcEmbeds contents) <&>
@@ -47,7 +47,7 @@ makeContext info =
     tiConstructors info ^.. traverse . Lens._2 . traverse . Lens._Right >>= ctxForPat
     where
         ctxForPat (InContainer _ pat) = ctxForPat pat
-        ctxForPat (Embed t) = [ConT ''KNodes `AppT` t]
+        ctxForPat (GenEmbed t) = [ConT ''KNodes `AppT` t]
         ctxForPat _ = []
 
 makeKLiftConstraints :: NodeWitnesses -> [Clause]

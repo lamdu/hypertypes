@@ -22,27 +22,33 @@ makeKFunctorForType :: TypeInfo -> DecsQ
 makeKFunctorForType info =
     instanceD (simplifyContext (makeContext info)) (appT (conT ''KFunctor) (pure (tiInstance info)))
     [ InlineP 'mapK Inline FunLike AllPhases & PragmaD & pure
-    , funD 'mapK (tiConstructors info <&> pure . makeMapKCtr wit)
+    , funD 'mapK (tiConstructors info <&> pure . makeCtr)
     ]
     <&> (:[])
     where
         (_, wit) = makeNodeOf info
+        makeCtr ctr =
+            Clause [VarP varF, pat] body []
+            where
+                (pat, body) = makeMapKCtr 0 wit ctr
+
+varF :: Name
+varF = mkName "_f"
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
     tiConstructors info ^.. traverse . Lens._2 . traverse . Lens._Right >>= ctxForPat
     where
         ctxForPat (InContainer t pat) = (ConT ''Functor `AppT` t) : ctxForPat pat
-        ctxForPat (Embed t) = [ConT ''KFunctor `AppT` t]
+        ctxForPat (GenEmbed t) = [ConT ''KFunctor `AppT` t]
         ctxForPat _ = []
 
-makeMapKCtr :: NodeWitnesses -> (Name, [Either Type CtrTypePattern]) -> Clause
-makeMapKCtr wit (cName, cFields) =
-    Clause [VarP varF, ConP cName (cVars <&> VarP)] body []
+makeMapKCtr :: Int -> NodeWitnesses -> (Name, [Either Type CtrTypePattern]) -> (Pat, Body)
+makeMapKCtr i wit (cName, cFields) =
+    (ConP cName (cVars <&> VarP), body)
     where
-        varF = mkName "_f"
         cVars =
-            [0::Int ..] <&> show <&> ('x':) <&> mkName
+            [i ..] <&> show <&> ('x':) <&> mkName
             & take (length cFields)
         body =
             zipWith bodyFor cFields cVars
@@ -51,5 +57,11 @@ makeMapKCtr wit (cName, cFields) =
         bodyFor (Right x) v = bodyForPat x `AppE` VarE v
         bodyFor Left{} v = VarE v
         bodyForPat (Node t) = VarE varF `AppE` nodeWit wit t
-        bodyForPat (Embed t) = VarE 'mapK `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))
+        bodyForPat (GenEmbed t) = VarE 'mapK `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))
         bodyForPat (InContainer _ pat) = bodyForPat pat & AppE (VarE 'fmap)
+        bodyForPat (FlatEmbed x) =
+            LamCaseE
+            (tiConstructors x
+                <&> makeMapKCtr (i + length cVars) wit
+                <&> \(p, b) -> Match p b []
+            )

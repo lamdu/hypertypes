@@ -22,29 +22,33 @@ makeKFoldableForType :: TypeInfo -> DecsQ
 makeKFoldableForType info =
     instanceD (simplifyContext (makeContext info)) (appT (conT ''KFoldable) (pure (tiInstance info)))
     [ InlineP 'foldMapK Inline FunLike AllPhases & PragmaD & pure
-    , funD 'foldMapK (tiConstructors info <&> pure . uncurry (makeFoldMapKCtr wit))
+    , funD 'foldMapK (tiConstructors info <&> pure . makeCtr)
     ]
     <&> (:[])
     where
         (_, wit) = makeNodeOf info
+        makeCtr ctr =
+            Clause [VarP varF, pat] body []
+            where
+                (pat, body) = makeFoldMapKCtr 0 wit ctr
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
     tiConstructors info ^.. traverse . Lens._2 . traverse . Lens._Right >>= ctxForPat
     where
         ctxForPat (InContainer t pat) = (ConT ''Foldable `AppT` t) : ctxForPat pat
-        ctxForPat (Embed t) = [ConT ''KFoldable `AppT` t]
+        ctxForPat (GenEmbed t) = [ConT ''KFoldable `AppT` t]
         ctxForPat _ = []
 
 varF :: Name
 varF = mkName "_f"
 
-makeFoldMapKCtr :: NodeWitnesses -> Name -> [Either Type CtrTypePattern] -> Clause
-makeFoldMapKCtr wit cName cFields =
-    Clause [VarP varF, ConP cName (cVars <&> VarP)] body []
+makeFoldMapKCtr :: Int -> NodeWitnesses -> (Name, [Either Type CtrTypePattern]) -> (Pat, Body)
+makeFoldMapKCtr i wit (cName, cFields) =
+    (ConP cName (cVars <&> VarP), body)
     where
         cVars =
-            [0::Int ..] <&> show <&> ("_x" <>) <&> mkName
+            [i ..] <&> show <&> ("_x" <>) <&> mkName
             & take (length cFields)
         bodyParts =
             zipWith (\x y -> x <&> (`AppE` y))
@@ -60,5 +64,12 @@ makeFoldMapKCtr wit cName cFields =
         bodyFor (Right x) = bodyForPat x
         bodyFor Left{} = []
         bodyForPat (Node t) = [VarE varF `AppE` nodeWit wit t]
-        bodyForPat (Embed t) = [VarE 'foldMapK `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))]
+        bodyForPat (GenEmbed t) = [VarE 'foldMapK `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))]
         bodyForPat (InContainer _ pat) = bodyForPat pat <&> AppE (VarE 'foldMap)
+        bodyForPat (FlatEmbed x) =
+            [ LamCaseE
+                (tiConstructors x
+                    <&> makeFoldMapKCtr (i + length cVars) wit
+                    <&> \(p, b) -> Match p b []
+                )
+            ]

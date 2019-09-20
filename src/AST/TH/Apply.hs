@@ -68,7 +68,8 @@ makeKApplyForType info =
         bodyFor (Right x) = bodyForPat x
         bodyFor Left{} = VarE '(<>)
         bodyForPat Node{} = ConE 'Pair
-        bodyForPat Embed{} = VarE 'zipK
+        bodyForPat GenEmbed{} = VarE 'zipK
+        bodyForPat FlatEmbed{} = VarE 'zipK
         bodyForPat (InContainer _ pat) = VarE 'liftA2 `AppE` bodyForPat pat
         f (p, x) (_, y) =
             bodyFor p `AppE` VarE x `AppE` VarE y
@@ -80,5 +81,6 @@ makeContext info =
         ctxFor (Right x) = ctxForPat x
         ctxFor (Left x) = [ConT ''Semigroup `AppT` x]
         ctxForPat (InContainer t pat) = (ConT ''Applicative `AppT` t) : ctxForPat pat
-        ctxForPat (Embed t) = [ConT ''KApply `AppT` t]
+        ctxForPat (GenEmbed t) = [ConT ''KApply `AppT` t]
+        ctxForPat (FlatEmbed t) = [ConT ''KApply `AppT` tiInstance t]
         ctxForPat _ = []

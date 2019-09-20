@@ -8,7 +8,7 @@ module AST.TH.Internal.Utils
     , makeTypeInfo, makeNodeOf
     , parts, toTuple, matchType
     , applicativeStyle, unapply, getVar, makeConstructorVars
-    , consPat, simplifyContext
+    , consPat, simplifyContext, childrenTypes
     ) where
 
 import           AST.Class.Nodes
@@ -16,7 +16,7 @@ import           AST.Knot (Knot(..), GetKnot, type (#))
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
-import           Control.Monad.Trans.State (StateT(..), evalStateT, execStateT, gets, modify)
+import           Control.Monad.Trans.State (State, evalState, execStateT, gets, modify)
 import           Data.Foldable (traverse_)
 import           Data.List (nub)
 import           Data.Map (Map)
@@ -35,7 +35,6 @@ data TypeInfo = TypeInfo
     { tiName :: Name
     , tiInstance :: Type
     , tiKnotParam :: Name
-    , tiContents :: TypeContents
     , tiConstructors :: [(Name, [Either Type CtrTypePattern])]
     } deriving Show
 
@@ -48,7 +47,8 @@ data TypeContents = TypeContents
 
 data CtrTypePattern
     = Node Type
-    | Embed Type
+    | FlatEmbed TypeInfo
+    | GenEmbed Type
     | InContainer Type CtrTypePattern
     deriving Show
 
@@ -57,15 +57,15 @@ makeTypeInfo name =
     do
         info <- D.reifyDatatype name
         (dst, var) <- parts info
-        contents <- evalStateT (childrenTypes var (AppT dst (VarT var))) mempty
+        let makeCons c =
+                traverse (matchType var) (D.constructorFields c)
+                <&> (D.constructorName c, )
+        cons <- traverse makeCons (D.datatypeCons info)
         pure TypeInfo
             { tiName = name
             , tiInstance = dst
             , tiKnotParam = var
-            , tiContents = contents
-            , tiConstructors =
-                D.datatypeCons info
-                <&> \x -> (D.constructorName x, D.constructorFields x <&> matchType var)
+            , tiConstructors = cons
             }
 
 parts :: D.DatatypeInfo -> Q (Type, Name)
@@ -81,24 +81,25 @@ parts info =
             res =
                 foldl AppT (ConT (D.datatypeName info)) (init xs <&> VarT . D.tvName)
 
-childrenTypes ::
-    Name -> Type -> StateT (Set Type) Q TypeContents
-childrenTypes var typ =
+childrenTypes :: TypeInfo -> TypeContents
+childrenTypes info = evalState (childrenTypesH info) mempty
+
+childrenTypesH ::
+    TypeInfo -> State (Set Type) TypeContents
+childrenTypesH info =
     do
-        did <- gets (^. Lens.contains typ)
+        did <- gets (^. Lens.contains (tiInstance info))
         if did
             then pure mempty
-            else modify (Lens.contains typ .~ True) *> add (matchType var typ)
+            else
+                modify (Lens.contains (tiInstance info) .~ True) *>
+                traverse addPat (tiConstructors info ^.. traverse . Lens._2 . traverse . Lens._Right)
+                    <&> mconcat
     where
-        add (Right x) = addPat x
-        add Left{} = pure mempty
-        addPat (Node ast) = pure mempty { tcChildren = Set.singleton ast }
-        addPat (Embed ast) =
-            case unapply ast of
-            (ConT name, as) -> childrenTypesFromTypeName name as
-            (x@VarT{}, as) -> pure mempty { tcEmbeds = Set.singleton (foldl AppT x as) }
-            _ -> pure mempty
-        addPat (InContainer _ pat) = addPat pat
+        addPat (FlatEmbed inner) = childrenTypesH inner
+        addPat (Node x) = pure mempty { tcChildren = Set.singleton x }
+        addPat (GenEmbed x) = pure mempty { tcEmbeds = Set.singleton x }
+        addPat (InContainer _ x) = addPat x
 
 unapply :: Type -> (Type, [Type])
 unapply =
@@ -108,93 +109,60 @@ unapply =
         go as (AppT f a) = go (a:as) f
         go as x = (x, as)
 
-matchType :: Name -> Type -> Either Type CtrTypePattern
+matchType :: Name -> Type -> Q (Either Type CtrTypePattern)
 matchType var (ConT getKnot `AppT` VarT k `AppT` (PromotedT knot `AppT` x))
     | getKnot == ''GetKnot && knot == 'Knot && k == var =
-        Node x & Right
+        Node x & Right & pure
 matchType var (InfixT (VarT k) hash x)
     | hash == ''(#) && k == var =
-        Node x & Right
+        Node x & Right & pure
 matchType var (ConT hash `AppT` VarT k `AppT` x)
     | hash == ''(#) && k == var =
-        Node x & Right
+        Node x & Right & pure
 matchType var (x `AppT` VarT k)
     | k == var && x /= ConT ''GetKnot =
-        Embed x & Right
+        case unapply x of
+        (ConT c, args) ->
+            do
+                inner <- D.reifyDatatype c
+                let innerVars = D.datatypeVars inner <&> D.tvName
+                let subst =
+                        args <> [VarT var]
+                        & zip innerVars
+                        & Map.fromList
+                let makeCons i =
+                        D.constructorFields i
+                        <&> D.applySubstitution subst
+                        & traverse (matchType var)
+                        <&> (D.constructorName i, )
+                traverse makeCons (D.datatypeCons inner)
+            <&>
+            \cons ->
+            if var `notElem` (D.freeVariablesWellScoped (cons ^.. traverse . Lens._2 . traverse . Lens._Left) <&> D.tvName)
+            then
+                FlatEmbed TypeInfo
+                { tiName = c
+                , tiInstance = x
+                , tiKnotParam = var
+                , tiConstructors = cons
+                }
+            else
+                GenEmbed x
+        _ -> GenEmbed x & pure
+        <&> Right
 matchType var x@(AppT f a) =
     -- TODO: check if applied over a functor-kinded type.
-    case matchType var a of
+    matchType var a
+    <&>
+    \case
     Left{} -> Left x
     Right pat -> InContainer f pat & Right
-matchType _ t = Left t
+matchType _ t = Left t & pure
 
 getVar :: Type -> Maybe Name
 getVar (VarT x) = Just x
 getVar (SigT x _) = getVar x
 getVar _ = Nothing
-
-childrenTypesFromTypeName ::
-    Name -> [Type] -> StateT (Set Type) Q TypeContents
-childrenTypesFromTypeName name args =
-    reifyInstances ''KNodesConstraint [typ, VarT constraintVar] & lift
-    >>=
-    \case
-    [] ->
-        D.reifyDatatype name
-        <&> Just
-        & recover (pure Nothing)
-        & lift
-        >>=
-        \case
-        Just info ->
-            do
-                (_, var) <- parts info & lift
-                D.datatypeCons info >>= D.constructorFields
-                    <&> D.applySubstitution substs
-                    & traverse (childrenTypes var)
-                    <&> mconcat
-            where
-                substs =
-                    zip (D.datatypeVars info) args
-                    <&> Lens._1 %~ D.tvName
-                    & Map.fromList
-        Nothing ->
-            -- Not a datatype, so an embedded type family
-            pure mempty { tcEmbeds = Set.singleton typ }
-    [TySynInstD ccI (TySynEqn [typI, VarT cI] x)]
-        | ccI == ''KNodesConstraint ->
-            case unapply typI of
-            (ConT n1, argsI) | n1 == name ->
-                case traverse getVar argsI of
-                Nothing ->
-                    error ("TODO: Support Children constraint of flexible instances " <> show typ)
-                Just argNames ->
-                    childrenTypesFromChildrenConstraint cI (D.applySubstitution substs x)
-                    where
-                        substs = zip argNames args & Map.fromList
-            _ -> error ("ReifyInstances brought wrong typ: " <> show (name, typI))
-    xs -> error ("Malformed ChildrenConstraint instance: " <> show xs)
-    where
-        typ = foldl AppT (ConT name) args
-
-constraintVar :: Name
-constraintVar = mkName "constraint"
-
-childrenTypesFromChildrenConstraint ::
-    Name -> Type -> StateT (Set Type) Q TypeContents
-childrenTypesFromChildrenConstraint c0 c@(AppT (VarT c1) x)
-    | c0 == c1 = pure mempty { tcChildren = Set.singleton x }
-    | otherwise = error ("TODO: Unsupported ChildrenContraint " <> show c)
-childrenTypesFromChildrenConstraint c0 constraints =
-    case unapply constraints of
-    (ConT cc1, [x, VarT c1])
-        | cc1 == ''KNodesConstraint && c0 == c1 ->
-            pure mempty { tcEmbeds = Set.singleton x }
-    (TupleT{}, xs) ->
-        traverse (childrenTypesFromChildrenConstraint c0) xs <&> mconcat
-    _ -> pure mempty { tcOthers = Set.singleton (D.applySubstitution subst constraints) }
-    where
-        subst = mempty & Lens.at c0 ?~ VarT constraintVar
 
 toTuple :: Foldable t => t Type -> Type
 toTuple xs = foldl AppT (TupleT (length xs)) xs
@@ -281,13 +249,15 @@ makeNodeOf info =
             <&> \t -> (t, mkName (nodeBase <> makeNiceType t))
         nodesForPat (Node t) = [t]
         nodesForPat (InContainer _ pat) = nodesForPat pat
+        nodesForPat (FlatEmbed x) = tiConstructors x ^.. traverse . Lens._2 . traverse . Lens._Right >>= nodesForPat
         nodesForPat _ = []
         nodeGadtType t = ConT ''KWitness `AppT` tiInstance info `AppT` t
         embeds =
             pats ^.. traverse . Lens._Right >>= embedsForPat & nub
             <&> \t -> (t, mkName (embedBase <> makeNiceType t))
-        embedsForPat (Embed t) = [t]
+        embedsForPat (GenEmbed t) = [t]
         embedsForPat (InContainer _ pat) = embedsForPat pat
+        embedsForPat (FlatEmbed x) = tiConstructors x ^.. traverse . Lens._2 . traverse . Lens._Right >>= embedsForPat
         embedsForPat _ = []
         embedGadtType t =
             ArrowT

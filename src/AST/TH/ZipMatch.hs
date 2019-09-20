@@ -63,18 +63,20 @@ makeZipMatchCtr cName cFields =
             , zmfConds = []
             , zmfContext = []
             }
-        field (x, y) (Right (Embed t)) =
-            ZipMatchField
-            { zmfResult = VarE 'zipMatch `AppE` VarE x `AppE` VarE y
-            , zmfConds = []
-            , zmfContext = [ConT ''ZipMatch `AppT` t]
-            }
+        field (x, y) (Right (GenEmbed t)) = embed t x y
+        field (x, y) (Right (FlatEmbed t)) = embed (tiInstance t) x y
         field _ (Right InContainer{}) = error "TODO"
         field (x, y) (Left t) =
             ZipMatchField
             { zmfResult = ConE 'Just `AppE` VarE x
             , zmfConds = [InfixE (Just (VarE x)) (VarE '(==)) (Just (VarE y))]
             , zmfContext = [ConT ''Eq `AppT` t]
+            }
+        embed t x y =
+            ZipMatchField
+            { zmfResult = VarE 'zipMatch `AppE` VarE x `AppE` VarE y
+            , zmfConds = []
+            , zmfContext = [ConT ''ZipMatch `AppT` t]
             }
 
 data ZipMatchField = ZipMatchField

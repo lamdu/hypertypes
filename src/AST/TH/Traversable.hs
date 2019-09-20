@@ -66,7 +66,8 @@ makeContext info =
     tiConstructors info ^.. traverse . Lens._2 . traverse . Lens._Right >>= ctxForPat
     where
         ctxForPat (InContainer t pat) = (ConT ''Traversable `AppT` t) : ctxForPat pat
-        ctxForPat (Embed t) = [ConT ''KTraversable `AppT` t]
+        ctxForPat (GenEmbed t) = [ConT ''KTraversable `AppT` t]
+        ctxForPat (FlatEmbed t) = [ConT ''KTraversable `AppT` tiInstance t]
         ctxForPat _ = []
 
 makeCons ::
@@ -83,5 +84,6 @@ makeCons cName cFields =
         bodyFor (Right x) = bodyForPat x
         bodyFor Left{} = VarE 'pure
         bodyForPat Node{} = VarE 'runContainedK
-        bodyForPat Embed{} = VarE 'sequenceK
+        bodyForPat FlatEmbed{} = VarE 'sequenceK
+        bodyForPat GenEmbed{} = VarE 'sequenceK
         bodyForPat (InContainer _ pat) = VarE 'traverse `AppE` bodyForPat pat

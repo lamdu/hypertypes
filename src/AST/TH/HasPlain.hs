@@ -7,7 +7,7 @@ module AST.TH.HasPlain
     ) where
 
 import           AST.Class.HasPlain
-import           AST.Knot (GetKnot, type (#))
+import           AST.Knot (GetKnot)
 import           AST.Knot.Pure (Pure, _Pure)
 import           AST.TH.Internal.Utils
 import qualified Control.Lens as Lens
@@ -53,8 +53,8 @@ makeKHasPlainForType info =
 
 data FieldInfo = FieldInfo
     { fieldPlainType :: Type
-    , fieldToPlain :: Exp
-    , fieldFromPlain :: Exp
+    , fieldToPlain :: Exp -> Exp
+    , fieldFromPlain :: Exp -> Exp
     }
 
 data EmbedInfo = EmbedInfo
@@ -77,7 +77,7 @@ makeCtr knot (cName, cFields) =
     ( plainTypes
         <&> (Bang NoSourceUnpackedness NoSourceStrictness, )
         & NormalC pcon
-    , zipWith AppE (xs >>= toPlainFields) (cVars <&> VarE)
+    , zipWith ($) (xs >>= toPlainFields) (cVars <&> VarE)
         & foldl AppE (ConE pcon)
         & NormalB
         & \x ->
@@ -101,7 +101,7 @@ makeCtr knot (cName, cFields) =
         toPlainPat [] _ = error "out of variables"
         fromPlainFields cs [] = ([], cs)
         fromPlainFields (c:cs) (NodeField x : xs) =
-            fromPlainFields cs xs & Lens._1 %~ (fieldFromPlain x `AppE` VarE c :)
+            fromPlainFields cs xs & Lens._1 %~ (fieldFromPlain x (VarE c) :)
         fromPlainFields cs0 (EmbedFields x : xs) =
             fromPlainFields cs1 xs & Lens._1 %~ (foldl AppE (ConE (embedCtr x)) r :)
             where
@@ -113,41 +113,53 @@ makeCtr knot (cName, cFields) =
         forField (Left t) =
             NodeField FieldInfo
             { fieldPlainType = normalizeType t
-            , fieldToPlain = VarE 'id
-            , fieldFromPlain = VarE 'id
+            , fieldToPlain = id
+            , fieldFromPlain = id
             } & pure
         forField (Right x) = forPat x
-        forPat (Node x) =
+        forPat (Node x) = forGen x
+        forPat (GenEmbed x) = forGen x
+        forPat (InContainer t p) =
             NodeField FieldInfo
-            { fieldPlainType = ConT ''KPlain `AppT` x
-            , fieldToPlain = InfixE (Just (VarE 'kPlain)) (VarE '(#)) Nothing
-            , fieldFromPlain = InfixE Nothing (VarE '(^.)) (Just (VarE 'kPlain))
+            { fieldPlainType = t `AppT` patType p
+            , fieldToPlain = AppE (VarE 'fmap `AppE` InfixE (Just (VarE 'kPlain)) (VarE '(#)) Nothing)
+            , fieldFromPlain = AppE (VarE 'fmap `AppE` InfixE Nothing (VarE '(^.)) (Just (VarE 'kPlain)))
             } & pure
-        forPat (Embed t) = embed t (VarT knot)
-        forPat (InContainer t p) = embed t (patType p)
-        embed t arg =
+            where
+                patType (Node x) = ConT ''KPlain `AppT` x
+                patType (GenEmbed x) = ConT ''KPlain `AppT` x
+                patType (FlatEmbed x) = ConT ''KPlain `AppT` tiInstance x
+                patType (InContainer t' p') = t' `AppT` patType p'
+        forPat (FlatEmbed x) =
+            case tiConstructors x of
+            [(n, xs)] -> traverse forField xs <&> EmbedInfo n <&> EmbedFields
+            _ -> forGen (tiInstance x)
+        forGen t =
             case unapply t of
             (ConT c, args) ->
                 do
                     inner <- D.reifyDatatype c
-                    let innerVars = D.datatypeVars inner <&> D.tvName
                     let subst =
-                            args <> [arg]
-                            & zip innerVars
+                            args <> [VarT knot]
+                            & zip (D.datatypeVars inner <&> D.tvName)
                             & Map.fromList
                     case D.datatypeCons inner of
                         [x] ->
                             D.constructorFields x
                             <&> D.applySubstitution subst
-                            <&> matchType knot
-                            & traverse forField
+                            & traverse (matchType knot)
+                            >>= traverse forField
                             <&> EmbedInfo (D.constructorName x)
                             <&> EmbedFields
-                        _ -> fail "TODO: makeKHAsPlain missing support 0"
-            _ -> fail "TODO: makeKHAsPlain missing support 1"
-        patType (Node x) = InfixT (VarT knot) ''(#) x
-        patType (Embed x) = x `AppT` VarT knot
-        patType (InContainer t p) = t `AppT` patType p
+                        _ -> gen
+            _ -> gen
+            where
+                gen =
+                    NodeField FieldInfo
+                    { fieldPlainType = ConT ''KPlain `AppT` t
+                    , fieldToPlain = InfixE (Just (VarE 'kPlain)) (VarE '(#)) . Just
+                    , fieldFromPlain = \f -> InfixE (Just f) (VarE '(^.)) (Just (VarE 'kPlain))
+                    } & pure
         normalizeType (ConT g `AppT` VarT v)
             | g == ''GetKnot && v == knot = ConT ''Pure
         normalizeType (x `AppT` y) = normalizeType x `AppT` normalizeType y
