@@ -36,7 +36,7 @@ data TypeInfo = TypeInfo
     , tiInstance :: Type
     , tiKnotParam :: Name
     , tiContents :: TypeContents
-    , tiConstructors :: [(Name, [CtrTypePattern])]
+    , tiConstructors :: [(Name, [Either Type CtrTypePattern])]
     } deriving Show
 
 data TypeContents = TypeContents
@@ -50,7 +50,6 @@ data CtrTypePattern
     = Node Type
     | Embed Type
     | InContainer Type CtrTypePattern
-    | PlainData Type
     deriving Show
 
 makeTypeInfo :: Name -> Q TypeInfo
@@ -91,14 +90,15 @@ childrenTypes var typ =
             then pure mempty
             else modify (Lens.contains typ .~ True) *> add (matchType var typ)
     where
-        add (Node ast) = pure mempty { tcChildren = Set.singleton ast }
-        add (Embed ast) =
+        add (Right x) = addPat x
+        add Left{} = pure mempty
+        addPat (Node ast) = pure mempty { tcChildren = Set.singleton ast }
+        addPat (Embed ast) =
             case unapply ast of
             (ConT name, as) -> childrenTypesFromTypeName name as
             (x@VarT{}, as) -> pure mempty { tcEmbeds = Set.singleton (foldl AppT x as) }
             _ -> pure mempty
-        add (InContainer _ pat) = add pat
-        add PlainData{} = pure mempty
+        addPat (InContainer _ pat) = addPat pat
 
 unapply :: Type -> (Type, [Type])
 unapply =
@@ -108,25 +108,25 @@ unapply =
         go as (AppT f a) = go (a:as) f
         go as x = (x, as)
 
-matchType :: Name -> Type -> CtrTypePattern
+matchType :: Name -> Type -> Either Type CtrTypePattern
 matchType var (ConT getKnot `AppT` VarT k `AppT` (PromotedT knot `AppT` x))
     | getKnot == ''GetKnot && knot == 'Knot && k == var =
-        Node x
+        Node x & Right
 matchType var (InfixT (VarT k) hash x)
     | hash == ''(#) && k == var =
-        Node x
+        Node x & Right
 matchType var (ConT hash `AppT` VarT k `AppT` x)
     | hash == ''(#) && k == var =
-        Node x
+        Node x & Right
 matchType var (x `AppT` VarT k)
     | k == var && x /= ConT ''GetKnot =
-        Embed x
+        Embed x & Right
 matchType var x@(AppT f a) =
     -- TODO: check if applied over a functor-kinded type.
     case matchType var a of
-    PlainData{} -> PlainData x
-    pat -> InContainer f pat
-matchType _ t = PlainData t
+    Left{} -> Left x
+    Right pat -> InContainer f pat & Right
+matchType _ t = Left t
 
 getVar :: Type -> Maybe Name
 getVar (VarT x) = Just x
@@ -277,14 +277,14 @@ makeNodeOf info =
         makeNiceType (SigT x _) = makeNiceType x
         makeNiceType x = error ("TODO: Witness name generator is partial! Need to support " <> show x)
         nodes =
-            pats >>= nodesForPat & nub
+            pats ^.. traverse . Lens._Right >>= nodesForPat & nub
             <&> \t -> (t, mkName (nodeBase <> makeNiceType t))
         nodesForPat (Node t) = [t]
         nodesForPat (InContainer _ pat) = nodesForPat pat
         nodesForPat _ = []
         nodeGadtType t = ConT ''KWitness `AppT` tiInstance info `AppT` t
         embeds =
-            pats >>= embedsForPat & nub
+            pats ^.. traverse . Lens._Right >>= embedsForPat & nub
             <&> \t -> (t, mkName (embedBase <> makeNiceType t))
         embedsForPat (Embed t) = [t]
         embedsForPat (InContainer _ pat) = embedsForPat pat

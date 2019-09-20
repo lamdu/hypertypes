@@ -66,9 +66,9 @@ data Field
     = NodeField FieldInfo
     | EmbedFields EmbedInfo
 
-makeCtr :: Name -> (Name, [CtrTypePattern]) -> Q (Con, Clause, Clause)
+makeCtr :: Name -> (Name, [Either Type CtrTypePattern]) -> Q (Con, Clause, Clause)
 makeCtr knot (cName, cFields) =
-    traverse forPat cFields
+    traverse forField cFields
     <&>
     \xs ->
     let plainTypes = xs >>= plainFieldTypes
@@ -110,17 +110,18 @@ makeCtr knot (cName, cFields) =
         pcon =
             show cName & reverse & takeWhile (/= '.') & reverse
             & (<> "P") & mkName
+        forField (Left t) =
+            NodeField FieldInfo
+            { fieldPlainType = normalizeType t
+            , fieldToPlain = VarE 'id
+            , fieldFromPlain = VarE 'id
+            } & pure
+        forField (Right x) = forPat x
         forPat (Node x) =
             NodeField FieldInfo
             { fieldPlainType = ConT ''KPlain `AppT` x
             , fieldToPlain = InfixE (Just (VarE 'kPlain)) (VarE '(#)) Nothing
             , fieldFromPlain = InfixE Nothing (VarE '(^.)) (Just (VarE 'kPlain))
-            } & pure
-        forPat (PlainData t) =
-            NodeField FieldInfo
-            { fieldPlainType = normalizeType t
-            , fieldToPlain = VarE 'id
-            , fieldFromPlain = VarE 'id
             } & pure
         forPat (Embed t) = embed t (VarT knot)
         forPat (InContainer t p) = embed t (patType p)
@@ -139,12 +140,11 @@ makeCtr knot (cName, cFields) =
                             D.constructorFields x
                             <&> D.applySubstitution subst
                             <&> matchType knot
-                            & traverse forPat
+                            & traverse forField
                             <&> EmbedInfo (D.constructorName x)
                             <&> EmbedFields
                         _ -> fail "TODO: makeKHAsPlain missing support 0"
             _ -> fail "TODO: makeKHAsPlain missing support 1"
-        patType (PlainData t) = t
         patType (Node x) = InfixT (VarT knot) ''(#) x
         patType (Embed x) = x `AppT` VarT knot
         patType (InContainer t p) = t `AppT` patType p

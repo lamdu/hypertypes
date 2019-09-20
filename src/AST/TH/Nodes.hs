@@ -8,6 +8,7 @@ module AST.TH.Nodes
 
 import           AST.Class.Nodes
 import           AST.TH.Internal.Utils
+import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import qualified Data.Set as Set
 import           Language.Haskell.TH
@@ -43,7 +44,7 @@ makeKNodesForType info =
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
-    tiConstructors info >>= snd >>= ctxForPat
+    tiConstructors info ^.. traverse . Lens._2 . traverse . Lens._Right >>= ctxForPat
     where
         ctxForPat (InContainer _ pat) = ctxForPat pat
         ctxForPat (Embed t) = [ConT ''KNodes `AppT` t]

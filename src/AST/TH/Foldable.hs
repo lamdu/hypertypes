@@ -8,6 +8,7 @@ module AST.TH.Foldable
 
 import           AST.Class.Foldable
 import           AST.TH.Internal.Utils
+import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Language.Haskell.TH
 
@@ -29,7 +30,7 @@ makeKFoldableForType info =
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
-    tiConstructors info >>= snd >>= ctxForPat
+    tiConstructors info ^.. traverse . Lens._2 . traverse . Lens._Right >>= ctxForPat
     where
         ctxForPat (InContainer t pat) = (ConT ''Foldable `AppT` t) : ctxForPat pat
         ctxForPat (Embed t) = [ConT ''KFoldable `AppT` t]
@@ -38,7 +39,7 @@ makeContext info =
 varF :: Name
 varF = mkName "_f"
 
-makeFoldMapKCtr :: NodeWitnesses -> Name -> [CtrTypePattern] -> Clause
+makeFoldMapKCtr :: NodeWitnesses -> Name -> [Either Type CtrTypePattern] -> Clause
 makeFoldMapKCtr wit cName cFields =
     Clause [VarP varF, ConP cName (cVars <&> VarP)] body []
     where
@@ -47,7 +48,7 @@ makeFoldMapKCtr wit cName cFields =
             & take (length cFields)
         bodyParts =
             zipWith (\x y -> x <&> (`AppE` y))
-            (cFields <&> bodyForPat)
+            (cFields <&> bodyFor)
             (cVars <&> VarE)
             & concat
         body =
@@ -56,7 +57,8 @@ makeFoldMapKCtr wit cName cFields =
             _ -> foldl1 append bodyParts
             & NormalB
         append x y = InfixE (Just x) (VarE '(<>)) (Just y)
+        bodyFor (Right x) = bodyForPat x
+        bodyFor Left{} = []
         bodyForPat (Node t) = [VarE varF `AppE` nodeWit wit t]
         bodyForPat (Embed t) = [VarE 'foldMapK `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))]
         bodyForPat (InContainer _ pat) = bodyForPat pat <&> AppE (VarE 'foldMap)
-        bodyForPat PlainData{} = []

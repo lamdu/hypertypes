@@ -39,7 +39,7 @@ data CtrCase =
     , ccContext :: [Pred]
     }
 
-makeZipMatchCtr :: Name -> [CtrTypePattern] -> CtrCase
+makeZipMatchCtr :: Name -> [Either Type CtrTypePattern] -> CtrCase
 makeZipMatchCtr cName cFields =
     CtrCase
     { ccClause = Clause [con fst, con snd] body []
@@ -57,20 +57,20 @@ makeZipMatchCtr cName cFields =
         mkAnd x y = InfixE (Just x) (VarE '(&&)) (Just y)
         fieldParts = zipWith field cVars cFields
         bodyExp = applicativeStyle (ConE cName) (fieldParts <&> zmfResult)
-        field (x, y) Node{} =
+        field (x, y) (Right Node{}) =
             ZipMatchField
             { zmfResult = ConE 'Just `AppE` (ConE 'Pair `AppE` VarE x `AppE` VarE y)
             , zmfConds = []
             , zmfContext = []
             }
-        field (x, y) (Embed t) =
+        field (x, y) (Right (Embed t)) =
             ZipMatchField
             { zmfResult = VarE 'zipMatch `AppE` VarE x `AppE` VarE y
             , zmfConds = []
             , zmfContext = [ConT ''ZipMatch `AppT` t]
             }
-        field _ InContainer{} = error "TODO"
-        field (x, y) (PlainData t) =
+        field _ (Right InContainer{}) = error "TODO"
+        field (x, y) (Left t) =
             ZipMatchField
             { zmfResult = ConE 'Just `AppE` VarE x
             , zmfConds = [InfixE (Just (VarE x)) (VarE '(==)) (Just (VarE y))]

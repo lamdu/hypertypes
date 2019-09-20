@@ -8,6 +8,7 @@ module AST.TH.Functor
 
 import           AST.Class.Functor
 import           AST.TH.Internal.Utils
+import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Language.Haskell.TH
 
@@ -29,13 +30,13 @@ makeKFunctorForType info =
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
-    tiConstructors info >>= snd >>= ctxForPat
+    tiConstructors info ^.. traverse . Lens._2 . traverse . Lens._Right >>= ctxForPat
     where
         ctxForPat (InContainer t pat) = (ConT ''Functor `AppT` t) : ctxForPat pat
         ctxForPat (Embed t) = [ConT ''KFunctor `AppT` t]
         ctxForPat _ = []
 
-makeMapKCtr :: NodeWitnesses -> (Name, [CtrTypePattern]) -> Clause
+makeMapKCtr :: NodeWitnesses -> (Name, [Either Type CtrTypePattern]) -> Clause
 makeMapKCtr wit (cName, cFields) =
     Clause [VarP varF, ConP cName (cVars <&> VarP)] body []
     where
@@ -45,11 +46,12 @@ makeMapKCtr wit (cName, cFields) =
             & take (length cFields)
         body =
             zipWith AppE
-            (cFields <&> bodyForPat)
+            (cFields <&> bodyFor)
             (cVars <&> VarE)
             & foldl AppE (ConE cName)
             & NormalB
+        bodyFor (Right x) = bodyForPat x
+        bodyFor Left{} = VarE 'id
         bodyForPat (Node t) = VarE varF `AppE` nodeWit wit t
         bodyForPat (Embed t) = VarE 'mapK `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))
         bodyForPat (InContainer _ pat) = bodyForPat pat & AppE (VarE 'fmap)
-        bodyForPat PlainData{} = VarE 'id

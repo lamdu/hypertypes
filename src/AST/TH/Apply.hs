@@ -65,18 +65,20 @@ makeKApplyForType info =
             ]
             <&> (:[])
     where
+        bodyFor (Right x) = bodyForPat x
+        bodyFor Left{} = VarE '(<>)
         bodyForPat Node{} = ConE 'Pair
         bodyForPat Embed{} = VarE 'zipK
         bodyForPat (InContainer _ pat) = VarE 'liftA2 `AppE` bodyForPat pat
-        bodyForPat PlainData{} = VarE '(<>)
         f (p, x) (_, y) =
-            bodyForPat p `AppE` VarE x `AppE` VarE y
+            bodyFor p `AppE` VarE x `AppE` VarE y
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
-    tiConstructors info >>= snd >>= ctxForPat
+    tiConstructors info >>= snd >>= ctxFor
     where
+        ctxFor (Right x) = ctxForPat x
+        ctxFor (Left x) = [ConT ''Semigroup `AppT` x]
         ctxForPat (InContainer t pat) = (ConT ''Applicative `AppT` t) : ctxForPat pat
         ctxForPat (Embed t) = [ConT ''KApply `AppT` t]
-        ctxForPat (PlainData t) = [ConT ''Semigroup `AppT` t]
         ctxForPat _ = []

@@ -15,6 +15,7 @@ import           AST.TH.Foldable (makeKFoldable)
 import           AST.TH.Functor (makeKFunctor)
 import           AST.TH.Internal.Utils
 import           AST.TH.Nodes (makeKNodes)
+import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Language.Haskell.TH
 
@@ -62,14 +63,14 @@ makeKTraversableForType info =
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
-    tiConstructors info >>= snd >>= ctxForPat
+    tiConstructors info ^.. traverse . Lens._2 . traverse . Lens._Right >>= ctxForPat
     where
         ctxForPat (InContainer t pat) = (ConT ''Traversable `AppT` t) : ctxForPat pat
         ctxForPat (Embed t) = [ConT ''KTraversable `AppT` t]
         ctxForPat _ = []
 
 makeCons ::
-    Name -> [CtrTypePattern] -> Clause
+    Name -> [Either Type CtrTypePattern] -> Clause
 makeCons cName cFields =
     Clause [consPat cName consVars] body []
     where
@@ -78,8 +79,9 @@ makeCons cName cFields =
             & applicativeStyle (ConE cName)
             & NormalB
         consVars = makeConstructorVars "x" cFields
-        f (pat, name) = bodyForPat pat `AppE` VarE name
+        f (pat, name) = bodyFor pat `AppE` VarE name
+        bodyFor (Right x) = bodyForPat x
+        bodyFor Left{} = VarE 'pure
         bodyForPat Node{} = VarE 'runContainedK
         bodyForPat Embed{} = VarE 'sequenceK
         bodyForPat (InContainer _ pat) = VarE 'traverse `AppE` bodyForPat pat
-        bodyForPat PlainData{} = VarE 'pure
