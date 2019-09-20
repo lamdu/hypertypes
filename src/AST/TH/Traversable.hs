@@ -57,7 +57,7 @@ makeKTraversableForType :: TypeInfo -> DecsQ
 makeKTraversableForType info =
     instanceD (simplifyContext (makeContext info)) (appT (conT ''KTraversable) (pure (tiInstance info)))
     [ InlineP 'sequenceK Inline FunLike AllPhases & PragmaD & pure
-    , funD 'sequenceK (tiCons info <&> pure . makeCons (tiVar info))
+    , funD 'sequenceK (tiCons info <&> pure . makeCons (tiKnotParam info))
     ]
     <&> (:[])
 
@@ -65,7 +65,7 @@ makeContext :: TypeInfo -> [Pred]
 makeContext info =
     tiCons info
     >>= D.constructorFields
-    <&> matchType (tiVar info)
+    <&> matchType (tiKnotParam info)
     >>= ctxForPat
     where
         ctxForPat (InContainer t pat) = (ConT ''Traversable `AppT` t) : ctxForPat pat

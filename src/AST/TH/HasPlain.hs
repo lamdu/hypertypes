@@ -27,7 +27,7 @@ makeOne typeName = makeTypeInfo typeName >>= makeKHasPlainForType
 
 makeKHasPlainForType :: TypeInfo -> Q Dec
 makeKHasPlainForType info =
-    traverse (makeCtr (tiVar info)) (tiCons info)
+    traverse (makeCtr (tiKnotParam info)) (tiCons info)
     <&>
     \ctrs ->
     InstanceD Nothing [] (ConT ''KHasPlain `AppT` tiInstance info)

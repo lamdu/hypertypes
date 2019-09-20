@@ -46,7 +46,7 @@ makeContext :: TypeInfo -> [Pred]
 makeContext info =
     tiCons info
     >>= D.constructorFields
-    <&> matchType (tiVar info)
+    <&> matchType (tiKnotParam info)
     >>= ctxForPat
     where
         ctxForPat (InContainer _ pat) = ctxForPat pat

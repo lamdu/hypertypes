@@ -72,13 +72,13 @@ makeKApplyForType info =
         bodyForPat (InContainer _ pat) = VarE 'liftA2 `AppE` bodyForPat pat
         bodyForPat PlainData{} = VarE '(<>)
         f (typ, x) (_, y) =
-            bodyForPat (matchType (tiVar info) typ) `AppE` VarE x `AppE` VarE y
+            bodyForPat (matchType (tiKnotParam info) typ) `AppE` VarE x `AppE` VarE y
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
     tiCons info
     >>= D.constructorFields
-    <&> matchType (tiVar info)
+    <&> matchType (tiKnotParam info)
     >>= ctxForPat
     where
         ctxForPat (InContainer t pat) = (ConT ''Applicative `AppT` t) : ctxForPat pat

@@ -22,7 +22,7 @@ makeKFoldableForType :: TypeInfo -> DecsQ
 makeKFoldableForType info =
     instanceD (simplifyContext (makeContext info)) (appT (conT ''KFoldable) (pure (tiInstance info)))
     [ InlineP 'foldMapK Inline FunLike AllPhases & PragmaD & pure
-    , funD 'foldMapK (tiCons info <&> pure . makeFoldMapKCtr wit (tiVar info))
+    , funD 'foldMapK (tiCons info <&> pure . makeFoldMapKCtr wit (tiKnotParam info))
     ]
     <&> (:[])
     where
@@ -32,7 +32,7 @@ makeContext :: TypeInfo -> [Pred]
 makeContext info =
     tiCons info
     >>= D.constructorFields
-    <&> matchType (tiVar info)
+    <&> matchType (tiKnotParam info)
     >>= ctxForPat
     where
         ctxForPat (InContainer t pat) = (ConT ''Foldable `AppT` t) : ctxForPat pat

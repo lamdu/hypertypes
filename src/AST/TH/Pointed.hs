@@ -35,7 +35,7 @@ makeContext :: TypeInfo -> [Pred]
 makeContext info =
     tiCons info
     >>= D.constructorFields
-    <&> matchType (tiVar info)
+    <&> matchType (tiKnotParam info)
     >>= ctxForPat
     where
         ctxForPat (InContainer t pat) = (ConT ''Applicative `AppT` t) : ctxForPat pat
@@ -49,7 +49,7 @@ makePureKCtr typeInfo ctrInfo =
     where
         body =
             D.constructorFields ctrInfo
-            <&> matchType (tiVar typeInfo)
+            <&> matchType (tiKnotParam typeInfo)
             <&> bodyForPat
             & foldl AppE (ConE (D.constructorName ctrInfo))
             & NormalB

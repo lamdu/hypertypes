@@ -22,7 +22,7 @@ makeKFunctorForType :: TypeInfo -> DecsQ
 makeKFunctorForType info =
     instanceD (simplifyContext (makeContext info)) (appT (conT ''KFunctor) (pure (tiInstance info)))
     [ InlineP 'mapK Inline FunLike AllPhases & PragmaD & pure
-    , funD 'mapK (tiCons info <&> pure . makeMapKCtr wit (tiVar info))
+    , funD 'mapK (tiCons info <&> pure . makeMapKCtr wit (tiKnotParam info))
     ]
     <&> (:[])
     where
@@ -32,7 +32,7 @@ makeContext :: TypeInfo -> [Pred]
 makeContext info =
     tiCons info
     >>= D.constructorFields
-    <&> matchType (tiVar info)
+    <&> matchType (tiKnotParam info)
     >>= ctxForPat
     where
         ctxForPat (InContainer t pat) = (ConT ''Functor `AppT` t) : ctxForPat pat

@@ -34,7 +34,7 @@ import           Prelude.Compat
 data TypeInfo = TypeInfo
     { tiName :: Name
     , tiInstance :: Type
-    , tiVar :: Name
+    , tiKnotParam :: Name
     , tiContents :: TypeContents
     , tiCons :: [D.ConstructorInfo]
     } deriving Show
@@ -62,7 +62,7 @@ makeTypeInfo name =
         pure TypeInfo
             { tiName = name
             , tiInstance = dst
-            , tiVar = var
+            , tiKnotParam = var
             , tiContents = contents
             , tiCons = D.datatypeCons info
             }
@@ -107,23 +107,23 @@ unapply =
         go as x = (x, as)
 
 matchType :: Name -> Type -> CtrTypePattern
-matchType var (ConT runKnot `AppT` VarT k `AppT` (PromotedT knot `AppT` ast))
-    | runKnot == ''GetKnot && knot == 'Knot && k == var =
-        Node ast
-matchType var (InfixT (VarT k) tie ast)
-    | tie == ''(#) && k == var =
-        Node ast
-matchType var (ConT tie `AppT` VarT k `AppT` ast)
-    | tie == ''(#) && k == var =
-        Node ast
-matchType var (ast `AppT` VarT knot)
-    | knot == var && ast /= ConT ''GetKnot =
-        Embed ast
-matchType var x@(AppT t typ) =
+matchType var (ConT getKnot `AppT` VarT k `AppT` (PromotedT knot `AppT` x))
+    | getKnot == ''GetKnot && knot == 'Knot && k == var =
+        Node x
+matchType var (InfixT (VarT k) hash x)
+    | hash == ''(#) && k == var =
+        Node x
+matchType var (ConT hash `AppT` VarT k `AppT` x)
+    | hash == ''(#) && k == var =
+        Node x
+matchType var (x `AppT` VarT k)
+    | k == var && x /= ConT ''GetKnot =
+        Embed x
+matchType var x@(AppT f a) =
     -- TODO: check if applied over a functor-kinded type.
-    case matchType var typ of
+    case matchType var a of
     PlainData{} -> PlainData x
-    pat -> InContainer t pat
+    pat -> InContainer f pat
 matchType _ t = PlainData t
 
 getVar :: Type -> Maybe Name
@@ -271,7 +271,7 @@ makeNodeOf info =
         pats =
             tiCons info
             >>= D.constructorFields
-            <&> matchType (tiVar info)
+            <&> matchType (tiKnotParam info)
         makeNiceType (ConT x) = makeNiceName (show x)
         makeNiceType (AppT x y) = makeNiceType x <> "_" <> makeNiceType y
         makeNiceType (VarT x) = takeWhile (/= '_') (show x)
