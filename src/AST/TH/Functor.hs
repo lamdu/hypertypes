@@ -45,13 +45,11 @@ makeMapKCtr wit (cName, cFields) =
             [0::Int ..] <&> show <&> ('x':) <&> mkName
             & take (length cFields)
         body =
-            zipWith AppE
-            (cFields <&> bodyFor)
-            (cVars <&> VarE)
+            zipWith bodyFor cFields cVars
             & foldl AppE (ConE cName)
             & NormalB
-        bodyFor (Right x) = bodyForPat x
-        bodyFor Left{} = VarE 'id
+        bodyFor (Right x) v = bodyForPat x `AppE` VarE v
+        bodyFor Left{} v = VarE v
         bodyForPat (Node t) = VarE varF `AppE` nodeWit wit t
         bodyForPat (Embed t) = VarE 'mapK `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))
         bodyForPat (InContainer _ pat) = bodyForPat pat & AppE (VarE 'fmap)
