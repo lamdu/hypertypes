@@ -20,7 +20,7 @@ class HNodes h => HFunctor h where
     -- | 'HFunctor' variant of 'fmap'
     --
     -- Applied a given mapping for @h@'s nodes (trees along witnesses that they are nodes of @h@)
-    -- to result with a new tree, potentially with a different fix-point.
+    -- to result with a new tree, potentially with a different nest type.
     mapH ::
         (forall n. HWitness h n -> Tree p n -> Tree q n) ->
         Tree h p ->

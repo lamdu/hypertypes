@@ -225,36 +225,39 @@ data Typ h
     | FuncT (h # Typ) (h # Typ)
 ```
 
-The `#` type operator used above requires introduction:
+Sub-expressions are nested using the `#` type operator. On the left side of `#` is `Expr`'s type parameter `h` which is the "nest type", and on the right side `Expr` and `Typ` are the nested nodes.
+
+`#` is defined as:
 
 ```Haskell
 -- A type parameterized by a hypertype
 type HyperType = AHyperType -> Type
 
 -- A kind for hypertypes
-newtype AHyperType = AHyperType HyperType
+newtype AHyperType = AHyperType { getHyperType :: HyperType }
 
--- GetHyperType is a getter from the AHyperType newtype lifted to the type level
+-- GetHyperType is getHyperType lifted to the type level
 type family GetHyperType h where
     GetHyperType ('AHyperType t) = t
 
 type p # q = (GetHyperType p) ('AHyperType q)
+-- AHyperType is DataKinds syntax for using AHyperType in types
 ```
 
-(`'AHyperType` is `DataKinds` syntax for using the `AHyperType` data constructor in types)
+The `hypertypes` library provides:
 
-For such Hypertypes, `hypertypes` provides:
-
-* Variants of standard classes like `Functor` with `TemplateHaskell` derivations for them.
+* Variants of standard classes like `Functor` with `TemplateHaskell` derivations for hypertypes.
   (Unlike in `multirec`'s `HFunctor`, only the actual child node types of each node need to be handled)
 * Combinators for recursive processing and transformation of nested structures
-* Implementations for common AST terms and useful fix-points
+* Implementations of common AST terms
 * A unification implementation for mutually recursive types inspired by `unification-fd`
 * A generic and fast implementation of Hindley-Milner type inference ("Efficient generalization with levels" as described in [*How OCaml type checker works*](http://okmij.org/ftp/ML/generalization.html), Kiselyov, 2013)
 
-## Usage examples
+## Examples
 
-First, how do we represent an expression of the example language declared above? Let's start with a verbose way:
+How do we represent an expression of the example language declared above?
+
+Let's start with the verbose way:
 
 ```Haskell
 verboseExpr :: Tree Pure Expr
@@ -265,13 +268,14 @@ verboseExpr =
 Explanations for the above:
 
 * `Tree Pure Expr` is a type synonym for `Pure ('AHyperType Expr)`
-* `Pure` is the simple pass-through/identity fix-point
-* The above is quite verbose with a lot of instances of `Pure` and parentheses
+* `Pure` is the simplest "pass-through" nest type
+* The above is quite verbose with a lot of instances of `Pure` and many parentheses
 
-To write examples and tests more consicely, the `HasHPlain` class, along with a `TemplateHaskell` generator for it, exists:
+To write it more consicely, the `HasHPlain` class, along with a `TemplateHaskell` generator for it, exists:
 
 ```Haskell
 > let e = hPlain # verboseExpr
+-- Note: This (#) comes from Control.Lens
 
 > e
 LamP "x" IntTP (VarP "x")
@@ -282,9 +286,9 @@ e :: HPlain Expr
 
 It's now easier to see that `e` represents `λ(x:Int). x`
 
-`HPlain` is a data family of "plain versions" of expressions, generated via `TemplateHaskell`. This is similar to how `recursion-schemes` can derive a parameterized version of an AST, but in the other way around: the parameterized type is the source and the plain one is generated. We believe that this is a good choice because the parameterized type will be used more often in application code.
+`HPlain` is a data family of "plain versions" of expressions, generated via `TemplateHaskell`. This is similar to how `recursion-schemes` can derive a parameterized version of an AST, but is the other way around: the parameterized type is the source and the plain one is generated.
 
-So now, let's define some example expressions in the shorter way:
+So now, let's define some example expressions concisely:
 
 ```Haskell
 exprA, exprB :: HPlain Expr
@@ -295,7 +299,7 @@ exprB = LamP "x" (FuncTP IntTP IntTP) (VarP "x")
 ```
 
 What can we do with these expressions?
-Let's calculate a diff:
+Let's compute a diff:
 
 ```Haskell
 > let d = diffP exprA exprB
@@ -309,10 +313,10 @@ CommonBodyP
 
 > :t d
 d :: Tree DiffP Expr
--- (An Expr with the DiffP fix-point)
+-- (An Expr with the DiffP nest type)
 ```
 
-Let's see the type of `diffP`
+Let's see the type of `diffP`:
 
 ```Haskell
 > :t diffP
@@ -324,7 +328,7 @@ diffP ::
     HPlain h -> HPlain h -> Tree DiffP h
 ```
 
-`diffP` can calculate the diff for any AST that is recursively traversable, can be matched, and has a plain representation.
+`diffP` can compute the diff for any AST that is recursively traversable, can be matched, and has a plain representation.
 
 Now, let's format this diff better:
 
@@ -346,7 +350,7 @@ foldDiffsP ::
     r
 ```
 
-What does the ignored argument of `formatDiff` stand for? It is the `HRecWitness h n` from the type of `foldDiffsP` above. It is a witness argument that "proves" that the folded node `n` is a recursive node of `h` (a type parameter from `foldDiffsP`'s type), essentially turning the `forall n.` to a "for-some", specifically for the recursive types inside `h`.
+What does the ignored argument of `formatDiff` for? It is the `HRecWitness h n` from the type of `foldDiffsP` above. It is a witness that "proves" that the folded node `n` is a recursive node of `h`, essentially restricting the `forall n.` to `n`s that are recursive nodes of `h`.
 
 ## Witness parameters
 
@@ -365,11 +369,11 @@ class HNodes h => HFunctor h where
         Tree h q
 ```
 
-`HFunctor` can change a tree of `h`'s fix-point from `p` to `q` given a rank-n-function that transforms an element in `p` to an element in `q` given a witness that its node `n` it a node of `h`.
+`HFunctor` can change an `h`'s nest-type from `p` to `q`.
 
-`HWitness` is a data family which comes from the `HNodes` instance of `h`.
+`HWitness` is a data family which is a member of `HNodes`.
 
-For an example let's see the definition of `Expr`'s `HWitness`:
+For example, let's see the definition of `Expr`'s `HWitness`:
 
 ```Haskell
 data instance HWitness Expr n where
@@ -377,31 +381,31 @@ data instance HWitness Expr n where
     W_Expr_Typ :: HWitness Expr Typ
 ```
 
-Note that this GADT gets automatically derived via a `TemplateHaskell` generator!
+Note that this GADT is automatically generated via `TemplateHaskell`.
 
-What does this give us?
+What does the witness give us? It restricts `forall n.` to the nodes of `h`.
 When mapping over an `Expr` we can:
 
 * Ignore the witness and use a mapping from a `p` of any `n` to a `q` of it
 * Pattern match on the witness to handle `Expr`'s specific node types
-* Use the `#>` operator to lift a class constraint of `Expr`'s nodes into scope. `Proxy @c #>` replaces the witness parameter with a constraint `c n`.
+* Use the `#>` operator to convert the witness to a class constraint on `n`.
 
-## Understanding `AHyperType`s
+## Understanding `HyperType`s
 
-* We want structures to be parameterized by fix-points
-* Fix-points are parameterized by the structures, too
-* Therefore, structures and their fix-points need to be parameterized by each other
+* We want structures to be parameterized by nest-types
+* Nest-types are parameterized by the structures, too
+* Therefore, structures and their nest-types need to be parameterized by each other
 * This results in infinite types, as the structure is parameterized by something which may be parameterized by the structure itself.
 
-`multirec` ties this knot by using indices to represent types. `hypertypes` does this by using `DataKinds` and the `AHyperType` `newtype` which is used for both structures and their fix-points An implication of the two being the same is that the same classes and combinators are re-used for both.
+`multirec` ties this knot by using indices to represent types. `hypertypes` does this by using `DataKinds` and the `AHyperType` `newtype` which is used for both structures and their nest-types. An implication of the two being the same is that the same classes and combinators are re-used for both.
 
 ## What Haskell is this
 
 `hypertypes` is implemented with GHC and heavily relies on quite a few language extensions:
 
-* `ConstraintKinds` and `TypeFamilies` are needed for the `HNodesConstraint` type family which lifts a constraint to apply over a value's nodes. Type families are also used to encode term's results in type inference.
+* `ConstraintKinds` and `TypeFamilies` are needed for the `HNodesConstraint` type family that lifts a constraint to apply over a value's nodes. Type families are also used to encode term's results in type inference.
 * `DataKinds` allows parameterizing types over `AHyperType`s
-* `DefaultSignatures` is used for default methods that return `Dict`s to avoid undecidable super-classes
+* `DefaultSignatures` are used for default methods that return `Dict`s to avoid undecidable super-classes
 * `DeriveGeneric`, `DerivingVia`, `GeneralizedNewtypeDeriving`, `StandaloneDeriving` and `TemplateHaskell` are used to derive type-class instances
 * `EmptyCase` is needed for instances of leaf nodes
 * `FlexibleContexts`, `FlexibleInstances` and `UndecidableInstances` are required to specify many constraints
@@ -420,7 +424,7 @@ Some extensions we use but would like to avoid (we're looking for alternative so
 
 ## How does hypertypes compare/relate to
 
-Note that comparisons to HKD, `recursion-schemes`, `multirec`, `rank2classes`, and `unification-fd` were discussed in depth above.
+Note that comparisons to `multirec`, HKD, `recursion-schemes`, `rank2classes`, and `unification-fd` were discussed above.
 
 In addition:
 
@@ -443,7 +447,7 @@ For more info on hyperfunctions and their use cases in the value level see [LKS2
 
 ### Data Types a la Carte
 
-[Data Types a la Carte](http://www.staff.science.uu.nl/~swier004/publications/2008-jfp.pdf) (DTALC) describes how to define ASTs structurally.
+In addition to the external fix-points described above, [Data Types a la Carte](http://www.staff.science.uu.nl/~swier004/publications/2008-jfp.pdf) (DTALC) also describes how to define ASTs structurally.
 
 I.e, rather than having
 
