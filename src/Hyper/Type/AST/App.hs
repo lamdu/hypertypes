@@ -1,13 +1,13 @@
 {-# LANGUAGE FlexibleInstances, UndecidableInstances, TemplateHaskell #-}
 
-module Hyper.Term.App
+module Hyper.Type.AST.App
     ( App(..), appFunc, appArg, KWitness(..)
     , appChildren
     ) where
 
 import Hyper
 import Hyper.Infer
-import Hyper.Term.FuncType
+import Hyper.Type.AST.FuncType
 import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.Unify (Unify, unify)
 import Hyper.Unify.New (newTerm, newUnbound)

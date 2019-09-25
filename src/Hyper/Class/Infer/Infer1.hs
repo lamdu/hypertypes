@@ -1,4 +1,4 @@
--- | 'Infer' for indexed AST types (such as 'Hyper.Term.Scope.Scope')
+-- | 'Infer' for indexed AST types (such as 'Hyper.Type.AST.Scope.Scope')
 
 module Hyper.Class.Infer.Infer1
     ( HasTypeOf1(..), HasInferOf1(..), Infer1(..)

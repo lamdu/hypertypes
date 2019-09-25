@@ -3,7 +3,7 @@
 -- 'blame' is a type-error blame assignment algorithm for languages with Hindley-Milner type inference,
 -- but __/without generalization of intermediate terms/__.
 -- This means that it is not suitable for languages with let-generalization.
--- 'Hyper.Term.Let.Let' is an example of a term that is not suitable for this algorithm.
+-- 'Hyper.Type.AST.Let.Let' is an example of a term that is not suitable for this algorithm.
 --
 -- With the contemporary knowledge that
 -- ["Let Should Not Be Generalised"](https://www.microsoft.com/en-us/research/publication/let-should-not-be-generalised/),

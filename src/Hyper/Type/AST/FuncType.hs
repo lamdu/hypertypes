@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances #-}
 
-module Hyper.Term.FuncType
+module Hyper.Type.AST.FuncType
     ( FuncType(..), funcIn, funcOut, KWitness(..)
     , HasFuncType(..)
     ) where
@@ -46,7 +46,7 @@ instance Show (k # typ) => Show (FuncType typ k) where
 
 -- | HasFuncType is a class of 'AHyperType's representing types that support the types of functions.
 --
--- It is used by the 'Hyper.Class.Infer.Infer' instances of 'Hyper.Term.App.App' and 'Hyper.Term.Lam.Lam'
+-- It is used by the 'Hyper.Class.Infer.Infer' instances of 'Hyper.Type.AST.App.App' and 'Hyper.Type.AST.Lam.Lam'
 -- to work for any AST which provides 'HasFuncType'.
 class HasFuncType typ where
     funcType :: Prism' (Tree typ k) (Tree (FuncType typ) k)

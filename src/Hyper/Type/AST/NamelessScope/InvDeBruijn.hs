@@ -1,9 +1,9 @@
-module Hyper.Term.NamelessScope.InvDeBruijn
+module Hyper.Type.AST.NamelessScope.InvDeBruijn
     ( InvDeBruijnIndex(..), inverseDeBruijnIndex, scope, scopeVar
     ) where
 
 import Hyper.Type (Tree)
-import Hyper.Term.NamelessScope (DeBruijnIndex(..), EmptyScope, Scope(..), ScopeVar(..))
+import Hyper.Type.AST.NamelessScope (DeBruijnIndex(..), EmptyScope, Scope(..), ScopeVar(..))
 import Control.Lens (Prism', iso)
 import Control.Lens.Operators
 import Data.Proxy (Proxy(..))

@@ -12,11 +12,11 @@ import           Hyper.Class.Infer.Infer1
 import           Hyper.Class.Unify
 import           Hyper.Infer
 import           Hyper.Recurse
-import           Hyper.Term.App
-import           Hyper.Term.NamelessScope
-import           Hyper.Term.NamelessScope.InvDeBruijn
-import           Hyper.Term.Scheme
-import           Hyper.Term.TypeSig
+import           Hyper.Type.AST.App
+import           Hyper.Type.AST.NamelessScope
+import           Hyper.Type.AST.NamelessScope.InvDeBruijn
+import           Hyper.Type.AST.Scheme
+import           Hyper.Type.AST.TypeSig
 import           Hyper.Unify
 import           Hyper.Unify.Apply
 import           Hyper.Unify.Binding

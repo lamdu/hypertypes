@@ -1,13 +1,13 @@
 {-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances #-}
 
-module Hyper.Term.TypedLam
+module Hyper.Type.AST.TypedLam
     ( TypedLam(..), tlIn, tlInType, tlOut
     ) where
 
 import           Hyper
 import           Hyper.Class.Has (HasChild(..))
 import           Hyper.Infer
-import           Hyper.Term.FuncType (FuncType(..))
+import           Hyper.Type.AST.FuncType (FuncType(..))
 import           Hyper.Unify (Unify, UVarOf)
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Control.Lens (makeLenses)

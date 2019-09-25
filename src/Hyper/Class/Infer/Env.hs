@@ -9,7 +9,7 @@ module Hyper.Class.Infer.Env
 -- to type schemes of type @scheme@.
 --
 -- Used by the 'Hyper.Class.Infer.Infer' instances
--- of 'Hyper.Term.Lam.Lam' and 'Hyper.Term.Let.Let'.
+-- of 'Hyper.Type.AST.Lam.Lam' and 'Hyper.Type.AST.Let.Let'.
 class LocalScopeType var scheme m where
     -- | Add a variable type into an action's scope
     localScopeType :: var -> scheme -> m a -> m a

@@ -8,11 +8,11 @@ import           Hyper.Class.Has
 import           Hyper.Class.Unify
 import           Hyper.Infer
 import           Hyper.Recurse
-import           Hyper.Term.FuncType
-import           Hyper.Term.NamelessScope
-import           Hyper.Term.Nominal
-import           Hyper.Term.Row
-import           Hyper.Term.Scheme
+import           Hyper.Type.AST.FuncType
+import           Hyper.Type.AST.NamelessScope
+import           Hyper.Type.AST.Nominal
+import           Hyper.Type.AST.Row
+import           Hyper.Type.AST.Scheme
 import           Hyper.Unify
 import           Hyper.Unify.Binding
 import           Hyper.Unify.QuantifiedVar

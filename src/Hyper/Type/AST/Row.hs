@@ -2,7 +2,7 @@
 
 {-# LANGUAGE FlexibleInstances, UndecidableInstances, FlexibleContexts, TemplateHaskell #-}
 
-module Hyper.Term.Row
+module Hyper.Type.AST.Row
     ( RowConstraints(..), RowKey
     , RowExtend(..), eKey, eVal, eRest, KWitness(..)
     , FlatRowExtends(..), freExtends, freRest

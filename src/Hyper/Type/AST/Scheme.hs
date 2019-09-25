@@ -3,7 +3,7 @@
 {-# LANGUAGE TemplateHaskell, FlexibleContexts, DefaultSignatures #-}
 {-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
 
-module Hyper.Term.Scheme
+module Hyper.Type.AST.Scheme
     ( Scheme(..), sForAlls, sTyp, KWitness(..)
     , QVars(..), _QVars
     , HasScheme(..), loadScheme, saveScheme

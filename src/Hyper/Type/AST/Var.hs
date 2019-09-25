@@ -3,7 +3,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, UndecidableInstances, EmptyCase #-}
 {-# LANGUAGE FlexibleInstances, TemplateHaskell, FlexibleContexts #-}
 
-module Hyper.Term.Var
+module Hyper.Type.AST.Var
     ( Var(..), _Var
     , VarType(..)
     , ScopeOf, HasScope(..)

@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances #-}
 
-module Hyper.Term.Let
+module Hyper.Type.AST.Let
     ( Let(..), letVar, letEquals, letIn, KWitness(..)
     ) where
 

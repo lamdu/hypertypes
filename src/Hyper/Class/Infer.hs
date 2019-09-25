@@ -64,7 +64,7 @@ makePrisms ''InferChild
 -- It replaces context for the 'Infer' class to avoid @UndecidableSuperClasses@.
 --
 -- Instances usually don't need to implement this method as the default implementation works for them,
--- but infinitely polymorphic trees such as 'Hyper.Term.NamelessScope.Scope' do need to implement the method,
+-- but infinitely polymorphic trees such as 'Hyper.Type.AST.NamelessScope.Scope' do need to implement the method,
 -- because the required context is infinite.
 class (Monad m, KFunctor t) => Infer m t where
     -- | Infer the body of an expression given the inference actions for its child nodes.

@@ -6,7 +6,7 @@
 {-# LANGUAGE UndecidableInstances, GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleInstances, TemplateHaskell, EmptyCase #-}
 
-module Hyper.Term.NamelessScope
+module Hyper.Type.AST.NamelessScope
     ( Scope(..), _Scope, KWitness(..)
     , ScopeVar(..), _ScopeVar
     , EmptyScope
@@ -17,7 +17,7 @@ module Hyper.Term.NamelessScope
 import           Hyper
 import           Hyper.Class.Infer.Infer1
 import           Hyper.Infer
-import           Hyper.Term.FuncType
+import           Hyper.Type.AST.FuncType
 import           Hyper.Unify (Unify(..), UVarOf)
 import           Hyper.Unify.New (newUnbound)
 import           Control.Lens (Lens', Prism')

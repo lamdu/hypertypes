@@ -6,10 +6,10 @@ module LangA.Pure
     ) where
 
 import Hyper
-import Hyper.Term.App
-import Hyper.Term.NamelessScope.InvDeBruijn
-import Hyper.Term.Scheme
-import Hyper.Term.TypeSig
+import Hyper.Type.AST.App
+import Hyper.Type.AST.NamelessScope.InvDeBruijn
+import Hyper.Type.AST.Scheme
+import Hyper.Type.AST.TypeSig
 import LangA
 import TypeLang
 

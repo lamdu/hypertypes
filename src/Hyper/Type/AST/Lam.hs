@@ -1,12 +1,12 @@
 {-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances #-}
 
-module Hyper.Term.Lam
+module Hyper.Type.AST.Lam
     ( Lam(..), lamIn, lamOut, KWitness(..)
     ) where
 
 import           Hyper
 import           Hyper.Infer
-import           Hyper.Term.FuncType
+import           Hyper.Type.AST.FuncType
 import           Hyper.Unify (Unify, UVarOf)
 import           Hyper.Unify.New (newUnbound)
 import           Hyper.TH.Internal.Instances (makeCommonInstances)

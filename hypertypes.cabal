@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2233d585e5f97c4eed4fba3423b7adbcc1c0a74f1bce922dab692572e97d1b73
+-- hash: 7b171b0cd3150f596159e3f5f95a5c34025ddb1007d6ce1b906dbd466fe26fc3
 
 name:           hypertypes
 version:        0.1.0.1
@@ -57,20 +57,6 @@ library
       Hyper.Infer.ScopeLevel
       Hyper.Infer.Term
       Hyper.Recurse
-      Hyper.Term.App
-      Hyper.Term.FuncType
-      Hyper.Term.Lam
-      Hyper.Term.Let
-      Hyper.Term.Map
-      Hyper.Term.NamelessScope
-      Hyper.Term.NamelessScope.InvDeBruijn
-      Hyper.Term.Nominal
-      Hyper.Term.Row
-      Hyper.Term.Scheme
-      Hyper.Term.Scheme.AlphaEq
-      Hyper.Term.TypedLam
-      Hyper.Term.TypeSig
-      Hyper.Term.Var
       Hyper.TH.Apply
       Hyper.TH.Foldable
       Hyper.TH.Functor
@@ -82,6 +68,20 @@ library
       Hyper.Type
       Hyper.Type.Ann
       Hyper.Type.Ann.Arbitrary
+      Hyper.Type.AST.App
+      Hyper.Type.AST.FuncType
+      Hyper.Type.AST.Lam
+      Hyper.Type.AST.Let
+      Hyper.Type.AST.Map
+      Hyper.Type.AST.NamelessScope
+      Hyper.Type.AST.NamelessScope.InvDeBruijn
+      Hyper.Type.AST.Nominal
+      Hyper.Type.AST.Row
+      Hyper.Type.AST.Scheme
+      Hyper.Type.AST.Scheme.AlphaEq
+      Hyper.Type.AST.TypedLam
+      Hyper.Type.AST.TypeSig
+      Hyper.Type.AST.Var
       Hyper.Type.Functor
       Hyper.Type.Prune
       Hyper.Type.Pure

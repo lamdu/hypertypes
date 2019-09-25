@@ -470,7 +470,7 @@ This enables re-usability of the AST elements `Val` and `Add` in various ASTs, w
 Like DTALC, `hypertypes` has:
 
 * Instances for combinators such as `Product` and `Sum`, so that these can be used to build ASTs
-* Implementations of common AST terms in the `Hyper.Term` module hierarchy (`App`, `Lam`, `Let`, `Var`, `TypeSig` and others)
+* Implementations of common AST terms in the `Hyper.Type.AST` module hierarchy (`App`, `Lam`, `Let`, `Var`, `TypeSig` and others)
 * Classes like `KFunctor`, `KTraversable`, `Unify`, `Infer` with instances for the provided AST terms
 
 As an example of a reusable term let's look at the definition of `App`:
@@ -496,7 +496,7 @@ While it is possible to declare ASTs as `newtype`s wrapping `Sum`s and `Product`
 An intereseting aspect of `bound`'s ASTs is that recursively they are made of an infinite amount of types.
 
 When implementing `hypertypes` we had the explicit goal of making sure that such ASTs are expressible with it,
-and for this reason the `Hyper.Term.NamelessScope` module implementing it is provided, and the test suite includes
+and for this reason the `Hyper.Type.AST.NamelessScope` module implementing it is provided, and the test suite includes
 a language implementation based on it (`LangA` in the tests).
 
 ### lens

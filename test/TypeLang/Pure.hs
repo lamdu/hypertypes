@@ -5,9 +5,9 @@ module TypeLang.Pure
     ) where
 
 import           Hyper
-import           Hyper.Term.FuncType
-import           Hyper.Term.Row
-import           Hyper.Term.Scheme
+import           Hyper.Type.AST.FuncType
+import           Hyper.Type.AST.Row
+import           Hyper.Type.AST.Scheme
 import           Hyper.Unify
 import           Hyper.Unify.QuantifiedVar
 import qualified Control.Lens as Lens
