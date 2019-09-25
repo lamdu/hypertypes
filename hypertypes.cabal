@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8106000a4745d313a96987d2713d9264481d1bd1ea3d70d17a4e494d6f2757dc
+-- hash: e2b842bed40a9d8354901caddcf161b18750a95080926d6d5d879e318851a72d
 
 name:           hypertypes
 version:        0.1.0.1
@@ -29,79 +29,79 @@ source-repository head
 
 library
   exposed-modules:
-      AST
-      AST.Class.Apply
-      AST.Class.Foldable
-      AST.Class.Functor
-      AST.Class.Has
-      AST.Class.HasPlain
-      AST.Class.Infer
-      AST.Class.Infer.Env
-      AST.Class.Infer.Infer1
-      AST.Class.Infer.InferOf
-      AST.Class.Monad
-      AST.Class.Nodes
-      AST.Class.Pointed
-      AST.Class.Recursive
-      AST.Class.Traversable
-      AST.Class.Unify
-      AST.Class.ZipMatch
-      AST.Combinator.ANode
-      AST.Combinator.Compose
-      AST.Combinator.Flip
-      AST.Diff
-      AST.Infer
-      AST.Infer.Blame
-      AST.Infer.ScopeLevel
-      AST.Infer.Term
-      AST.Knot
-      AST.Knot.Ann
-      AST.Knot.Ann.Arbitrary
-      AST.Knot.Functor
-      AST.Knot.Prune
-      AST.Knot.Pure
-      AST.Recurse
-      AST.Term.App
-      AST.Term.FuncType
-      AST.Term.Lam
-      AST.Term.Let
-      AST.Term.Map
-      AST.Term.NamelessScope
-      AST.Term.NamelessScope.InvDeBruijn
-      AST.Term.Nominal
-      AST.Term.Row
-      AST.Term.Scheme
-      AST.Term.Scheme.AlphaEq
-      AST.Term.TypedLam
-      AST.Term.TypeSig
-      AST.Term.Var
-      AST.TH.Apply
-      AST.TH.Foldable
-      AST.TH.Functor
-      AST.TH.HasPlain
-      AST.TH.Nodes
-      AST.TH.Pointed
-      AST.TH.Traversable
-      AST.TH.ZipMatch
-      AST.Unify
-      AST.Unify.Apply
-      AST.Unify.Binding
-      AST.Unify.Binding.Save
-      AST.Unify.Binding.ST
-      AST.Unify.Binding.ST.Load
-      AST.Unify.Constraints
-      AST.Unify.Error
-      AST.Unify.Generalize
-      AST.Unify.Lookup
-      AST.Unify.New
-      AST.Unify.Occurs
-      AST.Unify.QuantifiedVar
-      AST.Unify.Term
       Data.Functor.Product.PolyKinds
       Data.Functor.Sum.PolyKinds
+      Hyper
+      Hyper.Class.Apply
+      Hyper.Class.Foldable
+      Hyper.Class.Functor
+      Hyper.Class.Has
+      Hyper.Class.HasPlain
+      Hyper.Class.Infer
+      Hyper.Class.Infer.Env
+      Hyper.Class.Infer.Infer1
+      Hyper.Class.Infer.InferOf
+      Hyper.Class.Monad
+      Hyper.Class.Nodes
+      Hyper.Class.Pointed
+      Hyper.Class.Recursive
+      Hyper.Class.Traversable
+      Hyper.Class.Unify
+      Hyper.Class.ZipMatch
+      Hyper.Combinator.ANode
+      Hyper.Combinator.Compose
+      Hyper.Combinator.Flip
+      Hyper.Diff
+      Hyper.Infer
+      Hyper.Infer.Blame
+      Hyper.Infer.ScopeLevel
+      Hyper.Infer.Term
+      Hyper.Knot
+      Hyper.Knot.Ann
+      Hyper.Knot.Ann.Arbitrary
+      Hyper.Knot.Functor
+      Hyper.Knot.Prune
+      Hyper.Knot.Pure
+      Hyper.Recurse
+      Hyper.Term.App
+      Hyper.Term.FuncType
+      Hyper.Term.Lam
+      Hyper.Term.Let
+      Hyper.Term.Map
+      Hyper.Term.NamelessScope
+      Hyper.Term.NamelessScope.InvDeBruijn
+      Hyper.Term.Nominal
+      Hyper.Term.Row
+      Hyper.Term.Scheme
+      Hyper.Term.Scheme.AlphaEq
+      Hyper.Term.TypedLam
+      Hyper.Term.TypeSig
+      Hyper.Term.Var
+      Hyper.TH.Apply
+      Hyper.TH.Foldable
+      Hyper.TH.Functor
+      Hyper.TH.HasPlain
+      Hyper.TH.Nodes
+      Hyper.TH.Pointed
+      Hyper.TH.Traversable
+      Hyper.TH.ZipMatch
+      Hyper.Unify
+      Hyper.Unify.Apply
+      Hyper.Unify.Binding
+      Hyper.Unify.Binding.Save
+      Hyper.Unify.Binding.ST
+      Hyper.Unify.Binding.ST.Load
+      Hyper.Unify.Constraints
+      Hyper.Unify.Error
+      Hyper.Unify.Generalize
+      Hyper.Unify.Lookup
+      Hyper.Unify.New
+      Hyper.Unify.Occurs
+      Hyper.Unify.QuantifiedVar
+      Hyper.Unify.Term
   other-modules:
-      AST.TH.Internal.Instances
-      AST.TH.Internal.Utils
+      Hyper.TH.Internal.Instances
+      Hyper.TH.Internal.Utils
   hs-source-dirs:
       src
   default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies GADTs LambdaCase MultiParamTypeClasses RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeOperators TypeFamilies NoImplicitPrelude

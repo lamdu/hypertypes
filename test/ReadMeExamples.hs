@@ -2,8 +2,8 @@
 
 module ReadMeExamples where
 
-import AST
-import AST.Diff
+import Hyper
+import Hyper.Diff
 import Data.Text
 import Generics.Constraints (makeDerivings)
 import GHC.Generics (Generic)

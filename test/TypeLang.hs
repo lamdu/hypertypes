@@ -3,20 +3,20 @@
 
 module TypeLang where
 
-import           AST
-import           AST.Class.Has
-import           AST.Class.Unify
-import           AST.Infer
-import           AST.Recurse
-import           AST.Term.FuncType
-import           AST.Term.NamelessScope
-import           AST.Term.Nominal
-import           AST.Term.Row
-import           AST.Term.Scheme
-import           AST.Unify
-import           AST.Unify.Binding
-import           AST.Unify.QuantifiedVar
-import           AST.Unify.Term
+import           Hyper
+import           Hyper.Class.Has
+import           Hyper.Class.Unify
+import           Hyper.Infer
+import           Hyper.Recurse
+import           Hyper.Term.FuncType
+import           Hyper.Term.NamelessScope
+import           Hyper.Term.Nominal
+import           Hyper.Term.Row
+import           Hyper.Term.Scheme
+import           Hyper.Unify
+import           Hyper.Unify.Binding
+import           Hyper.Unify.QuantifiedVar
+import           Hyper.Unify.Term
 import           Algebra.PartialOrd
 import           Control.Applicative
 import           Control.Lens (ALens')

@@ -4,12 +4,12 @@ module TypeLang.Pure
     , module TypeLang
     ) where
 
-import           AST
-import           AST.Term.FuncType
-import           AST.Term.Row
-import           AST.Term.Scheme
-import           AST.Unify
-import           AST.Unify.QuantifiedVar
+import           Hyper
+import           Hyper.Term.FuncType
+import           Hyper.Term.Row
+import           Hyper.Term.Scheme
+import           Hyper.Unify
+import           Hyper.Unify.QuantifiedVar
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import qualified Data.Map as Map

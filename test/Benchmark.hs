@@ -1,6 +1,6 @@
-import AST
-import AST.Unify
-import AST.Unify.New (unfreeze)
+import Hyper
+import Hyper.Unify
+import Hyper.Unify.New (unfreeze)
 import Control.Exception (evaluate)
 import Control.Lens.Operators
 import Criterion (Benchmarkable, whnfIO)

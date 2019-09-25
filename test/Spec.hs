@@ -1,15 +1,15 @@
 {-# LANGUAGE FlexibleContexts, BlockArguments, OverloadedStrings #-}
 
-import           AST
-import           AST.Class.Unify
-import           AST.Combinator.Flip
-import           AST.Infer
-import           AST.Recurse
-import           AST.Term.NamelessScope (EmptyScope)
-import           AST.Term.Nominal
-import           AST.Term.Scheme
-import           AST.Term.Scheme.AlphaEq
-import           AST.Unify.Apply
+import           Hyper
+import           Hyper.Class.Unify
+import           Hyper.Combinator.Flip
+import           Hyper.Infer
+import           Hyper.Recurse
+import           Hyper.Term.NamelessScope (EmptyScope)
+import           Hyper.Term.Nominal
+import           Hyper.Term.Scheme
+import           Hyper.Term.Scheme.AlphaEq
+import           Hyper.Unify.Apply
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Except

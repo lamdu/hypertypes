@@ -5,11 +5,11 @@ module LangA.Pure
     , module LangA.Pure
     ) where
 
-import AST
-import AST.Term.App
-import AST.Term.NamelessScope.InvDeBruijn
-import AST.Term.Scheme
-import AST.Term.TypeSig
+import Hyper
+import Hyper.Term.App
+import Hyper.Term.NamelessScope.InvDeBruijn
+import Hyper.Term.Scheme
+import Hyper.Term.TypeSig
 import LangA
 import TypeLang
 

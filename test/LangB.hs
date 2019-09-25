@@ -5,27 +5,27 @@ module LangB where
 
 import           TypeLang
 
-import           AST
-import           AST.Class.Unify
-import           AST.Combinator.Flip
-import           AST.Infer
-import           AST.Recurse
-import           AST.Term.App
-import           AST.Term.Lam
-import           AST.Term.Let
-import           AST.Term.Nominal
-import           AST.Term.Row
-import           AST.Term.Scheme
-import           AST.Term.Var
-import           AST.TH.Foldable
-import           AST.Unify
-import           AST.Unify.Apply
-import           AST.Unify.Binding
-import           AST.Unify.Binding.ST
-import           AST.Unify.Generalize
-import           AST.Unify.New
-import           AST.Unify.QuantifiedVar
-import           AST.Unify.Term
+import           Hyper
+import           Hyper.Class.Unify
+import           Hyper.Combinator.Flip
+import           Hyper.Infer
+import           Hyper.Recurse
+import           Hyper.Term.App
+import           Hyper.Term.Lam
+import           Hyper.Term.Let
+import           Hyper.Term.Nominal
+import           Hyper.Term.Row
+import           Hyper.Term.Scheme
+import           Hyper.Term.Var
+import           Hyper.TH.Foldable
+import           Hyper.Unify
+import           Hyper.Unify.Apply
+import           Hyper.Unify.Binding
+import           Hyper.Unify.Binding.ST
+import           Hyper.Unify.Generalize
+import           Hyper.Unify.New
+import           Hyper.Unify.QuantifiedVar
+import           Hyper.Unify.Term
 import           Control.Applicative
 import           Control.Lens (Traversal)
 import qualified Control.Lens as Lens

@@ -7,22 +7,22 @@ module LangA where
 
 import           TypeLang
 
-import           AST
-import           AST.Class.Infer.Infer1
-import           AST.Class.Unify
-import           AST.Infer
-import           AST.Recurse
-import           AST.Term.App
-import           AST.Term.NamelessScope
-import           AST.Term.NamelessScope.InvDeBruijn
-import           AST.Term.Scheme
-import           AST.Term.TypeSig
-import           AST.Unify
-import           AST.Unify.Apply
-import           AST.Unify.Binding
-import           AST.Unify.Binding.ST
-import           AST.Unify.New
-import           AST.Unify.QuantifiedVar
+import           Hyper
+import           Hyper.Class.Infer.Infer1
+import           Hyper.Class.Unify
+import           Hyper.Infer
+import           Hyper.Recurse
+import           Hyper.Term.App
+import           Hyper.Term.NamelessScope
+import           Hyper.Term.NamelessScope.InvDeBruijn
+import           Hyper.Term.Scheme
+import           Hyper.Term.TypeSig
+import           Hyper.Unify
+import           Hyper.Unify.Apply
+import           Hyper.Unify.Binding
+import           Hyper.Unify.Binding.ST
+import           Hyper.Unify.New
+import           Hyper.Unify.QuantifiedVar
 import           Control.Applicative
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
