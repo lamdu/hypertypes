@@ -1,14 +1,14 @@
 -- | A variant of 'Traversable' for 'AHyperType's
 
 module Hyper.Class.Traversable
-    ( KTraversable(..)
+    ( HTraversable(..)
     , ContainedK(..), _ContainedK
     , traverseK, traverseK1
     ) where
 
-import Hyper.Class.Foldable (KFoldable)
-import Hyper.Class.Functor (KFunctor(..), mappedK1)
-import Hyper.Class.Nodes (KNodes(..))
+import Hyper.Class.Foldable (HFoldable)
+import Hyper.Class.Functor (HFunctor(..), mappedK1)
+import Hyper.Class.Nodes (HNodes(..))
 import Hyper.Type (AHyperType, Tree)
 import Control.Lens (Traversal, Iso, iso)
 import Control.Lens.Operators
@@ -33,40 +33,40 @@ _ContainedK ::
 _ContainedK = iso runContainedK MkContainedK
 
 -- | A variant of 'Traversable' for 'AHyperType's
-class (KFunctor k, KFoldable k) => KTraversable k where
-    -- | 'KTraversable' variant of 'sequenceA'
+class (HFunctor k, HFoldable k) => HTraversable k where
+    -- | 'HTraversable' variant of 'sequenceA'
     sequenceK ::
         Applicative f =>
         Tree k (ContainedK f p) ->
         f (Tree k p)
 
-instance KTraversable (Const a) where
+instance HTraversable (Const a) where
     {-# INLINE sequenceK #-}
     sequenceK (Const x) = pure (Const x)
 
-instance (KTraversable a, KTraversable b) => KTraversable (Product a b) where
+instance (HTraversable a, HTraversable b) => HTraversable (Product a b) where
     {-# INLINE sequenceK #-}
     sequenceK (Pair x y) = Pair <$> sequenceK x <*> sequenceK y
 
-instance (KTraversable a, KTraversable b) => KTraversable (Sum a b) where
+instance (HTraversable a, HTraversable b) => HTraversable (Sum a b) where
     {-# INLINE sequenceK #-}
     sequenceK (InL x) = sequenceK x <&> InL
     sequenceK (InR x) = sequenceK x <&> InR
 
--- | 'KTraversable' variant of 'traverse'
+-- | 'HTraversable' variant of 'traverse'
 {-# INLINE traverseK #-}
 traverseK ::
-    (Applicative f, KTraversable k) =>
-    (forall n. KWitness k n -> Tree p n -> f (Tree q n)) ->
+    (Applicative f, HTraversable k) =>
+    (forall n. HWitness k n -> Tree p n -> f (Tree q n)) ->
     Tree k p ->
     f (Tree k q)
 traverseK f = sequenceK . mapK (fmap MkContainedK . f)
 
--- | 'KTraversable' variant of 'traverse' for 'AHyperType's with a single node type.
+-- | 'HTraversable' variant of 'traverse' for 'AHyperType's with a single node type.
 --
 -- It is a valid 'Traversal' as it avoids using @RankNTypes@.
 {-# INLINE traverseK1 #-}
 traverseK1 ::
-    (KTraversable k, KNodesConstraint k ((~) n)) =>
+    (HTraversable k, HNodesConstraint k ((~) n)) =>
     Traversal (Tree k p) (Tree k q) (Tree p n) (Tree q n)
 traverseK1 f = sequenceK . (mappedK1 %~ (MkContainedK . f))

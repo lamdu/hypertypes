@@ -3,12 +3,12 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 module Hyper.Class.Monad
-    ( KMonad(..), bindK
+    ( HMonad(..), bindK
     ) where
 
-import Hyper.Class.Apply (KApplicative)
-import Hyper.Class.Functor (KFunctor(..))
-import Hyper.Class.Nodes (KNodes(..), (#>))
+import Hyper.Class.Apply (HApplicative)
+import Hyper.Class.Functor (HFunctor(..))
+import Hyper.Class.Nodes (HNodes(..), (#>))
 import Hyper.Class.Recursive (Recursively(..))
 import Hyper.Type.Combinator.Compose (Compose, _Compose)
 import Hyper.Type (Tree)
@@ -20,26 +20,26 @@ import Data.Proxy (Proxy(..))
 import Prelude.Compat
 
 -- | A variant of 'Control.Monad.Monad' for 'Hyper.Type.AHyperType's
-class KApplicative k => KMonad k where
+class HApplicative k => HMonad k where
     joinK ::
-        Recursively KFunctor p =>
+        Recursively HFunctor p =>
         Tree (Compose k k) p ->
         Tree k p
 
-instance KMonad Pure where
+instance HMonad Pure where
     joinK x =
         withDict (recursively (p x)) $
         _Pure #
-        mapK (Proxy @(Recursively KFunctor) #> joinK)
+        mapK (Proxy @(Recursively HFunctor) #> joinK)
         (x ^. _Compose . _Pure . _Compose . _Pure . _Compose)
         where
-            p :: Tree (Compose Pure Pure) p -> Proxy (KFunctor p)
+            p :: Tree (Compose Pure Pure) p -> Proxy (HFunctor p)
             p _ = Proxy
 
 -- | A variant of 'Control.Monad.(>>=)' for 'Hyper.Type.AHyperType's
 bindK ::
-    (KMonad k, Recursively KFunctor p) =>
+    (HMonad k, Recursively HFunctor p) =>
     Tree k p ->
-    (forall n. KWitness k n -> Tree p n -> Tree (Compose k p) n) ->
+    (forall n. HWitness k n -> Tree p n -> Tree (Compose k p) n) ->
     Tree k p
 bindK x f = _Compose # mapK f x & joinK

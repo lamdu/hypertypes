@@ -3,13 +3,13 @@
 module Hyper.Class.Infer.InferOf
     ( HasInferredType(..)
     , HasInferredValue(..)
-    , KFunctorInferOf, KFoldableInferOf, RTraversableInferOf
+    , HFunctorInferOf, HFoldableInferOf, RTraversableInferOf
     ) where
 
-import Hyper.Class.Nodes (KNodes(..))
-import Hyper.Class.Foldable (KFoldable)
-import Hyper.Class.Functor (KFunctor)
-import Hyper.Class.Traversable (KTraversable)
+import Hyper.Class.Nodes (HNodes(..))
+import Hyper.Class.Foldable (HFoldable)
+import Hyper.Class.Functor (HFunctor)
+import Hyper.Class.Traversable (HTraversable)
 import Hyper.Class.Infer (InferOf)
 import Hyper.Class.Recursive (Recursive(..), Recursively)
 import Hyper.Type (HyperType, Tree)
@@ -31,20 +31,20 @@ class HasInferredValue t where
     -- | A 'Control.Lens.Lens' from an inference result to an inferred value
     inferredValue :: Lens' (Tree (InferOf t) v) (Tree v t)
 
-class    KFunctor (InferOf k) => KFunctorInferOf k
-instance KFunctor (InferOf k) => KFunctorInferOf k
-class    KFoldable (InferOf k) => KFoldableInferOf k
-instance KFoldable (InferOf k) => KFoldableInferOf k
+class    HFunctor (InferOf k) => HFunctorInferOf k
+instance HFunctor (InferOf k) => HFunctorInferOf k
+class    HFoldable (InferOf k) => HFoldableInferOf k
+instance HFoldable (InferOf k) => HFoldableInferOf k
 
 class
-    (KTraversable (InferOf k), Recursively KFunctorInferOf k, Recursively KFoldableInferOf k) =>
+    (HTraversable (InferOf k), Recursively HFunctorInferOf k, Recursively HFoldableInferOf k) =>
     RTraversableInferOf k where
     rTraversableInferOfRec ::
-        Proxy k -> Dict (KNodesConstraint k RTraversableInferOf)
+        Proxy k -> Dict (HNodesConstraint k RTraversableInferOf)
     {-# INLINE rTraversableInferOfRec #-}
     default rTraversableInferOfRec ::
-        KNodesConstraint k RTraversableInferOf =>
-        Proxy k -> Dict (KNodesConstraint k RTraversableInferOf)
+        HNodesConstraint k RTraversableInferOf =>
+        Proxy k -> Dict (HNodesConstraint k RTraversableInferOf)
     rTraversableInferOfRec _ = Dict
 
 instance Recursive RTraversableInferOf where

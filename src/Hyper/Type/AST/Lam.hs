@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances #-}
 
 module Hyper.Type.AST.Lam
-    ( Lam(..), lamIn, lamOut, KWitness(..)
+    ( Lam(..), lamIn, lamOut, HWitness(..)
     ) where
 
 import           Hyper
@@ -33,7 +33,7 @@ data Lam v expr k = Lam
 
 makeLenses ''Lam
 makeCommonInstances [''Lam]
-makeKTraversableApplyAndBases ''Lam
+makeHTraversableApplyAndBases ''Lam
 makeZipMatch ''Lam
 
 instance

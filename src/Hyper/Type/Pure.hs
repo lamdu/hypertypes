@@ -6,14 +6,14 @@
 
 {-# LANGUAGE UndecidableInstances, TemplateHaskell #-}
 module Hyper.Type.Pure
-    ( Pure(..), _Pure, KWitness(..)
+    ( Pure(..), _Pure, HWitness(..)
     , (&#)
     ) where
 
-import Hyper.Class.Nodes (KNodes(..))
+import Hyper.Class.Nodes (HNodes(..))
 import Hyper.Type (Tree, type (#))
 import Hyper.TH.Internal.Instances (makeCommonInstances)
-import Hyper.TH.Traversable (makeKTraversableApplyAndBases)
+import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
 import Control.Lens (Iso, iso)
 import Control.Lens.Operators
 import GHC.Generics (Generic)
@@ -23,7 +23,7 @@ import Text.PrettyPrint.HughesPJClass (Pretty(..))
 newtype Pure k = Pure (k # Pure)
     deriving stock Generic
 
-makeKTraversableApplyAndBases ''Pure
+makeHTraversableApplyAndBases ''Pure
 makeCommonInstances [''Pure]
 
 -- | An 'Iso' from 'Pure' to its content.

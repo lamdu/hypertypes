@@ -1,9 +1,9 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
 
--- | Generate 'KPointed' instances via @TemplateHaskell@
+-- | Generate 'HPointed' instances via @TemplateHaskell@
 
 module Hyper.TH.Pointed
-    ( makeKPointed
+    ( makeHPointed
     ) where
 
 import           Hyper.Class.Pointed
@@ -13,18 +13,18 @@ import           Language.Haskell.TH
 
 import           Prelude.Compat
 
--- | Generate a 'KPointed' instance
-makeKPointed :: Name -> DecsQ
-makeKPointed typeName = makeTypeInfo typeName >>= makeKPointedForType
+-- | Generate a 'HPointed' instance
+makeHPointed :: Name -> DecsQ
+makeHPointed typeName = makeTypeInfo typeName >>= makeHPointedForType
 
-makeKPointedForType :: TypeInfo -> DecsQ
-makeKPointedForType info =
+makeHPointedForType :: TypeInfo -> DecsQ
+makeHPointedForType info =
     do
         cons <-
             case tiConstructors info of
             [x] -> pure x
-            _ -> fail "makeKPointed only supports types with a single constructor"
-        instanceD (simplifyContext (makeContext info)) (appT (conT ''KPointed) (pure (tiInstance info)))
+            _ -> fail "makeHPointed only supports types with a single constructor"
+        instanceD (simplifyContext (makeContext info)) (appT (conT ''HPointed) (pure (tiInstance info)))
             [ InlineP 'pureK Inline FunLike AllPhases & PragmaD & pure
             , funD 'pureK [makePureKCtr info cons]
             ]
@@ -37,7 +37,7 @@ makeContext info =
         ctxFor (Right x) = ctxForPat x
         ctxFor (Left x) = [ConT ''Monoid `AppT` x]
         ctxForPat (InContainer t pat) = (ConT ''Applicative `AppT` t) : ctxForPat pat
-        ctxForPat (GenEmbed t) = [ConT ''KPointed `AppT` t]
+        ctxForPat (GenEmbed t) = [ConT ''HPointed `AppT` t]
         ctxForPat _ = []
 
 makePureKCtr :: TypeInfo -> (Name, [Either Type CtrTypePattern]) -> Q Clause
@@ -53,7 +53,7 @@ makePureKCtr typeInfo (cName, cFields) =
         bodyForPat (FlatEmbed inner) =
             case tiConstructors inner of
             [(iName, iFields)] -> traverse bodyFor iFields <&> foldl AppE (ConE iName)
-            _ -> fail "makeKPointed only supports embedded types with a single constructor"
+            _ -> fail "makeHPointed only supports embedded types with a single constructor"
         bodyForPat (GenEmbed t) =
             VarE 'pureK `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))
             & pure

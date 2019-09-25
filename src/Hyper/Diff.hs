@@ -65,41 +65,41 @@ diff x@(Ann xA xB) y@(Ann yA yB) =
 
 foldDiffs ::
     forall r k a b.
-    (Monoid r, Recursively KFoldable k) =>
-    (forall n. KRecWitness k n -> Tree (Ann a) n -> Tree (Ann b) n -> r) ->
+    (Monoid r, Recursively HFoldable k) =>
+    (forall n. HRecWitness k n -> Tree (Ann a) n -> Tree (Ann b) n -> r) ->
     Tree (Diff a b) k ->
     r
 foldDiffs _ CommonSubTree{} = mempty
-foldDiffs f (Different (Pair x y)) = f KRecSelf x y
+foldDiffs f (Different (Pair x y)) = f HRecSelf x y
 foldDiffs f (CommonBody (MkCommonBody _ x)) =
-    withDict (recursively (Proxy @(KFoldable k))) $
+    withDict (recursively (Proxy @(HFoldable k))) $
     foldMapK
-    ( Proxy @(Recursively KFoldable) #*#
-        \w -> foldDiffs (f . KRecSub w)
+    ( Proxy @(Recursively HFoldable) #*#
+        \w -> foldDiffs (f . HRecSub w)
     ) x
 
 data DiffP k
-    = CommonSubTreeP (KPlain (GetHyperType k))
+    = CommonSubTreeP (HPlain (GetHyperType k))
     | CommonBodyP (k # DiffP)
-    | DifferentP (KPlain (GetHyperType k)) (KPlain (GetHyperType k))
+    | DifferentP (HPlain (GetHyperType k)) (HPlain (GetHyperType k))
     deriving Generic
 makePrisms ''DiffP
 
 diffP ::
     forall k.
-    (Recursively ZipMatch k, Recursively KHasPlain k, RTraversable k) =>
-    KPlain k -> KPlain k -> Tree DiffP k
+    (Recursively ZipMatch k, Recursively HasHPlain k, RTraversable k) =>
+    HPlain k -> HPlain k -> Tree DiffP k
 diffP x y =
-    withDict (recursively (Proxy @(KHasPlain k))) $
+    withDict (recursively (Proxy @(HasHPlain k))) $
     diffPH (x ^. kPlain) (y ^. kPlain)
 
 diffPH ::
     forall k.
-    (Recursively ZipMatch k, Recursively KHasPlain k, RTraversable k) =>
+    (Recursively ZipMatch k, Recursively HasHPlain k, RTraversable k) =>
     Tree Pure k -> Tree Pure k -> Tree DiffP k
 diffPH x y =
     withDict (recursively (Proxy @(ZipMatch k))) $
-    withDict (recursively (Proxy @(KHasPlain k))) $
+    withDict (recursively (Proxy @(HasHPlain k))) $
     withDict (recurse (Proxy @(RTraversable k))) $
     case zipMatch (x ^. _Pure) (y ^. _Pure) of
     Nothing -> DifferentP (kPlain # x) (kPlain # y)
@@ -111,7 +111,7 @@ diffPH x y =
             sub =
                 mapK
                 ( Proxy @(Recursively ZipMatch) #*#
-                    Proxy @(Recursively KHasPlain) #*#
+                    Proxy @(Recursively HasHPlain) #*#
                     Proxy @RTraversable #>
                     \(Pair xC yC) -> diffPH xC yC
                 ) match
@@ -120,18 +120,18 @@ makeCommonInstances [''Diff, ''CommonBody, ''DiffP]
 
 foldDiffsP ::
     forall r k.
-    (Monoid r, Recursively KFoldable k, Recursively KHasPlain k) =>
-    (forall n. KHasPlain n => KRecWitness k n -> KPlain n -> KPlain n -> r) ->
+    (Monoid r, Recursively HFoldable k, Recursively HasHPlain k) =>
+    (forall n. HasHPlain n => HRecWitness k n -> HPlain n -> HPlain n -> r) ->
     Tree DiffP k ->
     r
 foldDiffsP f =
-    withDict (recursively (Proxy @(KHasPlain k))) $
+    withDict (recursively (Proxy @(HasHPlain k))) $
     \case
     CommonSubTreeP{} -> mempty
-    DifferentP x y -> f KRecSelf x y
+    DifferentP x y -> f HRecSelf x y
     CommonBodyP x ->
-        withDict (recursively (Proxy @(KFoldable k))) $
+        withDict (recursively (Proxy @(HFoldable k))) $
         foldMapK
-        ( Proxy @(Recursively KFoldable) #*# Proxy @(Recursively KHasPlain) #*#
-            \w -> foldDiffsP (f . KRecSub w)
+        ( Proxy @(Recursively HFoldable) #*# Proxy @(Recursively HasHPlain) #*#
+            \w -> foldDiffsP (f . HRecSub w)
         ) x

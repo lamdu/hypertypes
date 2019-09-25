@@ -47,17 +47,17 @@ data LangA v k
     | ATypeSig (TypeSig Types (LangA v) k)
     | ALit Int
 
-makeKTraversableAndBases ''LangA
+makeHTraversableAndBases ''LangA
 
 instance RNodes (LangA v)
-instance Recursively KFunctor (LangA k)
-instance Recursively KFoldable (LangA k)
+instance Recursively HFunctor (LangA k)
+instance Recursively HFoldable (LangA k)
 instance RTraversable (LangA k)
 
 type instance InferOf (LangA k) = ANode Typ
 
-instance Recursively KFunctorInferOf (LangA k)
-instance Recursively KFoldableInferOf (LangA k)
+instance Recursively HFunctorInferOf (LangA k)
+instance Recursively HFoldableInferOf (LangA k)
 instance RTraversableInferOf (LangA k)
 instance (c Typ, c Row, Recursive c) => ITermVarsConstraint c (LangA k)
 

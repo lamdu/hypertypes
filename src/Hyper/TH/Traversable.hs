@@ -1,61 +1,61 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
 
--- | Generate 'KTraversable' and related instances via @TemplateHaskell@
+-- | Generate 'HTraversable' and related instances via @TemplateHaskell@
 
 module Hyper.TH.Traversable
-    ( makeKTraversable
-    , makeKTraversableAndFoldable
-    , makeKTraversableAndBases
-    , makeKTraversableApplyAndBases
+    ( makeHTraversable
+    , makeHTraversableAndFoldable
+    , makeHTraversableAndBases
+    , makeHTraversableApplyAndBases
     ) where
 
 import           Hyper.Class.Traversable
-import           Hyper.TH.Apply (makeKApplicativeBases)
-import           Hyper.TH.Foldable (makeKFoldable)
-import           Hyper.TH.Functor (makeKFunctor)
+import           Hyper.TH.Apply (makeHApplicativeBases)
+import           Hyper.TH.Foldable (makeHFoldable)
+import           Hyper.TH.Functor (makeHFunctor)
 import           Hyper.TH.Internal.Utils
-import           Hyper.TH.Nodes (makeKNodes)
+import           Hyper.TH.Nodes (makeHNodes)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Language.Haskell.TH
 
 import           Prelude.Compat
 
--- | Generate 'KTraversable' and 'Hyper.Class.Apply.KApply' instances along with all of their base classes:
--- 'Hyper.Class.Foldable.KFoldable', 'Hyper.Class.Functor.KFunctor',
--- 'Hyper.Class.Pointed.KPointed', and 'Hyper.Class.Nodes.KNodes'.
-makeKTraversableApplyAndBases :: Name -> DecsQ
-makeKTraversableApplyAndBases x =
+-- | Generate 'HTraversable' and 'Hyper.Class.Apply.HApply' instances along with all of their base classes:
+-- 'Hyper.Class.Foldable.HFoldable', 'Hyper.Class.Functor.HFunctor',
+-- 'Hyper.Class.Pointed.HPointed', and 'Hyper.Class.Nodes.HNodes'.
+makeHTraversableApplyAndBases :: Name -> DecsQ
+makeHTraversableApplyAndBases x =
     sequenceA
-    [ makeKApplicativeBases x
-    , makeKTraversableAndFoldable x
+    [ makeHApplicativeBases x
+    , makeHTraversableAndFoldable x
     ] <&> concat
 
--- | Generate a 'KTraversable' instance along with the instance of its base classes:
--- 'Hyper.Class.Foldable.KFoldable', 'Hyper.Class.Functor.KFunctor', and 'Hyper.Class.Nodes.KNodes'.
-makeKTraversableAndBases :: Name -> DecsQ
-makeKTraversableAndBases x =
+-- | Generate a 'HTraversable' instance along with the instance of its base classes:
+-- 'Hyper.Class.Foldable.HFoldable', 'Hyper.Class.Functor.HFunctor', and 'Hyper.Class.Nodes.HNodes'.
+makeHTraversableAndBases :: Name -> DecsQ
+makeHTraversableAndBases x =
     sequenceA
-    [ makeKNodes x
-    , makeKFunctor x
-    , makeKTraversableAndFoldable x
+    [ makeHNodes x
+    , makeHFunctor x
+    , makeHTraversableAndFoldable x
     ] <&> concat
 
--- | Generate 'KTraversable' and 'Hyper.Class.Foldable.KFoldable' instances
-makeKTraversableAndFoldable :: Name -> DecsQ
-makeKTraversableAndFoldable x =
+-- | Generate 'HTraversable' and 'Hyper.Class.Foldable.HFoldable' instances
+makeHTraversableAndFoldable :: Name -> DecsQ
+makeHTraversableAndFoldable x =
     sequenceA
-    [ makeKFoldable x
-    , makeKTraversable x
+    [ makeHFoldable x
+    , makeHTraversable x
     ] <&> concat
 
--- | Generate a 'KTraversable' instance
-makeKTraversable :: Name -> DecsQ
-makeKTraversable typeName = makeTypeInfo typeName >>= makeKTraversableForType
+-- | Generate a 'HTraversable' instance
+makeHTraversable :: Name -> DecsQ
+makeHTraversable typeName = makeTypeInfo typeName >>= makeHTraversableForType
 
-makeKTraversableForType :: TypeInfo -> DecsQ
-makeKTraversableForType info =
-    instanceD (simplifyContext (makeContext info)) (appT (conT ''KTraversable) (pure (tiInstance info)))
+makeHTraversableForType :: TypeInfo -> DecsQ
+makeHTraversableForType info =
+    instanceD (simplifyContext (makeContext info)) (appT (conT ''HTraversable) (pure (tiInstance info)))
     [ InlineP 'sequenceK Inline FunLike AllPhases & PragmaD & pure
     , funD 'sequenceK (tiConstructors info <&> pure . uncurry makeCons)
     ]
@@ -66,8 +66,8 @@ makeContext info =
     tiConstructors info ^.. traverse . Lens._2 . traverse . Lens._Right >>= ctxForPat
     where
         ctxForPat (InContainer t pat) = (ConT ''Traversable `AppT` t) : ctxForPat pat
-        ctxForPat (GenEmbed t) = [ConT ''KTraversable `AppT` t]
-        ctxForPat (FlatEmbed t) = [ConT ''KTraversable `AppT` tiInstance t]
+        ctxForPat (GenEmbed t) = [ConT ''HTraversable `AppT` t]
+        ctxForPat (FlatEmbed t) = [ConT ''HTraversable `AppT` tiInstance t]
         ctxForPat _ = []
 
 makeCons ::

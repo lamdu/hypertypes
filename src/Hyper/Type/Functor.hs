@@ -2,17 +2,17 @@
 {-# LANGUAGE TemplateHaskell, FlexibleInstances, FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances, GeneralizedNewtypeDeriving #-}
 module Hyper.Type.Functor
-    ( F(..), _F, KWitness(..)
+    ( F(..), _F, HWitness(..)
     ) where
 
-import Hyper.Class.Nodes (KNodes(..), (#>))
-import Hyper.Class.Functor (KFunctor(..))
-import Hyper.Class.Monad (KMonad(..))
+import Hyper.Class.Nodes (HNodes(..), (#>))
+import Hyper.Class.Functor (HFunctor(..))
+import Hyper.Class.Monad (HMonad(..))
 import Hyper.Class.Recursive (RNodes, Recursively(..), RTraversable)
 import Hyper.Type.Combinator.Compose
 import Hyper.Type (Tree, type (#))
 import Hyper.TH.Internal.Instances (makeCommonInstances)
-import Hyper.TH.Traversable (makeKTraversableApplyAndBases)
+import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
 import Control.Lens (Iso, iso, mapped)
 import Control.Lens.Operators
 import Data.Constraint (withDict)
@@ -41,9 +41,9 @@ _F ::
 _F = iso (\(F x) -> x) F
 
 makeCommonInstances [''F]
-makeKTraversableApplyAndBases ''F
+makeHTraversableApplyAndBases ''F
 
-instance Monad f => KMonad (F f) where
+instance Monad f => HMonad (F f) where
     joinK =
         ( _F %~
             ( >>=
@@ -54,12 +54,12 @@ instance Monad f => KMonad (F f) where
         where
             t ::
                 forall p.
-                Recursively KFunctor p =>
+                Recursively HFunctor p =>
                 Tree p (Compose (F f) (F f)) ->
                 Tree p (F f)
             t =
-                withDict (recursively (Proxy @(KFunctor p))) $
-                mapK (Proxy @(Recursively KFunctor) #> joinK)
+                withDict (recursively (Proxy @(HFunctor p))) $
+                mapK (Proxy @(Recursively HFunctor) #> joinK)
 
 instance RNodes (F f)
 instance c (F f) => Recursively c (F f)

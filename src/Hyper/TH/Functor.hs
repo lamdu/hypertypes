@@ -1,9 +1,9 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
 
--- | Generate 'KFunctor' instances via @TemplateHaskell@
+-- | Generate 'HFunctor' instances via @TemplateHaskell@
 
 module Hyper.TH.Functor
-    ( makeKFunctor
+    ( makeHFunctor
     ) where
 
 import           Hyper.Class.Functor
@@ -14,13 +14,13 @@ import           Language.Haskell.TH
 
 import           Prelude.Compat
 
--- | Generate a 'KFunctor' instance
-makeKFunctor :: Name -> DecsQ
-makeKFunctor typeName = makeTypeInfo typeName >>= makeKFunctorForType
+-- | Generate a 'HFunctor' instance
+makeHFunctor :: Name -> DecsQ
+makeHFunctor typeName = makeTypeInfo typeName >>= makeHFunctorForType
 
-makeKFunctorForType :: TypeInfo -> DecsQ
-makeKFunctorForType info =
-    instanceD (simplifyContext (makeContext info)) (appT (conT ''KFunctor) (pure (tiInstance info)))
+makeHFunctorForType :: TypeInfo -> DecsQ
+makeHFunctorForType info =
+    instanceD (simplifyContext (makeContext info)) (appT (conT ''HFunctor) (pure (tiInstance info)))
     [ InlineP 'mapK Inline FunLike AllPhases & PragmaD & pure
     , funD 'mapK (tiConstructors info <&> pure . makeCtr)
     ]
@@ -40,7 +40,7 @@ makeContext info =
     tiConstructors info ^.. traverse . Lens._2 . traverse . Lens._Right >>= ctxForPat
     where
         ctxForPat (InContainer t pat) = (ConT ''Functor `AppT` t) : ctxForPat pat
-        ctxForPat (GenEmbed t) = [ConT ''KFunctor `AppT` t]
+        ctxForPat (GenEmbed t) = [ConT ''HFunctor `AppT` t]
         ctxForPat _ = []
 
 makeMapKCtr :: Int -> NodeWitnesses -> (Name, [Either Type CtrTypePattern]) -> (Pat, Body)

@@ -1,7 +1,7 @@
 {-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances #-}
 
 module Hyper.Type.AST.FuncType
-    ( FuncType(..), funcIn, funcOut, KWitness(..)
+    ( FuncType(..), funcIn, funcOut, HWitness(..)
     , HasFuncType(..)
     ) where
 
@@ -32,7 +32,7 @@ data FuncType typ k = FuncType
 
 makeLenses ''FuncType
 makeZipMatch ''FuncType
-makeKTraversableApplyAndBases ''FuncType
+makeHTraversableApplyAndBases ''FuncType
 makeDerivings [''Eq, ''Ord] [''FuncType]
 makeInstances [''Binary, ''NFData] [''FuncType]
 

@@ -4,7 +4,7 @@
 
 module Hyper.Type.AST.Row
     ( RowConstraints(..), RowKey
-    , RowExtend(..), eKey, eVal, eRest, KWitness(..)
+    , RowExtend(..), eKey, eVal, eRest, HWitness(..)
     , FlatRowExtends(..), freExtends, freRest
     , flattenRow, flattenRowExtend, unflattenRow
     , verifyRowExtendConstraints, rowExtendStructureMismatch
@@ -58,8 +58,8 @@ makeLenses ''RowExtend
 makeLenses ''FlatRowExtends
 makeCommonInstances [''FlatRowExtends]
 makeZipMatch ''RowExtend
-makeKTraversableApplyAndBases ''RowExtend
-makeKTraversableApplyAndBases ''FlatRowExtends
+makeHTraversableApplyAndBases ''RowExtend
+makeHTraversableApplyAndBases ''FlatRowExtends
 makeDerivings [''Eq, ''Ord] [''RowExtend]
 makeInstances [''Binary, ''NFData] [''RowExtend]
 

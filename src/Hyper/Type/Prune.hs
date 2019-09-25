@@ -25,15 +25,15 @@ data Prune k =
 
 makeCommonInstances [''Prune]
 Lens.makePrisms ''Prune
-makeKTraversableAndBases ''Prune
+makeHTraversableAndBases ''Prune
 makeZipMatch ''Prune
 
--- `KPointed` and `KApplicative` instances in the spirit of `Maybe`
+-- `HPointed` and `HApplicative` instances in the spirit of `Maybe`
 
-instance KPointed Prune where
+instance HPointed Prune where
     pureK f = Unpruned (f W_Prune_Prune)
 
-instance KApply Prune where
+instance HApply Prune where
     zipK Pruned _ = Pruned
     zipK _ Pruned = Pruned
     zipK (Unpruned x) (Unpruned y) = Pair x y & Unpruned
@@ -46,8 +46,8 @@ type instance InferOf (Compose Prune t) = InferOf t
 
 instance
     ( Infer m t
-    , KPointed (InferOf t)
-    , KTraversable (InferOf t)
+    , HPointed (InferOf t)
+    , HTraversable (InferOf t)
     ) =>
     Infer m (Compose Prune t) where
     inferBody (MkCompose Pruned) =

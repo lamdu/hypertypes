@@ -43,8 +43,8 @@ schemeBodyToType foralls x =
 schemeToRestrictedType ::
     forall m varTypes typ.
     ( Monad m
-    , KTraversable varTypes
-    , KNodesConstraint varTypes (Unify m)
+    , HTraversable varTypes
+    , HNodesConstraint varTypes (Unify m)
     , HasScheme varTypes m typ
     ) =>
     Tree Pure (Scheme varTypes typ) -> m (Tree (UVarOf m) typ)
@@ -97,8 +97,8 @@ goUVar xv yv =
 
 -- Check for alpha equality. Raises a `unifyError` when mismatches.
 alphaEq ::
-    ( KTraversable varTypes
-    , KNodesConstraint varTypes (Unify m)
+    ( HTraversable varTypes
+    , HNodesConstraint varTypes (Unify m)
     , HasScheme varTypes m typ
     ) =>
     Tree Pure (Scheme varTypes typ) ->

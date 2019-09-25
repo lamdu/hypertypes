@@ -1,18 +1,18 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
 
--- | Generate 'KApply' and related instances via @TemplateHaskell@
+-- | Generate 'HApply' and related instances via @TemplateHaskell@
 
 module Hyper.TH.Apply
-    ( makeKApply
-    , makeKApplyAndBases
-    , makeKApplicativeBases
+    ( makeHApply
+    , makeHApplyAndBases
+    , makeHApplicativeBases
     ) where
 
 import           Hyper.Class.Apply
-import           Hyper.TH.Functor (makeKFunctor)
+import           Hyper.TH.Functor (makeHFunctor)
 import           Hyper.TH.Internal.Utils
-import           Hyper.TH.Nodes (makeKNodes)
-import           Hyper.TH.Pointed (makeKPointed)
+import           Hyper.TH.Nodes (makeHNodes)
+import           Hyper.TH.Pointed (makeHPointed)
 import           Control.Applicative (liftA2)
 import           Control.Lens.Operators
 import           Data.Functor.Product.PolyKinds (Product(..))
@@ -20,40 +20,40 @@ import           Language.Haskell.TH
 
 import           Prelude.Compat
 
--- | Generate instances of 'KApply',
--- 'Hyper.Class.Functor.KFunctor', 'Hyper.Class.Pointed.KPointed' and 'Hyper.Class.Nodes.KNodes',
--- which together form 'KApplicative'.
-makeKApplicativeBases :: Name -> DecsQ
-makeKApplicativeBases x =
+-- | Generate instances of 'HApply',
+-- 'Hyper.Class.Functor.HFunctor', 'Hyper.Class.Pointed.HPointed' and 'Hyper.Class.Nodes.HNodes',
+-- which together form 'HApplicative'.
+makeHApplicativeBases :: Name -> DecsQ
+makeHApplicativeBases x =
     sequenceA
-    [ makeKPointed x
-    , makeKApplyAndBases x
+    [ makeHPointed x
+    , makeHApplyAndBases x
     ] <&> concat
 
--- | Generate an instance of 'KApply'
--- along with its bases 'Hyper.Class.Functor.KFunctor' and 'Hyper.Class.Nodes.KNodes'
-makeKApplyAndBases :: Name -> DecsQ
-makeKApplyAndBases x =
+-- | Generate an instance of 'HApply'
+-- along with its bases 'Hyper.Class.Functor.HFunctor' and 'Hyper.Class.Nodes.HNodes'
+makeHApplyAndBases :: Name -> DecsQ
+makeHApplyAndBases x =
     sequenceA
-    [ makeKNodes x
-    , makeKFunctor x
-    , makeKApply x
+    [ makeHNodes x
+    , makeHFunctor x
+    , makeHApply x
     ] <&> concat
 
--- | Generate an instance of 'KApply'
-makeKApply :: Name -> DecsQ
-makeKApply typeName = makeTypeInfo typeName >>= makeKApplyForType
+-- | Generate an instance of 'HApply'
+makeHApply :: Name -> DecsQ
+makeHApply typeName = makeTypeInfo typeName >>= makeHApplyForType
 
-makeKApplyForType :: TypeInfo -> DecsQ
-makeKApplyForType info =
+makeHApplyForType :: TypeInfo -> DecsQ
+makeHApplyForType info =
     do
         (name, fields) <-
             case tiConstructors info of
             [x] -> pure x
-            _ -> fail "makeKApply only supports types with a single constructor"
+            _ -> fail "makeHApply only supports types with a single constructor"
         let xVars = makeConstructorVars "x" fields
         let yVars = makeConstructorVars "y" fields
-        instanceD (simplifyContext (makeContext info)) (appT (conT ''KApply) (pure (tiInstance info)))
+        instanceD (simplifyContext (makeContext info)) (appT (conT ''HApply) (pure (tiInstance info)))
             [ InlineP 'zipK Inline FunLike AllPhases & PragmaD & pure
             , funD 'zipK
                 [ Clause
@@ -81,6 +81,6 @@ makeContext info =
         ctxFor (Right x) = ctxForPat x
         ctxFor (Left x) = [ConT ''Semigroup `AppT` x]
         ctxForPat (InContainer t pat) = (ConT ''Applicative `AppT` t) : ctxForPat pat
-        ctxForPat (GenEmbed t) = [ConT ''KApply `AppT` t]
-        ctxForPat (FlatEmbed t) = [ConT ''KApply `AppT` tiInstance t]
+        ctxForPat (GenEmbed t) = [ConT ''HApply `AppT` t]
+        ctxForPat (FlatEmbed t) = [ConT ''HApply `AppT` tiInstance t]
         ctxForPat _ = []

@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances #-}
 
 module Hyper.Type.AST.Let
-    ( Let(..), letVar, letEquals, letIn, KWitness(..)
+    ( Let(..), letVar, letEquals, letIn, HWitness(..)
     ) where
 
 import           Hyper
@@ -33,7 +33,7 @@ data Let v expr k = Let
 
 makeLenses ''Let
 makeCommonInstances [''Let]
-makeKTraversableApplyAndBases ''Let
+makeHTraversableApplyAndBases ''Let
 makeZipMatch ''Let
 
 instance
@@ -52,8 +52,8 @@ instance
     , LocalScopeType v (Tree (GTerm (UVarOf m)) (TypeOf expr)) m
     , Unify m (TypeOf expr)
     , HasInferredType expr
-    , KNodesConstraint (InferOf expr) (Unify m)
-    , KTraversable (InferOf expr)
+    , HNodesConstraint (InferOf expr) (Unify m)
+    , HTraversable (InferOf expr)
     , Infer m expr
     ) =>
     Infer m (Let v expr) where

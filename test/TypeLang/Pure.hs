@@ -27,7 +27,7 @@ rowExtends =
 record :: [(Name, Tree Pure Typ)] -> Tree Pure Typ
 record fields = rowExtends (_Pure # REmpty) fields &# TRec
 
-uniType :: KPlain Typ -> Tree Pure (Scheme Types Typ)
+uniType :: HPlain Typ -> Tree Pure (Scheme Types Typ)
 uniType typ =
     _Pure # Scheme
     { _sForAlls = Types (QVars mempty) (QVars mempty)

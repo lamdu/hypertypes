@@ -22,11 +22,11 @@ data Typ k
     deriving Generic
 
 makeDerivings [''Eq, ''Ord, ''Show] [''Expr, ''Typ]
-makeKTraversableAndBases ''Expr
-makeKTraversableAndBases ''Typ
+makeHTraversableAndBases ''Expr
+makeHTraversableAndBases ''Typ
 makeZipMatch ''Expr
 makeZipMatch ''Typ
-makeKHasPlain [''Expr, ''Typ]
+makeHasHPlain [''Expr, ''Typ]
 
 instance RNodes Expr
 instance RNodes Typ
@@ -38,7 +38,7 @@ instance RTraversable Typ
 verboseExpr :: Tree Pure Expr
 verboseExpr = Pure (Lam "x" (Pure IntT) (Pure (Var "x")))
 
-exprA, exprB :: KPlain Expr
+exprA, exprB :: HPlain Expr
 exprA = LamP "x" IntTP (VarP "x")
 exprB = LamP "x" (FuncTP IntTP IntTP) (VarP "x")
 

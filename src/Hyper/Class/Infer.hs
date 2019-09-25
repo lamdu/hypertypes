@@ -58,15 +58,15 @@ makePrisms ''InferChild
 --
 -- The 'inferContext' method represents the following constraints on @t@:
 --
--- * @KNodesConstraint (InferOf t) (Unify m)@ - The child nodes of the inferrence can unify in the @m@ 'Monad'
--- * @KNodesConstraint t (Infer m)@ - @Infer m@ is also available for child nodes
+-- * @HNodesConstraint (InferOf t) (Unify m)@ - The child nodes of the inferrence can unify in the @m@ 'Monad'
+-- * @HNodesConstraint t (Infer m)@ - @Infer m@ is also available for child nodes
 --
 -- It replaces context for the 'Infer' class to avoid @UndecidableSuperClasses@.
 --
 -- Instances usually don't need to implement this method as the default implementation works for them,
 -- but infinitely polymorphic trees such as 'Hyper.Type.AST.NamelessScope.Scope' do need to implement the method,
 -- because the required context is infinite.
-class (Monad m, KFunctor t) => Infer m t where
+class (Monad m, HFunctor t) => Infer m t where
     -- | Infer the body of an expression given the inference actions for its child nodes.
     inferBody ::
         Tree t (InferChild m k) ->
@@ -76,13 +76,13 @@ class (Monad m, KFunctor t) => Infer m t where
     inferContext ::
         Proxy m ->
         Proxy t ->
-        Dict (KNodesConstraint t (Infer m), KNodesConstraint (InferOf t) (Unify m))
+        Dict (HNodesConstraint t (Infer m), HNodesConstraint (InferOf t) (Unify m))
     {-# INLINE inferContext #-}
     default inferContext ::
-        (KNodesConstraint t (Infer m), KNodesConstraint (InferOf t) (Unify m)) =>
+        (HNodesConstraint t (Infer m), HNodesConstraint (InferOf t) (Unify m)) =>
         Proxy m ->
         Proxy t ->
-        Dict (KNodesConstraint t (Infer m), KNodesConstraint (InferOf t) (Unify m))
+        Dict (HNodesConstraint t (Infer m), HNodesConstraint (InferOf t) (Unify m))
     inferContext _ _ = Dict
 
 instance Recursive (Infer m) where

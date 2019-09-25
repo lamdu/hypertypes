@@ -1,9 +1,9 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
 
--- | Generate 'KNodes' instances via @TemplateHaskell@
+-- | Generate 'HNodes' instances via @TemplateHaskell@
 
 module Hyper.TH.Nodes
-    ( makeKNodes
+    ( makeHNodes
     ) where
 
 import           Hyper.Class.Nodes
@@ -15,16 +15,16 @@ import           Language.Haskell.TH
 
 import           Prelude.Compat
 
--- | Generate a 'KNodes' instance
-makeKNodes :: Name -> DecsQ
-makeKNodes typeName = makeTypeInfo typeName >>= makeKNodesForType
+-- | Generate a 'HNodes' instance
+makeHNodes :: Name -> DecsQ
+makeHNodes typeName = makeTypeInfo typeName >>= makeHNodesForType
 
-makeKNodesForType :: TypeInfo -> DecsQ
-makeKNodesForType info =
-    instanceD (simplifyContext (makeContext info)) (appT (conT ''KNodes) (pure (tiInstance info)))
-    [ tySynInstD ''KNodesConstraint
+makeHNodesForType :: TypeInfo -> DecsQ
+makeHNodesForType info =
+    instanceD (simplifyContext (makeContext info)) (appT (conT ''HNodes) (pure (tiInstance info)))
+    [ tySynInstD ''HNodesConstraint
         (simplifyContext nodesConstraint <&> toTuple <&> TySynEqn [tiInstance info, VarT constraintVar])
-    , dataInstD (pure []) ''KWitness
+    , dataInstD (pure []) ''HWitness
         [pure (tiInstance info), pure (VarT (mkName "node"))]
         Nothing (nodeOfCons <&> pure) []
     , InlineP 'kLiftConstraint Inline FunLike AllPhases & PragmaD & pure
@@ -39,7 +39,7 @@ makeKNodesForType info =
         nodesConstraint =
             (Set.toList (tcChildren contents) <&> (VarT constraintVar `AppT`))
             <> (Set.toList (tcEmbeds contents) <&>
-                \x -> ConT ''KNodesConstraint `AppT` x `AppT` VarT constraintVar)
+                \x -> ConT ''HNodesConstraint `AppT` x `AppT` VarT constraintVar)
             <> Set.toList (tcOthers contents)
 
 makeContext :: TypeInfo -> [Pred]
@@ -47,7 +47,7 @@ makeContext info =
     tiConstructors info ^.. traverse . Lens._2 . traverse . Lens._Right >>= ctxForPat
     where
         ctxForPat (InContainer _ pat) = ctxForPat pat
-        ctxForPat (GenEmbed t) = [ConT ''KNodes `AppT` t]
+        ctxForPat (GenEmbed t) = [ConT ''HNodes `AppT` t]
         ctxForPat _ = []
 
 makeKLiftConstraints :: NodeWitnesses -> [Clause]

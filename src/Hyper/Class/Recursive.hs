@@ -9,8 +9,8 @@ module Hyper.Class.Recursive
     ) where
 
 import Hyper.Class.Foldable
-import Hyper.Class.Functor (KFunctor(..))
-import Hyper.Class.Nodes (KNodes(..))
+import Hyper.Class.Functor (HFunctor(..))
+import Hyper.Class.Nodes (HNodes(..))
 import Hyper.Class.Traversable
 import Hyper.Type
 import Hyper.Type.Pure (Pure(..))
@@ -24,16 +24,16 @@ import Prelude.Compat
 -- | A class of constraint constructors that apply to all recursive child nodes
 class Recursive c where
     -- | Lift a recursive constraint to the next layer
-    recurse :: (KNodes k, c k) => Proxy (c k) -> Dict (KNodesConstraint k c)
+    recurse :: (HNodes k, c k) => Proxy (c k) -> Dict (HNodesConstraint k c)
 
--- | A class of 'AHyperType's which recursively implement 'KNodes'
-class KNodes k => RNodes k where
-    recursiveKNodes :: Proxy k -> Dict (KNodesConstraint k RNodes)
-    {-# INLINE recursiveKNodes #-}
-    default recursiveKNodes ::
-        KNodesConstraint k RNodes =>
-        Proxy k -> Dict (KNodesConstraint k RNodes)
-    recursiveKNodes _ = Dict
+-- | A class of 'AHyperType's which recursively implement 'HNodes'
+class HNodes k => RNodes k where
+    recursiveHNodes :: Proxy k -> Dict (HNodesConstraint k RNodes)
+    {-# INLINE recursiveHNodes #-}
+    default recursiveHNodes ::
+        HNodesConstraint k RNodes =>
+        Proxy k -> Dict (HNodesConstraint k RNodes)
+    recursiveHNodes _ = Dict
 
 instance RNodes Pure
 instance RNodes (Const a)
@@ -43,7 +43,7 @@ argP _ = Proxy
 
 instance Recursive RNodes where
     {-# INLINE recurse #-}
-    recurse = recursiveKNodes . argP
+    recurse = recursiveHNodes . argP
 
 -- | A constraint lifted to apply recursively.
 --
@@ -52,11 +52,11 @@ instance Recursive RNodes where
 -- otherwise using it in class contexts will be quite unergonomic.
 class RNodes k => Recursively c k where
     recursively ::
-        Proxy (c k) -> Dict (c k, KNodesConstraint k (Recursively c))
+        Proxy (c k) -> Dict (c k, HNodesConstraint k (Recursively c))
     {-# INLINE recursively #-}
     default recursively ::
-        (c k, KNodesConstraint k (Recursively c)) =>
-        Proxy (c k) -> Dict (c k, KNodesConstraint k (Recursively c))
+        (c k, HNodesConstraint k (Recursively c)) =>
+        Proxy (c k) -> Dict (c k, HNodesConstraint k (Recursively c))
     recursively _ = Dict
 
 instance Recursive (Recursively c) where
@@ -70,18 +70,18 @@ instance Recursive (Recursively c) where
 instance c Pure => Recursively c Pure
 instance c (Const a) => Recursively c (Const a)
 
--- | A class of 'AHyperType's which recursively implement 'KTraversable'
-class (KTraversable k, Recursively KFunctor k, Recursively KFoldable k) => RTraversable k where
-    recursiveKTraversable :: Proxy k -> Dict (KNodesConstraint k RTraversable)
-    {-# INLINE recursiveKTraversable #-}
-    default recursiveKTraversable ::
-        KNodesConstraint k RTraversable =>
-        Proxy k -> Dict (KNodesConstraint k RTraversable)
-    recursiveKTraversable _ = Dict
+-- | A class of 'AHyperType's which recursively implement 'HTraversable'
+class (HTraversable k, Recursively HFunctor k, Recursively HFoldable k) => RTraversable k where
+    recursiveHTraversable :: Proxy k -> Dict (HNodesConstraint k RTraversable)
+    {-# INLINE recursiveHTraversable #-}
+    default recursiveHTraversable ::
+        HNodesConstraint k RTraversable =>
+        Proxy k -> Dict (HNodesConstraint k RTraversable)
+    recursiveHTraversable _ = Dict
 
 instance RTraversable Pure
 instance RTraversable (Const a)
 
 instance Recursive RTraversable where
     {-# INLINE recurse #-}
-    recurse = recursiveKTraversable . argP
+    recurse = recursiveHTraversable . argP

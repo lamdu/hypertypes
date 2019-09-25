@@ -5,7 +5,7 @@
 module Hyper.Unify.Generalize
     ( generalize, instantiate
 
-    , GTerm(..), _GMono, _GPoly, _GBody, KWitness(..)
+    , GTerm(..), _GMono, _GPoly, _GBody, HWitness(..)
 
     , instantiateWith, instantiateForAll
 
@@ -52,17 +52,17 @@ data GTerm v ast
 Lens.makePrisms ''GTerm
 makeCommonInstances [''GTerm]
 
-instance RNodes a => KNodes (Flip GTerm a) where
-    type KNodesConstraint (Flip GTerm a) c = (c a, Recursive c)
-    data KWitness (Flip GTerm a) n = E_Flip_GTerm (KRecWitness a n)
+instance RNodes a => HNodes (Flip GTerm a) where
+    type HNodesConstraint (Flip GTerm a) c = (c a, Recursive c)
+    data HWitness (Flip GTerm a) n = E_Flip_GTerm (HRecWitness a n)
     {-# INLINE kLiftConstraint #-}
-    kLiftConstraint (E_Flip_GTerm KRecSelf) = const id
-    kLiftConstraint (E_Flip_GTerm (KRecSub c n)) = kLiftConstraintH c n
+    kLiftConstraint (E_Flip_GTerm HRecSelf) = const id
+    kLiftConstraint (E_Flip_GTerm (HRecSub c n)) = kLiftConstraintH c n
 
 kLiftConstraintH ::
     forall a c b n r.
-    (RNodes a, KNodesConstraint (Flip GTerm a) c) =>
-    KWitness a b -> KRecWitness b n -> Proxy c -> (c n => r) -> r
+    (RNodes a, HNodesConstraint (Flip GTerm a) c) =>
+    HWitness a b -> HRecWitness b n -> Proxy c -> (c n => r) -> r
 kLiftConstraintH c n =
     withDict (recurse (Proxy @(RNodes a))) $
     withDict (recurse (Proxy @(c a))) $
@@ -71,40 +71,40 @@ kLiftConstraintH c n =
         (kLiftConstraint (E_Flip_GTerm n))
     )
 
-instance Recursively KFunctor ast => KFunctor (Flip GTerm ast) where
+instance Recursively HFunctor ast => HFunctor (Flip GTerm ast) where
     {-# INLINE mapK #-}
     mapK f =
         _Flip %~
         \case
-        GMono x -> f (E_Flip_GTerm KRecSelf) x & GMono
-        GPoly x -> f (E_Flip_GTerm KRecSelf) x & GPoly
+        GMono x -> f (E_Flip_GTerm HRecSelf) x & GMono
+        GPoly x -> f (E_Flip_GTerm HRecSelf) x & GPoly
         GBody x ->
-            withDict (recursively (Proxy @(KFunctor ast))) $
+            withDict (recursively (Proxy @(HFunctor ast))) $
             mapK
             ( \cw ->
-                kLiftConstraint cw (Proxy @(Recursively KFunctor)) $
+                kLiftConstraint cw (Proxy @(Recursively HFunctor)) $
                 Lens.from _Flip %~
-                mapK (f . (\(E_Flip_GTerm nw) -> E_Flip_GTerm (KRecSub cw nw)))
+                mapK (f . (\(E_Flip_GTerm nw) -> E_Flip_GTerm (HRecSub cw nw)))
             ) x
             & GBody
 
-instance Recursively KFoldable ast => KFoldable (Flip GTerm ast) where
+instance Recursively HFoldable ast => HFoldable (Flip GTerm ast) where
     {-# INLINE foldMapK #-}
     foldMapK f =
         \case
-        GMono x -> f (E_Flip_GTerm KRecSelf) x
-        GPoly x -> f (E_Flip_GTerm KRecSelf) x
+        GMono x -> f (E_Flip_GTerm HRecSelf) x
+        GPoly x -> f (E_Flip_GTerm HRecSelf) x
         GBody x ->
-            withDict (recursively (Proxy @(KFoldable ast))) $
+            withDict (recursively (Proxy @(HFoldable ast))) $
             foldMapK
             ( \cw ->
-                kLiftConstraint cw (Proxy @(Recursively KFoldable)) $
-                foldMapK (f . (\(E_Flip_GTerm nw) -> E_Flip_GTerm (KRecSub cw nw)))
+                kLiftConstraint cw (Proxy @(Recursively HFoldable)) $
+                foldMapK (f . (\(E_Flip_GTerm nw) -> E_Flip_GTerm (HRecSub cw nw)))
                 . (_Flip #)
             ) x
         . (^. _Flip)
 
-instance RTraversable ast => KTraversable (Flip GTerm ast) where
+instance RTraversable ast => HTraversable (Flip GTerm ast) where
     {-# INLINE sequenceK #-}
     sequenceK (MkFlip fx) =
         case fx of
@@ -112,7 +112,7 @@ instance RTraversable ast => KTraversable (Flip GTerm ast) where
         GPoly x -> runContainedK x <&> GPoly
         GBody x ->
             withDict (recurse (Proxy @(RTraversable ast))) $
-            -- KTraversable will be required when not implied by Recursively
+            -- HTraversable will be required when not implied by Recursively
             traverseK
             ( Proxy @RTraversable #> Lens.from _Flip sequenceK
             ) x

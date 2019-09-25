@@ -7,7 +7,7 @@
 {-# LANGUAGE FlexibleInstances, TemplateHaskell, EmptyCase #-}
 
 module Hyper.Type.AST.NamelessScope
-    ( Scope(..), _Scope, KWitness(..)
+    ( Scope(..), _Scope, HWitness(..)
     , ScopeVar(..), _ScopeVar
     , EmptyScope
     , DeBruijnIndex(..)
@@ -40,9 +40,9 @@ newtype ScopeVar (expr :: * -> AHyperType -> *) a (k :: AHyperType) = ScopeVar a
 Lens.makePrisms ''ScopeVar
 
 makeZipMatch ''Scope
-makeKTraversableApplyAndBases ''Scope
+makeHTraversableApplyAndBases ''Scope
 makeZipMatch ''ScopeVar
-makeKTraversableApplyAndBases ''ScopeVar
+makeHTraversableApplyAndBases ''ScopeVar
 
 class DeBruijnIndex a where
     deBruijnIndex :: Prism' Int a
@@ -64,7 +64,7 @@ newtype ScopeTypes t v = ScopeTypes (Seq (v # t))
     deriving newtype (Semigroup, Monoid)
 
 Lens.makePrisms ''ScopeTypes
-makeKTraversableApplyAndBases ''ScopeTypes
+makeHTraversableApplyAndBases ''ScopeTypes
 
 -- TODO: Replace this class with ones from Infer
 class HasScopeTypes v t env where

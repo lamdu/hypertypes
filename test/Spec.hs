@@ -53,60 +53,60 @@ nomLam =
             & TNomP "Map"
             & uniType
 
-letGen0 :: KPlain LangB
+letGen0 :: HPlain LangB
 letGen0 =
     BLetP "id" (BLamP "x" "x") $
     "id" `BAppP` "id" `BAppP` BLitP 5
 
-letGen1 :: KPlain LangB
+letGen1 :: HPlain LangB
 letGen1 =
     BLetP "five" (BLitP 5) $
     BLetP "f" (BLamP "x" ("x" `BAppP` "five" `BAppP` "five")) $
     "f"
 
-letGen2 :: KPlain LangB
+letGen2 :: HPlain LangB
 letGen2 =
     BLetP "f" (BLamP "x" (BGetFieldP "x" "a")) $
     BLamP "x" ("f" `BAppP` ("f" `BAppP` "x"))
 
-genInf :: KPlain LangB
+genInf :: HPlain LangB
 genInf =
     BLetP "f" (BLamP "x" ("x" `BAppP` "x"))
     "f"
 
-shouldNotGen :: KPlain LangB
+shouldNotGen :: HPlain LangB
 shouldNotGen =
     BLamP "x"
     ( BLetP "y" "x"
         "y"
     )
 
-simpleRec :: KPlain LangB
+simpleRec :: HPlain LangB
 simpleRec =
     BRecExtendP "a" (BLitP 5) $
     BRecEmptyP
 
-extendLit :: KPlain LangB
+extendLit :: HPlain LangB
 extendLit =
     BRecExtendP "a" (BLitP 5) $
     BLitP 7
 
-extendDup :: KPlain LangB
+extendDup :: HPlain LangB
 extendDup =
     BRecExtendP "a" (BLitP 7) $
     BRecExtendP "a" (BLitP 5) $
     BRecEmptyP
 
-extendGood :: KPlain LangB
+extendGood :: HPlain LangB
 extendGood =
     BRecExtendP "b" (BLitP 7) $
     BRecExtendP "a" (BLitP 5) $
     BRecEmptyP
 
-getAField :: KPlain LangB
+getAField :: HPlain LangB
 getAField = BLamP "x" (BGetFieldP "x" "a")
 
-vecApp :: KPlain LangB
+vecApp :: HPlain LangB
 vecApp =
     BLamP "x"
     ( BLamP "y"
@@ -117,10 +117,10 @@ vecApp =
         )
     )
 
-usePhantom :: KPlain LangB
+usePhantom :: HPlain LangB
 usePhantom = BToNomP "PhantomInt" (BLitP 5)
 
-unifyRows :: KPlain LangB
+unifyRows :: HPlain LangB
 unifyRows =
     BLamP "f" ("f" `BAppP` r0 `BAppP` ("f" `BAppP` r1 `BAppP` BLitP 12))
     where
@@ -133,16 +133,16 @@ unifyRows =
             BRecExtendP "a" (BLitP 7) $
             BRecEmptyP
 
-return5 :: KPlain LangB
+return5 :: HPlain LangB
 return5 = "return" `BAppP` BLitP 5
 
-returnOk :: KPlain LangB
+returnOk :: HPlain LangB
 returnOk = BToNomP "LocalMut" return5
 
-nomSkolem0 :: KPlain LangB
+nomSkolem0 :: HPlain LangB
 nomSkolem0 = BLamP "x" (BToNomP "LocalMut" "x")
 
-nomSkolem1 :: KPlain LangB
+nomSkolem1 :: HPlain LangB
 nomSkolem1 = nomSkolem0 `BAppP` return5
 
 inferExpr ::
@@ -271,7 +271,7 @@ testA expr expect =
         pureRes = execPureInferA (inferExpr expr)
         stRes = runST (execSTInferA (inferExpr expr))
 
-testB :: KPlain LangB -> String -> IO Bool
+testB :: HPlain LangB -> String -> IO Bool
 testB p expect =
     testCommon expr expect pureRes stRes
     where

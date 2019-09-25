@@ -251,7 +251,7 @@ makeNodeOf info =
         nodesForPat (InContainer _ pat) = nodesForPat pat
         nodesForPat (FlatEmbed x) = tiConstructors x ^.. traverse . Lens._2 . traverse . Lens._Right >>= nodesForPat
         nodesForPat _ = []
-        nodeGadtType t = ConT ''KWitness `AppT` tiInstance info `AppT` t
+        nodeGadtType t = ConT ''HWitness `AppT` tiInstance info `AppT` t
         embeds =
             pats ^.. traverse . Lens._Right >>= embedsForPat & nub
             <&> \t -> (t, mkName (embedBase <> makeNiceType t))
@@ -261,8 +261,8 @@ makeNodeOf info =
         embedsForPat _ = []
         embedGadtType t =
             ArrowT
-            `AppT` (ConT ''KWitness `AppT` t `AppT` VarT nodeVar)
-            `AppT` (ConT ''KWitness `AppT` tiInstance info `AppT` VarT nodeVar)
+            `AppT` (ConT ''HWitness `AppT` t `AppT` VarT nodeVar)
+            `AppT` (ConT ''HWitness `AppT` tiInstance info `AppT` VarT nodeVar)
         nodeVar = mkName "node"
         getWit :: Map Type Exp -> Type -> Exp
         getWit m k =

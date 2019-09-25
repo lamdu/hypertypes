@@ -29,7 +29,7 @@ data TypedLam var typ expr k = TypedLam
 
 makeLenses ''TypedLam
 makeCommonInstances [''TypedLam]
-makeKTraversableApplyAndBases ''TypedLam
+makeHTraversableApplyAndBases ''TypedLam
 makeZipMatch ''TypedLam
 
 instance

@@ -9,7 +9,7 @@ import Control.Lens (Iso, iso)
 
 -- | Flip the order of the last two type parameters of a 'Hyper.Type.AHyperType'.
 --
--- Useful to use instances of classes such as 'Hyper.Class.Traversable.KTraversable' which
+-- Useful to use instances of classes such as 'Hyper.Class.Traversable.HTraversable' which
 -- are available on the flipped 'Hyper.Type.HyperType'.
 -- For example 'Hyper.Unify.Generalize.GTerm' has instances when flipped.
 newtype Flip f x k = MkFlip (Tree (f (GetHyperType k)) x)

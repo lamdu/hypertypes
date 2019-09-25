@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleInstances, UndecidableInstances, TemplateHaskell #-}
 
 module Hyper.Type.AST.App
-    ( App(..), appFunc, appArg, KWitness(..)
+    ( App(..), appFunc, appArg, HWitness(..)
     , appChildren
     ) where
 
@@ -32,7 +32,7 @@ data App expr k = App
 
 makeLenses ''App
 makeZipMatch ''App
-makeKTraversableApplyAndBases ''App
+makeHTraversableApplyAndBases ''App
 makeCommonInstances [''App]
 
 instance Pretty (k # expr) => Pretty (App expr k) where

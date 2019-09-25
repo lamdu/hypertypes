@@ -7,7 +7,7 @@ module Hyper.Class.Unify
     , BindingDict(..)
     ) where
 
-import Hyper.Class.Nodes (KNodes(..))
+import Hyper.Class.Nodes (HNodes(..))
 import Hyper.Class.Recursive
 import Hyper.Class.ZipMatch (ZipMatch)
 import Hyper.Type (Tree, HyperType)
@@ -79,11 +79,11 @@ class
     structureMismatch _ x y = unifyError (Mismatch (x ^. uBody) (y ^. uBody))
 
     -- TODO: Putting documentation here causes duplication in the haddock documentation
-    unifyRecursive :: Proxy m -> Proxy t -> Dict (KNodesConstraint t (Unify m))
+    unifyRecursive :: Proxy m -> Proxy t -> Dict (HNodesConstraint t (Unify m))
     {-# INLINE unifyRecursive #-}
     default unifyRecursive ::
-        KNodesConstraint t (Unify m) =>
-        Proxy m -> Proxy t -> Dict (KNodesConstraint t (Unify m))
+        HNodesConstraint t (Unify m) =>
+        Proxy m -> Proxy t -> Dict (HNodesConstraint t (Unify m))
     unifyRecursive _ _ = Dict
 
 instance Recursive (Unify m) where

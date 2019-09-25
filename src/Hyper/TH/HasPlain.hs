@@ -1,9 +1,9 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
 
--- | Generate 'KHasPlain' instances via @TemplateHaskell@
+-- | Generate 'HasHPlain' instances via @TemplateHaskell@
 
 module Hyper.TH.HasPlain
-    ( makeKHasPlain
+    ( makeHasHPlain
     ) where
 
 import           Hyper.Class.HasPlain
@@ -18,20 +18,20 @@ import qualified Language.Haskell.TH.Datatype as D
 
 import           Prelude.Compat
 
--- | Generate a 'KHasPlain' instance
-makeKHasPlain :: [Name] -> DecsQ
-makeKHasPlain = traverse makeOne
+-- | Generate a 'HasHPlain' instance
+makeHasHPlain :: [Name] -> DecsQ
+makeHasHPlain = traverse makeOne
 
 makeOne :: Name -> Q Dec
-makeOne typeName = makeTypeInfo typeName >>= makeKHasPlainForType
+makeOne typeName = makeTypeInfo typeName >>= makeHasHPlainForType
 
-makeKHasPlainForType :: TypeInfo -> Q Dec
-makeKHasPlainForType info =
+makeHasHPlainForType :: TypeInfo -> Q Dec
+makeHasHPlainForType info =
     traverse (makeCtr (tiHyperParam info)) (tiConstructors info)
     <&>
     \ctrs ->
-    InstanceD Nothing [] (ConT ''KHasPlain `AppT` tiInstance info)
-    [ DataInstD [] ''KPlain [tiInstance info] Nothing (ctrs <&> (^. Lens._1))
+    InstanceD Nothing [] (ConT ''HasHPlain `AppT` tiInstance info)
+    [ DataInstD [] ''HPlain [tiInstance info] Nothing (ctrs <&> (^. Lens._1))
         [DerivClause (Just StockStrategy) [ConT ''Eq, ConT ''Ord, ConT ''Show]]
     , FunD 'kPlain
         [ Clause []
@@ -126,9 +126,9 @@ makeCtr param (cName, cFields) =
             , fieldFromPlain = AppE (VarE 'fmap `AppE` InfixE Nothing (VarE '(^.)) (Just (VarE 'kPlain)))
             } & pure
             where
-                patType (Node x) = ConT ''KPlain `AppT` x
-                patType (GenEmbed x) = ConT ''KPlain `AppT` x
-                patType (FlatEmbed x) = ConT ''KPlain `AppT` tiInstance x
+                patType (Node x) = ConT ''HPlain `AppT` x
+                patType (GenEmbed x) = ConT ''HPlain `AppT` x
+                patType (FlatEmbed x) = ConT ''HPlain `AppT` tiInstance x
                 patType (InContainer t' p') = t' `AppT` patType p'
         forPat (FlatEmbed x) =
             case tiConstructors x of
@@ -156,7 +156,7 @@ makeCtr param (cName, cFields) =
             where
                 gen =
                     NodeField FieldInfo
-                    { fieldPlainType = ConT ''KPlain `AppT` t
+                    { fieldPlainType = ConT ''HPlain `AppT` t
                     , fieldToPlain = InfixE (Just (VarE 'kPlain)) (VarE '(#)) . Just
                     , fieldFromPlain = \f -> InfixE (Just f) (VarE '(^.)) (Just (VarE 'kPlain))
                     } & pure

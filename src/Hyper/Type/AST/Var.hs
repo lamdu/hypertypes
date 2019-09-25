@@ -42,7 +42,7 @@ newtype Var v (expr :: AHyperType -> *) (k :: AHyperType) = Var v
     deriving stock (Show, Generic)
 
 Lens.makePrisms ''Var
-makeKTraversableApplyAndBases ''Var
+makeHTraversableApplyAndBases ''Var
 makeZipMatch ''Var
 
 instance Pretty v => Pretty (Var v expr k) where

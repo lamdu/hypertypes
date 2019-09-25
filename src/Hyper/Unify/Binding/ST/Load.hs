@@ -96,7 +96,7 @@ loadBody src conv =
 load ::
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
-    , KTraversable typeVars
+    , HTraversable typeVars
     , Unify m t
     , Recursively (HasChild typeVars) t
     ) =>

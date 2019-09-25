@@ -267,7 +267,7 @@ Explanations for the above:
 * `Pure` is the simple pass-through/identtiy fix-point
 * The above is quite verbose with a lot of `Pure` and parentheses
 
-To write examples and tests more consicely, the `KHasPlain` class, along with a `TemplateHaskell` generator for it, exists:
+To write examples and tests more consicely, the `HasHPlain` class, along with a `TemplateHaskell` generator for it, exists:
 
 ```Haskell
 > let e = kPlain # verboseExpr
@@ -276,19 +276,19 @@ To write examples and tests more consicely, the `KHasPlain` class, along with a 
 LamP "x" IntTP (VarP "x")
 
 > :t e
-e :: KPlain Expr
+e :: HPlain Expr
 ```
 
 It's now easier to see that `e` represents `\(x:Int). x`
 
-`KPlain` is a data family of "plain versions" of expressions. These are generated automatically via `TemplateHaskell`.
+`HPlain` is a data family of "plain versions" of expressions. These are generated automatically via `TemplateHaskell`.
 
 This is similar to how `recursion-schemes` can derive a parameterized version of an AST, but in the other way around: the parameterized type is the source and the plain one is generated. We believe this is a good choice because the parameterized type will be used more often in application code.
 
 So now, let's define some example expressions in the shorter way:
 
 ```Haskell
-exprA, exprB :: KPlain Expr
+exprA, exprB :: HPlain Expr
 
 exprA = LamP "x" IntTP (VarP "x")
 
@@ -320,9 +320,9 @@ Let's see the type of `diffP`
 diffP ::
     ( RTraversable k
     , Recursively ZipMatch k
-    , Recursively KHasPlain k
+    , Recursively HasHPlain k
     ) =>
-    KPlain k -> KPlain k -> Tree DiffP k
+    HPlain k -> HPlain k -> Tree DiffP k
 ```
 
 `diffP` can calculate the diff for any AST that is recursively traversable, can be matched, and has a plain representation.
@@ -339,15 +339,15 @@ Now, let's format this diff better:
 > :t foldDiffsP
 foldDiffsP ::
     ( Monoid r
-    , Recursively KFoldable k
-    , Recursively KHasPlain k
+    , Recursively HFoldable k
+    , Recursively HasHPlain k
     ) =>
-    (forall n. KHasPlain n => KRecWitness k n -> KPlain n -> KPlain n -> r) ->
+    (forall n. HasHPlain n => HRecWitness k n -> HPlain n -> HPlain n -> r) ->
     Tree DiffP k ->
     r
 ```
 
-What does the ignored argument of `formatDiff` stand for? It is the `KRecWitness k n` from the type of `foldDiffsP` above. It is a witness argument that "proves" that the folded node `n` is a recursive node of `k` (a type parameter from `foldDiffsP`'s type).
+What does the ignored argument of `formatDiff` stand for? It is the `HRecWitness k n` from the type of `foldDiffsP` above. It is a witness argument that "proves" that the folded node `n` is a recursive node of `k` (a type parameter from `foldDiffsP`'s type).
 
 ## Witness parameters
 
@@ -355,27 +355,27 @@ What does the ignored argument of `formatDiff` stand for? It is the `KRecWitness
 
 What are witness parameters?
 
-Let's look at how `KFunctor` is defined:
+Let's look at how `HFunctor` is defined:
 
 ```Haskell
-class KNodes k => KFunctor k where
-    -- | 'KFunctor' variant of 'fmap'
+class HNodes k => HFunctor k where
+    -- | 'HFunctor' variant of 'fmap'
     mapK ::
-        (forall n. KWitness k n -> Tree p n -> Tree q n) ->
+        (forall n. HWitness k n -> Tree p n -> Tree q n) ->
         Tree k p ->
         Tree k q
 ```
 
-`KFunctor` can change a tree of `k`'s fix-point from `p` to `q` given a rank-n-function that transforms an element in `p` to an element in `q` given a witness that its node `n` it a node of `k`.
+`HFunctor` can change a tree of `k`'s fix-point from `p` to `q` given a rank-n-function that transforms an element in `p` to an element in `q` given a witness that its node `n` it a node of `k`.
 
-`KWitness` is a data family which comes from the `KNodes` instance of `k`.
+`HWitness` is a data family which comes from the `HNodes` instance of `k`.
 
-For an example let's see the definition of `Expr`'s `KWitness`:
+For an example let's see the definition of `Expr`'s `HWitness`:
 
 ```Haskell
-data instance KWitness Expr n where
-    W_Expr_Expr :: KWitness Expr Expr
-    W_Expr_Typ :: KWitness Expr Typ
+data instance HWitness Expr n where
+    W_Expr_Expr :: HWitness Expr Expr
+    W_Expr_Typ :: HWitness Expr Typ
 ```
 
 Note that this GADT gets automatically derived via a `TemplateHaskell` generator!
@@ -400,7 +400,7 @@ When mapping over an `Expr` we can:
 
 `hypertypes` is implemented with GHC and heavily relies on quite a few language extensions:
 
-* `ConstraintKinds` and `TypeFamilies` are needed for the `KNodesConstraint` type family which lifts a constraint to apply over a value's nodes. Type families are also used to encode term's results in type inference.
+* `ConstraintKinds` and `TypeFamilies` are needed for the `HNodesConstraint` type family which lifts a constraint to apply over a value's nodes. Type families are also used to encode term's results in type inference.
 * `DataKinds` allows parameterizing types over `AHyperType`s
 * `DefaultSignatures` is used for default methods that return `Dict`s to avoid undecidable super-classes
 * `DeriveGeneric`, `DerivingVia`, `GeneralizedNewtypeDeriving`, `StandaloneDeriving` and `TemplateHaskell` are used to derive type-class instances
@@ -471,7 +471,7 @@ Like DTALC, `hypertypes` has:
 
 * Instances for combinators such as `Product` and `Sum`, so that these can be used to build ASTs
 * Implementations of common AST terms in the `Hyper.Type.AST` module hierarchy (`App`, `Lam`, `Let`, `Var`, `TypeSig` and others)
-* Classes like `KFunctor`, `KTraversable`, `Unify`, `Infer` with instances for the provided AST terms
+* Classes like `HFunctor`, `HTraversable`, `Unify`, `Infer` with instances for the provided AST terms
 
 As an example of a reusable term let's look at the definition of `App`:
 

@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances #-}
 
 module Hyper.Type.AST.Map
-    ( TermMap(..), _TermMap, KWitness(..)
+    ( TermMap(..), _TermMap, HWitness(..)
     ) where
 
 import           Hyper
@@ -24,7 +24,7 @@ newtype TermMap k expr f = TermMap (Map k (f # expr))
 
 Lens.makePrisms ''TermMap
 makeCommonInstances [''TermMap]
-makeKTraversableApplyAndBases ''TermMap
+makeHTraversableApplyAndBases ''TermMap
 
 instance Eq k => ZipMatch (TermMap k expr) where
     {-# INLINE zipMatch #-}

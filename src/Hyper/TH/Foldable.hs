@@ -1,9 +1,9 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
 
--- | Generate 'KFoldable' instances via @TemplateHaskell@
+-- | Generate 'HFoldable' instances via @TemplateHaskell@
 
 module Hyper.TH.Foldable
-    ( makeKFoldable
+    ( makeHFoldable
     ) where
 
 import           Hyper.Class.Foldable
@@ -14,13 +14,13 @@ import           Language.Haskell.TH
 
 import           Prelude.Compat
 
--- | Generate a 'KFoldable' instance
-makeKFoldable :: Name -> DecsQ
-makeKFoldable typeName = makeTypeInfo typeName >>= makeKFoldableForType
+-- | Generate a 'HFoldable' instance
+makeHFoldable :: Name -> DecsQ
+makeHFoldable typeName = makeTypeInfo typeName >>= makeHFoldableForType
 
-makeKFoldableForType :: TypeInfo -> DecsQ
-makeKFoldableForType info =
-    instanceD (simplifyContext (makeContext info)) (appT (conT ''KFoldable) (pure (tiInstance info)))
+makeHFoldableForType :: TypeInfo -> DecsQ
+makeHFoldableForType info =
+    instanceD (simplifyContext (makeContext info)) (appT (conT ''HFoldable) (pure (tiInstance info)))
     [ InlineP 'foldMapK Inline FunLike AllPhases & PragmaD & pure
     , funD 'foldMapK (tiConstructors info <&> pure . makeCtr)
     ]
@@ -37,7 +37,7 @@ makeContext info =
     tiConstructors info ^.. traverse . Lens._2 . traverse . Lens._Right >>= ctxForPat
     where
         ctxForPat (InContainer t pat) = (ConT ''Foldable `AppT` t) : ctxForPat pat
-        ctxForPat (GenEmbed t) = [ConT ''KFoldable `AppT` t]
+        ctxForPat (GenEmbed t) = [ConT ''HFoldable `AppT` t]
         ctxForPat _ = []
 
 varF :: Name

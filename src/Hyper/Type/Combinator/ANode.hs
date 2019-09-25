@@ -9,7 +9,7 @@ module Hyper.Type.Combinator.ANode
 import Hyper.Class.Has (HasChild(..))
 import Hyper.Type (Tree, type (#))
 import Hyper.TH.Internal.Instances (makeCommonInstances)
-import Hyper.TH.Traversable (makeKTraversableApplyAndBases)
+import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
 import Control.Lens (Iso, iso)
 import GHC.Generics (Generic)
 
@@ -25,7 +25,7 @@ newtype ANode c k = MkANode (k # c)
 _ANode :: Iso (Tree (ANode c0) k0) (Tree (ANode c1) k1) (Tree k0 c0) (Tree k1 c1)
 _ANode = iso (\(MkANode x) -> x) MkANode
 
-makeKTraversableApplyAndBases ''ANode
+makeHTraversableApplyAndBases ''ANode
 makeCommonInstances [''ANode]
 
 instance HasChild (ANode c) c where

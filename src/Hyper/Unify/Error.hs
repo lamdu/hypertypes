@@ -10,8 +10,8 @@ module Hyper.Unify.Error
 
 import           Hyper
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
-import           Hyper.TH.Functor (makeKFunctor)
-import           Hyper.TH.Traversable (makeKTraversableAndFoldable)
+import           Hyper.TH.Functor (makeHFunctor)
+import           Hyper.TH.Traversable (makeHTraversableAndFoldable)
 import           Hyper.Unify.Constraints (TypeConstraintsOf)
 import           Control.Lens (makePrisms)
 import           Generics.Constraints (Constraints)
@@ -41,16 +41,16 @@ makePrisms ''UnifyError
 makeCommonInstances [''UnifyError]
 
 -- TODO: TH should be able to generate this
-instance KNodes t => KNodes (UnifyError t) where
-    type KNodesConstraint (UnifyError t) c = (c t, KNodesConstraint t c)
-    data KWitness (UnifyError t) n where
-        W_UnifyError_t :: KWitness (UnifyError t) t
-        E_UnifyError_t :: KWitness t n -> KWitness (UnifyError t) n
+instance HNodes t => HNodes (UnifyError t) where
+    type HNodesConstraint (UnifyError t) c = (c t, HNodesConstraint t c)
+    data HWitness (UnifyError t) n where
+        W_UnifyError_t :: HWitness (UnifyError t) t
+        E_UnifyError_t :: HWitness t n -> HWitness (UnifyError t) n
     kLiftConstraint W_UnifyError_t = const id
     kLiftConstraint (E_UnifyError_t w) = kLiftConstraint w
 
-makeKFunctor ''UnifyError
-makeKTraversableAndFoldable ''UnifyError
+makeHFunctor ''UnifyError
+makeHTraversableAndFoldable ''UnifyError
 
 instance Constraints (UnifyError t k) Pretty => Pretty (UnifyError t k) where
     pPrintPrec lvl p =

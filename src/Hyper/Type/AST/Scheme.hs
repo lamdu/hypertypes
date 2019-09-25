@@ -4,7 +4,7 @@
 {-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
 
 module Hyper.Type.AST.Scheme
-    ( Scheme(..), sForAlls, sTyp, KWitness(..)
+    ( Scheme(..), sForAlls, sTyp, HWitness(..)
     , QVars(..), _QVars
     , HasScheme(..), loadScheme, saveScheme
     , MonadInstantiate(..), inferType
@@ -59,11 +59,11 @@ Lens.makeLenses ''Scheme
 Lens.makePrisms ''QVars
 Lens.makePrisms ''QVarInstances
 makeCommonInstances [''Scheme, ''QVars, ''QVarInstances]
-makeKTraversableApplyAndBases ''Scheme
+makeHTraversableApplyAndBases ''Scheme
 
 instance RNodes t => RNodes (Scheme v t)
 instance (c (Scheme v t), Recursively c t) => Recursively c (Scheme v t)
-instance (KTraversable (Scheme v t), RTraversable t) => RTraversable (Scheme v t)
+instance (HTraversable (Scheme v t), RTraversable t) => RTraversable (Scheme v t)
 instance (RTraversable t, RTraversableInferOf t) => RTraversableInferOf (Scheme v t)
 
 instance
@@ -129,8 +129,8 @@ instance
     ( Monad m
     , HasInferredValue typ
     , Unify m typ
-    , KTraversable varTypes
-    , KNodesConstraint varTypes (MonadInstantiate m)
+    , HTraversable varTypes
+    , HNodesConstraint varTypes (MonadInstantiate m)
     , RTraversable typ
     , Infer m typ
     ) =>
@@ -151,8 +151,8 @@ instance
 
 inferType ::
     ( InferOf t ~ ANode t
-    , KTraversable t
-    , KNodesConstraint t HasInferredValue
+    , HTraversable t
+    , HNodesConstraint t HasInferredValue
     , Unify m t
     , MonadInstantiate m t
     ) =>
@@ -200,12 +200,12 @@ class
 
     hasSchemeRecursive ::
         Proxy varTypes -> Proxy m -> Proxy t ->
-        Dict (KNodesConstraint t (HasScheme varTypes m))
+        Dict (HNodesConstraint t (HasScheme varTypes m))
     {-# INLINE hasSchemeRecursive #-}
     default hasSchemeRecursive ::
-        KNodesConstraint t (HasScheme varTypes m) =>
+        HNodesConstraint t (HasScheme varTypes m) =>
         Proxy varTypes -> Proxy m -> Proxy t ->
-        Dict (KNodesConstraint t (HasScheme varTypes m))
+        Dict (HNodesConstraint t (HasScheme varTypes m))
     hasSchemeRecursive _ _ _ = Dict
 
 instance Recursive (HasScheme varTypes m) where
@@ -222,8 +222,8 @@ instance Recursive (HasScheme varTypes m) where
 loadScheme ::
     forall m varTypes typ.
     ( Monad m
-    , KTraversable varTypes
-    , KNodesConstraint varTypes (Unify m)
+    , HTraversable varTypes
+    , HNodesConstraint varTypes (Unify m)
     , HasScheme varTypes m typ
     ) =>
     Tree Pure (Scheme varTypes typ) ->
@@ -268,8 +268,8 @@ saveH (GPoly x) =
     _ -> error "unexpected state at saveScheme's forall"
 
 saveScheme ::
-    ( KNodesConstraint varTypes OrdQVar
-    , KPointed varTypes
+    ( HNodesConstraint varTypes OrdQVar
+    , HPointed varTypes
     , HasScheme varTypes m typ
     ) =>
     Tree (GTerm (UVarOf m)) typ ->

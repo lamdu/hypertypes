@@ -3,7 +3,7 @@
 -- | A class for lifting constraints to child nodes of a 'AHyperType'.
 
 module Hyper.Class.Nodes
-    ( KNodes(..), KWitness(..)
+    ( HNodes(..), HWitness(..)
     , (#>), (#*#)
     ) where
 
@@ -14,50 +14,50 @@ import Data.Functor.Sum.PolyKinds (Sum(..))
 import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy(..))
 
--- | 'KNodes' allows lifting a constraint to the child nodes of a 'AHyperType'
--- by using the 'KNodesConstraint' type family.
+-- | 'HNodes' allows lifting a constraint to the child nodes of a 'AHyperType'
+-- by using the 'HNodesConstraint' type family.
 --
 -- It also provides some methods to combine and process child node constraints.
 --
--- Various classes like 'Hyper.Class.Functor.KFunctor' build upon 'KNodes'
+-- Various classes like 'Hyper.Class.Functor.HFunctor' build upon 'HNodes'
 -- to provide methods such as 'Hyper.Class.Functor.mapKWith' which provide a rank-n function
 -- for processing child nodes which requires a constraint on the nodes.
-class KNodes (k :: HyperType) where
+class HNodes (k :: HyperType) where
     -- | Lift a constraint to apply to the child nodes
-    type family KNodesConstraint k (c :: (HyperType -> Constraint)) :: Constraint
+    type family HNodesConstraint k (c :: (HyperType -> Constraint)) :: Constraint
 
-    -- | @KWitness k n@ is a witness that @n@ is a node of @k@
-    data family KWitness k :: HyperType -> Type
+    -- | @HWitness k n@ is a witness that @n@ is a node of @k@
+    data family HWitness k :: HyperType -> Type
 
     -- | Lift a rank-n value with a constraint which the child nodes satisfy
     -- to a function from a node witness.
     kLiftConstraint ::
-        KNodesConstraint k c =>
-        KWitness k n ->
+        HNodesConstraint k c =>
+        HWitness k n ->
         Proxy c ->
         (c n => r) ->
         r
 
-instance KNodes (Const a) where
-    type KNodesConstraint (Const a) x = ()
-    data KWitness (Const a) i
+instance HNodes (Const a) where
+    type HNodesConstraint (Const a) x = ()
+    data HWitness (Const a) i
     {-# INLINE kLiftConstraint #-}
     kLiftConstraint = \case{}
 
-instance (KNodes a, KNodes b) => KNodes (Product a b) where
-    type KNodesConstraint (Product a b) x = (KNodesConstraint a x, KNodesConstraint b x)
-    data KWitness (Product a b) n where
-        E_Product_a :: KWitness a n -> KWitness (Product a b) n
-        E_Product_b :: KWitness b n -> KWitness (Product a b) n
+instance (HNodes a, HNodes b) => HNodes (Product a b) where
+    type HNodesConstraint (Product a b) x = (HNodesConstraint a x, HNodesConstraint b x)
+    data HWitness (Product a b) n where
+        E_Product_a :: HWitness a n -> HWitness (Product a b) n
+        E_Product_b :: HWitness b n -> HWitness (Product a b) n
     {-# INLINE kLiftConstraint #-}
     kLiftConstraint (E_Product_a w) = kLiftConstraint w
     kLiftConstraint (E_Product_b w) = kLiftConstraint w
 
-instance (KNodes a, KNodes b) => KNodes (Sum a b) where
-    type KNodesConstraint (Sum a b) x = (KNodesConstraint a x, KNodesConstraint b x)
-    data KWitness (Sum a b) n where
-        E_Sum_a :: KWitness a n -> KWitness (Sum a b) n
-        E_Sum_b :: KWitness b n -> KWitness (Sum a b) n
+instance (HNodes a, HNodes b) => HNodes (Sum a b) where
+    type HNodesConstraint (Sum a b) x = (HNodesConstraint a x, HNodesConstraint b x)
+    data HWitness (Sum a b) n where
+        E_Sum_a :: HWitness a n -> HWitness (Sum a b) n
+        E_Sum_b :: HWitness b n -> HWitness (Sum a b) n
     {-# INLINE kLiftConstraint #-}
     kLiftConstraint (E_Sum_a w) = kLiftConstraint w
     kLiftConstraint (E_Sum_b w) = kLiftConstraint w
@@ -68,8 +68,8 @@ infixr 0 #*#
 -- | @Proxy @c #> r@ replaces the witness parameter of @r@ with a constraint on the witnessed node
 {-# INLINE (#>) #-}
 (#>) ::
-    (KNodes k, KNodesConstraint k c) =>
-    Proxy c -> (c n => r) -> KWitness k n -> r
+    (HNodes k, HNodesConstraint k c) =>
+    Proxy c -> (c n => r) -> HWitness k n -> r
 (#>) p r w = kLiftConstraint w p r
 
 -- | A variant of '#>' which does not consume the witness parameter.
@@ -77,6 +77,6 @@ infixr 0 #*#
 -- @Proxy @c0 #*# Proxy @c1 #> r@ brings into context both the @c0 n@ and @c1 n@ constraints.
 {-# INLINE (#*#) #-}
 (#*#) ::
-    (KNodes k, KNodesConstraint k c) =>
-    Proxy c -> (KWitness k n -> (c n => r)) -> KWitness k n -> r
+    (HNodes k, HNodesConstraint k c) =>
+    Proxy c -> (HWitness k n -> (c n => r)) -> HWitness k n -> r
 (#*#) p r w = (p #> r) w w

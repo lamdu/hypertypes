@@ -4,7 +4,7 @@
 {-# LANGUAGE FlexibleContexts, TemplateHaskell, EmptyCase #-}
 
 module Hyper.Type.AST.Nominal
-    ( NominalDecl(..), nParams, nScheme, KWitness(..)
+    ( NominalDecl(..), nParams, nScheme, HWitness(..)
     , NominalInst(..), nId, nArgs
     , ToNom(..), tnId, tnVal
     , FromNom(..), _FromNom
@@ -93,28 +93,28 @@ makeLenses ''NominalInst
 makeLenses ''ToNom
 makePrisms ''FromNom
 makeCommonInstances [''NominalDecl, ''NominalInst, ''ToNom, ''LoadedNominalDecl]
-makeKTraversableAndBases ''NominalDecl
-makeKTraversableApplyAndBases ''ToNom
-makeKTraversableApplyAndBases ''FromNom
+makeHTraversableAndBases ''NominalDecl
+makeHTraversableApplyAndBases ''ToNom
+makeHTraversableApplyAndBases ''FromNom
 makeZipMatch ''ToNom
 makeZipMatch ''FromNom
 
-instance KNodes v => KNodes (NominalInst n v) where
-    type KNodesConstraint (NominalInst n v) c = KNodesConstraint v c
-    data KWitness (NominalInst n v) c = E_NominalInst_k (KWitness v c)
+instance HNodes v => HNodes (NominalInst n v) where
+    type HNodesConstraint (NominalInst n v) c = HNodesConstraint v c
+    data HWitness (NominalInst n v) c = E_NominalInst_k (HWitness v c)
     {-# INLINE kLiftConstraint #-}
     kLiftConstraint (E_NominalInst_k w) = kLiftConstraint w
 
-instance KFunctor v => KFunctor (NominalInst n v) where
+instance HFunctor v => HFunctor (NominalInst n v) where
     {-# INLINE mapK #-}
     mapK f = nArgs %~ mapK (\w -> _QVarInstances . Lens.mapped %~ f (E_NominalInst_k w))
 
-instance KFoldable v => KFoldable (NominalInst n v) where
+instance HFoldable v => HFoldable (NominalInst n v) where
     {-# INLINE foldMapK #-}
     foldMapK f =
         foldMapK (\w -> foldMap (f (E_NominalInst_k w)) . (^. _QVarInstances)) . (^. nArgs)
 
-instance KTraversable v => KTraversable (NominalInst n v) where
+instance HTraversable v => HTraversable (NominalInst n v) where
     {-# INLINE sequenceK #-}
     sequenceK (NominalInst n v) =
         traverseK (const (_QVarInstances (traverse runContainedK))) v
@@ -123,9 +123,9 @@ instance KTraversable v => KTraversable (NominalInst n v) where
 instance
     ( Eq nomId
     , ZipMatch varTypes
-    , KTraversable varTypes
-    , KNodesConstraint varTypes ZipMatch
-    , KNodesConstraint varTypes OrdQVar
+    , HTraversable varTypes
+    , HNodesConstraint varTypes ZipMatch
+    , HNodesConstraint varTypes OrdQVar
     ) =>
     ZipMatch (NominalInst nomId varTypes) where
 
@@ -153,8 +153,8 @@ instance (Pretty (QVar k), Pretty (outer # k)) => PrettyConstraints outer k
 
 instance
     ( Pretty nomId
-    , KApply varTypes, KFoldable varTypes
-    , KNodesConstraint varTypes (PrettyConstraints k)
+    , HApply varTypes, HFoldable varTypes
+    , HNodesConstraint varTypes (PrettyConstraints k)
     ) =>
     Pretty (NominalInst nomId varTypes k) where
 
@@ -173,22 +173,22 @@ instance
                 \(k, v) ->
                 (pPrint k <> Pretty.text ":") <+> pPrint v
 
-instance (RNodes t, KNodes (NomVarTypes t)) => KNodes (LoadedNominalDecl t) where
-    type KNodesConstraint (LoadedNominalDecl t) c =
-        ( KNodesConstraint (NomVarTypes t) c
+instance (RNodes t, HNodes (NomVarTypes t)) => HNodes (LoadedNominalDecl t) where
+    type HNodesConstraint (LoadedNominalDecl t) c =
+        ( HNodesConstraint (NomVarTypes t) c
         , c t
         , Recursive c
         )
-    data KWitness (LoadedNominalDecl t) n where
-        E_LoadedNominalDecl_Body :: KRecWitness t n -> KWitness (LoadedNominalDecl t) n
-        E_LoadedNominalDecl_NomVarTypes :: KWitness (NomVarTypes t) n -> KWitness (LoadedNominalDecl t) n
+    data HWitness (LoadedNominalDecl t) n where
+        E_LoadedNominalDecl_Body :: HRecWitness t n -> HWitness (LoadedNominalDecl t) n
+        E_LoadedNominalDecl_NomVarTypes :: HWitness (NomVarTypes t) n -> HWitness (LoadedNominalDecl t) n
     {-# INLINE kLiftConstraint #-}
     kLiftConstraint (E_LoadedNominalDecl_Body w) = kLiftConstraint (E_Flip_GTerm w)
     kLiftConstraint (E_LoadedNominalDecl_NomVarTypes w) = kLiftConstraint w
 
 instance
-    (Recursively KFunctor typ, KFunctor (NomVarTypes typ)) =>
-    KFunctor (LoadedNominalDecl typ) where
+    (Recursively HFunctor typ, HFunctor (NomVarTypes typ)) =>
+    HFunctor (LoadedNominalDecl typ) where
     {-# INLINE mapK #-}
     mapK f (LoadedNominalDecl mp mf t) =
         LoadedNominalDecl (onMap mp) (onMap mf)
@@ -197,8 +197,8 @@ instance
             onMap = mapK (\w -> _QVarInstances . Lens.mapped %~ f (E_LoadedNominalDecl_NomVarTypes w))
 
 instance
-    (Recursively KFoldable typ, KFoldable (NomVarTypes typ)) =>
-    KFoldable (LoadedNominalDecl typ) where
+    (Recursively HFoldable typ, HFoldable (NomVarTypes typ)) =>
+    HFoldable (LoadedNominalDecl typ) where
     {-# INLINE foldMapK #-}
     foldMapK f (LoadedNominalDecl mp mf t) =
         onMap mp <> onMap mf <>
@@ -207,8 +207,8 @@ instance
             onMap = foldMapK (\w -> foldMap (f (E_LoadedNominalDecl_NomVarTypes w)) . (^. _QVarInstances))
 
 instance
-    (RTraversable typ, KTraversable (NomVarTypes typ)) =>
-    KTraversable (LoadedNominalDecl typ) where
+    (RTraversable typ, HTraversable (NomVarTypes typ)) =>
+    HTraversable (LoadedNominalDecl typ) where
     {-# INLINE sequenceK #-}
     sequenceK (LoadedNominalDecl p f t) =
         LoadedNominalDecl
@@ -244,8 +244,8 @@ loadBody params foralls x =
 loadNominalDecl ::
     forall m typ.
     ( Monad m
-    , KTraversable (NomVarTypes typ)
-    , KNodesConstraint (NomVarTypes typ) (Unify m)
+    , HTraversable (NomVarTypes typ)
+    , HNodesConstraint (NomVarTypes typ) (Unify m)
     , HasScheme (NomVarTypes typ) m typ
     ) =>
     Tree Pure (NominalDecl typ) ->
@@ -270,8 +270,8 @@ class HasNominalInst nomId typ where
 lookupParams ::
     forall m varTypes.
     ( Applicative m
-    , KTraversable varTypes
-    , KNodesConstraint varTypes (Unify m)
+    , HTraversable varTypes
+    , HNodesConstraint varTypes (Unify m)
     ) =>
     Tree varTypes (QVarInstances (UVarOf m)) ->
     m (Tree varTypes (QVarInstances (UVarOf m)))
@@ -293,8 +293,8 @@ type instance InferOf (ToNom n e) = NominalInst n (NomVarTypes (TypeOf e))
 instance
     ( MonadScopeLevel m
     , MonadNominals nomId (TypeOf expr) m
-    , KTraversable (NomVarTypes (TypeOf expr))
-    , KNodesConstraint (NomVarTypes (TypeOf expr)) (Unify m)
+    , HTraversable (NomVarTypes (TypeOf expr))
+    , HNodesConstraint (NomVarTypes (TypeOf expr)) (Unify m)
     , Unify m (TypeOf expr)
     , HasInferredType expr
     , Infer m expr
@@ -326,8 +326,8 @@ instance
     ( Infer m expr
     , HasNominalInst nomId (TypeOf expr)
     , MonadNominals nomId (TypeOf expr) m
-    , KTraversable (NomVarTypes (TypeOf expr))
-    , KNodesConstraint (NomVarTypes (TypeOf expr)) (Unify m)
+    , HTraversable (NomVarTypes (TypeOf expr))
+    , HNodesConstraint (NomVarTypes (TypeOf expr)) (Unify m)
     , Unify m (TypeOf expr)
     ) =>
     Infer m (FromNom nomId expr) where

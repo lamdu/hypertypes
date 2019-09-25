@@ -69,7 +69,7 @@ import Prelude.Compat
 -- The 'blamableRecursive' method represents that 'Blame' applies to all recursive child nodes.
 -- It replaces context for 'Blame' to avoid @UndecidableSuperClasses@.
 class
-    (Infer m t, RTraversable t, KTraversable (InferOf t), KPointed (InferOf t)) =>
+    (Infer m t, RTraversable t, HTraversable (InferOf t), HPointed (InferOf t)) =>
     Blame m t where
 
     -- | Unify the types/values in infer results
@@ -88,11 +88,11 @@ class
 
     -- TODO: Putting documentation here causes duplication in the haddock documentation
     blamableRecursive ::
-        Proxy m -> Proxy t -> Dict (KNodesConstraint t (Blame m))
+        Proxy m -> Proxy t -> Dict (HNodesConstraint t (Blame m))
     {-# INLINE blamableRecursive #-}
     default blamableRecursive ::
-        KNodesConstraint t (Blame m) =>
-        Proxy m -> Proxy t -> Dict (KNodesConstraint t (Blame m))
+        HNodesConstraint t (Blame m) =>
+        Proxy m -> Proxy t -> Dict (HNodesConstraint t (Blame m))
     blamableRecursive _ _ = Dict
 
 instance Recursive (Blame m) where
@@ -181,16 +181,16 @@ data BTerm a v e = BTerm
 makeLenses ''BTerm
 makeCommonInstances [''BTerm]
 
-instance KNodes (Flip (BTerm a) e) where
-    type KNodesConstraint (Flip (BTerm a) e) c = ITermVarsConstraint c e
-    data KWitness (Flip (BTerm a) e) n where
+instance HNodes (Flip (BTerm a) e) where
+    type HNodesConstraint (Flip (BTerm a) e) c = ITermVarsConstraint c e
+    data HWitness (Flip (BTerm a) e) n where
         E_Flip_BTerm_InferOf_e ::
-            KWitness (InferOf e) n ->
-            KWitness (Flip (BTerm a) e) n
+            HWitness (InferOf e) n ->
+            HWitness (Flip (BTerm a) e) n
         E_Flip_BTerm_e ::
-            KWitness e f ->
-            KWitness (Flip (BTerm a) f) n ->
-            KWitness (Flip (BTerm a) e) n
+            HWitness e f ->
+            HWitness (Flip (BTerm a) f) n ->
+            HWitness (Flip (BTerm a) e) n
     {-# INLINE kLiftConstraint #-}
     kLiftConstraint w p =
         withDict (iTermVarsConstraintCtx p (Proxy @e)) $
@@ -202,11 +202,11 @@ instance KNodes (Flip (BTerm a) e) where
                 p0 :: Proxy c -> Proxy (ITermVarsConstraint c)
                 p0 _ = Proxy
 
-instance (Recursively KFunctor e, Recursively KFunctorInferOf e) => KFunctor (Flip (BTerm a) e) where
+instance (Recursively HFunctor e, Recursively HFunctorInferOf e) => HFunctor (Flip (BTerm a) e) where
     {-# INLINE mapK #-}
     mapK f =
-        withDict (recursively (Proxy @(KFunctor e))) $
-        withDict (recursively (Proxy @(KFunctorInferOf e))) $
+        withDict (recursively (Proxy @(HFunctor e))) $
+        withDict (recursively (Proxy @(HFunctorInferOf e))) $
         let mapRes = mapK (f . E_Flip_BTerm_InferOf_e)
         in
         _Flip %~
@@ -217,16 +217,16 @@ instance (Recursively KFunctor e, Recursively KFunctorInferOf e) => KFunctor (Fl
             Right r0 -> Right (mapRes r0)
         )
         ( mapK
-            ( Proxy @(Recursively KFunctor) #*# Proxy @(Recursively KFunctorInferOf) #*#
+            ( Proxy @(Recursively HFunctor) #*# Proxy @(Recursively HFunctorInferOf) #*#
                 \w -> from _Flip %~ mapK (f . E_Flip_BTerm_e w)
             ) x
         )
 
-instance (Recursively KFoldable e, Recursively KFoldableInferOf e) => KFoldable (Flip (BTerm a) e) where
+instance (Recursively HFoldable e, Recursively HFoldableInferOf e) => HFoldable (Flip (BTerm a) e) where
     {-# INLINE foldMapK #-}
     foldMapK f (MkFlip (BTerm _ r x)) =
-        withDict (recursively (Proxy @(KFoldable e))) $
-        withDict (recursively (Proxy @(KFoldableInferOf e))) $
+        withDict (recursively (Proxy @(HFoldable e))) $
+        withDict (recursively (Proxy @(HFoldableInferOf e))) $
         let foldRes = foldMapK (f . E_Flip_BTerm_InferOf_e)
         in
         case r of
@@ -234,13 +234,13 @@ instance (Recursively KFoldable e, Recursively KFoldableInferOf e) => KFoldable 
         Right r0 -> foldRes r0
         <>
         foldMapK
-        ( Proxy @(Recursively KFoldable) #*# Proxy @(Recursively KFoldableInferOf) #*#
+        ( Proxy @(Recursively HFoldable) #*# Proxy @(Recursively HFoldableInferOf) #*#
             \w -> foldMapK (f . E_Flip_BTerm_e w) . (_Flip #)
         ) x
 
 instance
     (RTraversable e, RTraversableInferOf e) =>
-    KTraversable (Flip (BTerm a) e) where
+    HTraversable (Flip (BTerm a) e) where
     {-# INLINE sequenceK #-}
     sequenceK =
         withDict (recurse (Proxy @(RTraversable e))) $
@@ -259,7 +259,7 @@ instance
         )
         where
             seqRes ::
-                (KTraversable k, Applicative f) =>
+                (HTraversable k, Applicative f) =>
                 Tree k (ContainedK f p) -> f (Tree k p)
             seqRes = traverseK (const runContainedK)
 
@@ -307,9 +307,9 @@ blame order topLevelType e =
 
 bTermToAnn ::
     forall a v e r.
-    Recursively KFunctor e =>
+    Recursively HFunctor e =>
     ( forall n.
-        KRecWitness e n ->
+        HRecWitness e n ->
         a ->
         Either (Tree (InferOf n) v, Tree (InferOf n) v) (Tree (InferOf n) v) ->
         r
@@ -317,9 +317,9 @@ bTermToAnn ::
     Tree (BTerm a v) e ->
     Tree (Ann r) e
 bTermToAnn f (BTerm pl r x) =
-    withDict (recursively (Proxy @(KFunctor e))) $
+    withDict (recursively (Proxy @(HFunctor e))) $
     mapK
-    ( Proxy @(Recursively KFunctor) #*#
-        \w -> bTermToAnn (f . KRecSub w)
+    ( Proxy @(Recursively HFunctor) #*#
+        \w -> bTermToAnn (f . HRecSub w)
     ) x
-    & Ann (f KRecSelf pl r)
+    & Ann (f HRecSelf pl r)

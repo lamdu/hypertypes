@@ -60,7 +60,7 @@ data LangB k
     | BToNom (ToNom Name LangB k)
     deriving Generic
 
-makeKTraversableAndBases ''LangB
+makeHTraversableAndBases ''LangB
 instance c LangB => Recursively c LangB
 instance RNodes LangB
 instance RTraversable LangB
@@ -152,13 +152,13 @@ newtype ScopeTypes v = ScopeTypes (Map Name (Tree (GTerm (GetHyperType v)) Typ))
 
 makeDerivings [''Show] [''LangB, ''ScopeTypes]
 
-makeKHasPlain [''LangB]
-instance IsString (KPlain LangB) where
+makeHasHPlain [''LangB]
+instance IsString (HPlain LangB) where
     fromString = BVarP . fromString
 
-instance KNodes ScopeTypes where
-    data KWitness ScopeTypes n = E_ScopeTypes (KWitness (Flip GTerm Typ) n)
-    type KNodesConstraint ScopeTypes c = (c Typ, Recursive c)
+instance HNodes ScopeTypes where
+    data HWitness ScopeTypes n = E_ScopeTypes (HWitness (Flip GTerm Typ) n)
+    type HNodesConstraint ScopeTypes c = (c Typ, Recursive c)
     kLiftConstraint (E_ScopeTypes w) = kLiftConstraint w
 
 Lens.makePrisms ''ScopeTypes
@@ -171,12 +171,12 @@ typesInScope ::
         (Tree (Flip GTerm Typ) v1)
 typesInScope = _ScopeTypes . traverse . Lens.from _Flip
 
-makeKFoldable ''ScopeTypes
+makeHFoldable ''ScopeTypes
 
-instance KFunctor ScopeTypes where
+instance HFunctor ScopeTypes where
     mapK f = typesInScope %~ mapK (f . E_ScopeTypes)
 
-instance KTraversable ScopeTypes where
+instance HTraversable ScopeTypes where
     sequenceK = typesInScope sequenceK
 
 data InferScope v = InferScope

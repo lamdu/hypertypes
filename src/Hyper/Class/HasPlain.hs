@@ -6,7 +6,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 module Hyper.Class.HasPlain
-    ( KHasPlain(..)
+    ( HasHPlain(..)
     ) where
 
 import Hyper.Type (Tree)
@@ -16,8 +16,8 @@ import Control.Lens (Iso')
 import Prelude.Compat
 
 -- | A class for a plain for of a @Tree Pure k@
-class Show (KPlain k) => KHasPlain k where
+class Show (HPlain k) => HasHPlain k where
     -- | Plain form data type
-    data KPlain k
+    data HPlain k
     -- | An 'Control.Lens.Iso' between the plain form and 'Hyper.Type.HyperType' form
-    kPlain :: Iso' (KPlain k) (Tree Pure k)
+    kPlain :: Iso' (HPlain k) (Tree Pure k)

@@ -81,13 +81,13 @@ Lens.makeLenses ''Types
 makeZipMatch ''Types
 makeZipMatch ''Typ
 makeZipMatch ''Row
-makeKTraversableApplyAndBases ''Types
-makeKTraversableAndBases ''Typ
-makeKTraversableAndBases ''Row
+makeHTraversableApplyAndBases ''Types
+makeHTraversableAndBases ''Typ
+makeHTraversableAndBases ''Row
 
 makeDerivings [''Eq, ''Ord, ''Show] [''Typ, ''Row, ''Types, ''TypeError]
 
-makeKHasPlain [''Typ, ''Row]
+makeHasHPlain [''Typ, ''Row]
 
 type instance NomVarTypes Typ = Types
 

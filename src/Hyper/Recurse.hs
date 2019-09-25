@@ -7,13 +7,13 @@ module Hyper.Recurse
     , fold, unfold
     , wrap, wrapM, unwrap, unwrapM
     , foldMapRecursive
-    , KRecWitness(..)
+    , HRecWitness(..)
     , (#>>), (#**#), (##>>)
     ) where
 
 import Hyper.Class.Foldable
-import Hyper.Class.Functor (KFunctor(..))
-import Hyper.Class.Nodes (KNodes(..), (#>), (#*#))
+import Hyper.Class.Functor (HFunctor(..))
+import Hyper.Class.Nodes (HNodes(..), (#>), (#*#))
 import Hyper.Class.Recursive
 import Hyper.Class.Traversable
 import Hyper.Type
@@ -25,71 +25,71 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
--- | @KRecWitness k n@ is a witness that @n@ is a recursive node of @k@
-data KRecWitness k n where
-    KRecSelf :: KRecWitness k k
-    KRecSub :: KWitness k c -> KRecWitness c n -> KRecWitness k n
+-- | @HRecWitness k n@ is a witness that @n@ is a recursive node of @k@
+data HRecWitness k n where
+    HRecSelf :: HRecWitness k k
+    HRecSub :: HWitness k c -> HRecWitness c n -> HRecWitness k n
 
 -- | Monadically convert a 'Pure' 'Tree' to a different 'Hyper.Type.AHyperType' from the bottom up
 {-# INLINE wrapM #-}
 wrapM ::
     forall m k w.
     (Monad m, RTraversable k) =>
-    (forall n. KRecWitness k n -> Tree n w -> m (Tree w n)) ->
+    (forall n. HRecWitness k n -> Tree n w -> m (Tree w n)) ->
     Tree Pure k ->
     m (Tree w k)
 wrapM f x =
     withDict (recurse (Proxy @(RTraversable k))) $
     x ^. _Pure
-    & traverseK (Proxy @RTraversable #*# \w -> wrapM (f . KRecSub w))
-    >>= f KRecSelf
+    & traverseK (Proxy @RTraversable #*# \w -> wrapM (f . HRecSub w))
+    >>= f HRecSelf
 
 -- | Monadically unwrap a 'Tree' from the top down, replacing its 'Hyper.Type.AHyperType' with 'Pure'
 {-# INLINE unwrapM #-}
 unwrapM ::
     forall m k w.
     (Monad m, RTraversable k) =>
-    (forall n. KRecWitness k n -> Tree w n -> m (Tree n w)) ->
+    (forall n. HRecWitness k n -> Tree w n -> m (Tree n w)) ->
     Tree w k ->
     m (Tree Pure k)
 unwrapM f x =
     withDict (recurse (Proxy @(RTraversable k))) $
-    f KRecSelf x
-    >>= traverseK (Proxy @RTraversable #*# \w -> unwrapM (f . KRecSub w))
+    f HRecSelf x
+    >>= traverseK (Proxy @RTraversable #*# \w -> unwrapM (f . HRecSub w))
     <&> (_Pure #)
 
 -- | Wrap a 'Pure' 'Tree' to a different 'Hyper.Type.AHyperType' from the bottom up
 {-# INLINE wrap #-}
 wrap ::
     forall k w.
-    Recursively KFunctor k =>
-    (forall n. KRecWitness k n -> Tree n w -> Tree w n) ->
+    Recursively HFunctor k =>
+    (forall n. HRecWitness k n -> Tree n w -> Tree w n) ->
     Tree Pure k ->
     Tree w k
 wrap f x =
-    withDict (recursively (Proxy @(KFunctor k))) $
+    withDict (recursively (Proxy @(HFunctor k))) $
     x ^. _Pure
-    & mapK (Proxy @(Recursively KFunctor) #*# \w -> wrap (f . KRecSub w))
-    & f KRecSelf
+    & mapK (Proxy @(Recursively HFunctor) #*# \w -> wrap (f . HRecSub w))
+    & f HRecSelf
 
 -- | Unwrap a 'Tree' from the top down, replacing its 'Hyper.Type.AHyperType' with 'Pure'
 {-# INLINE unwrap #-}
 unwrap ::
     forall k w.
-    Recursively KFunctor k =>
-    (forall n. KRecWitness k n -> Tree w n -> Tree n w) ->
+    Recursively HFunctor k =>
+    (forall n. HRecWitness k n -> Tree w n -> Tree n w) ->
     Tree w k ->
     Tree Pure k
 unwrap f x =
-    withDict (recursively (Proxy @(KFunctor k))) $
-    f KRecSelf x
-    &# mapK (Proxy @(Recursively KFunctor) #*# \w -> unwrap (f . KRecSub w))
+    withDict (recursively (Proxy @(HFunctor k))) $
+    f HRecSelf x
+    &# mapK (Proxy @(Recursively HFunctor) #*# \w -> unwrap (f . HRecSub w))
 
 -- | Recursively fold up a tree to produce a result (aka catamorphism)
 {-# INLINE fold #-}
 fold ::
-    Recursively KFunctor k =>
-    (forall n. KRecWitness k n -> Tree n (Const a) -> a) ->
+    Recursively HFunctor k =>
+    (forall n. HRecWitness k n -> Tree n (Const a) -> a) ->
     Tree Pure k ->
     a
 fold f = getConst . wrap (fmap Const . f)
@@ -97,8 +97,8 @@ fold f = getConst . wrap (fmap Const . f)
 -- | Build/load a tree from a seed value (aka anamorphism)
 {-# INLINE unfold #-}
 unfold ::
-    Recursively KFunctor k =>
-    (forall n. KRecWitness k n -> a -> Tree n (Const a)) ->
+    Recursively HFunctor k =>
+    (forall n. HRecWitness k n -> a -> Tree n (Const a)) ->
     a ->
     Tree Pure k
 unfold f = unwrap (fmap (. getConst) f) . Const
@@ -107,17 +107,17 @@ unfold f = unwrap (fmap (. getConst) f) . Const
 {-# INLINE foldMapRecursive #-}
 foldMapRecursive ::
     forall k p a.
-    (Recursively KFoldable k, Recursively KFoldable p, Monoid a) =>
-    (forall n q. KRecWitness k n -> Tree n q -> a) ->
+    (Recursively HFoldable k, Recursively HFoldable p, Monoid a) =>
+    (forall n q. HRecWitness k n -> Tree n q -> a) ->
     Tree k p ->
     a
 foldMapRecursive f x =
-    withDict (recursively (Proxy @(KFoldable k))) $
-    withDict (recursively (Proxy @(KFoldable p))) $
-    f KRecSelf x <>
+    withDict (recursively (Proxy @(HFoldable k))) $
+    withDict (recursively (Proxy @(HFoldable p))) $
+    f HRecSelf x <>
     foldMapK
-    ( Proxy @(Recursively KFoldable) #*#
-        \w -> foldMapK (Proxy @(Recursively KFoldable) #> foldMapRecursive (f . KRecSub w))
+    ( Proxy @(Recursively HFoldable) #*#
+        \w -> foldMapK (Proxy @(Recursively HFoldable) #> foldMapRecursive (f . HRecSub w))
     ) x
 
 infixr 0 #>>
@@ -129,9 +129,9 @@ infixr 0 #**#
 (#>>) ::
     forall c k n r.
     (Recursive c, c k, RNodes k) =>
-    Proxy c -> (c n => r) -> KRecWitness k n -> r
-(#>>) _ r KRecSelf = r
-(#>>) p r (KRecSub w0 w1) =
+    Proxy c -> (c n => r) -> HRecWitness k n -> r
+(#>>) _ r HRecSelf = r
+(#>>) p r (HRecSub w0 w1) =
     withDict (recurse (Proxy @(RNodes k))) $
     withDict (recurse (Proxy @(c k))) $
     (Proxy @RNodes #*# p #> (p #>> r) w1) w0
@@ -141,12 +141,12 @@ infixr 0 #**#
 (##>>) ::
     forall c k n r.
     Recursively c k =>
-    Proxy c -> (c n => r) -> KRecWitness k n -> r
+    Proxy c -> (c n => r) -> HRecWitness k n -> r
 (##>>) p r =
     withDict (recursively (Proxy @(c k))) $
     \case
-    KRecSelf -> r
-    KRecSub w0 w1 -> (Proxy @(Recursively c) #> (p ##>> r) w1) w0
+    HRecSelf -> r
+    HRecSub w0 w1 -> (Proxy @(Recursively c) #> (p ##>> r) w1) w0
 
 -- | A variant of '#>>' which does not consume the witness parameter.
 --
@@ -154,5 +154,5 @@ infixr 0 #**#
 {-# INLINE (#**#) #-}
 (#**#) ::
     (Recursive c, c k, RNodes k) =>
-    Proxy c -> (KRecWitness k n -> (c n => r)) -> KRecWitness k n -> r
+    Proxy c -> (HRecWitness k n -> (c n => r)) -> HRecWitness k n -> r
 (#**#) p r w = (p #>> r) w w

@@ -3,7 +3,7 @@
 {-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances #-}
 
 module Hyper.Type.AST.TypeSig
-    ( TypeSig(..), tsType, tsTerm, KWitness(..)
+    ( TypeSig(..), tsType, tsTerm, HWitness(..)
     ) where
 
 import           Hyper
@@ -32,7 +32,7 @@ data TypeSig vars term k = TypeSig
 
 makeLenses ''TypeSig
 makeCommonInstances [''TypeSig]
-makeKTraversableApplyAndBases ''TypeSig
+makeHTraversableApplyAndBases ''TypeSig
 
 instance
     Constraints (TypeSig vars term k) Pretty =>
@@ -47,10 +47,10 @@ instance
     ( MonadScopeLevel m
     , HasInferredType term
     , HasInferredValue (TypeOf term)
-    , KTraversable vars
-    , KTraversable (InferOf term)
-    , KNodesConstraint (InferOf term) (Unify m)
-    , KNodesConstraint vars (MonadInstantiate m)
+    , HTraversable vars
+    , HTraversable (InferOf term)
+    , HNodesConstraint (InferOf term) (Unify m)
+    , HNodesConstraint vars (MonadInstantiate m)
     , Unify m (TypeOf term)
     , Infer m (TypeOf term)
     , Infer m term

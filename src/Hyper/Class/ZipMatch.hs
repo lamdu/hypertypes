@@ -8,9 +8,9 @@ module Hyper.Class.ZipMatch
     ) where
 
 import           Hyper.Class.Foldable
-import           Hyper.Class.Functor (KFunctor(..))
-import           Hyper.Class.Nodes (KNodes(..))
-import           Hyper.Class.Traversable (KTraversable, traverseK)
+import           Hyper.Class.Functor (HFunctor(..))
+import           Hyper.Class.Nodes (HNodes(..))
+import           Hyper.Class.Traversable (HTraversable, traverseK)
 import           Hyper.Type (Tree)
 import           Hyper.Type.Pure (Pure(..), _Pure)
 import           Control.Lens.Operators
@@ -27,7 +27,7 @@ import           Prelude.Compat
 -- when the terms contain plain values, 'Hyper.Class.Apply.zipK' would append them,
 -- but 'zipMatch' would compare them and only produce a result if they match.
 --
--- The @TemplateHaskell@ generators 'Hyper.TH.Apply.makeKApply' and 'Hyper.TH.ZipMatch.makeZipMatch'
+-- The @TemplateHaskell@ generators 'Hyper.TH.Apply.makeHApply' and 'Hyper.TH.ZipMatch.makeZipMatch'
 -- create the instances according to these semantics.
 class ZipMatch k where
     -- | Compare two structures
@@ -60,31 +60,31 @@ instance ZipMatch Pure where
 -- | 'ZipMatch' variant of 'Control.Applicative.liftA2'
 {-# INLINE zipMatch2 #-}
 zipMatch2 ::
-    (ZipMatch k, KFunctor k) =>
-    (forall n. KWitness k n -> Tree p n -> Tree q n -> Tree r n) ->
+    (ZipMatch k, HFunctor k) =>
+    (forall n. HWitness k n -> Tree p n -> Tree q n -> Tree r n) ->
     Tree k p -> Tree k q -> Maybe (Tree k r)
 zipMatch2 f x y = zipMatch x y <&> mapK (\w (Pair a b) -> f w a b)
 
 -- | An 'Applicative' variant of 'zipMatch2'
 {-# INLINE zipMatchA #-}
 zipMatchA ::
-    (Applicative f, ZipMatch k, KTraversable k) =>
-    (forall n. KWitness k n -> Tree p n -> Tree q n -> f (Tree r n)) ->
+    (Applicative f, ZipMatch k, HTraversable k) =>
+    (forall n. HWitness k n -> Tree p n -> Tree q n -> f (Tree r n)) ->
     Tree k p -> Tree k q -> Maybe (f (Tree k r))
 zipMatchA f x y = zipMatch x y <&> traverseK (\w (Pair a b) -> f w a b)
 
 -- | A variant of 'zipMatchA' where the 'Applicative' actions do not contain results
 {-# INLINE zipMatch_ #-}
 zipMatch_ ::
-    (Applicative f, ZipMatch k, KFoldable k) =>
-    (forall n. KWitness k n -> Tree p n -> Tree q n -> f ()) ->
+    (Applicative f, ZipMatch k, HFoldable k) =>
+    (forall n. HWitness k n -> Tree p n -> Tree q n -> f ()) ->
     Tree k p -> Tree k q -> Maybe (f ())
 zipMatch_ f x y = zipMatch x y <&> traverseK_ (\w (Pair a b) -> f w a b)
 
 -- | A variant of 'zipMatch_' for 'Hyper.Type.AHyperType's with a single node type (avoids using @RankNTypes@)
 {-# INLINE zipMatch1_ #-}
 zipMatch1_ ::
-    (Applicative f, ZipMatch k, KFoldable k, KNodesConstraint k ((~) n)) =>
+    (Applicative f, ZipMatch k, HFoldable k, HNodesConstraint k ((~) n)) =>
     (Tree p n -> Tree q n -> f ()) ->
     Tree k p -> Tree k q -> Maybe (f ())
 zipMatch1_ f x y = zipMatch x y <&> traverseK1_ (\(Pair a b) -> f a b)
