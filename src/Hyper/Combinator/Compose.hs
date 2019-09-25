@@ -1,4 +1,4 @@
--- | Compose two knots.
+-- | Compose two 'HyperType's.
 --
 -- Inspired by [hyperfunctions' @Category@ instance](http://hackage.haskell.org/package/hyperfunctions-0/docs/Control-Monad-Hyper.html).
 
@@ -25,7 +25,7 @@ import           GHC.Generics (Generic)
 
 import           Prelude.Compat
 
--- | Compose two knots as an external and internal layer.
+-- | Compose two 'HyperType's as an external and internal layer
 newtype Compose a b k = MkCompose { getCompose :: Tree a (Compose b (GetHyperType k)) }
     deriving stock Generic
 

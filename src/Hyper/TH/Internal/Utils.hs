@@ -74,9 +74,9 @@ parts info =
     [] -> fail "expected type constructor which requires arguments"
     xs ->
         case last xs of
-        KindedTV var (ConT knot) | knot == ''AHyperType -> pure (res, var)
+        KindedTV var (ConT aHyper) | aHyper == ''AHyperType -> pure (res, var)
         PlainTV var -> pure (res, var)
-        _ -> fail "expected last argument to be a knot variable"
+        _ -> fail "expected last argument to be a AHyperType variable"
         where
             res =
                 foldl AppT (ConT (D.datatypeName info)) (init xs <&> VarT . D.tvName)
@@ -110,8 +110,8 @@ unapply =
         go as x = (x, as)
 
 matchType :: Name -> Type -> Q (Either Type CtrTypePattern)
-matchType var (ConT get `AppT` VarT k `AppT` (PromotedT knot `AppT` x))
-    | get == ''GetHyperType && knot == 'AHyperType && k == var =
+matchType var (ConT get `AppT` VarT k `AppT` (PromotedT aHyper `AppT` x))
+    | get == ''GetHyperType && aHyper == 'AHyperType && k == var =
         Node x & Right & pure
 matchType var (InfixT (VarT k) hash x)
     | hash == ''(#) && k == var =

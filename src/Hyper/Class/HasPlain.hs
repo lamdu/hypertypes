@@ -19,5 +19,5 @@ import Prelude.Compat
 class Show (KPlain k) => KHasPlain k where
     -- | Plain form data type
     data KPlain k
-    -- | An 'Control.Lens.Iso' between the plain and knotted forms
+    -- | An 'Control.Lens.Iso' between the plain form and 'Hyper.Type.HyperType' form
     kPlain :: Iso' (KPlain k) (Tree Pure k)

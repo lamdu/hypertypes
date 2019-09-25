@@ -67,7 +67,7 @@ data Field
     | EmbedFields EmbedInfo
 
 makeCtr :: Name -> (Name, [Either Type CtrTypePattern]) -> Q (Con, Clause, Clause)
-makeCtr knot (cName, cFields) =
+makeCtr param (cName, cFields) =
     traverse forField cFields
     <&>
     \xs ->
@@ -140,14 +140,14 @@ makeCtr knot (cName, cFields) =
                 do
                     inner <- D.reifyDatatype c
                     let subst =
-                            args <> [VarT knot]
+                            args <> [VarT param]
                             & zip (D.datatypeVars inner <&> D.tvName)
                             & Map.fromList
                     case D.datatypeCons inner of
                         [x] ->
                             D.constructorFields x
                             <&> D.applySubstitution subst
-                            & traverse (matchType knot)
+                            & traverse (matchType param)
                             >>= traverse forField
                             <&> EmbedInfo (D.constructorName x)
                             <&> EmbedFields
@@ -161,6 +161,6 @@ makeCtr knot (cName, cFields) =
                     , fieldFromPlain = \f -> InfixE (Just f) (VarE '(^.)) (Just (VarE 'kPlain))
                     } & pure
         normalizeType (ConT g `AppT` VarT v)
-            | g == ''GetHyperType && v == knot = ConT ''Pure
+            | g == ''GetHyperType && v == param = ConT ''Pure
         normalizeType (x `AppT` y) = normalizeType x `AppT` normalizeType y
         normalizeType x = x
