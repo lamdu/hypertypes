@@ -15,7 +15,7 @@ import Hyper.Type.Pure (Pure)
 
 import Prelude.Compat
 
--- | A class for a plain for of a @Tree Pure h@
+-- | A class for a plain form of a @Tree Pure h@
 class Show (HPlain h) => HasHPlain h where
     -- | Plain form data type
     data HPlain h
