@@ -2,7 +2,7 @@
 
 import           Hyper
 import           Hyper.Class.Unify
-import           Hyper.Combinator.Flip
+import           Hyper.Type.Combinator.Flip
 import           Hyper.Infer
 import           Hyper.Recurse
 import           Hyper.Type.AST.NamelessScope (EmptyScope)

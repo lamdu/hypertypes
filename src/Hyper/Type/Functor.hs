@@ -9,7 +9,7 @@ import Hyper.Class.Nodes (KNodes(..), (#>))
 import Hyper.Class.Functor (KFunctor(..))
 import Hyper.Class.Monad (KMonad(..))
 import Hyper.Class.Recursive (RNodes, Recursively(..), RTraversable)
-import Hyper.Combinator.Compose
+import Hyper.Type.Combinator.Compose
 import Hyper.Type (Tree, type (#))
 import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.TH.Traversable (makeKTraversableApplyAndBases)

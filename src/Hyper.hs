@@ -11,7 +11,7 @@ import Hyper.Class.Functor as X (KFunctor(..), mappedK1)
 import Hyper.Class.Nodes as X (KNodes(..), (#>), (#*#))
 import Hyper.Class.Pointed as X (KPointed(..))
 import Hyper.Class.Traversable as X (KTraversable(..), traverseK, traverseK1)
-import Hyper.Combinator.ANode as X
+import Hyper.Type.Combinator.ANode as X
 import Hyper.Type as X
 import Hyper.Type.Ann as X (Ann(..), ann, annotations)
 import Hyper.Type.Pure as X

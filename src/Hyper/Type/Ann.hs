@@ -12,7 +12,7 @@ import           Hyper.Class.Functor (KFunctor(..))
 import           Hyper.Class.Monad
 import           Hyper.Class.Nodes (KNodes(..), (#>))
 import           Hyper.Class.Traversable (traverseK)
-import           Hyper.Combinator.Compose
+import           Hyper.Type.Combinator.Compose
 import           Hyper.Type (Tree, type (#))
 import           Hyper.Type.Pure (Pure(..))
 import           Hyper.Recurse

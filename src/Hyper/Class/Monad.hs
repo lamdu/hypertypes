@@ -10,7 +10,7 @@ import Hyper.Class.Apply (KApplicative)
 import Hyper.Class.Functor (KFunctor(..))
 import Hyper.Class.Nodes (KNodes(..), (#>))
 import Hyper.Class.Recursive (Recursively(..))
-import Hyper.Combinator.Compose (Compose, _Compose)
+import Hyper.Type.Combinator.Compose (Compose, _Compose)
 import Hyper.Type (Tree)
 import Hyper.Type.Pure (Pure(..), _Pure)
 import Control.Lens.Operators

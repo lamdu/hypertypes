@@ -19,7 +19,7 @@ import           Hyper
 import           Hyper.Class.Has (HasChild(..))
 import           Hyper.Class.Traversable (ContainedK(..))
 import           Hyper.Class.ZipMatch (ZipMatch(..))
-import           Hyper.Combinator.Flip (_Flip)
+import           Hyper.Type.Combinator.Flip (_Flip)
 import           Hyper.Infer
 import           Hyper.Recurse
 import           Hyper.Type.AST.FuncType (FuncType(..))

@@ -16,8 +16,8 @@ module Hyper.Type.AST.Scheme
 import           Hyper
 import           Hyper.Class.Has (HasChild(..))
 import           Hyper.Class.Recursive
-import           Hyper.Combinator.ANode (ANode)
-import           Hyper.Combinator.Flip (Flip(..))
+import           Hyper.Type.Combinator.ANode (ANode)
+import           Hyper.Type.Combinator.Flip (Flip(..))
 import           Hyper.Infer
 import           Hyper.Recurse
 import           Hyper.TH.Internal.Instances (makeCommonInstances)

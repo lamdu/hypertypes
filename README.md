@@ -417,7 +417,7 @@ Many harmless syntactic extensions are also used:
 
 Some extensions we use but would like to avoid (we're looking for alternative solutions but haven't found them):
 
-* `UndecidableSuperClasses` is currently in use in `Hyper.Combinator.Compose`
+* `UndecidableSuperClasses` is currently in use in `Hyper.Type.Combinator.Compose`
 
 ## How does hypertypes compare/relate to
 

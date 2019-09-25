@@ -1,6 +1,6 @@
 -- | A combinator to flip the order of the last two type parameters of a 'Hyper.Type.AHyperType'.
 
-module Hyper.Combinator.Flip
+module Hyper.Type.Combinator.Flip
     ( Flip(..), _Flip
     ) where
 

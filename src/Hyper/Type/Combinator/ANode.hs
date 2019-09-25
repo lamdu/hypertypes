@@ -2,7 +2,7 @@
 
 -- | A simple 'Hyper.Type.AHyperType' with a single child node
 
-module Hyper.Combinator.ANode
+module Hyper.Type.Combinator.ANode
     ( ANode(..), _ANode
     ) where
 

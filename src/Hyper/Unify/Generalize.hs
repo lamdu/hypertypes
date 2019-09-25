@@ -17,7 +17,7 @@ import           Algebra.PartialOrd (PartialOrd(..))
 import           Hyper
 import           Hyper.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           Hyper.Class.Traversable
-import           Hyper.Combinator.Flip
+import           Hyper.Type.Combinator.Flip
 import           Hyper.Recurse
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Unify.Constraints

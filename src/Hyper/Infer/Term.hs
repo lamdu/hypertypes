@@ -9,7 +9,7 @@ module Hyper.Infer.Term
     ) where
 
 import Hyper
-import Hyper.Combinator.Flip
+import Hyper.Type.Combinator.Flip
 import Hyper.Class.Infer
 import Hyper.Class.Infer.InferOf (KFunctorInferOf, KFoldableInferOf, RTraversableInferOf)
 import Hyper.Class.Traversable (ContainedK(..))

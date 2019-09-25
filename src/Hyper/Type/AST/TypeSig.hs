@@ -7,7 +7,7 @@ module Hyper.Type.AST.TypeSig
     ) where
 
 import           Hyper
-import           Hyper.Combinator.Flip (_Flip)
+import           Hyper.Type.Combinator.Flip (_Flip)
 import           Hyper.Infer
 import           Hyper.Type.AST.Scheme
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
