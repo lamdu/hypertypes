@@ -48,7 +48,7 @@ occursCheck v0 =
     USkolem{} -> pure ()
     UTerm b ->
         withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
-        traverseK_
+        traverseH_
         ( Proxy @(Unify m) #>
             \c ->
             do

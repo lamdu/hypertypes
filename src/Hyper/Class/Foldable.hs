@@ -2,8 +2,8 @@
 
 module Hyper.Class.Foldable
     ( HFoldable(..)
-    , foldMapK1
-    , traverseK_, traverseK1_
+    , foldMapH1
+    , traverseH_, traverseH1_
     ) where
 
 import Data.Foldable (sequenceA_)
@@ -22,30 +22,30 @@ class HNodes h => HFoldable h where
     --
     -- Gets a function from @h@'s nodes (trees along witnesses that they are nodes of @h@)
     -- into a monoid and concats its results for all nodes.
-    foldMapK ::
+    foldMapH ::
         Monoid a =>
         (forall n. HWitness h n -> Tree p n -> a) ->
         Tree h p ->
         a
 
 instance HFoldable (Const a) where
-    {-# INLINE foldMapK #-}
-    foldMapK _ _ = mempty
+    {-# INLINE foldMapH #-}
+    foldMapH _ _ = mempty
 
 instance (HFoldable a, HFoldable b) => HFoldable (Product a b) where
-    {-# INLINE foldMapK #-}
-    foldMapK f (Pair x y) = foldMapK (f . E_Product_a) x <> foldMapK (f . E_Product_b) y
+    {-# INLINE foldMapH #-}
+    foldMapH f (Pair x y) = foldMapH (f . E_Product_a) x <> foldMapH (f . E_Product_b) y
 
 instance (HFoldable a, HFoldable b) => HFoldable (Sum a b) where
-    {-# INLINE foldMapK #-}
-    foldMapK f (InL x) = foldMapK (f . E_Sum_a) x
-    foldMapK f (InR x) = foldMapK (f . E_Sum_b) x
+    {-# INLINE foldMapH #-}
+    foldMapH f (InL x) = foldMapH (f . E_Sum_a) x
+    foldMapH f (InR x) = foldMapH (f . E_Sum_b) x
 
--- TODO: Replace `foldMapK1` with `foldedK1` which is a `Fold`
+-- TODO: Replace `foldMapH1` with `foldedK1` which is a `Fold`
 
 -- | 'HFoldable' variant for 'foldMap' for 'Hyper.Type.AHyperType's with a single node type (avoids using @RankNTypes@)
-{-# INLINE foldMapK1 #-}
-foldMapK1 ::
+{-# INLINE foldMapH1 #-}
+foldMapH1 ::
     forall a h n p.
     ( Monoid a, HFoldable h
     , HNodesConstraint h ((~) n)
@@ -53,23 +53,23 @@ foldMapK1 ::
     (Tree p n -> a) ->
     Tree h p ->
     a
-foldMapK1 f = foldMapK (Proxy @((~) n) #> f)
+foldMapH1 f = foldMapH (Proxy @((~) n) #> f)
 
 -- | 'HFoldable' variant of 'Data.Foldable.traverse_'
 --
 -- Applise a given action on all subtrees
 -- (represented as trees along witnesses that they are nodes of @h@)
-{-# INLINE traverseK_ #-}
-traverseK_ ::
+{-# INLINE traverseH_ #-}
+traverseH_ ::
     (Applicative f, HFoldable h) =>
     (forall c. HWitness h c -> Tree m c -> f ()) ->
     Tree h m ->
     f ()
-traverseK_ f = sequenceA_ . foldMapK (fmap (:[]) . f)
+traverseH_ f = sequenceA_ . foldMapH (fmap (:[]) . f)
 
 -- | 'HFoldable' variant of 'Data.Foldable.traverse_' for 'Hyper.Type.AHyperType's with a single node type (avoids using @RankNTypes@)
-{-# INLINE traverseK1_ #-}
-traverseK1_ ::
+{-# INLINE traverseH1_ #-}
+traverseH1_ ::
     forall f h n p.
     ( Applicative f, HFoldable h
     , HNodesConstraint h ((~) n)
@@ -77,4 +77,4 @@ traverseK1_ ::
     (Tree p n -> f ()) ->
     Tree h p ->
     f ()
-traverseK1_ f = traverseK_ (Proxy @((~) n) #> f)
+traverseH1_ f = traverseH_ (Proxy @((~) n) #> f)

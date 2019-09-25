@@ -357,7 +357,7 @@ Let's look at how `HFunctor` is defined:
 ```Haskell
 class HNodes h => HFunctor h where
     -- | 'HFunctor' variant of 'fmap'
-    mapK ::
+    mapH ::
         (forall n. HWitness h n -> Tree p n -> Tree q n) ->
         Tree h p ->
         Tree h q
@@ -403,7 +403,7 @@ When mapping over an `Expr` we can:
 * `DeriveGeneric`, `DerivingVia`, `GeneralizedNewtypeDeriving`, `StandaloneDeriving` and `TemplateHaskell` are used to derive type-class instances
 * `EmptyCase` is needed for instances of leaf nodes
 * `FlexibleContexts`, `FlexibleInstances` and `UndecidableInstances` are required to specify many constraints
-* `GADTs` and `RankNTypes` enable functions like `mapK` which get `forall`ed functions with witness parameters
+* `GADTs` and `RankNTypes` enable functions like `mapH` which get `forall`ed functions with witness parameters
 * `MultiParamTypeClasses` is needed for the `Unify` and `Infer` type classes
 * `PolyKinds` is used for re-using combinators such as `Product` and `Sum` rather than defining specifically kinded variants of them
 * `ScopedTypeVariables` and `TypeApplications` assist writing short code that type checks
@@ -498,4 +498,4 @@ a language implementation based on it (`LangA` in the tests).
 
 ### lens
 
-`hypertypes` strives to be maximally compatible with [`lens`](http://hackage.haskell.org/package/lens), and offers `Traversal`s and `Setter`s wherever possible. But unfortunately the `RankNTypes` nature of many combinators in hypertypes makes them not composable with optics. For the special simpler cases when all child nodes have the same types the `traverseK1` traversal and `mappedK1` setter are available.
+`hypertypes` strives to be maximally compatible with [`lens`](http://hackage.haskell.org/package/lens), and offers `Traversal`s and `Setter`s wherever possible. But unfortunately the `RankNTypes` nature of many combinators in hypertypes makes them not composable with optics. For the special simpler cases when all child nodes have the same types the `traverseH1` traversal and `mappedH1` setter are available.

@@ -21,8 +21,8 @@ makeHFoldable typeName = makeTypeInfo typeName >>= makeHFoldableForType
 makeHFoldableForType :: TypeInfo -> DecsQ
 makeHFoldableForType info =
     instanceD (simplifyContext (makeContext info)) (appT (conT ''HFoldable) (pure (tiInstance info)))
-    [ InlineP 'foldMapK Inline FunLike AllPhases & PragmaD & pure
-    , funD 'foldMapK (tiConstructors info <&> pure . makeCtr)
+    [ InlineP 'foldMapH Inline FunLike AllPhases & PragmaD & pure
+    , funD 'foldMapH (tiConstructors info <&> pure . makeCtr)
     ]
     <&> (:[])
     where
@@ -30,7 +30,7 @@ makeHFoldableForType info =
         makeCtr ctr =
             Clause [VarP varF, pat] body []
             where
-                (pat, body) = makeFoldMapKCtr 0 wit ctr
+                (pat, body) = makeFoldMapHCtr 0 wit ctr
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
@@ -43,8 +43,8 @@ makeContext info =
 varF :: Name
 varF = mkName "_f"
 
-makeFoldMapKCtr :: Int -> NodeWitnesses -> (Name, [Either Type CtrTypePattern]) -> (Pat, Body)
-makeFoldMapKCtr i wit (cName, cFields) =
+makeFoldMapHCtr :: Int -> NodeWitnesses -> (Name, [Either Type CtrTypePattern]) -> (Pat, Body)
+makeFoldMapHCtr i wit (cName, cFields) =
     (ConP cName (cVars <&> VarP), body)
     where
         cVars =
@@ -64,12 +64,12 @@ makeFoldMapKCtr i wit (cName, cFields) =
         bodyFor (Right x) = bodyForPat x
         bodyFor Left{} = []
         bodyForPat (Node t) = [VarE varF `AppE` nodeWit wit t]
-        bodyForPat (GenEmbed t) = [VarE 'foldMapK `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))]
+        bodyForPat (GenEmbed t) = [VarE 'foldMapH `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))]
         bodyForPat (InContainer _ pat) = bodyForPat pat <&> AppE (VarE 'foldMap)
         bodyForPat (FlatEmbed x) =
             [ LamCaseE
                 (tiConstructors x
-                    <&> makeFoldMapKCtr (i + length cVars) wit
+                    <&> makeFoldMapHCtr (i + length cVars) wit
                     <&> \(p, b) -> Match p b []
                 )
             ]

@@ -25,8 +25,8 @@ makeHPointedForType info =
             [x] -> pure x
             _ -> fail "makeHPointed only supports types with a single constructor"
         instanceD (simplifyContext (makeContext info)) (appT (conT ''HPointed) (pure (tiInstance info)))
-            [ InlineP 'pureK Inline FunLike AllPhases & PragmaD & pure
-            , funD 'pureK [makePureKCtr info cons]
+            [ InlineP 'pureH Inline FunLike AllPhases & PragmaD & pure
+            , funD 'pureH [makePureKCtr info cons]
             ]
     <&> (:[])
 
@@ -55,7 +55,7 @@ makePureKCtr typeInfo (cName, cFields) =
             [(iName, iFields)] -> traverse bodyFor iFields <&> foldl AppE (ConE iName)
             _ -> fail "makeHPointed only supports embedded types with a single constructor"
         bodyForPat (GenEmbed t) =
-            VarE 'pureK `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))
+            VarE 'pureH `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))
             & pure
         bodyForPat (InContainer _ pat) =
             bodyForPat pat <&> AppE (VarE 'pure)

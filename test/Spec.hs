@@ -157,7 +157,7 @@ inferExpr ::
     m (Tree Pure (TypeOf t))
 inferExpr x =
     infer (wrap (const (Ann ())) x)
-    >>= Lens.from _Flip (traverseK (Proxy @(Unify m) #> applyBindings))
+    >>= Lens.from _Flip (traverseH (Proxy @(Unify m) #> applyBindings))
     <&> (^# iRes . inferredType (Proxy @t))
 
 vecNominalDecl :: Tree Pure (NominalDecl Typ)

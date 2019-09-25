@@ -16,7 +16,7 @@ import GHC.Generics (Generic)
 import Hyper
 import Hyper.Class.Infer
 import Hyper.Class.Infer.InferOf (HFunctorInferOf, HFoldableInferOf, RTraversableInferOf)
-import Hyper.Class.Traversable (ContainedK(..))
+import Hyper.Class.Traversable (ContainedH(..))
 import Hyper.Recurse
 import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.Type.Combinator.Flip
@@ -85,45 +85,45 @@ instance HNodes (Flip (Inferred a) e) where
                 p0 _ = Proxy
 
 instance (Recursively HFunctor e, Recursively HFunctorInferOf e) => HFunctor (Flip (Inferred a) e) where
-    {-# INLINE mapK #-}
-    mapK f =
+    {-# INLINE mapH #-}
+    mapH f =
         withDict (recursively (Proxy @(HFunctor e))) $
         withDict (recursively (Proxy @(HFunctorInferOf e))) $
         _Flip %~
         \(Inferred pl r x) ->
         Inferred pl
-        (mapK (f . E_Flip_Inferred_InferOf_e) r)
-        ( mapK
+        (mapH (f . E_Flip_Inferred_InferOf_e) r)
+        ( mapH
             ( Proxy @(Recursively HFunctor) #*# Proxy @(Recursively HFunctorInferOf) #*#
-                \w -> from _Flip %~ mapK (f . E_Flip_Inferred_e w)
+                \w -> from _Flip %~ mapH (f . E_Flip_Inferred_e w)
             ) x
         )
 
 instance (Recursively HFoldable e, Recursively HFoldableInferOf e) => HFoldable (Flip (Inferred a) e) where
-    {-# INLINE foldMapK #-}
-    foldMapK f (MkFlip (Inferred _ r x)) =
+    {-# INLINE foldMapH #-}
+    foldMapH f (MkFlip (Inferred _ r x)) =
         withDict (recursively (Proxy @(HFoldable e))) $
         withDict (recursively (Proxy @(HFoldableInferOf e))) $
-        foldMapK (f . E_Flip_Inferred_InferOf_e) r <>
-        foldMapK
+        foldMapH (f . E_Flip_Inferred_InferOf_e) r <>
+        foldMapH
         ( Proxy @(Recursively HFoldable) #*# Proxy @(Recursively HFoldableInferOf) #*#
-            \w -> foldMapK (f . E_Flip_Inferred_e w) . (_Flip #)
+            \w -> foldMapH (f . E_Flip_Inferred_e w) . (_Flip #)
         ) x
 
 instance
     (RTraversable e, RTraversableInferOf e) =>
     HTraversable (Flip (Inferred a) e) where
-    {-# INLINE sequenceK #-}
-    sequenceK =
+    {-# INLINE sequenceH #-}
+    sequenceH =
         withDict (recurse (Proxy @(RTraversable e))) $
         withDict (recurse (Proxy @(RTraversableInferOf e))) $
         _Flip
         ( \(Inferred pl r x) ->
             Inferred pl
-            <$> traverseK (const runContainedK) r
-            <*> traverseK
+            <$> traverseH (const runContainedH) r
+            <*> traverseH
                 ( Proxy @RTraversable #*# Proxy @RTraversableInferOf #>
-                    from _Flip sequenceK
+                    from _Flip sequenceH
                 ) x
         )
 
@@ -140,7 +140,7 @@ iAnnotations f (Inferred pl r x) =
     Inferred
     <$> f pl
     <*> pure r
-    <*> traverseK (Proxy @RTraversable #> iAnnotations f) x
+    <*> traverseH (Proxy @RTraversable #> iAnnotations f) x
 
 inferredToAnn ::
     forall a v e r.
@@ -155,7 +155,7 @@ inferredToAnn ::
     Tree (Ann r) e
 inferredToAnn f (Inferred pl r x) =
     withDict (recursively (Proxy @(HFunctor e))) $
-    mapK
+    mapH
     ( Proxy @(Recursively HFunctor) #*#
         \w -> inferredToAnn (f . HRecSub w)
     ) x

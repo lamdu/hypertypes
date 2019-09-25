@@ -48,7 +48,7 @@ applyBindings v0 =
         do
             (r, anyChild) <-
                 withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
-                traverseK
+                traverseH
                 ( Proxy @(Unify m) #>
                     \c ->
                     do

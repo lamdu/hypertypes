@@ -62,51 +62,51 @@ instance c (Compose k0 k1) => ComposeConstraint1 c k0 k1
 instance
     (HNodes a, HPointed a, HPointed b) =>
     HPointed (Compose a b) where
-    {-# INLINE pureK #-}
-    pureK x =
+    {-# INLINE pureH #-}
+    pureH x =
         _Compose #
-        pureK
+        pureH
         ( \wa ->
-            _Compose # pureK (\wb -> _Compose # x (HWitness_Compose wa wb))
+            _Compose # pureH (\wb -> _Compose # x (HWitness_Compose wa wb))
         )
 
 instance (HFunctor a, HFunctor b) => HFunctor (Compose a b) where
-    {-# INLINE mapK #-}
-    mapK f =
+    {-# INLINE mapH #-}
+    mapH f =
         _Compose %~
-        mapK
+        mapH
         ( \w0 ->
-            _Compose %~ mapK (\w1 -> _Compose %~ f (HWitness_Compose w0 w1))
+            _Compose %~ mapH (\w1 -> _Compose %~ f (HWitness_Compose w0 w1))
         )
 
 instance (HApply a, HApply b) => HApply (Compose a b) where
-    {-# INLINE zipK #-}
-    zipK (MkCompose a0) =
+    {-# INLINE zipH #-}
+    zipH (MkCompose a0) =
         _Compose %~
-        mapK
+        mapH
         ( \_ (Pair (MkCompose b0) (MkCompose b1)) ->
             _Compose #
-            mapK
+            mapH
             ( \_ (Pair (MkCompose i0) (MkCompose i1)) ->
                 _Compose # Pair i0 i1
-            ) (zipK b0 b1)
+            ) (zipH b0 b1)
         )
-        . zipK a0
+        . zipH a0
 
 instance (HFoldable a, HFoldable b) => HFoldable (Compose a b) where
-    {-# INLINE foldMapK #-}
-    foldMapK f =
-        foldMapK
+    {-# INLINE foldMapH #-}
+    foldMapH f =
+        foldMapH
         ( \w0 ->
-            foldMapK (\w1 -> f (HWitness_Compose w0 w1) . (^. _Compose)) . (^. _Compose)
+            foldMapH (\w1 -> f (HWitness_Compose w0 w1) . (^. _Compose)) . (^. _Compose)
         ) . (^. _Compose)
 
 instance (HTraversable a, HTraversable b) => HTraversable (Compose a b) where
-    {-# INLINE sequenceK #-}
-    sequenceK =
+    {-# INLINE sequenceH #-}
+    sequenceH =
         _Compose
-        ( sequenceK .
-            mapK (const (MkContainedK . _Compose (traverseK (const (_Compose runContainedK)))))
+        ( sequenceH .
+            mapH (const (MkContainedH . _Compose (traverseH (const (_Compose runContainedH)))))
         )
 
 instance
@@ -115,10 +115,10 @@ instance
     {-# INLINE zipMatch #-}
     zipMatch (MkCompose x) (MkCompose y) =
         zipMatch x y
-        >>= traverseK
+        >>= traverseH
             (\_ (Pair (MkCompose cx) (MkCompose cy)) ->
                 zipMatch cx cy
-                <&> mapK
+                <&> mapH
                     (\_ (Pair (MkCompose bx) (MkCompose by)) -> Pair bx by & MkCompose)
                 <&> (_Compose #)
             )

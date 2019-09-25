@@ -53,12 +53,12 @@ diff x@(Ann xA xB) y@(Ann yA yB) =
     case zipMatch xB yB of
     Nothing -> Different (Pair x y)
     Just match ->
-        case traverseK (const (^? _CommonSubTree)) sub of
+        case traverseH (const (^? _CommonSubTree)) sub of
         Nothing -> MkCommonBody (xA, yA) sub & CommonBody
         Just r -> Ann (xA, yA) r & CommonSubTree
         where
             sub =
-                mapK
+                mapH
                 ( Proxy @(Recursively ZipMatch) #*# Proxy @RTraversable #>
                     \(Pair xC yC) -> diff xC yC
                 ) match
@@ -73,7 +73,7 @@ foldDiffs _ CommonSubTree{} = mempty
 foldDiffs f (Different (Pair x y)) = f HRecSelf x y
 foldDiffs f (CommonBody (MkCommonBody _ x)) =
     withDict (recursively (Proxy @(HFoldable h))) $
-    foldMapK
+    foldMapH
     ( Proxy @(Recursively HFoldable) #*#
         \w -> foldDiffs (f . HRecSub w)
     ) x
@@ -104,12 +104,12 @@ diffPH x y =
     case zipMatch (x ^. _Pure) (y ^. _Pure) of
     Nothing -> DifferentP (kPlain # x) (kPlain # y)
     Just match ->
-        case traverseK_ (const ((() <$) . (^? _CommonSubTreeP))) sub of
+        case traverseH_ (const ((() <$) . (^? _CommonSubTreeP))) sub of
         Nothing -> CommonBodyP sub
         Just () -> _CommonSubTreeP . kPlain # x
         where
             sub =
-                mapK
+                mapH
                 ( Proxy @(Recursively ZipMatch) #*#
                     Proxy @(Recursively HasHPlain) #*#
                     Proxy @RTraversable #>
@@ -131,7 +131,7 @@ foldDiffsP f =
     DifferentP x y -> f HRecSelf x y
     CommonBodyP x ->
         withDict (recursively (Proxy @(HFoldable h))) $
-        foldMapK
+        foldMapH
         ( Proxy @(Recursively HFoldable) #*# Proxy @(Recursively HasHPlain) #*#
             \w -> foldDiffsP (f . HRecSub w)
         ) x

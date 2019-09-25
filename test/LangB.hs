@@ -174,10 +174,10 @@ typesInScope = _ScopeTypes . traverse . Lens.from _Flip
 makeHFoldable ''ScopeTypes
 
 instance HFunctor ScopeTypes where
-    mapK f = typesInScope %~ mapK (f . E_ScopeTypes)
+    mapH f = typesInScope %~ mapH (f . E_ScopeTypes)
 
 instance HTraversable ScopeTypes where
-    sequenceK = typesInScope sequenceK
+    sequenceH = typesInScope sequenceH
 
 data InferScope v = InferScope
     { _varSchemes :: Tree ScopeTypes v
@@ -242,14 +242,14 @@ instance MonadQuantify RConstraints Name PureInferB where
 instance Unify PureInferB Typ where
     binding = bindingDict (Lens._1 . tTyp)
     unifyError e =
-        traverseK (Proxy @(Unify PureInferB) #> applyBindings) e
+        traverseH (Proxy @(Unify PureInferB) #> applyBindings) e
         >>= throwError . TypError
 
 instance Unify PureInferB Row where
     binding = bindingDict (Lens._1 . tRow)
     structureMismatch = rStructureMismatch
     unifyError e =
-        traverseK (Proxy @(Unify PureInferB) #> applyBindings) e
+        traverseH (Proxy @(Unify PureInferB) #> applyBindings) e
         >>= throwError . RowError
 
 instance HasScheme Types PureInferB Typ
@@ -305,14 +305,14 @@ instance MonadQuantify RConstraints Name (STInferB s) where
 instance Unify (STInferB s) Typ where
     binding = stBinding
     unifyError e =
-        traverseK (Proxy @(Unify (STInferB s)) #> applyBindings) e
+        traverseH (Proxy @(Unify (STInferB s)) #> applyBindings) e
         >>= throwError . TypError
 
 instance Unify (STInferB s) Row where
     binding = stBinding
     structureMismatch = rStructureMismatch
     unifyError e =
-        traverseK (Proxy @(Unify (STInferB s)) #> applyBindings) e
+        traverseH (Proxy @(Unify (STInferB s)) #> applyBindings) e
         >>= throwError . RowError
 
 instance HasScheme Types (STInferB s) Typ

@@ -72,49 +72,49 @@ kLiftConstraintH c n =
     )
 
 instance Recursively HFunctor ast => HFunctor (Flip GTerm ast) where
-    {-# INLINE mapK #-}
-    mapK f =
+    {-# INLINE mapH #-}
+    mapH f =
         _Flip %~
         \case
         GMono x -> f (E_Flip_GTerm HRecSelf) x & GMono
         GPoly x -> f (E_Flip_GTerm HRecSelf) x & GPoly
         GBody x ->
             withDict (recursively (Proxy @(HFunctor ast))) $
-            mapK
+            mapH
             ( \cw ->
                 kLiftConstraint cw (Proxy @(Recursively HFunctor)) $
                 Lens.from _Flip %~
-                mapK (f . (\(E_Flip_GTerm nw) -> E_Flip_GTerm (HRecSub cw nw)))
+                mapH (f . (\(E_Flip_GTerm nw) -> E_Flip_GTerm (HRecSub cw nw)))
             ) x
             & GBody
 
 instance Recursively HFoldable ast => HFoldable (Flip GTerm ast) where
-    {-# INLINE foldMapK #-}
-    foldMapK f =
+    {-# INLINE foldMapH #-}
+    foldMapH f =
         \case
         GMono x -> f (E_Flip_GTerm HRecSelf) x
         GPoly x -> f (E_Flip_GTerm HRecSelf) x
         GBody x ->
             withDict (recursively (Proxy @(HFoldable ast))) $
-            foldMapK
+            foldMapH
             ( \cw ->
                 kLiftConstraint cw (Proxy @(Recursively HFoldable)) $
-                foldMapK (f . (\(E_Flip_GTerm nw) -> E_Flip_GTerm (HRecSub cw nw)))
+                foldMapH (f . (\(E_Flip_GTerm nw) -> E_Flip_GTerm (HRecSub cw nw)))
                 . (_Flip #)
             ) x
         . (^. _Flip)
 
 instance RTraversable ast => HTraversable (Flip GTerm ast) where
-    {-# INLINE sequenceK #-}
-    sequenceK (MkFlip fx) =
+    {-# INLINE sequenceH #-}
+    sequenceH (MkFlip fx) =
         case fx of
-        GMono x -> runContainedK x <&> GMono
-        GPoly x -> runContainedK x <&> GPoly
+        GMono x -> runContainedH x <&> GMono
+        GPoly x -> runContainedH x <&> GPoly
         GBody x ->
             withDict (recurse (Proxy @(RTraversable ast))) $
             -- HTraversable will be required when not implied by Recursively
-            traverseK
-            ( Proxy @RTraversable #> Lens.from _Flip sequenceK
+            traverseH
+            ( Proxy @RTraversable #> Lens.from _Flip sequenceH
             ) x
             <&> GBody
         <&> MkFlip
@@ -143,11 +143,11 @@ generalize v0 =
                 withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
                 do
                     bindVar binding v1 (UResolving t)
-                    r <- traverseK (Proxy @(Unify m) #> generalize) (t ^. uBody)
+                    r <- traverseH (Proxy @(Unify m) #> generalize) (t ^. uBody)
                     r <$ bindVar binding v1 (UTerm t)
                 <&>
                 \b ->
-                if foldMapK (Proxy @(Unify m) #> All . Lens.has _GMono) b ^. Lens._Wrapped
+                if foldMapH (Proxy @(Unify m) #> All . Lens.has _GMono) b ^. Lens._Wrapped
                 then GMono v1
                 else GBody b
             UResolving t -> GMono v1 <$ occursError v1 t
@@ -184,7 +184,7 @@ instantiateH _ (GMono x) = pure x
 instantiateH cons (GPoly x) = instantiateForAll cons x
 instantiateH cons (GBody x) =
     withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
-    traverseK (Proxy @(Unify m) #> instantiateH cons) x >>= lift . newTerm
+    traverseH (Proxy @(Unify m) #> instantiateH cons) x >>= lift . newTerm
 
 {-# INLINE instantiateWith #-}
 instantiateWith ::

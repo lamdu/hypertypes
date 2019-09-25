@@ -44,7 +44,7 @@ makeCommonInstances [''F]
 makeHTraversableApplyAndBases ''F
 
 instance Monad f => HMonad (F f) where
-    joinK =
+    joinH =
         ( _F %~
             ( >>=
                 ( mapped %~ t . (^. _Compose)
@@ -59,7 +59,7 @@ instance Monad f => HMonad (F f) where
                 Tree p (F f)
             t =
                 withDict (recursively (Proxy @(HFunctor p))) $
-                mapK (Proxy @(Recursively HFunctor) #> joinK)
+                mapH (Proxy @(Recursively HFunctor) #> joinH)
 
 instance RNodes (F f)
 instance c (F f) => Recursively c (F f)

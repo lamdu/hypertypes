@@ -70,7 +70,7 @@ updateTermConstraints v t newConstraints
                 Nothing -> ConstraintsViolation (t ^. uBody) newConstraints & unifyError
                 Just prop ->
                     do
-                        traverseK_ (Proxy @(Unify m) #> updateTermConstraintsH) prop
+                        traverseH_ (Proxy @(Unify m) #> updateTermConstraintsH) prop
                         UTermBody newConstraints (t ^. uBody) & UTerm & bindVar binding v
 
 {-# INLINE updateTermConstraintsH #-}

@@ -21,8 +21,8 @@ makeHFunctor typeName = makeTypeInfo typeName >>= makeHFunctorForType
 makeHFunctorForType :: TypeInfo -> DecsQ
 makeHFunctorForType info =
     instanceD (simplifyContext (makeContext info)) (appT (conT ''HFunctor) (pure (tiInstance info)))
-    [ InlineP 'mapK Inline FunLike AllPhases & PragmaD & pure
-    , funD 'mapK (tiConstructors info <&> pure . makeCtr)
+    [ InlineP 'mapH Inline FunLike AllPhases & PragmaD & pure
+    , funD 'mapH (tiConstructors info <&> pure . makeCtr)
     ]
     <&> (:[])
     where
@@ -30,7 +30,7 @@ makeHFunctorForType info =
         makeCtr ctr =
             Clause [VarP varF, pat] body []
             where
-                (pat, body) = makeMapKCtr 0 wit ctr
+                (pat, body) = makeMapHCtr 0 wit ctr
 
 varF :: Name
 varF = mkName "_f"
@@ -43,8 +43,8 @@ makeContext info =
         ctxForPat (GenEmbed t) = [ConT ''HFunctor `AppT` t]
         ctxForPat _ = []
 
-makeMapKCtr :: Int -> NodeWitnesses -> (Name, [Either Type CtrTypePattern]) -> (Pat, Body)
-makeMapKCtr i wit (cName, cFields) =
+makeMapHCtr :: Int -> NodeWitnesses -> (Name, [Either Type CtrTypePattern]) -> (Pat, Body)
+makeMapHCtr i wit (cName, cFields) =
     (ConP cName (cVars <&> VarP), body)
     where
         cVars =
@@ -57,11 +57,11 @@ makeMapKCtr i wit (cName, cFields) =
         bodyFor (Right x) v = bodyForPat x `AppE` VarE v
         bodyFor Left{} v = VarE v
         bodyForPat (Node t) = VarE varF `AppE` nodeWit wit t
-        bodyForPat (GenEmbed t) = VarE 'mapK `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))
+        bodyForPat (GenEmbed t) = VarE 'mapH `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))
         bodyForPat (InContainer _ pat) = bodyForPat pat & AppE (VarE 'fmap)
         bodyForPat (FlatEmbed x) =
             LamCaseE
             (tiConstructors x
-                <&> makeMapKCtr (i + length cVars) wit
+                <&> makeMapHCtr (i + length cVars) wit
                 <&> \(p, b) -> Match p b []
             )

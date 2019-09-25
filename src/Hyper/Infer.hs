@@ -32,7 +32,7 @@ infer ::
     m (Tree (Inferred a (UVarOf m)) t)
 infer (Ann a x) =
     withDict (inferContext (Proxy @m) (Proxy @t)) $
-    inferBody (mapK (Proxy @(Infer m) #> inferH) x)
+    inferBody (mapH (Proxy @(Infer m) #> inferH) x)
     <&> (\(xI, t) -> Inferred a t xI)
 
 {-# INLINE inferH #-}

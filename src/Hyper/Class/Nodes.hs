@@ -20,7 +20,7 @@ import Hyper.Type (HyperType)
 -- It also provides some methods to combine and process child node constraints.
 --
 -- Various classes like 'Hyper.Class.Functor.HFunctor' build upon 'HNodes'
--- to provide methods such as 'Hyper.Class.Functor.mapKWith' which provide a rank-n function
+-- to provide methods such as 'Hyper.Class.Functor.mapHWith' which provide a rank-n function
 -- for processing child nodes which requires a constraint on the nodes.
 class HNodes (h :: HyperType) where
     -- | Lift a constraint to apply to the child nodes

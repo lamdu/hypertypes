@@ -23,9 +23,9 @@ import Prelude.Compat
 class HFunctor h => HApply h where
     -- | Combine child values
     --
-    -- >>> zipK (Person name0 age0) (Person name1 age1)
+    -- >>> zipH (Person name0 age0) (Person name1 age1)
     -- Person (Pair name0 name1) (Pair age0 age1)
-    zipK ::
+    zipH ::
         Tree h p ->
         Tree h q ->
         Tree h (Product p q)
@@ -35,12 +35,12 @@ class    (HPointed h, HApply h) => HApplicative h
 instance (HPointed h, HApply h) => HApplicative h
 
 instance Semigroup a => HApply (Const a) where
-    {-# INLINE zipK #-}
-    zipK (Const x) (Const y) = Const (x <> y)
+    {-# INLINE zipH #-}
+    zipH (Const x) (Const y) = Const (x <> y)
 
 instance (HApply a, HApply b) => HApply (Product a b) where
-    {-# INLINE zipK #-}
-    zipK (Pair a0 b0) (Pair a1 b1) = Pair (zipK a0 a1) (zipK b0 b1)
+    {-# INLINE zipH #-}
+    zipH (Pair a0 b0) (Pair a1 b1) = Pair (zipH a0 a1) (zipH b0 b1)
 
 -- | 'HApply' variant of 'Control.Applicative.liftA2'
 {-# INLINE liftH2 #-}
@@ -50,4 +50,4 @@ liftH2 ::
     Tree h p ->
     Tree h q ->
     Tree h r
-liftH2 f x = mapK (\w (Pair a b) -> f w a b) . zipK x
+liftH2 f x = mapH (\w (Pair a b) -> f w a b) . zipH x

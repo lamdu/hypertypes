@@ -54,8 +54,8 @@ makeHApplyForType info =
         let xVars = makeConstructorVars "x" fields
         let yVars = makeConstructorVars "y" fields
         instanceD (simplifyContext (makeContext info)) (appT (conT ''HApply) (pure (tiInstance info)))
-            [ InlineP 'zipK Inline FunLike AllPhases & PragmaD & pure
-            , funD 'zipK
+            [ InlineP 'zipH Inline FunLike AllPhases & PragmaD & pure
+            , funD 'zipH
                 [ Clause
                     [ consPat name xVars
                     , consPat name yVars
@@ -68,8 +68,8 @@ makeHApplyForType info =
         bodyFor (Right x) = bodyForPat x
         bodyFor Left{} = VarE '(<>)
         bodyForPat Node{} = ConE 'Pair
-        bodyForPat GenEmbed{} = VarE 'zipK
-        bodyForPat FlatEmbed{} = VarE 'zipK
+        bodyForPat GenEmbed{} = VarE 'zipH
+        bodyForPat FlatEmbed{} = VarE 'zipH
         bodyForPat (InContainer _ pat) = VarE 'liftA2 `AppE` bodyForPat pat
         f (p, x) (_, y) =
             bodyFor p `AppE` VarE x `AppE` VarE y

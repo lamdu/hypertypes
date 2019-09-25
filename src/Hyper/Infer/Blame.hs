@@ -53,7 +53,7 @@ import GHC.Generics (Generic)
 import Hyper
 import Hyper.Class.Infer
 import Hyper.Class.Infer.InferOf
-import Hyper.Class.Traversable (ContainedK(..))
+import Hyper.Class.Traversable (ContainedH(..))
 import Hyper.Class.Unify (Unify, UVarOf)
 import Hyper.Infer.Result (InferredVarsConstraint(..))
 import Hyper.Recurse
@@ -119,8 +119,8 @@ prepareH ::
     m (Tree (PTerm a (UVarOf m)) exp)
 prepareH t =
     withDict (inferContext (Proxy @m) (Proxy @exp)) $
-    pureK (Proxy @(Unify m) #> MkContainedK newUnbound)
-    & sequenceK
+    pureH (Proxy @(Unify m) #> MkContainedH newUnbound)
+    & sequenceH
     >>= (`prepare` t)
 
 prepare ::
@@ -133,7 +133,7 @@ prepare resFromPosition (Ann a x) =
     withDict (recurse (Proxy @(Blame m exp))) $
     do
         (xI, r) <-
-            mapK
+            mapH
             (Proxy @(Blame m) #>
                 InferChild . fmap (\t -> InferredChild t (pInferResultFromPos t)) . prepareH)
             x
@@ -156,7 +156,7 @@ tryUnify p i0 i1 =
     withDict (inferContext (Proxy @m) p) $
     do
         inferOfUnify p i0 i1
-        traverseK_ (Proxy @(Unify m) #> occursCheck) i0
+        traverseH_ (Proxy @(Unify m) #> occursCheck) i0
     & (`catchError` const (pure ()))
 
 toUnifies ::
@@ -166,7 +166,7 @@ toUnifies ::
     Tree (Ann (a, m ())) exp
 toUnifies (PTerm a i0 i1 b) =
     withDict (recurse (Proxy @(Blame m exp))) $
-    mapK (Proxy @(Blame m) #> toUnifies) b
+    mapH (Proxy @(Blame m) #> toUnifies) b
     & Ann (a, tryUnify (Proxy @exp) i0 i1)
 
 -- | A 'AHyperType' for an inferred term with type mismatches - the output of 'blame'
@@ -203,11 +203,11 @@ instance HNodes (Flip (BTerm a) e) where
                 p0 _ = Proxy
 
 instance (Recursively HFunctor e, Recursively HFunctorInferOf e) => HFunctor (Flip (BTerm a) e) where
-    {-# INLINE mapK #-}
-    mapK f =
+    {-# INLINE mapH #-}
+    mapH f =
         withDict (recursively (Proxy @(HFunctor e))) $
         withDict (recursively (Proxy @(HFunctorInferOf e))) $
-        let mapRes = mapK (f . E_Flip_BTerm_InferOf_e)
+        let mapRes = mapH (f . E_Flip_BTerm_InferOf_e)
         in
         _Flip %~
         \(BTerm pl r x) ->
@@ -216,33 +216,33 @@ instance (Recursively HFunctor e, Recursively HFunctorInferOf e) => HFunctor (Fl
             Left (r0, r1) -> Left (mapRes r0, mapRes r1)
             Right r0 -> Right (mapRes r0)
         )
-        ( mapK
+        ( mapH
             ( Proxy @(Recursively HFunctor) #*# Proxy @(Recursively HFunctorInferOf) #*#
-                \w -> from _Flip %~ mapK (f . E_Flip_BTerm_e w)
+                \w -> from _Flip %~ mapH (f . E_Flip_BTerm_e w)
             ) x
         )
 
 instance (Recursively HFoldable e, Recursively HFoldableInferOf e) => HFoldable (Flip (BTerm a) e) where
-    {-# INLINE foldMapK #-}
-    foldMapK f (MkFlip (BTerm _ r x)) =
+    {-# INLINE foldMapH #-}
+    foldMapH f (MkFlip (BTerm _ r x)) =
         withDict (recursively (Proxy @(HFoldable e))) $
         withDict (recursively (Proxy @(HFoldableInferOf e))) $
-        let foldRes = foldMapK (f . E_Flip_BTerm_InferOf_e)
+        let foldRes = foldMapH (f . E_Flip_BTerm_InferOf_e)
         in
         case r of
         Left (r0, r1) -> foldRes r0 <> foldRes r1
         Right r0 -> foldRes r0
         <>
-        foldMapK
+        foldMapH
         ( Proxy @(Recursively HFoldable) #*# Proxy @(Recursively HFoldableInferOf) #*#
-            \w -> foldMapK (f . E_Flip_BTerm_e w) . (_Flip #)
+            \w -> foldMapH (f . E_Flip_BTerm_e w) . (_Flip #)
         ) x
 
 instance
     (RTraversable e, RTraversableInferOf e) =>
     HTraversable (Flip (BTerm a) e) where
-    {-# INLINE sequenceK #-}
-    sequenceK =
+    {-# INLINE sequenceH #-}
+    sequenceH =
         withDict (recurse (Proxy @(RTraversable e))) $
         withDict (recurse (Proxy @(RTraversableInferOf e))) $
         _Flip
@@ -252,16 +252,16 @@ instance
                     Left (r0, r1) -> (,) <$> seqRes r0 <*> seqRes r1 <&> Left
                     Right r0 -> seqRes r0 <&> Right
                 )
-            <*> traverseK
+            <*> traverseH
                 ( Proxy @RTraversable #*# Proxy @RTraversableInferOf #>
-                    from _Flip sequenceK
+                    from _Flip sequenceH
                 ) x
         )
         where
             seqRes ::
                 (HTraversable h, Applicative f) =>
-                Tree h (ContainedK f p) -> f (Tree h p)
-            seqRes = traverseK (const runContainedK)
+                Tree h (ContainedH f p) -> f (Tree h p)
+            seqRes = traverseH (const runContainedH)
 
 finalize ::
     forall a m exp.
@@ -275,7 +275,7 @@ finalize (PTerm a i0 i1 x) =
         let result
                 | match = Right i0
                 | otherwise = Left (i0, i1)
-        traverseK (Proxy @(Blame m) #> finalize) x
+        traverseH (Proxy @(Blame m) #> finalize) x
             <&> BTerm a result
 
 -- | Perform Hindley-Milner type inference with prioritised blame for type error,
@@ -318,7 +318,7 @@ bTermToAnn ::
     Tree (Ann r) e
 bTermToAnn f (BTerm pl r x) =
     withDict (recursively (Proxy @(HFunctor e))) $
-    mapK
+    mapH
     ( Proxy @(Recursively HFunctor) #*#
         \w -> bTermToAnn (f . HRecSub w)
     ) x
