@@ -21,10 +21,10 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 import           Prelude.Compat
 
-data TypedLam var typ expr k = TypedLam
+data TypedLam var typ expr h = TypedLam
     { _tlIn :: var
-    , _tlInType :: k # typ
-    , _tlOut :: k # expr
+    , _tlInType :: h # typ
+    , _tlOut :: h # expr
     } deriving Generic
 
 makeLenses ''TypedLam
@@ -33,8 +33,8 @@ makeHTraversableApplyAndBases ''TypedLam
 makeZipMatch ''TypedLam
 
 instance
-    Constraints (TypedLam var typ expr k) Pretty =>
-    Pretty (TypedLam var typ expr k) where
+    Constraints (TypedLam var typ expr h) Pretty =>
+    Pretty (TypedLam var typ expr h) where
     pPrintPrec lvl p (TypedLam i t o) =
         (Pretty.text "λ" <> pPrintPrec lvl 0 i
             <> Pretty.text ":" <> pPrintPrec lvl 0 t

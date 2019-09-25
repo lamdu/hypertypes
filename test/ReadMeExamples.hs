@@ -10,15 +10,15 @@ import Hyper.Diff
 
 import Prelude
 
-data Expr k
+data Expr h
     = Var Text
-    | App (k # Expr) (k # Expr)
-    | Lam Text (k # Typ) (k # Expr)
+    | App (h # Expr) (h # Expr)
+    | Lam Text (h # Typ) (h # Expr)
     deriving Generic
 
-data Typ k
+data Typ h
     = IntT
-    | FuncT (k # Typ) (k # Typ)
+    | FuncT (h # Typ) (h # Typ)
     deriving Generic
 
 makeDerivings [''Eq, ''Ord, ''Show] [''Expr, ''Typ]

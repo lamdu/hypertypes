@@ -31,9 +31,9 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 import           Prelude.Compat
 
 -- | A 'Hyper.Type.AHyperType' which adds an annotation to every node in a tree
-data Ann a k = Ann
+data Ann a h = Ann
     { _ann :: a
-    , _val :: k # Ann a
+    , _val :: h # Ann a
     } deriving Generic
 makeLenses ''Ann
 
@@ -69,14 +69,14 @@ instance Constraints (Ann a t) Pretty => Pretty (Ann a t) where
 
 -- | A 'Traversal' from an annotated tree to its annotations
 annotations ::
-    forall k a b.
-    RTraversable k =>
+    forall h a b.
+    RTraversable h =>
     Traversal
-    (Tree (Ann a) k)
-    (Tree (Ann b) k)
+    (Tree (Ann a) h)
+    (Tree (Ann b) h)
     a b
 annotations f (Ann pl x) =
-    withDict (recurse (Proxy @(RTraversable k))) $
+    withDict (recurse (Proxy @(RTraversable h))) $
     Ann
     <$> f pl
     <*> traverseK (Proxy @RTraversable #> annotations f) x
@@ -90,8 +90,8 @@ strip = unwrap (const (^. val))
 
 -- | Compute annotations for a tree from the bottom up
 addAnnotations ::
-    Recursively HFunctor k =>
-    (forall n. HRecWitness k n -> Tree n (Ann a) -> a) ->
-    Tree Pure k ->
-    Tree (Ann a) k
+    Recursively HFunctor h =>
+    (forall n. HRecWitness h n -> Tree n (Ann a) -> a) ->
+    Tree Pure h ->
+    Tree (Ann a) h
 addAnnotations f = wrap (\w x -> Ann (f w x) x)

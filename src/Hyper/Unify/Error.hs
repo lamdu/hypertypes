@@ -23,17 +23,17 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 import           Prelude.Compat
 
 -- | An error that occurred during unification
-data UnifyError t k
-    = SkolemUnified (k # t) (k # t)
+data UnifyError t h
+    = SkolemUnified (h # t) (h # t)
       -- ^ A universally quantified variable was unified with a
       -- different type
-    | SkolemEscape (k # t)
+    | SkolemEscape (h # t)
       -- ^ A universally quantified variable escapes its scope
-    | ConstraintsViolation (t k) (TypeConstraintsOf t)
+    | ConstraintsViolation (t h) (TypeConstraintsOf t)
       -- ^ A term violates constraints that should apply to it
-    | Occurs (t k) (t k)
+    | Occurs (t h) (t h)
       -- ^ Infinite type encountered. A type occurs within itself
-    | Mismatch (t k) (t k)
+    | Mismatch (t h) (t h)
       -- ^ Unification between two mismatching type structures
     deriving Generic
 
@@ -52,7 +52,7 @@ instance HNodes t => HNodes (UnifyError t) where
 makeHFunctor ''UnifyError
 makeHTraversableAndFoldable ''UnifyError
 
-instance Constraints (UnifyError t k) Pretty => Pretty (UnifyError t k) where
+instance Constraints (UnifyError t h) Pretty => Pretty (UnifyError t h) where
     pPrintPrec lvl p =
         maybeParens haveParens . \case
         SkolemUnified x y        -> Pretty.text "SkolemUnified" <+> r x <+> r y

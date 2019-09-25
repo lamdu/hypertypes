@@ -25,9 +25,9 @@ import Prelude.Compat
 -- @App expr@s express function applications of @expr@s.
 --
 -- Apart from the data type, an 'Infer' instance is also provided.
-data App expr k = App
-    { _appFunc :: k # expr
-    , _appArg :: k # expr
+data App expr h = App
+    { _appFunc :: h # expr
+    , _appArg :: h # expr
     } deriving Generic
 
 makeLenses ''App
@@ -35,7 +35,7 @@ makeZipMatch ''App
 makeHTraversableApplyAndBases ''App
 makeCommonInstances [''App]
 
-instance Pretty (k # expr) => Pretty (App expr k) where
+instance Pretty (h # expr) => Pretty (App expr h) where
     pPrintPrec lvl p (App f x) =
         pPrintPrec lvl 10 f <+>
         pPrintPrec lvl 11 x

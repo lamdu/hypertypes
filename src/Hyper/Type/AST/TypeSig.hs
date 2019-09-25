@@ -25,9 +25,9 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 import           Prelude.Compat
 
-data TypeSig vars term k = TypeSig
-    { _tsTerm :: k # term
-    , _tsType :: k # Scheme vars (TypeOf term)
+data TypeSig vars term h = TypeSig
+    { _tsTerm :: h # term
+    , _tsType :: h # Scheme vars (TypeOf term)
     } deriving Generic
 
 makeLenses ''TypeSig
@@ -35,8 +35,8 @@ makeCommonInstances [''TypeSig]
 makeHTraversableApplyAndBases ''TypeSig
 
 instance
-    Constraints (TypeSig vars term k) Pretty =>
-    Pretty (TypeSig vars term k) where
+    Constraints (TypeSig vars term h) Pretty =>
+    Pretty (TypeSig vars term h) where
     pPrintPrec lvl p (TypeSig term typ) =
         pPrintPrec lvl 1 term <+> Pretty.text ":" <+> pPrintPrec lvl 1 typ
         & maybeParens (p > 1)

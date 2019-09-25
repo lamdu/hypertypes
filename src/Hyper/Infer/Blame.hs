@@ -259,8 +259,8 @@ instance
         )
         where
             seqRes ::
-                (HTraversable k, Applicative f) =>
-                Tree k (ContainedK f p) -> f (Tree k p)
+                (HTraversable h, Applicative f) =>
+                Tree h (ContainedK f p) -> f (Tree h p)
             seqRes = traverseK (const runContainedK)
 
 finalize ::

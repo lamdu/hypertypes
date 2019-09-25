@@ -15,9 +15,9 @@ import Hyper.Type.Pure (Pure)
 
 import Prelude.Compat
 
--- | A class for a plain for of a @Tree Pure k@
-class Show (HPlain k) => HasHPlain k where
+-- | A class for a plain for of a @Tree Pure h@
+class Show (HPlain h) => HasHPlain h where
     -- | Plain form data type
-    data HPlain k
+    data HPlain h
     -- | An 'Control.Lens.Iso' between the plain form and 'Hyper.Type.HyperType' form
-    kPlain :: Iso' (HPlain k) (Tree Pure k)
+    kPlain :: Iso' (HPlain h) (Tree Pure h)

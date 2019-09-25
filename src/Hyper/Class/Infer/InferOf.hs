@@ -31,20 +31,20 @@ class HasInferredValue t where
     -- | A 'Control.Lens.Lens' from an inference result to an inferred value
     inferredValue :: Lens' (Tree (InferOf t) v) (Tree v t)
 
-class    HFunctor (InferOf k) => HFunctorInferOf k
-instance HFunctor (InferOf k) => HFunctorInferOf k
-class    HFoldable (InferOf k) => HFoldableInferOf k
-instance HFoldable (InferOf k) => HFoldableInferOf k
+class    HFunctor (InferOf h) => HFunctorInferOf h
+instance HFunctor (InferOf h) => HFunctorInferOf h
+class    HFoldable (InferOf h) => HFoldableInferOf h
+instance HFoldable (InferOf h) => HFoldableInferOf h
 
 class
-    (HTraversable (InferOf k), Recursively HFunctorInferOf k, Recursively HFoldableInferOf k) =>
-    RTraversableInferOf k where
+    (HTraversable (InferOf h), Recursively HFunctorInferOf h, Recursively HFoldableInferOf h) =>
+    RTraversableInferOf h where
     rTraversableInferOfRec ::
-        Proxy k -> Dict (HNodesConstraint k RTraversableInferOf)
+        Proxy h -> Dict (HNodesConstraint h RTraversableInferOf)
     {-# INLINE rTraversableInferOfRec #-}
     default rTraversableInferOfRec ::
-        HNodesConstraint k RTraversableInferOf =>
-        Proxy k -> Dict (HNodesConstraint k RTraversableInferOf)
+        HNodesConstraint h RTraversableInferOf =>
+        Proxy h -> Dict (HNodesConstraint h RTraversableInferOf)
     rTraversableInferOfRec _ = Dict
 
 instance Recursive RTraversableInferOf where
@@ -52,5 +52,5 @@ instance Recursive RTraversableInferOf where
     recurse =
         rTraversableInferOfRec . p
         where
-            p :: Proxy (RTraversableInferOf k) -> Proxy k
+            p :: Proxy (RTraversableInferOf h) -> Proxy h
             p _ = Proxy

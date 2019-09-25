@@ -26,9 +26,9 @@ import           Prelude.Compat
 -- @Lam v expr@s express lambda abstractions with @v@s as variable names and @expr@s for bodies.
 --
 -- Apart from the data type, an 'Infer' instance is also provided.
-data Lam v expr k = Lam
+data Lam v expr h = Lam
     { _lamIn :: v
-    , _lamOut :: k # expr
+    , _lamOut :: h # expr
     } deriving Generic
 
 makeLenses ''Lam
@@ -37,8 +37,8 @@ makeHTraversableApplyAndBases ''Lam
 makeZipMatch ''Lam
 
 instance
-    Constraints (Lam v expr k) Pretty =>
-    Pretty (Lam v expr k) where
+    Constraints (Lam v expr h) Pretty =>
+    Pretty (Lam v expr h) where
     pPrintPrec lvl p (Lam i o) =
         (Pretty.text "λ" <> pPrintPrec lvl 0 i)
         <+> Pretty.text "→" <+> pPrintPrec lvl 0 o

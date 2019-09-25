@@ -31,5 +31,5 @@ v $:: t = v `TypeSig` t &# ATypeSig
 aApp :: Tree Pure (LangA n) -> Tree Pure (LangA n) -> Tree Pure (LangA n)
 f `aApp` x = App f x &# AApp
 
-var :: InvDeBruijnIndex k => Int -> Tree Pure (LangA k)
+var :: InvDeBruijnIndex h => Int -> Tree Pure (LangA h)
 var i = scopeVar i &# AVar

@@ -20,19 +20,19 @@ import Prelude.Compat
 --
 -- A type which has 'HApply' and 'HPointed' instances also has 'HApplicative',
 -- which is the equivalent to the 'Applicative' class.
-class HFunctor k => HApply k where
+class HFunctor h => HApply h where
     -- | Combine child values
     --
     -- >>> zipK (Person name0 age0) (Person name1 age1)
     -- Person (Pair name0 name1) (Pair age0 age1)
     zipK ::
-        Tree k p ->
-        Tree k q ->
-        Tree k (Product p q)
+        Tree h p ->
+        Tree h q ->
+        Tree h (Product p q)
 
 -- | A variant of 'Applicative' for 'Hyper.Type.AHyperType's.
-class    (HPointed k, HApply k) => HApplicative k
-instance (HPointed k, HApply k) => HApplicative k
+class    (HPointed h, HApply h) => HApplicative h
+instance (HPointed h, HApply h) => HApplicative h
 
 instance Semigroup a => HApply (Const a) where
     {-# INLINE zipK #-}
@@ -45,9 +45,9 @@ instance (HApply a, HApply b) => HApply (Product a b) where
 -- | 'HApply' variant of 'Control.Applicative.liftA2'
 {-# INLINE liftH2 #-}
 liftH2 ::
-    HApply k =>
-    (forall n. HWitness k n -> Tree p n -> Tree q n -> Tree r n) ->
-    Tree k p ->
-    Tree k q ->
-    Tree k r
+    HApply h =>
+    (forall n. HWitness h n -> Tree p n -> Tree q n -> Tree r n) ->
+    Tree h p ->
+    Tree h q ->
+    Tree h r
 liftH2 f x = mapK (\w (Pair a b) -> f w a b) . zipK x

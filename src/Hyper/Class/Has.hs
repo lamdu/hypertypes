@@ -15,4 +15,4 @@ import Hyper.Type (Tree)
 -- | @HasChild record child@ represents that @record@ has exactly one child node of @child@
 class HasChild record child where
     -- | A 'Control.Lens.Lens' from the record to the child node
-    getChild :: Lens' (Tree record k) (Tree k child)
+    getChild :: Lens' (Tree record h) (Tree h child)

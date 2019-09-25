@@ -12,7 +12,7 @@ import Hyper.Type (Tree, GetHyperType)
 -- Useful to use instances of classes such as 'Hyper.Class.Traversable.HTraversable' which
 -- are available on the flipped 'Hyper.Type.HyperType'.
 -- For example 'Hyper.Unify.Generalize.GTerm' has instances when flipped.
-newtype Flip f x k = MkFlip (Tree (f (GetHyperType k)) x)
+newtype Flip f x h = MkFlip (Tree (f (GetHyperType h)) x)
 
 -- | An 'Iso' from 'Flip' to its content.
 --

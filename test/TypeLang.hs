@@ -41,17 +41,17 @@ newtype Name =
     deriving stock Show
     deriving newtype (Eq, Ord, IsString)
 
-data Typ k
+data Typ h
     = TInt
-    | TFun (FuncType Typ k)
-    | TRec (k # Row)
+    | TFun (FuncType Typ h)
+    | TRec (h # Row)
     | TVar Name
-    | TNom (NominalInst Name Types k)
+    | TNom (NominalInst Name Types h)
     deriving Generic
 
-data Row k
+data Row h
     = REmpty
-    | RExtend (RowExtend Name Typ Row k)
+    | RExtend (RowExtend Name Typ Row h)
     | RVar Name
     deriving Generic
 
@@ -61,14 +61,14 @@ data RConstraints = RowConstraints
     } deriving stock (Eq, Show, Generic)
     deriving (Semigroup, Monoid) via Generically RConstraints
 
-data Types k = Types
-    { _tTyp :: k # Typ
-    , _tRow :: k # Row
+data Types h = Types
+    { _tTyp :: h # Typ
+    , _tRow :: h # Row
     } deriving Generic
 
-data TypeError k
-    = TypError (UnifyError Typ k)
-    | RowError (UnifyError Row k)
+data TypeError h
+    = TypError (UnifyError Typ h)
+    | RowError (UnifyError Row h)
     | QVarNotInScope Name
     deriving Generic
 
@@ -101,28 +101,28 @@ instance Pretty RConstraints where
         Pretty.text "Forbidden fields:" <+> pPrint (f ^.. Lens.folded)
         & maybeParens (p > 10)
 
-instance Constraints (Types k) Pretty => Pretty (Types k) where
+instance Constraints (Types h) Pretty => Pretty (Types h) where
     pPrintPrec lvl p (Types typ row) =
         pPrintPrec lvl p typ <+>
         pPrintPrec lvl p row
 
-instance Constraints (TypeError k) Pretty => Pretty (TypeError k) where
+instance Constraints (TypeError h) Pretty => Pretty (TypeError h) where
     pPrintPrec lvl p (TypError x) = pPrintPrec lvl p x
     pPrintPrec lvl p (RowError x) = pPrintPrec lvl p x
     pPrintPrec _ _ (QVarNotInScope x) =
         Pretty.text "quantified type variable not in scope" <+> pPrint x
 
-instance Constraints (Typ k) Pretty => Pretty (Typ k) where
+instance Constraints (Typ h) Pretty => Pretty (Typ h) where
     pPrintPrec _ _ TInt = Pretty.text "Int"
     pPrintPrec lvl p (TFun x) = pPrintPrec lvl p x
     pPrintPrec lvl p (TRec x) = pPrintPrec lvl p x
     pPrintPrec _ _ (TVar s) = pPrint s
     pPrintPrec _ _ (TNom n) = pPrint n
 
-instance Constraints (Types k) Pretty => Pretty (Row k) where
+instance Constraints (Types h) Pretty => Pretty (Row h) where
     pPrintPrec _ _ REmpty = Pretty.text "{}"
-    pPrintPrec lvl p (RExtend (RowExtend k v r)) =
-        pPrintPrec lvl 20 k <+>
+    pPrintPrec lvl p (RExtend (RowExtend h v r)) =
+        pPrintPrec lvl 20 h <+>
         Pretty.text ":" <+>
         pPrintPrec lvl 2 v <+>
         Pretty.text ":*:" <+>

@@ -49,14 +49,14 @@ class
     -- verifier on children
     verifyConstraints ::
         TypeConstraintsOf ast ->
-        Tree ast k ->
-        Maybe (Tree ast (WithConstraint k))
+        Tree ast h ->
+        Maybe (Tree ast (WithConstraint h))
 
 -- | A 'AHyperType' to represent a term alongside a constraint.
 --
 -- Used for 'verifyConstraints'.
-data WithConstraint k ast = WithConstraint
+data WithConstraint h ast = WithConstraint
     { _wcConstraint :: TypeConstraintsOf (GetHyperType ast)
-    , _wcBody :: k ast
+    , _wcBody :: h ast
     }
 makeLenses ''WithConstraint

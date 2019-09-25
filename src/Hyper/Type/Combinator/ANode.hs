@@ -14,7 +14,7 @@ import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
 import Hyper.Type (Tree, type (#))
 
 -- | @ANode c@ is a 'Hyper.Type.AHyperType' with a single child node of type @c@
-newtype ANode c k = MkANode (k # c)
+newtype ANode c h = MkANode (h # c)
     deriving stock Generic
 
 -- | An 'Iso' from 'ANode' its child node.

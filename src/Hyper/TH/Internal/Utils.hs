@@ -110,17 +110,17 @@ unapply =
         go as x = (x, as)
 
 matchType :: Name -> Type -> Q (Either Type CtrTypePattern)
-matchType var (ConT get `AppT` VarT k `AppT` (PromotedT aHyper `AppT` x))
-    | get == ''GetHyperType && aHyper == 'AHyperType && k == var =
+matchType var (ConT get `AppT` VarT h `AppT` (PromotedT aHyper `AppT` x))
+    | get == ''GetHyperType && aHyper == 'AHyperType && h == var =
         Node x & Right & pure
-matchType var (InfixT (VarT k) hash x)
-    | hash == ''(#) && k == var =
+matchType var (InfixT (VarT h) hash x)
+    | hash == ''(#) && h == var =
         Node x & Right & pure
-matchType var (ConT hash `AppT` VarT k `AppT` x)
-    | hash == ''(#) && k == var =
+matchType var (ConT hash `AppT` VarT h `AppT` x)
+    | hash == ''(#) && h == var =
         Node x & Right & pure
-matchType var (x `AppT` VarT k)
-    | k == var && x /= ConT ''GetHyperType =
+matchType var (x `AppT` VarT h)
+    | h == var && x /= ConT ''GetHyperType =
         case unapply x of
         (ConT c, args) ->
             do
@@ -265,6 +265,6 @@ makeNodeOf info =
             `AppT` (ConT ''HWitness `AppT` tiInstance info `AppT` VarT nodeVar)
         nodeVar = mkName "node"
         getWit :: Map Type Exp -> Type -> Exp
-        getWit m k =
-            m ^? Lens.ix k
-            & fromMaybe (LitE (StringL ("Cant find witness for " <> show k <> " in " <> show m)))
+        getWit m h =
+            m ^? Lens.ix h
+            & fromMaybe (LitE (StringL ("Cant find witness for " <> show h <> " in " <> show m)))

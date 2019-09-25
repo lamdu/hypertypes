@@ -40,29 +40,29 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 import           Prelude
 
-data LangA v k
-    = ALam (Scope LangA v k)
-    | AVar (ScopeVar LangA v k)
-    | AApp (App (LangA v) k)
-    | ATypeSig (TypeSig Types (LangA v) k)
+data LangA v h
+    = ALam (Scope LangA v h)
+    | AVar (ScopeVar LangA v h)
+    | AApp (App (LangA v) h)
+    | ATypeSig (TypeSig Types (LangA v) h)
     | ALit Int
 
 makeHTraversableAndBases ''LangA
 
 instance RNodes (LangA v)
-instance Recursively HFunctor (LangA k)
-instance Recursively HFoldable (LangA k)
-instance RTraversable (LangA k)
+instance Recursively HFunctor (LangA h)
+instance Recursively HFoldable (LangA h)
+instance RTraversable (LangA h)
 
-type instance InferOf (LangA k) = ANode Typ
+type instance InferOf (LangA h) = ANode Typ
 
-instance Recursively HFunctorInferOf (LangA k)
-instance Recursively HFoldableInferOf (LangA k)
-instance RTraversableInferOf (LangA k)
-instance (c Typ, c Row, Recursive c) => InferredVarsConstraint c (LangA k)
+instance Recursively HFunctorInferOf (LangA h)
+instance Recursively HFoldableInferOf (LangA h)
+instance RTraversableInferOf (LangA h)
+instance (c Typ, c Row, Recursive c) => InferredVarsConstraint c (LangA h)
 
-instance HasInferredType (LangA k) where
-    type TypeOf (LangA k) = Typ
+instance HasInferredType (LangA h) where
+    type TypeOf (LangA h) = Typ
     inferredType _ = _ANode
 
 instance InvDeBruijnIndex v => Pretty (LangA v ('AHyperType Pure)) where
@@ -99,7 +99,7 @@ type TermInfer1Deps env m =
 instance TermInfer1Deps env m => Infer1 m LangA where
     inferMonad = Sub Dict
 
-instance (DeBruijnIndex k, TermInfer1Deps env m) => Infer m (LangA k) where
+instance (DeBruijnIndex h, TermInfer1Deps env m) => Infer m (LangA h) where
     inferBody (ALit x) = newTerm TInt <&> MkANode <&> (ALit x, )
     inferBody (AVar x) = inferBody x <&> Lens._1 %~ AVar
     inferBody (ALam x) =

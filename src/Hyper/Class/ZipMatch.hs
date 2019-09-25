@@ -29,14 +29,14 @@ import Prelude.Compat
 --
 -- The @TemplateHaskell@ generators 'Hyper.TH.Apply.makeHApply' and 'Hyper.TH.ZipMatch.makeZipMatch'
 -- create the instances according to these semantics.
-class ZipMatch k where
+class ZipMatch h where
     -- | Compare two structures
     --
     -- >>> zipMatch (NewPerson p0) (NewPerson p1)
     -- Just (NewPerson (Pair p0 p1))
     -- >>> zipMatch (NewPerson p) (NewCake c)
     -- Nothing
-    zipMatch :: Tree k p -> Tree k q -> Maybe (Tree k (Product p q))
+    zipMatch :: Tree h p -> Tree h q -> Maybe (Tree h (Product p q))
 
 instance Eq a => ZipMatch (Const a) where
     {-# INLINE zipMatch #-}
@@ -60,31 +60,31 @@ instance ZipMatch Pure where
 -- | 'ZipMatch' variant of 'Control.Applicative.liftA2'
 {-# INLINE zipMatch2 #-}
 zipMatch2 ::
-    (ZipMatch k, HFunctor k) =>
-    (forall n. HWitness k n -> Tree p n -> Tree q n -> Tree r n) ->
-    Tree k p -> Tree k q -> Maybe (Tree k r)
+    (ZipMatch h, HFunctor h) =>
+    (forall n. HWitness h n -> Tree p n -> Tree q n -> Tree r n) ->
+    Tree h p -> Tree h q -> Maybe (Tree h r)
 zipMatch2 f x y = zipMatch x y <&> mapK (\w (Pair a b) -> f w a b)
 
 -- | An 'Applicative' variant of 'zipMatch2'
 {-# INLINE zipMatchA #-}
 zipMatchA ::
-    (Applicative f, ZipMatch k, HTraversable k) =>
-    (forall n. HWitness k n -> Tree p n -> Tree q n -> f (Tree r n)) ->
-    Tree k p -> Tree k q -> Maybe (f (Tree k r))
+    (Applicative f, ZipMatch h, HTraversable h) =>
+    (forall n. HWitness h n -> Tree p n -> Tree q n -> f (Tree r n)) ->
+    Tree h p -> Tree h q -> Maybe (f (Tree h r))
 zipMatchA f x y = zipMatch x y <&> traverseK (\w (Pair a b) -> f w a b)
 
 -- | A variant of 'zipMatchA' where the 'Applicative' actions do not contain results
 {-# INLINE zipMatch_ #-}
 zipMatch_ ::
-    (Applicative f, ZipMatch k, HFoldable k) =>
-    (forall n. HWitness k n -> Tree p n -> Tree q n -> f ()) ->
-    Tree k p -> Tree k q -> Maybe (f ())
+    (Applicative f, ZipMatch h, HFoldable h) =>
+    (forall n. HWitness h n -> Tree p n -> Tree q n -> f ()) ->
+    Tree h p -> Tree h q -> Maybe (f ())
 zipMatch_ f x y = zipMatch x y <&> traverseK_ (\w (Pair a b) -> f w a b)
 
 -- | A variant of 'zipMatch_' for 'Hyper.Type.AHyperType's with a single node type (avoids using @RankNTypes@)
 {-# INLINE zipMatch1_ #-}
 zipMatch1_ ::
-    (Applicative f, ZipMatch k, HFoldable k, HNodesConstraint k ((~) n)) =>
+    (Applicative f, ZipMatch h, HFoldable h, HNodesConstraint h ((~) n)) =>
     (Tree p n -> Tree q n -> f ()) ->
-    Tree k p -> Tree k q -> Maybe (f ())
+    Tree h p -> Tree h q -> Maybe (f ())
 zipMatch1_ f x y = zipMatch x y <&> traverseK1_ (\(Pair a b) -> f a b)

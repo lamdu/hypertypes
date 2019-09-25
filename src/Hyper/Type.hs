@@ -31,14 +31,14 @@ newtype AHyperType = AHyperType HyperType
 -- * Because 'GetHyperType' can't declared as bijective, uses of it may restrict inference.
 --   In those cases wrapping terms with the 'asTree' helper assists Haskell's type inference
 --   as if Haskell knew that 'GetHyperType' was bijective.
-type family GetHyperType k where
+type family GetHyperType h where
     GetHyperType ('AHyperType t) = t
 
 -- | A type synonym to express nested-HKD structures
-type Tree k p = (k ('AHyperType p) :: Type)
+type Tree h p = (h ('AHyperType p) :: Type)
 
 -- | A type synonym to express child nodes in nested-HKDs
-type k # p = Tree (GetHyperType k) p
+type h # p = Tree (GetHyperType h) p
 
 -- | An 'id' variant which tells the type checker that its argument is a 'Tree'.
 --
@@ -46,5 +46,5 @@ type k # p = Tree (GetHyperType k) p
 --
 -- Note that 'asTree' may often be used during development to assist the inference of incomplete code,
 -- but removed once the code is complete.
-asTree :: Tree k p -> Tree k p
+asTree :: Tree h p -> Tree h p
 asTree = id

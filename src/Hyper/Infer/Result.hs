@@ -57,11 +57,11 @@ instance Recursive (InferredVarsConstraint c) where
         withDict (r p) Dict
         where
             r ::
-                forall k.
-                InferredVarsConstraint c k =>
-                Proxy (InferredVarsConstraint c k) ->
-                Dict (InferredVarsConstraintContext c k)
-            r _ = inferredVarsConstraintCtx (Proxy @c) (Proxy @k)
+                forall h.
+                InferredVarsConstraint c h =>
+                Proxy (InferredVarsConstraint c h) ->
+                Dict (InferredVarsConstraintContext c h)
+            r _ = inferredVarsConstraintCtx (Proxy @c) (Proxy @h)
 
 instance HNodes (Flip (Inferred a) e) where
     type HNodesConstraint (Flip (Inferred a) e) c = InferredVarsConstraint c e

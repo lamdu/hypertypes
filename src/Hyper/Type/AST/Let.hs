@@ -25,10 +25,10 @@ import           Prelude.Compat
 -- @Let v expr@s express let-expressions with @v@s as variable names and @expr@s for terms.
 --
 -- Apart from the data type, an 'Infer' instance is also provided.
-data Let v expr k = Let
+data Let v expr h = Let
     { _letVar :: v
-    , _letEquals :: k # expr
-    , _letIn :: k # expr
+    , _letEquals :: h # expr
+    , _letIn :: h # expr
     } deriving (Generic)
 
 makeLenses ''Let
@@ -37,8 +37,8 @@ makeHTraversableApplyAndBases ''Let
 makeZipMatch ''Let
 
 instance
-    Constraints (Let v expr k) Pretty =>
-    Pretty (Let v expr k) where
+    Constraints (Let v expr h) Pretty =>
+    Pretty (Let v expr h) where
     pPrintPrec lvl p (Let v e i) =
         Pretty.text "let" <+> pPrintPrec lvl 0 v <+> Pretty.text "="
         <+> pPrintPrec lvl 0 e

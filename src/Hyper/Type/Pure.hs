@@ -20,7 +20,7 @@ import Hyper.Type (Tree, type (#))
 import Text.PrettyPrint.HughesPJClass (Pretty(..))
 
 -- | A 'Hyper.Type.AHyperType' to express the simplest plain form of a nested higher-kinded data structure
-newtype Pure k = Pure (k # Pure)
+newtype Pure h = Pure (h # Pure)
     deriving stock Generic
 
 makeHTraversableApplyAndBases ''Pure
@@ -31,7 +31,7 @@ makeCommonInstances [''Pure]
 -- Using `_Pure` rather than the 'Pure' data constructor is recommended,
 -- because it helps the type inference know that 'Pure' is parameterized with a 'Hyper.Type.AHyperType'.
 {-# INLINE _Pure #-}
-_Pure :: Iso (Tree Pure k) (Tree Pure j) (Tree k Pure) (Tree j Pure)
+_Pure :: Iso (Tree Pure h) (Tree Pure j) (Tree h Pure) (Tree j Pure)
 _Pure = iso (\(Pure x) -> x) Pure
 
 -- | An operator to apply a function to a value and wrap it with 'Pure'.
@@ -44,8 +44,8 @@ _Pure = iso (\(Pure x) -> x) Pure
 -- Pure (f x)
 infixl 1 &#
 {-# INLINE (&#) #-}
-(&#) :: a -> (a -> Tree k Pure) -> Tree Pure k
+(&#) :: a -> (a -> Tree h Pure) -> Tree Pure h
 x &# f = _Pure # f x
 
-instance Pretty (k # Pure) => Pretty (Pure k) where
+instance Pretty (h # Pure) => Pretty (Pure h) where
     pPrintPrec lvl p (Pure x) = pPrintPrec lvl p x

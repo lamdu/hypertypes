@@ -17,15 +17,15 @@ import Hyper.Type (Tree)
 import Prelude.Compat
 
 -- | A variant of 'Foldable' for 'Hyper.Type.AHyperType's
-class HNodes k => HFoldable k where
+class HNodes h => HFoldable h where
     -- | 'HFoldable' variant of 'foldMap'
     --
-    -- Gets a function from @k@'s nodes (trees along witnesses that they are nodes of @k@)
+    -- Gets a function from @h@'s nodes (trees along witnesses that they are nodes of @h@)
     -- into a monoid and concats its results for all nodes.
     foldMapK ::
         Monoid a =>
-        (forall n. HWitness k n -> Tree p n -> a) ->
-        Tree k p ->
+        (forall n. HWitness h n -> Tree p n -> a) ->
+        Tree h p ->
         a
 
 instance HFoldable (Const a) where
@@ -46,35 +46,35 @@ instance (HFoldable a, HFoldable b) => HFoldable (Sum a b) where
 -- | 'HFoldable' variant for 'foldMap' for 'Hyper.Type.AHyperType's with a single node type (avoids using @RankNTypes@)
 {-# INLINE foldMapK1 #-}
 foldMapK1 ::
-    forall a k n p.
-    ( Monoid a, HFoldable k
-    , HNodesConstraint k ((~) n)
+    forall a h n p.
+    ( Monoid a, HFoldable h
+    , HNodesConstraint h ((~) n)
     ) =>
     (Tree p n -> a) ->
-    Tree k p ->
+    Tree h p ->
     a
 foldMapK1 f = foldMapK (Proxy @((~) n) #> f)
 
 -- | 'HFoldable' variant of 'Data.Foldable.traverse_'
 --
 -- Applise a given action on all subtrees
--- (represented as trees along witnesses that they are nodes of @k@)
+-- (represented as trees along witnesses that they are nodes of @h@)
 {-# INLINE traverseK_ #-}
 traverseK_ ::
-    (Applicative f, HFoldable k) =>
-    (forall c. HWitness k c -> Tree m c -> f ()) ->
-    Tree k m ->
+    (Applicative f, HFoldable h) =>
+    (forall c. HWitness h c -> Tree m c -> f ()) ->
+    Tree h m ->
     f ()
 traverseK_ f = sequenceA_ . foldMapK (fmap (:[]) . f)
 
 -- | 'HFoldable' variant of 'Data.Foldable.traverse_' for 'Hyper.Type.AHyperType's with a single node type (avoids using @RankNTypes@)
 {-# INLINE traverseK1_ #-}
 traverseK1_ ::
-    forall f k n p.
-    ( Applicative f, HFoldable k
-    , HNodesConstraint k ((~) n)
+    forall f h n p.
+    ( Applicative f, HFoldable h
+    , HNodesConstraint h ((~) n)
     ) =>
     (Tree p n -> f ()) ->
-    Tree k p ->
+    Tree h p ->
     f ()
 traverseK1_ f = traverseK_ (Proxy @((~) n) #> f)

@@ -48,16 +48,16 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 import           Prelude
 
-data LangB k
+data LangB h
     = BLit Int
-    | BApp (App LangB k)
-    | BVar (Var Name LangB k)
-    | BLam (Lam Name LangB k)
-    | BLet (Let Name LangB k)
+    | BApp (App LangB h)
+    | BVar (Var Name LangB h)
+    | BLam (Lam Name LangB h)
+    | BLet (Let Name LangB h)
     | BRecEmpty
-    | BRecExtend (RowExtend Name LangB LangB k)
-    | BGetField (k # LangB) Name
-    | BToNom (ToNom Name LangB k)
+    | BRecExtend (RowExtend Name LangB LangB h)
+    | BGetField (h # LangB) Name
+    | BToNom (ToNom Name LangB h)
     deriving Generic
 
 makeHTraversableAndBases ''LangB
@@ -75,8 +75,8 @@ instance HasInferredType LangB where
 instance Pretty (Tree LangB Pure) where
     pPrintPrec _ _ (BLit i) = pPrint i
     pPrintPrec _ _ BRecEmpty = Pretty.text "{}"
-    pPrintPrec lvl p (BRecExtend (RowExtend k v r)) =
-        pPrintPrec lvl 20 k <+>
+    pPrintPrec lvl p (BRecExtend (RowExtend h v r)) =
+        pPrintPrec lvl 20 h <+>
         Pretty.text "=" <+>
         (pPrintPrec lvl 2 v <> Pretty.text ",") <+>
         pPrintPrec lvl 1 r
@@ -85,12 +85,12 @@ instance Pretty (Tree LangB Pure) where
     pPrintPrec lvl p (BVar x) = pPrintPrec lvl p x
     pPrintPrec lvl p (BLam x) = pPrintPrec lvl p x
     pPrintPrec lvl p (BLet x) = pPrintPrec lvl p x
-    pPrintPrec lvl p (BGetField w k) =
-        pPrintPrec lvl p w <> Pretty.text "." <> pPrint k
+    pPrintPrec lvl p (BGetField w h) =
+        pPrintPrec lvl p w <> Pretty.text "." <> pPrint h
     pPrintPrec lvl p (BToNom n) = pPrintPrec lvl p n
 
 instance VarType Name LangB where
-    varType _ k (ScopeTypes t) =
+    varType _ h (ScopeTypes t) =
         r t
         where
             r ::
@@ -99,7 +99,7 @@ instance VarType Name LangB where
                 m (Tree (UVarOf m) Typ)
             r x =
                 withDict (unifyRecursive (Proxy @m) (Proxy @Typ)) $
-                x ^?! Lens.ix k & instantiate
+                x ^?! Lens.ix h & instantiate
 
 instance
     ( MonadScopeLevel m
@@ -121,24 +121,24 @@ instance
     inferBody (BToNom x) =
         inferBody x
         >>= \(b, t) -> TNom t & newTerm <&> (BToNom b, ) . MkANode
-    inferBody (BRecExtend (RowExtend k v r)) =
+    inferBody (BRecExtend (RowExtend h v r)) =
         do
             InferredChild vI vT <- inferChild v
             InferredChild rI rT <- inferChild r
             restR <-
-                scopeConstraints <&> rForbiddenFields . Lens.contains k .~ True
+                scopeConstraints <&> rForbiddenFields . Lens.contains h .~ True
                 >>= newVar binding . UUnbound
             _ <- TRec restR & newTerm >>= unify (rT ^. _ANode)
-            RowExtend k (vT ^. _ANode) restR & RExtend & newTerm
+            RowExtend h (vT ^. _ANode) restR & RExtend & newTerm
                 >>= newTerm . TRec
-                <&> (BRecExtend (RowExtend k vI rI), ) . MkANode
+                <&> (BRecExtend (RowExtend h vI rI), ) . MkANode
     inferBody BRecEmpty =
         newTerm REmpty >>= newTerm . TRec <&> (BRecEmpty, ) . MkANode
-    inferBody (BGetField w k) =
+    inferBody (BGetField w h) =
         do
-            (rT, wR) <- rowElementInfer RExtend k
+            (rT, wR) <- rowElementInfer RExtend h
             InferredChild wI wT <- inferChild w
-            (BGetField wI k, _ANode # rT) <$
+            (BGetField wI h, _ANode # rT) <$
                 (newTerm (TRec wR) >>= unify (wT ^. _ANode))
 
 instance RTraversableInferOf LangB
@@ -217,10 +217,10 @@ instance HasScope PureInferB ScopeTypes where
     getScope = Lens.view varSchemes
 
 instance LocalScopeType Name (Tree UVar Typ) PureInferB where
-    localScopeType k v = local (varSchemes . _ScopeTypes . Lens.at k ?~ GMono v)
+    localScopeType h v = local (varSchemes . _ScopeTypes . Lens.at h ?~ GMono v)
 
 instance LocalScopeType Name (Tree (GTerm UVar) Typ) PureInferB where
-    localScopeType k v = local (varSchemes . _ScopeTypes . Lens.at k ?~ v)
+    localScopeType h v = local (varSchemes . _ScopeTypes . Lens.at h ?~ v)
 
 instance MonadScopeLevel PureInferB where
     localLevel = local (scopeLevel . _ScopeLevel +~ 1)
@@ -282,10 +282,10 @@ instance HasScope (STInferB s) ScopeTypes where
     getScope = Lens.view (Lens._1 . varSchemes)
 
 instance LocalScopeType Name (Tree (STUVar s) Typ) (STInferB s) where
-    localScopeType k v = local (Lens._1 . varSchemes . _ScopeTypes . Lens.at k ?~ GMono v)
+    localScopeType h v = local (Lens._1 . varSchemes . _ScopeTypes . Lens.at h ?~ GMono v)
 
 instance LocalScopeType Name (Tree (GTerm (STUVar s)) Typ) (STInferB s) where
-    localScopeType k v = local (Lens._1 . varSchemes . _ScopeTypes . Lens.at k ?~ v)
+    localScopeType h v = local (Lens._1 . varSchemes . _ScopeTypes . Lens.at h ?~ v)
 
 instance MonadScopeLevel (STInferB s) where
     localLevel = local (Lens._1 . scopeLevel . _ScopeLevel +~ 1)

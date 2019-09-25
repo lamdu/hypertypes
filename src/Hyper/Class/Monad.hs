@@ -20,11 +20,11 @@ import Hyper.Type.Pure (Pure(..), _Pure)
 import Prelude.Compat
 
 -- | A variant of 'Control.Monad.Monad' for 'Hyper.Type.AHyperType's
-class HApplicative k => HMonad k where
+class HApplicative h => HMonad h where
     joinK ::
         Recursively HFunctor p =>
-        Tree (Compose k k) p ->
-        Tree k p
+        Tree (Compose h h) p ->
+        Tree h p
 
 instance HMonad Pure where
     joinK x =
@@ -38,8 +38,8 @@ instance HMonad Pure where
 
 -- | A variant of 'Control.Monad.(>>=)' for 'Hyper.Type.AHyperType's
 bindK ::
-    (HMonad k, Recursively HFunctor p) =>
-    Tree k p ->
-    (forall n. HWitness k n -> Tree p n -> Tree (Compose k p) n) ->
-    Tree k p
+    (HMonad h, Recursively HFunctor p) =>
+    Tree h p ->
+    (forall n. HWitness h n -> Tree p n -> Tree (Compose h p) n) ->
+    Tree h p
 bindK x f = _Compose # mapK f x & joinK

@@ -16,15 +16,15 @@ import Hyper.Type (Tree)
 import Prelude.Compat
 
 -- | A variant of 'Functor' for 'Hyper.Type.AHyperType's
-class HNodes k => HFunctor k where
+class HNodes h => HFunctor h where
     -- | 'HFunctor' variant of 'fmap'
     --
-    -- Applied a given mapping for @k@'s nodes (trees along witnesses that they are nodes of @k@)
+    -- Applied a given mapping for @h@'s nodes (trees along witnesses that they are nodes of @h@)
     -- to result with a new tree, potentially with a different fix-point.
     mapK ::
-        (forall n. HWitness k n -> Tree p n -> Tree q n) ->
-        Tree k p ->
-        Tree k q
+        (forall n. HWitness h n -> Tree p n -> Tree q n) ->
+        Tree h p ->
+        Tree h q
 
 instance HFunctor (Const a) where
     {-# INLINE mapK #-}
@@ -45,7 +45,7 @@ instance (HFunctor a, HFunctor b) => HFunctor (Sum a b) where
 -- Avoids using @RankNTypes@ and thus can be composed with other optics.
 {-# INLINE mappedK1 #-}
 mappedK1 ::
-    forall k n p q.
-    (HFunctor k, HNodesConstraint k ((~) n)) =>
-    Setter (Tree k p) (Tree k q) (Tree p n) (Tree q n)
+    forall h n p q.
+    (HFunctor h, HNodesConstraint h ((~) n)) =>
+    Setter (Tree h p) (Tree h q) (Tree p n) (Tree q n)
 mappedK1 = sets (\f -> mapK (Proxy @((~) n) #> f))

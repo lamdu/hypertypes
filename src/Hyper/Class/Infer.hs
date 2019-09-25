@@ -34,8 +34,8 @@ type family InferOf (t :: HyperType) :: HyperType
 type instance InferOf (Sum a b) = InferOf a
 
 -- | A 'AHyperType' containing an inferred child node
-data InferredChild v k t = InferredChild
-    { _inRep :: !(k t)
+data InferredChild v h t = InferredChild
+    { _inRep :: !(h t)
         -- ^ Inferred node.
         --
         -- An 'inferBody' implementation needs to place this value in the corresponding child node of the inferred term body
@@ -50,8 +50,8 @@ makeLenses ''InferredChild
 --
 -- The caller may modify the scope before invoking the action via
 -- 'Hyper.Class.Infer.Env.localScopeType' or 'Hyper.Infer.ScopeLevel.localLevel'
-newtype InferChild m k t =
-    InferChild { inferChild :: m (InferredChild (UVarOf m) k t) }
+newtype InferChild m h t =
+    InferChild { inferChild :: m (InferredChild (UVarOf m) h t) }
 makePrisms ''InferChild
 
 -- | @Infer m t@ enables 'Hyper.Infer.infer' to perform type-inference for @t@ in the 'Monad' @m@.
@@ -69,8 +69,8 @@ makePrisms ''InferChild
 class (Monad m, HFunctor t) => Infer m t where
     -- | Infer the body of an expression given the inference actions for its child nodes.
     inferBody ::
-        Tree t (InferChild m k) ->
-        m (Tree t k, Tree (InferOf t) (UVarOf m))
+        Tree t (InferChild m h) ->
+        m (Tree t h, Tree (InferOf t) (UVarOf m))
 
     -- TODO: Putting documentation here causes duplication in the haddock documentation
     inferContext ::

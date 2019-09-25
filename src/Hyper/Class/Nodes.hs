@@ -22,18 +22,18 @@ import Hyper.Type (HyperType)
 -- Various classes like 'Hyper.Class.Functor.HFunctor' build upon 'HNodes'
 -- to provide methods such as 'Hyper.Class.Functor.mapKWith' which provide a rank-n function
 -- for processing child nodes which requires a constraint on the nodes.
-class HNodes (k :: HyperType) where
+class HNodes (h :: HyperType) where
     -- | Lift a constraint to apply to the child nodes
-    type family HNodesConstraint k (c :: (HyperType -> Constraint)) :: Constraint
+    type family HNodesConstraint h (c :: (HyperType -> Constraint)) :: Constraint
 
-    -- | @HWitness k n@ is a witness that @n@ is a node of @k@
-    data family HWitness k :: HyperType -> Type
+    -- | @HWitness h n@ is a witness that @n@ is a node of @h@
+    data family HWitness h :: HyperType -> Type
 
     -- | Lift a rank-n value with a constraint which the child nodes satisfy
     -- to a function from a node witness.
     kLiftConstraint ::
-        HNodesConstraint k c =>
-        HWitness k n ->
+        HNodesConstraint h c =>
+        HWitness h n ->
         Proxy c ->
         (c n => r) ->
         r
@@ -68,8 +68,8 @@ infixr 0 #*#
 -- | @Proxy @c #> r@ replaces the witness parameter of @r@ with a constraint on the witnessed node
 {-# INLINE (#>) #-}
 (#>) ::
-    (HNodes k, HNodesConstraint k c) =>
-    Proxy c -> (c n => r) -> HWitness k n -> r
+    (HNodes h, HNodesConstraint h c) =>
+    Proxy c -> (c n => r) -> HWitness h n -> r
 (#>) p r w = kLiftConstraint w p r
 
 -- | A variant of '#>' which does not consume the witness parameter.
@@ -77,6 +77,6 @@ infixr 0 #*#
 -- @Proxy @c0 #*# Proxy @c1 #> r@ brings into context both the @c0 n@ and @c1 n@ constraints.
 {-# INLINE (#*#) #-}
 (#*#) ::
-    (HNodes k, HNodesConstraint k c) =>
-    Proxy c -> (HWitness k n -> (c n => r)) -> HWitness k n -> r
+    (HNodes h, HNodesConstraint h c) =>
+    Proxy c -> (HWitness h n -> (c n => r)) -> HWitness h n -> r
 (#*#) p r w = (p #> r) w w

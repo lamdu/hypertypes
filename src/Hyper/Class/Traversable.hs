@@ -21,7 +21,7 @@ import Prelude.Compat
 -- | A 'AHyperType' containing a tree inside an action.
 --
 -- Used to express 'sequenceK'.
-newtype ContainedK f p (k :: AHyperType) = MkContainedK { runContainedK :: f (p k) }
+newtype ContainedK f p (h :: AHyperType) = MkContainedK { runContainedK :: f (p h) }
 
 -- | An 'Iso' for the 'ContainedK' @newtype@
 {-# INLINE _ContainedK #-}
@@ -33,12 +33,12 @@ _ContainedK ::
 _ContainedK = iso runContainedK MkContainedK
 
 -- | A variant of 'Traversable' for 'AHyperType's
-class (HFunctor k, HFoldable k) => HTraversable k where
+class (HFunctor h, HFoldable h) => HTraversable h where
     -- | 'HTraversable' variant of 'sequenceA'
     sequenceK ::
         Applicative f =>
-        Tree k (ContainedK f p) ->
-        f (Tree k p)
+        Tree h (ContainedK f p) ->
+        f (Tree h p)
 
 instance HTraversable (Const a) where
     {-# INLINE sequenceK #-}
@@ -56,10 +56,10 @@ instance (HTraversable a, HTraversable b) => HTraversable (Sum a b) where
 -- | 'HTraversable' variant of 'traverse'
 {-# INLINE traverseK #-}
 traverseK ::
-    (Applicative f, HTraversable k) =>
-    (forall n. HWitness k n -> Tree p n -> f (Tree q n)) ->
-    Tree k p ->
-    f (Tree k q)
+    (Applicative f, HTraversable h) =>
+    (forall n. HWitness h n -> Tree p n -> f (Tree q n)) ->
+    Tree h p ->
+    f (Tree h q)
 traverseK f = sequenceK . mapK (fmap MkContainedK . f)
 
 -- | 'HTraversable' variant of 'traverse' for 'AHyperType's with a single node type.
@@ -67,6 +67,6 @@ traverseK f = sequenceK . mapK (fmap MkContainedK . f)
 -- It is a valid 'Traversal' as it avoids using @RankNTypes@.
 {-# INLINE traverseK1 #-}
 traverseK1 ::
-    (HTraversable k, HNodesConstraint k ((~) n)) =>
-    Traversal (Tree k p) (Tree k q) (Tree p n) (Tree q n)
+    (HTraversable h, HNodesConstraint h ((~) n)) =>
+    Traversal (Tree h p) (Tree h q) (Tree p n) (Tree q n)
 traverseK1 f = sequenceK . (mappedK1 %~ (MkContainedK . f))

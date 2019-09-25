@@ -52,15 +52,15 @@ import           Prelude.Compat
 type family NomVarTypes (t :: HyperType) :: HyperType
 
 -- | A declaration of a nominal type.
-data NominalDecl typ k = NominalDecl
+data NominalDecl typ h = NominalDecl
     { _nParams :: Tree (NomVarTypes typ) QVars
-    , _nScheme :: Scheme (NomVarTypes typ) typ k
+    , _nScheme :: Scheme (NomVarTypes typ) typ h
     } deriving Generic
 
 -- | An instantiation of a nominal type
-data NominalInst nomId varTypes k = NominalInst
+data NominalInst nomId varTypes h = NominalInst
     { _nId :: nomId
-    , _nArgs :: Tree varTypes (QVarInstances (GetHyperType k))
+    , _nArgs :: Tree varTypes (QVarInstances (GetHyperType h))
     } deriving Generic
 
 -- | Nominal data constructor.
@@ -69,15 +69,15 @@ data NominalInst nomId varTypes k = NominalInst
 -- (analogues to a data constructor of a Haskell `newtype`'s).
 --
 -- Introduces the nominal's foralled type variables into the value's scope.
-data ToNom nomId term k = ToNom
+data ToNom nomId term h = ToNom
     { _tnId :: nomId
-    , _tnVal :: k # term
+    , _tnVal :: h # term
     } deriving Generic
 
 -- | Access the data in a nominally typed value.
 --
 -- Analogues to a getter of a Haskell `newtype`.
-newtype FromNom nomId (term :: HyperType) (k :: AHyperType) = FromNom nomId
+newtype FromNom nomId (term :: HyperType) (h :: AHyperType) = FromNom nomId
     deriving newtype (Eq, Ord, Binary, NFData)
     deriving stock (Show, Generic)
 
@@ -143,25 +143,25 @@ instance
                 )
             <&> NominalInst xId
 
-instance Constraints (ToNom nomId term k) Pretty => Pretty (ToNom nomId term k) where
+instance Constraints (ToNom nomId term h) Pretty => Pretty (ToNom nomId term h) where
     pPrintPrec lvl p (ToNom nomId term) =
         (pPrint nomId <> Pretty.text "#") <+> pPrintPrec lvl 11 term
         & maybeParens (p > 10)
 
-class    (Pretty (QVar k), Pretty (outer # k)) => PrettyConstraints outer k
-instance (Pretty (QVar k), Pretty (outer # k)) => PrettyConstraints outer k
+class    (Pretty (QVar h), Pretty (outer # h)) => PrettyConstraints outer h
+instance (Pretty (QVar h), Pretty (outer # h)) => PrettyConstraints outer h
 
 instance
     ( Pretty nomId
     , HApply varTypes, HFoldable varTypes
-    , HNodesConstraint varTypes (PrettyConstraints k)
+    , HNodesConstraint varTypes (PrettyConstraints h)
     ) =>
-    Pretty (NominalInst nomId varTypes k) where
+    Pretty (NominalInst nomId varTypes h) where
 
     pPrint (NominalInst n vars) =
         pPrint n <>
         joinArgs
-        (foldMapK (Proxy @(PrettyConstraints k) #> mkArgs) vars)
+        (foldMapK (Proxy @(PrettyConstraints h) #> mkArgs) vars)
         where
             joinArgs [] = mempty
             joinArgs xs =
@@ -170,8 +170,8 @@ instance
                 <> Pretty.text "]"
             mkArgs (QVarInstances m) =
                 Map.toList m <&>
-                \(k, v) ->
-                (pPrint k <> Pretty.text ":") <+> pPrint v
+                \(h, v) ->
+                (pPrint h <> Pretty.text ":") <+> pPrint v
 
 instance (RNodes t, HNodes (NomVarTypes t)) => HNodes (LoadedNominalDecl t) where
     type HNodesConstraint (LoadedNominalDecl t) c =
@@ -264,7 +264,7 @@ class MonadNominals nomId typ m where
     getNominalDecl :: nomId -> m (Tree (LoadedNominalDecl typ) (UVarOf m))
 
 class HasNominalInst nomId typ where
-    nominalInst :: Prism' (Tree typ k) (Tree (NominalInst nomId (NomVarTypes typ)) k)
+    nominalInst :: Prism' (Tree typ h) (Tree (NominalInst nomId (NomVarTypes typ)) h)
 
 {-# INLINE lookupParams #-}
 lookupParams ::

@@ -49,14 +49,14 @@ bindingDict ::
 bindingDict l =
     BindingDict
     { lookupVar =
-        \(UVar k) ->
+        \(UVar h) ->
         Lens.use (Lens.cloneLens l . _Binding)
-        <&> (^?! Lens.ix k)
+        <&> (^?! Lens.ix h)
     , newVar =
         \x ->
         Lens.cloneLens l . _Binding <<%= (Sequence.|> x)
         <&> Sequence.length <&> UVar
     , bindVar =
-        \(UVar k) v ->
-        Lens.cloneLens l . _Binding . Lens.ix k .= v
+        \(UVar h) v ->
+        Lens.cloneLens l . _Binding . Lens.ix h .= v
     }

@@ -19,8 +19,8 @@ import           Hyper.Unify.New (newUnbound)
 
 import           Prelude.Compat
 
-data Prune k =
-    Pruned | Unpruned (k # Prune)
+data Prune h =
+    Pruned | Unpruned (h # Prune)
     deriving Generic
 
 makeCommonInstances [''Prune]

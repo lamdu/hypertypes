@@ -26,7 +26,7 @@ import           Hyper.Type
 import           Prelude.Compat
 
 -- | Compose two 'HyperType's as an external and internal layer
-newtype Compose a b k = MkCompose { getCompose :: Tree a (Compose b (GetHyperType k)) }
+newtype Compose a b h = MkCompose { getCompose :: Tree a (Compose b (GetHyperType h)) }
     deriving stock Generic
 
 makeCommonInstances [''Compose]

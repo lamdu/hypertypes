@@ -43,15 +43,15 @@ class
 type RowKey typ = RowConstraintsKey (TypeConstraintsOf typ)
 
 -- | Row-extend primitive for use in both value-level and type-level
-data RowExtend key val rest k = RowExtend
+data RowExtend key val rest h = RowExtend
     { _eKey :: key
-    , _eVal :: k # val
-    , _eRest :: k # rest
+    , _eVal :: h # val
+    , _eRest :: h # rest
     } deriving Generic
 
-data FlatRowExtends key val rest k = FlatRowExtends
-    { _freExtends :: Map key (k # val)
-    , _freRest :: k # rest
+data FlatRowExtends key val rest h = FlatRowExtends
+    { _freExtends :: Map key (h # val)
+    , _freRest :: h # rest
     } deriving Generic
 
 makeLenses ''RowExtend
@@ -64,9 +64,9 @@ makeDerivings [''Eq, ''Ord] [''RowExtend]
 makeInstances [''Binary, ''NFData] [''RowExtend]
 
 instance
-    Constraints (RowExtend key val rest k) Show =>
-    Show (RowExtend key val rest k) where
-    showsPrec p (RowExtend k v r) = (showCon "RowExtend" @| k @| v @| r) p
+    Constraints (RowExtend key val rest h) Show =>
+    Show (RowExtend key val rest h) where
+    showsPrec p (RowExtend h v r) = (showCon "RowExtend" @| h @| v @| r) p
 
 {-# INLINE flattenRowExtend #-}
 flattenRowExtend ::
@@ -74,9 +74,9 @@ flattenRowExtend ::
     (Tree v rest -> m (Maybe (Tree (RowExtend key val rest) v))) ->
     Tree (RowExtend key val rest) v ->
     m (Tree (FlatRowExtends key val rest) v)
-flattenRowExtend nextExtend (RowExtend k v rest) =
+flattenRowExtend nextExtend (RowExtend h v rest) =
     flattenRow nextExtend rest
-    <&> freExtends %~ Map.unionWith (error "Colliding keys") (Map.singleton k v)
+    <&> freExtends %~ Map.unionWith (error "Colliding keys") (Map.singleton h v)
 
 {-# INLINE flattenRow #-}
 flattenRow ::
@@ -105,14 +105,14 @@ verifyRowExtendConstraints ::
     RowConstraints (TypeConstraintsOf rowTyp) =>
     (TypeConstraintsOf rowTyp -> TypeConstraintsOf valTyp) ->
     TypeConstraintsOf rowTyp ->
-    Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) k ->
-    Maybe (Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) (WithConstraint k))
-verifyRowExtendConstraints toChildC c (RowExtend k v rest)
-    | c ^. forbidden . contains k = Nothing
+    Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) h ->
+    Maybe (Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) (WithConstraint h))
+verifyRowExtendConstraints toChildC c (RowExtend h v rest)
+    | c ^. forbidden . contains h = Nothing
     | otherwise =
-        RowExtend k
+        RowExtend h
         (WithConstraint (c & forbidden .~ mempty & toChildC) v)
-        (WithConstraint (c & forbidden . contains k .~ True) rest)
+        (WithConstraint (c & forbidden . contains h .~ True) rest)
         & Just
 
 {-# INLINE rowExtendStructureMismatch #-}
@@ -159,11 +159,11 @@ rowElementInfer ::
     (Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) (UVarOf m) -> Tree rowTyp (UVarOf m)) ->
     RowKey rowTyp ->
     m (Tree (UVarOf m) valTyp, Tree (UVarOf m) rowTyp)
-rowElementInfer extendToRow k =
+rowElementInfer extendToRow h =
     do
         restVar <-
             scopeConstraints
-            >>= newVar binding . UUnbound . (forbidden . contains k .~ True)
+            >>= newVar binding . UUnbound . (forbidden . contains h .~ True)
         part <- newUnbound
-        whole <- RowExtend k part restVar & extendToRow & newTerm
+        whole <- RowExtend h part restVar & extendToRow & newTerm
         pure (part, whole)

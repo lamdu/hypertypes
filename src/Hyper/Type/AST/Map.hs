@@ -19,14 +19,14 @@ import           Prelude.Compat
 -- | A mapping of keys to terms.
 --
 -- Apart from the data type, a 'ZipMatch' instance is also provided.
-newtype TermMap k expr f = TermMap (Map k (f # expr))
+newtype TermMap h expr f = TermMap (Map h (f # expr))
     deriving stock Generic
 
 Lens.makePrisms ''TermMap
 makeCommonInstances [''TermMap]
 makeHTraversableApplyAndBases ''TermMap
 
-instance Eq k => ZipMatch (TermMap k expr) where
+instance Eq h => ZipMatch (TermMap h expr) where
     {-# INLINE zipMatch #-}
     zipMatch (TermMap x) (TermMap y)
         | Map.size x /= Map.size y = Nothing

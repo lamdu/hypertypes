@@ -33,10 +33,10 @@ import           Prelude.Compat
 
 data EmptyScope
 
-newtype Scope expr a k = Scope (k # expr (Maybe a))
+newtype Scope expr a h = Scope (h # expr (Maybe a))
 Lens.makePrisms ''Scope
 
-newtype ScopeVar (expr :: * -> HyperType) a (k :: AHyperType) = ScopeVar a
+newtype ScopeVar (expr :: * -> HyperType) a (h :: AHyperType) = ScopeVar a
 Lens.makePrisms ''ScopeVar
 
 makeZipMatch ''Scope
@@ -73,8 +73,8 @@ class HasScopeTypes v t env where
 instance HasScopeTypes v t (Tree (ScopeTypes t) v) where
     scopeTypes = id
 
-type instance InferOf (Scope t k) = FuncType (TypeOf (t k))
-type instance InferOf (ScopeVar t k) = ANode (TypeOf (t k))
+type instance InferOf (Scope t h) = FuncType (TypeOf (t h))
+type instance InferOf (ScopeVar t h) = ANode (TypeOf (t h))
 
 instance HasTypeOf1 t => HasInferOf1 (Scope t) where
     type InferOf1 (Scope t) = FuncType (TypeOf1 t)
@@ -82,24 +82,24 @@ instance HasTypeOf1 t => HasInferOf1 (Scope t) where
     hasInferOf1 p =
         withDict (typeAst (p0 p)) Dict
         where
-            p0 :: Proxy (Scope t k) -> Proxy (t k)
+            p0 :: Proxy (Scope t h) -> Proxy (t h)
             p0 _ = Proxy
 
 instance
     ( Infer1 m t
     , HasInferOf1 t
     , InferOf1IndexConstraint t ~ DeBruijnIndex
-    , DeBruijnIndex k
-    , Unify m (TypeOf (t k))
+    , DeBruijnIndex h
+    , Unify m (TypeOf (t h))
     , MonadReader env m
-    , HasScopeTypes (UVarOf m) (TypeOf (t k)) env
-    , HasInferredType (t k)
+    , HasScopeTypes (UVarOf m) (TypeOf (t h)) env
+    , HasInferredType (t h)
     ) =>
-    Infer m (Scope t k) where
+    Infer m (Scope t h) where
 
     inferBody (Scope x) =
-        withDict (hasInferOf1 (Proxy @(t k))) $
-        withDict (hasInferOf1 (Proxy @(t (Maybe k)))) $
+        withDict (hasInferOf1 (Proxy @(t h))) $
+        withDict (hasInferOf1 (Proxy @(t (Maybe h)))) $
         do
             varType <- newUnbound
             inferChild x
@@ -107,20 +107,20 @@ instance
                 <&>
                 \(InferredChild xI xR) ->
                 ( Scope xI
-                , FuncType varType (xR ^# inferredType (Proxy @(t k)))
+                , FuncType varType (xR ^# inferredType (Proxy @(t h)))
                 )
-        \\ (inferMonad :: DeBruijnIndex (Maybe k) :- Infer m (t (Maybe k)))
+        \\ (inferMonad :: DeBruijnIndex (Maybe h) :- Infer m (t (Maybe h)))
 
     inferContext _ _ =
-        Dict \\ inferMonad @m @t @(Maybe k)
+        Dict \\ inferMonad @m @t @(Maybe h)
 
 instance
     ( MonadReader env m
-    , HasScopeTypes (UVarOf m) (TypeOf (t k)) env
-    , DeBruijnIndex k
-    , Unify m (TypeOf (t k))
+    , HasScopeTypes (UVarOf m) (TypeOf (t h)) env
+    , DeBruijnIndex h
+    , Unify m (TypeOf (t h))
     ) =>
-    Infer m (ScopeVar t k) where
+    Infer m (ScopeVar t h) where
 
     inferBody (ScopeVar v) =
         Lens.view (scopeTypes . _ScopeTypes)

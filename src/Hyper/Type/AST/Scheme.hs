@@ -43,16 +43,16 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 import           Prelude.Compat
 
 -- | A type scheme representing a polymorphic type.
-data Scheme varTypes typ k = Scheme
+data Scheme varTypes typ h = Scheme
     { _sForAlls :: Tree varTypes QVars
-    , _sTyp :: k # typ
+    , _sTyp :: h # typ
     } deriving Generic
 
 newtype QVars typ = QVars
     (Map (QVar (GetHyperType typ)) (TypeConstraintsOf (GetHyperType typ)))
     deriving stock Generic
 
-newtype QVarInstances k typ = QVarInstances (Map (QVar (GetHyperType typ)) (k typ))
+newtype QVarInstances h typ = QVarInstances (Map (QVar (GetHyperType typ)) (h typ))
     deriving stock Generic
 
 Lens.makeLenses ''Scheme
@@ -85,8 +85,8 @@ instance
     mempty = QVars Map.empty
 
 instance
-    (Pretty (Tree varTypes QVars), Pretty (k # typ)) =>
-    Pretty (Scheme varTypes typ k) where
+    (Pretty (Tree varTypes QVars), Pretty (h # typ)) =>
+    Pretty (Scheme varTypes typ h) where
 
     pPrintPrec lvl p (Scheme forAlls typ) =
         pPrintPrec lvl 0 forAlls <+>
@@ -114,7 +114,7 @@ type instance Lens.IxValue (QVars typ) = TypeConstraintsOf (GetHyperType typ)
 instance Ord (QVar (GetHyperType typ)) => Lens.Ixed (QVars typ)
 
 instance Ord (QVar (GetHyperType typ)) => Lens.At (QVars typ) where
-    at k = _QVars . Lens.at k
+    at h = _QVars . Lens.at h
 
 type instance InferOf (Scheme v t) = Flip GTerm t
 
@@ -156,8 +156,8 @@ inferType ::
     , Unify m t
     , MonadInstantiate m t
     ) =>
-    Tree t (InferChild m k) ->
-    m (Tree t k, Tree (InferOf t) (UVarOf m))
+    Tree t (InferChild m h) ->
+    m (Tree t h, Tree (InferOf t) (UVarOf m))
 inferType x =
     case x ^? quantifiedVar of
     Just q -> lookupQVar q <&> (quantifiedVar # q, ) . MkANode

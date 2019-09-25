@@ -37,7 +37,7 @@ class VarType var expr where
 -- | Parameterized by term AST and not by its type AST
 -- (which currently is its only part used),
 -- for future evaluation/complilation support.
-newtype Var v (expr :: HyperType) (k :: AHyperType) = Var v
+newtype Var v (expr :: HyperType) (h :: AHyperType) = Var v
     deriving newtype (Eq, Ord, Binary, NFData)
     deriving stock (Show, Generic)
 
@@ -45,7 +45,7 @@ Lens.makePrisms ''Var
 makeHTraversableApplyAndBases ''Var
 makeZipMatch ''Var
 
-instance Pretty v => Pretty (Var v expr k) where
+instance Pretty v => Pretty (Var v expr h) where
     pPrintPrec lvl p (Var v) = pPrintPrec lvl p v
 
 type instance InferOf (Var v t) = ANode (TypeOf t)

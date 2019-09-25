@@ -12,12 +12,12 @@ import Hyper.Type (Tree)
 import Prelude.Compat
 
 -- | A variant of 'Data.Pointed.Pointed' for 'Hyper.Type.AHyperType's
-class HNodes k => HPointed k where
-    -- | Construct a value from a generator of @k@'s nodes
-    -- (a generator which can generate a tree of any type given a witness that it is a node of @k@)
+class HNodes h => HPointed h where
+    -- | Construct a value from a generator of @h@'s nodes
+    -- (a generator which can generate a tree of any type given a witness that it is a node of @h@)
     pureK ::
-        (forall n. HWitness k n -> Tree p n) ->
-        Tree k p
+        (forall n. HWitness h n -> Tree p n) ->
+        Tree h p
 
 instance Monoid a => HPointed (Const a) where
     {-# INLINE pureK #-}

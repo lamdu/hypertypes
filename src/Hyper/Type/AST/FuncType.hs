@@ -25,9 +25,9 @@ import           Prelude.Compat
 --
 -- The data type comes along with the 'HasFuncType' class
 -- for code to be able to work for any type AST supporting the types of functions.
-data FuncType typ k = FuncType
-    { _funcIn  :: k # typ
-    , _funcOut :: k # typ
+data FuncType typ h = FuncType
+    { _funcIn  :: h # typ
+    , _funcOut :: h # typ
     } deriving Generic
 
 makeLenses ''FuncType
@@ -36,12 +36,12 @@ makeHTraversableApplyAndBases ''FuncType
 makeDerivings [''Eq, ''Ord] [''FuncType]
 makeInstances [''Binary, ''NFData] [''FuncType]
 
-instance Pretty (k # typ) => Pretty (FuncType typ k) where
+instance Pretty (h # typ) => Pretty (FuncType typ h) where
     pPrintPrec lvl p (FuncType i o) =
         pPrintPrec lvl 11 i <+> Pretty.text "->" <+> pPrintPrec lvl 10 o
         & maybeParens (p > 10)
 
-instance Show (k # typ) => Show (FuncType typ k) where
+instance Show (h # typ) => Show (FuncType typ h) where
     showsPrec p (FuncType i o) = (showCon "FuncType" @| i @| o) p
 
 -- | HasFuncType is a class of 'AHyperType's representing types that support the types of functions.
@@ -49,4 +49,4 @@ instance Show (k # typ) => Show (FuncType typ k) where
 -- It is used by the 'Hyper.Class.Infer.Infer' instances of 'Hyper.Type.AST.App.App' and 'Hyper.Type.AST.Lam.Lam'
 -- to work for any AST which provides 'HasFuncType'.
 class HasFuncType typ where
-    funcType :: Prism' (Tree typ k) (Tree (FuncType typ) k)
+    funcType :: Prism' (Tree typ h) (Tree (FuncType typ) h)

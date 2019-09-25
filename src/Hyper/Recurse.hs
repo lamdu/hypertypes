@@ -25,21 +25,21 @@ import Hyper.Type.Pure (Pure(..), _Pure, (&#))
 
 import Prelude.Compat
 
--- | @HRecWitness k n@ is a witness that @n@ is a recursive node of @k@
-data HRecWitness k n where
-    HRecSelf :: HRecWitness k k
-    HRecSub :: HWitness k c -> HRecWitness c n -> HRecWitness k n
+-- | @HRecWitness h n@ is a witness that @n@ is a recursive node of @h@
+data HRecWitness h n where
+    HRecSelf :: HRecWitness h h
+    HRecSub :: HWitness h c -> HRecWitness c n -> HRecWitness h n
 
 -- | Monadically convert a 'Pure' 'Tree' to a different 'Hyper.Type.AHyperType' from the bottom up
 {-# INLINE wrapM #-}
 wrapM ::
-    forall m k w.
-    (Monad m, RTraversable k) =>
-    (forall n. HRecWitness k n -> Tree n w -> m (Tree w n)) ->
-    Tree Pure k ->
-    m (Tree w k)
+    forall m h w.
+    (Monad m, RTraversable h) =>
+    (forall n. HRecWitness h n -> Tree n w -> m (Tree w n)) ->
+    Tree Pure h ->
+    m (Tree w h)
 wrapM f x =
-    withDict (recurse (Proxy @(RTraversable k))) $
+    withDict (recurse (Proxy @(RTraversable h))) $
     x ^. _Pure
     & traverseK (Proxy @RTraversable #*# \w -> wrapM (f . HRecSub w))
     >>= f HRecSelf
@@ -47,13 +47,13 @@ wrapM f x =
 -- | Monadically unwrap a 'Tree' from the top down, replacing its 'Hyper.Type.AHyperType' with 'Pure'
 {-# INLINE unwrapM #-}
 unwrapM ::
-    forall m k w.
-    (Monad m, RTraversable k) =>
-    (forall n. HRecWitness k n -> Tree w n -> m (Tree n w)) ->
-    Tree w k ->
-    m (Tree Pure k)
+    forall m h w.
+    (Monad m, RTraversable h) =>
+    (forall n. HRecWitness h n -> Tree w n -> m (Tree n w)) ->
+    Tree w h ->
+    m (Tree Pure h)
 unwrapM f x =
-    withDict (recurse (Proxy @(RTraversable k))) $
+    withDict (recurse (Proxy @(RTraversable h))) $
     f HRecSelf x
     >>= traverseK (Proxy @RTraversable #*# \w -> unwrapM (f . HRecSub w))
     <&> (_Pure #)
@@ -61,13 +61,13 @@ unwrapM f x =
 -- | Wrap a 'Pure' 'Tree' to a different 'Hyper.Type.AHyperType' from the bottom up
 {-# INLINE wrap #-}
 wrap ::
-    forall k w.
-    Recursively HFunctor k =>
-    (forall n. HRecWitness k n -> Tree n w -> Tree w n) ->
-    Tree Pure k ->
-    Tree w k
+    forall h w.
+    Recursively HFunctor h =>
+    (forall n. HRecWitness h n -> Tree n w -> Tree w n) ->
+    Tree Pure h ->
+    Tree w h
 wrap f x =
-    withDict (recursively (Proxy @(HFunctor k))) $
+    withDict (recursively (Proxy @(HFunctor h))) $
     x ^. _Pure
     & mapK (Proxy @(Recursively HFunctor) #*# \w -> wrap (f . HRecSub w))
     & f HRecSelf
@@ -75,44 +75,44 @@ wrap f x =
 -- | Unwrap a 'Tree' from the top down, replacing its 'Hyper.Type.AHyperType' with 'Pure'
 {-# INLINE unwrap #-}
 unwrap ::
-    forall k w.
-    Recursively HFunctor k =>
-    (forall n. HRecWitness k n -> Tree w n -> Tree n w) ->
-    Tree w k ->
-    Tree Pure k
+    forall h w.
+    Recursively HFunctor h =>
+    (forall n. HRecWitness h n -> Tree w n -> Tree n w) ->
+    Tree w h ->
+    Tree Pure h
 unwrap f x =
-    withDict (recursively (Proxy @(HFunctor k))) $
+    withDict (recursively (Proxy @(HFunctor h))) $
     f HRecSelf x
     &# mapK (Proxy @(Recursively HFunctor) #*# \w -> unwrap (f . HRecSub w))
 
 -- | Recursively fold up a tree to produce a result (aka catamorphism)
 {-# INLINE fold #-}
 fold ::
-    Recursively HFunctor k =>
-    (forall n. HRecWitness k n -> Tree n (Const a) -> a) ->
-    Tree Pure k ->
+    Recursively HFunctor h =>
+    (forall n. HRecWitness h n -> Tree n (Const a) -> a) ->
+    Tree Pure h ->
     a
 fold f = getConst . wrap (fmap Const . f)
 
 -- | Build/load a tree from a seed value (aka anamorphism)
 {-# INLINE unfold #-}
 unfold ::
-    Recursively HFunctor k =>
-    (forall n. HRecWitness k n -> a -> Tree n (Const a)) ->
+    Recursively HFunctor h =>
+    (forall n. HRecWitness h n -> a -> Tree n (Const a)) ->
     a ->
-    Tree Pure k
+    Tree Pure h
 unfold f = unwrap (fmap (. getConst) f) . Const
 
 -- | Fold over all of the recursive child nodes of a 'Tree' in pre-order
 {-# INLINE foldMapRecursive #-}
 foldMapRecursive ::
-    forall k p a.
-    (Recursively HFoldable k, Recursively HFoldable p, Monoid a) =>
-    (forall n q. HRecWitness k n -> Tree n q -> a) ->
-    Tree k p ->
+    forall h p a.
+    (Recursively HFoldable h, Recursively HFoldable p, Monoid a) =>
+    (forall n q. HRecWitness h n -> Tree n q -> a) ->
+    Tree h p ->
     a
 foldMapRecursive f x =
-    withDict (recursively (Proxy @(HFoldable k))) $
+    withDict (recursively (Proxy @(HFoldable h))) $
     withDict (recursively (Proxy @(HFoldable p))) $
     f HRecSelf x <>
     foldMapK
@@ -127,23 +127,23 @@ infixr 0 #**#
 -- | @Proxy @c #> r@ replaces a recursive witness parameter of @r@ with a constraint on the witnessed node
 {-# INLINE (#>>) #-}
 (#>>) ::
-    forall c k n r.
-    (Recursive c, c k, RNodes k) =>
-    Proxy c -> (c n => r) -> HRecWitness k n -> r
+    forall c h n r.
+    (Recursive c, c h, RNodes h) =>
+    Proxy c -> (c n => r) -> HRecWitness h n -> r
 (#>>) _ r HRecSelf = r
 (#>>) p r (HRecSub w0 w1) =
-    withDict (recurse (Proxy @(RNodes k))) $
-    withDict (recurse (Proxy @(c k))) $
+    withDict (recurse (Proxy @(RNodes h))) $
+    withDict (recurse (Proxy @(c h))) $
     (Proxy @RNodes #*# p #> (p #>> r) w1) w0
 
 -- | @Proxy @c #> r@ replaces a recursive witness parameter of @r@ with a @Recursively c@ constraint on the witnessed node
 {-# INLINE (##>>) #-}
 (##>>) ::
-    forall c k n r.
-    Recursively c k =>
-    Proxy c -> (c n => r) -> HRecWitness k n -> r
+    forall c h n r.
+    Recursively c h =>
+    Proxy c -> (c n => r) -> HRecWitness h n -> r
 (##>>) p r =
-    withDict (recursively (Proxy @(c k))) $
+    withDict (recursively (Proxy @(c h))) $
     \case
     HRecSelf -> r
     HRecSub w0 w1 -> (Proxy @(Recursively c) #> (p ##>> r) w1) w0
@@ -153,6 +153,6 @@ infixr 0 #**#
 -- @Proxy @c0 #**# Proxy @c1 #>> r@ brings into context both the @c0 n@ and @c1 n@ constraints.
 {-# INLINE (#**#) #-}
 (#**#) ::
-    (Recursive c, c k, RNodes k) =>
-    Proxy c -> (HRecWitness k n -> (c n => r)) -> HRecWitness k n -> r
+    (Recursive c, c h, RNodes h) =>
+    Proxy c -> (HRecWitness h n -> (c n => r)) -> HRecWitness h n -> r
 (#**#) p r w = (p #>> r) w w
