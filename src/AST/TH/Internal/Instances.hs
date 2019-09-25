@@ -11,7 +11,7 @@ import Generics.Constraints (makeDerivings, makeInstances)
 
 import Prelude.Compat
 
--- Derive a specific list of classes that types in syntax-tree implement.
+-- Derive a specific list of classes that types in hypertypes implement.
 makeCommonInstances :: [Name] -> DecsQ
 makeCommonInstances names =
     (<>)

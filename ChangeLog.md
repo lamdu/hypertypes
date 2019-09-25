@@ -1,3 +1,3 @@
-# Changelog for syntax-tree
+# Changelog for hypertypes
 
 ## Unreleased changes

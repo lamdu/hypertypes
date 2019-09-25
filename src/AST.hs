@@ -1,4 +1,4 @@
--- | A convinience module which re-exports common basic functionality of `syntax-tree`
+-- | A convinience module which re-exports common basic functionality of `hypertypes`
 
 module AST (module X) where
 

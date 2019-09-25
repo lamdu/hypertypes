@@ -1,4 +1,4 @@
-# syntax-tree: Higher-Kinded Data + recursion-schemes
+# hypertypes: Higher-Kinded Data + recursion-schemes
 
 Parameterizing data types by a "field constructor" is a widely used technique,
 used by
@@ -15,7 +15,7 @@ but these two approaches do not work well together and each one of them has its 
   by encoding each family of nested types as a single GADT.
   But using a single type imposes limitations on composabilty and modularity.
 
-`syntax-tree` is a Haskell library for describing rich nested and mutually recursive types with
+`hypertypes` is a Haskell library for describing rich nested and mutually recursive types with
 the "field constructor" parameter pattern, in a modular and composable manner.
 
 ## Introduction to the "field constructor" pattern and the status-quo
@@ -213,9 +213,9 @@ But `multirec` has several limitations:
 * Invocations of `HFunctor` for a `Typ` node need to support transforming all indices of `AST`,
   including `Expr`, even though `Typ` doesn't have `Expr` child nodes.
 
-## `Knot -> Type`: `syntax-tree`'s approach
+## `Knot -> Type`: `hypertypes`'s approach
 
-The `syntax-tree` representation of the above AST example:
+The `hypertypes` representation of the above AST example:
 
 ```Haskell
 data Expr k
@@ -241,7 +241,7 @@ type family GetKnot k where
 
 (`'Knot` is `DataKinds` syntax for using the `Knot` data constructor in types)
 
-For this representation, `syntax-tree` offers the power and functionality of HKD, `recursion-schemes`, `multirec`, and some useful helpers:
+For this representation, `hypertypes` offers the power and functionality of HKD, `recursion-schemes`, `multirec`, and some useful helpers:
 
 * Variants of standard classes like `Functor` with `TemplateHaskell` derivations for them.
   (Unlike in `multirec`'s `HFunctor`, only the actual child node types of each node need to be handled)
@@ -393,11 +393,11 @@ When mapping over an `Expr` we can:
 * Therefore, structures and their fix-points need to be parameterized by each other
 * This results in infinite types, as the structure is parameterized by something which may be parameterized by the structure itself.
 
-`multirec` ties this knot by using indices to represent types. `syntax-tree` does this by using `DataKinds` and the `Knot` `newtype` which is used for both structures and their fix-points An implication of the two being the same is that the same classes and combinators are re-used for both.
+`multirec` ties this knot by using indices to represent types. `hypertypes` does this by using `DataKinds` and the `Knot` `newtype` which is used for both structures and their fix-points An implication of the two being the same is that the same classes and combinators are re-used for both.
 
 ## What Haskell is this
 
-`syntax-tree` is implemented with GHC and heavily relies on quite a few language extensions:
+`hypertypes` is implemented with GHC and heavily relies on quite a few language extensions:
 
 * `ConstraintKinds` and `TypeFamilies` are needed for the `KNodesConstraint` type family which lifts a constraint to apply over a value's nodes. Type families are also used to encode term's results in type inference.
 * `DataKinds` allows parameterizing types over `Knot`s
@@ -418,7 +418,7 @@ Some extensions we use but would like to avoid (we're looking for alternative so
 
 * `UndecidableSuperClasses` is currently in use in `AST.Combinator.Compose`
 
-## How does syntax-tree compare/relate to
+## How does hypertypes compare/relate to
 
 Note that comparisons to HKD, `recursion-schemes`, `multirec`, `rank2classes`, and `unification-fd` were discussed in depth above.
 
@@ -466,7 +466,7 @@ type Expr = Val :+: Add
 
 This enables re-usability of the AST elements `Val` and `Add` in various ASTs, where the functionality is shared via type classes. Code using these type classes can work generically for different ASTs.
 
-Like DTALC, `syntax-tree` has:
+Like DTALC, `hypertypes` has:
 
 * Instances for combinators such as `Product` and `Sum`, so that these can be used to build ASTs
 * Implementations of common AST terms in the `AST.Term` module hierarchy (`App`, `Lam`, `Let`, `Var`, `TypeSig` and others)
@@ -484,7 +484,7 @@ data App expr k = App
 
 Unlike a DTALC-based apply, which would be parameterized by a single type parameter `(a :: Type)`, `App` is parameterized on two type parameters, `(expr :: Knot -> Type)` and `(k :: Knot)`. `expr` represents the node type of `App expr`'s child nodes and `k` is the tree's fix-point. This enables using `App` in mutually recursive ASTs where it may be parameterized by several different `expr`s.
 
-Unlike the original DTALC paper which isn't suitable for mutually recursive ASTs, in `syntax-tree` one would have to declare an explicit expression type for each expression type for use as `App`'s `expr` type parameter. Similarly, `multirec`'s DTALC variant also requires explicitly declaring type indices.
+Unlike the original DTALC paper which isn't suitable for mutually recursive ASTs, in `hypertypes` one would have to declare an explicit expression type for each expression type for use as `App`'s `expr` type parameter. Similarly, `multirec`'s DTALC variant also requires explicitly declaring type indices.
 
 While it is possible to declare ASTs as `newtype`s wrapping `Sum`s and `Product`s of existing terms and deriving all the instances via `GeneralizedNewtypeDeriving`, our usage and examples declare types in the straight forward way, with named data constructors, as we think results in more readable and performant code.
 
@@ -494,10 +494,10 @@ While it is possible to declare ASTs as `newtype`s wrapping `Sum`s and `Product`
 
 An intereseting aspect of `bound`'s ASTs is that recursively they are made of an infinite amount of types.
 
-When implementing `syntax-tree` we had the explicit goal of making sure that such ASTs are expressible with it,
+When implementing `hypertypes` we had the explicit goal of making sure that such ASTs are expressible with it,
 and for this reason the `AST.Term.NamelessScope` module implementing it is provided, and the test suite includes
 a language implementation based on it (`LangA` in the tests).
 
 ### lens
 
-`syntax-tree` strives to be maximally compatible with [`lens`](http://hackage.haskell.org/package/lens), and offers `Traversal`s and `Setter`s wherever possible. But unfortunately the `RankNTypes` nature of many combinators in syntax-tree makes them not composable with optics. For the special simpler cases when all child nodes have the same types the `traverseK1` traversal and `mappedK1` setter are available.
+`hypertypes` strives to be maximally compatible with [`lens`](http://hackage.haskell.org/package/lens), and offers `Traversal`s and `Setter`s wherever possible. But unfortunately the `RankNTypes` nature of many combinators in hypertypes makes them not composable with optics. For the special simpler cases when all child nodes have the same types the `traverseK1` traversal and `mappedK1` setter are available.

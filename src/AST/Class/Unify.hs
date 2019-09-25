@@ -33,7 +33,7 @@ type family UVarOf (m :: Type -> Type) :: Knot -> Type
 -- * @m@: The 'Monad' to bind in
 -- * @t@: The unified term's 'Knot'
 --
--- Has 2 implementations in syntax-tree:
+-- Has 2 implementations in hypertypes:
 --
 -- * 'AST.Unify.Binding.bindingDict' for pure state based unification
 -- * 'AST.Unify.Binding.ST.stBinding' for 'Control.Monad.ST.ST' based unification

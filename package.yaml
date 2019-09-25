@@ -1,6 +1,6 @@
-name: syntax-tree
+name: hypertypes
 version: 0.1.0.1
-github: "lamdu/syntax-tree"
+github: "lamdu/hypertypes"
 license: BSD3
 author: "Yair Chuchem"
 maintainer: "yairchu@gmail.com"
@@ -13,7 +13,7 @@ extra-source-files:
 synopsis: Typed ASTs
 category: Algorithms, Compilers/Interpreters, Language, Logic, Unification
 
-description: Please see the README on GitHub at <https://github.com/lamdu/syntax-tree#readme>
+description: Please see the README on GitHub at <https://github.com/lamdu/hypertypes#readme>
 
 dependencies:
 - base >= 4.9 && <5
@@ -73,7 +73,7 @@ library:
   - -fexpose-all-unfoldings
 
 tests:
-  syntax-tree-test:
+  hypertypes-test:
     main: Spec.hs
     source-dirs: test
     other-modules:
@@ -90,11 +90,11 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - syntax-tree
+    - hypertypes
     - text
 
 benchmarks:
-  syntax-tree-bench:
+  hypertypes-bench:
     main: Benchmark.hs
     source-dirs: test
     other-modules:
@@ -111,4 +111,4 @@ benchmarks:
     - -Wredundant-constraints
     dependencies:
     - criterion
-    - syntax-tree
+    - hypertypes
