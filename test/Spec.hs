@@ -10,6 +10,8 @@ import           Hyper.Type.AST.Nominal
 import           Hyper.Type.AST.Scheme
 import           Hyper.Type.AST.Scheme.AlphaEq
 import           Hyper.Unify.Apply
+import           Hyper.Unify.Constraints
+import           Hyper.Unify.QuantifiedVar
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Except
@@ -24,7 +26,7 @@ import           ReadMeExamples ()
 import           System.Exit (exitFailure)
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
-import           TypeLang.Pure
+import           TypeLang
 
 import           Prelude
 
@@ -35,10 +37,10 @@ infinite :: Tree Pure (LangA EmptyScope)
 infinite = aLam \x -> x `aApp` x
 
 skolem :: Tree Pure (LangA EmptyScope)
-skolem = aLam \x -> x $:: forAll1 "a" \a -> a
+skolem = aLam \x -> x $:: forAll1 "a" id
 
 validForAll :: Tree Pure (LangA EmptyScope)
-validForAll = aLam id $:: forAll1 "a" \a -> a ~> a
+validForAll = aLam id $:: forAll1 "a" (join TFunP)
 
 nomLam :: Tree Pure (LangA EmptyScope)
 nomLam =
@@ -171,7 +173,12 @@ vecNominalDecl =
     , _nScheme =
         Scheme
         { _sForAlls = Types mempty mempty
-        , _sTyp = record [("x", "elem" &# TVar), ("y", "elem" &# TVar)]
+        , _sTyp =
+            ( REmptyP
+                & RExtendP "x" (TVarP "elem")
+                & RExtendP "y" (TVarP "elem")
+                & TRecP
+            ) ^. hPlain
         }
     }
 
@@ -190,14 +197,13 @@ phantomIntNominalDecl =
         }
     }
 
-mutType :: Tree Pure Typ
+mutType :: HPlain Typ
 mutType =
-    NominalInst "Mut"
+    TNomP "Mut"
     Types
     { _tRow = mempty & Lens.at "effects" ?~ ("effects" &# RVar) & QVarInstances
     , _tTyp = mempty & Lens.at "value" ?~ ("value" &# TVar) & QVarInstances
     }
-    &# TNom
 
 -- A nominal type with foralls:
 -- "newtype LocalMut a = forall s. Mut s a"
@@ -216,7 +222,7 @@ localMutNominalDecl =
 returnScheme :: Tree Pure (Scheme Types Typ)
 returnScheme =
     forAll (Lens.Identity "value") (Lens.Identity "effects") $
-    \(Lens.Identity val) _ -> val ~> mutType
+    \(Lens.Identity val) _ -> TFunP val mutType
 
 withEnv ::
     ( Unify m Row, MonadReader env m
@@ -294,10 +300,49 @@ testAlphaEq x y expect =
         stRes = Lens.has Lens._Right (runST (execSTInferB (alphaEq x y)))
 
 intsRecord :: [Name] -> Tree Pure (Scheme Types Typ)
-intsRecord = uniType . (hPlain #) . record . map (, _Pure # TInt)
+intsRecord = uniType . TRecP . foldr (\k r -> RExtendP k TIntP r) REmptyP
 
 intToInt :: Tree Pure (Scheme Types Typ)
 intToInt = TFunP TIntP TIntP & uniType
+
+uniType :: HPlain Typ -> Tree Pure (Scheme Types Typ)
+uniType typ =
+    _Pure # Scheme
+    { _sForAlls = Types (QVars mempty) (QVars mempty)
+    , _sTyp = typ ^. hPlain
+    }
+
+forAll ::
+    (Traversable t, Traversable u) =>
+    t Name -> u Name ->
+    (t (HPlain Typ) -> u (HPlain Row) -> HPlain Typ) ->
+    Tree Pure (Scheme Types Typ)
+forAll tvs rvs body =
+    _Pure #
+    Scheme (Types (foralls tvs) (foralls rvs))
+    (body (tvs <&> TVarP) (rvs <&> RVarP) ^. hPlain)
+    where
+        foralls ::
+            ( Foldable f
+            , QVar typ ~ Name
+            , Monoid (TypeConstraintsOf typ)
+            ) =>
+            f Name -> Tree QVars typ
+        foralls xs =
+            xs ^.. Lens.folded <&> (, mempty)
+            & Map.fromList & QVars
+
+forAll1 ::
+    Name -> (HPlain Typ -> HPlain Typ) ->
+    Tree Pure (Scheme Types Typ)
+forAll1 t body =
+    forAll (Lens.Identity t) (Lens.Const ()) $ \(Lens.Identity tv) _ -> body tv
+
+forAll1r ::
+    Name -> (HPlain Row -> HPlain Typ) ->
+    Tree Pure (Scheme Types Typ)
+forAll1r t body =
+    forAll (Lens.Const ()) (Lens.Identity t) $ \_ (Lens.Identity tv) -> body tv
 
 main :: IO ()
 main =
@@ -341,8 +386,8 @@ main =
             , testAlphaEq (intsRecord ["a", "b", "c"]) (intsRecord ["b", "c", "a"]) True
             , testAlphaEq (forAll1 "a" id) (forAll1 "b" id) True
             , testAlphaEq (forAll1 "a" id) (uniType TIntP) False
-            , testAlphaEq (forAll1r "a" (&# TRec)) (uniType TIntP) False
-            , testAlphaEq (forAll1r "a" (&# TRec)) (forAll1r "b" (&# TRec)) True
+            , testAlphaEq (forAll1r "a" TRecP) (uniType TIntP) False
+            , testAlphaEq (forAll1r "a" TRecP) (forAll1r "b" TRecP) True
             , testAlphaEq (mkOpenRec "a" "x" "y") (mkOpenRec "b" "y" "x") True
             ]
         mkOpenRec a x y =
@@ -350,4 +395,9 @@ main =
             Scheme
             (Types (QVars mempty)
                 (QVars (Map.fromList [(a, RowConstraints (Set.fromList [x, y]) mempty)])))
-            (rowExtends (a &# RVar) [(x, _Pure # TInt), (y, _Pure # TInt)] &# TRec)
+            ( TRecP
+                (RVarP a
+                & RExtendP x TIntP
+                & RExtendP y TIntP
+                ) ^. hPlain
+            )

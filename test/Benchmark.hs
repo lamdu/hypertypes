@@ -7,10 +7,13 @@ import Criterion (Benchmarkable, whnfIO)
 import Criterion.Main (bench, defaultMain)
 import LangB
 import Text.PrettyPrint.HughesPJClass (prettyShow)
-import TypeLang.Pure
+import TypeLang
 
-fields :: [(String, Tree Pure Typ)]
-fields = [ ("a" ++ show i, _Pure # TInt) | i <- [0 :: Int .. 100] ]
+fields :: [String]
+fields = [ "a" ++ show i | i <- [0 :: Int .. 100] ]
+
+record :: [String] -> Tree Pure Typ
+record = (^. hPlain) . TRecP . foldr (\k -> RExtendP (Name k) TIntP) REmptyP
 
 recordFwd :: Tree Pure Typ
 recordFwd = record fields

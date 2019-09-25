@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.31.1.
+-- This file has been generated from package.yaml by hpack version 0.31.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 00081826cbbe206977dde33eb02aaab41be7fbc43196da1ece9870cdf4585e57
+-- hash: 10ed731981e00ef25e0945043515b171ae1f5a1ea06479ff00e798775f98442b
 
 name:           hypertypes
 version:        0.1.0.1
@@ -138,7 +138,6 @@ test-suite hypertypes-test
       LangB
       ReadMeExamples
       TypeLang
-      TypeLang.Pure
   hs-source-dirs:
       test
   default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies GADTs LambdaCase MultiParamTypeClasses RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeOperators TypeFamilies
@@ -165,7 +164,6 @@ benchmark hypertypes-bench
   other-modules:
       LangB
       TypeLang
-      TypeLang.Pure
   hs-source-dirs:
       test
   default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies GADTs LambdaCase MultiParamTypeClasses RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeOperators TypeFamilies
