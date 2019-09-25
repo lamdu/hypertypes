@@ -23,7 +23,7 @@ import Hyper.TH.Internal.Instances (makeCommonInstances)
 
 import Prelude.Compat
 
--- | A 'AHyperType' which represents the difference between two annotated trees.
+-- | A 'HyperType' which represents the difference between two annotated trees.
 -- The annotation types also function as tokens
 -- to describe which of the two trees a term comes from.
 data Diff a b e
@@ -32,7 +32,7 @@ data Diff a b e
     | Different (Product (Ann a) (Ann b) e)
     deriving Generic
 
--- | A 'AHyperType' which represents two trees which have the same top-level node,
+-- | A 'HyperType' which represents two trees which have the same top-level node,
 -- but their children may differ.
 data CommonBody a b e = MkCommonBody
     { _anns :: (a, b)

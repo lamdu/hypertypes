@@ -1,6 +1,6 @@
-{-# LANGUAGE EmptyCase #-}
+-- | A class for witness types and lifting of constraints to the child nodes of a 'HyperType'
 
--- | A class for lifting constraints to child nodes of a 'AHyperType'.
+{-# LANGUAGE EmptyCase #-}
 
 module Hyper.Class.Nodes
     ( HNodes(..), HWitness(..)
@@ -14,19 +14,19 @@ import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy(..))
 import Hyper.Type (HyperType)
 
--- | 'HNodes' allows lifting a constraint to the child nodes of a 'AHyperType'
--- by using the 'HNodesConstraint' type family.
---
--- It also provides some methods to combine and process child node constraints.
+-- | 'HNodes' allows talking about the child nodes of a 'HyperType'.
 --
 -- Various classes like 'Hyper.Class.Functor.HFunctor' build upon 'HNodes'
--- to provide methods such as 'Hyper.Class.Functor.mapHWith' which provide a rank-n function
+-- to provide methods such as 'Hyper.Class.Functor.mapH' which provide a rank-n function
 -- for processing child nodes which requires a constraint on the nodes.
 class HNodes (h :: HyperType) where
     -- | Lift a constraint to apply to the child nodes
     type family HNodesConstraint h (c :: (HyperType -> Constraint)) :: Constraint
 
-    -- | @HWitness h n@ is a witness that @n@ is a node of @h@
+    -- | @HWitness h n@ is a witness that @n@ is a node of @h@.
+    --
+    -- A value quantified with @forall n. HWitness h n -> ... n@,
+    -- is equivalent for a "for-some" where the possible values for @n@ are the nodes of @h@.
     data family HWitness h :: HyperType -> Type
 
     -- | Lift a rank-n value with a constraint which the child nodes satisfy

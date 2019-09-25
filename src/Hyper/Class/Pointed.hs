@@ -1,4 +1,4 @@
--- | A variant of 'Data.Pointed.Pointed' for 'Hyper.Type.AHyperType's
+-- | A variant of 'Data.Pointed.Pointed' for 'Hyper.Type.HyperType's
 
 module Hyper.Class.Pointed
     ( HPointed(..)
@@ -11,7 +11,7 @@ import Hyper.Type (Tree)
 
 import Prelude.Compat
 
--- | A variant of 'Data.Pointed.Pointed' for 'Hyper.Type.AHyperType's
+-- | A variant of 'Data.Pointed.Pointed' for 'Hyper.Type.HyperType's
 class HNodes h => HPointed h where
     -- | Construct a value from a generator of @h@'s nodes
     -- (a generator which can generate a tree of any type given a witness that it is a node of @h@)

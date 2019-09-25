@@ -52,7 +52,7 @@ class
         Tree ast h ->
         Maybe (Tree ast (WithConstraint h))
 
--- | A 'AHyperType' to represent a term alongside a constraint.
+-- | A 'HyperType' to represent a term alongside a constraint.
 --
 -- Used for 'verifyConstraints'.
 data WithConstraint h ast = WithConstraint

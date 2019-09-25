@@ -23,7 +23,7 @@ import Hyper.Type.Combinator.Flip
 
 import Prelude.Compat
 
--- | A 'AHyperType' for an inferred term - the output of 'Hyper.Infer.infer'
+-- | A 'HyperType' for an inferred term - the output of 'Hyper.Infer.infer'
 data Inferred a v e = Inferred
     { _iAnn :: a
         -- ^ The node's original annotation as passed to 'Hyper.Infer.infer'

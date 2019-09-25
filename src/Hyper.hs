@@ -1,4 +1,4 @@
--- | A convinience module which re-exports common basic functionality of `hypertypes`
+-- | A convinience module which re-exports common functionality of the hypertypes library
 
 module Hyper (module X) where
 

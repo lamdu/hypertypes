@@ -1,5 +1,5 @@
--- | A class for plain `Data.Kind.Type` equivalents
--- for the simple forms of 'Hyper.Type.AHyperType's.
+-- | A class for plain 'Data.Kind.Type' equivalents
+-- for the simple forms of 'Hyper.Type.HyperType's.
 --
 -- Useful for succinct tests, examples, and for debug prints.
 

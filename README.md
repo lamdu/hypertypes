@@ -10,6 +10,8 @@ They are a solution to the *Expression Problem*, as described by Phil Wadler (19
 
 Hypertypes allow constructing expressions from re-usable terms like DTALC, which can be rich mutually recursive types like in `multirec`.
 
+The name "Hypertypes" is inspired by "Hyperfunctions" (S. Krstic et al, FICS 2001), which are a similar construct at the value level.
+
 ## Introduction to the "field constructor" pattern
 
 ### `Type`: Simple type, simple functionality

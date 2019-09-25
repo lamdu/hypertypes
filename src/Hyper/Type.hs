@@ -1,6 +1,6 @@
--- | 'AHyperType' is the 'Data.Kind.Kind' for nested higher-kinded data.
+-- | A 'HyperType' is a type parameterized by a hypertype.
 --
--- This library revolves around 'AHyperType's, which enable encoding many rich recursive structures.
+-- This infinite definition is expressible using the 'AHyperType' 'Data.Kind.Kind' for hypertypes.
 --
 -- For more information see the [README](https://github.com/lamdu/hypertypes/blob/master/README.md).
 

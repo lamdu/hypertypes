@@ -81,7 +81,7 @@ zipMatch_ ::
     Tree h p -> Tree h q -> Maybe (f ())
 zipMatch_ f x y = zipMatch x y <&> traverseH_ (\w (Pair a b) -> f w a b)
 
--- | A variant of 'zipMatch_' for 'Hyper.Type.AHyperType's with a single node type (avoids using @RankNTypes@)
+-- | A variant of 'zipMatch_' for 'Hyper.Type.HyperType's with a single node type (avoids using @RankNTypes@)
 {-# INLINE zipMatch1_ #-}
 zipMatch1_ ::
     (Applicative f, ZipMatch h, HFoldable h, HNodesConstraint h ((~) n)) =>

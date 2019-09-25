@@ -1,4 +1,4 @@
--- | A 'AHyperType' based implementation of "locally-nameless" terms,
+-- | A 'HyperType' based implementation of "locally-nameless" terms,
 -- inspired by the [bound](http://hackage.haskell.org/package/bound) library
 -- and the technique from Bird & Paterson's
 -- ["de Bruijn notation as a nested datatype"](https://www.semanticscholar.org/paper/De-Bruijn-Notation-as-a-Nested-Datatype-Bird-Paterson/254b3b01651c5e325d9b3cd15c106fbec40e53ea)
@@ -19,6 +19,7 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Reader (MonadReader, local)
 import           Data.Constraint
+import           Data.Kind (Type)
 import           Data.Proxy (Proxy(..))
 import           Data.Sequence (Seq)
 import qualified Data.Sequence as Sequence
@@ -36,7 +37,7 @@ data EmptyScope
 newtype Scope expr a h = Scope (h # expr (Maybe a))
 Lens.makePrisms ''Scope
 
-newtype ScopeVar (expr :: * -> HyperType) a (h :: AHyperType) = ScopeVar a
+newtype ScopeVar (expr :: Type -> HyperType) a (h :: AHyperType) = ScopeVar a
 Lens.makePrisms ''ScopeVar
 
 makeZipMatch ''Scope

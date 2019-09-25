@@ -1,4 +1,4 @@
--- | A variant of 'Traversable' for 'AHyperType's
+-- | A variant of 'Traversable' for 'Hyper.Type.HyperType's
 
 module Hyper.Class.Traversable
     ( HTraversable(..)
@@ -18,7 +18,7 @@ import Hyper.Type (AHyperType, Tree)
 
 import Prelude.Compat
 
--- | A 'AHyperType' containing a tree inside an action.
+-- | A 'Hyper.Type.HyperType' containing a tree inside an action.
 --
 -- Used to express 'sequenceH'.
 newtype ContainedH f p (h :: AHyperType) = MkContainedH { runContainedH :: f (p h) }
@@ -32,7 +32,7 @@ _ContainedH ::
         (f1 (Tree p1 k1))
 _ContainedH = iso runContainedH MkContainedH
 
--- | A variant of 'Traversable' for 'AHyperType's
+-- | A variant of 'Traversable' for 'Hyper.Type.HyperType's
 class (HFunctor h, HFoldable h) => HTraversable h where
     -- | 'HTraversable' variant of 'sequenceA'
     sequenceH ::
@@ -62,7 +62,7 @@ traverseH ::
     f (Tree h q)
 traverseH f = sequenceH . mapH (fmap MkContainedH . f)
 
--- | 'HTraversable' variant of 'traverse' for 'AHyperType's with a single node type.
+-- | 'HTraversable' variant of 'traverse' for 'Hyper.Type.HyperType's with a single node type.
 --
 -- It is a valid 'Traversal' as it avoids using @RankNTypes@.
 {-# INLINE traverseH1 #-}

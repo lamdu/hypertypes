@@ -1,4 +1,4 @@
--- | Classes applying on 'AHyperType's recursively
+-- | Classes applying on 'HyperType's recursively
 
 {-# LANGUAGE DefaultSignatures, FlexibleContexts, FlexibleInstances #-}
 
@@ -26,7 +26,7 @@ class Recursive c where
     -- | Lift a recursive constraint to the next layer
     recurse :: (HNodes h, c h) => Proxy (c h) -> Dict (HNodesConstraint h c)
 
--- | A class of 'AHyperType's which recursively implement 'HNodes'
+-- | A class of 'HyperType's which recursively implement 'HNodes'
 class HNodes h => RNodes h where
     recursiveHNodes :: Proxy h -> Dict (HNodesConstraint h RNodes)
     {-# INLINE recursiveHNodes #-}
@@ -70,7 +70,7 @@ instance Recursive (Recursively c) where
 instance c Pure => Recursively c Pure
 instance c (Const a) => Recursively c (Const a)
 
--- | A class of 'AHyperType's which recursively implement 'HTraversable'
+-- | A class of 'HyperType's which recursively implement 'HTraversable'
 class (HTraversable h, Recursively HFunctor h, Recursively HFoldable h) => RTraversable h where
     recursiveHTraversable :: Proxy h -> Dict (HNodesConstraint h RTraversable)
     {-# INLINE recursiveHTraversable #-}

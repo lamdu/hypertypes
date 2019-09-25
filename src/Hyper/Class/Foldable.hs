@@ -1,4 +1,4 @@
--- | A variant of 'Foldable' for 'Hyper.Type.AHyperType's
+-- | A variant of 'Foldable' for 'Hyper.Type.HyperType's
 
 module Hyper.Class.Foldable
     ( HFoldable(..)
@@ -16,7 +16,7 @@ import Hyper.Type (Tree)
 
 import Prelude.Compat
 
--- | A variant of 'Foldable' for 'Hyper.Type.AHyperType's
+-- | A variant of 'Foldable' for 'Hyper.Type.HyperType's
 class HNodes h => HFoldable h where
     -- | 'HFoldable' variant of 'foldMap'
     --
@@ -43,7 +43,7 @@ instance (HFoldable a, HFoldable b) => HFoldable (Sum a b) where
 
 -- TODO: Replace `foldMapH1` with `foldedK1` which is a `Fold`
 
--- | 'HFoldable' variant for 'foldMap' for 'Hyper.Type.AHyperType's with a single node type (avoids using @RankNTypes@)
+-- | 'HFoldable' variant for 'foldMap' for 'Hyper.Type.HyperType's with a single node type (avoids using @RankNTypes@)
 {-# INLINE foldMapH1 #-}
 foldMapH1 ::
     forall a h n p.
@@ -67,7 +67,7 @@ traverseH_ ::
     f ()
 traverseH_ f = sequenceA_ . foldMapH (fmap (:[]) . f)
 
--- | 'HFoldable' variant of 'Data.Foldable.traverse_' for 'Hyper.Type.AHyperType's with a single node type (avoids using @RankNTypes@)
+-- | 'HFoldable' variant of 'Data.Foldable.traverse_' for 'Hyper.Type.HyperType's with a single node type (avoids using @RankNTypes@)
 {-# INLINE traverseH1_ #-}
 traverseH1_ ::
     forall f h n p.

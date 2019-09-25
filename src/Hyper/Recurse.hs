@@ -30,7 +30,7 @@ data HRecWitness h n where
     HRecSelf :: HRecWitness h h
     HRecSub :: HWitness h c -> HRecWitness c n -> HRecWitness h n
 
--- | Monadically convert a 'Pure' 'Tree' to a different 'Hyper.Type.AHyperType' from the bottom up
+-- | Monadically convert a 'Pure' 'Tree' to a different 'HyperType' from the bottom up
 {-# INLINE wrapM #-}
 wrapM ::
     forall m h w.
@@ -44,7 +44,7 @@ wrapM f x =
     & traverseH (Proxy @RTraversable #*# \w -> wrapM (f . HRecSub w))
     >>= f HRecSelf
 
--- | Monadically unwrap a 'Tree' from the top down, replacing its 'Hyper.Type.AHyperType' with 'Pure'
+-- | Monadically unwrap a 'Tree' from the top down, replacing its 'HyperType' with 'Pure'
 {-# INLINE unwrapM #-}
 unwrapM ::
     forall m h w.
@@ -58,7 +58,7 @@ unwrapM f x =
     >>= traverseH (Proxy @RTraversable #*# \w -> unwrapM (f . HRecSub w))
     <&> (_Pure #)
 
--- | Wrap a 'Pure' 'Tree' to a different 'Hyper.Type.AHyperType' from the bottom up
+-- | Wrap a 'Pure' 'Tree' to a different 'HyperType' from the bottom up
 {-# INLINE wrap #-}
 wrap ::
     forall h w.
@@ -72,7 +72,7 @@ wrap f x =
     & mapH (Proxy @(Recursively HFunctor) #*# \w -> wrap (f . HRecSub w))
     & f HRecSelf
 
--- | Unwrap a 'Tree' from the top down, replacing its 'Hyper.Type.AHyperType' with 'Pure'
+-- | Unwrap a 'Tree' from the top down, replacing its 'HyperType' with 'Pure'
 {-# INLINE unwrap #-}
 unwrap ::
     forall h w.

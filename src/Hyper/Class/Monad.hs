@@ -1,4 +1,4 @@
--- | A variant of 'Control.Monad.Monad' for 'Hyper.Type.AHyperType's
+-- | A variant of 'Control.Monad.Monad' for 'Hyper.Type.HyperType's
 
 {-# LANGUAGE FlexibleContexts #-}
 
@@ -19,7 +19,7 @@ import Hyper.Type.Pure (Pure(..), _Pure)
 
 import Prelude.Compat
 
--- | A variant of 'Control.Monad.Monad' for 'Hyper.Type.AHyperType's
+-- | A variant of 'Control.Monad.Monad' for 'Hyper.Type.HyperType's
 class HApplicative h => HMonad h where
     joinH ::
         Recursively HFunctor p =>
@@ -36,7 +36,7 @@ instance HMonad Pure where
             p :: Tree (Compose Pure Pure) p -> Proxy (HFunctor p)
             p _ = Proxy
 
--- | A variant of 'Control.Monad.(>>=)' for 'Hyper.Type.AHyperType's
+-- | A variant of 'Control.Monad.(>>=)' for 'Hyper.Type.HyperType's
 bindH ::
     (HMonad h, Recursively HFunctor p) =>
     Tree h p ->

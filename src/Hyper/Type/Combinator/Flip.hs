@@ -1,4 +1,4 @@
--- | A combinator to flip the order of the last two type parameters of a 'Hyper.Type.AHyperType'.
+-- | A combinator to flip the order of the last two type parameters of a 'Hyper.Type.HyperType'.
 
 module Hyper.Type.Combinator.Flip
     ( Flip(..), _Flip
@@ -7,7 +7,7 @@ module Hyper.Type.Combinator.Flip
 import Control.Lens (Iso, iso)
 import Hyper.Type (Tree, GetHyperType)
 
--- | Flip the order of the last two type parameters of a 'Hyper.Type.AHyperType'.
+-- | Flip the order of the last two type parameters of a 'Hyper.Type.HyperType'.
 --
 -- Useful to use instances of classes such as 'Hyper.Class.Traversable.HTraversable' which
 -- are available on the flipped 'Hyper.Type.HyperType'.
@@ -17,7 +17,7 @@ newtype Flip f x h = MkFlip (Tree (f (GetHyperType h)) x)
 -- | An 'Iso' from 'Flip' to its content.
 --
 -- Using `_Flip` rather than the 'MkFlip' data constructor is recommended,
--- because it helps the type inference know that @ANode c@ is parameterized with a 'Hyper.Type.AHyperType'.
+-- because it helps the type inference know that @ANode c@ is parameterized with a 'Hyper.Type.HyperType'.
 _Flip ::
     Iso
     (Tree (Flip f0 x0) k0)

@@ -33,7 +33,7 @@ type family InferOf (t :: HyperType) :: HyperType
 
 type instance InferOf (Sum a b) = InferOf a
 
--- | A 'AHyperType' containing an inferred child node
+-- | A 'HyperType' containing an inferred child node
 data InferredChild v h t = InferredChild
     { _inRep :: !(h t)
         -- ^ Inferred node.
@@ -46,7 +46,7 @@ data InferredChild v h t = InferredChild
     }
 makeLenses ''InferredChild
 
--- | A 'AHyperType' containing an inference action.
+-- | A 'HyperType' containing an inference action.
 --
 -- The caller may modify the scope before invoking the action via
 -- 'Hyper.Class.Infer.Env.localScopeType' or 'Hyper.Infer.ScopeLevel.localLevel'

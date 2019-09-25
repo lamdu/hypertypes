@@ -104,7 +104,7 @@ instance Recursive (Blame m) where
 -- | A type synonym to help 'BTerm' be more succinct
 type InferOf' e v = Tree (InferOf (GetHyperType e)) v
 
--- Internal AHyperType for the blame algorithm
+-- Internal HyperType for the blame algorithm
 data PTerm a v e = PTerm
     { pAnn :: a
     , pInferResultFromPos :: InferOf' e v
@@ -169,7 +169,7 @@ toUnifies (PTerm a i0 i1 b) =
     mapH (Proxy @(Blame m) #> toUnifies) b
     & Ann (a, tryUnify (Proxy @exp) i0 i1)
 
--- | A 'AHyperType' for an inferred term with type mismatches - the output of 'blame'
+-- | A 'HyperType' for an inferred term with type mismatches - the output of 'blame'
 data BTerm a v e = BTerm
     { _bAnn :: a
         -- ^ The node's original annotation as passed to 'blame'

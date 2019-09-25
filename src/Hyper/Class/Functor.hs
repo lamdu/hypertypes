@@ -1,4 +1,4 @@
--- | A variant of 'Functor' for 'Hyper.Type.AHyperType's
+-- | A variant of 'Functor' for 'Hyper.Type.HyperType's
 
 module Hyper.Class.Functor
     ( HFunctor(..)
@@ -15,7 +15,7 @@ import Hyper.Type (Tree)
 
 import Prelude.Compat
 
--- | A variant of 'Functor' for 'Hyper.Type.AHyperType's
+-- | A variant of 'Functor' for 'HyperType's
 class HNodes h => HFunctor h where
     -- | 'HFunctor' variant of 'fmap'
     --
@@ -40,7 +40,7 @@ instance (HFunctor a, HFunctor b) => HFunctor (Sum a b) where
     mapH f (InL x) = InL (mapH (f . E_Sum_a) x)
     mapH f (InR x) = InR (mapH (f . E_Sum_b) x)
 
--- | 'HFunctor' variant of 'Control.Lens.mapped' for 'Hyper.Type.AHyperType's with a single node type.
+-- | 'HFunctor' variant of 'Control.Lens.mapped' for 'Hyper.Type.HyperType's with a single node type.
 --
 -- Avoids using @RankNTypes@ and thus can be composed with other optics.
 {-# INLINE mappedH1 #-}

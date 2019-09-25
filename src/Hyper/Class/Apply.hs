@@ -1,4 +1,4 @@
--- | A variant of 'Data.Functor.Apply.Apply' for 'Hyper.Type.AHyperType's
+-- | A variant of 'Data.Functor.Apply.Apply' for 'Hyper.Type.HyperType's
 
 {-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
 
@@ -16,7 +16,7 @@ import Hyper.Type (Tree)
 
 import Prelude.Compat
 
--- | A variant of 'Data.Functor.Apply.Apply' for 'Hyper.Type.AHyperType's.
+-- | A variant of 'Data.Functor.Apply.Apply' for 'Hyper.Type.HyperType's.
 --
 -- A type which has 'HApply' and 'HPointed' instances also has 'HApplicative',
 -- which is the equivalent to the 'Applicative' class.
@@ -30,7 +30,7 @@ class HFunctor h => HApply h where
         Tree h q ->
         Tree h (Product p q)
 
--- | A variant of 'Applicative' for 'Hyper.Type.AHyperType's.
+-- | A variant of 'Applicative' for 'Hyper.Type.HyperType's.
 class    (HPointed h, HApply h) => HApplicative h
 instance (HPointed h, HApply h) => HApplicative h
 
