@@ -6,11 +6,11 @@ They are a solution to the *Expression Problem*, as described by Phil Wadler (19
 
 > The goal is to define a data type by cases, where one can add new cases to the data type and new functions over the data type, without recompiling existing code, and while retaining static type safety.
 
-*Data types a la carte* (DTALC, Swierstra, 2008) offers a solution for the expression problem which is only applicatble for recursive expressions, without support for mutually recursive types. In practice, ASTs tend to be mutually recursive types. [`multirec`](http://hackage.haskell.org/package/multirec) (Rodriguez et al, 2009) uses GADTs to encode mutually recursive types but in comparison to DTALC it lacks in the ability to construct the types from re-usable components.
+[*Data types a la carte*](http://www.cs.ru.nl/~W.Swierstra/Publications/DataTypesALaCarte.pdf) (DTALC, Swierstra, 2008) offers a solution for the expression problem which is only applicable for recursive expressions, without support for mutually recursive types. In practice, programming language ASTs do tend to be mutually recursive. [`multirec`](http://hackage.haskell.org/package/multirec) (Rodriguez et al, 2009) uses GADTs to encode mutually recursive types but in comparison to DTALC it lacks in the ability to construct the types from re-usable components.
 
 Hypertypes allow constructing expressions from re-usable terms like DTALC, which can be rich mutually recursive types like in `multirec`.
 
-The name "Hypertypes" is inspired by "Hyperfunctions" (S. Krstic et al, FICS 2001), which are a similar construct at the value level.
+The name "Hypertypes" is inspired by *Hyperfunctions* (S. Krstic et al, FICS 2001), which are a similar construct at the value level.
 
 ## Introduction to the "field constructor" pattern
 
@@ -138,7 +138,7 @@ data Expr a
 Notes:
 
 * The [`recursion-schemes`](http://hackage.haskell.org/package/recursion-schemes) package can generate this type for us from the plain definition of `Expr` using `TemplateHaskell`
-* DTALC allows us to construct the type by combining standalone `Const`, `Add`, and `Mult` types, but we'll defer this discussion for now
+* DTALC also allows us to construct this type by combining standalone `Const`, `Add`, and `Mul` types
 
 This approach does have the single node type limitation, so we gave up on parameterizing over the `Int` in `Const`.
 This is a big limitation, but as we'll see, we do get several advantages in return.
@@ -152,9 +152,9 @@ newtype Fix f = Fix (f (Fix f))
 We can then use useful combinators from `recursion-schemes` for folding and processing of `Expr`s.
 
 [`unification-fd`](http://hackage.haskell.org/package/unification-fd)
-is a good example for the power of this approach.
+is a good example of the power of this approach.
 It implements generic unification for ASTs,
-where it uses the parameterization to store unification variables standing for terms.
+where it uses the parameterization to represent sub-expressions via unification variables.
 
 In constrast to the HKD approach, we can also use rich fix-points which store several different fix-points within, like `Diff`:
 
@@ -179,9 +179,9 @@ data Typ
     | FuncT Typ Typ
 ```
 
-This type is an example for an AST which DTALC and `recursion-schemes` can't help us with.
+This type is an example for an AST which DTALC and `recursion-schemes` cannot represent.
 
-Is there a way to present this structure? Yes:
+Can the "field constructor" pattern be used to represent such ASTs? Yes:
 
 ### `(Index -> Type) -> Index -> Type`: The `multirec` approach
 
@@ -211,7 +211,7 @@ But `multirec` has several limitations:
 * Invocations of `HFunctor` for a `Typ` node need to support transforming all indices of `AST`,
   including `Expr`, even though `Typ` doesn't have `Expr` child nodes.
 
-## `AHyperType -> Type`: `hypertypes`'s approach
+## `hypertypes`'s approach
 
 The `hypertypes` representation of the above AST example:
 
@@ -228,33 +228,33 @@ data Typ h
 The `#` type operator used above requires introduction:
 
 ```Haskell
-type p # q = (GetHyperType p) ('AHyperType q)
+-- A type parameterized by a hypertype
+type HyperType = AHyperType -> Type
 
 -- A kind for hypertypes
 newtype AHyperType = AHyperType HyperType
 
--- A type parameterized by a hypertype
-type HyperType = AHyperType -> Type
-
 -- GetHyperType is a getter from the AHyperType newtype lifted to the type level
 type family GetHyperType h where
     GetHyperType ('AHyperType t) = t
+
+type p # q = (GetHyperType p) ('AHyperType q)
 ```
 
 (`'AHyperType` is `DataKinds` syntax for using the `AHyperType` data constructor in types)
 
-This representation enables a lot of functionality:
+For such Hypertypes, `hypertypes` provides:
 
 * Variants of standard classes like `Functor` with `TemplateHaskell` derivations for them.
   (Unlike in `multirec`'s `HFunctor`, only the actual child node types of each node need to be handled)
 * Combinators for recursive processing and transformation of nested structures
 * Implementations for common AST terms and useful fix-points
-* A `unification-fd` inspired unification implementation for mutually recursive types
-* A generic and fast implementation of a Hindley-Milner type inference algorithm ("Efficient generalization with levels" as described in ["How OCaml type checker works - or what polymorphism and garbage collection have in common"](http://okmij.org/ftp/ML/generalization.html). Kiselyov, 2013)
+* A unification implementation for mutually recursive types inspired by `unification-fd`
+* A generic and fast implementation of Hindley-Milner type inference ("Efficient generalization with levels" as described in [*How OCaml type checker works*](http://okmij.org/ftp/ML/generalization.html), Kiselyov, 2013)
 
 ## Usage examples
 
-First, how do we represent an example expression of the example language declared above? Let's start with a verbose way:
+First, how do we represent an expression of the example language declared above? Let's start with a verbose way:
 
 ```Haskell
 verboseExpr :: Tree Pure Expr
@@ -265,7 +265,7 @@ verboseExpr =
 Explanations for the above:
 
 * `Tree Pure Expr` is a type synonym for `Pure ('AHyperType Expr)`
-* `Pure` is the simple pass-through/identtiy fix-point
+* `Pure` is the simple pass-through/identity fix-point
 * The above is quite verbose with a lot of instances of `Pure` and parentheses
 
 To write examples and tests more consicely, the `HasHPlain` class, along with a `TemplateHaskell` generator for it, exists:
