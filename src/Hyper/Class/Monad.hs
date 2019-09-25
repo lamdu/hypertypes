@@ -1,4 +1,4 @@
--- | A variant of 'Control.Monad.Monad' for 'Hyper.Type.Knot's
+-- | A variant of 'Control.Monad.Monad' for 'Hyper.Type.AHyperType's
 
 {-# LANGUAGE FlexibleContexts #-}
 
@@ -19,7 +19,7 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
--- | A variant of 'Control.Monad.Monad' for 'Hyper.Type.Knot's
+-- | A variant of 'Control.Monad.Monad' for 'Hyper.Type.AHyperType's
 class KApplicative k => KMonad k where
     joinK ::
         Recursively KFunctor p =>
@@ -36,7 +36,7 @@ instance KMonad Pure where
             p :: Tree (Compose Pure Pure) p -> Proxy (KFunctor p)
             p _ = Proxy
 
--- | A variant of 'Control.Monad.(>>=)' for 'Hyper.Type.Knot's
+-- | A variant of 'Control.Monad.(>>=)' for 'Hyper.Type.AHyperType's
 bindK ::
     (KMonad k, Recursively KFunctor p) =>
     Tree k p ->

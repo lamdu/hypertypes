@@ -213,7 +213,7 @@ But `multirec` has several limitations:
 * Invocations of `HFunctor` for a `Typ` node need to support transforming all indices of `AST`,
   including `Expr`, even though `Typ` doesn't have `Expr` child nodes.
 
-## `Knot -> Type`: `hypertypes`'s approach
+## `AHyperType -> Type`: `hypertypes`'s approach
 
 The `hypertypes` representation of the above AST example:
 
@@ -230,16 +230,16 @@ data Typ k
 The `#` type operator used above requires introduction:
 
 ```Haskell
-type k # p = (GetKnot k) ('Knot p)
+type k # p = (GetHyperType k) ('AHyperType p)
 
-newtype Knot = Knot (Knot -> Type)
+newtype AHyperType = AHyperType (AHyperType -> Type)
 
--- GetKnot is a getter from the Knot newtype lifted to the type level
-type family GetKnot k where
-    GetKnot ('Knot t) = t
+-- GetHyperType is a getter from the AHyperType newtype lifted to the type level
+type family GetHyperType k where
+    GetHyperType ('AHyperType t) = t
 ```
 
-(`'Knot` is `DataKinds` syntax for using the `Knot` data constructor in types)
+(`'AHyperType` is `DataKinds` syntax for using the `AHyperType` data constructor in types)
 
 For this representation, `hypertypes` offers the power and functionality of HKD, `recursion-schemes`, `multirec`, and some useful helpers:
 
@@ -262,7 +262,7 @@ verboseExpr =
 
 Explanations for the above:
 
-* `Tree Pure Expr` is a type synonym for `Pure ('Knot Expr)`
+* `Tree Pure Expr` is a type synonym for `Pure ('AHyperType Expr)`
 * `Pure` is the simple pass-through/identtiy fix-point
 * The above is quite verbose with a lot of `Pure` and parentheses
 
@@ -386,21 +386,21 @@ When mapping over an `Expr` we can:
 * Pattern match on the witness to handle `Expr`'s specific node types
 * Use the `#>` operator to lift a class constraint of `Expr`'s nodes into scope. `Proxy @c #>` replaces the witness parameter with a constraint `c n`.
 
-## Understanding `Knot`s
+## Understanding `AHyperType`s
 
 * We want structures to be parameterized by fix-points
 * Fix-points are parameterized by the structures, too
 * Therefore, structures and their fix-points need to be parameterized by each other
 * This results in infinite types, as the structure is parameterized by something which may be parameterized by the structure itself.
 
-`multirec` ties this knot by using indices to represent types. `hypertypes` does this by using `DataKinds` and the `Knot` `newtype` which is used for both structures and their fix-points An implication of the two being the same is that the same classes and combinators are re-used for both.
+`multirec` ties this knot by using indices to represent types. `hypertypes` does this by using `DataKinds` and the `AHyperType` `newtype` which is used for both structures and their fix-points An implication of the two being the same is that the same classes and combinators are re-used for both.
 
 ## What Haskell is this
 
 `hypertypes` is implemented with GHC and heavily relies on quite a few language extensions:
 
 * `ConstraintKinds` and `TypeFamilies` are needed for the `KNodesConstraint` type family which lifts a constraint to apply over a value's nodes. Type families are also used to encode term's results in type inference.
-* `DataKinds` allows parameterizing types over `Knot`s
+* `DataKinds` allows parameterizing types over `AHyperType`s
 * `DefaultSignatures` is used for default methods that return `Dict`s to avoid undecidable super-classes
 * `DeriveGeneric`, `DerivingVia`, `GeneralizedNewtypeDeriving`, `StandaloneDeriving` and `TemplateHaskell` are used to derive type-class instances
 * `EmptyCase` is needed for instances of leaf nodes
@@ -432,7 +432,7 @@ S. Krstic et al [KLP2001] have described the a type which they call a "Hyperfunc
 newtype Hyper a b = Hyper { invoke :: Hyper b a -> b }
 ```
 
-`Knot`s are isomorphic to `Hyper Type Type` (assuming a `PolyKinds` variant of `Hyper`), so they can be seen as type-level "hyperfunctions".
+`AHyperType`s are isomorphic to `Hyper Type Type` (assuming a `PolyKinds` variant of `Hyper`), so they can be seen as type-level "hyperfunctions".
 
 For more info on hyperfunctions and their use cases in the value level see [LKS2013]
 
@@ -482,7 +482,7 @@ data App expr k = App
     }
 ```
 
-Unlike a DTALC-based apply, which would be parameterized by a single type parameter `(a :: Type)`, `App` is parameterized on two type parameters, `(expr :: Knot -> Type)` and `(k :: Knot)`. `expr` represents the node type of `App expr`'s child nodes and `k` is the tree's fix-point. This enables using `App` in mutually recursive ASTs where it may be parameterized by several different `expr`s.
+Unlike a DTALC-based apply, which would be parameterized by a single type parameter `(a :: Type)`, `App` is parameterized on two type parameters, `(expr :: AHyperType -> Type)` and `(k :: AHyperType)`. `expr` represents the node type of `App expr`'s child nodes and `k` is the tree's fix-point. This enables using `App` in mutually recursive ASTs where it may be parameterized by several different `expr`s.
 
 Unlike the original DTALC paper which isn't suitable for mutually recursive ASTs, in `hypertypes` one would have to declare an explicit expression type for each expression type for use as `App`'s `expr` type parameter. Similarly, `multirec`'s DTALC variant also requires explicitly declaring type indices.
 

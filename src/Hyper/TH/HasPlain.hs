@@ -7,7 +7,7 @@ module Hyper.TH.HasPlain
     ) where
 
 import           Hyper.Class.HasPlain
-import           Hyper.Type (GetKnot)
+import           Hyper.Type (GetHyperType)
 import           Hyper.Type.Pure (Pure, _Pure)
 import           Hyper.TH.Internal.Utils
 import qualified Control.Lens as Lens
@@ -27,7 +27,7 @@ makeOne typeName = makeTypeInfo typeName >>= makeKHasPlainForType
 
 makeKHasPlainForType :: TypeInfo -> Q Dec
 makeKHasPlainForType info =
-    traverse (makeCtr (tiKnotParam info)) (tiConstructors info)
+    traverse (makeCtr (tiHyperParam info)) (tiConstructors info)
     <&>
     \ctrs ->
     InstanceD Nothing [] (ConT ''KHasPlain `AppT` tiInstance info)
@@ -161,6 +161,6 @@ makeCtr knot (cName, cFields) =
                     , fieldFromPlain = \f -> InfixE (Just f) (VarE '(^.)) (Just (VarE 'kPlain))
                     } & pure
         normalizeType (ConT g `AppT` VarT v)
-            | g == ''GetKnot && v == knot = ConT ''Pure
+            | g == ''GetHyperType && v == knot = ConT ''Pure
         normalizeType (x `AppT` y) = normalizeType x `AppT` normalizeType y
         normalizeType x = x

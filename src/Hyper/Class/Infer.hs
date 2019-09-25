@@ -30,24 +30,24 @@ import           Prelude.Compat
 --
 -- * An inferred value (for types inside terms)
 -- * An inferred type together with a scope
-type family InferOf (t :: Knot -> Type) :: Knot -> Type
+type family InferOf (t :: AHyperType -> Type) :: AHyperType -> Type
 
 type instance InferOf (Sum a b) = InferOf a
 
--- | A 'Knot' containing an inferred child node
+-- | A 'AHyperType' containing an inferred child node
 data InferredChild v k t = InferredChild
     { _inRep :: !(k t)
         -- ^ Inferred node.
         --
         -- An 'inferBody' implementation needs to place this value in the corresponding child node of the inferred term body
-    , _inType :: !(Tree (InferOf (GetKnot t)) v)
+    , _inType :: !(Tree (InferOf (GetHyperType t)) v)
         -- ^ The inference result for the child node.
         --
         -- An 'inferBody' implementation may use it to perform unifications with it.
     }
 makeLenses ''InferredChild
 
--- | A 'Knot' containing an inference action.
+-- | A 'AHyperType' containing an inference action.
 --
 -- The caller may modify the scope before invoking the action via
 -- 'Hyper.Class.Infer.Env.localScopeType' or 'Hyper.Infer.ScopeLevel.localLevel'

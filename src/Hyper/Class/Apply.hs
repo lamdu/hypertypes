@@ -1,4 +1,4 @@
--- | A variant of 'Data.Functor.Apply.Apply' for 'Hyper.Type.Knot's
+-- | A variant of 'Data.Functor.Apply.Apply' for 'Hyper.Type.AHyperType's
 
 {-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
 
@@ -16,7 +16,7 @@ import Data.Functor.Product.PolyKinds (Product(..))
 
 import Prelude.Compat
 
--- | A variant of 'Data.Functor.Apply.Apply' for 'Hyper.Type.Knot's.
+-- | A variant of 'Data.Functor.Apply.Apply' for 'Hyper.Type.AHyperType's.
 --
 -- A type which has 'KApply' and 'KPointed' instances also has 'KApplicative',
 -- which is the equivalent to the 'Applicative' class.
@@ -30,7 +30,7 @@ class KFunctor k => KApply k where
         Tree k q ->
         Tree k (Product p q)
 
--- | A variant of 'Applicative' for 'Hyper.Type.Knot's.
+-- | A variant of 'Applicative' for 'Hyper.Type.AHyperType's.
 class    (KPointed k, KApply k) => KApplicative k
 instance (KPointed k, KApply k) => KApplicative k
 

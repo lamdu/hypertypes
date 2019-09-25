@@ -1,4 +1,4 @@
--- | A variant of 'Data.Pointed.Pointed' for 'Hyper.Type.Knot's
+-- | A variant of 'Data.Pointed.Pointed' for 'Hyper.Type.AHyperType's
 
 module Hyper.Class.Pointed
     ( KPointed(..)
@@ -11,7 +11,7 @@ import Data.Functor.Product.PolyKinds (Product(..))
 
 import Prelude.Compat
 
--- | A variant of 'Data.Pointed.Pointed' for 'Hyper.Type.Knot's
+-- | A variant of 'Data.Pointed.Pointed' for 'Hyper.Type.AHyperType's
 class KNodes k => KPointed k where
     -- | Construct a value from a generator of @k@'s nodes
     -- (a generator which can generate a tree of any type given a witness that it is a node of @k@)

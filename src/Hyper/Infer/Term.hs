@@ -23,11 +23,11 @@ import GHC.Generics (Generic)
 
 import Prelude.Compat
 
--- | A 'Knot' for an inferred term - the output of 'Hyper.Infer.infer'
+-- | A 'AHyperType' for an inferred term - the output of 'Hyper.Infer.infer'
 data ITerm a v e = ITerm
     { _iAnn :: a
         -- ^ The node's original annotation as passed to 'Hyper.Infer.infer'
-    , _iRes :: !(Tree (InferOf (GetKnot e)) v)
+    , _iRes :: !(Tree (InferOf (GetHyperType e)) v)
         -- ^ The node's inference result (such as an inferred type)
     , _iVal :: e # ITerm a v
         -- ^ The node's body and its inferred child nodes

@@ -44,7 +44,7 @@ instance Pretty (k # typ) => Pretty (FuncType typ k) where
 instance Show (k # typ) => Show (FuncType typ k) where
     showsPrec p (FuncType i o) = (showCon "FuncType" @| i @| o) p
 
--- | HasFuncType is a class of 'Knot's representing types that support the types of functions.
+-- | HasFuncType is a class of 'AHyperType's representing types that support the types of functions.
 --
 -- It is used by the 'Hyper.Class.Infer.Infer' instances of 'Hyper.Term.App.App' and 'Hyper.Term.Lam.Lam'
 -- to work for any AST which provides 'HasFuncType'.

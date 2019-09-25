@@ -1,4 +1,4 @@
--- | Classes applying on 'Knot's recursively
+-- | Classes applying on 'AHyperType's recursively
 
 {-# LANGUAGE DefaultSignatures, FlexibleContexts, FlexibleInstances #-}
 
@@ -26,7 +26,7 @@ class Recursive c where
     -- | Lift a recursive constraint to the next layer
     recurse :: (KNodes k, c k) => Proxy (c k) -> Dict (KNodesConstraint k c)
 
--- | A class of 'Knot's which recursively implement 'KNodes'
+-- | A class of 'AHyperType's which recursively implement 'KNodes'
 class KNodes k => RNodes k where
     recursiveKNodes :: Proxy k -> Dict (KNodesConstraint k RNodes)
     {-# INLINE recursiveKNodes #-}
@@ -38,7 +38,7 @@ class KNodes k => RNodes k where
 instance RNodes Pure
 instance RNodes (Const a)
 
-argP :: Proxy (f k :: Constraint) -> Proxy (k :: Knot -> Type)
+argP :: Proxy (f k :: Constraint) -> Proxy (k :: AHyperType -> Type)
 argP _ = Proxy
 
 instance Recursive RNodes where
@@ -70,7 +70,7 @@ instance Recursive (Recursively c) where
 instance c Pure => Recursively c Pure
 instance c (Const a) => Recursively c (Const a)
 
--- | A class of 'Knot's which recursively implement 'KTraversable'
+-- | A class of 'AHyperType's which recursively implement 'KTraversable'
 class (KTraversable k, Recursively KFunctor k, Recursively KFoldable k) => RTraversable k where
     recursiveKTraversable :: Proxy k -> Dict (KNodesConstraint k RTraversable)
     {-# INLINE recursiveKTraversable #-}

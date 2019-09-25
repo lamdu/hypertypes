@@ -26,7 +26,7 @@ import           GHC.Generics (Generic)
 import           Prelude.Compat
 
 -- | Compose two knots as an external and internal layer.
-newtype Compose a b k = MkCompose { getCompose :: Tree a (Compose b (GetKnot k)) }
+newtype Compose a b k = MkCompose { getCompose :: Tree a (Compose b (GetHyperType k)) }
     deriving stock Generic
 
 makeCommonInstances [''Compose]

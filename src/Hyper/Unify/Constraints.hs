@@ -10,7 +10,7 @@ module Hyper.Unify.Constraints
     ) where
 
 import Algebra.PartialOrd (PartialOrd(..))
-import Hyper (Tree, Knot, GetKnot)
+import Hyper (Tree, AHyperType, GetHyperType)
 import Control.Lens (makeLenses)
 import Data.Kind (Type)
 
@@ -41,9 +41,9 @@ class Monad m => MonadScopeConstraints c m where
 -- A dependency of `Hyper.Class.Unify.Unify`
 class
     TypeConstraints (TypeConstraintsOf ast) =>
-    HasTypeConstraints (ast :: Knot -> *) where
+    HasTypeConstraints (ast :: AHyperType -> *) where
 
-    type family TypeConstraintsOf (ast :: Knot -> Type) :: Type
+    type family TypeConstraintsOf (ast :: AHyperType -> Type) :: Type
 
     -- | Verify constraints on the ast and apply the given child
     -- verifier on children
@@ -52,11 +52,11 @@ class
         Tree ast k ->
         Maybe (Tree ast (WithConstraint k))
 
--- | A 'Knot' to represent a term alongside a constraint.
+-- | A 'AHyperType' to represent a term alongside a constraint.
 --
 -- Used for 'verifyConstraints'.
 data WithConstraint k ast = WithConstraint
-    { _wcConstraint :: TypeConstraintsOf (GetKnot ast)
+    { _wcConstraint :: TypeConstraintsOf (GetHyperType ast)
     , _wcBody :: k ast
     }
 makeLenses ''WithConstraint

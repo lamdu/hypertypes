@@ -30,7 +30,7 @@ data KRecWitness k n where
     KRecSelf :: KRecWitness k k
     KRecSub :: KWitness k c -> KRecWitness c n -> KRecWitness k n
 
--- | Monadically convert a 'Pure' 'Tree' to a different 'Hyper.Type.Knot' from the bottom up
+-- | Monadically convert a 'Pure' 'Tree' to a different 'Hyper.Type.AHyperType' from the bottom up
 {-# INLINE wrapM #-}
 wrapM ::
     forall m k w.
@@ -44,7 +44,7 @@ wrapM f x =
     & traverseK (Proxy @RTraversable #*# \w -> wrapM (f . KRecSub w))
     >>= f KRecSelf
 
--- | Monadically unwrap a 'Tree' from the top down, replacing its 'Hyper.Type.Knot' with 'Pure'
+-- | Monadically unwrap a 'Tree' from the top down, replacing its 'Hyper.Type.AHyperType' with 'Pure'
 {-# INLINE unwrapM #-}
 unwrapM ::
     forall m k w.
@@ -58,7 +58,7 @@ unwrapM f x =
     >>= traverseK (Proxy @RTraversable #*# \w -> unwrapM (f . KRecSub w))
     <&> (_Pure #)
 
--- | Wrap a 'Pure' 'Tree' to a different 'Hyper.Type.Knot' from the bottom up
+-- | Wrap a 'Pure' 'Tree' to a different 'Hyper.Type.AHyperType' from the bottom up
 {-# INLINE wrap #-}
 wrap ::
     forall k w.
@@ -72,7 +72,7 @@ wrap f x =
     & mapK (Proxy @(Recursively KFunctor) #*# \w -> wrap (f . KRecSub w))
     & f KRecSelf
 
--- | Unwrap a 'Tree' from the top down, replacing its 'Hyper.Type.Knot' with 'Pure'
+-- | Unwrap a 'Tree' from the top down, replacing its 'Hyper.Type.AHyperType' with 'Pure'
 {-# INLINE unwrap #-}
 unwrap ::
     forall k w.

@@ -10,7 +10,7 @@ module Hyper.Class.Unify
 import Hyper.Class.Nodes (KNodes(..))
 import Hyper.Class.Recursive
 import Hyper.Class.ZipMatch (ZipMatch)
-import Hyper.Type (Tree, Knot)
+import Hyper.Type (Tree, AHyperType)
 import Hyper.Unify.Error (UnifyError(..))
 import Hyper.Unify.Constraints
 import Hyper.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify)
@@ -23,15 +23,15 @@ import Data.Kind (Type)
 import Prelude.Compat
 
 -- | Unification variable type for a unification monad
-type family UVarOf (m :: Type -> Type) :: Knot -> Type
+type family UVarOf (m :: Type -> Type) :: AHyperType -> Type
 
 -- | BindingDict implements unification variables for a type in a unification monad.
 --
 -- It is parameterized on:
 --
--- * @v@: The unification variable 'Knot'
+-- * @v@: The unification variable 'AHyperType'
 -- * @m@: The 'Monad' to bind in
--- * @t@: The unified term's 'Knot'
+-- * @t@: The unified term's 'AHyperType'
 --
 -- Has 2 implementations in hypertypes:
 --

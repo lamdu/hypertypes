@@ -21,15 +21,15 @@ import Prelude.Compat
 
 -- | A unification term with a known body
 data UTermBody v ast = UTermBody
-    { _uConstraints :: TypeConstraintsOf (GetKnot ast)
+    { _uConstraints :: TypeConstraintsOf (GetHyperType ast)
     , _uBody :: ast # v
     } deriving Generic
 
 -- | A unification term pointed by a unification variable
 data UTerm v ast
-    = UUnbound (TypeConstraintsOf (GetKnot ast))
+    = UUnbound (TypeConstraintsOf (GetHyperType ast))
       -- ^ Unbound variable with at least the given constraints
-    | USkolem (TypeConstraintsOf (GetKnot ast))
+    | USkolem (TypeConstraintsOf (GetHyperType ast))
       -- ^ A variable bound by a rigid quantified variable with
       -- *exactly* the given constraints
     | UToVar (v ast)

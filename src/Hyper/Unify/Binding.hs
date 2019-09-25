@@ -10,7 +10,7 @@ module Hyper.Unify.Binding
     ) where
 
 import           Hyper.Class.Unify (BindingDict(..))
-import           Hyper.Type (Tree, Knot)
+import           Hyper.Type (Tree, AHyperType)
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Unify.Term
 import           Control.Lens (ALens')
@@ -24,7 +24,7 @@ import           GHC.Generics (Generic)
 import           Prelude.Compat
 
 -- | A unification variable identifier pure state based unification
-newtype UVar (t :: Knot) = UVar Int
+newtype UVar (t :: AHyperType) = UVar Int
     deriving stock (Generic, Show)
     deriving newtype (Eq, Ord)
 Lens.makePrisms ''UVar

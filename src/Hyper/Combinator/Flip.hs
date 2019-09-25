@@ -1,23 +1,23 @@
--- | A combinator to flip the order of the last two type parameters of a 'Hyper.Type.Knot'.
+-- | A combinator to flip the order of the last two type parameters of a 'Hyper.Type.AHyperType'.
 
 module Hyper.Combinator.Flip
     ( Flip(..), _Flip
     ) where
 
-import Hyper.Type (Tree, GetKnot)
+import Hyper.Type (Tree, GetHyperType)
 import Control.Lens (Iso, iso)
 
--- | Flip the order of the last two type parameters of a 'Hyper.Type.Knot'.
+-- | Flip the order of the last two type parameters of a 'Hyper.Type.AHyperType'.
 --
 -- Useful to use instances of classes such as 'Hyper.Class.Traversable.KTraversable' which
 -- are available on the flipped knot.
 -- For example 'Hyper.Unify.Generalize.GTerm' has instances when flipped.
-newtype Flip f x k = MkFlip (Tree (f (GetKnot k)) x)
+newtype Flip f x k = MkFlip (Tree (f (GetHyperType k)) x)
 
 -- | An 'Iso' from 'Flip' to its content.
 --
 -- Using `_Flip` rather than the 'MkFlip' data constructor is recommended,
--- because it helps the type inference know that @ANode c@ is parameterized with a 'Hyper.Type.Knot'.
+-- because it helps the type inference know that @ANode c@ is parameterized with a 'Hyper.Type.AHyperType'.
 _Flip ::
     Iso
     (Tree (Flip f0 x0) k0)

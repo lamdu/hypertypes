@@ -1,4 +1,4 @@
--- | A variant of 'Foldable' for 'Hyper.Type.Knot's
+-- | A variant of 'Foldable' for 'Hyper.Type.AHyperType's
 
 module Hyper.Class.Foldable
     ( KFoldable(..)
@@ -16,7 +16,7 @@ import Data.Functor.Sum.PolyKinds (Sum(..))
 
 import Prelude.Compat
 
--- | A variant of 'Foldable' for 'Hyper.Type.Knot's
+-- | A variant of 'Foldable' for 'Hyper.Type.AHyperType's
 class KNodes k => KFoldable k where
     -- | 'KFoldable' variant of 'foldMap'
     --
@@ -43,7 +43,7 @@ instance (KFoldable a, KFoldable b) => KFoldable (Sum a b) where
 
 -- TODO: Replace `foldMapK1` with `foldedK1` which is a `Fold`
 
--- | 'KFoldable' variant for 'foldMap' for 'Hyper.Type.Knot's with a single node type (avoids using @RankNTypes@)
+-- | 'KFoldable' variant for 'foldMap' for 'Hyper.Type.AHyperType's with a single node type (avoids using @RankNTypes@)
 {-# INLINE foldMapK1 #-}
 foldMapK1 ::
     forall a k n p.
@@ -67,7 +67,7 @@ traverseK_ ::
     f ()
 traverseK_ f = sequenceA_ . foldMapK (fmap (:[]) . f)
 
--- | 'KFoldable' variant of 'Data.Foldable.traverse_' for 'Hyper.Type.Knot's with a single node type (avoids using @RankNTypes@)
+-- | 'KFoldable' variant of 'Data.Foldable.traverse_' for 'Hyper.Type.AHyperType's with a single node type (avoids using @RankNTypes@)
 {-# INLINE traverseK1_ #-}
 traverseK1_ ::
     forall f k n p.

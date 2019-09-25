@@ -1,4 +1,4 @@
--- | A 'Hyper.Type.Knot' to express the simplest plain form of a nested higher-kinded data structure.
+-- | A 'Hyper.Type.AHyperType' to express the simplest plain form of a nested higher-kinded data structure.
 --
 -- The value level [hyperfunctions](http://hackage.haskell.org/package/hyperfunctions)
 -- equivalent of 'Pure' is called @self@ in
@@ -19,7 +19,7 @@ import Control.Lens.Operators
 import GHC.Generics (Generic)
 import Text.PrettyPrint.HughesPJClass (Pretty(..))
 
--- | A 'Hyper.Type.Knot' to express the simplest plain form of a nested higher-kinded data structure
+-- | A 'Hyper.Type.AHyperType' to express the simplest plain form of a nested higher-kinded data structure
 newtype Pure k = Pure (k # Pure)
     deriving stock Generic
 
@@ -29,7 +29,7 @@ makeCommonInstances [''Pure]
 -- | An 'Iso' from 'Pure' to its content.
 --
 -- Using `_Pure` rather than the 'Pure' data constructor is recommended,
--- because it helps the type inference know that 'Pure' is parameterized with a 'Hyper.Type.Knot'.
+-- because it helps the type inference know that 'Pure' is parameterized with a 'Hyper.Type.AHyperType'.
 {-# INLINE _Pure #-}
 _Pure :: Iso (Tree Pure k) (Tree Pure j) (Tree k Pure) (Tree j Pure)
 _Pure = iso (\(Pure x) -> x) Pure

@@ -65,7 +65,7 @@ instance HasInferredType (LangA k) where
     type TypeOf (LangA k) = Typ
     inferredType _ = _ANode
 
-instance InvDeBruijnIndex v => Pretty (LangA v ('Knot Pure)) where
+instance InvDeBruijnIndex v => Pretty (LangA v ('AHyperType Pure)) where
     pPrintPrec lvl p (ALam (Scope expr)) =
         Pretty.hcat
         [ Pretty.text "λ("

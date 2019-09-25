@@ -81,7 +81,7 @@ zipMatch_ ::
     Tree k p -> Tree k q -> Maybe (f ())
 zipMatch_ f x y = zipMatch x y <&> traverseK_ (\w (Pair a b) -> f w a b)
 
--- | A variant of 'zipMatch_' for 'Hyper.Type.Knot's with a single node type (avoids using @RankNTypes@)
+-- | A variant of 'zipMatch_' for 'Hyper.Type.AHyperType's with a single node type (avoids using @RankNTypes@)
 {-# INLINE zipMatch1_ #-}
 zipMatch1_ ::
     (Applicative f, ZipMatch k, KFoldable k, KNodesConstraint k ((~) n)) =>

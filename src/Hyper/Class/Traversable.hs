@@ -1,4 +1,4 @@
--- | A variant of 'Traversable' for 'Knot's
+-- | A variant of 'Traversable' for 'AHyperType's
 
 module Hyper.Class.Traversable
     ( KTraversable(..)
@@ -9,7 +9,7 @@ module Hyper.Class.Traversable
 import Hyper.Class.Foldable (KFoldable)
 import Hyper.Class.Functor (KFunctor(..), mappedK1)
 import Hyper.Class.Nodes (KNodes(..))
-import Hyper.Type (Knot, Tree)
+import Hyper.Type (AHyperType, Tree)
 import Control.Lens (Traversal, Iso, iso)
 import Control.Lens.Operators
 import Data.Functor.Const (Const(..))
@@ -18,10 +18,10 @@ import Data.Functor.Sum.PolyKinds (Sum(..))
 
 import Prelude.Compat
 
--- | A 'Knot' containing a tree inside an action.
+-- | A 'AHyperType' containing a tree inside an action.
 --
 -- Used to express 'sequenceK'.
-newtype ContainedK f p (k :: Knot) = MkContainedK { runContainedK :: f (p k) }
+newtype ContainedK f p (k :: AHyperType) = MkContainedK { runContainedK :: f (p k) }
 
 -- | An 'Iso' for the 'ContainedK' @newtype@
 {-# INLINE _ContainedK #-}
@@ -32,7 +32,7 @@ _ContainedK ::
         (f1 (Tree p1 k1))
 _ContainedK = iso runContainedK MkContainedK
 
--- | A variant of 'Traversable' for 'Knot's
+-- | A variant of 'Traversable' for 'AHyperType's
 class (KFunctor k, KFoldable k) => KTraversable k where
     -- | 'KTraversable' variant of 'sequenceA'
     sequenceK ::
@@ -62,7 +62,7 @@ traverseK ::
     f (Tree k q)
 traverseK f = sequenceK . mapK (fmap MkContainedK . f)
 
--- | 'KTraversable' variant of 'traverse' for 'Knot's with a single node type.
+-- | 'KTraversable' variant of 'traverse' for 'AHyperType's with a single node type.
 --
 -- It is a valid 'Traversal' as it avoids using @RankNTypes@.
 {-# INLINE traverseK1 #-}

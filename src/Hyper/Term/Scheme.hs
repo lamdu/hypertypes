@@ -49,10 +49,10 @@ data Scheme varTypes typ k = Scheme
     } deriving Generic
 
 newtype QVars typ = QVars
-    (Map (QVar (GetKnot typ)) (TypeConstraintsOf (GetKnot typ)))
+    (Map (QVar (GetHyperType typ)) (TypeConstraintsOf (GetHyperType typ)))
     deriving stock Generic
 
-newtype QVarInstances k typ = QVarInstances (Map (QVar (GetKnot typ)) (k typ))
+newtype QVarInstances k typ = QVarInstances (Map (QVar (GetHyperType typ)) (k typ))
     deriving stock Generic
 
 Lens.makeLenses ''Scheme
@@ -71,15 +71,15 @@ instance
     ITermVarsConstraint c (Scheme v t)
 
 instance
-    ( Ord (QVar (GetKnot typ))
-    , Semigroup (TypeConstraintsOf (GetKnot typ))
+    ( Ord (QVar (GetHyperType typ))
+    , Semigroup (TypeConstraintsOf (GetHyperType typ))
     ) =>
     Semigroup (QVars typ) where
     QVars m <> QVars n = QVars (Map.unionWith (<>) m n)
 
 instance
-    ( Ord (QVar (GetKnot typ))
-    , Semigroup (TypeConstraintsOf (GetKnot typ))
+    ( Ord (QVar (GetHyperType typ))
+    , Semigroup (TypeConstraintsOf (GetHyperType typ))
     ) =>
     Monoid (QVars typ) where
     mempty = QVars Map.empty
@@ -108,12 +108,12 @@ instance
                 where
                     cP = pPrint c
 
-type instance Lens.Index (QVars typ) = QVar (GetKnot typ)
-type instance Lens.IxValue (QVars typ) = TypeConstraintsOf (GetKnot typ)
+type instance Lens.Index (QVars typ) = QVar (GetHyperType typ)
+type instance Lens.IxValue (QVars typ) = TypeConstraintsOf (GetHyperType typ)
 
-instance Ord (QVar (GetKnot typ)) => Lens.Ixed (QVars typ)
+instance Ord (QVar (GetHyperType typ)) => Lens.Ixed (QVars typ)
 
-instance Ord (QVar (GetKnot typ)) => Lens.At (QVars typ) where
+instance Ord (QVar (GetHyperType typ)) => Lens.At (QVars typ) where
     at k = _QVars . Lens.at k
 
 type instance InferOf (Scheme v t) = Flip GTerm t

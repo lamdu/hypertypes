@@ -231,7 +231,7 @@ readModifySTRef ref func =
 
 newStQuantified ::
     (MonadReader env m, MonadST m, Enum a) =>
-    ALens' env (Const (STRef (World m) a) (ast :: Knot)) ->
+    ALens' env (Const (STRef (World m) a) (ast :: AHyperType)) ->
     m a
 newStQuantified l =
     Lens.view (Lens.cloneLens l . Lens._Wrapped)

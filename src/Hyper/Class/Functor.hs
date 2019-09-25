@@ -1,4 +1,4 @@
--- | A variant of 'Functor' for 'Hyper.Type.Knot's
+-- | A variant of 'Functor' for 'Hyper.Type.AHyperType's
 
 module Hyper.Class.Functor
     ( KFunctor(..)
@@ -15,7 +15,7 @@ import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
--- | A variant of 'Functor' for 'Hyper.Type.Knot's
+-- | A variant of 'Functor' for 'Hyper.Type.AHyperType's
 class KNodes k => KFunctor k where
     -- | 'KFunctor' variant of 'fmap'
     --
@@ -40,7 +40,7 @@ instance (KFunctor a, KFunctor b) => KFunctor (Sum a b) where
     mapK f (InL x) = InL (mapK (f . E_Sum_a) x)
     mapK f (InR x) = InR (mapK (f . E_Sum_b) x)
 
--- | 'KFunctor' variant of 'Control.Lens.mapped' for 'Hyper.Type.Knot's with a single node type.
+-- | 'KFunctor' variant of 'Control.Lens.mapped' for 'Hyper.Type.AHyperType's with a single node type.
 --
 -- Avoids using @RankNTypes@ and thus can be composed with other optics.
 {-# INLINE mappedK1 #-}

@@ -8,14 +8,14 @@ module Hyper.Unify.QuantifiedVar
     , OrdQVar
     ) where
 
-import Hyper.Type (Knot)
+import Hyper.Type (AHyperType)
 import Control.Lens (Prism')
 import Data.Kind (Type)
 
 import Prelude.Compat
 
 -- | Class for types which have quantified variables
-class HasQuantifiedVar (t :: Knot -> Type) where
+class HasQuantifiedVar (t :: AHyperType -> Type) where
     -- | The type of quantified variable identifiers
     type family QVar t :: Type
     -- | A `Prism'` from a type to its quantified variable term

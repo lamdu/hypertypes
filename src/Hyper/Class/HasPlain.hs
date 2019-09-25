@@ -1,5 +1,5 @@
 -- | A class for plain `Data.Kind.Type` equivalents
--- for the simple forms of 'Hyper.Type.Knot's.
+-- for the simple forms of 'Hyper.Type.AHyperType's.
 --
 -- Useful for succinct tests, examples, and for debug prints.
 

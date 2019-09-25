@@ -1,4 +1,4 @@
--- | A 'Hyper.Type.Knot' which adds an annotation to every node in a tree
+-- | A 'Hyper.Type.AHyperType' which adds an annotation to every node in a tree
 
 {-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances, FlexibleContexts #-}
 
@@ -30,7 +30,7 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 import           Prelude.Compat
 
--- | A 'Hyper.Type.Knot' which adds an annotation to every node in a tree
+-- | A 'Hyper.Type.AHyperType' which adds an annotation to every node in a tree
 data Ann a k = Ann
     { _ann :: a
     , _val :: k # Ann a

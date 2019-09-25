@@ -146,7 +146,7 @@ instance c Typ => ITermVarsConstraint c LangB
 
 -- Monads for inferring `LangB`:
 
-newtype ScopeTypes v = ScopeTypes (Map Name (Tree (GTerm (GetKnot v)) Typ))
+newtype ScopeTypes v = ScopeTypes (Map Name (Tree (GTerm (GetHyperType v)) Typ))
     deriving stock Generic
     deriving newtype (Semigroup, Monoid)
 

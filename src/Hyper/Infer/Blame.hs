@@ -102,9 +102,9 @@ instance Recursive (Blame m) where
         ((const Proxy :: p (b m t) -> Proxy t) p)
 
 -- | A type synonym to help 'BTerm' be more succinct
-type InferOf' e v = Tree (InferOf (GetKnot e)) v
+type InferOf' e v = Tree (InferOf (GetHyperType e)) v
 
--- Internal Knot for the blame algorithm
+-- Internal AHyperType for the blame algorithm
 data PTerm a v e = PTerm
     { pAnn :: a
     , pInferResultFromPos :: InferOf' e v
@@ -169,7 +169,7 @@ toUnifies (PTerm a i0 i1 b) =
     mapK (Proxy @(Blame m) #> toUnifies) b
     & Ann (a, tryUnify (Proxy @exp) i0 i1)
 
--- | A 'Knot' for an inferred term with type mismatches - the output of 'blame'
+-- | A 'AHyperType' for an inferred term with type mismatches - the output of 'blame'
 data BTerm a v e = BTerm
     { _bAnn :: a
         -- ^ The node's original annotation as passed to 'blame'

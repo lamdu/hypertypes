@@ -23,7 +23,7 @@ import GHC.Generics (Generic)
 
 import Prelude.Compat
 
--- | A 'Knot' which represents the difference between two annotated trees.
+-- | A 'AHyperType' which represents the difference between two annotated trees.
 -- The annotation types also function as tokens
 -- to describe which of the two trees a term comes from.
 data Diff a b e
@@ -32,7 +32,7 @@ data Diff a b e
     | Different (Product (Ann a) (Ann b) e)
     deriving Generic
 
--- | A 'Knot' which represents two trees which have the same top-level node,
+-- | A 'AHyperType' which represents two trees which have the same top-level node,
 -- but their children may differ.
 data CommonBody a b e = MkCommonBody
     { _anns :: (a, b)
@@ -79,9 +79,9 @@ foldDiffs f (CommonBody (MkCommonBody _ x)) =
     ) x
 
 data DiffP k
-    = CommonSubTreeP (KPlain (GetKnot k))
+    = CommonSubTreeP (KPlain (GetHyperType k))
     | CommonBodyP (k # DiffP)
-    | DifferentP (KPlain (GetKnot k)) (KPlain (GetKnot k))
+    | DifferentP (KPlain (GetHyperType k)) (KPlain (GetHyperType k))
     deriving Generic
 makePrisms ''DiffP
 

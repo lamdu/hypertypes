@@ -2,7 +2,7 @@
 --
 -- Useful for records of values for several different types,
 -- for example when performing unification of heterogenous ASTs,
--- the @record@ 'Hyper.Type.Knot' can be used to hold the unification variables mappings
+-- the @record@ 'Hyper.Type.AHyperType' can be used to hold the unification variables mappings
 -- for each of the AST types.
 
 module Hyper.Class.Has

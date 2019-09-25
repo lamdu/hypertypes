@@ -50,7 +50,7 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 import           Prelude.Compat
 
-type family NomVarTypes (t :: Knot -> Type) :: Knot -> Type
+type family NomVarTypes (t :: AHyperType -> Type) :: AHyperType -> Type
 
 -- | A declaration of a nominal type.
 data NominalDecl typ k = NominalDecl
@@ -61,7 +61,7 @@ data NominalDecl typ k = NominalDecl
 -- | An instantiation of a nominal type
 data NominalInst nomId varTypes k = NominalInst
     { _nId :: nomId
-    , _nArgs :: Tree varTypes (QVarInstances (GetKnot k))
+    , _nArgs :: Tree varTypes (QVarInstances (GetHyperType k))
     } deriving Generic
 
 -- | Nominal data constructor.
@@ -78,15 +78,15 @@ data ToNom nomId term k = ToNom
 -- | Access the data in a nominally typed value.
 --
 -- Analogues to a getter of a Haskell `newtype`.
-newtype FromNom nomId (term :: Knot -> *) (k :: Knot) = FromNom nomId
+newtype FromNom nomId (term :: AHyperType -> *) (k :: AHyperType) = FromNom nomId
     deriving newtype (Eq, Ord, Binary, NFData)
     deriving stock (Show, Generic)
 
 -- | A nominal declaration loaded into scope in an inference monad.
 data LoadedNominalDecl typ v = LoadedNominalDecl
-    { _lnParams :: Tree (NomVarTypes typ) (QVarInstances (GetKnot v))
-    , _lnForalls :: Tree (NomVarTypes typ) (QVarInstances (GetKnot v))
-    , _lnType :: Tree (GTerm (GetKnot v)) typ
+    { _lnParams :: Tree (NomVarTypes typ) (QVarInstances (GetHyperType v))
+    , _lnForalls :: Tree (NomVarTypes typ) (QVarInstances (GetHyperType v))
+    , _lnType :: Tree (GTerm (GetHyperType v)) typ
     } deriving Generic
 
 makeLenses ''NominalDecl

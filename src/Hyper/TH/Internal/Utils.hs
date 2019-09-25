@@ -12,7 +12,7 @@ module Hyper.TH.Internal.Utils
     ) where
 
 import           Hyper.Class.Nodes
-import           Hyper.Type (Knot(..), GetKnot, type (#))
+import           Hyper.Type (AHyperType(..), GetHyperType, type (#))
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
@@ -34,7 +34,7 @@ import           Prelude.Compat
 data TypeInfo = TypeInfo
     { tiName :: Name
     , tiInstance :: Type
-    , tiKnotParam :: Name
+    , tiHyperParam :: Name
     , tiConstructors :: [(Name, [Either Type CtrTypePattern])]
     } deriving Show
 
@@ -64,7 +64,7 @@ makeTypeInfo name =
         pure TypeInfo
             { tiName = name
             , tiInstance = dst
-            , tiKnotParam = var
+            , tiHyperParam = var
             , tiConstructors = cons
             }
 
@@ -74,7 +74,7 @@ parts info =
     [] -> fail "expected type constructor which requires arguments"
     xs ->
         case last xs of
-        KindedTV var (ConT knot) | knot == ''Knot -> pure (res, var)
+        KindedTV var (ConT knot) | knot == ''AHyperType -> pure (res, var)
         PlainTV var -> pure (res, var)
         _ -> fail "expected last argument to be a knot variable"
         where
@@ -110,8 +110,8 @@ unapply =
         go as x = (x, as)
 
 matchType :: Name -> Type -> Q (Either Type CtrTypePattern)
-matchType var (ConT getKnot `AppT` VarT k `AppT` (PromotedT knot `AppT` x))
-    | getKnot == ''GetKnot && knot == 'Knot && k == var =
+matchType var (ConT get `AppT` VarT k `AppT` (PromotedT knot `AppT` x))
+    | get == ''GetHyperType && knot == 'AHyperType && k == var =
         Node x & Right & pure
 matchType var (InfixT (VarT k) hash x)
     | hash == ''(#) && k == var =
@@ -120,7 +120,7 @@ matchType var (ConT hash `AppT` VarT k `AppT` x)
     | hash == ''(#) && k == var =
         Node x & Right & pure
 matchType var (x `AppT` VarT k)
-    | k == var && x /= ConT ''GetKnot =
+    | k == var && x /= ConT ''GetHyperType =
         case unapply x of
         (ConT c, args) ->
             do
@@ -143,7 +143,7 @@ matchType var (x `AppT` VarT k)
                 FlatEmbed TypeInfo
                 { tiName = c
                 , tiInstance = x
-                , tiKnotParam = var
+                , tiHyperParam = var
                 , tiConstructors = cons
                 }
             else
