@@ -31,7 +31,7 @@ uniType :: HPlain Typ -> Tree Pure (Scheme Types Typ)
 uniType typ =
     _Pure # Scheme
     { _sForAlls = Types (QVars mempty) (QVars mempty)
-    , _sTyp = typ ^. kPlain
+    , _sTyp = typ ^. hPlain
     }
 
 forAll ::

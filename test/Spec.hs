@@ -275,7 +275,7 @@ testB :: HPlain LangB -> String -> IO Bool
 testB p expect =
     testCommon expr expect pureRes stRes
     where
-        expr = p ^. kPlain
+        expr = p ^. hPlain
         pureRes = execPureInferB (withEnv id (inferExpr expr))
         stRes = runST (execSTInferB (withEnv Lens._1 (inferExpr expr)))
 
@@ -294,7 +294,7 @@ testAlphaEq x y expect =
         stRes = Lens.has Lens._Right (runST (execSTInferB (alphaEq x y)))
 
 intsRecord :: [Name] -> Tree Pure (Scheme Types Typ)
-intsRecord = uniType . (kPlain #) . record . map (, _Pure # TInt)
+intsRecord = uniType . (hPlain #) . record . map (, _Pure # TInt)
 
 intToInt :: Tree Pure (Scheme Types Typ)
 intToInt = TFunP TIntP TIntP & uniType

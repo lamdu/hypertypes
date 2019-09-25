@@ -91,7 +91,7 @@ diffP ::
     HPlain h -> HPlain h -> Tree DiffP h
 diffP x y =
     withDict (recursively (Proxy @(HasHPlain h))) $
-    diffPH (x ^. kPlain) (y ^. kPlain)
+    diffPH (x ^. hPlain) (y ^. hPlain)
 
 diffPH ::
     forall h.
@@ -102,11 +102,11 @@ diffPH x y =
     withDict (recursively (Proxy @(HasHPlain h))) $
     withDict (recurse (Proxy @(RTraversable h))) $
     case zipMatch (x ^. _Pure) (y ^. _Pure) of
-    Nothing -> DifferentP (kPlain # x) (kPlain # y)
+    Nothing -> DifferentP (hPlain # x) (hPlain # y)
     Just match ->
         case traverseH_ (const ((() <$) . (^? _CommonSubTreeP))) sub of
         Nothing -> CommonBodyP sub
-        Just () -> _CommonSubTreeP . kPlain # x
+        Just () -> _CommonSubTreeP . hPlain # x
         where
             sub =
                 mapH

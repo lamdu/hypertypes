@@ -271,7 +271,7 @@ Explanations for the above:
 To write examples and tests more consicely, the `HasHPlain` class, along with a `TemplateHaskell` generator for it, exists:
 
 ```Haskell
-> let e = kPlain # verboseExpr
+> let e = hPlain # verboseExpr
 
 > e
 LamP "x" IntTP (VarP "x")

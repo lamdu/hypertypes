@@ -33,7 +33,7 @@ makeHasHPlainForType info =
     InstanceD Nothing [] (ConT ''HasHPlain `AppT` tiInstance info)
     [ DataInstD [] ''HPlain [tiInstance info] Nothing (ctrs <&> (^. Lens._1))
         [DerivClause (Just StockStrategy) [ConT ''Eq, ConT ''Ord, ConT ''Show]]
-    , FunD 'kPlain
+    , FunD 'hPlain
         [ Clause []
             ( NormalB
                 (InfixE
@@ -122,8 +122,8 @@ makeCtr param (cName, cFields) =
         forPat (InContainer t p) =
             NodeField FieldInfo
             { fieldPlainType = t `AppT` patType p
-            , fieldToPlain = AppE (VarE 'fmap `AppE` InfixE (Just (VarE 'kPlain)) (VarE '(#)) Nothing)
-            , fieldFromPlain = AppE (VarE 'fmap `AppE` InfixE Nothing (VarE '(^.)) (Just (VarE 'kPlain)))
+            , fieldToPlain = AppE (VarE 'fmap `AppE` InfixE (Just (VarE 'hPlain)) (VarE '(#)) Nothing)
+            , fieldFromPlain = AppE (VarE 'fmap `AppE` InfixE Nothing (VarE '(^.)) (Just (VarE 'hPlain)))
             } & pure
             where
                 patType (Node x) = ConT ''HPlain `AppT` x
@@ -157,8 +157,8 @@ makeCtr param (cName, cFields) =
                 gen =
                     NodeField FieldInfo
                     { fieldPlainType = ConT ''HPlain `AppT` t
-                    , fieldToPlain = InfixE (Just (VarE 'kPlain)) (VarE '(#)) . Just
-                    , fieldFromPlain = \f -> InfixE (Just f) (VarE '(^.)) (Just (VarE 'kPlain))
+                    , fieldToPlain = InfixE (Just (VarE 'hPlain)) (VarE '(#)) . Just
+                    , fieldFromPlain = \f -> InfixE (Just f) (VarE '(^.)) (Just (VarE 'hPlain))
                     } & pure
         normalizeType (ConT g `AppT` VarT v)
             | g == ''GetHyperType && v == param = ConT ''Pure

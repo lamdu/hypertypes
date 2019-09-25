@@ -20,4 +20,4 @@ class Show (HPlain h) => HasHPlain h where
     -- | Plain form data type
     data HPlain h
     -- | An 'Control.Lens.Iso' between the plain form and 'Hyper.Type.HyperType' form
-    kPlain :: Iso' (HPlain h) (Tree Pure h)
+    hPlain :: Iso' (HPlain h) (Tree Pure h)
