@@ -37,7 +37,7 @@ class VarType var expr where
 -- | Parameterized by term AST and not by its type AST
 -- (which currently is its only part used),
 -- for future evaluation/complilation support.
-newtype Var v (expr :: AHyperType -> *) (k :: AHyperType) = Var v
+newtype Var v (expr :: HyperType) (k :: AHyperType) = Var v
     deriving newtype (Eq, Ord, Binary, NFData)
     deriving stock (Show, Generic)
 

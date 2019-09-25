@@ -77,7 +77,7 @@ data ToNom nomId term k = ToNom
 -- | Access the data in a nominally typed value.
 --
 -- Analogues to a getter of a Haskell `newtype`.
-newtype FromNom nomId (term :: AHyperType -> *) (k :: AHyperType) = FromNom nomId
+newtype FromNom nomId (term :: HyperType) (k :: AHyperType) = FromNom nomId
     deriving newtype (Eq, Ord, Binary, NFData)
     deriving stock (Show, Generic)
 

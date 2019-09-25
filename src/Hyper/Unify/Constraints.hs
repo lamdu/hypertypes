@@ -12,7 +12,7 @@ module Hyper.Unify.Constraints
 import Algebra.PartialOrd (PartialOrd(..))
 import Control.Lens (makeLenses)
 import Data.Kind (Type)
-import Hyper (Tree, HyperType, AHyperType, GetHyperType)
+import Hyper (Tree, HyperType, GetHyperType)
 
 import Prelude.Compat
 
@@ -41,7 +41,7 @@ class Monad m => MonadScopeConstraints c m where
 -- A dependency of `Hyper.Class.Unify.Unify`
 class
     TypeConstraints (TypeConstraintsOf ast) =>
-    HasTypeConstraints (ast :: AHyperType -> *) where
+    HasTypeConstraints (ast :: HyperType) where
 
     type family TypeConstraintsOf (ast :: HyperType) :: Type
 

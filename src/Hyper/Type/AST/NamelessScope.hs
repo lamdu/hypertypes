@@ -36,7 +36,7 @@ data EmptyScope
 newtype Scope expr a k = Scope (k # expr (Maybe a))
 Lens.makePrisms ''Scope
 
-newtype ScopeVar (expr :: * -> AHyperType -> *) a (k :: AHyperType) = ScopeVar a
+newtype ScopeVar (expr :: * -> HyperType) a (k :: AHyperType) = ScopeVar a
 Lens.makePrisms ''ScopeVar
 
 makeZipMatch ''Scope
