@@ -15,7 +15,7 @@ import           Hyper.Class.Nodes
 import           Hyper.Class.Pointed
 import           Hyper.Class.Traversable
 import           Hyper.Class.ZipMatch (ZipMatch(..))
-import           Hyper.Knot
+import           Hyper.Type
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators

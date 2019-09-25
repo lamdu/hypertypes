@@ -1,5 +1,5 @@
 -- | A class for plain `Data.Kind.Type` equivalents
--- for the simple forms of 'Hyper.Knot.Knot's.
+-- for the simple forms of 'Hyper.Type.Knot's.
 --
 -- Useful for succinct tests, examples, and for debug prints.
 
@@ -9,8 +9,8 @@ module Hyper.Class.HasPlain
     ( KHasPlain(..)
     ) where
 
-import Hyper.Knot (Tree)
-import Hyper.Knot.Pure (Pure)
+import Hyper.Type (Tree)
+import Hyper.Type.Pure (Pure)
 import Control.Lens (Iso')
 
 import Prelude.Compat

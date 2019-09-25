@@ -11,8 +11,8 @@ import           Hyper.Class.Foldable
 import           Hyper.Class.Functor (KFunctor(..))
 import           Hyper.Class.Nodes (KNodes(..))
 import           Hyper.Class.Traversable (KTraversable, traverseK)
-import           Hyper.Knot (Tree)
-import           Hyper.Knot.Pure (Pure(..), _Pure)
+import           Hyper.Type (Tree)
+import           Hyper.Type.Pure (Pure(..), _Pure)
 import           Control.Lens.Operators
 import           Control.Monad (guard)
 import           Data.Functor.Const (Const(..))
@@ -81,7 +81,7 @@ zipMatch_ ::
     Tree k p -> Tree k q -> Maybe (f ())
 zipMatch_ f x y = zipMatch x y <&> traverseK_ (\w (Pair a b) -> f w a b)
 
--- | A variant of 'zipMatch_' for 'Hyper.Knot.Knot's with a single node type (avoids using @RankNTypes@)
+-- | A variant of 'zipMatch_' for 'Hyper.Type.Knot's with a single node type (avoids using @RankNTypes@)
 {-# INLINE zipMatch1_ #-}
 zipMatch1_ ::
     (Applicative f, ZipMatch k, KFoldable k, KNodesConstraint k ((~) n)) =>

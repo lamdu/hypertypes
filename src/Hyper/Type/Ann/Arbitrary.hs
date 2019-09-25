@@ -3,13 +3,13 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS -fno-warn-orphans #-} -- Arbitrary instances
 
-module Hyper.Knot.Ann.Arbitrary
+module Hyper.Type.Ann.Arbitrary
     ( ArbitraryWithContext(..)
     , ArbitraryWithContextOf
     ) where
 
-import Hyper.Knot (type (#))
-import Hyper.Knot.Ann (Ann(..))
+import Hyper.Type (type (#))
+import Hyper.Type.Ann (Ann(..))
 import Test.QuickCheck (Arbitrary(..), Gen)
 
 import Prelude.Compat hiding (any)

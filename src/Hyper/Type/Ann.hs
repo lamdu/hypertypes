@@ -1,8 +1,8 @@
--- | A 'Hyper.Knot.Knot' which adds an annotation to every node in a tree
+-- | A 'Hyper.Type.Knot' which adds an annotation to every node in a tree
 
 {-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances, FlexibleContexts #-}
 
-module Hyper.Knot.Ann
+module Hyper.Type.Ann
     ( Ann(..), ann, val, KWitness(..)
     , annotations
     , strip, addAnnotations
@@ -13,8 +13,8 @@ import           Hyper.Class.Monad
 import           Hyper.Class.Nodes (KNodes(..), (#>))
 import           Hyper.Class.Traversable (traverseK)
 import           Hyper.Combinator.Compose
-import           Hyper.Knot (Tree, type (#))
-import           Hyper.Knot.Pure (Pure(..))
+import           Hyper.Type (Tree, type (#))
+import           Hyper.Type.Pure (Pure(..))
 import           Hyper.Recurse
 import           Hyper.TH.Traversable (makeKTraversableApplyAndBases)
 import           Hyper.TH.ZipMatch (makeZipMatch)
@@ -30,7 +30,7 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 import           Prelude.Compat
 
--- | A 'Hyper.Knot.Knot' which adds an annotation to every node in a tree
+-- | A 'Hyper.Type.Knot' which adds an annotation to every node in a tree
 data Ann a k = Ann
     { _ann :: a
     , _val :: k # Ann a

@@ -1,7 +1,7 @@
 -- | Functors as Knots
 {-# LANGUAGE TemplateHaskell, FlexibleInstances, FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances, GeneralizedNewtypeDeriving #-}
-module Hyper.Knot.Functor
+module Hyper.Type.Functor
     ( F(..), _F, KWitness(..)
     ) where
 
@@ -10,7 +10,7 @@ import Hyper.Class.Functor (KFunctor(..))
 import Hyper.Class.Monad (KMonad(..))
 import Hyper.Class.Recursive (RNodes, Recursively(..), RTraversable)
 import Hyper.Combinator.Compose
-import Hyper.Knot (Tree, type (#))
+import Hyper.Type (Tree, type (#))
 import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.TH.Traversable (makeKTraversableApplyAndBases)
 import Control.Lens (Iso, iso, mapped)
@@ -21,7 +21,7 @@ import GHC.Generics (Generic)
 
 import Prelude.Compat
 
--- | Lift a 'Functor', or type constructor of kind @Type -> Type@ to a 'Hyper.Knot.Knot'.
+-- | Lift a 'Functor', or type constructor of kind @Type -> Type@ to a 'Hyper.Type.Knot'.
 --
 -- * @F Maybe@ can be used to encode structures with missing values
 -- * @F (Either Text)@ can be used to encode results of parsing where structure components
@@ -32,7 +32,7 @@ newtype F f k = F (f (k # F f))
 -- | An 'Iso' from 'F' to its content.
 --
 -- Using `_F` rather than the 'F' data constructor is recommended,
--- because it helps the type inference know that @F f@ is parameterized with a 'Hyper.Knot.Knot'.
+-- because it helps the type inference know that @F f@ is parameterized with a 'Hyper.Type.Knot'.
 _F ::
     Iso (Tree (F f0) k0)
         (Tree (F f1) k1)

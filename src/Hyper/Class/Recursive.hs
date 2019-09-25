@@ -12,8 +12,8 @@ import Hyper.Class.Foldable
 import Hyper.Class.Functor (KFunctor(..))
 import Hyper.Class.Nodes (KNodes(..))
 import Hyper.Class.Traversable
-import Hyper.Knot
-import Hyper.Knot.Pure (Pure(..))
+import Hyper.Type
+import Hyper.Type.Pure (Pure(..))
 import Data.Constraint (Dict(..), withDict)
 import Data.Functor.Const (Const(..))
 import Data.Kind (Constraint, Type)

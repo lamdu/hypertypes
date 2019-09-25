@@ -8,7 +8,7 @@ module Hyper.Unify.QuantifiedVar
     , OrdQVar
     ) where
 
-import Hyper.Knot (Knot)
+import Hyper.Type (Knot)
 import Control.Lens (Prism')
 import Data.Kind (Type)
 

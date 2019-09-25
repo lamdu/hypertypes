@@ -2,7 +2,7 @@ module Hyper.Term.NamelessScope.InvDeBruijn
     ( InvDeBruijnIndex(..), inverseDeBruijnIndex, scope, scopeVar
     ) where
 
-import Hyper.Knot (Tree)
+import Hyper.Type (Tree)
 import Hyper.Term.NamelessScope (DeBruijnIndex(..), EmptyScope, Scope(..), ScopeVar(..))
 import Control.Lens (Prism', iso)
 import Control.Lens.Operators

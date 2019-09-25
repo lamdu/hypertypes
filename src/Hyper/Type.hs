@@ -4,7 +4,7 @@
 --
 -- For more information see the [README](https://github.com/lamdu/hypertypes/blob/master/README.md).
 
-module Hyper.Knot
+module Hyper.Type
     ( Knot(..), GetKnot
     , Tree, type (#)
     , asTree

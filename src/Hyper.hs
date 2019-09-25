@@ -12,9 +12,9 @@ import Hyper.Class.Nodes as X (KNodes(..), (#>), (#*#))
 import Hyper.Class.Pointed as X (KPointed(..))
 import Hyper.Class.Traversable as X (KTraversable(..), traverseK, traverseK1)
 import Hyper.Combinator.ANode as X
-import Hyper.Knot as X
-import Hyper.Knot.Ann as X (Ann(..), ann, annotations)
-import Hyper.Knot.Pure as X
+import Hyper.Type as X
+import Hyper.Type.Ann as X (Ann(..), ann, annotations)
+import Hyper.Type.Pure as X
 import Hyper.Class.Recursive as X (Recursively(..), RNodes, RTraversable)
 import Hyper.TH.Apply as X (makeKApplicativeBases)
 import Hyper.TH.HasPlain as X (makeKHasPlain)

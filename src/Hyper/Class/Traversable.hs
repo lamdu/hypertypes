@@ -9,7 +9,7 @@ module Hyper.Class.Traversable
 import Hyper.Class.Foldable (KFoldable)
 import Hyper.Class.Functor (KFunctor(..), mappedK1)
 import Hyper.Class.Nodes (KNodes(..))
-import Hyper.Knot (Knot, Tree)
+import Hyper.Type (Knot, Tree)
 import Control.Lens (Traversal, Iso, iso)
 import Control.Lens.Operators
 import Data.Functor.Const (Const(..))

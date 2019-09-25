@@ -12,7 +12,7 @@ module Hyper.TH.Internal.Utils
     ) where
 
 import           Hyper.Class.Nodes
-import           Hyper.Knot (Knot(..), GetKnot, type (#))
+import           Hyper.Type (Knot(..), GetKnot, type (#))
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))

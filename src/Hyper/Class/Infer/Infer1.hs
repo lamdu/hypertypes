@@ -5,7 +5,7 @@ module Hyper.Class.Infer.Infer1
     ) where
 
 import Hyper.Infer
-import Hyper.Knot (Knot)
+import Hyper.Type (Knot)
 import Data.Constraint (Constraint, Dict, (:-))
 import Data.Kind (Type)
 import Data.Proxy (Proxy(..))

@@ -1,4 +1,4 @@
--- | A variant of 'Control.Monad.Monad' for 'Hyper.Knot.Knot's
+-- | A variant of 'Control.Monad.Monad' for 'Hyper.Type.Knot's
 
 {-# LANGUAGE FlexibleContexts #-}
 
@@ -11,15 +11,15 @@ import Hyper.Class.Functor (KFunctor(..))
 import Hyper.Class.Nodes (KNodes(..), (#>))
 import Hyper.Class.Recursive (Recursively(..))
 import Hyper.Combinator.Compose (Compose, _Compose)
-import Hyper.Knot (Tree)
-import Hyper.Knot.Pure (Pure(..), _Pure)
+import Hyper.Type (Tree)
+import Hyper.Type.Pure (Pure(..), _Pure)
 import Control.Lens.Operators
 import Data.Constraint (withDict)
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 
--- | A variant of 'Control.Monad.Monad' for 'Hyper.Knot.Knot's
+-- | A variant of 'Control.Monad.Monad' for 'Hyper.Type.Knot's
 class KApplicative k => KMonad k where
     joinK ::
         Recursively KFunctor p =>
@@ -36,7 +36,7 @@ instance KMonad Pure where
             p :: Tree (Compose Pure Pure) p -> Proxy (KFunctor p)
             p _ = Proxy
 
--- | A variant of 'Control.Monad.(>>=)' for 'Hyper.Knot.Knot's
+-- | A variant of 'Control.Monad.(>>=)' for 'Hyper.Type.Knot's
 bindK ::
     (KMonad k, Recursively KFunctor p) =>
     Tree k p ->

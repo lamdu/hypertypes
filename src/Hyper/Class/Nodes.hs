@@ -7,7 +7,7 @@ module Hyper.Class.Nodes
     , (#>), (#*#)
     ) where
 
-import Hyper.Knot (Knot)
+import Hyper.Type (Knot)
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
 import Data.Functor.Sum.PolyKinds (Sum(..))

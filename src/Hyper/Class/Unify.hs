@@ -10,7 +10,7 @@ module Hyper.Class.Unify
 import Hyper.Class.Nodes (KNodes(..))
 import Hyper.Class.Recursive
 import Hyper.Class.ZipMatch (ZipMatch)
-import Hyper.Knot (Tree, Knot)
+import Hyper.Type (Tree, Knot)
 import Hyper.Unify.Error (UnifyError(..))
 import Hyper.Unify.Constraints
 import Hyper.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify)

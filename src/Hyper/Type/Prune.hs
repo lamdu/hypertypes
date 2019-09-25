@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances, ScopedTypeVariables, TemplateHaskell, FlexibleInstances #-}
 
-module Hyper.Knot.Prune
+module Hyper.Type.Prune
     ( Prune(..)
     ) where
 

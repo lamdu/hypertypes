@@ -16,8 +16,8 @@ import Hyper.Class.Functor (KFunctor(..))
 import Hyper.Class.Nodes (KNodes(..), (#>), (#*#))
 import Hyper.Class.Recursive
 import Hyper.Class.Traversable
-import Hyper.Knot
-import Hyper.Knot.Pure (Pure(..), _Pure, (&#))
+import Hyper.Type
+import Hyper.Type.Pure (Pure(..), _Pure, (&#))
 import Control.Lens.Operators
 import Data.Constraint (withDict)
 import Data.Functor.Const (Const(..))
@@ -30,7 +30,7 @@ data KRecWitness k n where
     KRecSelf :: KRecWitness k k
     KRecSub :: KWitness k c -> KRecWitness c n -> KRecWitness k n
 
--- | Monadically convert a 'Pure' 'Tree' to a different 'Hyper.Knot.Knot' from the bottom up
+-- | Monadically convert a 'Pure' 'Tree' to a different 'Hyper.Type.Knot' from the bottom up
 {-# INLINE wrapM #-}
 wrapM ::
     forall m k w.
@@ -44,7 +44,7 @@ wrapM f x =
     & traverseK (Proxy @RTraversable #*# \w -> wrapM (f . KRecSub w))
     >>= f KRecSelf
 
--- | Monadically unwrap a 'Tree' from the top down, replacing its 'Hyper.Knot.Knot' with 'Pure'
+-- | Monadically unwrap a 'Tree' from the top down, replacing its 'Hyper.Type.Knot' with 'Pure'
 {-# INLINE unwrapM #-}
 unwrapM ::
     forall m k w.
@@ -58,7 +58,7 @@ unwrapM f x =
     >>= traverseK (Proxy @RTraversable #*# \w -> unwrapM (f . KRecSub w))
     <&> (_Pure #)
 
--- | Wrap a 'Pure' 'Tree' to a different 'Hyper.Knot.Knot' from the bottom up
+-- | Wrap a 'Pure' 'Tree' to a different 'Hyper.Type.Knot' from the bottom up
 {-# INLINE wrap #-}
 wrap ::
     forall k w.
@@ -72,7 +72,7 @@ wrap f x =
     & mapK (Proxy @(Recursively KFunctor) #*# \w -> wrap (f . KRecSub w))
     & f KRecSelf
 
--- | Unwrap a 'Tree' from the top down, replacing its 'Hyper.Knot.Knot' with 'Pure'
+-- | Unwrap a 'Tree' from the top down, replacing its 'Hyper.Type.Knot' with 'Pure'
 {-# INLINE unwrap #-}
 unwrap ::
     forall k w.

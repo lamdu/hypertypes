@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e2b842bed40a9d8354901caddcf161b18750a95080926d6d5d879e318851a72d
+-- hash: 2233d585e5f97c4eed4fba3423b7adbcc1c0a74f1bce922dab692572e97d1b73
 
 name:           hypertypes
 version:        0.1.0.1
@@ -56,12 +56,6 @@ library
       Hyper.Infer.Blame
       Hyper.Infer.ScopeLevel
       Hyper.Infer.Term
-      Hyper.Knot
-      Hyper.Knot.Ann
-      Hyper.Knot.Ann.Arbitrary
-      Hyper.Knot.Functor
-      Hyper.Knot.Prune
-      Hyper.Knot.Pure
       Hyper.Recurse
       Hyper.Term.App
       Hyper.Term.FuncType
@@ -85,6 +79,12 @@ library
       Hyper.TH.Pointed
       Hyper.TH.Traversable
       Hyper.TH.ZipMatch
+      Hyper.Type
+      Hyper.Type.Ann
+      Hyper.Type.Ann.Arbitrary
+      Hyper.Type.Functor
+      Hyper.Type.Prune
+      Hyper.Type.Pure
       Hyper.Unify
       Hyper.Unify.Apply
       Hyper.Unify.Binding

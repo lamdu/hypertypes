@@ -7,8 +7,8 @@ module Hyper.TH.HasPlain
     ) where
 
 import           Hyper.Class.HasPlain
-import           Hyper.Knot (GetKnot)
-import           Hyper.Knot.Pure (Pure, _Pure)
+import           Hyper.Type (GetKnot)
+import           Hyper.Type.Pure (Pure, _Pure)
 import           Hyper.TH.Internal.Utils
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators

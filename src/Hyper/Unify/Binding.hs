@@ -10,7 +10,7 @@ module Hyper.Unify.Binding
     ) where
 
 import           Hyper.Class.Unify (BindingDict(..))
-import           Hyper.Knot (Tree, Knot)
+import           Hyper.Type (Tree, Knot)
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Unify.Term
 import           Control.Lens (ALens')
