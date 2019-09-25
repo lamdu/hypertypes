@@ -29,15 +29,15 @@ infer ::
     forall m t a.
     Infer m t =>
     Tree (Ann a) t ->
-    m (Tree (ITerm a (UVarOf m)) t)
+    m (Tree (Inferred a (UVarOf m)) t)
 infer (Ann a x) =
     withDict (inferContext (Proxy @m) (Proxy @t)) $
     inferBody (mapK (Proxy @(Infer m) #> inferH) x)
-    <&> (\(xI, t) -> ITerm a t xI)
+    <&> (\(xI, t) -> Inferred a t xI)
 
 {-# INLINE inferH #-}
 inferH ::
     Infer m t =>
     Tree (Ann a) t ->
-    Tree (InferChild m (ITerm a (UVarOf m))) t
+    Tree (InferChild m (Inferred a (UVarOf m))) t
 inferH c = infer c <&> (\i -> InferredChild i (i ^. iRes)) & InferChild

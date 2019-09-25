@@ -59,7 +59,7 @@ type instance InferOf (LangA k) = ANode Typ
 instance Recursively HFunctorInferOf (LangA k)
 instance Recursively HFoldableInferOf (LangA k)
 instance RTraversableInferOf (LangA k)
-instance (c Typ, c Row, Recursive c) => ITermVarsConstraint c (LangA k)
+instance (c Typ, c Row, Recursive c) => InferredVarsConstraint c (LangA k)
 
 instance HasInferredType (LangA k) where
     type TypeOf (LangA k) = Typ

@@ -151,7 +151,7 @@ inferExpr ::
     , Infer m t
     , RTraversable t
     , RTraversableInferOf t
-    , ITermVarsConstraint (Unify m) t
+    , InferredVarsConstraint (Unify m) t
     ) =>
     Tree Pure t ->
     m (Tree Pure (TypeOf t))

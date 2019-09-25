@@ -2,10 +2,10 @@
 {-# LANGUAGE UndecidableInstances, FlexibleInstances, DefaultSignatures #-}
 
 module Hyper.Infer.Result
-    ( ITerm(..), iVal, iRes, iAnn
-    , ITermVarsConstraint(..)
+    ( Inferred(..), iVal, iRes, iAnn
+    , InferredVarsConstraint(..)
     , iAnnotations
-    , iTermToAnn
+    , inferredToAnn
     ) where
 
 import Hyper
@@ -24,102 +24,102 @@ import GHC.Generics (Generic)
 import Prelude.Compat
 
 -- | A 'AHyperType' for an inferred term - the output of 'Hyper.Infer.infer'
-data ITerm a v e = ITerm
+data Inferred a v e = Inferred
     { _iAnn :: a
         -- ^ The node's original annotation as passed to 'Hyper.Infer.infer'
     , _iRes :: !(Tree (InferOf (GetHyperType e)) v)
         -- ^ The node's inference result (such as an inferred type)
-    , _iVal :: e # ITerm a v
+    , _iVal :: e # Inferred a v
         -- ^ The node's body and its inferred child nodes
     } deriving Generic
-makeLenses ''ITerm
-makeCommonInstances [''ITerm]
+makeLenses ''Inferred
+makeCommonInstances [''Inferred]
 
-type ITermVarsConstraintContext c e =
+type InferredVarsConstraintContext c e =
     ( HNodes (InferOf e)
     , HNodesConstraint (InferOf e) c
     , HNodes e
-    , HNodesConstraint e (ITermVarsConstraint c)
+    , HNodesConstraint e (InferredVarsConstraint c)
     )
 
-class ITermVarsConstraint c e where
-    iTermVarsConstraintCtx ::
+class InferredVarsConstraint c e where
+    inferredVarsConstraintCtx ::
         Proxy c -> Proxy e ->
-        Dict (ITermVarsConstraintContext c e)
-    default iTermVarsConstraintCtx ::
-        ITermVarsConstraintContext c e =>
+        Dict (InferredVarsConstraintContext c e)
+    default inferredVarsConstraintCtx ::
+        InferredVarsConstraintContext c e =>
         Proxy c -> Proxy e ->
-        Dict (ITermVarsConstraintContext c e)
-    iTermVarsConstraintCtx _ _ = Dict
+        Dict (InferredVarsConstraintContext c e)
+    inferredVarsConstraintCtx _ _ = Dict
 
-instance Recursive (ITermVarsConstraint c) where
+instance Recursive (InferredVarsConstraint c) where
     recurse p =
         withDict (r p) Dict
         where
             r ::
                 forall k.
-                ITermVarsConstraint c k =>
-                Proxy (ITermVarsConstraint c k) ->
-                Dict (ITermVarsConstraintContext c k)
-            r _ = iTermVarsConstraintCtx (Proxy @c) (Proxy @k)
+                InferredVarsConstraint c k =>
+                Proxy (InferredVarsConstraint c k) ->
+                Dict (InferredVarsConstraintContext c k)
+            r _ = inferredVarsConstraintCtx (Proxy @c) (Proxy @k)
 
-instance HNodes (Flip (ITerm a) e) where
-    type HNodesConstraint (Flip (ITerm a) e) c = ITermVarsConstraint c e
-    data HWitness (Flip (ITerm a) e) n where
-        E_Flip_ITerm_InferOf_e ::
+instance HNodes (Flip (Inferred a) e) where
+    type HNodesConstraint (Flip (Inferred a) e) c = InferredVarsConstraint c e
+    data HWitness (Flip (Inferred a) e) n where
+        E_Flip_Inferred_InferOf_e ::
             HWitness (InferOf e) n ->
-            HWitness (Flip (ITerm a) e) n
-        E_Flip_ITerm_e ::
+            HWitness (Flip (Inferred a) e) n
+        E_Flip_Inferred_e ::
             HWitness e f ->
-            HWitness (Flip (ITerm a) f) n ->
-            HWitness (Flip (ITerm a) e) n
+            HWitness (Flip (Inferred a) f) n ->
+            HWitness (Flip (Inferred a) e) n
     {-# INLINE kLiftConstraint #-}
     kLiftConstraint w p =
-        withDict (iTermVarsConstraintCtx p (Proxy @e)) $
+        withDict (inferredVarsConstraintCtx p (Proxy @e)) $
         case w of
-        E_Flip_ITerm_InferOf_e w0 -> kLiftConstraint w0 p
-        E_Flip_ITerm_e w0 w1 ->
+        E_Flip_Inferred_InferOf_e w0 -> kLiftConstraint w0 p
+        E_Flip_Inferred_e w0 w1 ->
             kLiftConstraint w0 (p0 p) (kLiftConstraint w1 p)
             where
-                p0 :: Proxy c -> Proxy (ITermVarsConstraint c)
+                p0 :: Proxy c -> Proxy (InferredVarsConstraint c)
                 p0 _ = Proxy
 
-instance (Recursively HFunctor e, Recursively HFunctorInferOf e) => HFunctor (Flip (ITerm a) e) where
+instance (Recursively HFunctor e, Recursively HFunctorInferOf e) => HFunctor (Flip (Inferred a) e) where
     {-# INLINE mapK #-}
     mapK f =
         withDict (recursively (Proxy @(HFunctor e))) $
         withDict (recursively (Proxy @(HFunctorInferOf e))) $
         _Flip %~
-        \(ITerm pl r x) ->
-        ITerm pl
-        (mapK (f . E_Flip_ITerm_InferOf_e) r)
+        \(Inferred pl r x) ->
+        Inferred pl
+        (mapK (f . E_Flip_Inferred_InferOf_e) r)
         ( mapK
             ( Proxy @(Recursively HFunctor) #*# Proxy @(Recursively HFunctorInferOf) #*#
-                \w -> from _Flip %~ mapK (f . E_Flip_ITerm_e w)
+                \w -> from _Flip %~ mapK (f . E_Flip_Inferred_e w)
             ) x
         )
 
-instance (Recursively HFoldable e, Recursively HFoldableInferOf e) => HFoldable (Flip (ITerm a) e) where
+instance (Recursively HFoldable e, Recursively HFoldableInferOf e) => HFoldable (Flip (Inferred a) e) where
     {-# INLINE foldMapK #-}
-    foldMapK f (MkFlip (ITerm _ r x)) =
+    foldMapK f (MkFlip (Inferred _ r x)) =
         withDict (recursively (Proxy @(HFoldable e))) $
         withDict (recursively (Proxy @(HFoldableInferOf e))) $
-        foldMapK (f . E_Flip_ITerm_InferOf_e) r <>
+        foldMapK (f . E_Flip_Inferred_InferOf_e) r <>
         foldMapK
         ( Proxy @(Recursively HFoldable) #*# Proxy @(Recursively HFoldableInferOf) #*#
-            \w -> foldMapK (f . E_Flip_ITerm_e w) . (_Flip #)
+            \w -> foldMapK (f . E_Flip_Inferred_e w) . (_Flip #)
         ) x
 
 instance
     (RTraversable e, RTraversableInferOf e) =>
-    HTraversable (Flip (ITerm a) e) where
+    HTraversable (Flip (Inferred a) e) where
     {-# INLINE sequenceK #-}
     sequenceK =
         withDict (recurse (Proxy @(RTraversable e))) $
         withDict (recurse (Proxy @(RTraversableInferOf e))) $
         _Flip
-        ( \(ITerm pl r x) ->
-            ITerm pl
+        ( \(Inferred pl r x) ->
+            Inferred pl
             <$> traverseK (const runContainedK) r
             <*> traverseK
                 ( Proxy @RTraversable #*# Proxy @RTraversableInferOf #>
@@ -132,17 +132,17 @@ iAnnotations ::
     forall e a b v.
     RTraversable e =>
     Traversal
-    (Tree (ITerm a v) e)
-    (Tree (ITerm b v) e)
+    (Tree (Inferred a v) e)
+    (Tree (Inferred b v) e)
     a b
-iAnnotations f (ITerm pl r x) =
+iAnnotations f (Inferred pl r x) =
     withDict (recurse (Proxy @(RTraversable e))) $
-    ITerm
+    Inferred
     <$> f pl
     <*> pure r
     <*> traverseK (Proxy @RTraversable #> iAnnotations f) x
 
-iTermToAnn ::
+inferredToAnn ::
     forall a v e r.
     Recursively HFunctor e =>
     ( forall n.
@@ -151,12 +151,12 @@ iTermToAnn ::
         Tree (InferOf n) v ->
         r
     ) ->
-    Tree (ITerm a v) e ->
+    Tree (Inferred a v) e ->
     Tree (Ann r) e
-iTermToAnn f (ITerm pl r x) =
+inferredToAnn f (Inferred pl r x) =
     withDict (recursively (Proxy @(HFunctor e))) $
     mapK
     ( Proxy @(Recursively HFunctor) #*#
-        \w -> iTermToAnn (f . HRecSub w)
+        \w -> inferredToAnn (f . HRecSub w)
     ) x
     & Ann (f HRecSelf pl r)

@@ -67,8 +67,8 @@ instance (HTraversable (Scheme v t), RTraversable t) => RTraversable (Scheme v t
 instance (RTraversable t, RTraversableInferOf t) => RTraversableInferOf (Scheme v t)
 
 instance
-    (RNodes t, c t, Recursive c, ITermVarsConstraint c t) =>
-    ITermVarsConstraint c (Scheme v t)
+    (RNodes t, c t, Recursive c, InferredVarsConstraint c t) =>
+    InferredVarsConstraint c (Scheme v t)
 
 instance
     ( Ord (QVar (GetHyperType typ))

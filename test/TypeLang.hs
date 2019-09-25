@@ -182,8 +182,8 @@ instance RTraversable Row
 instance RTraversableInferOf Typ
 instance RTraversableInferOf Row
 
-instance (c Typ, c Row, Recursive c) => ITermVarsConstraint c Typ
-instance (c Typ, c Row, Recursive c) => ITermVarsConstraint c Row
+instance (c Typ, c Row, Recursive c) => InferredVarsConstraint c Typ
+instance (c Typ, c Row, Recursive c) => InferredVarsConstraint c Row
 
 instance HasQuantifiedVar Typ where
     type QVar Typ = Name

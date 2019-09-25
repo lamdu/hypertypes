@@ -48,7 +48,7 @@ import Hyper.Class.Infer.InferOf
 import Hyper.Class.Traversable (ContainedK(..))
 import Hyper.Class.Unify (Unify, UVarOf)
 import Hyper.Type.Combinator.Flip
-import Hyper.Infer.Result (ITermVarsConstraint(..))
+import Hyper.Infer.Result (InferredVarsConstraint(..))
 import Hyper.Recurse
 import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.Unify.New (newUnbound)
@@ -182,7 +182,7 @@ makeLenses ''BTerm
 makeCommonInstances [''BTerm]
 
 instance HNodes (Flip (BTerm a) e) where
-    type HNodesConstraint (Flip (BTerm a) e) c = ITermVarsConstraint c e
+    type HNodesConstraint (Flip (BTerm a) e) c = InferredVarsConstraint c e
     data HWitness (Flip (BTerm a) e) n where
         E_Flip_BTerm_InferOf_e ::
             HWitness (InferOf e) n ->
@@ -193,13 +193,13 @@ instance HNodes (Flip (BTerm a) e) where
             HWitness (Flip (BTerm a) e) n
     {-# INLINE kLiftConstraint #-}
     kLiftConstraint w p =
-        withDict (iTermVarsConstraintCtx p (Proxy @e)) $
+        withDict (inferredVarsConstraintCtx p (Proxy @e)) $
         case w of
         E_Flip_BTerm_InferOf_e w0 -> kLiftConstraint w0 p
         E_Flip_BTerm_e w0 w1 ->
             kLiftConstraint w0 (p0 p) (kLiftConstraint w1 p)
             where
-                p0 :: Proxy c -> Proxy (ITermVarsConstraint c)
+                p0 :: Proxy c -> Proxy (InferredVarsConstraint c)
                 p0 _ = Proxy
 
 instance (Recursively HFunctor e, Recursively HFunctorInferOf e) => HFunctor (Flip (BTerm a) e) where
