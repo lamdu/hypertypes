@@ -113,9 +113,7 @@ instance
 
     inferBody (BApp x) = inferBody x <&> Lens._1 %~ BApp
     inferBody (BVar x) = inferBody x <&> Lens._1 %~ BVar
-    inferBody (BLam x) =
-        inferBody x
-        >>= \(b, t) -> TFun t & newTerm <&> (BLam b, ) . MkANode
+    inferBody (BLam x) = inferBody x <&> Lens._1 %~ BLam
     inferBody (BLet x) = inferBody x <&> Lens._1 %~ BLet
     inferBody (BLit x) = newTerm TInt <&> (BLit x, ) . MkANode
     inferBody (BToNom x) =

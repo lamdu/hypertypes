@@ -14,7 +14,7 @@ import           Hyper.Infer
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Type.AST.FuncType
 import           Hyper.Unify (Unify, UVarOf)
-import           Hyper.Unify.New (newUnbound)
+import           Hyper.Unify.New (newUnbound, newTerm)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
@@ -44,11 +44,12 @@ instance
         <+> Pretty.text "→" <+> pPrintPrec lvl 0 o
         & maybeParens (p > 0)
 
-type instance InferOf (Lam v t) = FuncType (TypeOf t)
+type instance InferOf (Lam v t) = ANode (TypeOf t)
 
 instance
     ( Infer m t
     , Unify m (TypeOf t)
+    , HasFuncType (TypeOf t)
     , HasInferredType t
     , LocalScopeType v (Tree (UVarOf m) (TypeOf t)) m
     ) =>
@@ -58,9 +59,8 @@ instance
     inferBody (Lam p r) =
         do
             varType <- newUnbound
-            inferChild r & localScopeType p varType
-                <&>
-                \(InferredChild rI rR) ->
-                ( Lam p rI
-                , FuncType varType (rR ^# inferredType (Proxy @t))
-                )
+            InferredChild rI rR <- inferChild r & localScopeType p varType
+            funcType # FuncType varType (rR ^# inferredType (Proxy @t))
+                & newTerm
+                <&> MkANode
+                <&> (Lam p rI,)
