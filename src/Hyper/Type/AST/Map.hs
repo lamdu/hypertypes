@@ -4,15 +4,15 @@ module Hyper.Type.AST.Map
     ( TermMap(..), _TermMap, HWitness(..)
     ) where
 
-import           Hyper
-import           Hyper.Class.ZipMatch (ZipMatch(..))
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Functor.Product.PolyKinds (Product(..))
 import           Data.Map (Map)
 import qualified Data.Map as Map
 import           GHC.Generics (Generic)
+import           Hyper
+import           Hyper.Class.ZipMatch (ZipMatch(..))
+import           Hyper.TH.Internal.Instances (makeCommonInstances)
 
 import           Prelude.Compat
 

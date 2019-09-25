@@ -2,11 +2,11 @@ module Hyper.Type.AST.NamelessScope.InvDeBruijn
     ( InvDeBruijnIndex(..), inverseDeBruijnIndex, scope, scopeVar
     ) where
 
-import Hyper.Type (Tree)
-import Hyper.Type.AST.NamelessScope (DeBruijnIndex(..), EmptyScope, Scope(..), ScopeVar(..))
 import Control.Lens (Prism', iso)
 import Control.Lens.Operators
 import Data.Proxy (Proxy(..))
+import Hyper.Type (Tree)
+import Hyper.Type.AST.NamelessScope (DeBruijnIndex(..), EmptyScope, Scope(..), ScopeVar(..))
 
 import Prelude.Compat
 

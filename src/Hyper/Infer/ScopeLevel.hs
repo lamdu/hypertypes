@@ -6,11 +6,11 @@ module Hyper.Infer.ScopeLevel
     ) where
 
 import           Algebra.PartialOrd (PartialOrd(..))
-import           Hyper.Unify.Constraints (TypeConstraints(..))
 import           Control.DeepSeq (NFData)
-import           Data.Binary (Binary)
 import           Control.Lens (makePrisms)
+import           Data.Binary (Binary)
 import           GHC.Generics (Generic)
+import           Hyper.Unify.Constraints (TypeConstraints(..))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 

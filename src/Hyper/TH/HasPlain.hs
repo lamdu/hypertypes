@@ -6,13 +6,13 @@ module Hyper.TH.HasPlain
     ( makeHasHPlain
     ) where
 
-import           Hyper.Class.HasPlain
-import           Hyper.Type (GetHyperType)
-import           Hyper.Type.Pure (Pure, _Pure)
-import           Hyper.TH.Internal.Utils
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import qualified Data.Map as Map
+import           Hyper.Class.HasPlain
+import           Hyper.TH.Internal.Utils
+import           Hyper.Type (GetHyperType)
+import           Hyper.Type.Pure (Pure, _Pure)
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
 

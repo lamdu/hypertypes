@@ -6,19 +6,19 @@ module Hyper.Type.AST.TypeSig
     ( TypeSig(..), tsType, tsTerm, HWitness(..)
     ) where
 
-import           Hyper
-import           Hyper.Type.Combinator.Flip (_Flip)
-import           Hyper.Infer
-import           Hyper.Type.AST.Scheme
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
-import           Hyper.Unify (Unify, unify)
-import           Hyper.Unify.Generalize (instantiateWith)
-import           Hyper.Unify.Term (UTerm(..))
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
 import           Data.Proxy (Proxy(..))
-import           Generics.Constraints (Constraints)
 import           GHC.Generics (Generic)
+import           Generics.Constraints (Constraints)
+import           Hyper
+import           Hyper.Infer
+import           Hyper.TH.Internal.Instances (makeCommonInstances)
+import           Hyper.Type.AST.Scheme
+import           Hyper.Type.Combinator.Flip (_Flip)
+import           Hyper.Unify (Unify, unify)
+import           Hyper.Unify.Generalize (instantiateWith)
+import           Hyper.Unify.Term (UTerm(..))
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)

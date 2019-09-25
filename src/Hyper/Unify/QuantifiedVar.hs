@@ -8,8 +8,8 @@ module Hyper.Unify.QuantifiedVar
     , OrdQVar
     ) where
 
-import Hyper.Type (HyperType)
 import Control.Lens (Prism')
+import Hyper.Type (HyperType)
 
 import Prelude.Compat
 

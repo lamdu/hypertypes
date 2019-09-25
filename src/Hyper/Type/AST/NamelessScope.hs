@@ -14,20 +14,20 @@ module Hyper.Type.AST.NamelessScope
     , ScopeTypes(..), _ScopeTypes, HasScopeTypes(..)
     ) where
 
+import           Control.Lens (Lens', Prism')
+import qualified Control.Lens as Lens
+import           Control.Lens.Operators
+import           Control.Monad.Reader (MonadReader, local)
+import           Data.Constraint
+import           Data.Proxy (Proxy(..))
+import           Data.Sequence (Seq)
+import qualified Data.Sequence as Sequence
 import           Hyper
 import           Hyper.Class.Infer.Infer1
 import           Hyper.Infer
 import           Hyper.Type.AST.FuncType
 import           Hyper.Unify (Unify(..), UVarOf)
 import           Hyper.Unify.New (newUnbound)
-import           Control.Lens (Lens', Prism')
-import qualified Control.Lens as Lens
-import           Control.Lens.Operators
-import           Control.Monad.Reader (MonadReader, local)
-import           Data.Constraint
-import           Data.Sequence (Seq)
-import qualified Data.Sequence as Sequence
-import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
 

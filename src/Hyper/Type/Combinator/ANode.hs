@@ -6,12 +6,12 @@ module Hyper.Type.Combinator.ANode
     ( ANode(..), _ANode
     ) where
 
-import Hyper.Class.Has (HasChild(..))
-import Hyper.Type (Tree, type (#))
-import Hyper.TH.Internal.Instances (makeCommonInstances)
-import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
 import Control.Lens (Iso, iso)
 import GHC.Generics (Generic)
+import Hyper.Class.Has (HasChild(..))
+import Hyper.TH.Internal.Instances (makeCommonInstances)
+import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
+import Hyper.Type (Tree, type (#))
 
 -- | @ANode c@ is a 'Hyper.Type.AHyperType' with a single child node of type @c@
 newtype ANode c k = MkANode (k # c)

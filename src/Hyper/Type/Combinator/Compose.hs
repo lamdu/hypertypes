@@ -8,6 +8,11 @@ module Hyper.Type.Combinator.Compose
     ( Compose(..), _Compose
     ) where
 
+import qualified Control.Lens as Lens
+import           Control.Lens.Operators
+import           Data.Functor.Product.PolyKinds (Product(..))
+import           Data.Proxy (Proxy(..))
+import           GHC.Generics (Generic)
 import           Hyper.Class.Apply
 import           Hyper.Class.Foldable
 import           Hyper.Class.Functor
@@ -15,13 +20,8 @@ import           Hyper.Class.Nodes
 import           Hyper.Class.Pointed
 import           Hyper.Class.Traversable
 import           Hyper.Class.ZipMatch (ZipMatch(..))
-import           Hyper.Type
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
-import qualified Control.Lens as Lens
-import           Control.Lens.Operators
-import           Data.Functor.Product.PolyKinds (Product(..))
-import           Data.Proxy (Proxy(..))
-import           GHC.Generics (Generic)
+import           Hyper.Type
 
 import           Prelude.Compat
 

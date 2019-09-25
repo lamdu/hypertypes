@@ -11,11 +11,11 @@ module Hyper.Unify.Term
     , UTermBody(..), uBody, uConstraints
     ) where
 
+import Control.Lens (makeLenses, makePrisms)
+import GHC.Generics (Generic)
 import Hyper
 import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.Unify.Constraints (TypeConstraintsOf)
-import Control.Lens (makeLenses, makePrisms)
-import GHC.Generics (Generic)
 
 import Prelude.Compat
 

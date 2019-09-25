@@ -8,23 +8,23 @@ module Hyper.Type.Ann
     , strip, addAnnotations
     ) where
 
-import           Hyper.Class.Functor (HFunctor(..))
-import           Hyper.Class.Monad
-import           Hyper.Class.Nodes (HNodes(..), (#>))
-import           Hyper.Class.Traversable (traverseK)
-import           Hyper.Type.Combinator.Compose
-import           Hyper.Type (Tree, type (#))
-import           Hyper.Type.Pure (Pure(..))
-import           Hyper.Recurse
-import           Hyper.TH.Traversable (makeHTraversableApplyAndBases)
-import           Hyper.TH.ZipMatch (makeZipMatch)
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Control.Lens (Traversal, makeLenses)
 import           Control.Lens.Operators
 import           Data.Constraint (withDict)
 import           Data.Proxy (Proxy(..))
-import           Generics.Constraints (Constraints)
 import           GHC.Generics (Generic)
+import           Generics.Constraints (Constraints)
+import           Hyper.Class.Functor (HFunctor(..))
+import           Hyper.Class.Monad
+import           Hyper.Class.Nodes (HNodes(..), (#>))
+import           Hyper.Class.Traversable (traverseK)
+import           Hyper.Recurse
+import           Hyper.TH.Internal.Instances (makeCommonInstances)
+import           Hyper.TH.Traversable (makeHTraversableApplyAndBases)
+import           Hyper.TH.ZipMatch (makeZipMatch)
+import           Hyper.Type (Tree, type (#))
+import           Hyper.Type.Combinator.Compose
+import           Hyper.Type.Pure (Pure(..))
 import qualified Text.PrettyPrint as PP
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 

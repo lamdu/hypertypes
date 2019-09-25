@@ -6,10 +6,10 @@ module Hyper.TH.Foldable
     ( makeHFoldable
     ) where
 
-import           Hyper.Class.Foldable
-import           Hyper.TH.Internal.Utils
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
+import           Hyper.Class.Foldable
+import           Hyper.TH.Internal.Utils
 import           Language.Haskell.TH
 
 import           Prelude.Compat

@@ -5,16 +5,16 @@ module Hyper.Type.AST.App
     , appChildren
     ) where
 
-import Hyper
-import Hyper.Infer
-import Hyper.Type.AST.FuncType
-import Hyper.TH.Internal.Instances (makeCommonInstances)
-import Hyper.Unify (Unify, unify)
-import Hyper.Unify.New (newTerm, newUnbound)
 import Control.Lens (Traversal, makeLenses)
 import Control.Lens.Operators
 import Data.Proxy (Proxy(..))
 import GHC.Generics (Generic)
+import Hyper
+import Hyper.Infer
+import Hyper.TH.Internal.Instances (makeCommonInstances)
+import Hyper.Type.AST.FuncType
+import Hyper.Unify (Unify, unify)
+import Hyper.Unify.New (newTerm, newUnbound)
 import Text.PrettyPrint ((<+>))
 import Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 

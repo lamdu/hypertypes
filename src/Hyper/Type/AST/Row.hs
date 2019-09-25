@@ -11,12 +11,6 @@ module Hyper.Type.AST.Row
     , rowElementInfer
     ) where
 
-import           Hyper
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
-import           Hyper.Unify
-import           Hyper.Unify.Lookup (semiPruneLookup)
-import           Hyper.Unify.New (newTerm, newUnbound)
-import           Hyper.Unify.Term (UTerm(..), _UTerm, uBody)
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Prism', Lens', makeLenses, contains)
 import qualified Control.Lens as Lens
@@ -27,8 +21,14 @@ import           Data.Foldable (sequenceA_)
 import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Data.Set (Set)
-import           Generics.Constraints (Constraints, makeDerivings, makeInstances)
 import           GHC.Generics (Generic)
+import           Generics.Constraints (Constraints, makeDerivings, makeInstances)
+import           Hyper
+import           Hyper.TH.Internal.Instances (makeCommonInstances)
+import           Hyper.Unify
+import           Hyper.Unify.Lookup (semiPruneLookup)
+import           Hyper.Unify.New (newTerm, newUnbound)
+import           Hyper.Unify.Term (UTerm(..), _UTerm, uBody)
 import           Text.Show.Combinators ((@|), showCon)
 
 import           Prelude.Compat

@@ -7,12 +7,12 @@ module Hyper.Class.Nodes
     , (#>), (#*#)
     ) where
 
-import Hyper.Type (HyperType)
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
 import Data.Functor.Sum.PolyKinds (Sum(..))
 import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy(..))
+import Hyper.Type (HyperType)
 
 -- | 'HNodes' allows lifting a constraint to the child nodes of a 'AHyperType'
 -- by using the 'HNodesConstraint' type family.

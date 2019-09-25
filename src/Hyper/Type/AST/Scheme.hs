@@ -13,20 +13,6 @@ module Hyper.Type.AST.Scheme
     , makeQVarInstances
     ) where
 
-import           Hyper
-import           Hyper.Class.Has (HasChild(..))
-import           Hyper.Class.Recursive
-import           Hyper.Type.Combinator.ANode (ANode)
-import           Hyper.Type.Combinator.Flip (Flip(..))
-import           Hyper.Infer
-import           Hyper.Recurse
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
-import           Hyper.Unify
-import           Hyper.Unify.Lookup (semiPruneLookup)
-import           Hyper.Unify.New (newTerm)
-import           Hyper.Unify.Generalize
-import           Hyper.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify(..), OrdQVar)
-import           Hyper.Unify.Term (UTerm(..), uBody)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
@@ -36,6 +22,20 @@ import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
+import           Hyper
+import           Hyper.Class.Has (HasChild(..))
+import           Hyper.Class.Recursive
+import           Hyper.Infer
+import           Hyper.Recurse
+import           Hyper.TH.Internal.Instances (makeCommonInstances)
+import           Hyper.Type.Combinator.ANode (ANode)
+import           Hyper.Type.Combinator.Flip (Flip(..))
+import           Hyper.Unify
+import           Hyper.Unify.Generalize
+import           Hyper.Unify.Lookup (semiPruneLookup)
+import           Hyper.Unify.New (newTerm)
+import           Hyper.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify(..), OrdQVar)
+import           Hyper.Unify.Term (UTerm(..), uBody)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)

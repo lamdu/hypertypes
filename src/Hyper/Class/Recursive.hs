@@ -8,16 +8,16 @@ module Hyper.Class.Recursive
     , RNodes, RTraversable
     ) where
 
+import Data.Constraint (Dict(..), withDict)
+import Data.Functor.Const (Const(..))
+import Data.Kind (Constraint)
+import Data.Proxy (Proxy(..))
 import Hyper.Class.Foldable
 import Hyper.Class.Functor (HFunctor(..))
 import Hyper.Class.Nodes (HNodes(..))
 import Hyper.Class.Traversable
 import Hyper.Type
 import Hyper.Type.Pure (Pure(..))
-import Data.Constraint (Dict(..), withDict)
-import Data.Functor.Const (Const(..))
-import Data.Kind (Constraint)
-import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 

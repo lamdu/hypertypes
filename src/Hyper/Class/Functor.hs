@@ -5,13 +5,13 @@ module Hyper.Class.Functor
     , mappedK1
     ) where
 
-import Hyper.Class.Nodes
-import Hyper.Type (Tree)
 import Control.Lens (Setter, sets)
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
 import Data.Functor.Sum.PolyKinds (Sum(..))
 import Data.Proxy (Proxy(..))
+import Hyper.Class.Nodes
+import Hyper.Type (Tree)
 
 import Prelude.Compat
 

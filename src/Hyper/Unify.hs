@@ -14,6 +14,10 @@ module Hyper.Unify
     ) where
 
 import Algebra.PartialOrd (PartialOrd(..))
+import Control.Lens.Operators
+import Data.Constraint (withDict)
+import Data.Maybe (fromMaybe)
+import Data.Proxy (Proxy(..))
 import Hyper
 import Hyper.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import Hyper.Class.ZipMatch (zipMatchA)
@@ -22,10 +26,6 @@ import Hyper.Unify.Error (UnifyError(..))
 import Hyper.Unify.Lookup (semiPruneLookup)
 import Hyper.Unify.Occurs (occursError)
 import Hyper.Unify.Term (UTerm(..), UTermBody(..), uConstraints, uBody)
-import Control.Lens.Operators
-import Data.Constraint (withDict)
-import Data.Maybe (fromMaybe)
-import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 

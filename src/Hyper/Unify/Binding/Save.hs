@@ -6,12 +6,6 @@ module Hyper.Unify.Binding.Save
     ( save
     ) where
 
-import           Hyper
-import           Hyper.Class.Has (HasChild(..))
-import           Hyper.Class.Unify (Unify(..), UVarOf, BindingDict(..))
-import           Hyper.Recurse
-import           Hyper.Unify.Binding (Binding, _Binding, UVar(..))
-import           Hyper.Unify.Term (UTerm(..), uBody)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
@@ -19,6 +13,12 @@ import           Control.Monad.Trans.State (StateT(..))
 import           Data.Constraint (withDict)
 import           Data.Proxy (Proxy(..))
 import qualified Data.Sequence as Sequence
+import           Hyper
+import           Hyper.Class.Has (HasChild(..))
+import           Hyper.Class.Unify (Unify(..), UVarOf, BindingDict(..))
+import           Hyper.Recurse
+import           Hyper.Unify.Binding (Binding, _Binding, UVar(..))
+import           Hyper.Unify.Term (UTerm(..), uBody)
 
 import           Prelude.Compat
 

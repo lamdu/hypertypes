@@ -4,19 +4,19 @@ module Hyper.Type.AST.TypedLam
     ( TypedLam(..), tlIn, tlInType, tlOut
     ) where
 
-import           Hyper
-import           Hyper.Class.Has (HasChild(..))
-import           Hyper.Infer
-import           Hyper.Type.AST.FuncType (FuncType(..))
-import           Hyper.Unify (Unify, UVarOf)
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
 import           Data.Proxy (Proxy(..))
-import           Generics.Constraints (Constraints)
 import           GHC.Generics (Generic)
-import qualified Text.PrettyPrint as Pretty
+import           Generics.Constraints (Constraints)
+import           Hyper
+import           Hyper.Class.Has (HasChild(..))
+import           Hyper.Infer
+import           Hyper.TH.Internal.Instances (makeCommonInstances)
+import           Hyper.Type.AST.FuncType (FuncType(..))
+import           Hyper.Unify (Unify, UVarOf)
 import           Text.PrettyPrint ((<+>))
+import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 import           Prelude.Compat

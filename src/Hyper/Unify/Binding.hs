@@ -9,10 +9,6 @@ module Hyper.Unify.Binding
     , bindingDict
     ) where
 
-import           Hyper.Class.Unify (BindingDict(..))
-import           Hyper.Type (Tree, AHyperType)
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
-import           Hyper.Unify.Term
 import           Control.Lens (ALens')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
@@ -20,6 +16,10 @@ import           Control.Monad.State (MonadState(..))
 import           Data.Sequence
 import qualified Data.Sequence as Sequence
 import           GHC.Generics (Generic)
+import           Hyper.Class.Unify (BindingDict(..))
+import           Hyper.TH.Internal.Instances (makeCommonInstances)
+import           Hyper.Type (Tree, AHyperType)
+import           Hyper.Unify.Term
 
 import           Prelude.Compat
 

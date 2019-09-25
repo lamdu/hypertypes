@@ -4,12 +4,12 @@ module Hyper.Unify.New
     ( newUnbound, newTerm, unfreeze
     ) where
 
+import Data.Proxy (Proxy(..))
 import Hyper (Tree, Pure)
 import Hyper.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import Hyper.Recurse (wrapM, (#>>))
 import Hyper.Unify.Constraints (MonadScopeConstraints(..))
 import Hyper.Unify.Term (UTerm(..), UTermBody(..))
-import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 

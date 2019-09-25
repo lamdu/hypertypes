@@ -6,18 +6,18 @@ module Hyper.Unify.Occurs
       occursError
     ) where
 
-import Hyper
-import Hyper.Class.Unify (Unify(..), UVarOf, BindingDict(..))
-import Hyper.Unify.Error (UnifyError(..))
-import Hyper.Unify.Lookup (semiPruneLookup)
-import Hyper.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify(..))
-import Hyper.Unify.Term (UTerm(..), UTermBody(..), uBody)
 import Control.Lens.Operators
 import Control.Monad (unless, when)
 import Control.Monad.Trans.Class (MonadTrans(..))
 import Control.Monad.Trans.State (execStateT, get, put)
 import Data.Constraint (withDict)
 import Data.Proxy (Proxy(..))
+import Hyper
+import Hyper.Class.Unify (Unify(..), UVarOf, BindingDict(..))
+import Hyper.Unify.Error (UnifyError(..))
+import Hyper.Unify.Lookup (semiPruneLookup)
+import Hyper.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify(..))
+import Hyper.Unify.Term (UTerm(..), UTermBody(..), uBody)
 
 import Prelude.Compat
 

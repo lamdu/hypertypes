@@ -14,17 +14,6 @@ module Hyper.Unify.Generalize
     ) where
 
 import           Algebra.PartialOrd (PartialOrd(..))
-import           Hyper
-import           Hyper.Class.Unify (Unify(..), UVarOf, BindingDict(..))
-import           Hyper.Class.Traversable
-import           Hyper.Type.Combinator.Flip
-import           Hyper.Recurse
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
-import           Hyper.Unify.Constraints
-import           Hyper.Unify.Lookup (semiPruneLookup)
-import           Hyper.Unify.New
-import           Hyper.Unify.Occurs (occursError)
-import           Hyper.Unify.Term (UTerm(..), uBody)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
@@ -33,6 +22,17 @@ import           Data.Constraint (withDict)
 import           Data.Monoid (All(..))
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
+import           Hyper
+import           Hyper.Class.Traversable
+import           Hyper.Class.Unify (Unify(..), UVarOf, BindingDict(..))
+import           Hyper.Recurse
+import           Hyper.TH.Internal.Instances (makeCommonInstances)
+import           Hyper.Type.Combinator.Flip
+import           Hyper.Unify.Constraints
+import           Hyper.Unify.Lookup (semiPruneLookup)
+import           Hyper.Unify.New
+import           Hyper.Unify.Occurs (occursError)
+import           Hyper.Unify.Term (UTerm(..), uBody)
 
 import           Prelude.Compat
 

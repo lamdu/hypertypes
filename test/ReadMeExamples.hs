@@ -2,11 +2,11 @@
 
 module ReadMeExamples where
 
+import Data.Text
+import GHC.Generics (Generic)
+import Generics.Constraints (makeDerivings)
 import Hyper
 import Hyper.Diff
-import Data.Text
-import Generics.Constraints (makeDerivings)
-import GHC.Generics (Generic)
 
 import Prelude
 

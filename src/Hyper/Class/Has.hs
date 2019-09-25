@@ -9,8 +9,8 @@ module Hyper.Class.Has
     ( HasChild(..)
     ) where
 
-import Hyper.Type (Tree)
 import Control.Lens (Lens')
+import Hyper.Type (Tree)
 
 -- | @HasChild record child@ represents that @record@ has exactly one child node of @child@
 class HasChild record child where

@@ -8,17 +8,17 @@ module Hyper.TH.Apply
     , makeHApplicativeBases
     ) where
 
-import           Hyper.Class.Apply
-import           Hyper.TH.Functor (makeHFunctor)
-import           Hyper.TH.Internal.Utils
-import           Hyper.TH.Nodes (makeHNodes)
-import           Hyper.TH.Pointed (makeHPointed)
-import           Control.Applicative (liftA2)
-import           Control.Lens.Operators
-import           Data.Functor.Product.PolyKinds (Product(..))
-import           Language.Haskell.TH
+import Control.Applicative (liftA2)
+import Control.Lens.Operators
+import Data.Functor.Product.PolyKinds (Product(..))
+import Hyper.Class.Apply
+import Hyper.TH.Functor (makeHFunctor)
+import Hyper.TH.Internal.Utils
+import Hyper.TH.Nodes (makeHNodes)
+import Hyper.TH.Pointed (makeHPointed)
+import Language.Haskell.TH
 
-import           Prelude.Compat
+import Prelude.Compat
 
 -- | Generate instances of 'HApply',
 -- 'Hyper.Class.Functor.HFunctor', 'Hyper.Class.Pointed.HPointed' and 'Hyper.Class.Nodes.HNodes',

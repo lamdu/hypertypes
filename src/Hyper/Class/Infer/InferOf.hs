@@ -6,16 +6,16 @@ module Hyper.Class.Infer.InferOf
     , HFunctorInferOf, HFoldableInferOf, RTraversableInferOf
     ) where
 
-import Hyper.Class.Nodes (HNodes(..))
-import Hyper.Class.Foldable (HFoldable)
-import Hyper.Class.Functor (HFunctor)
-import Hyper.Class.Traversable (HTraversable)
-import Hyper.Class.Infer (InferOf)
-import Hyper.Class.Recursive (Recursive(..), Recursively)
-import Hyper.Type (HyperType, Tree)
 import Control.Lens (ALens', Lens')
 import Data.Constraint (Dict(..))
 import Data.Proxy (Proxy(..))
+import Hyper.Class.Foldable (HFoldable)
+import Hyper.Class.Functor (HFunctor)
+import Hyper.Class.Infer (InferOf)
+import Hyper.Class.Nodes (HNodes(..))
+import Hyper.Class.Recursive (Recursive(..), Recursively)
+import Hyper.Class.Traversable (HTraversable)
+import Hyper.Type (HyperType, Tree)
 
 import Prelude.Compat
 

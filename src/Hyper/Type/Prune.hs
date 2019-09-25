@@ -4,18 +4,18 @@ module Hyper.Type.Prune
     ( Prune(..)
     ) where
 
-import           Hyper
-import           Hyper.Class.Traversable
-import           Hyper.Class.Unify (Unify)
-import           Hyper.Type.Combinator.Compose (Compose(..))
-import           Hyper.Infer
-import           Hyper.Unify.New (newUnbound)
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Constraint (Dict(..), withDict)
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
+import           Hyper
+import           Hyper.Class.Traversable
+import           Hyper.Class.Unify (Unify)
+import           Hyper.Infer
+import           Hyper.TH.Internal.Instances (makeCommonInstances)
+import           Hyper.Type.Combinator.Compose (Compose(..))
+import           Hyper.Unify.New (newUnbound)
 
 import           Prelude.Compat
 

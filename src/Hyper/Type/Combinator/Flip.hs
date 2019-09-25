@@ -4,8 +4,8 @@ module Hyper.Type.Combinator.Flip
     ( Flip(..), _Flip
     ) where
 
-import Hyper.Type (Tree, GetHyperType)
 import Control.Lens (Iso, iso)
+import Hyper.Type (Tree, GetHyperType)
 
 -- | Flip the order of the last two type parameters of a 'Hyper.Type.AHyperType'.
 --

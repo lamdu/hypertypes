@@ -10,16 +10,16 @@ module Hyper.Infer
       inferH
     ) where
 
+import Control.Lens.Operators
+import Data.Constraint (withDict)
+import Data.Proxy (Proxy(..))
 import Hyper
 import Hyper.Class.Infer
 import Hyper.Class.Infer.Env
 import Hyper.Class.Infer.InferOf
-import Hyper.Infer.ScopeLevel
 import Hyper.Infer.Result
+import Hyper.Infer.ScopeLevel
 import Hyper.Unify (UVarOf)
-import Control.Lens.Operators
-import Data.Constraint (withDict)
-import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 

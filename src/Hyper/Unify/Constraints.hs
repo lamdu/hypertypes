@@ -10,9 +10,9 @@ module Hyper.Unify.Constraints
     ) where
 
 import Algebra.PartialOrd (PartialOrd(..))
-import Hyper (Tree, HyperType, AHyperType, GetHyperType)
 import Control.Lens (makeLenses)
 import Data.Kind (Type)
+import Hyper (Tree, HyperType, AHyperType, GetHyperType)
 
 import Prelude.Compat
 

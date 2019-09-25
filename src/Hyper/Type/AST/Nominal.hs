@@ -15,22 +15,6 @@ module Hyper.Type.AST.Nominal
     , LoadedNominalDecl, loadNominalDecl
     ) where
 
-import           Hyper
-import           Hyper.Class.Has (HasChild(..))
-import           Hyper.Class.Traversable (ContainedK(..))
-import           Hyper.Class.ZipMatch (ZipMatch(..))
-import           Hyper.Type.Combinator.Flip (_Flip)
-import           Hyper.Infer
-import           Hyper.Recurse
-import           Hyper.Type.AST.FuncType (FuncType(..))
-import           Hyper.Type.AST.Map (TermMap(..), _TermMap)
-import           Hyper.Type.AST.Scheme
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
-import           Hyper.Unify
-import           Hyper.Unify.Generalize (GTerm(..), _GMono, instantiateWith, instantiateForAll)
-import           Hyper.Unify.New (newTerm)
-import           Hyper.Unify.QuantifiedVar (HasQuantifiedVar(..), OrdQVar)
-import           Hyper.Unify.Term (UTerm(..))
 import           Control.Applicative (Alternative(..))
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Prism', makeLenses, makePrisms)
@@ -39,10 +23,26 @@ import           Control.Lens.Operators
 import           Control.Monad.Trans.Writer (execWriterT)
 import           Data.Binary (Binary)
 import           Data.Foldable (traverse_)
-import           Data.Proxy (Proxy(..))
 import qualified Data.Map as Map
-import           Generics.Constraints (Constraints)
+import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
+import           Generics.Constraints (Constraints)
+import           Hyper
+import           Hyper.Class.Has (HasChild(..))
+import           Hyper.Class.Traversable (ContainedK(..))
+import           Hyper.Class.ZipMatch (ZipMatch(..))
+import           Hyper.Infer
+import           Hyper.Recurse
+import           Hyper.TH.Internal.Instances (makeCommonInstances)
+import           Hyper.Type.AST.FuncType (FuncType(..))
+import           Hyper.Type.AST.Map (TermMap(..), _TermMap)
+import           Hyper.Type.AST.Scheme
+import           Hyper.Type.Combinator.Flip (_Flip)
+import           Hyper.Unify
+import           Hyper.Unify.Generalize (GTerm(..), _GMono, instantiateWith, instantiateForAll)
+import           Hyper.Unify.New (newTerm)
+import           Hyper.Unify.QuantifiedVar (HasQuantifiedVar(..), OrdQVar)
+import           Hyper.Unify.Term (UTerm(..))
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)

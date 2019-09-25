@@ -11,8 +11,6 @@ module Hyper.TH.Internal.Utils
     , consPat, simplifyContext, childrenTypes
     ) where
 
-import           Hyper.Class.Nodes
-import           Hyper.Type (AHyperType(..), GetHyperType, type (#))
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
@@ -24,8 +22,10 @@ import qualified Data.Map as Map
 import           Data.Maybe (fromMaybe)
 import           Data.Set (Set)
 import qualified Data.Set as Set
-import           Generic.Data (Generically(..))
 import           GHC.Generics (Generic)
+import           Generic.Data (Generically(..))
+import           Hyper.Class.Nodes
+import           Hyper.Type (AHyperType(..), GetHyperType, type (#))
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
 

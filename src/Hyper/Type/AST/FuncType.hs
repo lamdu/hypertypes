@@ -5,13 +5,13 @@ module Hyper.Type.AST.FuncType
     , HasFuncType(..)
     ) where
 
-import           Hyper
 import           Control.DeepSeq (NFData)
 import           Control.Lens (Prism', makeLenses)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
-import           Generics.Constraints (makeDerivings, makeInstances)
 import           GHC.Generics (Generic)
+import           Generics.Constraints (makeDerivings, makeInstances)
+import           Hyper
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)

@@ -6,13 +6,13 @@ module Hyper.TH.ZipMatch
     ( makeZipMatch
     ) where
 
-import           Hyper.Class.ZipMatch (ZipMatch(..))
-import           Hyper.TH.Internal.Utils
-import           Control.Lens.Operators
-import           Data.Functor.Product.PolyKinds (Product(..))
-import           Language.Haskell.TH
+import Control.Lens.Operators
+import Data.Functor.Product.PolyKinds (Product(..))
+import Hyper.Class.ZipMatch (ZipMatch(..))
+import Hyper.TH.Internal.Utils
+import Language.Haskell.TH
 
-import           Prelude.Compat
+import Prelude.Compat
 
 -- | Generate a 'ZipMatch' instance
 makeZipMatch :: Name -> DecsQ

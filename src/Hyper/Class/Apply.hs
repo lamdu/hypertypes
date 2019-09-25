@@ -7,12 +7,12 @@ module Hyper.Class.Apply
     , liftH2
     ) where
 
+import Data.Functor.Const (Const(..))
+import Data.Functor.Product.PolyKinds (Product(..))
 import Hyper.Class.Functor (HFunctor(..))
 import Hyper.Class.Nodes (HNodes(..))
 import Hyper.Class.Pointed (HPointed)
 import Hyper.Type (Tree)
-import Data.Functor.Const (Const(..))
-import Data.Functor.Product.PolyKinds (Product(..))
 
 import Prelude.Compat
 

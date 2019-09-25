@@ -6,12 +6,12 @@ module Hyper.TH.Pointed
     ( makeHPointed
     ) where
 
-import           Hyper.Class.Pointed
-import           Hyper.TH.Internal.Utils
-import           Control.Lens.Operators
-import           Language.Haskell.TH
+import Control.Lens.Operators
+import Hyper.Class.Pointed
+import Hyper.TH.Internal.Utils
+import Language.Haskell.TH
 
-import           Prelude.Compat
+import Prelude.Compat
 
 -- | Generate a 'HPointed' instance
 makeHPointed :: Name -> DecsQ

@@ -6,13 +6,13 @@ module Hyper.Class.Foldable
     , traverseK_, traverseK1_
     ) where
 
-import Hyper.Class.Nodes (HNodes(..), HWitness(..), (#>))
-import Hyper.Type (Tree)
 import Data.Foldable (sequenceA_)
 import Data.Functor.Const (Const(..))
-import Data.Proxy (Proxy(..))
 import Data.Functor.Product.PolyKinds (Product(..))
 import Data.Functor.Sum.PolyKinds (Sum(..))
+import Data.Proxy (Proxy(..))
+import Hyper.Class.Nodes (HNodes(..), HWitness(..), (#>))
+import Hyper.Type (Tree)
 
 import Prelude.Compat
 

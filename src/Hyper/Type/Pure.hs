@@ -10,13 +10,13 @@ module Hyper.Type.Pure
     , (&#)
     ) where
 
-import Hyper.Class.Nodes (HNodes(..))
-import Hyper.Type (Tree, type (#))
-import Hyper.TH.Internal.Instances (makeCommonInstances)
-import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
 import Control.Lens (Iso, iso)
 import Control.Lens.Operators
 import GHC.Generics (Generic)
+import Hyper.Class.Nodes (HNodes(..))
+import Hyper.TH.Internal.Instances (makeCommonInstances)
+import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
+import Hyper.Type (Tree, type (#))
 import Text.PrettyPrint.HughesPJClass (Pretty(..))
 
 -- | A 'Hyper.Type.AHyperType' to express the simplest plain form of a nested higher-kinded data structure

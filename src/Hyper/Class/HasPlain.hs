@@ -9,9 +9,9 @@ module Hyper.Class.HasPlain
     ( HasHPlain(..)
     ) where
 
+import Control.Lens (Iso')
 import Hyper.Type (Tree)
 import Hyper.Type.Pure (Pure)
-import Control.Lens (Iso')
 
 import Prelude.Compat
 

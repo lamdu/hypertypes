@@ -7,18 +7,18 @@ module Hyper.Class.Unify
     , BindingDict(..)
     ) where
 
+import Control.Lens.Operators
+import Data.Constraint (Dict(..))
+import Data.Kind (Type)
+import Data.Proxy (Proxy(..))
 import Hyper.Class.Nodes (HNodes(..))
 import Hyper.Class.Recursive
 import Hyper.Class.ZipMatch (ZipMatch)
 import Hyper.Type (Tree, HyperType)
-import Hyper.Unify.Error (UnifyError(..))
 import Hyper.Unify.Constraints
+import Hyper.Unify.Error (UnifyError(..))
 import Hyper.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify)
 import Hyper.Unify.Term (UTerm, UTermBody, uBody)
-import Control.Lens.Operators
-import Data.Constraint (Dict(..))
-import Data.Proxy (Proxy(..))
-import Data.Kind (Type)
 
 import Prelude.Compat
 

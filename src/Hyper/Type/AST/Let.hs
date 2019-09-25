@@ -4,16 +4,16 @@ module Hyper.Type.AST.Let
     ( Let(..), letVar, letEquals, letIn, HWitness(..)
     ) where
 
-import           Hyper
-import           Hyper.Class.Unify (Unify, UVarOf)
-import           Hyper.Infer
-import           Hyper.Unify.Generalize (GTerm, generalize)
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
 import           Data.Proxy (Proxy(..))
-import           Generics.Constraints (Constraints)
 import           GHC.Generics (Generic)
+import           Generics.Constraints (Constraints)
+import           Hyper
+import           Hyper.Class.Unify (Unify, UVarOf)
+import           Hyper.Infer
+import           Hyper.TH.Internal.Instances (makeCommonInstances)
+import           Hyper.Unify.Generalize (GTerm, generalize)
 import           Text.PrettyPrint (($+$), (<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)

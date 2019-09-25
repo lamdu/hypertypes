@@ -6,15 +6,15 @@ module Hyper.Class.Traversable
     , traverseK, traverseK1
     ) where
 
-import Hyper.Class.Foldable (HFoldable)
-import Hyper.Class.Functor (HFunctor(..), mappedK1)
-import Hyper.Class.Nodes (HNodes(..))
-import Hyper.Type (AHyperType, Tree)
 import Control.Lens (Traversal, Iso, iso)
 import Control.Lens.Operators
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
 import Data.Functor.Sum.PolyKinds (Sum(..))
+import Hyper.Class.Foldable (HFoldable)
+import Hyper.Class.Functor (HFunctor(..), mappedK1)
+import Hyper.Class.Nodes (HNodes(..))
+import Hyper.Type (AHyperType, Tree)
 
 import Prelude.Compat
 

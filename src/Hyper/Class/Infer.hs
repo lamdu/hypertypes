@@ -7,15 +7,15 @@ module Hyper.Class.Infer
     , InferredChild(..), inType, inRep
     ) where
 
-import           Hyper
-import           Hyper.Class.Unify
-import           Hyper.Recurse
 import           Control.Lens (makeLenses, makePrisms)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Constraint (Dict(..), withDict)
 import           Data.Functor.Sum.PolyKinds (Sum(..))
 import           Data.Proxy (Proxy(..))
+import           Hyper
+import           Hyper.Class.Unify
+import           Hyper.Recurse
 
 import           Prelude.Compat
 

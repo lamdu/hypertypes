@@ -3,6 +3,19 @@
 
 module TypeLang where
 
+import           Algebra.PartialOrd
+import           Control.Applicative
+import           Control.Lens (ALens')
+import qualified Control.Lens as Lens
+import           Control.Lens.Operators
+import           Control.Monad.Reader (MonadReader)
+import           Control.Monad.ST.Class (MonadST(..))
+import           Data.STRef
+import           Data.Set (Set)
+import           Data.String (IsString)
+import           GHC.Generics (Generic)
+import           Generic.Data
+import           Generics.Constraints (Constraints, makeDerivings)
 import           Hyper
 import           Hyper.Class.Has
 import           Hyper.Class.Unify
@@ -17,19 +30,6 @@ import           Hyper.Unify
 import           Hyper.Unify.Binding
 import           Hyper.Unify.QuantifiedVar
 import           Hyper.Unify.Term
-import           Algebra.PartialOrd
-import           Control.Applicative
-import           Control.Lens (ALens')
-import qualified Control.Lens as Lens
-import           Control.Lens.Operators
-import           Control.Monad.Reader (MonadReader)
-import           Control.Monad.ST.Class (MonadST(..))
-import           Data.STRef
-import           Data.Set (Set)
-import           Data.String (IsString)
-import           Generic.Data
-import           Generics.Constraints (Constraints, makeDerivings)
-import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)

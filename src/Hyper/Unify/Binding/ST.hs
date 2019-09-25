@@ -7,12 +7,12 @@ module Hyper.Unify.Binding.ST
     , stBinding
     ) where
 
-import           Hyper.Class.Unify (BindingDict(..))
-import           Hyper.Unify.Term (UTerm(..))
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.ST.Class (MonadST(..))
 import           Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
+import           Hyper.Class.Unify (BindingDict(..))
+import           Hyper.Unify.Term (UTerm(..))
 
 import           Prelude.Compat
 

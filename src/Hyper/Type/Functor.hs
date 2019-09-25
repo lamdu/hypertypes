@@ -5,19 +5,19 @@ module Hyper.Type.Functor
     ( F(..), _F, HWitness(..)
     ) where
 
-import Hyper.Class.Nodes (HNodes(..), (#>))
-import Hyper.Class.Functor (HFunctor(..))
-import Hyper.Class.Monad (HMonad(..))
-import Hyper.Class.Recursive (RNodes, Recursively(..), RTraversable)
-import Hyper.Type.Combinator.Compose
-import Hyper.Type (Tree, type (#))
-import Hyper.TH.Internal.Instances (makeCommonInstances)
-import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
 import Control.Lens (Iso, iso, mapped)
 import Control.Lens.Operators
 import Data.Constraint (withDict)
 import Data.Proxy (Proxy(..))
 import GHC.Generics (Generic)
+import Hyper.Class.Functor (HFunctor(..))
+import Hyper.Class.Monad (HMonad(..))
+import Hyper.Class.Nodes (HNodes(..), (#>))
+import Hyper.Class.Recursive (RNodes, Recursively(..), RTraversable)
+import Hyper.TH.Internal.Instances (makeCommonInstances)
+import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
+import Hyper.Type (Tree, type (#))
+import Hyper.Type.Combinator.Compose
 
 import Prelude.Compat
 

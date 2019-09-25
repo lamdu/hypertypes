@@ -6,16 +6,16 @@ module Hyper.Class.Monad
     ( HMonad(..), bindK
     ) where
 
+import Control.Lens.Operators
+import Data.Constraint (withDict)
+import Data.Proxy (Proxy(..))
 import Hyper.Class.Apply (HApplicative)
 import Hyper.Class.Functor (HFunctor(..))
 import Hyper.Class.Nodes (HNodes(..), (#>))
 import Hyper.Class.Recursive (Recursively(..))
-import Hyper.Type.Combinator.Compose (Compose, _Compose)
 import Hyper.Type (Tree)
+import Hyper.Type.Combinator.Compose (Compose, _Compose)
 import Hyper.Type.Pure (Pure(..), _Pure)
-import Control.Lens.Operators
-import Data.Constraint (withDict)
-import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 

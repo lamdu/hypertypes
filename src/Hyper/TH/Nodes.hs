@@ -6,11 +6,11 @@ module Hyper.TH.Nodes
     ( makeHNodes
     ) where
 
-import           Hyper.Class.Nodes
-import           Hyper.TH.Internal.Utils
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import qualified Data.Set as Set
+import           Hyper.Class.Nodes
+import           Hyper.TH.Internal.Utils
 import           Language.Haskell.TH
 
 import           Prelude.Compat

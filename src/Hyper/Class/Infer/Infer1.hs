@@ -4,11 +4,11 @@ module Hyper.Class.Infer.Infer1
     ( HasTypeOf1(..), HasInferOf1(..), Infer1(..)
     ) where
 
-import Hyper.Infer
-import Hyper.Type (HyperType)
 import Data.Constraint (Constraint, Dict, (:-))
 import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
+import Hyper.Infer
+import Hyper.Type (HyperType)
 
 class HasTypeOf1 t where
     type family TypeOf1 t :: HyperType

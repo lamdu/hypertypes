@@ -7,19 +7,19 @@ module Hyper.Class.ZipMatch
     , zipMatch_, zipMatch1_
     ) where
 
-import           Hyper.Class.Foldable
-import           Hyper.Class.Functor (HFunctor(..))
-import           Hyper.Class.Nodes (HNodes(..))
-import           Hyper.Class.Traversable (HTraversable, traverseK)
-import           Hyper.Type (Tree)
-import           Hyper.Type.Pure (Pure(..), _Pure)
-import           Control.Lens.Operators
-import           Control.Monad (guard)
-import           Data.Functor.Const (Const(..))
-import           Data.Functor.Product.PolyKinds (Product(..))
-import           Data.Functor.Sum.PolyKinds (Sum(..))
+import Control.Lens.Operators
+import Control.Monad (guard)
+import Data.Functor.Const (Const(..))
+import Data.Functor.Product.PolyKinds (Product(..))
+import Data.Functor.Sum.PolyKinds (Sum(..))
+import Hyper.Class.Foldable
+import Hyper.Class.Functor (HFunctor(..))
+import Hyper.Class.Nodes (HNodes(..))
+import Hyper.Class.Traversable (HTraversable, traverseK)
+import Hyper.Type (Tree)
+import Hyper.Type.Pure (Pure(..), _Pure)
 
-import           Prelude.Compat
+import Prelude.Compat
 
 -- | A class to match term structures.
 --

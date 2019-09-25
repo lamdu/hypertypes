@@ -8,14 +8,14 @@ module Hyper.Unify.Error
     , _Occurs, _Mismatch
     ) where
 
+import           Control.Lens (makePrisms)
+import           GHC.Generics (Generic)
+import           Generics.Constraints (Constraints)
 import           Hyper
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.TH.Functor (makeHFunctor)
+import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.TH.Traversable (makeHTraversableAndFoldable)
 import           Hyper.Unify.Constraints (TypeConstraintsOf)
-import           Control.Lens (makePrisms)
-import           Generics.Constraints (Constraints)
-import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)

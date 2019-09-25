@@ -6,8 +6,8 @@ module Hyper.TH.Internal.Instances
 
 import Control.DeepSeq (NFData)
 import Data.Binary (Binary)
-import Language.Haskell.TH (Name, DecsQ)
 import Generics.Constraints (makeDerivings, makeInstances)
+import Language.Haskell.TH (Name, DecsQ)
 
 import Prelude.Compat
 

@@ -4,10 +4,10 @@ module Hyper.Class.Pointed
     ( HPointed(..)
     ) where
 
-import Hyper.Class.Nodes (HNodes(..), HWitness(..))
-import Hyper.Type (Tree)
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
+import Hyper.Class.Nodes (HNodes(..), HWitness(..))
+import Hyper.Type (Tree)
 
 import Prelude.Compat
 

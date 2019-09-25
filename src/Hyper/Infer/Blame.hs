@@ -42,17 +42,6 @@ module Hyper.Infer.Blame
     , bTermToAnn
     ) where
 
-import Hyper
-import Hyper.Class.Infer
-import Hyper.Class.Infer.InferOf
-import Hyper.Class.Traversable (ContainedK(..))
-import Hyper.Class.Unify (Unify, UVarOf)
-import Hyper.Type.Combinator.Flip
-import Hyper.Infer.Result (InferredVarsConstraint(..))
-import Hyper.Recurse
-import Hyper.TH.Internal.Instances (makeCommonInstances)
-import Hyper.Unify.New (newUnbound)
-import Hyper.Unify.Occurs (occursCheck)
 import Control.Lens (makeLenses, from)
 import Control.Lens.Operators
 import Control.Monad.Except (MonadError(..))
@@ -61,6 +50,17 @@ import Data.Foldable (traverse_)
 import Data.List (sortOn)
 import Data.Proxy (Proxy(..))
 import GHC.Generics (Generic)
+import Hyper
+import Hyper.Class.Infer
+import Hyper.Class.Infer.InferOf
+import Hyper.Class.Traversable (ContainedK(..))
+import Hyper.Class.Unify (Unify, UVarOf)
+import Hyper.Infer.Result (InferredVarsConstraint(..))
+import Hyper.Recurse
+import Hyper.TH.Internal.Instances (makeCommonInstances)
+import Hyper.Type.Combinator.Flip
+import Hyper.Unify.New (newUnbound)
+import Hyper.Unify.Occurs (occursCheck)
 
 import Prelude.Compat
 

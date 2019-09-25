@@ -11,6 +11,10 @@ module Hyper.Recurse
     , (#>>), (#**#), (##>>)
     ) where
 
+import Control.Lens.Operators
+import Data.Constraint (withDict)
+import Data.Functor.Const (Const(..))
+import Data.Proxy (Proxy(..))
 import Hyper.Class.Foldable
 import Hyper.Class.Functor (HFunctor(..))
 import Hyper.Class.Nodes (HNodes(..), (#>), (#*#))
@@ -18,10 +22,6 @@ import Hyper.Class.Recursive
 import Hyper.Class.Traversable
 import Hyper.Type
 import Hyper.Type.Pure (Pure(..), _Pure, (&#))
-import Control.Lens.Operators
-import Data.Constraint (withDict)
-import Data.Functor.Const (Const(..))
-import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
 

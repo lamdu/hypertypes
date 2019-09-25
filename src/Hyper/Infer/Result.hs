@@ -8,18 +8,18 @@ module Hyper.Infer.Result
     , inferredToAnn
     ) where
 
-import Hyper
-import Hyper.Type.Combinator.Flip
-import Hyper.Class.Infer
-import Hyper.Class.Infer.InferOf (HFunctorInferOf, HFoldableInferOf, RTraversableInferOf)
-import Hyper.Class.Traversable (ContainedK(..))
-import Hyper.Recurse
-import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Control.Lens (Traversal, makeLenses, from)
 import Control.Lens.Operators
 import Data.Constraint
 import Data.Proxy (Proxy(..))
 import GHC.Generics (Generic)
+import Hyper
+import Hyper.Class.Infer
+import Hyper.Class.Infer.InferOf (HFunctorInferOf, HFoldableInferOf, RTraversableInferOf)
+import Hyper.Class.Traversable (ContainedK(..))
+import Hyper.Recurse
+import Hyper.TH.Internal.Instances (makeCommonInstances)
+import Hyper.Type.Combinator.Flip
 
 import Prelude.Compat
 

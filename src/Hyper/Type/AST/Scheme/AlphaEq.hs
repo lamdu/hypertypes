@@ -5,6 +5,11 @@ module Hyper.Type.AST.Scheme.AlphaEq
     ( alphaEq
     ) where
 
+import qualified Control.Lens as Lens
+import           Control.Lens.Operators
+import           Data.Constraint
+import           Data.Maybe (fromMaybe)
+import           Data.Proxy (Proxy(..))
 import           Hyper
 import           Hyper.Class.Has (HasChild(..))
 import           Hyper.Class.ZipMatch (zipMatch_)
@@ -14,11 +19,6 @@ import           Hyper.Unify
 import           Hyper.Unify.New (newTerm)
 import           Hyper.Unify.QuantifiedVar
 import           Hyper.Unify.Term (UTerm(..), uBody)
-import qualified Control.Lens as Lens
-import           Control.Lens.Operators
-import           Data.Constraint
-import           Data.Maybe (fromMaybe)
-import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
 

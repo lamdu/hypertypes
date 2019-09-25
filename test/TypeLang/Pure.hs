@@ -4,15 +4,15 @@ module TypeLang.Pure
     , module TypeLang
     ) where
 
+import qualified Control.Lens as Lens
+import           Control.Lens.Operators
+import qualified Data.Map as Map
 import           Hyper
 import           Hyper.Type.AST.FuncType
 import           Hyper.Type.AST.Row
 import           Hyper.Type.AST.Scheme
 import           Hyper.Unify
 import           Hyper.Unify.QuantifiedVar
-import qualified Control.Lens as Lens
-import           Control.Lens.Operators
-import qualified Data.Map as Map
 import           TypeLang
 
 import           Prelude

@@ -9,14 +9,14 @@ module Hyper.TH.Traversable
     , makeHTraversableApplyAndBases
     ) where
 
+import qualified Control.Lens as Lens
+import           Control.Lens.Operators
 import           Hyper.Class.Traversable
 import           Hyper.TH.Apply (makeHApplicativeBases)
 import           Hyper.TH.Foldable (makeHFoldable)
 import           Hyper.TH.Functor (makeHFunctor)
 import           Hyper.TH.Internal.Utils
 import           Hyper.TH.Nodes (makeHNodes)
-import qualified Control.Lens as Lens
-import           Control.Lens.Operators
 import           Language.Haskell.TH
 
 import           Prelude.Compat
