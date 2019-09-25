@@ -1,24 +1,16 @@
-# hypertypes: Higher-Kinded Data + recursion-schemes
+# hypertypes: Types parameterised by hypertypes
 
-Parameterizing data types by a "field constructor" is a widely used technique,
-used by
-the ["Higher-Kinded Data"](https://reasonablypolymorphic.com/blog/higher-kinded-data/) pattern and
-by [`recursion-schemes`](http://hackage.haskell.org/package/recursion-schemes),
-but these two approaches do not work well together and each one of them has its limitations.
+Hypertypes enable constructing rich recursive types from individual components, and processing them generically with type classes.
 
-* HKD parameterizes records on a functor to hold their fields.
-  This pattern supports simple records but doesn't support nested structures.
-* `recursion-schemes` parameterizes recursive structures by a fix-point.
-  It doesn't support structures with several different types.
-* A third approach, [`multirec`](http://hackage.haskell.org/package/multirec),
-  does allow encoding nested and mutually recursive types with fix-points,
-  by encoding each family of nested types as a single GADT.
-  But using a single type imposes limitations on composabilty and modularity.
+They are a solution to the *Expression Problem*, as described by Phil Wadler (1998):
 
-`hypertypes` is a Haskell library for describing rich nested and mutually recursive types with
-the "field constructor" parameter pattern, in a modular and composable manner.
+> The goal is to define a data type by cases, where one can add new cases to the data type and new functions over the data type, without recompiling existing code, and while retaining static type safety.
 
-## Introduction to the "field constructor" pattern and the status-quo
+*Data types a la carte* (DTALC, Swierstra, 2008) offers a solution for the expression problem which is only applicatble for recursive expressions, without support for mutually recursive types. In practice, ASTs tend to be mutually recursive types. [`multirec`](http://hackage.haskell.org/package/multirec) (Rodriguez et al, 2009) uses GADTs to encode mutually recursive types but in comparison to DTALC it lacks in the ability to construct the types from re-usable components.
+
+Hypertypes allow constructing expressions from re-usable terms like DTALC, which can be rich mutually recursive types like in `multirec`.
+
+## Introduction to the "field constructor" pattern
 
 ### `Type`: Simple type, simple functionality
 
@@ -53,7 +45,7 @@ data Person a = Person
 This would solve our problem.
 
 We can parameterize with `Double` for the normal structure,
-and with `Maybe Double` for the variant with missing fields!
+and with `Maybe Double` for the variant with missing fields.
 
 This approach reaches its limits when the fields have multiple different types, as in:
 
@@ -70,7 +62,7 @@ Is there a way to use a single type parameter for both types of fields? Yes, the
 
 ### `(Type -> Type) -> Type`: Higher-Kinded Data
 
-We could represent `Person` like so:
+The ["Higher-Kinded Data"](https://reasonablypolymorphic.com/blog/higher-kinded-data/) pattern represents `Person` like so:
 
 ```Haskell
 data Person f = Person
@@ -81,6 +73,7 @@ data Person f = Person
 ```
 
 For the plain case we would use `Person Identity`.
+
 `Identity` from `Data.Functor.Identity` is defined as so:
 
 ```Haskell
@@ -129,9 +122,9 @@ class Functor f where
 The rank-2 function argument expects the field type `a` to stay the same when it changes `p` to `q`,
 however in the above formulation of `Expr` the field type `Expr p` change to `Expr q` when changing the type parameter.
 
-### `Type -> Type`: The `recursion-schemes` approach
+### `Type -> Type`: The DTALC and `recursion-schemes` approach
 
-The `recursion-schemes` formulation of `Expr` is the same as the `Type -> Type` approach discussed above:
+Another formulation of `Expr` is the same as the `Type -> Type` approach discussed above:
 
 ```Haskell
 data Expr a
@@ -140,12 +133,15 @@ data Expr a
     | Mul a a
 ```
 
-(Note that `recursion-schemes` can generate it for us from the simple definition of `Expr` using `TemplateHaskell`)
+Notes:
+
+* The [`recursion-schemes`](http://hackage.haskell.org/package/recursion-schemes) package can generate this type for us from the plain definition of `Expr` using `TemplateHaskell`
+* DTALC allows us to construct the type by combining standalone `Const`, `Add`, and `Mult` types, but we'll defer this discussion for now
 
 This approach does have the single node type limitation, so we gave up on parameterizing over the `Int` in `Const`.
-This is a big limitation, but we do get several advantages.
+This is a big limitation, but as we'll see, we do get several advantages in return.
 
-We can represent an expression as `Fix Expr`, using:
+First, we can represent plain expressions as `Fix Expr`, using:
 
 ```Haskell
 newtype Fix f = Fix (f (Fix f))
@@ -155,7 +151,7 @@ We can then use useful combinators from `recursion-schemes` for folding and proc
 
 [`unification-fd`](http://hackage.haskell.org/package/unification-fd)
 is a good example for the power of this approach.
-It implements unification for ASTs,
+It implements generic unification for ASTs,
 where it uses the parameterization to store unification variables standing for terms.
 
 In constrast to the HKD approach, we can also use rich fix-points which store several different fix-points within, like `Diff`:
@@ -181,7 +177,7 @@ data Typ
     | FuncT Typ Typ
 ```
 
-This type is an example for an AST which `recursion-schemes` can't help us with.
+This type is an example for an AST which DTALC and `recursion-schemes` can't help us with.
 
 Is there a way to present this structure? Yes:
 
@@ -218,38 +214,41 @@ But `multirec` has several limitations:
 The `hypertypes` representation of the above AST example:
 
 ```Haskell
-data Expr k
+data Expr h
     = Var Text
-    | App (k # Expr) (k # Expr)
-    | Lam Text (k # Typ) (k # Expr)
-data Typ k
+    | App (h # Expr) (h # Expr)
+    | Lam Text (h # Typ) (h # Expr)
+data Typ h
     = IntT
-    | FuncT (k # Typ) (k # Typ)
+    | FuncT (h # Typ) (h # Typ)
 ```
 
 The `#` type operator used above requires introduction:
 
 ```Haskell
-type k # p = (GetHyperType k) ('AHyperType p)
+type p # q = (GetHyperType p) ('AHyperType q)
 
-type HyperType = AHyperType -> Type
+-- A kind for hypertypes
 newtype AHyperType = AHyperType HyperType
 
+-- A type parameterized by a hypertype
+type HyperType = AHyperType -> Type
+
 -- GetHyperType is a getter from the AHyperType newtype lifted to the type level
-type family GetHyperType k where
+type family GetHyperType h where
     GetHyperType ('AHyperType t) = t
 ```
 
 (`'AHyperType` is `DataKinds` syntax for using the `AHyperType` data constructor in types)
 
-For this representation, `hypertypes` offers the power and functionality of HKD, `recursion-schemes`, `multirec`, and some useful helpers:
+This representation enables a lot of functionality:
 
 * Variants of standard classes like `Functor` with `TemplateHaskell` derivations for them.
   (Unlike in `multirec`'s `HFunctor`, only the actual child node types of each node need to be handled)
 * Combinators for recursive processing and transformation of nested structures
 * Implementations for common AST terms and useful fix-points
 * A `unification-fd` inspired unification implementation for mutually recursive types
-* A generic and fast implementation of a Hindley-Milner type inference algorithm (["Efficient generalization with levels"](http://okmij.org/ftp/ML/generalization.html#levels))
+* A generic and fast implementation of a Hindley-Milner type inference algorithm ("Efficient generalization with levels" as described in ["How OCaml type checker works - or what polymorphism and garbage collection have in common"](http://okmij.org/ftp/ML/generalization.html). Kiselyov, 2013)
 
 ## Usage examples
 
@@ -265,7 +264,7 @@ Explanations for the above:
 
 * `Tree Pure Expr` is a type synonym for `Pure ('AHyperType Expr)`
 * `Pure` is the simple pass-through/identtiy fix-point
-* The above is quite verbose with a lot of `Pure` and parentheses
+* The above is quite verbose with a lot of instances of `Pure` and parentheses
 
 To write examples and tests more consicely, the `HasHPlain` class, along with a `TemplateHaskell` generator for it, exists:
 
@@ -279,11 +278,9 @@ LamP "x" IntTP (VarP "x")
 e :: HPlain Expr
 ```
 
-It's now easier to see that `e` represents `\(x:Int). x`
+It's now easier to see that `e` represents `λ(x:Int). x`
 
-`HPlain` is a data family of "plain versions" of expressions. These are generated automatically via `TemplateHaskell`.
-
-This is similar to how `recursion-schemes` can derive a parameterized version of an AST, but in the other way around: the parameterized type is the source and the plain one is generated. We believe this is a good choice because the parameterized type will be used more often in application code.
+`HPlain` is a data family of "plain versions" of expressions, generated via `TemplateHaskell`. This is similar to how `recursion-schemes` can derive a parameterized version of an AST, but in the other way around: the parameterized type is the source and the plain one is generated. We believe that this is a good choice because the parameterized type will be used more often in application code.
 
 So now, let's define some example expressions in the shorter way:
 
@@ -318,11 +315,11 @@ Let's see the type of `diffP`
 ```Haskell
 > :t diffP
 diffP ::
-    ( RTraversable k
-    , Recursively ZipMatch k
-    , Recursively HasHPlain k
+    ( RTraversable h
+    , Recursively ZipMatch h
+    , Recursively HasHPlain h
     ) =>
-    HPlain k -> HPlain k -> Tree DiffP k
+    HPlain h -> HPlain h -> Tree DiffP h
 ```
 
 `diffP` can calculate the diff for any AST that is recursively traversable, can be matched, and has a plain representation.
@@ -339,15 +336,15 @@ Now, let's format this diff better:
 > :t foldDiffsP
 foldDiffsP ::
     ( Monoid r
-    , Recursively HFoldable k
-    , Recursively HasHPlain k
+    , Recursively HFoldable h
+    , Recursively HasHPlain h
     ) =>
-    (forall n. HasHPlain n => HRecWitness k n -> HPlain n -> HPlain n -> r) ->
-    Tree DiffP k ->
+    (forall n. HasHPlain n => HRecWitness h n -> HPlain n -> HPlain n -> r) ->
+    Tree DiffP h ->
     r
 ```
 
-What does the ignored argument of `formatDiff` stand for? It is the `HRecWitness k n` from the type of `foldDiffsP` above. It is a witness argument that "proves" that the folded node `n` is a recursive node of `k` (a type parameter from `foldDiffsP`'s type).
+What does the ignored argument of `formatDiff` stand for? It is the `HRecWitness h n` from the type of `foldDiffsP` above. It is a witness argument that "proves" that the folded node `n` is a recursive node of `h` (a type parameter from `foldDiffsP`'s type), essentially turning the `forall n.` to a "for-some", specifically for the recursive types inside `h`.
 
 ## Witness parameters
 
@@ -358,17 +355,17 @@ What are witness parameters?
 Let's look at how `HFunctor` is defined:
 
 ```Haskell
-class HNodes k => HFunctor k where
+class HNodes h => HFunctor h where
     -- | 'HFunctor' variant of 'fmap'
     mapK ::
-        (forall n. HWitness k n -> Tree p n -> Tree q n) ->
-        Tree k p ->
-        Tree k q
+        (forall n. HWitness h n -> Tree p n -> Tree q n) ->
+        Tree h p ->
+        Tree h q
 ```
 
-`HFunctor` can change a tree of `k`'s fix-point from `p` to `q` given a rank-n-function that transforms an element in `p` to an element in `q` given a witness that its node `n` it a node of `k`.
+`HFunctor` can change a tree of `h`'s fix-point from `p` to `q` given a rank-n-function that transforms an element in `p` to an element in `q` given a witness that its node `n` it a node of `h`.
 
-`HWitness` is a data family which comes from the `HNodes` instance of `k`.
+`HWitness` is a data family which comes from the `HNodes` instance of `h`.
 
 For an example let's see the definition of `Expr`'s `HWitness`:
 
@@ -477,13 +474,13 @@ As an example of a reusable term let's look at the definition of `App`:
 
 ```Haskell
 -- | A term for function applications.
-data App expr k = App
-    { _appFunc :: k # expr
-    , _appArg :: k # expr
+data App expr h = App
+    { _appFunc :: h # expr
+    , _appArg :: h # expr
     }
 ```
 
-Unlike a DTALC-based apply, which would be parameterized by a single type parameter `(a :: Type)`, `App` is parameterized on two type parameters, `(expr :: HyperType)` and `(k :: AHyperType)`. `expr` represents the node type of `App expr`'s child nodes and `k` is the tree's fix-point. This enables using `App` in mutually recursive ASTs where it may be parameterized by several different `expr`s.
+Unlike a DTALC-based apply, which would be parameterized by a single type parameter `(a :: Type)`, `App` is parameterized on two type parameters, `(expr :: HyperType)` and `(h :: AHyperType)`. `expr` represents the node type of `App expr`'s child nodes and `h` is the tree's fix-point. This enables using `App` in mutually recursive ASTs where it may be parameterized by several different `expr`s.
 
 Unlike the original DTALC paper which isn't suitable for mutually recursive ASTs, in `hypertypes` one would have to declare an explicit expression type for each expression type for use as `App`'s `expr` type parameter. Similarly, `multirec`'s DTALC variant also requires explicitly declaring type indices.
 
