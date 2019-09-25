@@ -232,7 +232,8 @@ The `#` type operator used above requires introduction:
 ```Haskell
 type k # p = (GetHyperType k) ('AHyperType p)
 
-newtype AHyperType = AHyperType (AHyperType -> Type)
+type HyperType = AHyperType -> Type
+newtype AHyperType = AHyperType HyperType
 
 -- GetHyperType is a getter from the AHyperType newtype lifted to the type level
 type family GetHyperType k where
@@ -482,7 +483,7 @@ data App expr k = App
     }
 ```
 
-Unlike a DTALC-based apply, which would be parameterized by a single type parameter `(a :: Type)`, `App` is parameterized on two type parameters, `(expr :: AHyperType -> Type)` and `(k :: AHyperType)`. `expr` represents the node type of `App expr`'s child nodes and `k` is the tree's fix-point. This enables using `App` in mutually recursive ASTs where it may be parameterized by several different `expr`s.
+Unlike a DTALC-based apply, which would be parameterized by a single type parameter `(a :: Type)`, `App` is parameterized on two type parameters, `(expr :: HyperType)` and `(k :: AHyperType)`. `expr` represents the node type of `App expr`'s child nodes and `k` is the tree's fix-point. This enables using `App` in mutually recursive ASTs where it may be parameterized by several different `expr`s.
 
 Unlike the original DTALC paper which isn't suitable for mutually recursive ASTs, in `hypertypes` one would have to declare an explicit expression type for each expression type for use as `App`'s `expr` type parameter. Similarly, `multirec`'s DTALC variant also requires explicitly declaring type indices.
 

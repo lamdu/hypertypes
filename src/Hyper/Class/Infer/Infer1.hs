@@ -5,17 +5,17 @@ module Hyper.Class.Infer.Infer1
     ) where
 
 import Hyper.Infer
-import Hyper.Type (AHyperType)
+import Hyper.Type (HyperType)
 import Data.Constraint (Constraint, Dict, (:-))
 import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
 
 class HasTypeOf1 t where
-    type family TypeOf1 t :: AHyperType -> Type
+    type family TypeOf1 t :: HyperType
     typeAst :: Proxy (t k) -> Dict (TypeOf (t k) ~ TypeOf1 t)
 
 class HasInferOf1 t where
-    type family InferOf1 t :: AHyperType -> Type
+    type family InferOf1 t :: HyperType
     type family InferOf1IndexConstraint t :: Type -> Constraint
     hasInferOf1 :: Proxy (t k) -> Dict (InferOf (t k) ~ InferOf1 t)
 

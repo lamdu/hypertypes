@@ -15,7 +15,6 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Constraint (Dict(..), withDict)
 import           Data.Functor.Sum.PolyKinds (Sum(..))
-import           Data.Kind (Type)
 import           Data.Proxy (Proxy(..))
 
 import           Prelude.Compat
@@ -30,7 +29,7 @@ import           Prelude.Compat
 --
 -- * An inferred value (for types inside terms)
 -- * An inferred type together with a scope
-type family InferOf (t :: AHyperType -> Type) :: AHyperType -> Type
+type family InferOf (t :: HyperType) :: HyperType
 
 type instance InferOf (Sum a b) = InferOf a
 

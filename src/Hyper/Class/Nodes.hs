@@ -7,7 +7,7 @@ module Hyper.Class.Nodes
     , (#>), (#*#)
     ) where
 
-import Hyper.Type (AHyperType)
+import Hyper.Type (HyperType)
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
 import Data.Functor.Sum.PolyKinds (Sum(..))
@@ -22,12 +22,12 @@ import Data.Proxy (Proxy(..))
 -- Various classes like 'Hyper.Class.Functor.KFunctor' build upon 'KNodes'
 -- to provide methods such as 'Hyper.Class.Functor.mapKWith' which provide a rank-n function
 -- for processing child nodes which requires a constraint on the nodes.
-class KNodes (k :: AHyperType -> Type) where
+class KNodes (k :: HyperType) where
     -- | Lift a constraint to apply to the child nodes
-    type family KNodesConstraint k (c :: ((AHyperType -> Type) -> Constraint)) :: Constraint
+    type family KNodesConstraint k (c :: (HyperType -> Constraint)) :: Constraint
 
     -- | @KWitness k n@ is a witness that @n@ is a node of @k@
-    data family KWitness k :: (AHyperType -> Type) -> Type
+    data family KWitness k :: HyperType -> Type
 
     -- | Lift a rank-n value with a constraint which the child nodes satisfy
     -- to a function from a node witness.

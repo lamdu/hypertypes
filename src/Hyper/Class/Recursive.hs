@@ -16,7 +16,7 @@ import Hyper.Type
 import Hyper.Type.Pure (Pure(..))
 import Data.Constraint (Dict(..), withDict)
 import Data.Functor.Const (Const(..))
-import Data.Kind (Constraint, Type)
+import Data.Kind (Constraint)
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
@@ -38,7 +38,7 @@ class KNodes k => RNodes k where
 instance RNodes Pure
 instance RNodes (Const a)
 
-argP :: Proxy (f k :: Constraint) -> Proxy (k :: AHyperType -> Type)
+argP :: Proxy (f k :: Constraint) -> Proxy (k :: HyperType)
 argP _ = Proxy
 
 instance Recursive RNodes where

@@ -5,7 +5,8 @@
 -- For more information see the [README](https://github.com/lamdu/hypertypes/blob/master/README.md).
 
 module Hyper.Type
-    ( AHyperType(..), GetHyperType
+    ( HyperType
+    , AHyperType(..), GetHyperType
     , Tree, type (#)
     , asTree
     ) where
@@ -14,8 +15,11 @@ import Data.Kind (Type)
 
 import Prelude.Compat
 
--- | A 'Data.Kind.Kind' for nested higher-kinded data.
-newtype AHyperType = AHyperType (AHyperType -> Type)
+-- | A hypertype is a type parameterized by a hypertype
+type HyperType = AHyperType -> Type
+
+-- | A 'Data.Kind.Kind' for 'HyperType's
+newtype AHyperType = AHyperType HyperType
 
 -- | A type-level getter for the type constructor encoded in 'AHyperType'.
 --

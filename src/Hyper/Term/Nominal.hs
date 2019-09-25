@@ -39,7 +39,6 @@ import           Control.Lens.Operators
 import           Control.Monad.Trans.Writer (execWriterT)
 import           Data.Binary (Binary)
 import           Data.Foldable (traverse_)
-import           Data.Kind (Type)
 import           Data.Proxy (Proxy(..))
 import qualified Data.Map as Map
 import           Generics.Constraints (Constraints)
@@ -50,7 +49,7 @@ import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 import           Prelude.Compat
 
-type family NomVarTypes (t :: AHyperType -> Type) :: AHyperType -> Type
+type family NomVarTypes (t :: HyperType) :: HyperType
 
 -- | A declaration of a nominal type.
 data NominalDecl typ k = NominalDecl

@@ -12,10 +12,9 @@ import Hyper.Class.Functor (KFunctor)
 import Hyper.Class.Traversable (KTraversable)
 import Hyper.Class.Infer (InferOf)
 import Hyper.Class.Recursive (Recursive(..), Recursively)
-import Hyper.Type (AHyperType, Tree)
+import Hyper.Type (HyperType, Tree)
 import Control.Lens (ALens', Lens')
 import Data.Constraint (Dict(..))
-import Data.Kind (Type)
 import Data.Proxy (Proxy(..))
 
 import Prelude.Compat
@@ -23,7 +22,7 @@ import Prelude.Compat
 -- | @HasInferredType t@ represents that @InferOf t@ contains a @TypeOf t@, which represents its inferred type.
 class HasInferredType t where
     -- | The type of @t@
-    type TypeOf t :: AHyperType -> Type
+    type TypeOf t :: HyperType
     -- A 'Control.Lens.Lens' from an inference result to an inferred type
     inferredType :: Proxy t -> ALens' (Tree (InferOf t) v) (Tree v (TypeOf t))
 

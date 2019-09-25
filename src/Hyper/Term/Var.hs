@@ -16,14 +16,13 @@ import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
-import           Data.Kind (Type)
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 
 import           Prelude.Compat
 
-type family ScopeOf (t :: AHyperType -> Type) :: AHyperType -> Type
+type family ScopeOf (t :: HyperType) :: HyperType
 
 class HasScope m s where
     getScope :: m (Tree s (UVarOf m))

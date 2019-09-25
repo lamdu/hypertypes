@@ -10,7 +10,7 @@ module Hyper.Unify.Constraints
     ) where
 
 import Algebra.PartialOrd (PartialOrd(..))
-import Hyper (Tree, AHyperType, GetHyperType)
+import Hyper (Tree, HyperType, AHyperType, GetHyperType)
 import Control.Lens (makeLenses)
 import Data.Kind (Type)
 
@@ -43,7 +43,7 @@ class
     TypeConstraints (TypeConstraintsOf ast) =>
     HasTypeConstraints (ast :: AHyperType -> *) where
 
-    type family TypeConstraintsOf (ast :: AHyperType -> Type) :: Type
+    type family TypeConstraintsOf (ast :: HyperType) :: Type
 
     -- | Verify constraints on the ast and apply the given child
     -- verifier on children
