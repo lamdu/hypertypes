@@ -4,7 +4,7 @@ module Hyper.Infer
     , module Hyper.Class.Infer.Env
     , module Hyper.Class.Infer.InferOf
     , module Hyper.Infer.ScopeLevel
-    , module Hyper.Infer.Term
+    , module Hyper.Infer.Result
 
     , -- | Exported only for SPECIALIZE pragmas
       inferH
@@ -15,7 +15,7 @@ import Hyper.Class.Infer
 import Hyper.Class.Infer.Env
 import Hyper.Class.Infer.InferOf
 import Hyper.Infer.ScopeLevel
-import Hyper.Infer.Term
+import Hyper.Infer.Result
 import Hyper.Unify (UVarOf)
 import Control.Lens.Operators
 import Data.Constraint (withDict)

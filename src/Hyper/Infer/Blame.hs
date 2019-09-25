@@ -48,7 +48,7 @@ import Hyper.Class.Infer.InferOf
 import Hyper.Class.Traversable (ContainedK(..))
 import Hyper.Class.Unify (Unify, UVarOf)
 import Hyper.Type.Combinator.Flip
-import Hyper.Infer.Term (ITermVarsConstraint(..))
+import Hyper.Infer.Result (ITermVarsConstraint(..))
 import Hyper.Recurse
 import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.Unify.New (newUnbound)

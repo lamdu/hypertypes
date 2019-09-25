@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell, FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances, FlexibleInstances, DefaultSignatures #-}
 
-module Hyper.Infer.Term
+module Hyper.Infer.Result
     ( ITerm(..), iVal, iRes, iAnn
     , ITermVarsConstraint(..)
     , iAnnotations
