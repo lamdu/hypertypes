@@ -2,10 +2,11 @@
 
 module Hyper.Class.Foldable
     ( HFoldable(..)
-    , hfoldMap1
+    , hfolded1
     , htraverse_, htraverse1_
     ) where
 
+import Control.Lens (Fold, folding)
 import Data.Foldable (sequenceA_)
 import Data.Functor.Const (Const(..))
 import Data.Functor.Product.PolyKinds (Product(..))
@@ -41,19 +42,18 @@ instance (HFoldable a, HFoldable b) => HFoldable (Sum a b) where
     hfoldMap f (InL x) = hfoldMap (f . E_Sum_a) x
     hfoldMap f (InR x) = hfoldMap (f . E_Sum_b) x
 
--- TODO: Replace `hfoldMap1` with `hfolded1` which is a `Fold`
-
--- | 'HFoldable' variant for 'foldMap' for 'Hyper.Type.HyperType's with a single node type (avoids using @RankNTypes@)
-{-# INLINE hfoldMap1 #-}
-hfoldMap1 ::
-    forall a h n p.
-    ( Monoid a, HFoldable h
+-- | 'HFoldable' variant for 'Control.Lens.folded' for 'Hyper.Type.HyperType's with a single node type.
+--
+-- Avoids using @RankNTypes@ and thus can be composed with other optics.
+{-# INLINE hfolded1 #-}
+hfolded1 ::
+    forall h n p.
+    ( HFoldable h
     , HNodesConstraint h ((~) n)
     ) =>
-    (Tree p n -> a) ->
-    Tree h p ->
-    a
-hfoldMap1 f = hfoldMap (Proxy @((~) n) #> f)
+    Fold (Tree h p) (Tree p n)
+hfolded1 =
+    folding (hfoldMap @_ @[Tree p n] (Proxy @((~) n) #> pure))
 
 -- | 'HFoldable' variant of 'Data.Foldable.traverse_'
 --
