@@ -51,6 +51,7 @@ data GTerm v ast
 
 Lens.makePrisms ''GTerm
 makeCommonInstances [''GTerm]
+makeHTraversableAndBases ''GTerm
 
 instance RNodes a => HNodes (Flip GTerm a) where
     type HNodesConstraint (Flip GTerm a) c = (c a, Recursive c)
