@@ -1,6 +1,6 @@
 -- | A type for unification errors
 
-{-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, UndecidableInstances #-}
 
 module Hyper.Unify.Error
     ( UnifyError(..)
@@ -12,9 +12,7 @@ import           Control.Lens (makePrisms)
 import           GHC.Generics (Generic)
 import           Generics.Constraints (Constraints)
 import           Hyper
-import           Hyper.TH.Functor (makeHFunctor)
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
-import           Hyper.TH.Traversable (makeHTraversableAndFoldable)
 import           Hyper.Unify.Constraints (TypeConstraintsOf)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
@@ -39,18 +37,7 @@ data UnifyError t h
 
 makePrisms ''UnifyError
 makeCommonInstances [''UnifyError]
-
--- TODO: TH should be able to generate this
-instance HNodes t => HNodes (UnifyError t) where
-    type HNodesConstraint (UnifyError t) c = (c t, HNodesConstraint t c)
-    data HWitness (UnifyError t) n where
-        W_UnifyError_t :: HWitness (UnifyError t) t
-        E_UnifyError_t :: HWitness t n -> HWitness (UnifyError t) n
-    hLiftConstraint W_UnifyError_t = const id
-    hLiftConstraint (E_UnifyError_t w) = hLiftConstraint w
-
-makeHFunctor ''UnifyError
-makeHTraversableAndFoldable ''UnifyError
+makeHTraversableAndBases ''UnifyError
 
 instance Constraints (UnifyError t h) Pretty => Pretty (UnifyError t h) where
     pPrintPrec lvl p =
