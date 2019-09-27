@@ -7,11 +7,9 @@
 {-# LANGUAGE UndecidableInstances, TemplateHaskell #-}
 module Hyper.Type.Pure
     ( Pure(..), _Pure, HWitness(..)
-    , (&#)
     ) where
 
 import Control.Lens (Iso, iso)
-import Control.Lens.Operators
 import GHC.Generics (Generic)
 import Hyper.Class.Nodes (HNodes(..))
 import Hyper.TH.Internal.Instances (makeCommonInstances)
@@ -33,19 +31,6 @@ makeCommonInstances [''Pure]
 {-# INLINE _Pure #-}
 _Pure :: Iso (Tree Pure h) (Tree Pure j) (Tree h Pure) (Tree j Pure)
 _Pure = iso (\(Pure x) -> x) Pure
-
--- | An operator to apply a function to a value and wrap it with 'Pure'.
---
--- Helps value construction be more succinct.
---
--- The etymology and fixity of '&#' operator mimics '&'.
---
--- >>> x &# f
--- Pure (f x)
-infixl 1 &#
-{-# INLINE (&#) #-}
-(&#) :: a -> (a -> Tree h Pure) -> Tree Pure h
-x &# f = _Pure # f x
 
 instance Pretty (h # Pure) => Pretty (Pure h) where
     pPrintPrec lvl p (Pure x) = pPrintPrec lvl p x

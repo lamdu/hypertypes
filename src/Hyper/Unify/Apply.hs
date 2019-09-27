@@ -36,7 +36,7 @@ applyBindings v0 =
     \(v1, x) ->
     let result r = r <$ bindVar binding v1 (UResolved r)
         quantify c =
-            newQuantifiedVariable c <&> (&# (quantifiedVar #))
+            newQuantifiedVariable c <&> (_Pure . quantifiedVar #)
             >>= result
     in
     case x of

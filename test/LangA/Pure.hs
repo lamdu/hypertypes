@@ -5,6 +5,7 @@ module LangA.Pure
     , module LangA.Pure
     ) where
 
+import Control.Lens.Operators
 import Hyper
 import Hyper.Type.AST.App
 import Hyper.Type.AST.NamelessScope.InvDeBruijn
@@ -21,15 +22,15 @@ aLam ::
         Tree Pure (LangA n)) -> Tree Pure (LangA (Maybe t))) ->
     Tree Pure (LangA t)
 aLam f =
-    scope body &# ALam
+    scope body & ALam & Pure
     where
         body x = f (var x)
 
 ($::) :: Tree Pure (LangA n) -> Tree Pure (Scheme Types Typ) -> Tree Pure (LangA n)
-v $:: t = v `TypeSig` t &# ATypeSig
+v $:: t = v `TypeSig` t & ATypeSig & Pure
 
 aApp :: Tree Pure (LangA n) -> Tree Pure (LangA n) -> Tree Pure (LangA n)
-f `aApp` x = App f x &# AApp
+f `aApp` x = App f x & AApp & Pure
 
 var :: InvDeBruijnIndex h => Int -> Tree Pure (LangA h)
-var i = scopeVar i &# AVar
+var i = scopeVar i & AVar & Pure

@@ -31,7 +31,7 @@ import           TypeLang
 import           Prelude
 
 lamXYx5 :: Tree Pure (LangA EmptyScope)
-lamXYx5 = aLam \x -> aLam \_y -> x `aApp` ((5 &# ALit) $:: uniType TIntP)
+lamXYx5 = aLam \x -> aLam \_y -> x `aApp` ((ALit 5 & Pure) $:: uniType TIntP)
 
 infinite :: Tree Pure (LangA EmptyScope)
 infinite = aLam \x -> x `aApp` x
@@ -201,8 +201,8 @@ mutType :: HPlain Typ
 mutType =
     TNomP "Mut"
     Types
-    { _tRow = mempty & Lens.at "effects" ?~ ("effects" &# RVar) & QVarInstances
-    , _tTyp = mempty & Lens.at "value" ?~ ("value" &# TVar) & QVarInstances
+    { _tRow = mempty & Lens.at "effects" ?~ (RVar "effects" & Pure) & QVarInstances
+    , _tTyp = mempty & Lens.at "value" ?~ (TVar "value" & Pure) & QVarInstances
     }
 
 -- A nominal type with foralls:

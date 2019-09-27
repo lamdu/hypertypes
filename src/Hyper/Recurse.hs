@@ -21,7 +21,7 @@ import Hyper.Class.Nodes (HNodes(..), (#>), (#*#))
 import Hyper.Class.Recursive
 import Hyper.Class.Traversable
 import Hyper.Type
-import Hyper.Type.Pure (Pure(..), _Pure, (&#))
+import Hyper.Type.Pure (Pure(..), _Pure)
 
 import Prelude.Compat
 
@@ -82,8 +82,9 @@ unwrap ::
     Tree Pure h
 unwrap f x =
     withDict (recursively (Proxy @(HFunctor h))) $
-    f HRecSelf x
-    &# hmap (Proxy @(Recursively HFunctor) #*# \w -> unwrap (f . HRecSub w))
+    _Pure #
+    hmap (Proxy @(Recursively HFunctor) #*# \w -> unwrap (f . HRecSub w))
+    (f HRecSelf x)
 
 -- | Recursively fold up a tree to produce a result (aka catamorphism)
 {-# INLINE fold #-}
