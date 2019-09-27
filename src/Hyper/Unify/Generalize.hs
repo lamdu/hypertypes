@@ -55,66 +55,66 @@ makeCommonInstances [''GTerm]
 instance RNodes a => HNodes (Flip GTerm a) where
     type HNodesConstraint (Flip GTerm a) c = (c a, Recursive c)
     data HWitness (Flip GTerm a) n = E_Flip_GTerm (HRecWitness a n)
-    {-# INLINE kLiftConstraint #-}
-    kLiftConstraint (E_Flip_GTerm HRecSelf) = const id
-    kLiftConstraint (E_Flip_GTerm (HRecSub c n)) = kLiftConstraintH c n
+    {-# INLINE hLiftConstraint #-}
+    hLiftConstraint (E_Flip_GTerm HRecSelf) = const id
+    hLiftConstraint (E_Flip_GTerm (HRecSub c n)) = hLiftConstraintH c n
 
-kLiftConstraintH ::
+hLiftConstraintH ::
     forall a c b n r.
     (RNodes a, HNodesConstraint (Flip GTerm a) c) =>
     HWitness a b -> HRecWitness b n -> Proxy c -> (c n => r) -> r
-kLiftConstraintH c n =
+hLiftConstraintH c n =
     withDict (recurse (Proxy @(RNodes a))) $
     withDict (recurse (Proxy @(c a))) $
-    kLiftConstraint c (Proxy @RNodes)
-    ( kLiftConstraint c (Proxy @c)
-        (kLiftConstraint (E_Flip_GTerm n))
+    hLiftConstraint c (Proxy @RNodes)
+    ( hLiftConstraint c (Proxy @c)
+        (hLiftConstraint (E_Flip_GTerm n))
     )
 
 instance Recursively HFunctor ast => HFunctor (Flip GTerm ast) where
-    {-# INLINE mapH #-}
-    mapH f =
+    {-# INLINE hmap #-}
+    hmap f =
         _Flip %~
         \case
         GMono x -> f (E_Flip_GTerm HRecSelf) x & GMono
         GPoly x -> f (E_Flip_GTerm HRecSelf) x & GPoly
         GBody x ->
             withDict (recursively (Proxy @(HFunctor ast))) $
-            mapH
+            hmap
             ( \cw ->
-                kLiftConstraint cw (Proxy @(Recursively HFunctor)) $
+                hLiftConstraint cw (Proxy @(Recursively HFunctor)) $
                 Lens.from _Flip %~
-                mapH (f . (\(E_Flip_GTerm nw) -> E_Flip_GTerm (HRecSub cw nw)))
+                hmap (f . (\(E_Flip_GTerm nw) -> E_Flip_GTerm (HRecSub cw nw)))
             ) x
             & GBody
 
 instance Recursively HFoldable ast => HFoldable (Flip GTerm ast) where
-    {-# INLINE foldMapH #-}
-    foldMapH f =
+    {-# INLINE hfoldMap #-}
+    hfoldMap f =
         \case
         GMono x -> f (E_Flip_GTerm HRecSelf) x
         GPoly x -> f (E_Flip_GTerm HRecSelf) x
         GBody x ->
             withDict (recursively (Proxy @(HFoldable ast))) $
-            foldMapH
+            hfoldMap
             ( \cw ->
-                kLiftConstraint cw (Proxy @(Recursively HFoldable)) $
-                foldMapH (f . (\(E_Flip_GTerm nw) -> E_Flip_GTerm (HRecSub cw nw)))
+                hLiftConstraint cw (Proxy @(Recursively HFoldable)) $
+                hfoldMap (f . (\(E_Flip_GTerm nw) -> E_Flip_GTerm (HRecSub cw nw)))
                 . (_Flip #)
             ) x
         . (^. _Flip)
 
 instance RTraversable ast => HTraversable (Flip GTerm ast) where
-    {-# INLINE sequenceH #-}
-    sequenceH (MkFlip fx) =
+    {-# INLINE hsequence #-}
+    hsequence (MkFlip fx) =
         case fx of
         GMono x -> runContainedH x <&> GMono
         GPoly x -> runContainedH x <&> GPoly
         GBody x ->
             withDict (recurse (Proxy @(RTraversable ast))) $
             -- HTraversable will be required when not implied by Recursively
-            traverseH
-            ( Proxy @RTraversable #> Lens.from _Flip sequenceH
+            htraverse
+            ( Proxy @RTraversable #> Lens.from _Flip hsequence
             ) x
             <&> GBody
         <&> MkFlip
@@ -143,11 +143,11 @@ generalize v0 =
                 withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
                 do
                     bindVar binding v1 (UResolving t)
-                    r <- traverseH (Proxy @(Unify m) #> generalize) (t ^. uBody)
+                    r <- htraverse (Proxy @(Unify m) #> generalize) (t ^. uBody)
                     r <$ bindVar binding v1 (UTerm t)
                 <&>
                 \b ->
-                if foldMapH (Proxy @(Unify m) #> All . Lens.has _GMono) b ^. Lens._Wrapped
+                if hfoldMap (Proxy @(Unify m) #> All . Lens.has _GMono) b ^. Lens._Wrapped
                 then GMono v1
                 else GBody b
             UResolving t -> GMono v1 <$ occursError v1 t
@@ -184,7 +184,7 @@ instantiateH _ (GMono x) = pure x
 instantiateH cons (GPoly x) = instantiateForAll cons x
 instantiateH cons (GBody x) =
     withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
-    traverseH (Proxy @(Unify m) #> instantiateH cons) x >>= lift . newTerm
+    htraverse (Proxy @(Unify m) #> instantiateH cons) x >>= lift . newTerm
 
 {-# INLINE instantiateWith #-}
 instantiateWith ::

@@ -157,7 +157,7 @@ instance IsString (HPlain LangB) where
 instance HNodes ScopeTypes where
     data HWitness ScopeTypes n = E_ScopeTypes (HWitness (Flip GTerm Typ) n)
     type HNodesConstraint ScopeTypes c = (c Typ, Recursive c)
-    kLiftConstraint (E_ScopeTypes w) = kLiftConstraint w
+    hLiftConstraint (E_ScopeTypes w) = hLiftConstraint w
 
 Lens.makePrisms ''ScopeTypes
 
@@ -172,10 +172,10 @@ typesInScope = _ScopeTypes . traverse . Lens.from _Flip
 makeHFoldable ''ScopeTypes
 
 instance HFunctor ScopeTypes where
-    mapH f = typesInScope %~ mapH (f . E_ScopeTypes)
+    hmap f = typesInScope %~ hmap (f . E_ScopeTypes)
 
 instance HTraversable ScopeTypes where
-    sequenceH = typesInScope sequenceH
+    hsequence = typesInScope hsequence
 
 data InferScope v = InferScope
     { _varSchemes :: Tree ScopeTypes v
@@ -240,14 +240,14 @@ instance MonadQuantify RConstraints Name PureInferB where
 instance Unify PureInferB Typ where
     binding = bindingDict (Lens._1 . tTyp)
     unifyError e =
-        traverseH (Proxy @(Unify PureInferB) #> applyBindings) e
+        htraverse (Proxy @(Unify PureInferB) #> applyBindings) e
         >>= throwError . TypError
 
 instance Unify PureInferB Row where
     binding = bindingDict (Lens._1 . tRow)
     structureMismatch = rStructureMismatch
     unifyError e =
-        traverseH (Proxy @(Unify PureInferB) #> applyBindings) e
+        htraverse (Proxy @(Unify PureInferB) #> applyBindings) e
         >>= throwError . RowError
 
 instance HasScheme Types PureInferB Typ
@@ -303,14 +303,14 @@ instance MonadQuantify RConstraints Name (STInferB s) where
 instance Unify (STInferB s) Typ where
     binding = stBinding
     unifyError e =
-        traverseH (Proxy @(Unify (STInferB s)) #> applyBindings) e
+        htraverse (Proxy @(Unify (STInferB s)) #> applyBindings) e
         >>= throwError . TypError
 
 instance Unify (STInferB s) Row where
     binding = stBinding
     structureMismatch = rStructureMismatch
     unifyError e =
-        traverseH (Proxy @(Unify (STInferB s)) #> applyBindings) e
+        htraverse (Proxy @(Unify (STInferB s)) #> applyBindings) e
         >>= throwError . RowError
 
 instance HasScheme Types (STInferB s) Typ

@@ -65,7 +65,7 @@ saveBody ::
 saveBody =
     withDict (recurse (Proxy @(Unify m t))) $
     withDict (recursively (Proxy @(HasChild typeVars t))) $
-    traverseH
+    htraverse
     ( Proxy @(Unify m) #*# Proxy @(Recursively (HasChild typeVars))
         #> saveVar
     )

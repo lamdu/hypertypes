@@ -85,7 +85,7 @@ loadBody ::
 loadBody src conv =
     withDict (recurse (Proxy @(Unify m t))) $
     withDict (recursively (Proxy @(HasChild typeVars t))) $
-    traverseH
+    htraverse
     ( Proxy @(Unify m) #*# Proxy @(Recursively (HasChild typeVars))
         #> loadVar src conv
     )
@@ -103,5 +103,5 @@ load ::
     Tree typeVars Binding -> Tree t UVar -> m (Tree t (STUVar (World m)))
 load src collection =
     do
-        conv <- traverseH (const makeConvertState) src
+        conv <- htraverse (const makeConvertState) src
         loadBody src conv collection

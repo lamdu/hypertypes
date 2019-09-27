@@ -5,14 +5,14 @@ module Hyper (module X) where
 import Data.Functor.Product.PolyKinds as X (Product(..))
 import Hyper.Class.Apply as X (HApply(..), HApplicative, liftH2)
 import Hyper.Class.Foldable as X
-    ( HFoldable(..), foldMapH, traverseH_, traverseH1_
+    ( HFoldable(..), hfoldMap, htraverse_, htraverse1_
     )
-import Hyper.Class.Functor as X (HFunctor(..), mappedH1)
+import Hyper.Class.Functor as X (HFunctor(..), hmapped1)
 import Hyper.Class.HasPlain as X (HasHPlain(..))
 import Hyper.Class.Nodes as X (HNodes(..), (#>), (#*#))
 import Hyper.Class.Pointed as X (HPointed(..))
 import Hyper.Class.Recursive as X (Recursively(..), RNodes, RTraversable)
-import Hyper.Class.Traversable as X (HTraversable(..), traverseH, traverseH1)
+import Hyper.Class.Traversable as X (HTraversable(..), htraverse, htraverse1)
 import Hyper.TH.Apply as X (makeHApplicativeBases)
 import Hyper.TH.HasPlain as X (makeHasHPlain)
 import Hyper.TH.Traversable as X (makeHTraversableApplyAndBases, makeHTraversableAndBases)

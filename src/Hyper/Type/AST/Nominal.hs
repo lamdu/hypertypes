@@ -102,22 +102,22 @@ makeZipMatch ''FromNom
 instance HNodes v => HNodes (NominalInst n v) where
     type HNodesConstraint (NominalInst n v) c = HNodesConstraint v c
     data HWitness (NominalInst n v) c = E_NominalInst_k (HWitness v c)
-    {-# INLINE kLiftConstraint #-}
-    kLiftConstraint (E_NominalInst_k w) = kLiftConstraint w
+    {-# INLINE hLiftConstraint #-}
+    hLiftConstraint (E_NominalInst_k w) = hLiftConstraint w
 
 instance HFunctor v => HFunctor (NominalInst n v) where
-    {-# INLINE mapH #-}
-    mapH f = nArgs %~ mapH (\w -> _QVarInstances . Lens.mapped %~ f (E_NominalInst_k w))
+    {-# INLINE hmap #-}
+    hmap f = nArgs %~ hmap (\w -> _QVarInstances . Lens.mapped %~ f (E_NominalInst_k w))
 
 instance HFoldable v => HFoldable (NominalInst n v) where
-    {-# INLINE foldMapH #-}
-    foldMapH f =
-        foldMapH (\w -> foldMap (f (E_NominalInst_k w)) . (^. _QVarInstances)) . (^. nArgs)
+    {-# INLINE hfoldMap #-}
+    hfoldMap f =
+        hfoldMap (\w -> foldMap (f (E_NominalInst_k w)) . (^. _QVarInstances)) . (^. nArgs)
 
 instance HTraversable v => HTraversable (NominalInst n v) where
-    {-# INLINE sequenceH #-}
-    sequenceH (NominalInst n v) =
-        traverseH (const (_QVarInstances (traverse runContainedH))) v
+    {-# INLINE hsequence #-}
+    hsequence (NominalInst n v) =
+        htraverse (const (_QVarInstances (traverse runContainedH))) v
         <&> NominalInst n
 
 instance
@@ -134,7 +134,7 @@ instance
         | xId /= yId = Nothing
         | otherwise =
             zipMatch x y
-            >>= traverseH
+            >>= htraverse
                 ( Proxy @ZipMatch #*# Proxy @OrdQVar #>
                     \(Pair (QVarInstances c0) (QVarInstances c1)) ->
                     zipMatch (TermMap c0) (TermMap c1)
@@ -161,7 +161,7 @@ instance
     pPrint (NominalInst n vars) =
         pPrint n <>
         joinArgs
-        (foldMapH (Proxy @(PrettyConstraints h) #> mkArgs) vars)
+        (hfoldMap (Proxy @(PrettyConstraints h) #> mkArgs) vars)
         where
             joinArgs [] = mempty
             joinArgs xs =
@@ -182,41 +182,41 @@ instance (RNodes t, HNodes (NomVarTypes t)) => HNodes (LoadedNominalDecl t) wher
     data HWitness (LoadedNominalDecl t) n where
         E_LoadedNominalDecl_Body :: HRecWitness t n -> HWitness (LoadedNominalDecl t) n
         E_LoadedNominalDecl_NomVarTypes :: HWitness (NomVarTypes t) n -> HWitness (LoadedNominalDecl t) n
-    {-# INLINE kLiftConstraint #-}
-    kLiftConstraint (E_LoadedNominalDecl_Body w) = kLiftConstraint (E_Flip_GTerm w)
-    kLiftConstraint (E_LoadedNominalDecl_NomVarTypes w) = kLiftConstraint w
+    {-# INLINE hLiftConstraint #-}
+    hLiftConstraint (E_LoadedNominalDecl_Body w) = hLiftConstraint (E_Flip_GTerm w)
+    hLiftConstraint (E_LoadedNominalDecl_NomVarTypes w) = hLiftConstraint w
 
 instance
     (Recursively HFunctor typ, HFunctor (NomVarTypes typ)) =>
     HFunctor (LoadedNominalDecl typ) where
-    {-# INLINE mapH #-}
-    mapH f (LoadedNominalDecl mp mf t) =
+    {-# INLINE hmap #-}
+    hmap f (LoadedNominalDecl mp mf t) =
         LoadedNominalDecl (onMap mp) (onMap mf)
-        (t & Lens.from _Flip %~ mapH (\(E_Flip_GTerm w) -> f (E_LoadedNominalDecl_Body w)))
+        (t & Lens.from _Flip %~ hmap (\(E_Flip_GTerm w) -> f (E_LoadedNominalDecl_Body w)))
         where
-            onMap = mapH (\w -> _QVarInstances . Lens.mapped %~ f (E_LoadedNominalDecl_NomVarTypes w))
+            onMap = hmap (\w -> _QVarInstances . Lens.mapped %~ f (E_LoadedNominalDecl_NomVarTypes w))
 
 instance
     (Recursively HFoldable typ, HFoldable (NomVarTypes typ)) =>
     HFoldable (LoadedNominalDecl typ) where
-    {-# INLINE foldMapH #-}
-    foldMapH f (LoadedNominalDecl mp mf t) =
+    {-# INLINE hfoldMap #-}
+    hfoldMap f (LoadedNominalDecl mp mf t) =
         onMap mp <> onMap mf <>
-        foldMapH (\(E_Flip_GTerm w) -> f (E_LoadedNominalDecl_Body w)) (_Flip # t)
+        hfoldMap (\(E_Flip_GTerm w) -> f (E_LoadedNominalDecl_Body w)) (_Flip # t)
         where
-            onMap = foldMapH (\w -> foldMap (f (E_LoadedNominalDecl_NomVarTypes w)) . (^. _QVarInstances))
+            onMap = hfoldMap (\w -> foldMap (f (E_LoadedNominalDecl_NomVarTypes w)) . (^. _QVarInstances))
 
 instance
     (RTraversable typ, HTraversable (NomVarTypes typ)) =>
     HTraversable (LoadedNominalDecl typ) where
-    {-# INLINE sequenceH #-}
-    sequenceH (LoadedNominalDecl p f t) =
+    {-# INLINE hsequence #-}
+    hsequence (LoadedNominalDecl p f t) =
         LoadedNominalDecl
         <$> onMap p
         <*> onMap f
-        <*> Lens.from _Flip sequenceH t
+        <*> Lens.from _Flip hsequence t
         where
-            onMap = traverseH (const ((_QVarInstances . traverse) runContainedH))
+            onMap = htraverse (const ((_QVarInstances . traverse) runContainedH))
 
 {-# INLINE loadBody #-}
 loadBody ::
@@ -232,7 +232,7 @@ loadBody params foralls x =
     case x ^? quantifiedVar >>= get of
     Just r -> GPoly r & pure
     Nothing ->
-        case traverseH (const (^? _GMono)) x of
+        case htraverse (const (^? _GMono)) x of
         Just xm -> newTerm xm <&> GMono
         Nothing -> GBody x & pure
     where
@@ -252,8 +252,8 @@ loadNominalDecl ::
     m (Tree (LoadedNominalDecl typ) (UVarOf m))
 loadNominalDecl (Pure (NominalDecl params (Scheme foralls typ))) =
     do
-        paramsL <- traverseH (Proxy @(Unify m) #> makeQVarInstances) params
-        forallsL <- traverseH (Proxy @(Unify m) #> makeQVarInstances) foralls
+        paramsL <- htraverse (Proxy @(Unify m) #> makeQVarInstances) params
+        forallsL <- htraverse (Proxy @(Unify m) #> makeQVarInstances) foralls
         wrapM
             (Proxy @(HasScheme (NomVarTypes typ) m) #>>
                 loadBody paramsL forallsL
@@ -276,7 +276,7 @@ lookupParams ::
     Tree varTypes (QVarInstances (UVarOf m)) ->
     m (Tree varTypes (QVarInstances (UVarOf m)))
 lookupParams =
-    traverseH (Proxy @(Unify m) #> (_QVarInstances . traverse) lookupParam)
+    htraverse (Proxy @(Unify m) #> (_QVarInstances . traverse) lookupParam)
     where
         lookupParam v =
             lookupVar binding v
@@ -309,7 +309,7 @@ instance
                     v <- inferChild val
                     LoadedNominalDecl params foralls gen <- getNominalDecl nomId
                     recover <-
-                        traverseH_
+                        htraverse_
                         ( Proxy @(Unify m) #>
                             traverse_ (instantiateForAll USkolem) . (^. _QVarInstances)
                         ) foralls

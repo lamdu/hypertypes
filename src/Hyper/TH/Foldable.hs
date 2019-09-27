@@ -21,8 +21,8 @@ makeHFoldable typeName = makeTypeInfo typeName >>= makeHFoldableForType
 makeHFoldableForType :: TypeInfo -> DecsQ
 makeHFoldableForType info =
     instanceD (simplifyContext (makeContext info)) (appT (conT ''HFoldable) (pure (tiInstance info)))
-    [ InlineP 'foldMapH Inline FunLike AllPhases & PragmaD & pure
-    , funD 'foldMapH (tiConstructors info <&> pure . makeCtr)
+    [ InlineP 'hfoldMap Inline FunLike AllPhases & PragmaD & pure
+    , funD 'hfoldMap (tiConstructors info <&> pure . makeCtr)
     ]
     <&> (:[])
     where
@@ -64,7 +64,7 @@ makeFoldMapHCtr i wit (cName, cFields) =
         bodyFor (Right x) = bodyForPat x
         bodyFor Left{} = []
         bodyForPat (Node t) = [VarE varF `AppE` nodeWit wit t]
-        bodyForPat (GenEmbed t) = [VarE 'foldMapH `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))]
+        bodyForPat (GenEmbed t) = [VarE 'hfoldMap `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))]
         bodyForPat (InContainer _ pat) = bodyForPat pat <&> AppE (VarE 'foldMap)
         bodyForPat (FlatEmbed x) =
             [ LamCaseE

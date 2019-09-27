@@ -17,7 +17,7 @@ import           Generics.Constraints (Constraints)
 import           Hyper.Class.Functor (HFunctor(..))
 import           Hyper.Class.Monad
 import           Hyper.Class.Nodes (HNodes(..), (#>))
-import           Hyper.Class.Traversable (traverseH)
+import           Hyper.Class.Traversable (htraverse)
 import           Hyper.Recurse
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.TH.Traversable (makeHTraversableApplyAndBases)
@@ -46,7 +46,7 @@ instance RNodes (Ann a)
 instance RTraversable (Ann a)
 
 instance Monoid a => HMonad (Ann a) where
-    joinH (MkCompose (Ann a0 (MkCompose (Ann a1 (MkCompose x))))) =
+    hjoin (MkCompose (Ann a0 (MkCompose (Ann a1 (MkCompose x))))) =
         Ann (a0 <> a1) (t x)
         where
             t ::
@@ -56,7 +56,7 @@ instance Monoid a => HMonad (Ann a) where
                 Tree p (Ann a)
             t =
                 withDict (recursively (Proxy @(HFunctor p))) $
-                mapH (Proxy @(Recursively HFunctor) #> joinH)
+                hmap (Proxy @(Recursively HFunctor) #> hjoin)
 
 instance Constraints (Ann a t) Pretty => Pretty (Ann a t) where
     pPrintPrec lvl prec (Ann pl b)
@@ -79,7 +79,7 @@ annotations f (Ann pl x) =
     withDict (recurse (Proxy @(RTraversable h))) $
     Ann
     <$> f pl
-    <*> traverseH (Proxy @RTraversable #> annotations f) x
+    <*> htraverse (Proxy @RTraversable #> annotations f) x
 
 -- | Remove a tree's annotations
 strip ::

@@ -27,8 +27,8 @@ makeHNodesForType info =
     , dataInstD (pure []) ''HWitness
         [pure (tiInstance info), pure (VarT (mkName "node"))]
         Nothing (nodeOfCons <&> pure) []
-    , InlineP 'kLiftConstraint Inline FunLike AllPhases & PragmaD & pure
-    , funD 'kLiftConstraint (makeKLiftConstraints wit <&> pure)
+    , InlineP 'hLiftConstraint Inline FunLike AllPhases & PragmaD & pure
+    , funD 'hLiftConstraint (makeKLiftConstraints wit <&> pure)
     ]
     <&> (:[])
     where
@@ -61,6 +61,6 @@ makeKLiftConstraints wit
             (NormalB (VarE 'const `AppE` VarE 'id)) []
         liftEmbed x =
             Clause [ConP x [VarP witVar]]
-            (NormalB (VarE 'kLiftConstraint `AppE` VarE witVar)) []
+            (NormalB (VarE 'hLiftConstraint `AppE` VarE witVar)) []
         witVar :: Name
         witVar = mkName "witness"

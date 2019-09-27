@@ -31,12 +31,12 @@ makeZipMatch ''Prune
 -- `HPointed` and `HApplicative` instances in the spirit of `Maybe`
 
 instance HPointed Prune where
-    pureH f = Unpruned (f W_Prune_Prune)
+    hpure f = Unpruned (f W_Prune_Prune)
 
 instance HApply Prune where
-    zipH Pruned _ = Pruned
-    zipH _ Pruned = Pruned
-    zipH (Unpruned x) (Unpruned y) = Pair x y & Unpruned
+    hzip Pruned _ = Pruned
+    hzip _ Pruned = Pruned
+    hzip (Unpruned x) (Unpruned y) = Pair x y & Unpruned
 
 instance RNodes Prune
 instance c Prune => Recursively c Prune
@@ -52,11 +52,11 @@ instance
     Infer m (Compose Prune t) where
     inferBody (MkCompose Pruned) =
         withDict (inferContext (Proxy @m) (Proxy @t)) $
-        pureH (Proxy @(Unify m) #> MkContainedH newUnbound)
-        & sequenceH
+        hpure (Proxy @(Unify m) #> MkContainedH newUnbound)
+        & hsequence
         <&> (MkCompose Pruned, )
     inferBody (MkCompose (Unpruned (MkCompose x))) =
-        mapH
+        hmap
         ( \_ (MkCompose (InferChild i)) ->
             i <&> (\(InferredChild r t) -> InferredChild (MkCompose r) t)
             & InferChild

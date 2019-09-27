@@ -15,14 +15,14 @@ import Prelude.Compat
 class HNodes h => HPointed h where
     -- | Construct a value from a generator of @h@'s nodes
     -- (a generator which can generate a tree of any type given a witness that it is a node of @h@)
-    pureH ::
+    hpure ::
         (forall n. HWitness h n -> Tree p n) ->
         Tree h p
 
 instance Monoid a => HPointed (Const a) where
-    {-# INLINE pureH #-}
-    pureH _ = Const mempty
+    {-# INLINE hpure #-}
+    hpure _ = Const mempty
 
 instance (HPointed a, HPointed b) => HPointed (Product a b) where
-    {-# INLINE pureH #-}
-    pureH f = Pair (pureH (f . E_Product_a)) (pureH (f . E_Product_b))
+    {-# INLINE hpure #-}
+    hpure f = Pair (hpure (f . E_Product_a)) (hpure (f . E_Product_b))

@@ -46,8 +46,8 @@ instance HNodes t => HNodes (UnifyError t) where
     data HWitness (UnifyError t) n where
         W_UnifyError_t :: HWitness (UnifyError t) t
         E_UnifyError_t :: HWitness t n -> HWitness (UnifyError t) n
-    kLiftConstraint W_UnifyError_t = const id
-    kLiftConstraint (E_UnifyError_t w) = kLiftConstraint w
+    hLiftConstraint W_UnifyError_t = const id
+    hLiftConstraint (E_UnifyError_t w) = hLiftConstraint w
 
 makeHFunctor ''UnifyError
 makeHTraversableAndFoldable ''UnifyError

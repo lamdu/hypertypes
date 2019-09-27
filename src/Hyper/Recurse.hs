@@ -41,7 +41,7 @@ wrapM ::
 wrapM f x =
     withDict (recurse (Proxy @(RTraversable h))) $
     x ^. _Pure
-    & traverseH (Proxy @RTraversable #*# \w -> wrapM (f . HRecSub w))
+    & htraverse (Proxy @RTraversable #*# \w -> wrapM (f . HRecSub w))
     >>= f HRecSelf
 
 -- | Monadically unwrap a 'Tree' from the top down, replacing its 'HyperType' with 'Pure'
@@ -55,7 +55,7 @@ unwrapM ::
 unwrapM f x =
     withDict (recurse (Proxy @(RTraversable h))) $
     f HRecSelf x
-    >>= traverseH (Proxy @RTraversable #*# \w -> unwrapM (f . HRecSub w))
+    >>= htraverse (Proxy @RTraversable #*# \w -> unwrapM (f . HRecSub w))
     <&> (_Pure #)
 
 -- | Wrap a 'Pure' 'Tree' to a different 'HyperType' from the bottom up
@@ -69,7 +69,7 @@ wrap ::
 wrap f x =
     withDict (recursively (Proxy @(HFunctor h))) $
     x ^. _Pure
-    & mapH (Proxy @(Recursively HFunctor) #*# \w -> wrap (f . HRecSub w))
+    & hmap (Proxy @(Recursively HFunctor) #*# \w -> wrap (f . HRecSub w))
     & f HRecSelf
 
 -- | Unwrap a 'Tree' from the top down, replacing its 'HyperType' with 'Pure'
@@ -83,7 +83,7 @@ unwrap ::
 unwrap f x =
     withDict (recursively (Proxy @(HFunctor h))) $
     f HRecSelf x
-    &# mapH (Proxy @(Recursively HFunctor) #*# \w -> unwrap (f . HRecSub w))
+    &# hmap (Proxy @(Recursively HFunctor) #*# \w -> unwrap (f . HRecSub w))
 
 -- | Recursively fold up a tree to produce a result (aka catamorphism)
 {-# INLINE fold #-}
@@ -115,9 +115,9 @@ foldMapRecursive f x =
     withDict (recursively (Proxy @(HFoldable h))) $
     withDict (recursively (Proxy @(HFoldable p))) $
     f HRecSelf x <>
-    foldMapH
+    hfoldMap
     ( Proxy @(Recursively HFoldable) #*#
-        \w -> foldMapH (Proxy @(Recursively HFoldable) #> foldMapRecursive (f . HRecSub w))
+        \w -> hfoldMap (Proxy @(Recursively HFoldable) #> foldMapRecursive (f . HRecSub w))
     ) x
 
 infixr 0 #>>

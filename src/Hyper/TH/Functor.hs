@@ -21,8 +21,8 @@ makeHFunctor typeName = makeTypeInfo typeName >>= makeHFunctorForType
 makeHFunctorForType :: TypeInfo -> DecsQ
 makeHFunctorForType info =
     instanceD (simplifyContext (makeContext info)) (appT (conT ''HFunctor) (pure (tiInstance info)))
-    [ InlineP 'mapH Inline FunLike AllPhases & PragmaD & pure
-    , funD 'mapH (tiConstructors info <&> pure . makeCtr)
+    [ InlineP 'hmap Inline FunLike AllPhases & PragmaD & pure
+    , funD 'hmap (tiConstructors info <&> pure . makeCtr)
     ]
     <&> (:[])
     where
@@ -57,7 +57,7 @@ makeMapHCtr i wit (cName, cFields) =
         bodyFor (Right x) v = bodyForPat x `AppE` VarE v
         bodyFor Left{} v = VarE v
         bodyForPat (Node t) = VarE varF `AppE` nodeWit wit t
-        bodyForPat (GenEmbed t) = VarE 'mapH `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))
+        bodyForPat (GenEmbed t) = VarE 'hmap `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))
         bodyForPat (InContainer _ pat) = bodyForPat pat & AppE (VarE 'fmap)
         bodyForPat (FlatEmbed x) =
             LamCaseE

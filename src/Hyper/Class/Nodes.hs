@@ -17,7 +17,7 @@ import Hyper.Type (HyperType)
 -- | 'HNodes' allows talking about the child nodes of a 'HyperType'.
 --
 -- Various classes like 'Hyper.Class.Functor.HFunctor' build upon 'HNodes'
--- to provide methods such as 'Hyper.Class.Functor.mapH' which provide a rank-n function
+-- to provide methods such as 'Hyper.Class.Functor.hmap' which provide a rank-n function
 -- for processing child nodes which requires a constraint on the nodes.
 class HNodes (h :: HyperType) where
     -- | Lift a constraint to apply to the child nodes
@@ -31,7 +31,7 @@ class HNodes (h :: HyperType) where
 
     -- | Lift a rank-n value with a constraint which the child nodes satisfy
     -- to a function from a node witness.
-    kLiftConstraint ::
+    hLiftConstraint ::
         HNodesConstraint h c =>
         HWitness h n ->
         Proxy c ->
@@ -41,26 +41,26 @@ class HNodes (h :: HyperType) where
 instance HNodes (Const a) where
     type HNodesConstraint (Const a) x = ()
     data HWitness (Const a) i
-    {-# INLINE kLiftConstraint #-}
-    kLiftConstraint = \case{}
+    {-# INLINE hLiftConstraint #-}
+    hLiftConstraint = \case{}
 
 instance (HNodes a, HNodes b) => HNodes (Product a b) where
     type HNodesConstraint (Product a b) x = (HNodesConstraint a x, HNodesConstraint b x)
     data HWitness (Product a b) n where
         E_Product_a :: HWitness a n -> HWitness (Product a b) n
         E_Product_b :: HWitness b n -> HWitness (Product a b) n
-    {-# INLINE kLiftConstraint #-}
-    kLiftConstraint (E_Product_a w) = kLiftConstraint w
-    kLiftConstraint (E_Product_b w) = kLiftConstraint w
+    {-# INLINE hLiftConstraint #-}
+    hLiftConstraint (E_Product_a w) = hLiftConstraint w
+    hLiftConstraint (E_Product_b w) = hLiftConstraint w
 
 instance (HNodes a, HNodes b) => HNodes (Sum a b) where
     type HNodesConstraint (Sum a b) x = (HNodesConstraint a x, HNodesConstraint b x)
     data HWitness (Sum a b) n where
         E_Sum_a :: HWitness a n -> HWitness (Sum a b) n
         E_Sum_b :: HWitness b n -> HWitness (Sum a b) n
-    {-# INLINE kLiftConstraint #-}
-    kLiftConstraint (E_Sum_a w) = kLiftConstraint w
-    kLiftConstraint (E_Sum_b w) = kLiftConstraint w
+    {-# INLINE hLiftConstraint #-}
+    hLiftConstraint (E_Sum_a w) = hLiftConstraint w
+    hLiftConstraint (E_Sum_b w) = hLiftConstraint w
 
 infixr 0 #>
 infixr 0 #*#
@@ -70,7 +70,7 @@ infixr 0 #*#
 (#>) ::
     (HNodes h, HNodesConstraint h c) =>
     Proxy c -> (c n => r) -> HWitness h n -> r
-(#>) p r w = kLiftConstraint w p r
+(#>) p r w = hLiftConstraint w p r
 
 -- | A variant of '#>' which does not consume the witness parameter.
 --

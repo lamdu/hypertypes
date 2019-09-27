@@ -3,7 +3,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 module Hyper.Class.Monad
-    ( HMonad(..), bindH
+    ( HMonad(..), hbind
     ) where
 
 import Control.Lens.Operators
@@ -21,25 +21,25 @@ import Prelude.Compat
 
 -- | A variant of 'Control.Monad.Monad' for 'Hyper.Type.HyperType's
 class HApplicative h => HMonad h where
-    joinH ::
+    hjoin ::
         Recursively HFunctor p =>
         Tree (Compose h h) p ->
         Tree h p
 
 instance HMonad Pure where
-    joinH x =
+    hjoin x =
         withDict (recursively (p x)) $
         _Pure #
-        mapH (Proxy @(Recursively HFunctor) #> joinH)
+        hmap (Proxy @(Recursively HFunctor) #> hjoin)
         (x ^. _Compose . _Pure . _Compose . _Pure . _Compose)
         where
             p :: Tree (Compose Pure Pure) p -> Proxy (HFunctor p)
             p _ = Proxy
 
 -- | A variant of 'Control.Monad.(>>=)' for 'Hyper.Type.HyperType's
-bindH ::
+hbind ::
     (HMonad h, Recursively HFunctor p) =>
     Tree h p ->
     (forall n. HWitness h n -> Tree p n -> Tree (Compose h p) n) ->
     Tree h p
-bindH x f = _Compose # mapH f x & joinH
+hbind x f = _Compose # hmap f x & hjoin

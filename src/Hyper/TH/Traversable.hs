@@ -56,8 +56,8 @@ makeHTraversable typeName = makeTypeInfo typeName >>= makeHTraversableForType
 makeHTraversableForType :: TypeInfo -> DecsQ
 makeHTraversableForType info =
     instanceD (simplifyContext (makeContext info)) (appT (conT ''HTraversable) (pure (tiInstance info)))
-    [ InlineP 'sequenceH Inline FunLike AllPhases & PragmaD & pure
-    , funD 'sequenceH (tiConstructors info <&> pure . uncurry makeCons)
+    [ InlineP 'hsequence Inline FunLike AllPhases & PragmaD & pure
+    , funD 'hsequence (tiConstructors info <&> pure . uncurry makeCons)
     ]
     <&> (:[])
 
@@ -84,6 +84,6 @@ makeCons cName cFields =
         bodyFor (Right x) = bodyForPat x
         bodyFor Left{} = VarE 'pure
         bodyForPat Node{} = VarE 'runContainedH
-        bodyForPat FlatEmbed{} = VarE 'sequenceH
-        bodyForPat GenEmbed{} = VarE 'sequenceH
+        bodyForPat FlatEmbed{} = VarE 'hsequence
+        bodyForPat GenEmbed{} = VarE 'hsequence
         bodyForPat (InContainer _ pat) = VarE 'traverse `AppE` bodyForPat pat

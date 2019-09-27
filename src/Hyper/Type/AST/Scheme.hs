@@ -139,9 +139,9 @@ instance
     {-# INLINE inferBody #-}
     inferBody (Scheme vars typ) =
         do
-            foralls <- traverseH (Proxy @(MonadInstantiate m) #> makeQVarInstances) vars
+            foralls <- htraverse (Proxy @(MonadInstantiate m) #> makeQVarInstances) vars
             let withForalls =
-                    foldMapH
+                    hfoldMap
                     (Proxy @(MonadInstantiate m) #> (:[]) . localInstantiations)
                     foralls
                     & foldl (.) id
@@ -163,10 +163,10 @@ inferType x =
     Just q -> lookupQVar q <&> (quantifiedVar # q, ) . MkANode
     Nothing ->
         do
-            xI <- traverseH (const inferChild) x
-            mapH (Proxy @HasInferredValue #> (^. inType . inferredValue)) xI
+            xI <- htraverse (const inferChild) x
+            hmap (Proxy @HasInferredValue #> (^. inType . inferredValue)) xI
                 & newTerm
-                <&> (mapH (const (^. inRep)) xI, ) . MkANode
+                <&> (hmap (const (^. inRep)) xI, ) . MkANode
 
 {-# INLINE makeQVarInstances #-}
 makeQVarInstances ::
@@ -188,7 +188,7 @@ loadBody foralls x =
     case x ^? quantifiedVar >>= getForAll of
     Just r -> GPoly r & pure
     Nothing ->
-        case traverseH (const (^? _GMono)) x of
+        case htraverse (const (^? _GMono)) x of
         Just xm -> newTerm xm <&> GMono
         Nothing -> GBody x & pure
     where
@@ -230,7 +230,7 @@ loadScheme ::
     m (Tree (GTerm (UVarOf m)) typ)
 loadScheme (Pure (Scheme vars typ)) =
     do
-        foralls <- traverseH (Proxy @(Unify m) #> makeQVarInstances) vars
+        foralls <- htraverse (Proxy @(Unify m) #> makeQVarInstances) vars
         wrapM (Proxy @(HasScheme varTypes m) #>> loadBody foralls) typ
 
 saveH ::
@@ -240,7 +240,7 @@ saveH ::
     StateT (Tree varTypes QVars, [m ()]) m (Tree Pure typ)
 saveH (GBody x) =
     withDict (hasSchemeRecursive (Proxy @varTypes) (Proxy @m) (Proxy @typ)) $
-    traverseH (Proxy @(HasScheme varTypes m) #> saveH) x <&> (_Pure #)
+    htraverse (Proxy @(HasScheme varTypes m) #> saveH) x <&> (_Pure #)
 saveH (GMono x) =
     unwrapM (Proxy @(HasScheme varTypes m) #>> f) x & lift
     where
@@ -278,7 +278,7 @@ saveScheme x =
     do
         (t, (v, recover)) <-
             runStateT (saveH x)
-            ( pureH (Proxy @OrdQVar #> QVars mempty)
+            ( hpure (Proxy @OrdQVar #> QVars mempty)
             , []
             )
         _Pure # Scheme v t <$ sequence_ recover

@@ -43,9 +43,9 @@ instance (HNodes a, HNodes b) => HNodes (Compose a b) where
     type HNodesConstraint (Compose a b) c = HNodesConstraint a (ComposeConstraint0 c b)
     data HWitness (Compose a b) n where
         HWitness_Compose :: HWitness a a0 -> HWitness b b0 -> HWitness (Compose a b) (Compose a0 b0)
-    {-# INLINE kLiftConstraint #-}
-    kLiftConstraint (HWitness_Compose w0 w1) p r =
-        kLiftConstraint w0 (p0 p) (kLiftConstraint w1 (p1 p w0) r)
+    {-# INLINE hLiftConstraint #-}
+    hLiftConstraint (HWitness_Compose w0 w1) p r =
+        hLiftConstraint w0 (p0 p) (hLiftConstraint w1 (p1 p w0) r)
         where
             p0 :: Proxy c -> Proxy (ComposeConstraint0 c b)
             p0 _ = Proxy
@@ -62,51 +62,51 @@ instance c (Compose k0 k1) => ComposeConstraint1 c k0 k1
 instance
     (HNodes a, HPointed a, HPointed b) =>
     HPointed (Compose a b) where
-    {-# INLINE pureH #-}
-    pureH x =
+    {-# INLINE hpure #-}
+    hpure x =
         _Compose #
-        pureH
+        hpure
         ( \wa ->
-            _Compose # pureH (\wb -> _Compose # x (HWitness_Compose wa wb))
+            _Compose # hpure (\wb -> _Compose # x (HWitness_Compose wa wb))
         )
 
 instance (HFunctor a, HFunctor b) => HFunctor (Compose a b) where
-    {-# INLINE mapH #-}
-    mapH f =
+    {-# INLINE hmap #-}
+    hmap f =
         _Compose %~
-        mapH
+        hmap
         ( \w0 ->
-            _Compose %~ mapH (\w1 -> _Compose %~ f (HWitness_Compose w0 w1))
+            _Compose %~ hmap (\w1 -> _Compose %~ f (HWitness_Compose w0 w1))
         )
 
 instance (HApply a, HApply b) => HApply (Compose a b) where
-    {-# INLINE zipH #-}
-    zipH (MkCompose a0) =
+    {-# INLINE hzip #-}
+    hzip (MkCompose a0) =
         _Compose %~
-        mapH
+        hmap
         ( \_ (Pair (MkCompose b0) (MkCompose b1)) ->
             _Compose #
-            mapH
+            hmap
             ( \_ (Pair (MkCompose i0) (MkCompose i1)) ->
                 _Compose # Pair i0 i1
-            ) (zipH b0 b1)
+            ) (hzip b0 b1)
         )
-        . zipH a0
+        . hzip a0
 
 instance (HFoldable a, HFoldable b) => HFoldable (Compose a b) where
-    {-# INLINE foldMapH #-}
-    foldMapH f =
-        foldMapH
+    {-# INLINE hfoldMap #-}
+    hfoldMap f =
+        hfoldMap
         ( \w0 ->
-            foldMapH (\w1 -> f (HWitness_Compose w0 w1) . (^. _Compose)) . (^. _Compose)
+            hfoldMap (\w1 -> f (HWitness_Compose w0 w1) . (^. _Compose)) . (^. _Compose)
         ) . (^. _Compose)
 
 instance (HTraversable a, HTraversable b) => HTraversable (Compose a b) where
-    {-# INLINE sequenceH #-}
-    sequenceH =
+    {-# INLINE hsequence #-}
+    hsequence =
         _Compose
-        ( sequenceH .
-            mapH (const (MkContainedH . _Compose (traverseH (const (_Compose runContainedH)))))
+        ( hsequence .
+            hmap (const (MkContainedH . _Compose (htraverse (const (_Compose runContainedH)))))
         )
 
 instance
@@ -115,10 +115,10 @@ instance
     {-# INLINE zipMatch #-}
     zipMatch (MkCompose x) (MkCompose y) =
         zipMatch x y
-        >>= traverseH
+        >>= htraverse
             (\_ (Pair (MkCompose cx) (MkCompose cy)) ->
                 zipMatch cx cy
-                <&> mapH
+                <&> hmap
                     (\_ (Pair (MkCompose bx) (MkCompose by)) -> Pair bx by & MkCompose)
                 <&> (_Compose #)
             )
