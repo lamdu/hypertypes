@@ -26,7 +26,7 @@ makeHPointedForType info =
             _ -> fail "makeHPointed only supports types with a single constructor"
         instanceD (simplifyContext (makeContext info)) (appT (conT ''HPointed) (pure (tiInstance info)))
             [ InlineP 'hpure Inline FunLike AllPhases & PragmaD & pure
-            , funD 'hpure [makePureKCtr info cons]
+            , funD 'hpure [makeHPureCtr info cons]
             ]
     <&> (:[])
 
@@ -40,8 +40,8 @@ makeContext info =
         ctxForPat (GenEmbed t) = [ConT ''HPointed `AppT` t]
         ctxForPat _ = []
 
-makePureKCtr :: TypeInfo -> (Name, [Either Type CtrTypePattern]) -> Q Clause
-makePureKCtr typeInfo (cName, cFields) =
+makeHPureCtr :: TypeInfo -> (Name, [Either Type CtrTypePattern]) -> Q Clause
+makeHPureCtr typeInfo (cName, cFields) =
     traverse bodyFor cFields
     <&> foldl AppE (ConE cName)
     <&> NormalB

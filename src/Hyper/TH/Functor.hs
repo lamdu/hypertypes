@@ -30,7 +30,7 @@ makeHFunctorForType info =
         makeCtr ctr =
             Clause [VarP varF, pat] body []
             where
-                (pat, body) = makeMapHCtr 0 wit ctr
+                (pat, body) = makeHMapCtr 0 wit ctr
 
 varF :: Name
 varF = mkName "_f"
@@ -43,8 +43,8 @@ makeContext info =
         ctxForPat (GenEmbed t) = [ConT ''HFunctor `AppT` t]
         ctxForPat _ = []
 
-makeMapHCtr :: Int -> NodeWitnesses -> (Name, [Either Type CtrTypePattern]) -> (Pat, Body)
-makeMapHCtr i wit (cName, cFields) =
+makeHMapCtr :: Int -> NodeWitnesses -> (Name, [Either Type CtrTypePattern]) -> (Pat, Body)
+makeHMapCtr i wit (cName, cFields) =
     (ConP cName (cVars <&> VarP), body)
     where
         cVars =
@@ -62,6 +62,6 @@ makeMapHCtr i wit (cName, cFields) =
         bodyForPat (FlatEmbed x) =
             LamCaseE
             (tiConstructors x
-                <&> makeMapHCtr (i + length cVars) wit
+                <&> makeHMapCtr (i + length cVars) wit
                 <&> \(p, b) -> Match p b []
             )

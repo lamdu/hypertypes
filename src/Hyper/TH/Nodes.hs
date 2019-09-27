@@ -28,7 +28,7 @@ makeHNodesForType info =
         [pure (tiInstance info), pure (VarT (mkName "node"))]
         Nothing (nodeOfCons <&> pure) []
     , InlineP 'hLiftConstraint Inline FunLike AllPhases & PragmaD & pure
-    , funD 'hLiftConstraint (makeKLiftConstraints wit <&> pure)
+    , funD 'hLiftConstraint (makeHLiftConstraints wit <&> pure)
     ]
     <&> (:[])
     where
@@ -50,8 +50,8 @@ makeContext info =
         ctxForPat (GenEmbed t) = [ConT ''HNodes `AppT` t]
         ctxForPat _ = []
 
-makeKLiftConstraints :: NodeWitnesses -> [Clause]
-makeKLiftConstraints wit
+makeHLiftConstraints :: NodeWitnesses -> [Clause]
+makeHLiftConstraints wit
     | null clauses = [Clause [] (NormalB (LamCaseE [])) []]
     | otherwise = clauses
     where

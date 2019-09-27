@@ -30,7 +30,7 @@ makeHFoldableForType info =
         makeCtr ctr =
             Clause [VarP varF, pat] body []
             where
-                (pat, body) = makeFoldMapHCtr 0 wit ctr
+                (pat, body) = makeHFoldMapCtr 0 wit ctr
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
@@ -43,8 +43,8 @@ makeContext info =
 varF :: Name
 varF = mkName "_f"
 
-makeFoldMapHCtr :: Int -> NodeWitnesses -> (Name, [Either Type CtrTypePattern]) -> (Pat, Body)
-makeFoldMapHCtr i wit (cName, cFields) =
+makeHFoldMapCtr :: Int -> NodeWitnesses -> (Name, [Either Type CtrTypePattern]) -> (Pat, Body)
+makeHFoldMapCtr i wit (cName, cFields) =
     (ConP cName (cVars <&> VarP), body)
     where
         cVars =
@@ -69,7 +69,7 @@ makeFoldMapHCtr i wit (cName, cFields) =
         bodyForPat (FlatEmbed x) =
             [ LamCaseE
                 (tiConstructors x
-                    <&> makeFoldMapHCtr (i + length cVars) wit
+                    <&> makeHFoldMapCtr (i + length cVars) wit
                     <&> \(p, b) -> Match p b []
                 )
             ]
