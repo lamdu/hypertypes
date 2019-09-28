@@ -20,35 +20,55 @@ import           Prelude.Compat
 
 -- | Generate a 'HasHPlain' instance
 makeHasHPlain :: [Name] -> DecsQ
-makeHasHPlain = traverse makeOne
+makeHasHPlain x = traverse makeOne x <&> concat
 
-makeOne :: Name -> Q Dec
+makeOne :: Name -> Q [Dec]
 makeOne typeName = makeTypeInfo typeName >>= makeHasHPlainForType
 
-makeHasHPlainForType :: TypeInfo -> Q Dec
+makeHasHPlainForType :: TypeInfo -> Q [Dec]
 makeHasHPlainForType info =
     do
         ctrs <- traverse (makeCtr (tiHyperParam info)) (tiConstructors info)
-        ctx <- ctrs >>= (^. Lens._4) & simplifyContext
-        InstanceD Nothing ctx
-            (ConT ''HasHPlain `AppT` tiInstance info)
-            [ DataInstD [] ''HPlain [tiInstance info] Nothing (ctrs <&> (^. Lens._1))
-                [DerivClause (Just StockStrategy) [ConT ''Eq, ConT ''Ord, ConT ''Show]]
-            , FunD 'hPlain
-                [ Clause []
-                    ( NormalB
-                        (InfixE
-                            (Just (VarE 'Lens.iso `AppE` VarE fromPlain `AppE` VarE toPlain))
-                            (VarE '(.))
-                            (Just (VarE 'Lens.from `AppE` VarE '_Pure))
+        let typs = ctrs >>= (^. Lens._4) & filter (not . anHPlainOfCons)
+        let plains =
+                typs
+                >>=
+                \case
+                ConT hplain `AppT` x | hplain == ''HPlain -> [x]
+                _ -> []
+        plainsCtx <- plains <&> AppT (ConT ''HasHPlain) & simplifyContext
+        showCtx <- typs <&> AppT (ConT ''Show) & simplifyContext
+        ordCtx <- typs <&> AppT (ConT ''Ord) & simplifyContext
+        eqCtx <- typs <&> AppT (ConT ''Eq) & simplifyContext
+        pure
+            [ InstanceD Nothing (showCtx <> plainsCtx)
+                (ConT ''HasHPlain `AppT` tiInstance info)
+                [ DataInstD [] ''HPlain [tiInstance info] Nothing (ctrs <&> (^. Lens._1)) []
+                , FunD 'hPlain
+                    [ Clause []
+                        ( NormalB
+                            (InfixE
+                                (Just (VarE 'Lens.iso `AppE` VarE fromPlain `AppE` VarE toPlain))
+                                (VarE '(.))
+                                (Just (VarE 'Lens.from `AppE` VarE '_Pure))
+                            )
                         )
-                    )
-                    [ FunD toPlain (ctrs <&> (^. Lens._2))
-                    , FunD fromPlain (ctrs <&> (^. Lens._3))
+                        [ FunD toPlain (ctrs <&> (^. Lens._2))
+                        , FunD fromPlain (ctrs <&> (^. Lens._3))
+                        ]
                     ]
                 ]
-            ] & pure
+            , StandaloneDerivD Nothing eqCtx (ConT ''Eq `AppT` (ConT ''HPlain `AppT` tiInstance info))
+            , StandaloneDerivD Nothing ordCtx (ConT ''Ord `AppT` (ConT ''HPlain `AppT` tiInstance info))
+            , StandaloneDerivD Nothing showCtx (ConT ''Show `AppT` (ConT ''HPlain `AppT` tiInstance info))
+            ]
     where
+        anHPlainOfCons (ConT hplain `AppT` x)
+            | hplain == ''HPlain =
+                case unapply x of
+                (ConT{}, _) -> True
+                _ -> False
+        anHPlainOfCons _ = False
         toPlain = mkName "toPlain"
         fromPlain = mkName "fromPlain"
 
@@ -68,7 +88,7 @@ data Field
     = NodeField FieldInfo
     | FlatFields FlatInfo
 
-makeCtr :: Name -> (Name, [Either Type CtrTypePattern]) -> Q (Con, Clause, Clause, Cxt)
+makeCtr :: Name -> (Name, [Either Type CtrTypePattern]) -> Q (Con, Clause, Clause, [Type])
 makeCtr param (cName, cFields) =
     traverse (forField True) cFields
     <&>
@@ -178,8 +198,5 @@ makeCtr param (cName, cFields) =
             | g == ''GetHyperType && v == param = ConT ''Pure
         normalizeType (x `AppT` y) = normalizeType x `AppT` normalizeType y
         normalizeType x = x
-        fieldContext (NodeField x) =
-            case fieldPlainType x of
-            ConT hplain `AppT` _ | hplain == ''HPlain -> []
-            _ -> [ConT ''Show `AppT` fieldPlainType x]
+        fieldContext (NodeField x) = [fieldPlainType x]
         fieldContext (FlatFields x) = flatFields x >>= fieldContext
