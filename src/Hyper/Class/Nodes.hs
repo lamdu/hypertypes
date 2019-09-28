@@ -8,10 +8,9 @@ module Hyper.Class.Nodes
     ) where
 
 import Data.Functor.Const (Const(..))
-import Data.Functor.Product.PolyKinds (Product(..))
-import Data.Functor.Sum.PolyKinds (Sum(..))
 import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy(..))
+import GHC.Generics ((:+:)(..), (:*:)(..))
 import Hyper.Type (HyperType)
 
 -- | 'HNodes' allows talking about the child nodes of a 'HyperType'.
@@ -44,20 +43,20 @@ instance HNodes (Const a) where
     {-# INLINE hLiftConstraint #-}
     hLiftConstraint = \case{}
 
-instance (HNodes a, HNodes b) => HNodes (Product a b) where
-    type HNodesConstraint (Product a b) x = (HNodesConstraint a x, HNodesConstraint b x)
-    data HWitness (Product a b) n where
-        E_Product_a :: HWitness a n -> HWitness (Product a b) n
-        E_Product_b :: HWitness b n -> HWitness (Product a b) n
+instance (HNodes a, HNodes b) => HNodes (a :*: b) where
+    type HNodesConstraint (a :*: b) x = (HNodesConstraint a x, HNodesConstraint b x)
+    data HWitness (a :*: b) n where
+        E_Product_a :: HWitness a n -> HWitness (a :*: b) n
+        E_Product_b :: HWitness b n -> HWitness (a :*: b) n
     {-# INLINE hLiftConstraint #-}
     hLiftConstraint (E_Product_a w) = hLiftConstraint w
     hLiftConstraint (E_Product_b w) = hLiftConstraint w
 
-instance (HNodes a, HNodes b) => HNodes (Sum a b) where
-    type HNodesConstraint (Sum a b) x = (HNodesConstraint a x, HNodesConstraint b x)
-    data HWitness (Sum a b) n where
-        E_Sum_a :: HWitness a n -> HWitness (Sum a b) n
-        E_Sum_b :: HWitness b n -> HWitness (Sum a b) n
+instance (HNodes a, HNodes b) => HNodes (a :+: b) where
+    type HNodesConstraint (a :+: b) x = (HNodesConstraint a x, HNodesConstraint b x)
+    data HWitness (a :+: b) n where
+        E_Sum_a :: HWitness a n -> HWitness (a :+: b) n
+        E_Sum_b :: HWitness b n -> HWitness (a :+: b) n
     {-# INLINE hLiftConstraint #-}
     hLiftConstraint (E_Sum_a w) = hLiftConstraint w
     hLiftConstraint (E_Sum_b w) = hLiftConstraint w

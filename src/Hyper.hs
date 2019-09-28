@@ -2,7 +2,7 @@
 
 module Hyper (module X) where
 
-import Data.Functor.Product.PolyKinds as X (Product(..))
+import GHC.Generics as X ((:*:)(..))
 import Hyper.Class.Apply as X (HApply(..), HApplicative, liftH2)
 import Hyper.Class.Foldable as X
     ( HFoldable(..), hfoldMap, htraverse_, htraverse1_

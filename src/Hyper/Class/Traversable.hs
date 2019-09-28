@@ -9,8 +9,7 @@ module Hyper.Class.Traversable
 import Control.Lens (Traversal, Iso, iso)
 import Control.Lens.Operators
 import Data.Functor.Const (Const(..))
-import Data.Functor.Product.PolyKinds (Product(..))
-import Data.Functor.Sum.PolyKinds (Sum(..))
+import GHC.Generics ((:*:)(..), (:+:)(..))
 import Hyper.Class.Foldable (HFoldable)
 import Hyper.Class.Functor (HFunctor(..), hmapped1)
 import Hyper.Class.Nodes (HNodes(..))
@@ -44,14 +43,14 @@ instance HTraversable (Const a) where
     {-# INLINE hsequence #-}
     hsequence (Const x) = pure (Const x)
 
-instance (HTraversable a, HTraversable b) => HTraversable (Product a b) where
+instance (HTraversable a, HTraversable b) => HTraversable (a :*: b) where
     {-# INLINE hsequence #-}
-    hsequence (Pair x y) = Pair <$> hsequence x <*> hsequence y
+    hsequence (x :*: y) = (:*:) <$> hsequence x <*> hsequence y
 
-instance (HTraversable a, HTraversable b) => HTraversable (Sum a b) where
+instance (HTraversable a, HTraversable b) => HTraversable (a :+: b) where
     {-# INLINE hsequence #-}
-    hsequence (InL x) = hsequence x <&> InL
-    hsequence (InR x) = hsequence x <&> InR
+    hsequence (L1 x) = hsequence x <&> L1
+    hsequence (R1 x) = hsequence x <&> R1
 
 -- | 'HTraversable' variant of 'traverse'
 {-# INLINE htraverse #-}

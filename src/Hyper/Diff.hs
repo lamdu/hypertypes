@@ -29,7 +29,7 @@ import Prelude.Compat
 data Diff a b e
     = CommonSubTree (Ann (a, b) e)
     | CommonBody (CommonBody a b e)
-    | Different (Product (Ann a) (Ann b) e)
+    | Different ((Ann a :*: Ann b) e)
     deriving Generic
 
 -- | A 'HyperType' which represents two trees which have the same top-level node,
@@ -51,7 +51,7 @@ diff x@(Ann xA xB) y@(Ann yA yB) =
     withDict (recursively (Proxy @(ZipMatch t))) $
     withDict (recurse (Proxy @(RTraversable t))) $
     case zipMatch xB yB of
-    Nothing -> Different (Pair x y)
+    Nothing -> Different (x :*: y)
     Just match ->
         case htraverse (const (^? _CommonSubTree)) sub of
         Nothing -> MkCommonBody (xA, yA) sub & CommonBody
@@ -60,7 +60,7 @@ diff x@(Ann xA xB) y@(Ann yA yB) =
             sub =
                 hmap
                 ( Proxy @(Recursively ZipMatch) #*# Proxy @RTraversable #>
-                    \(Pair xC yC) -> diff xC yC
+                    \(xC :*: yC) -> diff xC yC
                 ) match
 
 foldDiffs ::
@@ -70,7 +70,7 @@ foldDiffs ::
     Tree (Diff a b) h ->
     r
 foldDiffs _ CommonSubTree{} = mempty
-foldDiffs f (Different (Pair x y)) = f HRecSelf x y
+foldDiffs f (Different (x :*: y)) = f HRecSelf x y
 foldDiffs f (CommonBody (MkCommonBody _ x)) =
     withDict (recursively (Proxy @(HFoldable h))) $
     hfoldMap
@@ -113,7 +113,7 @@ diffPH x y =
                 ( Proxy @(Recursively ZipMatch) #*#
                     Proxy @(Recursively HasHPlain) #*#
                     Proxy @RTraversable #>
-                    \(Pair xC yC) -> diffPH xC yC
+                    \(xC :*: yC) -> diffPH xC yC
                 ) match
 
 makeCommonInstances [''Diff, ''CommonBody, ''DiffP]

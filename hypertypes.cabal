@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 10ed731981e00ef25e0945043515b171ae1f5a1ea06479ff00e798775f98442b
+-- hash: b6eadef00a095a694395786dcae8208ae02ac3dd4823fe63dd9b97d2e2414f7f
 
 name:           hypertypes
 version:        0.1.0.1
@@ -29,8 +29,6 @@ source-repository head
 
 library
   exposed-modules:
-      Data.Functor.Product.PolyKinds
-      Data.Functor.Sum.PolyKinds
       Hyper
       Hyper.Class.Apply
       Hyper.Class.Foldable

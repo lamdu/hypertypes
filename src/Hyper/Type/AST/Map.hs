@@ -6,10 +6,9 @@ module Hyper.Type.AST.Map
 
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Data.Functor.Product.PolyKinds (Product(..))
 import           Data.Map (Map)
 import qualified Data.Map as Map
-import           GHC.Generics (Generic)
+import           GHC.Generics (Generic, (:*:)(..))
 import           Hyper
 import           Hyper.Class.ZipMatch (ZipMatch(..))
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
@@ -32,7 +31,7 @@ instance Eq h => ZipMatch (TermMap h expr) where
         | Map.size x /= Map.size y = Nothing
         | otherwise =
             zipMatchList (Map.toList x) (Map.toList y)
-            <&> traverse . Lens._2 %~ uncurry Pair
+            <&> traverse . Lens._2 %~ uncurry (:*:)
             <&> TermMap . Map.fromAscList
 
 {-# INLINE zipMatchList #-}

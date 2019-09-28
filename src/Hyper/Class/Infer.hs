@@ -11,8 +11,8 @@ import           Control.Lens (makeLenses, makePrisms)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Constraint (Dict(..), withDict)
-import           Data.Functor.Sum.PolyKinds (Sum(..))
 import           Data.Proxy (Proxy(..))
+import           GHC.Generics ((:+:)(..))
 import           Hyper
 import           Hyper.Class.Unify
 import           Hyper.Recurse
@@ -31,7 +31,7 @@ import           Prelude.Compat
 -- * An inferred type together with a scope
 type family InferOf (t :: HyperType) :: HyperType
 
-type instance InferOf (Sum a b) = InferOf a
+type instance InferOf (a :+: b) = InferOf a
 
 -- | A 'HyperType' containing an inferred child node
 data InferredChild v h t = InferredChild
@@ -95,10 +95,10 @@ instance Recursive (Infer m) where
             p1 :: Proxy (Infer m t) -> Proxy t
             p1 _ = Proxy
 
-instance (InferOf a ~ InferOf b, Infer m a, Infer m b) => Infer m (Sum a b) where
+instance (InferOf a ~ InferOf b, Infer m a, Infer m b) => Infer m (a :+: b) where
     {-# INLINE inferBody #-}
-    inferBody (InL x) = inferBody x <&> Lens._1 %~ InL
-    inferBody (InR x) = inferBody x <&> Lens._1 %~ InR
+    inferBody (L1 x) = inferBody x <&> Lens._1 %~ L1
+    inferBody (R1 x) = inferBody x <&> Lens._1 %~ R1
 
     {-# INLINE inferContext #-}
     inferContext p _ =

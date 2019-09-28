@@ -10,7 +10,7 @@ module Hyper.TH.Apply
 
 import Control.Applicative (liftA2)
 import Control.Lens.Operators
-import Data.Functor.Product.PolyKinds (Product(..))
+import GHC.Generics ((:*:)(..))
 import Hyper.Class.Apply
 import Hyper.TH.Functor (makeHFunctor)
 import Hyper.TH.Internal.Utils
@@ -67,7 +67,7 @@ makeHApplyForType info =
     where
         bodyFor (Right x) = bodyForPat x
         bodyFor Left{} = VarE '(<>)
-        bodyForPat Node{} = ConE 'Pair
+        bodyForPat Node{} = ConE '(:*:)
         bodyForPat GenEmbed{} = VarE 'hzip
         bodyForPat FlatEmbed{} = VarE 'hzip
         bodyForPat (InContainer _ pat) = VarE 'liftA2 `AppE` bodyForPat pat

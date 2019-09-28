@@ -36,7 +36,7 @@ instance HPointed Prune where
 instance HApply Prune where
     hzip Pruned _ = Pruned
     hzip _ Pruned = Pruned
-    hzip (Unpruned x) (Unpruned y) = Pair x y & Unpruned
+    hzip (Unpruned x) (Unpruned y) = x :*: y & Unpruned
 
 instance RNodes Prune
 instance c Prune => Recursively c Prune

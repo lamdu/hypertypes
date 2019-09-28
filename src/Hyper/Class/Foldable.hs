@@ -9,9 +9,8 @@ module Hyper.Class.Foldable
 import Control.Lens (Fold, folding)
 import Data.Foldable (sequenceA_)
 import Data.Functor.Const (Const(..))
-import Data.Functor.Product.PolyKinds (Product(..))
-import Data.Functor.Sum.PolyKinds (Sum(..))
 import Data.Proxy (Proxy(..))
+import GHC.Generics ((:*:)(..), (:+:)(..))
 import Hyper.Class.Nodes (HNodes(..), HWitness(..), (#>))
 import Hyper.Type (Tree)
 
@@ -33,14 +32,14 @@ instance HFoldable (Const a) where
     {-# INLINE hfoldMap #-}
     hfoldMap _ _ = mempty
 
-instance (HFoldable a, HFoldable b) => HFoldable (Product a b) where
+instance (HFoldable a, HFoldable b) => HFoldable (a :*: b) where
     {-# INLINE hfoldMap #-}
-    hfoldMap f (Pair x y) = hfoldMap (f . E_Product_a) x <> hfoldMap (f . E_Product_b) y
+    hfoldMap f (x :*: y) = hfoldMap (f . E_Product_a) x <> hfoldMap (f . E_Product_b) y
 
-instance (HFoldable a, HFoldable b) => HFoldable (Sum a b) where
+instance (HFoldable a, HFoldable b) => HFoldable (a :+: b) where
     {-# INLINE hfoldMap #-}
-    hfoldMap f (InL x) = hfoldMap (f . E_Sum_a) x
-    hfoldMap f (InR x) = hfoldMap (f . E_Sum_b) x
+    hfoldMap f (L1 x) = hfoldMap (f . E_Sum_a) x
+    hfoldMap f (R1 x) = hfoldMap (f . E_Sum_b) x
 
 -- | 'HFoldable' variant for 'Control.Lens.folded' for 'Hyper.Type.HyperType's with a single node type.
 --

@@ -10,9 +10,8 @@ module Hyper.Type.Combinator.Compose
 
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Data.Functor.Product.PolyKinds (Product(..))
 import           Data.Proxy (Proxy(..))
-import           GHC.Generics (Generic)
+import           GHC.Generics (Generic, (:*:)(..))
 import           Hyper.Class.Apply
 import           Hyper.Class.Foldable
 import           Hyper.Class.Functor
@@ -84,11 +83,11 @@ instance (HApply a, HApply b) => HApply (Compose a b) where
     hzip (MkCompose a0) =
         _Compose %~
         hmap
-        ( \_ (Pair (MkCompose b0) (MkCompose b1)) ->
+        ( \_ (MkCompose b0 :*: MkCompose b1) ->
             _Compose #
             hmap
-            ( \_ (Pair (MkCompose i0) (MkCompose i1)) ->
-                _Compose # Pair i0 i1
+            ( \_ (MkCompose i0 :*: MkCompose i1) ->
+                _Compose # (i0 :*: i1)
             ) (hzip b0 b1)
         )
         . hzip a0
@@ -116,10 +115,10 @@ instance
     zipMatch (MkCompose x) (MkCompose y) =
         zipMatch x y
         >>= htraverse
-            (\_ (Pair (MkCompose cx) (MkCompose cy)) ->
+            (\_ (MkCompose cx :*: MkCompose cy) ->
                 zipMatch cx cy
                 <&> hmap
-                    (\_ (Pair (MkCompose bx) (MkCompose by)) -> Pair bx by & MkCompose)
+                    (\_ (MkCompose bx :*: MkCompose by) -> bx :*: by & MkCompose)
                 <&> (_Compose #)
             )
         <&> (_Compose #)

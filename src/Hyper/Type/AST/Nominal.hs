@@ -136,7 +136,7 @@ instance
             zipMatch x y
             >>= htraverse
                 ( Proxy @ZipMatch #*# Proxy @OrdQVar #>
-                    \(Pair (QVarInstances c0) (QVarInstances c1)) ->
+                    \(QVarInstances c0 :*: QVarInstances c1) ->
                     zipMatch (TermMap c0) (TermMap c1)
                     <&> (^. _TermMap)
                     <&> QVarInstances

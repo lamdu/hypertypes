@@ -7,8 +7,7 @@ module Hyper.Class.Functor
 
 import Control.Lens (Setter, sets)
 import Data.Functor.Const (Const(..))
-import Data.Functor.Product.PolyKinds (Product(..))
-import Data.Functor.Sum.PolyKinds (Sum(..))
+import GHC.Generics ((:*:)(..), (:+:)(..))
 import Data.Proxy (Proxy(..))
 import Hyper.Class.Nodes
 import Hyper.Type (Tree)
@@ -30,15 +29,16 @@ instance HFunctor (Const a) where
     {-# INLINE hmap #-}
     hmap _ (Const x) = Const x
 
-instance (HFunctor a, HFunctor b) => HFunctor (Product a b) where
+instance (HFunctor a, HFunctor b) => HFunctor (a :*: b) where
     {-# INLINE hmap #-}
-    hmap f (Pair x y) =
-        Pair (hmap (f . E_Product_a) x) (hmap (f . E_Product_b) y)
+    hmap f (x :*: y) =
+        hmap (f . E_Product_a) x :*:
+        hmap (f . E_Product_b) y
 
-instance (HFunctor a, HFunctor b) => HFunctor (Sum a b) where
+instance (HFunctor a, HFunctor b) => HFunctor (a :+: b) where
     {-# INLINE hmap #-}
-    hmap f (InL x) = InL (hmap (f . E_Sum_a) x)
-    hmap f (InR x) = InR (hmap (f . E_Sum_b) x)
+    hmap f (L1 x) = L1 (hmap (f . E_Sum_a) x)
+    hmap f (R1 x) = R1 (hmap (f . E_Sum_b) x)
 
 -- | 'HFunctor' variant of 'Control.Lens.mapped' for 'Hyper.Type.HyperType's with a single node type.
 --

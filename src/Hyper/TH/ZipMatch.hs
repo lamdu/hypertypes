@@ -7,7 +7,7 @@ module Hyper.TH.ZipMatch
     ) where
 
 import Control.Lens.Operators
-import Data.Functor.Product.PolyKinds (Product(..))
+import GHC.Generics ((:*:)(..))
 import Hyper.Class.ZipMatch (ZipMatch(..))
 import Hyper.TH.Internal.Utils
 import Language.Haskell.TH
@@ -59,7 +59,7 @@ makeZipMatchCtr cName cFields =
         bodyExp = applicativeStyle (ConE cName) (fieldParts <&> zmfResult)
         field (x, y) (Right Node{}) =
             ZipMatchField
-            { zmfResult = ConE 'Just `AppE` (ConE 'Pair `AppE` VarE x `AppE` VarE y)
+            { zmfResult = ConE 'Just `AppE` (ConE '(:*:) `AppE` VarE x `AppE` VarE y)
             , zmfConds = []
             , zmfContext = []
             }

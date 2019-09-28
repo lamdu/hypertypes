@@ -8,7 +8,7 @@ module Hyper.Class.Apply
     ) where
 
 import Data.Functor.Const (Const(..))
-import Data.Functor.Product.PolyKinds (Product(..))
+import GHC.Generics ((:*:)(..))
 import Hyper.Class.Functor (HFunctor(..))
 import Hyper.Class.Nodes (HNodes(..))
 import Hyper.Class.Pointed (HPointed)
@@ -28,7 +28,7 @@ class HFunctor h => HApply h where
     hzip ::
         Tree h p ->
         Tree h q ->
-        Tree h (Product p q)
+        Tree h (p :*: q)
 
 -- | A variant of 'Applicative' for 'Hyper.Type.HyperType's.
 class    (HPointed h, HApply h) => HApplicative h
@@ -38,9 +38,9 @@ instance Semigroup a => HApply (Const a) where
     {-# INLINE hzip #-}
     hzip (Const x) (Const y) = Const (x <> y)
 
-instance (HApply a, HApply b) => HApply (Product a b) where
+instance (HApply a, HApply b) => HApply (a :*: b) where
     {-# INLINE hzip #-}
-    hzip (Pair a0 b0) (Pair a1 b1) = Pair (hzip a0 a1) (hzip b0 b1)
+    hzip (a0 :*: b0) (a1 :*: b1) = hzip a0 a1 :*: hzip b0 b1
 
 -- | 'HApply' variant of 'Control.Applicative.liftA2'
 {-# INLINE liftH2 #-}
@@ -50,4 +50,4 @@ liftH2 ::
     Tree h p ->
     Tree h q ->
     Tree h r
-liftH2 f x = hmap (\w (Pair a b) -> f w a b) . hzip x
+liftH2 f x = hmap (\w (a :*: b) -> f w a b) . hzip x
