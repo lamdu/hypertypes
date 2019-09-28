@@ -2,7 +2,7 @@
 {-# LANGUAGE UndecidableInstances, FlexibleInstances, DefaultSignatures #-}
 
 module Hyper.Infer.Result
-    ( Inferred(..), iVal, iRes, iAnn
+    ( Inferred(..), iVal, iRes, iAnn, W_Flip_Inferred(..)
     , InferredVarsConstraint(..)
     , iAnnotations
     , inferredToAnn
@@ -63,18 +63,20 @@ instance Recursive (InferredVarsConstraint c) where
                 Dict (InferredVarsConstraintContext c h)
             r _ = inferredVarsConstraintCtx (Proxy @c) (Proxy @h)
 
+data W_Flip_Inferred a e n where
+    E_Flip_Inferred_InferOf_e ::
+        HWitness (InferOf e) n ->
+        W_Flip_Inferred a e n
+    E_Flip_Inferred_e ::
+        HWitness e f ->
+        HWitness (Flip (Inferred a) f) n ->
+        W_Flip_Inferred a e n
+
 instance HNodes (Flip (Inferred a) e) where
     type HNodesConstraint (Flip (Inferred a) e) c = InferredVarsConstraint c e
-    data HWitness (Flip (Inferred a) e) n where
-        E_Flip_Inferred_InferOf_e ::
-            HWitness (InferOf e) n ->
-            HWitness (Flip (Inferred a) e) n
-        E_Flip_Inferred_e ::
-            HWitness e f ->
-            HWitness (Flip (Inferred a) f) n ->
-            HWitness (Flip (Inferred a) e) n
+    type HWitnessType (Flip (Inferred a) e) = W_Flip_Inferred a e
     {-# INLINE hLiftConstraint #-}
-    hLiftConstraint w p =
+    hLiftConstraint (HWitness w) p =
         withDict (inferredVarsConstraintCtx p (Proxy @e)) $
         case w of
         E_Flip_Inferred_InferOf_e w0 -> hLiftConstraint w0 p
@@ -92,10 +94,10 @@ instance (Recursively HFunctor e, Recursively HFunctorInferOf e) => HFunctor (Fl
         _Flip %~
         \(Inferred pl r x) ->
         Inferred pl
-        (hmap (f . E_Flip_Inferred_InferOf_e) r)
+        (hmap (f . HWitness . E_Flip_Inferred_InferOf_e) r)
         ( hmap
             ( Proxy @(Recursively HFunctor) #*# Proxy @(Recursively HFunctorInferOf) #*#
-                \w -> from _Flip %~ hmap (f . E_Flip_Inferred_e w)
+                \w -> from _Flip %~ hmap (f . HWitness . E_Flip_Inferred_e w)
             ) x
         )
 
@@ -104,10 +106,10 @@ instance (Recursively HFoldable e, Recursively HFoldableInferOf e) => HFoldable 
     hfoldMap f (MkFlip (Inferred _ r x)) =
         withDict (recursively (Proxy @(HFoldable e))) $
         withDict (recursively (Proxy @(HFoldableInferOf e))) $
-        hfoldMap (f . E_Flip_Inferred_InferOf_e) r <>
+        hfoldMap (f . HWitness . E_Flip_Inferred_InferOf_e) r <>
         hfoldMap
         ( Proxy @(Recursively HFoldable) #*# Proxy @(Recursively HFoldableInferOf) #*#
-            \w -> hfoldMap (f . E_Flip_Inferred_e w) . (_Flip #)
+            \w -> hfoldMap (f . HWitness . E_Flip_Inferred_e w) . (_Flip #)
         ) x
 
 instance

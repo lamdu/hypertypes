@@ -6,12 +6,11 @@
 
 {-# LANGUAGE UndecidableInstances, TemplateHaskell #-}
 module Hyper.Type.Pure
-    ( Pure(..), _Pure, HWitness(..)
+    ( Pure(..), _Pure, W_Pure(..)
     ) where
 
 import Control.Lens (Iso, iso)
 import GHC.Generics (Generic)
-import Hyper.Class.Nodes (HNodes(..))
 import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
 import Hyper.Type (Tree, type (#))

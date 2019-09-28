@@ -2,7 +2,7 @@
 {-# LANGUAGE TemplateHaskell, FlexibleInstances, FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances, GeneralizedNewtypeDeriving #-}
 module Hyper.Type.Functor
-    ( F(..), _F, HWitness(..)
+    ( F(..), _F, W_F(..)
     ) where
 
 import Control.Lens (Iso, iso, mapped)
@@ -12,7 +12,7 @@ import Data.Proxy (Proxy(..))
 import GHC.Generics (Generic)
 import Hyper.Class.Functor (HFunctor(..))
 import Hyper.Class.Monad (HMonad(..))
-import Hyper.Class.Nodes (HNodes(..), (#>))
+import Hyper.Class.Nodes ((#>))
 import Hyper.Class.Recursive (RNodes, Recursively(..), RTraversable)
 import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.TH.Traversable (makeHTraversableApplyAndBases)

@@ -38,7 +38,7 @@
 module Hyper.Infer.Blame
     ( blame
     , Blame(..)
-    , BTerm(..), InferOf', bAnn, bRes, bVal
+    , BTerm(..), InferOf', bAnn, bRes, bVal, W_Flip_BTerm(..)
     , bTermToAnn
     ) where
 
@@ -181,18 +181,20 @@ data BTerm a v e = BTerm
 makeLenses ''BTerm
 makeCommonInstances [''BTerm]
 
+data W_Flip_BTerm a e n where
+    E_Flip_BTerm_InferOf_e ::
+        HWitness (InferOf e) n ->
+        W_Flip_BTerm a e n
+    E_Flip_BTerm_e ::
+        HWitness e f ->
+        HWitness (Flip (BTerm a) f) n ->
+        W_Flip_BTerm a e n
+
 instance HNodes (Flip (BTerm a) e) where
     type HNodesConstraint (Flip (BTerm a) e) c = InferredVarsConstraint c e
-    data HWitness (Flip (BTerm a) e) n where
-        E_Flip_BTerm_InferOf_e ::
-            HWitness (InferOf e) n ->
-            HWitness (Flip (BTerm a) e) n
-        E_Flip_BTerm_e ::
-            HWitness e f ->
-            HWitness (Flip (BTerm a) f) n ->
-            HWitness (Flip (BTerm a) e) n
+    type HWitnessType (Flip (BTerm a) e) = W_Flip_BTerm a e
     {-# INLINE hLiftConstraint #-}
-    hLiftConstraint w p =
+    hLiftConstraint (HWitness w) p =
         withDict (inferredVarsConstraintCtx p (Proxy @e)) $
         case w of
         E_Flip_BTerm_InferOf_e w0 -> hLiftConstraint w0 p
@@ -207,7 +209,7 @@ instance (Recursively HFunctor e, Recursively HFunctorInferOf e) => HFunctor (Fl
     hmap f =
         withDict (recursively (Proxy @(HFunctor e))) $
         withDict (recursively (Proxy @(HFunctorInferOf e))) $
-        let mapRes = hmap (f . E_Flip_BTerm_InferOf_e)
+        let mapRes = hmap (f . HWitness . E_Flip_BTerm_InferOf_e)
         in
         _Flip %~
         \(BTerm pl r x) ->
@@ -218,7 +220,7 @@ instance (Recursively HFunctor e, Recursively HFunctorInferOf e) => HFunctor (Fl
         )
         ( hmap
             ( Proxy @(Recursively HFunctor) #*# Proxy @(Recursively HFunctorInferOf) #*#
-                \w -> from _Flip %~ hmap (f . E_Flip_BTerm_e w)
+                \w -> from _Flip %~ hmap (f . HWitness . E_Flip_BTerm_e w)
             ) x
         )
 
@@ -227,7 +229,7 @@ instance (Recursively HFoldable e, Recursively HFoldableInferOf e) => HFoldable 
     hfoldMap f (MkFlip (BTerm _ r x)) =
         withDict (recursively (Proxy @(HFoldable e))) $
         withDict (recursively (Proxy @(HFoldableInferOf e))) $
-        let foldRes = hfoldMap (f . E_Flip_BTerm_InferOf_e)
+        let foldRes = hfoldMap (f . HWitness . E_Flip_BTerm_InferOf_e)
         in
         case r of
         Left (r0, r1) -> foldRes r0 <> foldRes r1
@@ -235,7 +237,7 @@ instance (Recursively HFoldable e, Recursively HFoldableInferOf e) => HFoldable 
         <>
         hfoldMap
         ( Proxy @(Recursively HFoldable) #*# Proxy @(Recursively HFoldableInferOf) #*#
-            \w -> hfoldMap (f . E_Flip_BTerm_e w) . (_Flip #)
+            \w -> hfoldMap (f . HWitness . E_Flip_BTerm_e w) . (_Flip #)
         ) x
 
 instance

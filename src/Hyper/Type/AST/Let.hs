@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances #-}
 
 module Hyper.Type.AST.Let
-    ( Let(..), letVar, letEquals, letIn, HWitness(..)
+    ( Let(..), letVar, letEquals, letIn, W_Let(..)
     ) where
 
 import           Control.Lens (makeLenses)

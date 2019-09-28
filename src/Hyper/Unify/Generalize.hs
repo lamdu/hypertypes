@@ -5,7 +5,7 @@
 module Hyper.Unify.Generalize
     ( generalize, instantiate
 
-    , GTerm(..), _GMono, _GPoly, _GBody, HWitness(..)
+    , GTerm(..), _GMono, _GPoly, _GBody, W_GTerm(..)
 
     , instantiateWith, instantiateForAll
 
@@ -55,10 +55,10 @@ makeHTraversableAndBases ''GTerm
 
 instance RNodes a => HNodes (Flip GTerm a) where
     type HNodesConstraint (Flip GTerm a) c = (c a, Recursive c)
-    data HWitness (Flip GTerm a) n = E_Flip_GTerm (HRecWitness a n)
+    type HWitnessType (Flip GTerm a) = HRecWitness a
     {-# INLINE hLiftConstraint #-}
-    hLiftConstraint (E_Flip_GTerm HRecSelf) = const id
-    hLiftConstraint (E_Flip_GTerm (HRecSub c n)) = hLiftConstraintH c n
+    hLiftConstraint (HWitness HRecSelf) = const id
+    hLiftConstraint (HWitness (HRecSub c n)) = hLiftConstraintH c n
 
 hLiftConstraintH ::
     forall a c b n r.
@@ -69,7 +69,7 @@ hLiftConstraintH c n =
     withDict (recurse (Proxy @(c a))) $
     hLiftConstraint c (Proxy @RNodes)
     ( hLiftConstraint c (Proxy @c)
-        (hLiftConstraint (E_Flip_GTerm n))
+        (hLiftConstraint (HWitness @(Flip GTerm _) n))
     )
 
 instance Recursively HFunctor ast => HFunctor (Flip GTerm ast) where
@@ -77,15 +77,15 @@ instance Recursively HFunctor ast => HFunctor (Flip GTerm ast) where
     hmap f =
         _Flip %~
         \case
-        GMono x -> f (E_Flip_GTerm HRecSelf) x & GMono
-        GPoly x -> f (E_Flip_GTerm HRecSelf) x & GPoly
+        GMono x -> f (HWitness HRecSelf) x & GMono
+        GPoly x -> f (HWitness HRecSelf) x & GPoly
         GBody x ->
             withDict (recursively (Proxy @(HFunctor ast))) $
             hmap
             ( \cw ->
                 hLiftConstraint cw (Proxy @(Recursively HFunctor)) $
                 Lens.from _Flip %~
-                hmap (f . (\(E_Flip_GTerm nw) -> E_Flip_GTerm (HRecSub cw nw)))
+                hmap (f . (\(HWitness nw) -> HWitness (HRecSub cw nw)))
             ) x
             & GBody
 
@@ -93,14 +93,14 @@ instance Recursively HFoldable ast => HFoldable (Flip GTerm ast) where
     {-# INLINE hfoldMap #-}
     hfoldMap f =
         \case
-        GMono x -> f (E_Flip_GTerm HRecSelf) x
-        GPoly x -> f (E_Flip_GTerm HRecSelf) x
+        GMono x -> f (HWitness HRecSelf) x
+        GPoly x -> f (HWitness HRecSelf) x
         GBody x ->
             withDict (recursively (Proxy @(HFoldable ast))) $
             hfoldMap
             ( \cw ->
                 hLiftConstraint cw (Proxy @(Recursively HFoldable)) $
-                hfoldMap (f . (\(E_Flip_GTerm nw) -> E_Flip_GTerm (HRecSub cw nw)))
+                hfoldMap (f . (\(HWitness nw) -> HWitness (HRecSub cw nw)))
                 . (_Flip #)
             ) x
         . (^. _Flip)

@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleInstances, UndecidableInstances, TemplateHaskell #-}
 
 module Hyper.Type.AST.App
-    ( App(..), appFunc, appArg, HWitness(..)
+    ( App(..), appFunc, appArg, W_App(..)
     , appChildren
     ) where
 

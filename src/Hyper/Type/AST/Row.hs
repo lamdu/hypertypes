@@ -4,8 +4,8 @@
 
 module Hyper.Type.AST.Row
     ( RowConstraints(..), RowKey
-    , RowExtend(..), eKey, eVal, eRest, HWitness(..)
-    , FlatRowExtends(..), freExtends, freRest
+    , RowExtend(..), eKey, eVal, eRest, W_RowExtend(..)
+    , FlatRowExtends(..), freExtends, freRest, W_FlatRowExtends(..)
     , flattenRow, flattenRowExtend, unflattenRow
     , verifyRowExtendConstraints, rowExtendStructureMismatch
     , rowElementInfer

@@ -10,8 +10,10 @@ module Hyper.Class.Nodes
 import Data.Functor.Const (Const(..))
 import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy(..))
-import GHC.Generics ((:+:)(..), (:*:)(..))
+import GHC.Generics ((:+:)(..), (:*:)(..), V1)
 import Hyper.Type (HyperType)
+
+newtype HWitness h n = HWitness (HWitnessType h n)
 
 -- | 'HNodes' allows talking about the child nodes of a 'HyperType'.
 --
@@ -26,7 +28,7 @@ class HNodes (h :: HyperType) where
     --
     -- A value quantified with @forall n. HWitness h n -> ... n@,
     -- is equivalent for a "for-some" where the possible values for @n@ are the nodes of @h@.
-    data family HWitness h :: HyperType -> Type
+    type family HWitnessType h :: HyperType -> Type
 
     -- | Lift a rank-n value with a constraint which the child nodes satisfy
     -- to a function from a node witness.
@@ -39,27 +41,23 @@ class HNodes (h :: HyperType) where
 
 instance HNodes (Const a) where
     type HNodesConstraint (Const a) x = ()
-    data HWitness (Const a) i
+    type HWitnessType (Const a) = V1
     {-# INLINE hLiftConstraint #-}
     hLiftConstraint = \case{}
 
 instance (HNodes a, HNodes b) => HNodes (a :*: b) where
     type HNodesConstraint (a :*: b) x = (HNodesConstraint a x, HNodesConstraint b x)
-    data HWitness (a :*: b) n where
-        E_Product_a :: HWitness a n -> HWitness (a :*: b) n
-        E_Product_b :: HWitness b n -> HWitness (a :*: b) n
+    type HWitnessType (a :*: b) = HWitness a :+: HWitness b
     {-# INLINE hLiftConstraint #-}
-    hLiftConstraint (E_Product_a w) = hLiftConstraint w
-    hLiftConstraint (E_Product_b w) = hLiftConstraint w
+    hLiftConstraint (HWitness (L1 w)) = hLiftConstraint w
+    hLiftConstraint (HWitness (R1 w)) = hLiftConstraint w
 
 instance (HNodes a, HNodes b) => HNodes (a :+: b) where
     type HNodesConstraint (a :+: b) x = (HNodesConstraint a x, HNodesConstraint b x)
-    data HWitness (a :+: b) n where
-        E_Sum_a :: HWitness a n -> HWitness (a :+: b) n
-        E_Sum_b :: HWitness b n -> HWitness (a :+: b) n
+    type HWitnessType (a :+: b) = HWitness a :+: HWitness b
     {-# INLINE hLiftConstraint #-}
-    hLiftConstraint (E_Sum_a w) = hLiftConstraint w
-    hLiftConstraint (E_Sum_b w) = hLiftConstraint w
+    hLiftConstraint (HWitness (L1 w)) = hLiftConstraint w
+    hLiftConstraint (HWitness (R1 w)) = hLiftConstraint w
 
 infixr 0 #>
 infixr 0 #*#

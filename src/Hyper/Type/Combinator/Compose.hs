@@ -5,7 +5,7 @@
 {-# LANGUAGE UndecidableSuperClasses, UndecidableInstances, FlexibleInstances, TemplateHaskell #-}
 
 module Hyper.Type.Combinator.Compose
-    ( Compose(..), _Compose
+    ( Compose(..), _Compose, W_Compose(..)
     ) where
 
 import qualified Control.Lens as Lens
@@ -38,13 +38,16 @@ _Compose ::
     (Tree a0 (Compose b0 k0)) (Tree a1 (Compose b1 k1))
 _Compose = Lens.iso getCompose MkCompose
 
+data W_Compose a b n where
+    W_Compose :: HWitness a a0 -> HWitness b b0 -> W_Compose a b (Compose a0 b0)
+
 instance (HNodes a, HNodes b) => HNodes (Compose a b) where
     type HNodesConstraint (Compose a b) c = HNodesConstraint a (ComposeConstraint0 c b)
-    data HWitness (Compose a b) n where
-        HWitness_Compose :: HWitness a a0 -> HWitness b b0 -> HWitness (Compose a b) (Compose a0 b0)
+    type HWitnessType (Compose a b) = W_Compose a b
     {-# INLINE hLiftConstraint #-}
-    hLiftConstraint (HWitness_Compose w0 w1) p r =
-        hLiftConstraint w0 (p0 p) (hLiftConstraint w1 (p1 p w0) r)
+    hLiftConstraint (HWitness (W_Compose w0 w1)) p r =
+        hLiftConstraint w0 (p0 p)
+        (hLiftConstraint w1 (p1 p w0) r)
         where
             p0 :: Proxy c -> Proxy (ComposeConstraint0 c b)
             p0 _ = Proxy
@@ -66,7 +69,7 @@ instance
         _Compose #
         hpure
         ( \wa ->
-            _Compose # hpure (\wb -> _Compose # x (HWitness_Compose wa wb))
+            _Compose # hpure (\wb -> _Compose # x (HWitness (W_Compose wa wb)))
         )
 
 instance (HFunctor a, HFunctor b) => HFunctor (Compose a b) where
@@ -75,7 +78,7 @@ instance (HFunctor a, HFunctor b) => HFunctor (Compose a b) where
         _Compose %~
         hmap
         ( \w0 ->
-            _Compose %~ hmap (\w1 -> _Compose %~ f (HWitness_Compose w0 w1))
+            _Compose %~ hmap (\w1 -> _Compose %~ f (HWitness (W_Compose w0 w1)))
         )
 
 instance (HApply a, HApply b) => HApply (Compose a b) where
@@ -97,7 +100,7 @@ instance (HFoldable a, HFoldable b) => HFoldable (Compose a b) where
     hfoldMap f =
         hfoldMap
         ( \w0 ->
-            hfoldMap (\w1 -> f (HWitness_Compose w0 w1) . (^. _Compose)) . (^. _Compose)
+            hfoldMap (\w1 -> f (HWitness (W_Compose w0 w1)) . (^. _Compose)) . (^. _Compose)
         ) . (^. _Compose)
 
 instance (HTraversable a, HTraversable b) => HTraversable (Compose a b) where

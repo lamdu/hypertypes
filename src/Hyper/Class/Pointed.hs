@@ -5,8 +5,8 @@ module Hyper.Class.Pointed
     ) where
 
 import Data.Functor.Const (Const(..))
-import GHC.Generics ((:*:)(..))
-import Hyper.Class.Nodes (HNodes(..), HWitness(..))
+import GHC.Generics ((:*:)(..), (:+:)(..))
+import Hyper.Class.Nodes (HNodes, HWitness(..))
 import Hyper.Type (Tree)
 
 import Prelude.Compat
@@ -25,4 +25,4 @@ instance Monoid a => HPointed (Const a) where
 
 instance (HPointed a, HPointed b) => HPointed (a :*: b) where
     {-# INLINE hpure #-}
-    hpure f = hpure (f . E_Product_a) :*: hpure (f . E_Product_b)
+    hpure f = hpure (f . HWitness . L1) :*: hpure (f . HWitness . R1)

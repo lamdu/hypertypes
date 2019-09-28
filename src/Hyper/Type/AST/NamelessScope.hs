@@ -7,11 +7,12 @@
 {-# LANGUAGE FlexibleInstances, TemplateHaskell, EmptyCase #-}
 
 module Hyper.Type.AST.NamelessScope
-    ( Scope(..), _Scope, HWitness(..)
+    ( Scope(..), _Scope, W_Scope(..)
     , ScopeVar(..), _ScopeVar
     , EmptyScope
     , DeBruijnIndex(..)
-    , ScopeTypes(..), _ScopeTypes, HasScopeTypes(..)
+    , ScopeTypes(..), _ScopeTypes, W_ScopeTypes(..)
+    , HasScopeTypes(..)
     ) where
 
 import           Control.Lens (Lens', Prism')

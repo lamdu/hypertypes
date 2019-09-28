@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances #-}
 
 module Hyper.Type.AST.Lam
-    ( Lam(..), lamIn, lamOut, HWitness(..)
+    ( Lam(..), lamIn, lamOut, W_Lam(..)
     ) where
 
 import           Control.Lens (makeLenses)

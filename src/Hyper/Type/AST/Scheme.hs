@@ -4,7 +4,7 @@
 {-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
 
 module Hyper.Type.AST.Scheme
-    ( Scheme(..), sForAlls, sTyp, HWitness(..)
+    ( Scheme(..), sForAlls, sTyp, W_Scheme(..)
     , QVars(..), _QVars
     , HasScheme(..), loadScheme, saveScheme
     , MonadInstantiate(..), inferType

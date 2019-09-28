@@ -34,12 +34,14 @@ instance HFoldable (Const a) where
 
 instance (HFoldable a, HFoldable b) => HFoldable (a :*: b) where
     {-# INLINE hfoldMap #-}
-    hfoldMap f (x :*: y) = hfoldMap (f . E_Product_a) x <> hfoldMap (f . E_Product_b) y
+    hfoldMap f (x :*: y) =
+        hfoldMap (f . HWitness . L1) x <>
+        hfoldMap (f . HWitness . R1) y
 
 instance (HFoldable a, HFoldable b) => HFoldable (a :+: b) where
     {-# INLINE hfoldMap #-}
-    hfoldMap f (L1 x) = hfoldMap (f . E_Sum_a) x
-    hfoldMap f (R1 x) = hfoldMap (f . E_Sum_b) x
+    hfoldMap f (L1 x) = hfoldMap (f . HWitness . L1) x
+    hfoldMap f (R1 x) = hfoldMap (f . HWitness . R1) x
 
 -- | 'HFoldable' variant for 'Control.Lens.folded' for 'Hyper.Type.HyperType's with a single node type.
 --

@@ -11,9 +11,9 @@ import Control.Lens.Operators
 import Control.Monad (guard)
 import Data.Functor.Const (Const(..))
 import GHC.Generics ((:*:)(..), (:+:)(..))
-import Hyper.Class.Foldable
+import Hyper.Class.Foldable (HFoldable, htraverse_, htraverse1_)
 import Hyper.Class.Functor (HFunctor(..))
-import Hyper.Class.Nodes (HNodes(..))
+import Hyper.Class.Nodes (HNodes(..), HWitness)
 import Hyper.Class.Traversable (HTraversable, htraverse)
 import Hyper.Type (Tree)
 import Hyper.Type.Pure (Pure(..), _Pure)

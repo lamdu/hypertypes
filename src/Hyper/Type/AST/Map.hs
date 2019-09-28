@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances #-}
 
 module Hyper.Type.AST.Map
-    ( TermMap(..), _TermMap, HWitness(..)
+    ( TermMap(..), _TermMap, W_TermMap(..)
     ) where
 
 import qualified Control.Lens as Lens

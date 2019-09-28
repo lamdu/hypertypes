@@ -17,7 +17,7 @@ import Data.Functor.Const (Const(..))
 import Data.Proxy (Proxy(..))
 import Hyper.Class.Foldable
 import Hyper.Class.Functor (HFunctor(..))
-import Hyper.Class.Nodes (HNodes(..), (#>), (#*#))
+import Hyper.Class.Nodes (HWitness, (#>), (#*#))
 import Hyper.Class.Recursive
 import Hyper.Class.Traversable
 import Hyper.Type

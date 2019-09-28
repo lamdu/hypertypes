@@ -9,7 +9,7 @@ import Control.Lens (Setter, sets)
 import Data.Functor.Const (Const(..))
 import GHC.Generics ((:*:)(..), (:+:)(..))
 import Data.Proxy (Proxy(..))
-import Hyper.Class.Nodes
+import Hyper.Class.Nodes (HNodes(..), HWitness(..), (#>))
 import Hyper.Type (Tree)
 
 import Prelude.Compat
@@ -32,13 +32,13 @@ instance HFunctor (Const a) where
 instance (HFunctor a, HFunctor b) => HFunctor (a :*: b) where
     {-# INLINE hmap #-}
     hmap f (x :*: y) =
-        hmap (f . E_Product_a) x :*:
-        hmap (f . E_Product_b) y
+        hmap (f . HWitness . L1) x :*:
+        hmap (f . HWitness . R1) y
 
 instance (HFunctor a, HFunctor b) => HFunctor (a :+: b) where
     {-# INLINE hmap #-}
-    hmap f (L1 x) = L1 (hmap (f . E_Sum_a) x)
-    hmap f (R1 x) = R1 (hmap (f . E_Sum_b) x)
+    hmap f (L1 x) = L1 (hmap (f . HWitness . L1) x)
+    hmap f (R1 x) = R1 (hmap (f . HWitness . R1) x)
 
 -- | 'HFunctor' variant of 'Control.Lens.mapped' for 'Hyper.Type.HyperType's with a single node type.
 --

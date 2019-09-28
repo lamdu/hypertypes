@@ -4,9 +4,9 @@
 {-# LANGUAGE FlexibleContexts, TemplateHaskell, EmptyCase #-}
 
 module Hyper.Type.AST.Nominal
-    ( NominalDecl(..), nParams, nScheme, HWitness(..)
+    ( NominalDecl(..), nParams, nScheme, W_NominalDecl(..)
     , NominalInst(..), nId, nArgs
-    , ToNom(..), tnId, tnVal
+    , ToNom(..), tnId, tnVal, W_ToNom(..)
     , FromNom(..), _FromNom
 
     , HasNominalInst(..)
@@ -37,7 +37,7 @@ import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Type.AST.FuncType (FuncType(..))
 import           Hyper.Type.AST.Map (TermMap(..), _TermMap)
 import           Hyper.Type.AST.Scheme
-import           Hyper.Type.Combinator.Flip (_Flip)
+import           Hyper.Type.Combinator.Flip (Flip, _Flip)
 import           Hyper.Unify
 import           Hyper.Unify.Generalize (GTerm(..), _GMono, instantiateWith, instantiateForAll)
 import           Hyper.Unify.New (newTerm)
@@ -101,18 +101,18 @@ makeZipMatch ''FromNom
 
 instance HNodes v => HNodes (NominalInst n v) where
     type HNodesConstraint (NominalInst n v) c = HNodesConstraint v c
-    data HWitness (NominalInst n v) c = E_NominalInst_k (HWitness v c)
+    type HWitnessType (NominalInst n v) = HWitness v
     {-# INLINE hLiftConstraint #-}
-    hLiftConstraint (E_NominalInst_k w) = hLiftConstraint w
+    hLiftConstraint (HWitness w) = hLiftConstraint w
 
 instance HFunctor v => HFunctor (NominalInst n v) where
     {-# INLINE hmap #-}
-    hmap f = nArgs %~ hmap (\w -> _QVarInstances . Lens.mapped %~ f (E_NominalInst_k w))
+    hmap f = nArgs %~ hmap (\w -> _QVarInstances . Lens.mapped %~ f (HWitness w))
 
 instance HFoldable v => HFoldable (NominalInst n v) where
     {-# INLINE hfoldMap #-}
     hfoldMap f =
-        hfoldMap (\w -> foldMap (f (E_NominalInst_k w)) . (^. _QVarInstances)) . (^. nArgs)
+        hfoldMap (\w -> foldMap (f (HWitness w)) . (^. _QVarInstances)) . (^. nArgs)
 
 instance HTraversable v => HTraversable (NominalInst n v) where
     {-# INLINE hsequence #-}
@@ -173,18 +173,20 @@ instance
                 \(h, v) ->
                 (pPrint h <> Pretty.text ":") <+> pPrint v
 
+data W_LoadedNominalDecl t n where
+    E_LoadedNominalDecl_Body :: HRecWitness t n -> W_LoadedNominalDecl t n
+    E_LoadedNominalDecl_NomVarTypes :: HWitness (NomVarTypes t) n -> W_LoadedNominalDecl t n
+
 instance (RNodes t, HNodes (NomVarTypes t)) => HNodes (LoadedNominalDecl t) where
     type HNodesConstraint (LoadedNominalDecl t) c =
         ( HNodesConstraint (NomVarTypes t) c
         , c t
         , Recursive c
         )
-    data HWitness (LoadedNominalDecl t) n where
-        E_LoadedNominalDecl_Body :: HRecWitness t n -> HWitness (LoadedNominalDecl t) n
-        E_LoadedNominalDecl_NomVarTypes :: HWitness (NomVarTypes t) n -> HWitness (LoadedNominalDecl t) n
+    type HWitnessType (LoadedNominalDecl t) = W_LoadedNominalDecl t
     {-# INLINE hLiftConstraint #-}
-    hLiftConstraint (E_LoadedNominalDecl_Body w) = hLiftConstraint (E_Flip_GTerm w)
-    hLiftConstraint (E_LoadedNominalDecl_NomVarTypes w) = hLiftConstraint w
+    hLiftConstraint (HWitness (E_LoadedNominalDecl_Body w)) = hLiftConstraint @(Flip GTerm _) (HWitness w)
+    hLiftConstraint (HWitness (E_LoadedNominalDecl_NomVarTypes w)) = hLiftConstraint w
 
 instance
     (Recursively HFunctor typ, HFunctor (NomVarTypes typ)) =>
@@ -192,9 +194,9 @@ instance
     {-# INLINE hmap #-}
     hmap f (LoadedNominalDecl mp mf t) =
         LoadedNominalDecl (onMap mp) (onMap mf)
-        (t & Lens.from _Flip %~ hmap (\(E_Flip_GTerm w) -> f (E_LoadedNominalDecl_Body w)))
+        (t & Lens.from _Flip %~ hmap (\(HWitness w) -> f (HWitness (E_LoadedNominalDecl_Body w))))
         where
-            onMap = hmap (\w -> _QVarInstances . Lens.mapped %~ f (E_LoadedNominalDecl_NomVarTypes w))
+            onMap = hmap (\w -> _QVarInstances . Lens.mapped %~ f (HWitness (E_LoadedNominalDecl_NomVarTypes w)))
 
 instance
     (Recursively HFoldable typ, HFoldable (NomVarTypes typ)) =>
@@ -202,9 +204,11 @@ instance
     {-# INLINE hfoldMap #-}
     hfoldMap f (LoadedNominalDecl mp mf t) =
         onMap mp <> onMap mf <>
-        hfoldMap (\(E_Flip_GTerm w) -> f (E_LoadedNominalDecl_Body w)) (_Flip # t)
+        hfoldMap (\(HWitness w) -> f (HWitness (E_LoadedNominalDecl_Body w))) (_Flip # t)
         where
-            onMap = hfoldMap (\w -> foldMap (f (E_LoadedNominalDecl_NomVarTypes w)) . (^. _QVarInstances))
+            onMap =
+                hfoldMap (\w -> foldMap (f (HWitness (E_LoadedNominalDecl_NomVarTypes w)))
+                . (^. _QVarInstances))
 
 instance
     (RTraversable typ, HTraversable (NomVarTypes typ)) =>

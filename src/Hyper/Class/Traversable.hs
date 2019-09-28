@@ -12,7 +12,7 @@ import Data.Functor.Const (Const(..))
 import GHC.Generics ((:*:)(..), (:+:)(..))
 import Hyper.Class.Foldable (HFoldable)
 import Hyper.Class.Functor (HFunctor(..), hmapped1)
-import Hyper.Class.Nodes (HNodes(..))
+import Hyper.Class.Nodes (HNodes(..), HWitness)
 import Hyper.Type (AHyperType, Tree)
 
 import Prelude.Compat

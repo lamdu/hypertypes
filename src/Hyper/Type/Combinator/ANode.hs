@@ -3,7 +3,7 @@
 -- | A simple 'Hyper.Type.HyperType' with a single child node
 
 module Hyper.Type.Combinator.ANode
-    ( ANode(..), _ANode
+    ( ANode(..), _ANode, W_ANode(..)
     ) where
 
 import Control.Lens (Iso, iso)

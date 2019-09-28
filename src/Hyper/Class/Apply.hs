@@ -10,7 +10,7 @@ module Hyper.Class.Apply
 import Data.Functor.Const (Const(..))
 import GHC.Generics ((:*:)(..))
 import Hyper.Class.Functor (HFunctor(..))
-import Hyper.Class.Nodes (HNodes(..))
+import Hyper.Class.Nodes (HWitness)
 import Hyper.Class.Pointed (HPointed)
 import Hyper.Type (Tree)
 

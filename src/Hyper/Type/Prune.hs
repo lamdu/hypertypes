@@ -1,7 +1,7 @@
 {-# LANGUAGE UndecidableInstances, ScopedTypeVariables, TemplateHaskell, FlexibleInstances #-}
 
 module Hyper.Type.Prune
-    ( Prune(..)
+    ( Prune(..), W_Prune(..)
     ) where
 
 import qualified Control.Lens as Lens
@@ -31,7 +31,7 @@ makeZipMatch ''Prune
 -- `HPointed` and `HApplicative` instances in the spirit of `Maybe`
 
 instance HPointed Prune where
-    hpure f = Unpruned (f W_Prune_Prune)
+    hpure f = Unpruned (f (HWitness W_Prune_Prune))
 
 instance HApply Prune where
     hzip Pruned _ = Pruned

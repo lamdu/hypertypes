@@ -1,7 +1,7 @@
 {-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances #-}
 
 module Hyper.Type.AST.FuncType
-    ( FuncType(..), funcIn, funcOut, HWitness(..)
+    ( FuncType(..), funcIn, funcOut, W_FuncType(..)
     , HasFuncType(..)
     ) where
 

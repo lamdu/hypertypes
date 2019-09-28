@@ -3,7 +3,7 @@
 {-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances, FlexibleContexts #-}
 
 module Hyper.Type.Ann
-    ( Ann(..), ann, val, HWitness(..)
+    ( Ann(..), ann, val, W_Ann(..)
     , annotations
     , strip, addAnnotations
     ) where
@@ -16,7 +16,7 @@ import           GHC.Generics (Generic)
 import           Generics.Constraints (Constraints)
 import           Hyper.Class.Functor (HFunctor(..))
 import           Hyper.Class.Monad
-import           Hyper.Class.Nodes (HNodes(..), (#>))
+import           Hyper.Class.Nodes ((#>))
 import           Hyper.Class.Traversable (htraverse)
 import           Hyper.Recurse
 import           Hyper.TH.Internal.Instances (makeCommonInstances)

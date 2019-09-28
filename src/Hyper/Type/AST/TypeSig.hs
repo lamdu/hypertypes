@@ -3,7 +3,7 @@
 {-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances #-}
 
 module Hyper.Type.AST.TypeSig
-    ( TypeSig(..), tsType, tsTerm, HWitness(..)
+    ( TypeSig(..), tsType, tsTerm, W_TypeSig(..)
     ) where
 
 import           Control.Lens (makeLenses)
