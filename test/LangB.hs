@@ -9,7 +9,6 @@ import           Hyper
 import           Hyper.Class.Unify
 import           Hyper.Type.Combinator.Flip
 import           Hyper.Infer
-import           Hyper.Recurse
 import           Hyper.Type.AST.App
 import           Hyper.Type.AST.Lam
 import           Hyper.Type.AST.Let
@@ -17,7 +16,6 @@ import           Hyper.Type.AST.Nominal
 import           Hyper.Type.AST.Row
 import           Hyper.Type.AST.Scheme
 import           Hyper.Type.AST.Var
-import           Hyper.TH.Foldable
 import           Hyper.Unify
 import           Hyper.Unify.Apply
 import           Hyper.Unify.Binding
@@ -27,7 +25,6 @@ import           Hyper.Unify.New
 import           Hyper.Unify.QuantifiedVar
 import           Hyper.Unify.Term
 import           Control.Applicative
-import           Control.Lens (Traversal)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Except
@@ -95,11 +92,11 @@ instance VarType Name LangB where
         where
             r ::
                 forall m. Unify m Typ =>
-                Map Name (Tree (GTerm (UVarOf m)) Typ) ->
+                Map Name (Tree (Flip GTerm Typ) (UVarOf m)) ->
                 m (Tree (UVarOf m) Typ)
             r x =
                 withDict (unifyRecursive (Proxy @m) (Proxy @Typ)) $
-                x ^?! Lens.ix h & instantiate
+                x ^?! Lens.ix h . _Flip & instantiate
 
 instance
     ( MonadScopeLevel m
@@ -144,38 +141,18 @@ instance c Typ => InferredVarsConstraint c LangB
 
 -- Monads for inferring `LangB`:
 
-newtype ScopeTypes v = ScopeTypes (Map Name (Tree (GTerm (GetHyperType v)) Typ))
+newtype ScopeTypes v = ScopeTypes (Map Name (Flip GTerm Typ v))
     deriving stock Generic
     deriving newtype (Semigroup, Monoid)
 
 makeDerivings [''Show] [''LangB, ''ScopeTypes]
+makeHTraversableAndBases ''ScopeTypes
 
 makeHasHPlain [''LangB]
 instance IsString (HPlain LangB) where
     fromString = BVarP . fromString
 
-instance HNodes ScopeTypes where
-    data HWitness ScopeTypes n = E_ScopeTypes (HWitness (Flip GTerm Typ) n)
-    type HNodesConstraint ScopeTypes c = (c Typ, Recursive c)
-    hLiftConstraint (E_ScopeTypes w) = hLiftConstraint w
-
 Lens.makePrisms ''ScopeTypes
-
-typesInScope ::
-    Traversal
-        (Tree ScopeTypes v0)
-        (Tree ScopeTypes v1)
-        (Tree (Flip GTerm Typ) v0)
-        (Tree (Flip GTerm Typ) v1)
-typesInScope = _ScopeTypes . traverse . Lens.from _Flip
-
-makeHFoldable ''ScopeTypes
-
-instance HFunctor ScopeTypes where
-    hmap f = typesInScope %~ hmap (f . E_ScopeTypes)
-
-instance HTraversable ScopeTypes where
-    hsequence = typesInScope hsequence
 
 data InferScope v = InferScope
     { _varSchemes :: Tree ScopeTypes v
@@ -215,10 +192,10 @@ instance HasScope PureInferB ScopeTypes where
     getScope = Lens.view varSchemes
 
 instance LocalScopeType Name (Tree UVar Typ) PureInferB where
-    localScopeType h v = local (varSchemes . _ScopeTypes . Lens.at h ?~ GMono v)
+    localScopeType h v = local (varSchemes . _ScopeTypes . Lens.at h ?~ MkFlip (GMono v))
 
 instance LocalScopeType Name (Tree (GTerm UVar) Typ) PureInferB where
-    localScopeType h v = local (varSchemes . _ScopeTypes . Lens.at h ?~ v)
+    localScopeType h v = local (varSchemes . _ScopeTypes . Lens.at h ?~ MkFlip v)
 
 instance MonadScopeLevel PureInferB where
     localLevel = local (scopeLevel . _ScopeLevel +~ 1)
@@ -280,10 +257,10 @@ instance HasScope (STInferB s) ScopeTypes where
     getScope = Lens.view (Lens._1 . varSchemes)
 
 instance LocalScopeType Name (Tree (STUVar s) Typ) (STInferB s) where
-    localScopeType h v = local (Lens._1 . varSchemes . _ScopeTypes . Lens.at h ?~ GMono v)
+    localScopeType h v = local (Lens._1 . varSchemes . _ScopeTypes . Lens.at h ?~ MkFlip (GMono v))
 
 instance LocalScopeType Name (Tree (GTerm (STUVar s)) Typ) (STInferB s) where
-    localScopeType h v = local (Lens._1 . varSchemes . _ScopeTypes . Lens.at h ?~ v)
+    localScopeType h v = local (Lens._1 . varSchemes . _ScopeTypes . Lens.at h ?~ MkFlip v)
 
 instance MonadScopeLevel (STInferB s) where
     localLevel = local (Lens._1 . scopeLevel . _ScopeLevel +~ 1)

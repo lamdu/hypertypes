@@ -243,7 +243,7 @@ withEnv l act =
         let addEnv x =
                 x
                 & nominals %~ addNoms
-                & varSchemes . _ScopeTypes . Lens.at "return" ?~ ret
+                & varSchemes . _ScopeTypes . Lens.at "return" ?~ MkFlip ret
         local (l %~ addEnv) act
 
 prettyPrint :: Pretty a => a -> IO ()
