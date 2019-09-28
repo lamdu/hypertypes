@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, DefaultSignatures, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, DefaultSignatures, FlexibleInstances, FlexibleContexts #-}
 
 module Hyper.Class.Infer
     ( InferOf
@@ -12,7 +12,7 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Constraint (Dict(..), withDict)
 import           Data.Proxy (Proxy(..))
-import           GHC.Generics ((:+:)(..))
+import           GHC.Generics
 import           Hyper
 import           Hyper.Class.Unify
 import           Hyper.Recurse
@@ -30,8 +30,6 @@ import           Prelude.Compat
 -- * An inferred value (for types inside terms)
 -- * An inferred type together with a scope
 type family InferOf (t :: HyperType) :: HyperType
-
-type instance InferOf (a :+: b) = InferOf a
 
 -- | A 'HyperType' containing an inferred child node
 data InferredChild v h t = InferredChild
@@ -71,6 +69,12 @@ class (Monad m, HFunctor t) => Infer m t where
     inferBody ::
         Tree t (InferChild m h) ->
         m (Tree t h, Tree (InferOf t) (UVarOf m))
+    default inferBody ::
+        (Generic1 t, Infer m (Rep1 t), InferOf t ~ InferOf (Rep1 t)) =>
+        Tree t (InferChild m h) ->
+        m (Tree t h, Tree (InferOf t) (UVarOf m))
+    inferBody =
+        fmap (Lens._1 %~ to1) . inferBody . from1
 
     -- TODO: Putting documentation here causes duplication in the haddock documentation
     inferContext ::
@@ -95,6 +99,8 @@ instance Recursive (Infer m) where
             p1 :: Proxy (Infer m t) -> Proxy t
             p1 _ = Proxy
 
+type instance InferOf (a :+: b) = InferOf a
+
 instance (InferOf a ~ InferOf b, Infer m a, Infer m b) => Infer m (a :+: b) where
     {-# INLINE inferBody #-}
     inferBody (L1 x) = inferBody x <&> Lens._1 %~ L1
@@ -104,3 +110,21 @@ instance (InferOf a ~ InferOf b, Infer m a, Infer m b) => Infer m (a :+: b) wher
     inferContext p _ =
         withDict (inferContext p (Proxy @a)) $
         withDict (inferContext p (Proxy @b)) Dict
+
+type instance InferOf (M1 i c h) = InferOf h
+
+instance Infer m h => Infer m (M1 i c h) where
+    {-# INLINE inferBody #-}
+    inferBody (M1 x) = inferBody x <&> Lens._1 %~ M1
+
+    {-# INLINE inferContext #-}
+    inferContext p _ = withDict (inferContext p (Proxy @h)) Dict
+
+type instance InferOf (Rec1 h) = InferOf h
+
+instance Infer m h => Infer m (Rec1 h) where
+    {-# INLINE inferBody #-}
+    inferBody (Rec1 x) = inferBody x <&> Lens._1 %~ Rec1
+
+    {-# INLINE inferContext #-}
+    inferContext p _ = withDict (inferContext p (Proxy @h)) Dict

@@ -50,6 +50,11 @@ instance Pretty v => Pretty (Var v expr h) where
 
 type instance InferOf (Var v t) = ANode (TypeOf t)
 
+instance HasInferredType (Var v t) where
+    type instance (TypeOf (Var v t)) = TypeOf t
+    {-# INLINE inferredType #-}
+    inferredType _ = _ANode
+
 instance
     ( Unify m (TypeOf expr)
     , HasScope m (ScopeOf expr)

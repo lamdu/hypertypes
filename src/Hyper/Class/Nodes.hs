@@ -1,17 +1,19 @@
 -- | A class for witness types and lifting of constraints to the child nodes of a 'HyperType'
 
-{-# LANGUAGE EmptyCase #-}
+{-# LANGUAGE EmptyCase, UndecidableInstances, TemplateHaskell, DefaultSignatures #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Hyper.Class.Nodes
-    ( HNodes(..), HWitness(..)
+    ( HNodes(..), HWitness(..), _HWitness
     , (#>), (#*#)
     ) where
 
+import Control.Lens (makePrisms)
 import Data.Functor.Const (Const(..))
 import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy(..))
-import GHC.Generics ((:+:)(..), (:*:)(..), V1)
-import Hyper.Type (HyperType)
+import GHC.Generics
+import Hyper.Type
 
 newtype HWitness h n = HWitness (HWitnessType h n)
 
@@ -23,12 +25,14 @@ newtype HWitness h n = HWitness (HWitnessType h n)
 class HNodes (h :: HyperType) where
     -- | Lift a constraint to apply to the child nodes
     type family HNodesConstraint h (c :: (HyperType -> Constraint)) :: Constraint
+    type instance HNodesConstraint h c = HNodesConstraint (Rep1 h) c
 
     -- | @HWitness h n@ is a witness that @n@ is a node of @h@.
     --
     -- A value quantified with @forall n. HWitness h n -> ... n@,
     -- is equivalent for a "for-some" where the possible values for @n@ are the nodes of @h@.
     type family HWitnessType h :: HyperType -> Type
+    type instance HWitnessType h = HWitnessType (Rep1 h)
 
     -- | Lift a rank-n value with a constraint which the child nodes satisfy
     -- to a function from a node witness.
@@ -38,6 +42,20 @@ class HNodes (h :: HyperType) where
         Proxy c ->
         (c n => r) ->
         r
+    {-# INLINE hLiftConstraint #-}
+    default hLiftConstraint ::
+        ( HWitnessType h ~ HWitnessType (Rep1 h)
+        , HNodesConstraint h c ~ HNodesConstraint (Rep1 h) c
+        , HNodes (Rep1 h)
+        , HNodesConstraint h c
+        ) =>
+        HWitness h n ->
+        Proxy c ->
+        (c n => r) ->
+        r
+    hLiftConstraint (HWitness w) = hLiftConstraint @(Rep1 h) (HWitness w)
+
+makePrisms ''HWitness
 
 instance HNodes (Const a) where
     type HNodesConstraint (Const a) x = ()
@@ -58,6 +76,18 @@ instance (HNodes a, HNodes b) => HNodes (a :+: b) where
     {-# INLINE hLiftConstraint #-}
     hLiftConstraint (HWitness (L1 w)) = hLiftConstraint w
     hLiftConstraint (HWitness (R1 w)) = hLiftConstraint w
+
+instance HNodes h => HNodes (M1 i m h) where
+    type instance HNodesConstraint (M1 i m h) c = HNodesConstraint h c
+    type HWitnessType (M1 i m h) = HWitnessType h
+    {-# INLINE hLiftConstraint #-}
+    hLiftConstraint (HWitness w) = hLiftConstraint @h (HWitness w)
+
+instance HNodes h => HNodes (Rec1 h) where
+    type instance HNodesConstraint (Rec1 h) c = HNodesConstraint h c
+    type instance HWitnessType (Rec1 h) = HWitnessType h
+    {-# INLINE hLiftConstraint #-}
+    hLiftConstraint (HWitness w) = hLiftConstraint @h (HWitness w)
 
 infixr 0 #>
 infixr 0 #*#

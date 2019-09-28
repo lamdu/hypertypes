@@ -1,5 +1,7 @@
 -- | A class to match term structures
 
+{-# LANGUAGE DefaultSignatures, FlexibleContexts #-}
+
 module Hyper.Class.ZipMatch
     ( ZipMatch(..)
     , zipMatch2
@@ -10,7 +12,8 @@ module Hyper.Class.ZipMatch
 import Control.Lens.Operators
 import Control.Monad (guard)
 import Data.Functor.Const (Const(..))
-import GHC.Generics ((:*:)(..), (:+:)(..))
+import GHC.Generics
+import GHC.Generics.Lens (_M1, _Rec1)
 import Hyper.Class.Foldable (HFoldable, htraverse_, htraverse1_)
 import Hyper.Class.Functor (HFunctor(..))
 import Hyper.Class.Nodes (HNodes(..), HWitness)
@@ -36,6 +39,15 @@ class ZipMatch h where
     -- >>> zipMatch (NewPerson p) (NewCake c)
     -- Nothing
     zipMatch :: Tree h p -> Tree h q -> Maybe (Tree h (p :*: q))
+    default zipMatch ::
+        (Generic1 h, ZipMatch (Rep1 h)) =>
+        Tree h p -> Tree h q -> Maybe (Tree h (p :*: q))
+    zipMatch x =
+        fmap to1 . zipMatch (from1 x) . from1
+
+instance ZipMatch Pure where
+    {-# INLINE zipMatch #-}
+    zipMatch (Pure x) (Pure y) = _Pure # (x :*: y) & Just
 
 instance Eq a => ZipMatch (Const a) where
     {-# INLINE zipMatch #-}
@@ -52,9 +64,13 @@ instance (ZipMatch a, ZipMatch b) => ZipMatch (a :+: b) where
     zipMatch L1{} R1{} = Nothing
     zipMatch R1{} L1{} = Nothing
 
-instance ZipMatch Pure where
+instance ZipMatch h => ZipMatch (M1 i m h) where
     {-# INLINE zipMatch #-}
-    zipMatch (Pure x) (Pure y) = _Pure # (x :*: y) & Just
+    zipMatch = _M1 . zipMatch . (^. _M1)
+
+instance ZipMatch h => ZipMatch (Rec1 h) where
+    {-# INLINE zipMatch #-}
+    zipMatch = _Rec1 . zipMatch . (^. _Rec1)
 
 -- | 'ZipMatch' variant of 'Control.Applicative.liftA2'
 {-# INLINE zipMatch2 #-}

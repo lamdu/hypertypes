@@ -138,7 +138,7 @@ data Expr a
 Notes:
 
 * The [`recursion-schemes`](http://hackage.haskell.org/package/recursion-schemes) package can generate this type for us from the plain definition of `Expr` using `TemplateHaskell`
-* DTALC also allows us to construct this type by combining standalone `Const`, `Add`, and `Mul` types
+* DTALC also allows us to construct this type by combining standalone `Const`, `Add`, and `Mul` types with the `:+:` operator (i.e `Const Int :+: Add :+: Mul`)
 
 This approach does have the single node type limitation, so we gave up on parameterizing over the `Int` in `Const`.
 This is a big limitation, but as we'll see, we do get several advantages in return.
@@ -217,12 +217,12 @@ The `hypertypes` representation of the above AST example:
 
 ```Haskell
 data Expr h
-    = Var Text
-    | App (h # Expr) (h # Expr)
-    | Lam Text (h # Typ) (h # Expr)
+    = EVar Text
+    | EApp (h # Expr) (h # Expr)
+    | ELam Text (h # Typ) (h # Expr)
 data Typ h
-    = IntT
-    | FuncT (h # Typ) (h # Typ)
+    = TInt
+    | TFunc (h # Typ) (h # Typ)
 ```
 
 Sub-expressions are nested using the `#` type operator. On the left side of `#` is `Expr`'s type parameter `h` which is the "nest type", and on the right side `Expr` and `Typ` are the nested nodes.
@@ -253,6 +253,20 @@ The `hypertypes` library provides:
 * A unification implementation for mutually recursive types inspired by `unification-fd`
 * A generic and fast implementation of Hindley-Milner type inference ("Efficient generalization with levels" as described in [*How OCaml type checker works*](http://okmij.org/ftp/ML/generalization.html), Kiselyov, 2013)
 
+## Constructing types from individual components
+
+Note that another way to formulate the above expression would be using pre-existing parts, such as:
+
+```Haskell
+data RExpr h
+    = RVar (Var Text RExpr h)
+    | RApp (App RExpr h)
+    | RLam (TypedLam Text Typ RExpr h)
+    deriving (Generic, Generic1, HNodes, HFunctor, HFoldable, HTraversable, ZipMatch)
+```
+
+This form supports using `DeriveAnyClass` to derive instances for various `HyperType` classes such as `HFunctor` based on `Generic1`. Note that due to a technical limitation of `Generic1` the form of `Expr` from before, which directly nests values, doesn't have a `Generic1` instance (so the instances for `Expr` are derived using `TemplateHaskell` instead).
+
 ## Examples
 
 How do we represent an expression of the example language declared above?
@@ -262,7 +276,7 @@ Let's start with the verbose way:
 ```Haskell
 verboseExpr :: Tree Pure Expr
 verboseExpr =
-    Pure (Lam "x" (Pure IntT) (Pure (Var "x")))
+    Pure (ELam "x" (Pure TInt) (Pure (EVar "x")))
 ```
 
 Explanations for the above:
@@ -270,6 +284,7 @@ Explanations for the above:
 * `Tree Pure Expr` is a type synonym for `Pure ('AHyperType Expr)`
 * `Pure` is the simplest "pass-through" nest type
 * The above is quite verbose with a lot of instances of `Pure` and many parentheses
+* Writing an expression of the above `RExpr` would be even more verbose due to additional `Var` and `TypedLam` data constructors!
 
 To write it more consicely, the `HasHPlain` class, along with a `TemplateHaskell` generator for it, exists:
 
@@ -278,7 +293,7 @@ To write it more consicely, the `HasHPlain` class, along with a `TemplateHaskell
 -- Note: This (#) comes from Control.Lens
 
 > e
-LamP "x" IntTP (VarP "x")
+ELamP "x" TIntP (EVarP "x")
 
 > :t e
 e :: HPlain Expr
@@ -286,16 +301,18 @@ e :: HPlain Expr
 
 It's now easier to see that `e` represents `λ(x:Int). x`
 
-`HPlain` is a data family of "plain versions" of expressions, generated via `TemplateHaskell`. This is similar to how `recursion-schemes` can derive a parameterized version of an AST, but is the other way around: the parameterized type is the source and the plain one is generated.
+`HPlain` is a data family of "plain versions" of expressions, generated via `TemplateHaskell`. Note that it flattens embedded constructors for maximal convinience, so that the plain version of `RExpr` is as convinient to use as that of `Expr`!
+
+This is somewhat similar to how `recursion-schemes` can derive a parameterized version of an AST, but is the other way around: the parameterized type is the source and the plain one is generated.
 
 So now, let's define some example expressions concisely:
 
 ```Haskell
 exprA, exprB :: HPlain Expr
 
-exprA = LamP "x" IntTP (VarP "x")
+exprA = ELamP "x" IntTP (EVarP "x")
 
-exprB = LamP "x" (FuncTP IntTP IntTP) (VarP "x")
+exprB = ELamP "x" (TFuncP TIntP TIntP) (EVarP "x")
 ```
 
 What can we do with these expressions?
@@ -306,9 +323,9 @@ Let's compute a diff:
 
 > d
 CommonBodyP
-(Lam "x"
-    (DifferentP IntTP (FuncTP IntTP IntTP))
-    (CommonSubTreeP (VarP "x"))
+(ELam "x"
+    (DifferentP TIntP (TFuncP TIntP TIntP))
+    (CommonSubTreeP (EVarP "x"))
 )
 
 > :t d
@@ -336,8 +353,8 @@ Now, let's format this diff better:
 > let formatDiff _ x y = "- " <> show x <> "\n+ " <> show y <> "\n"
 
 > putStrLn (foldDiffsP formatDiff d)
-- IntTP
-+ FuncTP IntTP IntTP
+- TIntP
++ TFuncP TIntP TIntP
 
 > :t foldDiffsP
 foldDiffsP ::
@@ -350,7 +367,7 @@ foldDiffsP ::
     r
 ```
 
-What does the ignored argument of `formatDiff` for? It is the `HRecWitness h n` from the type of `foldDiffsP` above. It is a witness that "proves" that the folded node `n` is a recursive node of `h`, essentially restricting the `forall n.` to `n`s that are recursive nodes of `h`.
+Why is the ignored argument of `formatDiff` there? It is the `HRecWitness h n` from the type of `foldDiffsP` above. It is a witness that "proves" that the folded node `n` is a recursive node of `h`, essentially restricting the `forall n.` to `n`s that are recursive nodes of `h`.
 
 ## Witness parameters
 

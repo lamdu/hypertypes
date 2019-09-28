@@ -1,5 +1,7 @@
 -- | A variant of 'Traversable' for 'Hyper.Type.HyperType's
 
+{-# LANGUAGE DefaultSignatures, FlexibleContexts #-}
+
 module Hyper.Class.Traversable
     ( HTraversable(..)
     , ContainedH(..), _ContainedH
@@ -9,7 +11,8 @@ module Hyper.Class.Traversable
 import Control.Lens (Traversal, Iso, iso)
 import Control.Lens.Operators
 import Data.Functor.Const (Const(..))
-import GHC.Generics ((:*:)(..), (:+:)(..))
+import GHC.Generics
+import GHC.Generics.Lens (_M1, _Rec1)
 import Hyper.Class.Foldable (HFoldable)
 import Hyper.Class.Functor (HFunctor(..), hmapped1)
 import Hyper.Class.Nodes (HNodes(..), HWitness)
@@ -38,6 +41,12 @@ class (HFunctor h, HFoldable h) => HTraversable h where
         Applicative f =>
         Tree h (ContainedH f p) ->
         f (Tree h p)
+    {-# INLINE hsequence #-}
+    default hsequence ::
+        (Generic1 h, HTraversable (Rep1 h), Applicative f) =>
+        Tree h (ContainedH f p) ->
+        f (Tree h p)
+    hsequence = fmap to1 . hsequence . from1
 
 instance HTraversable (Const a) where
     {-# INLINE hsequence #-}
@@ -51,6 +60,14 @@ instance (HTraversable a, HTraversable b) => HTraversable (a :+: b) where
     {-# INLINE hsequence #-}
     hsequence (L1 x) = hsequence x <&> L1
     hsequence (R1 x) = hsequence x <&> R1
+
+instance HTraversable h => HTraversable (M1 i m h) where
+    {-# INLINE hsequence #-}
+    hsequence = _M1 hsequence
+
+instance HTraversable h => HTraversable (Rec1 h) where
+    {-# INLINE hsequence #-}
+    hsequence = _Rec1 hsequence
 
 -- | 'HTraversable' variant of 'traverse'
 {-# INLINE htraverse #-}

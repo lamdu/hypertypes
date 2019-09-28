@@ -1,5 +1,7 @@
 -- | A variant of 'Foldable' for 'Hyper.Type.HyperType's
 
+{-# LANGUAGE DefaultSignatures, FlexibleContexts #-}
+
 module Hyper.Class.Foldable
     ( HFoldable(..)
     , hfolded1
@@ -7,11 +9,12 @@ module Hyper.Class.Foldable
     ) where
 
 import Control.Lens (Fold, folding)
+import Control.Lens.Operators
 import Data.Foldable (sequenceA_)
 import Data.Functor.Const (Const(..))
 import Data.Proxy (Proxy(..))
-import GHC.Generics ((:*:)(..), (:+:)(..))
-import Hyper.Class.Nodes (HNodes(..), HWitness(..), (#>))
+import GHC.Generics
+import Hyper.Class.Nodes (HNodes(..), HWitness(..), _HWitness, (#>))
 import Hyper.Type (Tree)
 
 import Prelude.Compat
@@ -27,6 +30,15 @@ class HNodes h => HFoldable h where
         (forall n. HWitness h n -> Tree p n -> a) ->
         Tree h p ->
         a
+    {-# INLINE hfoldMap #-}
+    default hfoldMap ::
+        ( Generic1 h, HFoldable (Rep1 h), HWitnessType h ~ HWitnessType (Rep1 h)
+        , Monoid a
+        ) =>
+        (forall n. HWitness h n -> Tree p n -> a) ->
+        Tree h p ->
+        a
+    hfoldMap f = hfoldMap (f . (_HWitness %~ id)) . from1
 
 instance HFoldable (Const a) where
     {-# INLINE hfoldMap #-}
@@ -42,6 +54,14 @@ instance (HFoldable a, HFoldable b) => HFoldable (a :+: b) where
     {-# INLINE hfoldMap #-}
     hfoldMap f (L1 x) = hfoldMap (f . HWitness . L1) x
     hfoldMap f (R1 x) = hfoldMap (f . HWitness . R1) x
+
+instance HFoldable h => HFoldable (M1 i m h) where
+    {-# INLINE hfoldMap #-}
+    hfoldMap f (M1 x) = hfoldMap (f . (_HWitness %~ id)) x
+
+instance HFoldable h => HFoldable (Rec1 h) where
+    {-# INLINE hfoldMap #-}
+    hfoldMap f (Rec1 x) = hfoldMap (f . (_HWitness %~ id)) x
 
 -- | 'HFoldable' variant for 'Control.Lens.folded' for 'Hyper.Type.HyperType's with a single node type.
 --
