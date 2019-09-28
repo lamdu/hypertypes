@@ -12,7 +12,7 @@ import qualified Data.Map as Map
 import           Hyper.Class.HasPlain
 import           Hyper.TH.Internal.Utils
 import           Hyper.Type (GetHyperType)
-import           Hyper.Type.Pure (Pure, _Pure)
+import           Hyper.Type.Pure (Pure(..), _Pure)
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
 
@@ -27,26 +27,27 @@ makeOne typeName = makeTypeInfo typeName >>= makeHasHPlainForType
 
 makeHasHPlainForType :: TypeInfo -> Q Dec
 makeHasHPlainForType info =
-    traverse (makeCtr (tiHyperParam info)) (tiConstructors info)
-    <&>
-    \ctrs ->
-    InstanceD Nothing [] (ConT ''HasHPlain `AppT` tiInstance info)
-    [ DataInstD [] ''HPlain [tiInstance info] Nothing (ctrs <&> (^. Lens._1))
-        [DerivClause (Just StockStrategy) [ConT ''Eq, ConT ''Ord, ConT ''Show]]
-    , FunD 'hPlain
-        [ Clause []
-            ( NormalB
-                (InfixE
-                    (Just (VarE 'Lens.iso `AppE` VarE fromPlain `AppE` VarE toPlain))
-                    (VarE '(.))
-                    (Just (VarE 'Lens.from `AppE` VarE '_Pure))
-                )
-            )
-            [ FunD toPlain (ctrs <&> (^. Lens._2))
-            , FunD fromPlain (ctrs <&> (^. Lens._3))
-            ]
-        ]
-    ]
+    do
+        ctrs <- traverse (makeCtr (tiHyperParam info)) (tiConstructors info)
+        ctx <- ctrs >>= (^. Lens._4) & simplifyContext
+        InstanceD Nothing ctx
+            (ConT ''HasHPlain `AppT` tiInstance info)
+            [ DataInstD [] ''HPlain [tiInstance info] Nothing (ctrs <&> (^. Lens._1))
+                [DerivClause (Just StockStrategy) [ConT ''Eq, ConT ''Ord, ConT ''Show]]
+            , FunD 'hPlain
+                [ Clause []
+                    ( NormalB
+                        (InfixE
+                            (Just (VarE 'Lens.iso `AppE` VarE fromPlain `AppE` VarE toPlain))
+                            (VarE '(.))
+                            (Just (VarE 'Lens.from `AppE` VarE '_Pure))
+                        )
+                    )
+                    [ FunD toPlain (ctrs <&> (^. Lens._2))
+                    , FunD fromPlain (ctrs <&> (^. Lens._3))
+                    ]
+                ]
+            ] & pure
     where
         toPlain = mkName "toPlain"
         fromPlain = mkName "fromPlain"
@@ -57,18 +58,19 @@ data FieldInfo = FieldInfo
     , fieldFromPlain :: Exp -> Exp
     }
 
-data EmbedInfo = EmbedInfo
-    { embedCtr :: Name
-    , embedFields :: [Field]
+data FlatInfo = FlatInfo
+    { flatIsEmbed :: Bool
+    , flatCtr :: Name
+    , flatFields :: [Field]
     }
 
 data Field
     = NodeField FieldInfo
-    | EmbedFields EmbedInfo
+    | FlatFields FlatInfo
 
-makeCtr :: Name -> (Name, [Either Type CtrTypePattern]) -> Q (Con, Clause, Clause)
+makeCtr :: Name -> (Name, [Either Type CtrTypePattern]) -> Q (Con, Clause, Clause, Cxt)
 makeCtr param (cName, cFields) =
-    traverse forField cFields
+    traverse (forField True) cFields
     <&>
     \xs ->
     let plainTypes = xs >>= plainFieldTypes
@@ -86,40 +88,47 @@ makeCtr param (cName, cFields) =
         & foldl AppE (ConE cName)
         & NormalB
         & \x -> Clause [ConP pcon (cVars <&> VarP)] x []
+    , xs >>= fieldContext
     )
     where
         plainFieldTypes (NodeField x) = [fieldPlainType x]
-        plainFieldTypes (EmbedFields x) = embedFields x >>= plainFieldTypes
+        plainFieldTypes (FlatFields x) = flatFields x >>= plainFieldTypes
         toPlainFields (NodeField x) = [fieldToPlain x]
-        toPlainFields (EmbedFields x) = embedFields x >>= toPlainFields
+        toPlainFields (FlatFields x) = flatFields x >>= toPlainFields
         toPlainPat cs [] = ([], cs)
         toPlainPat (c:cs) (NodeField{} : xs) = toPlainPat cs xs & Lens._1 %~ (VarP c :)
-        toPlainPat cs0 (EmbedFields x : xs) =
-            toPlainPat cs1 xs & Lens._1 %~ (ConP (embedCtr x) r :)
+        toPlainPat cs0 (FlatFields x : xs) =
+            toPlainPat cs1 xs & Lens._1 %~ (res :)
             where
-                (r, cs1) = toPlainPat cs0 (embedFields x)
+                res | flatIsEmbed x = embed
+                    | otherwise = ConP 'Pure [embed]
+                embed = ConP (flatCtr x) r
+                (r, cs1) = toPlainPat cs0 (flatFields x)
         toPlainPat [] _ = error "out of variables"
         fromPlainFields cs [] = ([], cs)
         fromPlainFields (c:cs) (NodeField x : xs) =
             fromPlainFields cs xs & Lens._1 %~ (fieldFromPlain x (VarE c) :)
-        fromPlainFields cs0 (EmbedFields x : xs) =
-            fromPlainFields cs1 xs & Lens._1 %~ (foldl AppE (ConE (embedCtr x)) r :)
+        fromPlainFields cs0 (FlatFields x : xs) =
+            fromPlainFields cs1 xs & Lens._1 %~ (res :)
             where
-                (r, cs1) = fromPlainFields cs0 (embedFields x)
+                res | flatIsEmbed x = embed
+                    | otherwise = ConE 'Pure `AppE` embed
+                embed = foldl AppE (ConE (flatCtr x)) r
+                (r, cs1) = fromPlainFields cs0 (flatFields x)
         fromPlainFields [] _ = error "out of variables"
         pcon =
             show cName & reverse & takeWhile (/= '.') & reverse
             & (<> "P") & mkName
-        forField (Left t) =
+        forField _ (Left t) =
             NodeField FieldInfo
             { fieldPlainType = normalizeType t
             , fieldToPlain = id
             , fieldFromPlain = id
             } & pure
-        forField (Right x) = forPat x
-        forPat (Node x) = forGen x
-        forPat (GenEmbed x) = forGen x
-        forPat (InContainer t p) =
+        forField isTop (Right x) = forPat isTop x
+        forPat isTop (Node x) = forGen isTop x
+        forPat isTop (GenEmbed x) = forGen isTop x
+        forPat _ (InContainer t p) =
             NodeField FieldInfo
             { fieldPlainType = t `AppT` patType p
             , fieldToPlain = AppE (VarE 'fmap `AppE` InfixE (Just (VarE 'hPlain)) (VarE '(#)) Nothing)
@@ -130,28 +139,33 @@ makeCtr param (cName, cFields) =
                 patType (GenEmbed x) = ConT ''HPlain `AppT` x
                 patType (FlatEmbed x) = ConT ''HPlain `AppT` tiInstance x
                 patType (InContainer t' p') = t' `AppT` patType p'
-        forPat (FlatEmbed x) =
+        forPat isTop (FlatEmbed x) =
             case tiConstructors x of
-            [(n, xs)] -> traverse forField xs <&> EmbedInfo n <&> EmbedFields
-            _ -> forGen (tiInstance x)
-        forGen t =
+            [(n, xs)] -> traverse (forField False) xs <&> FlatInfo isTop n <&> FlatFields
+            _ -> forGen isTop (tiInstance x)
+        forGen isTop t =
             case unapply t of
             (ConT c, args) ->
-                do
-                    inner <- D.reifyDatatype c
-                    let subst =
-                            args <> [VarT param]
-                            & zip (D.datatypeVars inner <&> D.tvName)
-                            & Map.fromList
-                    case D.datatypeCons inner of
-                        [x] ->
-                            D.constructorFields x
-                            <&> D.applySubstitution subst
-                            & traverse (matchType param)
-                            >>= traverse forField
-                            <&> EmbedInfo (D.constructorName x)
-                            <&> EmbedFields
-                        _ -> gen
+                reify c
+                >>=
+                \case
+                FamilyI{} -> gen -- Not expanding type families currently
+                _ ->
+                    do
+                        inner <- D.reifyDatatype c
+                        let subst =
+                                args <> [VarT param]
+                                & zip (D.datatypeVars inner <&> D.tvName)
+                                & Map.fromList
+                        case D.datatypeCons inner of
+                            [x] ->
+                                D.constructorFields x
+                                <&> D.applySubstitution subst
+                                & traverse (matchType param)
+                                >>= traverse (forField False)
+                                <&> FlatInfo isTop (D.constructorName x)
+                                <&> FlatFields
+                            _ -> gen
             _ -> gen
             where
                 gen =
@@ -164,3 +178,8 @@ makeCtr param (cName, cFields) =
             | g == ''GetHyperType && v == param = ConT ''Pure
         normalizeType (x `AppT` y) = normalizeType x `AppT` normalizeType y
         normalizeType x = x
+        fieldContext (NodeField x) =
+            case fieldPlainType x of
+            ConT hplain `AppT` _ | hplain == ''HPlain -> []
+            _ -> [ConT ''Show `AppT` fieldPlainType x]
+        fieldContext (FlatFields x) = flatFields x >>= fieldContext

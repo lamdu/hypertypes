@@ -58,7 +58,7 @@ data Row h
 data RConstraints = RowConstraints
     { _rForbiddenFields :: Set Name
     , _rScope :: ScopeLevel
-    } deriving stock (Eq, Show, Generic)
+    } deriving stock (Eq, Ord, Show, Generic)
     deriving (Semigroup, Monoid) via Generically RConstraints
 
 data Types h = Types

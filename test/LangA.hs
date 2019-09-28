@@ -48,6 +48,7 @@ data LangA v h
     | ALit Int
 
 makeHTraversableAndBases ''LangA
+makeHasHPlain [''LangA]
 
 instance RNodes (LangA v)
 instance Recursively HFunctor (LangA h)
