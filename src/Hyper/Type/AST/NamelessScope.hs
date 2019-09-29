@@ -4,7 +4,7 @@
 -- ["de Bruijn notation as a nested datatype"](https://www.semanticscholar.org/paper/De-Bruijn-Notation-as-a-Nested-Datatype-Bird-Paterson/254b3b01651c5e325d9b3cd15c106fbec40e53ea)
 
 {-# LANGUAGE UndecidableInstances, GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE FlexibleInstances, TemplateHaskell, EmptyCase #-}
+{-# LANGUAGE FlexibleInstances, TemplateHaskell, EmptyCase, EmptyDataDeriving #-}
 
 module Hyper.Type.AST.NamelessScope
     ( Scope(..), _Scope, W_Scope(..)
@@ -33,7 +33,7 @@ import           Hyper.Unify.New (newUnbound)
 
 import           Prelude.Compat
 
-data EmptyScope
+data EmptyScope deriving Show
 
 newtype Scope expr a h = Scope (h # expr (Maybe a))
 Lens.makePrisms ''Scope

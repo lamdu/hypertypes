@@ -20,7 +20,7 @@ import           Control.Monad.ST
 import qualified Data.Map as Map
 import           Data.Proxy
 import qualified Data.Set as Set
-import           LangA.Pure
+import           LangA
 import           LangB
 import           ReadMeExamples ()
 import           System.Exit (exitFailure)
@@ -30,30 +30,53 @@ import           TypeLang
 
 import           Prelude
 
-lamXYx5 :: Tree Pure (LangA EmptyScope)
-lamXYx5 = aLam \x -> aLam \_y -> x `aApp` ((ALit 5 & Pure) $:: uniType TIntP)
+lamXYx5 :: HPlain (LangA EmptyScope)
+lamXYx5 =
+    -- λx y. x 5
+    ALamP (ALamP (AVarP (Just Nothing) `AAppP` ALitP 5))
 
-infinite :: Tree Pure (LangA EmptyScope)
-infinite = aLam \x -> x `aApp` x
+infinite :: HPlain (LangA EmptyScope)
+infinite =
+    -- λx. x x
+    ALamP (AVarP Nothing `AAppP` AVarP Nothing)
 
-skolem :: Tree Pure (LangA EmptyScope)
-skolem = aLam \x -> x $:: forAll1 "a" id
+skolem :: HPlain (LangA EmptyScope)
+skolem =
+    -- λx. (x : ∀a. a)
+    ALamP
+    ( ATypeSigP
+        (AVarP Nothing)
+        (Types (QVars (mempty & Lens.at "a" ?~ mempty)) (QVars mempty))
+        (TVarP "a")
+    )
 
-validForAll :: Tree Pure (LangA EmptyScope)
-validForAll = aLam id $:: forAll1 "a" (join TFunP)
+validForAll :: HPlain (LangA EmptyScope)
+validForAll =
+    -- (λx. x) : ∀a. a -> a
+    ATypeSigP
+    (ALamP (AVarP Nothing))
+    (Types (QVars (mempty & Lens.at "a" ?~ mempty)) (QVars mempty))
+    (TVarP "a" `TFunP` TVarP "a")
 
-nomLam :: Tree Pure (LangA EmptyScope)
+nomLam :: HPlain (LangA EmptyScope)
 nomLam =
-    aLam \x -> x $:: s
-    where
-        s =
-            mempty
-            & Lens.at "key" ?~ _Pure # TInt
-            & Lens.at "value" ?~ _Pure # TInt
-            & QVarInstances
-            & (`Types` QVarInstances mempty)
-            & TNomP "Map"
-            & uniType
+    -- λx. (x : Map[key: Int, value: Int])
+    ALamP
+    ( ATypeSigP
+        (AVarP Nothing)
+        (Types (QVars mempty) (QVars mempty))
+        (TNomP "Map"
+            (Types
+                (QVarInstances
+                    (mempty
+                        & Lens.at "key" ?~ Pure TInt
+                        & Lens.at "value" ?~ Pure TInt
+                    )
+                )
+                (QVarInstances mempty)
+            )
+        )
+    )
 
 letGen0 :: HPlain LangB
 letGen0 =
@@ -270,10 +293,11 @@ testCommon expr expect pureRes stRes =
             , (pureRes == stRes, putStrLn "FAIL! Different result in ST:" *> prettyPrint stRes)
             ]
 
-testA :: Tree Pure (LangA EmptyScope) -> String -> IO Bool
-testA expr expect =
+testA :: HPlain (LangA EmptyScope) -> String -> IO Bool
+testA p expect =
     testCommon expr expect pureRes stRes
     where
+        expr = p ^. hPlain
         pureRes = execPureInferA (inferExpr expr)
         stRes = runST (execSTInferA (inferExpr expr))
 
