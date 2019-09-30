@@ -8,7 +8,7 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Map (Map)
 import qualified Data.Map as Map
-import           GHC.Generics (Generic, (:*:)(..))
+import           GHC.Generics (Generic)
 import           Hyper
 import           Hyper.Class.ZipMatch (ZipMatch(..))
 import           Hyper.TH.Internal.Instances (makeCommonInstances)

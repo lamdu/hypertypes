@@ -28,7 +28,6 @@ import           Hyper.Class.Recursive
 import           Hyper.Infer
 import           Hyper.Recurse
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
-import           Hyper.Type.Combinator.ANode (ANode)
 import           Hyper.Type.Combinator.Flip (Flip(..))
 import           Hyper.Unify
 import           Hyper.Unify.Generalize
