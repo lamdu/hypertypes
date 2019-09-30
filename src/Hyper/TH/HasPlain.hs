@@ -38,30 +38,29 @@ makeHasHPlainForType info =
                 _ -> []
         plainsCtx <- plains <&> AppT (ConT ''HasHPlain) & simplifyContext
         showCtx <- typs <&> AppT (ConT ''Show) & simplifyContext
-        ordCtx <- typs <&> AppT (ConT ''Ord) & simplifyContext
-        eqCtx <- typs <&> AppT (ConT ''Eq) & simplifyContext
-        pure
-            [ InstanceD Nothing (showCtx <> plainsCtx)
-                (ConT ''HasHPlain `AppT` tiInstance info)
-                [ DataInstD [] ''HPlain [tiInstance info] Nothing (ctrs <&> (^. Lens._1)) []
-                , FunD 'hPlain
-                    [ Clause []
-                        ( NormalB
-                            (InfixE
-                                (Just (VarE 'Lens.iso `AppE` VarE fromPlain `AppE` VarE toPlain))
-                                (VarE '(.))
-                                (Just (VarE 'Lens.from `AppE` VarE '_Pure))
+        let makeDeriv cls =
+                typs <&> AppT (ConT cls) & simplifyContext
+                <&>
+                \ctx -> StandaloneDerivD Nothing ctx (ConT cls `AppT` (ConT ''HPlain `AppT` tiInstance info))
+        (:) <$> instanceD
+                (pure (showCtx <> plainsCtx))
+                (pure (ConT ''HasHPlain `AppT` tiInstance info))
+                [ dataInstD (pure []) ''HPlain [pure (tiInstance info)] Nothing (ctrs <&> pure . (^. Lens._1)) []
+                , funD 'hPlain
+                    [ clause []
+                        ( normalB
+                            (infixE
+                                (Just (varE 'Lens.iso `appE` varE fromPlain `appE` varE toPlain))
+                                (varE '(.))
+                                (Just (varE 'Lens.from `appE` varE '_Pure))
                             )
                         )
-                        [ FunD toPlain (ctrs <&> (^. Lens._2))
-                        , FunD fromPlain (ctrs <&> (^. Lens._3))
+                        [ funD toPlain (ctrs <&> pure . (^. Lens._2))
+                        , funD fromPlain (ctrs <&> pure . (^. Lens._3))
                         ]
                     ]
                 ]
-            , StandaloneDerivD Nothing eqCtx (ConT ''Eq `AppT` (ConT ''HPlain `AppT` tiInstance info))
-            , StandaloneDerivD Nothing ordCtx (ConT ''Ord `AppT` (ConT ''HPlain `AppT` tiInstance info))
-            , StandaloneDerivD Nothing showCtx (ConT ''Show `AppT` (ConT ''HPlain `AppT` tiInstance info))
-            ]
+            <*> traverse makeDeriv [''Eq, ''Ord, ''Show]
     where
         anHPlainOfCons (ConT hplain `AppT` x)
             | hplain == ''HPlain =

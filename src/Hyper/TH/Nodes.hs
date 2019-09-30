@@ -24,9 +24,12 @@ makeHNodes typeName = makeTypeInfo typeName >>= makeHNodesForType
 makeHNodesForType :: TypeInfo -> DecsQ
 makeHNodesForType info =
     instanceD (simplifyContext (makeContext info)) (appT (conT ''HNodes) (pure (tiInstance info)))
-    [ tySynInstD ''HNodesConstraint
-        (simplifyContext nodesConstraint <&> toTuple <&> TySynEqn [tiInstance info, VarT constraintVar])
-    , tySynInstD ''HWitnessType (pure (TySynEqn [tiInstance info] witType))
+    [ D.tySynInstDCompat
+        ''HNodesConstraint
+        (Just [pure (PlainTV constraintVar)])
+        ([tiInstance info, VarT constraintVar] <&> pure)
+        (simplifyContext nodesConstraint <&> toTuple)
+    , D.tySynInstDCompat ''HWitnessType Nothing [pure (tiInstance info)] (pure witType)
     , InlineP 'hLiftConstraint Inline FunLike AllPhases & PragmaD & pure
     , funD 'hLiftConstraint (makeHLiftConstraints wit <&> pure)
     ]

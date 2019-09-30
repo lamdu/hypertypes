@@ -97,9 +97,10 @@ class
 
 instance Recursive (Blame m) where
     recurse p =
-        blamableRecursive
-        ((const Proxy :: p (b m t) -> Proxy m) p)
-        ((const Proxy :: p (b m t) -> Proxy t) p)
+        blamableRecursive (Proxy @m) (p0 p)
+        where
+            p0 :: Proxy (Blame m t) -> Proxy t
+            p0 _ = Proxy
 
 -- | A type synonym to help 'BTerm' be more succinct
 type InferOf' e v = Tree (InferOf (GetHyperType e)) v
