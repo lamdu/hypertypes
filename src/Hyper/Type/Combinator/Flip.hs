@@ -1,10 +1,14 @@
 -- | A combinator to flip the order of the last two type parameters of a 'Hyper.Type.HyperType'.
 
+{-# LANGUAGE TemplateHaskell, UndecidableInstances #-}
+
 module Hyper.Type.Combinator.Flip
     ( Flip(..), _Flip
     ) where
 
 import Control.Lens (Iso, iso)
+import GHC.Generics (Generic)
+import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.Type (Tree, GetHyperType)
 
 -- | Flip the order of the last two type parameters of a 'Hyper.Type.HyperType'.
@@ -12,7 +16,11 @@ import Hyper.Type (Tree, GetHyperType)
 -- Useful to use instances of classes such as 'Hyper.Class.Traversable.HTraversable' which
 -- are available on the flipped 'Hyper.Type.HyperType'.
 -- For example 'Hyper.Unify.Generalize.GTerm' has instances when flipped.
-newtype Flip f x h = MkFlip (Tree (f (GetHyperType h)) x)
+newtype Flip f x h =
+    MkFlip (Tree (f (GetHyperType h)) x)
+    deriving Generic
+
+makeCommonInstances [''Flip]
 
 -- | An 'Iso' from 'Flip' to its content.
 --
