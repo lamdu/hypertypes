@@ -4,9 +4,7 @@ module Hyper (module X) where
 
 import GHC.Generics as X ((:*:)(..))
 import Hyper.Class.Apply as X (HApply(..), HApplicative, liftH2)
-import Hyper.Class.Foldable as X
-    ( HFoldable(..), hfoldMap, htraverse_, htraverse1_
-    )
+import Hyper.Class.Foldable as X (HFoldable(..), hfoldMap, hfolded1, htraverse_, htraverse1_)
 import Hyper.Class.Functor as X (HFunctor(..), hmapped1)
 import Hyper.Class.HasPlain as X (HasHPlain(..))
 import Hyper.Class.Nodes as X (HNodes(..), HWitness(..), (#>), (#*#))
