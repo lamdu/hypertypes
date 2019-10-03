@@ -105,8 +105,8 @@ type InferOf' e v = Tree (InferOf (GetHyperType e)) v
 prepareH ::
     forall m exp a.
     Blame m exp =>
-    Tree (PAnn a) exp ->
-    m (Tree (PAnn (a :*: InferResult (UVarOf m) :*: InferResult (UVarOf m))) exp)
+    Tree (Ann a) exp ->
+    m (Tree (Ann (a :*: InferResult (UVarOf m) :*: InferResult (UVarOf m))) exp)
 prepareH t =
     withDict (inferContext (Proxy @m) (Proxy @exp)) $
     hpure (Proxy @(Unify m) #> MkContainedH newUnbound)
@@ -117,9 +117,9 @@ prepare ::
     forall m exp a.
     Blame m exp =>
     Tree (InferOf exp) (UVarOf m) ->
-    Tree (PAnn a) exp ->
-    m (Tree (PAnn (a :*: InferResult (UVarOf m) :*: InferResult (UVarOf m))) exp)
-prepare resFromPosition (PAnn a x) =
+    Tree (Ann a) exp ->
+    m (Tree (Ann (a :*: InferResult (UVarOf m) :*: InferResult (UVarOf m))) exp)
+prepare resFromPosition (Ann a x) =
     withDict (recurse (Proxy @(Blame m exp))) $
     hmap
     ( Proxy @(Blame m) #>
@@ -128,7 +128,7 @@ prepare resFromPosition (PAnn a x) =
     & inferBody
     <&>
     \(xI, r) ->
-    PAnn (a :*: InferResult resFromPosition :*: InferResult r) xI
+    Ann (a :*: InferResult resFromPosition :*: InferResult r) xI
 
 tryUnify ::
     forall err m top exp.
@@ -154,9 +154,9 @@ makeCommonInstances [''BlameResult]
 finalize ::
     forall a m exp.
     Blame m exp =>
-    Tree (PAnn (a :*: InferResult (UVarOf m) :*: InferResult (UVarOf m))) exp ->
-    m (Tree (PAnn (a :*: BlameResult (UVarOf m))) exp)
-finalize (PAnn (a :*: InferResult i0 :*: InferResult i1) x) =
+    Tree (Ann (a :*: InferResult (UVarOf m) :*: InferResult (UVarOf m))) exp ->
+    m (Tree (Ann (a :*: BlameResult (UVarOf m))) exp)
+finalize (Ann (a :*: InferResult i0 :*: InferResult i1) x) =
     withDict (recurse (Proxy @(Blame m exp))) $
     do
         match <- inferOfMatches (Proxy @exp) i0 i1
@@ -164,7 +164,7 @@ finalize (PAnn (a :*: InferResult i0 :*: InferResult i1) x) =
                 | match = Good i0
                 | otherwise = Mismatch (i0, i1)
         htraverse (Proxy @(Blame m) #> finalize) x
-            <&> PAnn (a :*: result)
+            <&> Ann (a :*: result)
 
 -- | Perform Hindley-Milner type inference with prioritised blame for type error,
 -- given a prioritisation for the different nodes.
@@ -185,8 +185,8 @@ blame ::
     ) =>
     (forall n. Tree a n -> priority) ->
     Tree (InferOf exp) (UVarOf m) ->
-    Tree (PAnn a) exp ->
-    m (Tree (PAnn (a :*: BlameResult (UVarOf m))) exp)
+    Tree (Ann a) exp ->
+    m (Tree (Ann (a :*: BlameResult (UVarOf m))) exp)
 blame order topLevelType e =
     do
         p <- prepare topLevelType e

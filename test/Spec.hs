@@ -181,7 +181,7 @@ inferExpr ::
     Tree Pure t ->
     m (Tree Pure (TypeOf t))
 inferExpr x =
-    infer (wrap (const (PAnn (Const ()))) x)
+    infer (wrap (const (Ann (Const ()))) x)
     >>= Lens.from _Flip
         (htraverse
             ( Proxy @(Infer m) #*# Proxy @RTraversableInferOf #*#

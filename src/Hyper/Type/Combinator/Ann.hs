@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances #-}
 
-module Hyper.Type.Combinator.PAnn
-    ( PAnn(..), pAnn, pVal
+module Hyper.Type.Combinator.Ann
+    ( Ann(..), pAnn, pVal
     ) where
 
 import Control.Lens (makeLenses, from)
@@ -21,40 +21,40 @@ import Hyper.Type.Combinator.Flip
 
 import Prelude.Compat
 
-data PAnn a h = PAnn
+data Ann a h = Ann
     { _pAnn :: a h
-    , _pVal :: h # PAnn a
+    , _pVal :: h # Ann a
     } deriving Generic
-makeLenses ''PAnn
+makeLenses ''Ann
 
-makeHTraversableApplyAndBases ''PAnn
-makeCommonInstances [''PAnn]
+makeHTraversableApplyAndBases ''Ann
+makeCommonInstances [''Ann]
 
-instance RNodes h => HNodes (Flip PAnn h) where
-    type HNodesConstraint (Flip PAnn h) c = (Recursive c, c h)
-    type HWitnessType (Flip PAnn h) = HRecWitness h
+instance RNodes h => HNodes (Flip Ann h) where
+    type HNodesConstraint (Flip Ann h) c = (Recursive c, c h)
+    type HWitnessType (Flip Ann h) = HRecWitness h
     hLiftConstraint (HWitness HRecSelf) = const id
     hLiftConstraint (HWitness (HRecSub w0 w1)) = hLiftConstraintH w0 w1
 
 -- TODO: Dedup this and similar code in Hyper.Unify.Generalize
 hLiftConstraintH ::
     forall a c b n r.
-    (RNodes a, HNodesConstraint (Flip PAnn a) c) =>
+    (RNodes a, HNodesConstraint (Flip Ann a) c) =>
     HWitness a b -> HRecWitness b n -> Proxy c -> (c n => r) -> r
 hLiftConstraintH c n =
     withDict (recurse (Proxy @(RNodes a))) $
     withDict (recurse (Proxy @(c a))) $
     hLiftConstraint c (Proxy @RNodes)
     ( hLiftConstraint c (Proxy @c)
-        (hLiftConstraint (HWitness @(Flip PAnn _) n))
+        (hLiftConstraint (HWitness @(Flip Ann _) n))
     )
 
-instance Recursively HFunctor h => HFunctor (Flip PAnn h) where
+instance Recursively HFunctor h => HFunctor (Flip Ann h) where
     hmap f =
         withDict (recursively (Proxy @(HFunctor h))) $
         _Flip %~
-        \(PAnn a b) ->
-        PAnn
+        \(Ann a b) ->
+        Ann
         (f (HWitness HRecSelf) a)
         (hmap
             ( Proxy @(Recursively HFunctor) #*#
@@ -62,8 +62,8 @@ instance Recursively HFunctor h => HFunctor (Flip PAnn h) where
             ) b
         )
 
-instance Recursively HFoldable h => HFoldable (Flip PAnn h) where
-    hfoldMap f (MkFlip (PAnn a b)) =
+instance Recursively HFoldable h => HFoldable (Flip Ann h) where
+    hfoldMap f (MkFlip (Ann a b)) =
         withDict (recursively (Proxy @(HFoldable h))) $
         f (HWitness HRecSelf) a <>
         hfoldMap
@@ -71,12 +71,12 @@ instance Recursively HFoldable h => HFoldable (Flip PAnn h) where
             \w -> hfoldMap (f . HWitness . HRecSub w . (^. _HWitness)) . MkFlip
         ) b
 
-instance RTraversable h => HTraversable (Flip PAnn h) where
+instance RTraversable h => HTraversable (Flip Ann h) where
     hsequence =
         withDict (recurse (Proxy @(RTraversable h))) $
         _Flip
-        ( \(PAnn a b) ->
-            PAnn
+        ( \(Ann a b) ->
+            Ann
             <$> runContainedH a
             <*> htraverse (Proxy @RTraversable #> from _Flip hsequence) b
         )

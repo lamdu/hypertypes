@@ -27,9 +27,9 @@ import Prelude.Compat
 -- The annotation types also function as tokens
 -- to describe which of the two trees a term comes from.
 data Diff a b e
-    = CommonSubTree (PAnn (a :*: b) e)
+    = CommonSubTree (Ann (a :*: b) e)
     | CommonBody (CommonBody a b e)
-    | Different ((PAnn a :*: PAnn b) e)
+    | Different ((Ann a :*: Ann b) e)
     deriving Generic
 
 -- | A 'HyperType' which represents two trees which have the same top-level node,
@@ -46,8 +46,8 @@ makeLenses ''CommonBody
 diff ::
     forall t a b.
     (Recursively ZipMatch t, RTraversable t) =>
-    Tree (PAnn a) t -> Tree (PAnn b) t -> Tree (Diff a b) t
-diff x@(PAnn xA xB) y@(PAnn yA yB) =
+    Tree (Ann a) t -> Tree (Ann b) t -> Tree (Diff a b) t
+diff x@(Ann xA xB) y@(Ann yA yB) =
     withDict (recursively (Proxy @(ZipMatch t))) $
     withDict (recurse (Proxy @(RTraversable t))) $
     case zipMatch xB yB of
@@ -55,7 +55,7 @@ diff x@(PAnn xA xB) y@(PAnn yA yB) =
     Just match ->
         case htraverse (const (^? _CommonSubTree)) sub of
         Nothing -> MkCommonBody (xA :*: yA) sub & CommonBody
-        Just r -> PAnn (xA :*: yA) r & CommonSubTree
+        Just r -> Ann (xA :*: yA) r & CommonSubTree
         where
             sub =
                 hmap
@@ -66,7 +66,7 @@ diff x@(PAnn xA xB) y@(PAnn yA yB) =
 foldDiffs ::
     forall r h a b.
     (Monoid r, Recursively HFoldable h) =>
-    (forall n. HRecWitness h n -> Tree (PAnn a) n -> Tree (PAnn b) n -> r) ->
+    (forall n. HRecWitness h n -> Tree (Ann a) n -> Tree (Ann b) n -> r) ->
     Tree (Diff a b) h ->
     r
 foldDiffs _ CommonSubTree{} = mempty

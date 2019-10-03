@@ -30,16 +30,16 @@ import           Prelude.Compat
 infer ::
     forall m t a.
     Infer m t =>
-    Tree (PAnn a) t ->
-    m (Tree (PAnn (a :*: InferResult (UVarOf m))) t)
-infer (PAnn a x) =
+    Tree (Ann a) t ->
+    m (Tree (Ann (a :*: InferResult (UVarOf m))) t)
+infer (Ann a x) =
     withDict (inferContext (Proxy @m) (Proxy @t)) $
     inferBody (hmap (Proxy @(Infer m) #> inferH) x)
-    <&> (\(xI, t) -> PAnn (a :*: InferResult t) xI)
+    <&> (\(xI, t) -> Ann (a :*: InferResult t) xI)
 
 {-# INLINE inferH #-}
 inferH ::
     Infer m t =>
-    Tree (PAnn a) t ->
-    Tree (InferChild m (PAnn (a :*: InferResult (UVarOf m)))) t
+    Tree (Ann a) t ->
+    Tree (InferChild m (Ann (a :*: InferResult (UVarOf m)))) t
 inferH c = infer c <&> (\i -> InferredChild i (i ^. pAnn . Lens._2 . _InferResult)) & InferChild
