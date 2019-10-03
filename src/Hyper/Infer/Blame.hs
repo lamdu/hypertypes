@@ -36,32 +36,30 @@
 
 module Hyper.Infer.Blame
     ( blame
-    , Blame(..)
-    , BTerm(..), InferOf', bAnn, bRes, bVal, W_Flip_BTerm(..)
-    , bTermToAnn
+    , Blame(..), _Good, _Mismatch
+    , InferOf'
     ) where
 
-import Control.Lens (makeLenses, from)
-import Control.Lens.Operators
-import Control.Monad.Except (MonadError(..))
-import Data.Constraint (Dict(..), withDict)
-import Data.Foldable (traverse_)
-import Data.List (sortOn)
-import Data.Proxy (Proxy(..))
-import GHC.Generics (Generic)
-import Hyper
-import Hyper.Class.Infer
-import Hyper.Class.Infer.InferOf
-import Hyper.Class.Traversable (ContainedH(..))
-import Hyper.Class.Unify (Unify, UVarOf)
-import Hyper.Infer.Result (InferredVarsConstraint(..))
-import Hyper.Recurse
-import Hyper.TH.Internal.Instances (makeCommonInstances)
-import Hyper.Type.Combinator.Flip
-import Hyper.Unify.New (newUnbound)
-import Hyper.Unify.Occurs (occursCheck)
+import qualified Control.Lens as Lens
+import           Control.Lens.Operators
+import           Control.Monad.Except (MonadError(..))
+import           Data.Constraint (Dict(..), withDict)
+import           Data.Foldable (traverse_)
+import           Data.List (sortOn)
+import           Data.Proxy (Proxy(..))
+import           GHC.Generics (Generic)
+import           Hyper
+import           Hyper.Class.Infer
+import           Hyper.Class.Traversable (ContainedH(..))
+import           Hyper.Class.Unify (Unify, UVarOf)
+import           Hyper.Infer.Result
+import           Hyper.Recurse
+import           Hyper.TH.Internal.Instances (makeCommonInstances)
+import           Hyper.Type.Combinator.Flip
+import           Hyper.Unify.New (newUnbound)
+import           Hyper.Unify.Occurs (occursCheck)
 
-import Prelude.Compat
+import           Prelude.Compat
 
 -- | Class implementing some primitives needed by the 'blame' algorithm
 --
@@ -104,19 +102,11 @@ instance Recursive (Blame m) where
 -- | A type synonym to help 'BTerm' be more succinct
 type InferOf' e v = Tree (InferOf (GetHyperType e)) v
 
--- Internal HyperType for the blame algorithm
-data PTerm a v e = PTerm
-    { pAnn :: a
-    , pInferResultFromPos :: InferOf' e v
-    , pInferResultFromSelf :: InferOf' e v
-    , pBody :: e # PTerm a v
-    }
-
 prepareH ::
     forall m exp a.
     Blame m exp =>
-    Tree (Ann a) exp ->
-    m (Tree (PTerm a (UVarOf m)) exp)
+    Tree (PAnn a) exp ->
+    m (Tree (PAnn (a :*: InferResult (UVarOf m) :*: InferResult (UVarOf m))) exp)
 prepareH t =
     withDict (inferContext (Proxy @m) (Proxy @exp)) $
     hpure (Proxy @(Unify m) #> MkContainedH newUnbound)
@@ -127,158 +117,54 @@ prepare ::
     forall m exp a.
     Blame m exp =>
     Tree (InferOf exp) (UVarOf m) ->
-    Tree (Ann a) exp ->
-    m (Tree (PTerm a (UVarOf m)) exp)
-prepare resFromPosition (Ann a x) =
+    Tree (PAnn a) exp ->
+    m (Tree (PAnn (a :*: InferResult (UVarOf m) :*: InferResult (UVarOf m))) exp)
+prepare resFromPosition (PAnn a x) =
     withDict (recurse (Proxy @(Blame m exp))) $
     hmap
-    (Proxy @(Blame m) #>
-        InferChild . fmap (\t -> InferredChild t (pInferResultFromPos t)) . prepareH)
-    x
+    ( Proxy @(Blame m) #>
+        InferChild . fmap (\t -> InferredChild t (t ^. pAnn . Lens._2 . Lens._1 . _InferResult)) . prepareH
+    ) x
     & inferBody
     <&>
     \(xI, r) ->
-    PTerm
-    { pAnn = a
-    , pInferResultFromPos = resFromPosition
-    , pInferResultFromSelf = r
-    , pBody = xI
-    }
+    PAnn (a :*: InferResult resFromPosition :*: InferResult r) xI
 
 tryUnify ::
-    forall err m exp.
+    forall err m top exp.
     (MonadError err m, Blame m exp) =>
-    Proxy exp ->
+    HWitness top exp ->
     Tree (InferOf exp) (UVarOf m) ->
     Tree (InferOf exp) (UVarOf m) ->
     m ()
-tryUnify p i0 i1 =
-    withDict (inferContext (Proxy @m) p) $
+tryUnify _ i0 i1 =
+    withDict (inferContext (Proxy @m) (Proxy @exp)) $
     do
-        inferOfUnify p i0 i1
+        inferOfUnify (Proxy @exp) i0 i1
         htraverse_ (Proxy @(Unify m) #> occursCheck) i0
     & (`catchError` const (pure ()))
 
-toUnifies ::
-    forall err m exp a.
-    (MonadError err m, Blame m exp) =>
-    Tree (PTerm a (UVarOf m)) exp ->
-    Tree (Ann (a, m ())) exp
-toUnifies (PTerm a i0 i1 b) =
-    withDict (recurse (Proxy @(Blame m exp))) $
-    hmap (Proxy @(Blame m) #> toUnifies) b
-    & Ann (a, tryUnify (Proxy @exp) i0 i1)
-
--- | A 'HyperType' for an inferred term with type mismatches - the output of 'blame'
-data BTerm a v e = BTerm
-    { _bAnn :: a
-        -- ^ The node's original annotation as passed to 'blame'
-    , _bRes :: Either (InferOf' e v, InferOf' e v) (InferOf' e v)
-        -- ^ Either an infer result, or two conflicting results representing a type mismatch
-    , _bVal :: e # BTerm a v
-        -- ^ The node's body and its inferred child nodes
-    } deriving Generic
-makeLenses ''BTerm
-makeCommonInstances [''BTerm]
-
-data W_Flip_BTerm a e n where
-    E_Flip_BTerm_InferOf_e ::
-        HWitness (InferOf e) n ->
-        W_Flip_BTerm a e n
-    E_Flip_BTerm_e ::
-        HWitness e f ->
-        HWitness (Flip (BTerm a) f) n ->
-        W_Flip_BTerm a e n
-
-instance HNodes (Flip (BTerm a) e) where
-    type HNodesConstraint (Flip (BTerm a) e) c = InferredVarsConstraint c e
-    type HWitnessType (Flip (BTerm a) e) = W_Flip_BTerm a e
-    {-# INLINE hLiftConstraint #-}
-    hLiftConstraint (HWitness w) p =
-        withDict (inferredVarsConstraintCtx p (Proxy @e)) $
-        case w of
-        E_Flip_BTerm_InferOf_e w0 -> hLiftConstraint w0 p
-        E_Flip_BTerm_e w0 w1 ->
-            hLiftConstraint w0 (p0 p) (hLiftConstraint w1 p)
-            where
-                p0 :: Proxy c -> Proxy (InferredVarsConstraint c)
-                p0 _ = Proxy
-
-instance (Recursively HFunctor e, Recursively HFunctorInferOf e) => HFunctor (Flip (BTerm a) e) where
-    {-# INLINE hmap #-}
-    hmap f =
-        withDict (recursively (Proxy @(HFunctor e))) $
-        withDict (recursively (Proxy @(HFunctorInferOf e))) $
-        let mapRes = hmap (f . HWitness . E_Flip_BTerm_InferOf_e)
-        in
-        _Flip %~
-        \(BTerm pl r x) ->
-        BTerm pl
-        ( case r of
-            Left (r0, r1) -> Left (mapRes r0, mapRes r1)
-            Right r0 -> Right (mapRes r0)
-        )
-        ( hmap
-            ( Proxy @(Recursively HFunctor) #*# Proxy @(Recursively HFunctorInferOf) #*#
-                \w -> from _Flip %~ hmap (f . HWitness . E_Flip_BTerm_e w)
-            ) x
-        )
-
-instance (Recursively HFoldable e, Recursively HFoldableInferOf e) => HFoldable (Flip (BTerm a) e) where
-    {-# INLINE hfoldMap #-}
-    hfoldMap f (MkFlip (BTerm _ r x)) =
-        withDict (recursively (Proxy @(HFoldable e))) $
-        withDict (recursively (Proxy @(HFoldableInferOf e))) $
-        let foldRes = hfoldMap (f . HWitness . E_Flip_BTerm_InferOf_e)
-        in
-        case r of
-        Left (r0, r1) -> foldRes r0 <> foldRes r1
-        Right r0 -> foldRes r0
-        <>
-        hfoldMap
-        ( Proxy @(Recursively HFoldable) #*# Proxy @(Recursively HFoldableInferOf) #*#
-            \w -> hfoldMap (f . HWitness . E_Flip_BTerm_e w) . (_Flip #)
-        ) x
-
-instance
-    (RTraversable e, RTraversableInferOf e) =>
-    HTraversable (Flip (BTerm a) e) where
-    {-# INLINE hsequence #-}
-    hsequence =
-        withDict (recurse (Proxy @(RTraversable e))) $
-        withDict (recurse (Proxy @(RTraversableInferOf e))) $
-        _Flip
-        ( \(BTerm pl r x) ->
-            BTerm pl
-            <$> ( case r of
-                    Left (r0, r1) -> (,) <$> seqRes r0 <*> seqRes r1 <&> Left
-                    Right r0 -> seqRes r0 <&> Right
-                )
-            <*> htraverse
-                ( Proxy @RTraversable #*# Proxy @RTraversableInferOf #>
-                    from _Flip hsequence
-                ) x
-        )
-        where
-            seqRes ::
-                (HTraversable h, Applicative f) =>
-                Tree h (ContainedH f p) -> f (Tree h p)
-            seqRes = htraverse (const runContainedH)
+data BlameResult v e
+    = Good (InferOf' e v)
+    | Mismatch (InferOf' e v, InferOf' e v)
+    deriving Generic
+Lens.makePrisms ''BlameResult
+makeCommonInstances [''BlameResult]
 
 finalize ::
     forall a m exp.
     Blame m exp =>
-    Tree (PTerm a (UVarOf m)) exp ->
-    m (Tree (BTerm a (UVarOf m)) exp)
-finalize (PTerm a i0 i1 x) =
+    Tree (PAnn (a :*: InferResult (UVarOf m) :*: InferResult (UVarOf m))) exp ->
+    m (Tree (PAnn (a :*: BlameResult (UVarOf m))) exp)
+finalize (PAnn (a :*: InferResult i0 :*: InferResult i1) x) =
     withDict (recurse (Proxy @(Blame m exp))) $
     do
         match <- inferOfMatches (Proxy @exp) i0 i1
         let result
-                | match = Right i0
-                | otherwise = Left (i0, i1)
+                | match = Good i0
+                | otherwise = Mismatch (i0, i1)
         htraverse (Proxy @(Blame m) #> finalize) x
-            <&> BTerm a result
+            <&> PAnn (a :*: result)
 
 -- | Perform Hindley-Milner type inference with prioritised blame for type error,
 -- given a prioritisation for the different nodes.
@@ -297,31 +183,17 @@ blame ::
     , MonadError err m
     , Blame m exp
     ) =>
-    (a -> priority) ->
+    (forall n. Tree a n -> priority) ->
     Tree (InferOf exp) (UVarOf m) ->
-    Tree (Ann a) exp ->
-    m (Tree (BTerm a (UVarOf m)) exp)
+    Tree (PAnn a) exp ->
+    m (Tree (PAnn (a :*: BlameResult (UVarOf m))) exp)
 blame order topLevelType e =
     do
         p <- prepare topLevelType e
-        toUnifies p ^.. annotations & sortOn (order . fst) & traverse_ snd
+        hfoldMap
+            ( Proxy @(Blame m) #*#
+                \w (a :*: InferResult i0 :*: InferResult i1) ->
+                [(order a, tryUnify w i0 i1)]
+            ) (_Flip # p)
+            & sortOn fst & traverse_ snd
         finalize p
-
-bTermToAnn ::
-    forall a v e r.
-    Recursively HFunctor e =>
-    ( forall n.
-        HRecWitness e n ->
-        a ->
-        Either (Tree (InferOf n) v, Tree (InferOf n) v) (Tree (InferOf n) v) ->
-        r
-    ) ->
-    Tree (BTerm a v) e ->
-    Tree (Ann r) e
-bTermToAnn f (BTerm pl r x) =
-    withDict (recursively (Proxy @(HFunctor e))) $
-    hmap
-    ( Proxy @(Recursively HFunctor) #*#
-        \w -> bTermToAnn (f . HRecSub w)
-    ) x
-    & Ann (f HRecSelf pl r)

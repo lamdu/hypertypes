@@ -20,7 +20,6 @@ import           Data.STRef
 import           Hyper
 import           Hyper.Class.Infer.Infer1
 import           Hyper.Infer
-import           Hyper.Recurse
 import           Hyper.Type.AST.App
 import           Hyper.Type.AST.NamelessScope
 import           Hyper.Type.AST.NamelessScope.InvDeBruijn
@@ -58,7 +57,6 @@ type instance InferOf (LangA h) = ANode Typ
 instance Recursively HFunctorInferOf (LangA h)
 instance Recursively HFoldableInferOf (LangA h)
 instance RTraversableInferOf (LangA h)
-instance (c Typ, c Row, Recursive c) => InferredVarsConstraint c (LangA h)
 
 instance HasInferredType (LangA h) where
     type TypeOf (LangA h) = Typ

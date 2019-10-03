@@ -135,7 +135,6 @@ instance
                 (newTerm (TRec wR) >>= unify (wT ^. _ANode))
 
 instance RTraversableInferOf LangB
-instance c Typ => InferredVarsConstraint c LangB
 
 -- Monads for inferring `LangB`:
 

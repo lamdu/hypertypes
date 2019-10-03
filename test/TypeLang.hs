@@ -20,7 +20,6 @@ import           Hyper
 import           Hyper.Class.Has
 import           Hyper.Class.Unify
 import           Hyper.Infer
-import           Hyper.Recurse
 import           Hyper.Type.AST.FuncType
 import           Hyper.Type.AST.NamelessScope
 import           Hyper.Type.AST.Nominal
@@ -181,9 +180,6 @@ instance RTraversable Typ
 instance RTraversable Row
 instance RTraversableInferOf Typ
 instance RTraversableInferOf Row
-
-instance (c Typ, c Row, Recursive c) => InferredVarsConstraint c Typ
-instance (c Typ, c Row, Recursive c) => InferredVarsConstraint c Row
 
 instance HasQuantifiedVar Typ where
     type QVar Typ = Name

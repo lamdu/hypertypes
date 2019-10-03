@@ -18,4 +18,5 @@ import Hyper.TH.ZipMatch as X (makeZipMatch)
 import Hyper.Type as X
 import Hyper.Type.Ann as X (Ann(..), ann, annotations)
 import Hyper.Type.Combinator.ANode as X
+import Hyper.Type.Combinator.PAnn as X
 import Hyper.Type.Pure as X

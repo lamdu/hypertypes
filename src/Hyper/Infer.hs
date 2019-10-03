@@ -10,34 +10,36 @@ module Hyper.Infer
       inferH
     ) where
 
-import Control.Lens.Operators
-import Data.Constraint (withDict)
-import Data.Proxy (Proxy(..))
-import Hyper
-import Hyper.Class.Infer
-import Hyper.Class.Infer.Env
-import Hyper.Class.Infer.InferOf
-import Hyper.Infer.Result
-import Hyper.Infer.ScopeLevel
-import Hyper.Unify (UVarOf)
+import qualified Control.Lens as Lens
+import           Control.Lens.Operators
+import           Data.Constraint (withDict)
+import           Data.Proxy (Proxy(..))
+import           GHC.Generics
+import           Hyper
+import           Hyper.Class.Infer
+import           Hyper.Class.Infer.Env
+import           Hyper.Class.Infer.InferOf
+import           Hyper.Infer.Result
+import           Hyper.Infer.ScopeLevel
+import           Hyper.Unify (UVarOf)
 
-import Prelude.Compat
+import           Prelude.Compat
 
 -- | Perform Hindley-Milner type inference of a term
 {-# INLINE infer #-}
 infer ::
     forall m t a.
     Infer m t =>
-    Tree (Ann a) t ->
-    m (Tree (Inferred a (UVarOf m)) t)
-infer (Ann a x) =
+    Tree (PAnn a) t ->
+    m (Tree (PAnn (a :*: InferResult (UVarOf m))) t)
+infer (PAnn a x) =
     withDict (inferContext (Proxy @m) (Proxy @t)) $
     inferBody (hmap (Proxy @(Infer m) #> inferH) x)
-    <&> (\(xI, t) -> Inferred a t xI)
+    <&> (\(xI, t) -> PAnn (a :*: InferResult t) xI)
 
 {-# INLINE inferH #-}
 inferH ::
     Infer m t =>
-    Tree (Ann a) t ->
-    Tree (InferChild m (Inferred a (UVarOf m))) t
-inferH c = infer c <&> (\i -> InferredChild i (i ^. iRes)) & InferChild
+    Tree (PAnn a) t ->
+    Tree (InferChild m (PAnn (a :*: InferResult (UVarOf m)))) t
+inferH c = infer c <&> (\i -> InferredChild i (i ^. pAnn . Lens._2 . _InferResult)) & InferChild

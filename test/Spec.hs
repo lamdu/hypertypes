@@ -5,6 +5,8 @@ import           Control.Lens.Operators
 import           Control.Monad.Except
 import           Control.Monad.RWS
 import           Control.Monad.ST
+import           Data.Constraint
+import           Data.Functor.Const
 import qualified Data.Map as Map
 import           Data.Proxy
 import qualified Data.Set as Set
@@ -175,14 +177,24 @@ inferExpr ::
     , Infer m t
     , RTraversable t
     , RTraversableInferOf t
-    , InferredVarsConstraint (Unify m) t
     ) =>
     Tree Pure t ->
     m (Tree Pure (TypeOf t))
 inferExpr x =
-    infer (wrap (const (Ann ())) x)
-    >>= Lens.from _Flip (htraverse (Proxy @(Unify m) #> applyBindings))
-    <&> (^# iRes . inferredType (Proxy @t))
+    infer (wrap (const (PAnn (Const ()))) x)
+    >>= Lens.from _Flip
+        (htraverse
+            ( Proxy @(Infer m) #*# Proxy @RTraversableInferOf #*#
+                \w (Const () :*: InferResult i) ->
+                withDict (inferContext (Proxy @m) (p0 w)) $
+                htraverse (Proxy @(Unify m) #> applyBindings) i
+                <&> InferResult
+            )
+        )
+    <&> (^# pAnn . _InferResult . inferredType (Proxy @t))
+    where
+        p0 :: HWitness a n -> Proxy n
+        p0 _ = Proxy
 
 vecNominalDecl :: Tree Pure (NominalDecl Typ)
 vecNominalDecl =
