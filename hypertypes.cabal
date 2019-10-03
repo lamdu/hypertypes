@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 33bf99391fd662b3377c2e0eb8981ad13a7470b47dcba852ae8a68248d89cc5d
+-- hash: b35bfab8a27d1e5ccd78e280e7cdf5068f499e0e2c1d483b94d8989802210f2f
 
 name:           hypertypes
 version:        0.1.0.1
@@ -61,8 +61,6 @@ library
       Hyper.TH.Traversable
       Hyper.TH.ZipMatch
       Hyper.Type
-      Hyper.Type.Ann
-      Hyper.Type.Ann.Arbitrary
       Hyper.Type.AST.App
       Hyper.Type.AST.FuncType
       Hyper.Type.AST.Lam
