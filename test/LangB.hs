@@ -4,10 +4,22 @@ module LangB where
 
 import           TypeLang
 
+import           Control.Applicative
+import qualified Control.Lens as Lens
+import           Control.Lens.Operators
+import           Control.Monad.Except
+import           Control.Monad.RWS
+import           Control.Monad.Reader
+import           Control.Monad.ST
+import           Control.Monad.ST.Class (MonadST(..))
+import           Data.Constraint
+import           Data.Map (Map)
+import           Data.Proxy
+import           Data.STRef
+import           Data.String (IsString(..))
 import           Hyper
-import           Hyper.Class.Unify
-import           Hyper.Type.Combinator.Flip
 import           Hyper.Infer
+import           Hyper.Type.Combinator.Flip
 import           Hyper.Type.AST.App
 import           Hyper.Type.AST.Lam
 import           Hyper.Type.AST.Let
@@ -23,19 +35,6 @@ import           Hyper.Unify.Generalize
 import           Hyper.Unify.New
 import           Hyper.Unify.QuantifiedVar
 import           Hyper.Unify.Term
-import           Control.Applicative
-import qualified Control.Lens as Lens
-import           Control.Lens.Operators
-import           Control.Monad.Except
-import           Control.Monad.RWS
-import           Control.Monad.Reader
-import           Control.Monad.ST
-import           Control.Monad.ST.Class (MonadST(..))
-import           Data.Constraint
-import           Data.Map (Map)
-import           Data.Proxy
-import           Data.STRef
-import           Data.String (IsString(..))
 import           Generics.Constraints (makeDerivings)
 import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))

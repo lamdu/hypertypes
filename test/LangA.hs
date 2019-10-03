@@ -6,9 +6,19 @@ module LangA where
 
 import           TypeLang
 
+import           Control.Applicative
+import qualified Control.Lens as Lens
+import           Control.Lens.Operators
+import           Control.Monad.Except
+import           Control.Monad.RWS
+import           Control.Monad.Reader
+import           Control.Monad.ST
+import           Control.Monad.ST.Class (MonadST(..))
+import           Data.Constraint
+import           Data.Proxy (Proxy(..))
+import           Data.STRef
 import           Hyper
 import           Hyper.Class.Infer.Infer1
-import           Hyper.Class.Unify
 import           Hyper.Infer
 import           Hyper.Recurse
 import           Hyper.Type.AST.App
@@ -22,17 +32,6 @@ import           Hyper.Unify.Binding
 import           Hyper.Unify.Binding.ST
 import           Hyper.Unify.New
 import           Hyper.Unify.QuantifiedVar
-import           Control.Applicative
-import qualified Control.Lens as Lens
-import           Control.Lens.Operators
-import           Control.Monad.Except
-import           Control.Monad.RWS
-import           Control.Monad.Reader
-import           Control.Monad.ST
-import           Control.Monad.ST.Class (MonadST(..))
-import           Data.Constraint
-import           Data.Proxy (Proxy(..))
-import           Data.STRef
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)

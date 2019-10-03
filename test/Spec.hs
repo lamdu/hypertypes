@@ -1,17 +1,5 @@
 {-# LANGUAGE FlexibleContexts, BlockArguments, OverloadedStrings #-}
 
-import           Hyper
-import           Hyper.Class.Unify
-import           Hyper.Type.Combinator.Flip
-import           Hyper.Infer
-import           Hyper.Recurse
-import           Hyper.Type.AST.NamelessScope (EmptyScope)
-import           Hyper.Type.AST.Nominal
-import           Hyper.Type.AST.Scheme
-import           Hyper.Type.AST.Scheme.AlphaEq
-import           Hyper.Unify.Apply
-import           Hyper.Unify.Constraints
-import           Hyper.Unify.QuantifiedVar
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Except
@@ -20,6 +8,17 @@ import           Control.Monad.ST
 import qualified Data.Map as Map
 import           Data.Proxy
 import qualified Data.Set as Set
+import           Hyper
+import           Hyper.Infer
+import           Hyper.Unify
+import           Hyper.Unify.Apply
+import           Hyper.Unify.QuantifiedVar
+import           Hyper.Recurse
+import           Hyper.Type.AST.NamelessScope (EmptyScope)
+import           Hyper.Type.AST.Nominal
+import           Hyper.Type.AST.Scheme
+import           Hyper.Type.AST.Scheme.AlphaEq
+import           Hyper.Type.Combinator.Flip
 import           LangA
 import           LangB
 import           ReadMeExamples ()

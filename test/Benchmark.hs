@@ -1,10 +1,10 @@
-import Hyper
-import Hyper.Unify
-import Hyper.Unify.New (unfreeze)
 import Control.Exception (evaluate)
 import Control.Lens.Operators
 import Criterion (Benchmarkable, whnfIO)
 import Criterion.Main (bench, defaultMain)
+import Hyper
+import Hyper.Unify
+import Hyper.Unify.New (unfreeze)
 import LangB
 import Text.PrettyPrint.HughesPJClass (prettyShow)
 import TypeLang
