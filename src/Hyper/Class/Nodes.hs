@@ -1,7 +1,7 @@
 -- | A class for witness types and lifting of constraints to the child nodes of a 'HyperType'
 
 {-# LANGUAGE EmptyCase, UndecidableInstances, TemplateHaskell, DefaultSignatures #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, GeneralizedNewtypeDeriving #-}
 
 module Hyper.Class.Nodes
     ( HNodes(..), HWitness(..), _HWitness
@@ -77,17 +77,8 @@ instance (HNodes a, HNodes b) => HNodes (a :+: b) where
     hLiftConstraint (HWitness (L1 w)) = hLiftConstraint w
     hLiftConstraint (HWitness (R1 w)) = hLiftConstraint w
 
-instance HNodes h => HNodes (M1 i m h) where
-    type instance HNodesConstraint (M1 i m h) c = HNodesConstraint h c
-    type HWitnessType (M1 i m h) = HWitnessType h
-    {-# INLINE hLiftConstraint #-}
-    hLiftConstraint (HWitness w) = hLiftConstraint @h (HWitness w)
-
-instance HNodes h => HNodes (Rec1 h) where
-    type instance HNodesConstraint (Rec1 h) c = HNodesConstraint h c
-    type instance HWitnessType (Rec1 h) = HWitnessType h
-    {-# INLINE hLiftConstraint #-}
-    hLiftConstraint (HWitness w) = hLiftConstraint @h (HWitness w)
+deriving newtype instance HNodes h => HNodes (M1 i m h)
+deriving newtype instance HNodes h => HNodes (Rec1 h)
 
 infixr 0 #>
 infixr 0 #*#

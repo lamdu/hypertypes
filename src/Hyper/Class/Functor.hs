@@ -1,6 +1,6 @@
 -- | A variant of 'Functor' for 'Hyper.Type.HyperType's
 
-{-# LANGUAGE DefaultSignatures, FlexibleContexts #-}
+{-# LANGUAGE DefaultSignatures, FlexibleContexts, GeneralizedNewtypeDeriving #-}
 
 module Hyper.Class.Functor
     ( HFunctor(..)
@@ -11,7 +11,6 @@ import Control.Lens (Setter, sets)
 import Control.Lens.Operators
 import Data.Functor.Const (Const(..))
 import GHC.Generics
-import GHC.Generics.Lens (_M1, _Rec1)
 import Data.Proxy (Proxy(..))
 import Hyper.Class.Nodes (HNodes(..), HWitness(..), _HWitness, (#>))
 import Hyper.Type (Tree)
@@ -51,13 +50,8 @@ instance (HFunctor a, HFunctor b) => HFunctor (a :+: b) where
     hmap f (L1 x) = L1 (hmap (f . HWitness . L1) x)
     hmap f (R1 x) = R1 (hmap (f . HWitness . R1) x)
 
-instance HFunctor h => HFunctor (M1 i m h) where
-    {-# INLINE hmap #-}
-    hmap f = _M1 %~ hmap (f . (_HWitness %~ id))
-
-instance HFunctor h => HFunctor (Rec1 h) where
-    {-# INLINE hmap #-}
-    hmap f = _Rec1 %~ hmap (f . (_HWitness %~ id))
+deriving newtype instance HFunctor h => HFunctor (M1 i m h)
+deriving newtype instance HFunctor h => HFunctor (Rec1 h)
 
 -- | 'HFunctor' variant of 'Control.Lens.mapped' for 'Hyper.Type.HyperType's with a single node type.
 --

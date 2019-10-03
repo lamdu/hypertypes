@@ -1,6 +1,6 @@
 -- | A variant of 'Foldable' for 'Hyper.Type.HyperType's
 
-{-# LANGUAGE DefaultSignatures, FlexibleContexts #-}
+{-# LANGUAGE DefaultSignatures, FlexibleContexts, GeneralizedNewtypeDeriving #-}
 
 module Hyper.Class.Foldable
     ( HFoldable(..)
@@ -55,13 +55,8 @@ instance (HFoldable a, HFoldable b) => HFoldable (a :+: b) where
     hfoldMap f (L1 x) = hfoldMap (f . HWitness . L1) x
     hfoldMap f (R1 x) = hfoldMap (f . HWitness . R1) x
 
-instance HFoldable h => HFoldable (M1 i m h) where
-    {-# INLINE hfoldMap #-}
-    hfoldMap f (M1 x) = hfoldMap (f . (_HWitness %~ id)) x
-
-instance HFoldable h => HFoldable (Rec1 h) where
-    {-# INLINE hfoldMap #-}
-    hfoldMap f (Rec1 x) = hfoldMap (f . (_HWitness %~ id)) x
+deriving newtype instance HFoldable h => HFoldable (M1 i m h)
+deriving newtype instance HFoldable h => HFoldable (Rec1 h)
 
 -- | 'HFoldable' variant for 'Control.Lens.folded' for 'Hyper.Type.HyperType's with a single node type.
 --

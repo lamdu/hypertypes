@@ -1,6 +1,6 @@
 -- | A class to match term structures
 
-{-# LANGUAGE DefaultSignatures, FlexibleContexts #-}
+{-# LANGUAGE DefaultSignatures, FlexibleContexts, GeneralizedNewtypeDeriving #-}
 
 module Hyper.Class.ZipMatch
     ( ZipMatch(..)
@@ -13,7 +13,6 @@ import Control.Lens.Operators
 import Control.Monad (guard)
 import Data.Functor.Const (Const(..))
 import GHC.Generics
-import GHC.Generics.Lens (_M1, _Rec1)
 import Hyper.Class.Foldable (HFoldable, htraverse_, htraverse1_)
 import Hyper.Class.Functor (HFunctor(..))
 import Hyper.Class.Nodes (HNodes(..), HWitness)
@@ -64,13 +63,8 @@ instance (ZipMatch a, ZipMatch b) => ZipMatch (a :+: b) where
     zipMatch L1{} R1{} = Nothing
     zipMatch R1{} L1{} = Nothing
 
-instance ZipMatch h => ZipMatch (M1 i m h) where
-    {-# INLINE zipMatch #-}
-    zipMatch = _M1 . zipMatch . (^. _M1)
-
-instance ZipMatch h => ZipMatch (Rec1 h) where
-    {-# INLINE zipMatch #-}
-    zipMatch = _Rec1 . zipMatch . (^. _Rec1)
+deriving newtype instance ZipMatch h => ZipMatch (M1 i m h)
+deriving newtype instance ZipMatch h => ZipMatch (Rec1 h)
 
 -- | 'ZipMatch' variant of 'Control.Applicative.liftA2'
 {-# INLINE zipMatch2 #-}
