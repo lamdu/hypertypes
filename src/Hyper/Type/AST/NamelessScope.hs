@@ -3,7 +3,7 @@
 -- and the technique from Bird & Paterson's
 -- ["de Bruijn notation as a nested datatype"](https://www.semanticscholar.org/paper/De-Bruijn-Notation-as-a-Nested-Datatype-Bird-Paterson/254b3b01651c5e325d9b3cd15c106fbec40e53ea)
 
-{-# LANGUAGE UndecidableInstances, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FlexibleInstances, TemplateHaskell, EmptyCase, EmptyDataDeriving #-}
 
 module Hyper.Type.AST.NamelessScope

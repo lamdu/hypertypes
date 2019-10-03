@@ -1,6 +1,6 @@
 -- | A variant of 'Traversable' for 'Hyper.Type.HyperType's
 
-{-# LANGUAGE DefaultSignatures, FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Hyper.Class.Traversable
     ( HTraversable(..)

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f94d035c47a3252c4be2f2ee568e08f4978878327ba0a46fbef39ecb63272e61
+-- hash: 61149fa80bc809ee4b15ca5f1c781c2a2c85b79a92c45e1992da7955cd918d30
 
 name:           hypertypes
 version:        0.1.0.1
@@ -102,7 +102,7 @@ library
       Hyper.TH.Internal.Utils
   hs-source-dirs:
       src
-  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies GADTs LambdaCase MultiParamTypeClasses RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeOperators TypeFamilies NoImplicitPrelude
+  default-extensions: ConstraintKinds DataKinds DefaultSignatures DeriveGeneric DerivingStrategies GADTs GeneralizedNewtypeDeriving LambdaCase MultiParamTypeClasses RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeOperators TypeFamilies NoImplicitPrelude
   ghc-options: -fexpose-all-unfoldings -Wall -Wnoncanonical-monad-instances -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
   ghc-prof-options: -fexpose-all-unfoldings
   build-depends:
@@ -137,7 +137,7 @@ test-suite hypertypes-test
       TypeLang
   hs-source-dirs:
       test
-  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies GADTs LambdaCase MultiParamTypeClasses RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeOperators TypeFamilies
+  default-extensions: ConstraintKinds DataKinds DefaultSignatures DeriveGeneric DerivingStrategies GADTs GeneralizedNewtypeDeriving LambdaCase MultiParamTypeClasses RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeOperators TypeFamilies
   ghc-options: -Wall -Wcompat -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.9 && <5
@@ -163,7 +163,7 @@ benchmark hypertypes-bench
       TypeLang
   hs-source-dirs:
       test
-  default-extensions: ConstraintKinds DataKinds DeriveGeneric DerivingStrategies GADTs LambdaCase MultiParamTypeClasses RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeOperators TypeFamilies
+  default-extensions: ConstraintKinds DataKinds DefaultSignatures DeriveGeneric DerivingStrategies GADTs GeneralizedNewtypeDeriving LambdaCase MultiParamTypeClasses RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeOperators TypeFamilies
   ghc-options: -O2 -Wall -Wnoncanonical-monad-instances -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
   build-depends:
       base >=4.9 && <5

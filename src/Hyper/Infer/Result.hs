@@ -1,5 +1,4 @@
-{-# LANGUAGE TemplateHaskell, FlexibleContexts #-}
-{-# LANGUAGE UndecidableInstances, FlexibleInstances, DefaultSignatures #-}
+{-# LANGUAGE TemplateHaskell, FlexibleContexts, UndecidableInstances, FlexibleInstances #-}
 
 module Hyper.Infer.Result
     ( Inferred(..), iVal, iRes, iAnn, W_Flip_Inferred(..)

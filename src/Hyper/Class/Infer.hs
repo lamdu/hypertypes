@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, DefaultSignatures, FlexibleInstances, FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances, FlexibleContexts #-}
 
 module Hyper.Class.Infer
     ( InferOf

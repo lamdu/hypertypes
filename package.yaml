@@ -31,9 +31,11 @@ dependencies:
 default-extensions:
 - ConstraintKinds
 - DataKinds
+- DefaultSignatures
 - DeriveGeneric
 - DerivingStrategies
 - GADTs
+- GeneralizedNewtypeDeriving
 - LambdaCase
 - MultiParamTypeClasses
 - RankNTypes

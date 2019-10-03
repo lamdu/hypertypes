@@ -1,6 +1,6 @@
 -- | A variant of 'Foldable' for 'Hyper.Type.HyperType's
 
-{-# LANGUAGE DefaultSignatures, FlexibleContexts, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Hyper.Class.Foldable
     ( HFoldable(..)

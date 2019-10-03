@@ -1,7 +1,6 @@
 -- | Type schemes
 
-{-# LANGUAGE TemplateHaskell, FlexibleContexts, DefaultSignatures #-}
-{-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE TemplateHaskell, FlexibleContexts, FlexibleInstances, UndecidableInstances #-}
 
 module Hyper.Type.AST.Scheme
     ( Scheme(..), sForAlls, sTyp, W_Scheme(..)

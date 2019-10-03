@@ -1,6 +1,6 @@
 -- | Nominal (named) types declaration, instantiation, construction, and access.
 
-{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
 {-# LANGUAGE FlexibleContexts, TemplateHaskell, EmptyCase #-}
 
 module Hyper.Type.AST.Nominal

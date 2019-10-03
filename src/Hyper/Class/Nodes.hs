@@ -1,7 +1,6 @@
 -- | A class for witness types and lifting of constraints to the child nodes of a 'HyperType'
 
-{-# LANGUAGE EmptyCase, UndecidableInstances, TemplateHaskell, DefaultSignatures #-}
-{-# LANGUAGE FlexibleContexts, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE EmptyCase, UndecidableInstances, TemplateHaskell, FlexibleContexts #-}
 
 module Hyper.Class.Nodes
     ( HNodes(..), HWitness(..), _HWitness

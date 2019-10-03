@@ -1,6 +1,6 @@
 -- | A variant of 'Functor' for 'Hyper.Type.HyperType's
 
-{-# LANGUAGE DefaultSignatures, FlexibleContexts, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Hyper.Class.Functor
     ( HFunctor(..)

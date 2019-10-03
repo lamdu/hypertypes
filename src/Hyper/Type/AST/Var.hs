@@ -1,6 +1,6 @@
 -- | Variables.
 
-{-# LANGUAGE GeneralizedNewtypeDeriving, UndecidableInstances, EmptyCase #-}
+{-# LANGUAGE UndecidableInstances, EmptyCase #-}
 {-# LANGUAGE FlexibleInstances, TemplateHaskell, FlexibleContexts #-}
 
 module Hyper.Type.AST.Var

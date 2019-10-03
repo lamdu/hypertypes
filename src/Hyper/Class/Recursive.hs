@@ -1,6 +1,6 @@
 -- | Classes applying on 'HyperType's recursively
 
-{-# LANGUAGE DefaultSignatures, FlexibleContexts, FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts, FlexibleInstances #-}
 
 module Hyper.Class.Recursive
     ( Recursive(..)

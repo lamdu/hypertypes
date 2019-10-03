@@ -1,6 +1,6 @@
 -- | A class for unification
 
-{-# LANGUAGE FlexibleContexts, DefaultSignatures #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Hyper.Class.Unify
     ( Unify(..), UVarOf

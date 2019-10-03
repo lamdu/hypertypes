@@ -1,5 +1,4 @@
-{-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances, FlexibleContexts #-}
 
 -- | A test language with locally-nameless variable scoping and type signatures with for-alls
 

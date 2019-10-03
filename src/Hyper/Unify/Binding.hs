@@ -1,6 +1,6 @@
 -- | A pure data structures implementation of unification variables state
 
-{-# LANGUAGE UndecidableInstances, TemplateHaskell, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE UndecidableInstances, TemplateHaskell #-}
 
 module Hyper.Unify.Binding
     ( UVar(..), _UVar

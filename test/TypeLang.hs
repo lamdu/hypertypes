@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell, FlexibleInstances, FlexibleContexts #-}
-{-# LANGUAGE DerivingVia, UndecidableInstances, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DerivingVia, UndecidableInstances #-}
 
 module TypeLang where
 

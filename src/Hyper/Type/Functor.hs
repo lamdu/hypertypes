@@ -1,6 +1,5 @@
 -- | Lift Functors to HyperTypes
-{-# LANGUAGE TemplateHaskell, FlexibleInstances, FlexibleContexts #-}
-{-# LANGUAGE UndecidableInstances, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances, FlexibleContexts, UndecidableInstances #-}
 module Hyper.Type.Functor
     ( F(..), _F, W_F(..)
     ) where

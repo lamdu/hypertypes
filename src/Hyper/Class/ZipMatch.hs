@@ -1,6 +1,6 @@
 -- | A class to match term structures
 
-{-# LANGUAGE DefaultSignatures, FlexibleContexts, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Hyper.Class.ZipMatch
     ( ZipMatch(..)

@@ -32,8 +32,7 @@
 -- Note: If a similar algorithm already existed somewhere,
 -- [I](https://github.com/yairchu/) would very much like to know!
 
-{-# LANGUAGE FlexibleContexts, DefaultSignatures, TemplateHaskell #-}
-{-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts, TemplateHaskell, FlexibleInstances, UndecidableInstances #-}
 
 module Hyper.Infer.Blame
     ( blame
