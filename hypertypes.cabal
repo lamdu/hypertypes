@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 61149fa80bc809ee4b15ca5f1c781c2a2c85b79a92c45e1992da7955cd918d30
+-- hash: 33bf99391fd662b3377c2e0eb8981ad13a7470b47dcba852ae8a68248d89cc5d
 
 name:           hypertypes
 version:        0.1.0.1
@@ -80,6 +80,7 @@ library
       Hyper.Type.Combinator.ANode
       Hyper.Type.Combinator.Compose
       Hyper.Type.Combinator.Flip
+      Hyper.Type.Combinator.PAnn
       Hyper.Type.Functor
       Hyper.Type.Prune
       Hyper.Type.Pure
