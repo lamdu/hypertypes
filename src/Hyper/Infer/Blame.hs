@@ -131,19 +131,19 @@ prepare ::
     m (Tree (PTerm a (UVarOf m)) exp)
 prepare resFromPosition (Ann a x) =
     withDict (recurse (Proxy @(Blame m exp))) $
-    do
-        (xI, r) <-
-            hmap
-            (Proxy @(Blame m) #>
-                InferChild . fmap (\t -> InferredChild t (pInferResultFromPos t)) . prepareH)
-            x
-            & inferBody
-        pure PTerm
-            { pAnn = a
-            , pInferResultFromPos = resFromPosition
-            , pInferResultFromSelf = r
-            , pBody = xI
-            }
+    hmap
+    (Proxy @(Blame m) #>
+        InferChild . fmap (\t -> InferredChild t (pInferResultFromPos t)) . prepareH)
+    x
+    & inferBody
+    <&>
+    \(xI, r) ->
+    PTerm
+    { pAnn = a
+    , pInferResultFromPos = resFromPosition
+    , pInferResultFromSelf = r
+    , pBody = xI
+    }
 
 tryUnify ::
     forall err m exp.
