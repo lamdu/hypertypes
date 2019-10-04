@@ -6,7 +6,6 @@ import           Control.Monad.Except
 import           Control.Monad.RWS
 import           Control.Monad.ST
 import           Data.Constraint
-import           Data.Functor.Const
 import qualified Data.Map as Map
 import           Data.Proxy
 import qualified Data.Set as Set

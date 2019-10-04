@@ -2,6 +2,7 @@
 
 module Hyper (module X) where
 
+import Data.Functor.Const as X (Const(..))
 import GHC.Generics as X ((:*:)(..))
 import Hyper.Class.Apply as X (HApply(..), HApplicative, liftH2)
 import Hyper.Class.Foldable as X (HFoldable(..), hfoldMap, hfolded1, htraverse_, htraverse1_)
