@@ -55,6 +55,7 @@ import           Hyper.Class.Unify (Unify, UVarOf)
 import           Hyper.Infer.Result
 import           Hyper.Recurse
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
+import           Hyper.Type.Combinator.Ann (ann)
 import           Hyper.Type.Combinator.Flip
 import           Hyper.Unify.New (newUnbound)
 import           Hyper.Unify.Occurs (occursCheck)
@@ -123,7 +124,7 @@ prepare resFromPosition (Ann a x) =
     withDict (recurse (Proxy @(Blame m exp))) $
     hmap
     ( Proxy @(Blame m) #>
-        InferChild . fmap (\t -> InferredChild t (t ^. pAnn . Lens._2 . Lens._1 . _InferResult)) . prepareH
+        InferChild . fmap (\t -> InferredChild t (t ^. ann . Lens._2 . Lens._1 . _InferResult)) . prepareH
     ) x
     & inferBody
     <&>

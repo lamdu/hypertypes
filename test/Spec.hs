@@ -20,6 +20,7 @@ import           Hyper.Type.AST.NamelessScope (EmptyScope)
 import           Hyper.Type.AST.Nominal
 import           Hyper.Type.AST.Scheme
 import           Hyper.Type.AST.Scheme.AlphaEq
+import           Hyper.Type.Combinator.Ann (ann)
 import           Hyper.Type.Combinator.Flip
 import           LangA
 import           LangB
@@ -191,7 +192,7 @@ inferExpr x =
                 <&> InferResult
             )
         )
-    <&> (^# pAnn . _InferResult . inferredType (Proxy @t))
+    <&> (^# ann . _InferResult . inferredType (Proxy @t))
     where
         p0 :: HWitness a n -> Proxy n
         p0 _ = Proxy
