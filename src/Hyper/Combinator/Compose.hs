@@ -29,8 +29,8 @@ makeCommonInstances [''HCompose]
 {-# INLINE _HCompose #-}
 _HCompose ::
     Lens.Iso
-    (Tree (HCompose a0 b0) k0) (Tree (HCompose a1 b1) k1)
-    (Tree a0 (HCompose b0 k0)) (Tree a1 (HCompose b1 k1))
+    (Tree (HCompose a0 b0) h0) (Tree (HCompose a1 b1) h1)
+    (Tree a0 (HCompose b0 h0)) (Tree a1 (HCompose b1 h1))
 _HCompose = Lens.iso getHCompose MkHCompose
 
 data W_HCompose a b n where
@@ -51,10 +51,10 @@ instance (HNodes a, HNodes b) => HNodes (HCompose a b) where
 
 -- TODO: Avoid UndecidableSuperClasses!
 
-class    HNodesConstraint b (HComposeConstraint1 c k0) => HComposeConstraint0 c b k0
-instance HNodesConstraint b (HComposeConstraint1 c k0) => HComposeConstraint0 c b k0
-class    c (HCompose k0 k1) => HComposeConstraint1 c k0 k1
-instance c (HCompose k0 k1) => HComposeConstraint1 c k0 k1
+class    HNodesConstraint b (HComposeConstraint1 c h0) => HComposeConstraint0 c b h0
+instance HNodesConstraint b (HComposeConstraint1 c h0) => HComposeConstraint0 c b h0
+class    c (HCompose h0 h1) => HComposeConstraint1 c h0 h1
+instance c (HCompose h0 h1) => HComposeConstraint1 c h0 h1
 
 instance
     (HNodes a, HPointed a, HPointed b) =>
@@ -107,8 +107,8 @@ instance (HTraversable a, HTraversable b) => HTraversable (HCompose a b) where
         )
 
 instance
-    (ZipMatch k0, ZipMatch k1, HTraversable k0, HFunctor k1) =>
-    ZipMatch (HCompose k0 k1) where
+    (ZipMatch h0, ZipMatch h1, HTraversable h0, HFunctor h1) =>
+    ZipMatch (HCompose h0 h1) where
     {-# INLINE zipMatch #-}
     zipMatch (MkHCompose x) (MkHCompose y) =
         zipMatch x y
