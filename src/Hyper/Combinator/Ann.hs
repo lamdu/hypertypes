@@ -49,7 +49,20 @@ hLiftConstraintH c n =
         (hLiftConstraint (HWitness @(HFlip Ann _) n))
     )
 
+instance RNodes a => RNodes (Ann a) where
+    {-# INLINE recursiveHNodes #-}
+    recursiveHNodes _ = withDict (recursiveHNodes (Proxy @a)) Dict
+
+instance (c (Ann a), Recursively c a) => Recursively c (Ann a) where
+    {-# INLINE recursively #-}
+    recursively _ = withDict (recursively (Proxy @(c a))) Dict
+
+instance RTraversable a => RTraversable (Ann a) where
+    {-# INLINE recursiveHTraversable #-}
+    recursiveHTraversable _ = withDict (recursiveHTraversable (Proxy @a)) Dict
+
 instance Recursively HFunctor h => HFunctor (HFlip Ann h) where
+    {-# INLINE hmap #-}
     hmap f =
         withDict (recursively (Proxy @(HFunctor h))) $
         _HFlip %~
@@ -63,6 +76,7 @@ instance Recursively HFunctor h => HFunctor (HFlip Ann h) where
         )
 
 instance Recursively HFoldable h => HFoldable (HFlip Ann h) where
+    {-# INLINE hfoldMap #-}
     hfoldMap f (MkHFlip (Ann a b)) =
         withDict (recursively (Proxy @(HFoldable h))) $
         f (HWitness HRecSelf) a <>
@@ -72,6 +86,7 @@ instance Recursively HFoldable h => HFoldable (HFlip Ann h) where
         ) b
 
 instance RTraversable h => HTraversable (HFlip Ann h) where
+    {-# INLINE hsequence #-}
     hsequence =
         withDict (recurse (Proxy @(RTraversable h))) $
         _HFlip

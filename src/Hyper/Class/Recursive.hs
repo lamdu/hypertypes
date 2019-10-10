@@ -5,7 +5,7 @@
 module Hyper.Class.Recursive
     ( Recursive(..)
     , Recursively(..)
-    , RNodes, RTraversable
+    , RNodes(..), RTraversable(..)
     ) where
 
 import Data.Constraint (Dict(..), withDict)
