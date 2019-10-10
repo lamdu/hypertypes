@@ -24,7 +24,6 @@ import           GHC.Generics (Generic)
 import           Hyper
 import           Hyper.Class.Has (HasChild(..))
 import           Hyper.Class.Recursive
-import           Hyper.Combinator.Flip (HFlip(..))
 import           Hyper.Infer
 import           Hyper.Recurse
 import           Hyper.TH.Internal.Instances (makeCommonInstances)

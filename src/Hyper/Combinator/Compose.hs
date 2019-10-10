@@ -11,7 +11,7 @@ module Hyper.Combinator.Compose
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Proxy (Proxy(..))
-import           GHC.Generics (Generic, (:*:)(..))
+import           GHC.Generics (Generic)
 import           Hyper
 import           Hyper.Class.Traversable
 import           Hyper.Class.ZipMatch (ZipMatch(..))
