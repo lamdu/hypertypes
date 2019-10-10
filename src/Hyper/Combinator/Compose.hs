@@ -2,7 +2,7 @@
 --
 -- Inspired by [hyperfunctions' @Category@ instance](http://hackage.haskell.org/package/hyperfunctions-0/docs/Control-Monad-Hyper.html).
 
-{-# LANGUAGE UndecidableSuperClasses, UndecidableInstances, FlexibleInstances, TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances, FlexibleInstances, TemplateHaskell #-}
 
 module Hyper.Combinator.Compose
     ( HCompose(..), _HCompose, W_HCompose(..)
@@ -10,10 +10,11 @@ module Hyper.Combinator.Compose
 
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
+import           Data.Constraint (Constraint, Dict(..), withDict)
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import           Hyper
-import           Hyper.Class.Traversable
+import           Hyper.Class.Traversable (ContainedH(..))
 import           Hyper.Class.ZipMatch (ZipMatch(..))
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
 
@@ -41,20 +42,37 @@ instance (HNodes a, HNodes b) => HNodes (HCompose a b) where
     type HWitnessType (HCompose a b) = W_HCompose a b
     {-# INLINE hLiftConstraint #-}
     hLiftConstraint (HWitness (W_HCompose w0 w1)) p r =
-        hLiftConstraint w0 (p0 p)
-        (hLiftConstraint w1 (p1 p w0) r)
+        hLiftConstraint w0 (p0 p) $
+        withDict (hComposeConstraint0 p (Proxy @b) (p1 w0)) $
+        hLiftConstraint w1 (p2 p w0) $
+        withDict (d0 p w0 w1) r
         where
             p0 :: Proxy c -> Proxy (HComposeConstraint0 c b)
             p0 _ = Proxy
-            p1 :: Proxy c -> HWitness a a0 -> Proxy (HComposeConstraint1 c a0)
-            p1 _ _ = Proxy
+            p1 :: HWitness h n -> Proxy n
+            p1 _ = Proxy
+            p2 :: Proxy c -> HWitness a a0 -> Proxy (HComposeConstraint1 c a0)
+            p2 _ _ = Proxy
+            d0 ::
+                HComposeConstraint1 c a0 b0 =>
+                Proxy c -> HWitness a a0 -> HWitness b b0 -> Dict (c (HCompose a0 b0))
+            d0 _ _ _ = hComposeConstraint1
 
--- TODO: Avoid UndecidableSuperClasses!
+class HComposeConstraint0 (c :: HyperType -> Constraint) (b :: HyperType) (h0 :: HyperType) where
+    hComposeConstraint0 ::
+        Proxy c -> Proxy b -> Proxy h0 ->
+        Dict (HNodesConstraint b (HComposeConstraint1 c h0))
 
-class    HNodesConstraint b (HComposeConstraint1 c h0) => HComposeConstraint0 c b h0
-instance HNodesConstraint b (HComposeConstraint1 c h0) => HComposeConstraint0 c b h0
-class    c (HCompose h0 h1) => HComposeConstraint1 c h0 h1
-instance c (HCompose h0 h1) => HComposeConstraint1 c h0 h1
+instance HNodesConstraint b (HComposeConstraint1 c h0) => HComposeConstraint0 c b h0 where
+    {-# INLINE hComposeConstraint0 #-}
+    hComposeConstraint0 _ _ _ = Dict
+
+class HComposeConstraint1 (c :: HyperType -> Constraint) (h0 :: HyperType) (h1 :: HyperType) where
+    hComposeConstraint1 :: Dict (c (HCompose h0 h1))
+
+instance c (HCompose h0 h1) => HComposeConstraint1 c h0 h1 where
+    {-# INLINE hComposeConstraint1 #-}
+    hComposeConstraint1 = Dict
 
 instance
     (HNodes a, HPointed a, HPointed b) =>
