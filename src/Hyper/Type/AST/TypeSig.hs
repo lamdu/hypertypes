@@ -12,10 +12,10 @@ import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import           Generics.Constraints (Constraints)
 import           Hyper
+import           Hyper.Combinator.Flip (_Flip)
 import           Hyper.Infer
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Type.AST.Scheme
-import           Hyper.Type.Combinator.Flip (_Flip)
 import           Hyper.Unify (Unify, unify)
 import           Hyper.Unify.Generalize (instantiateWith)
 import           Hyper.Unify.Term (UTerm(..))

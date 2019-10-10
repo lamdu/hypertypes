@@ -12,9 +12,9 @@ import           GHC.Generics (Generic)
 import           Hyper
 import           Hyper.Class.Traversable
 import           Hyper.Class.Unify (Unify)
+import           Hyper.Combinator.Compose (Compose(..))
 import           Hyper.Infer
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
-import           Hyper.Type.Combinator.Compose (Compose(..))
 import           Hyper.Unify.New (newUnbound)
 
 import           Prelude.Compat

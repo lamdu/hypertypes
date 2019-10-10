@@ -52,11 +52,11 @@ import           Hyper
 import           Hyper.Class.Infer
 import           Hyper.Class.Traversable (ContainedH(..))
 import           Hyper.Class.Unify (Unify, UVarOf)
+import           Hyper.Combinator.Ann (ann)
+import           Hyper.Combinator.Flip
 import           Hyper.Infer.Result
 import           Hyper.Recurse
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
-import           Hyper.Type.Combinator.Ann (ann)
-import           Hyper.Type.Combinator.Flip
 import           Hyper.Unify.New (newUnbound)
 import           Hyper.Unify.Occurs (occursCheck)
 

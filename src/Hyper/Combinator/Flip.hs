@@ -2,7 +2,7 @@
 
 {-# LANGUAGE TemplateHaskell, UndecidableInstances #-}
 
-module Hyper.Type.Combinator.Flip
+module Hyper.Combinator.Flip
     ( Flip(..), _Flip
     ) where
 

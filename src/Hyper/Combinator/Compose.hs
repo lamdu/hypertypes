@@ -4,7 +4,7 @@
 
 {-# LANGUAGE UndecidableSuperClasses, UndecidableInstances, FlexibleInstances, TemplateHaskell #-}
 
-module Hyper.Type.Combinator.Compose
+module Hyper.Combinator.Compose
     ( Compose(..), _Compose, W_Compose(..)
     ) where
 

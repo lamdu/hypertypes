@@ -19,9 +19,9 @@ import           Hyper
 import           Hyper.Class.Infer
 import           Hyper.Class.Infer.Env
 import           Hyper.Class.Infer.InferOf
+import           Hyper.Combinator.Ann (ann)
 import           Hyper.Infer.Result
 import           Hyper.Infer.ScopeLevel
-import           Hyper.Type.Combinator.Ann (ann)
 import           Hyper.Unify (UVarOf)
 
 import           Prelude.Compat

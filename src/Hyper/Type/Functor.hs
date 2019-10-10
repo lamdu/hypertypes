@@ -13,10 +13,10 @@ import Hyper.Class.Functor (HFunctor(..))
 import Hyper.Class.Monad (HMonad(..))
 import Hyper.Class.Nodes ((#>))
 import Hyper.Class.Recursive (RNodes, Recursively(..), RTraversable)
+import Hyper.Combinator.Compose
 import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
 import Hyper.Type (Tree, type (#))
-import Hyper.Type.Combinator.Compose
 
 import Prelude.Compat
 

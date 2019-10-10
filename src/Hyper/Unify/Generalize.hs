@@ -25,9 +25,9 @@ import           GHC.Generics (Generic)
 import           Hyper
 import           Hyper.Class.Traversable
 import           Hyper.Class.Unify (Unify(..), UVarOf, BindingDict(..))
+import           Hyper.Combinator.Flip
 import           Hyper.Recurse
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
-import           Hyper.Type.Combinator.Flip
 import           Hyper.Unify.Constraints
 import           Hyper.Unify.Lookup (semiPruneLookup)
 import           Hyper.Unify.New

@@ -18,8 +18,8 @@ import           Data.Proxy
 import           Data.STRef
 import           Data.String (IsString(..))
 import           Hyper
+import           Hyper.Combinator.Flip
 import           Hyper.Infer
-import           Hyper.Type.Combinator.Flip
 import           Hyper.Type.AST.App
 import           Hyper.Type.AST.Lam
 import           Hyper.Type.AST.Let

@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances #-}
 
-module Hyper.Type.Combinator.Ann
+module Hyper.Combinator.Ann
     ( Ann(..), ann, val
     ) where
 
@@ -13,11 +13,11 @@ import Hyper.Class.Nodes
 import Hyper.Class.Functor
 import Hyper.Class.Foldable
 import Hyper.Class.Traversable
+import Hyper.Combinator.Flip
 import Hyper.Recurse
 import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
 import Hyper.Type (type (#))
-import Hyper.Type.Combinator.Flip
 
 import Prelude.Compat
 

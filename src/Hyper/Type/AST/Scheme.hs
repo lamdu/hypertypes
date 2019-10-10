@@ -24,10 +24,10 @@ import           GHC.Generics (Generic)
 import           Hyper
 import           Hyper.Class.Has (HasChild(..))
 import           Hyper.Class.Recursive
+import           Hyper.Combinator.Flip (Flip(..))
 import           Hyper.Infer
 import           Hyper.Recurse
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
-import           Hyper.Type.Combinator.Flip (Flip(..))
 import           Hyper.Unify
 import           Hyper.Unify.Generalize
 import           Hyper.Unify.Lookup (semiPruneLookup)

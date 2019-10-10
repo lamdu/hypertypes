@@ -10,6 +10,8 @@ import qualified Data.Map as Map
 import           Data.Proxy
 import qualified Data.Set as Set
 import           Hyper
+import           Hyper.Combinator.Ann (ann)
+import           Hyper.Combinator.Flip
 import           Hyper.Infer
 import           Hyper.Unify
 import           Hyper.Unify.Apply
@@ -19,8 +21,6 @@ import           Hyper.Type.AST.NamelessScope (EmptyScope)
 import           Hyper.Type.AST.Nominal
 import           Hyper.Type.AST.Scheme
 import           Hyper.Type.AST.Scheme.AlphaEq
-import           Hyper.Type.Combinator.Ann (ann)
-import           Hyper.Type.Combinator.Flip
 import           LangA
 import           LangB
 import           ReadMeExamples ()

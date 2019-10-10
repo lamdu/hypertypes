@@ -13,8 +13,8 @@ import Hyper.Class.Apply (HApplicative)
 import Hyper.Class.Functor (HFunctor(..))
 import Hyper.Class.Nodes (HWitness, (#>))
 import Hyper.Class.Recursive (Recursively(..))
+import Hyper.Combinator.Compose (Compose, _Compose)
 import Hyper.Type (Tree)
-import Hyper.Type.Combinator.Compose (Compose, _Compose)
 import Hyper.Type.Pure (Pure(..), _Pure)
 
 import Prelude.Compat
