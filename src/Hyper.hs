@@ -12,7 +12,7 @@ import Hyper.Class.Nodes as X (HNodes(..), HWitness(..), _HWitness, (#>), (#*#))
 import Hyper.Class.Pointed as X (HPointed(..))
 import Hyper.Class.Recursive as X (Recursively(..), RNodes, RTraversable)
 import Hyper.Class.Traversable as X (HTraversable(..), htraverse, htraverse1)
-import Hyper.Combinator.Ann as X (Ann(..))
+import Hyper.Combinator.Ann as X
 import Hyper.Combinator.ANode as X
 import Hyper.Combinator.Flip as X
 import Hyper.TH.Apply as X (makeHApplicativeBases)

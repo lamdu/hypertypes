@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances #-}
 
 module Hyper.Combinator.Ann
-    ( Ann(..), ann, val
+    ( Ann(..), hAnn, hVal
     ) where
 
 import Control.Lens (makeLenses, from)
@@ -22,8 +22,8 @@ import Hyper.Type (type (#))
 import Prelude.Compat
 
 data Ann a h = Ann
-    { _ann :: a h
-    , _val :: h # Ann a
+    { _hAnn :: a h
+    , _hVal :: h # Ann a
     } deriving Generic
 makeLenses ''Ann
 

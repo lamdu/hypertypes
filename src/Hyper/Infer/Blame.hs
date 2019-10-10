@@ -52,7 +52,6 @@ import           Hyper
 import           Hyper.Class.Infer
 import           Hyper.Class.Traversable (ContainedH(..))
 import           Hyper.Class.Unify (Unify, UVarOf)
-import           Hyper.Combinator.Ann (ann)
 import           Hyper.Infer.Result
 import           Hyper.Recurse
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
@@ -123,7 +122,7 @@ prepare resFromPosition (Ann a x) =
     withDict (recurse (Proxy @(Blame m exp))) $
     hmap
     ( Proxy @(Blame m) #>
-        InferChild . fmap (\t -> InferredChild t (t ^. ann . Lens._2 . Lens._1 . _InferResult)) . prepareH
+        InferChild . fmap (\t -> InferredChild t (t ^. hAnn . Lens._2 . Lens._1 . _InferResult)) . prepareH
     ) x
     & inferBody
     <&>

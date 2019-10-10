@@ -19,7 +19,6 @@ import           Hyper
 import           Hyper.Class.Infer
 import           Hyper.Class.Infer.Env
 import           Hyper.Class.Infer.InferOf
-import           Hyper.Combinator.Ann (ann)
 import           Hyper.Infer.Result
 import           Hyper.Infer.ScopeLevel
 import           Hyper.Unify (UVarOf)
@@ -43,4 +42,4 @@ inferH ::
     Infer m t =>
     Tree (Ann a) t ->
     Tree (InferChild m (Ann (a :*: InferResult (UVarOf m)))) t
-inferH c = infer c <&> (\i -> InferredChild i (i ^. ann . Lens._2 . _InferResult)) & InferChild
+inferH c = infer c <&> (\i -> InferredChild i (i ^. hAnn . Lens._2 . _InferResult)) & InferChild

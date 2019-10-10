@@ -10,7 +10,6 @@ import qualified Data.Map as Map
 import           Data.Proxy
 import qualified Data.Set as Set
 import           Hyper
-import           Hyper.Combinator.Ann (ann)
 import           Hyper.Infer
 import           Hyper.Unify
 import           Hyper.Unify.Apply
@@ -190,7 +189,7 @@ inferExpr x =
                 <&> InferResult
             )
         )
-    <&> (^# ann . _InferResult . inferredType (Proxy @t))
+    <&> (^# hAnn . _InferResult . inferredType (Proxy @t))
     where
         p0 :: HWitness a n -> Proxy n
         p0 _ = Proxy
