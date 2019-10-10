@@ -24,7 +24,7 @@ import           GHC.Generics (Generic)
 import           Hyper
 import           Hyper.Class.Has (HasChild(..))
 import           Hyper.Class.Recursive
-import           Hyper.Combinator.Flip (Flip(..))
+import           Hyper.Combinator.Flip (HFlip(..))
 import           Hyper.Infer
 import           Hyper.Recurse
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
@@ -110,7 +110,7 @@ instance Ord (QVar (GetHyperType typ)) => Lens.Ixed (QVars typ)
 instance Ord (QVar (GetHyperType typ)) => Lens.At (QVars typ) where
     at h = _QVars . Lens.at h
 
-type instance InferOf (Scheme v t) = Flip GTerm t
+type instance InferOf (Scheme v t) = HFlip GTerm t
 
 class Unify m t => MonadInstantiate m t where
     localInstantiations ::
@@ -141,7 +141,7 @@ instance
                     & foldl (.) id
             InferredChild typI typR <- inferChild typ & withForalls
             generalize (typR ^. inferredValue)
-                <&> (Scheme vars typI, ) . MkFlip
+                <&> (Scheme vars typI, ) . MkHFlip
 
 inferType ::
     ( InferOf t ~ ANode t

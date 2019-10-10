@@ -5,7 +5,7 @@
 {-# LANGUAGE UndecidableSuperClasses, UndecidableInstances, FlexibleInstances, TemplateHaskell #-}
 
 module Hyper.Combinator.Compose
-    ( Compose(..), _Compose, W_Compose(..)
+    ( HCompose(..), _HCompose, W_HCompose(..)
     ) where
 
 import qualified Control.Lens as Lens
@@ -25,103 +25,103 @@ import           Hyper.Type
 import           Prelude.Compat
 
 -- | Compose two 'HyperType's as an external and internal layer
-newtype Compose a b h = MkCompose { getCompose :: Tree a (Compose b (GetHyperType h)) }
+newtype HCompose a b h = MkHCompose { getHCompose :: Tree a (HCompose b (GetHyperType h)) }
     deriving stock Generic
 
-makeCommonInstances [''Compose]
+makeCommonInstances [''HCompose]
 
--- | An 'Control.Lens.Iso' for the 'Compose' @newtype@
-{-# INLINE _Compose #-}
-_Compose ::
+-- | An 'Control.Lens.Iso' for the 'HCompose' @newtype@
+{-# INLINE _HCompose #-}
+_HCompose ::
     Lens.Iso
-    (Tree (Compose a0 b0) k0) (Tree (Compose a1 b1) k1)
-    (Tree a0 (Compose b0 k0)) (Tree a1 (Compose b1 k1))
-_Compose = Lens.iso getCompose MkCompose
+    (Tree (HCompose a0 b0) k0) (Tree (HCompose a1 b1) k1)
+    (Tree a0 (HCompose b0 k0)) (Tree a1 (HCompose b1 k1))
+_HCompose = Lens.iso getHCompose MkHCompose
 
-data W_Compose a b n where
-    W_Compose :: HWitness a a0 -> HWitness b b0 -> W_Compose a b (Compose a0 b0)
+data W_HCompose a b n where
+    W_HCompose :: HWitness a a0 -> HWitness b b0 -> W_HCompose a b (HCompose a0 b0)
 
-instance (HNodes a, HNodes b) => HNodes (Compose a b) where
-    type HNodesConstraint (Compose a b) c = HNodesConstraint a (ComposeConstraint0 c b)
-    type HWitnessType (Compose a b) = W_Compose a b
+instance (HNodes a, HNodes b) => HNodes (HCompose a b) where
+    type HNodesConstraint (HCompose a b) c = HNodesConstraint a (HComposeConstraint0 c b)
+    type HWitnessType (HCompose a b) = W_HCompose a b
     {-# INLINE hLiftConstraint #-}
-    hLiftConstraint (HWitness (W_Compose w0 w1)) p r =
+    hLiftConstraint (HWitness (W_HCompose w0 w1)) p r =
         hLiftConstraint w0 (p0 p)
         (hLiftConstraint w1 (p1 p w0) r)
         where
-            p0 :: Proxy c -> Proxy (ComposeConstraint0 c b)
+            p0 :: Proxy c -> Proxy (HComposeConstraint0 c b)
             p0 _ = Proxy
-            p1 :: Proxy c -> HWitness a a0 -> Proxy (ComposeConstraint1 c a0)
+            p1 :: Proxy c -> HWitness a a0 -> Proxy (HComposeConstraint1 c a0)
             p1 _ _ = Proxy
 
 -- TODO: Avoid UndecidableSuperClasses!
 
-class    HNodesConstraint b (ComposeConstraint1 c k0) => ComposeConstraint0 c b k0
-instance HNodesConstraint b (ComposeConstraint1 c k0) => ComposeConstraint0 c b k0
-class    c (Compose k0 k1) => ComposeConstraint1 c k0 k1
-instance c (Compose k0 k1) => ComposeConstraint1 c k0 k1
+class    HNodesConstraint b (HComposeConstraint1 c k0) => HComposeConstraint0 c b k0
+instance HNodesConstraint b (HComposeConstraint1 c k0) => HComposeConstraint0 c b k0
+class    c (HCompose k0 k1) => HComposeConstraint1 c k0 k1
+instance c (HCompose k0 k1) => HComposeConstraint1 c k0 k1
 
 instance
     (HNodes a, HPointed a, HPointed b) =>
-    HPointed (Compose a b) where
+    HPointed (HCompose a b) where
     {-# INLINE hpure #-}
     hpure x =
-        _Compose #
+        _HCompose #
         hpure
         ( \wa ->
-            _Compose # hpure (\wb -> _Compose # x (HWitness (W_Compose wa wb)))
+            _HCompose # hpure (\wb -> _HCompose # x (HWitness (W_HCompose wa wb)))
         )
 
-instance (HFunctor a, HFunctor b) => HFunctor (Compose a b) where
+instance (HFunctor a, HFunctor b) => HFunctor (HCompose a b) where
     {-# INLINE hmap #-}
     hmap f =
-        _Compose %~
+        _HCompose %~
         hmap
         ( \w0 ->
-            _Compose %~ hmap (\w1 -> _Compose %~ f (HWitness (W_Compose w0 w1)))
+            _HCompose %~ hmap (\w1 -> _HCompose %~ f (HWitness (W_HCompose w0 w1)))
         )
 
-instance (HApply a, HApply b) => HApply (Compose a b) where
+instance (HApply a, HApply b) => HApply (HCompose a b) where
     {-# INLINE hzip #-}
-    hzip (MkCompose a0) =
-        _Compose %~
+    hzip (MkHCompose a0) =
+        _HCompose %~
         hmap
-        ( \_ (MkCompose b0 :*: MkCompose b1) ->
-            _Compose #
+        ( \_ (MkHCompose b0 :*: MkHCompose b1) ->
+            _HCompose #
             hmap
-            ( \_ (MkCompose i0 :*: MkCompose i1) ->
-                _Compose # (i0 :*: i1)
+            ( \_ (MkHCompose i0 :*: MkHCompose i1) ->
+                _HCompose # (i0 :*: i1)
             ) (hzip b0 b1)
         )
         . hzip a0
 
-instance (HFoldable a, HFoldable b) => HFoldable (Compose a b) where
+instance (HFoldable a, HFoldable b) => HFoldable (HCompose a b) where
     {-# INLINE hfoldMap #-}
     hfoldMap f =
         hfoldMap
         ( \w0 ->
-            hfoldMap (\w1 -> f (HWitness (W_Compose w0 w1)) . (^. _Compose)) . (^. _Compose)
-        ) . (^. _Compose)
+            hfoldMap (\w1 -> f (HWitness (W_HCompose w0 w1)) . (^. _HCompose)) . (^. _HCompose)
+        ) . (^. _HCompose)
 
-instance (HTraversable a, HTraversable b) => HTraversable (Compose a b) where
+instance (HTraversable a, HTraversable b) => HTraversable (HCompose a b) where
     {-# INLINE hsequence #-}
     hsequence =
-        _Compose
+        _HCompose
         ( hsequence .
-            hmap (const (MkContainedH . _Compose (htraverse (const (_Compose runContainedH)))))
+            hmap (const (MkContainedH . _HCompose (htraverse (const (_HCompose runContainedH)))))
         )
 
 instance
     (ZipMatch k0, ZipMatch k1, HTraversable k0, HFunctor k1) =>
-    ZipMatch (Compose k0 k1) where
+    ZipMatch (HCompose k0 k1) where
     {-# INLINE zipMatch #-}
-    zipMatch (MkCompose x) (MkCompose y) =
+    zipMatch (MkHCompose x) (MkHCompose y) =
         zipMatch x y
         >>= htraverse
-            (\_ (MkCompose cx :*: MkCompose cy) ->
+            (\_ (MkHCompose cx :*: MkHCompose cy) ->
                 zipMatch cx cy
                 <&> hmap
-                    (\_ (MkCompose bx :*: MkCompose by) -> bx :*: by & MkCompose)
-                <&> (_Compose #)
+                    (\_ (MkHCompose bx :*: MkHCompose by) -> bx :*: by & MkHCompose)
+                <&> (_HCompose #)
             )
-        <&> (_Compose #)
+        <&> (_HCompose #)

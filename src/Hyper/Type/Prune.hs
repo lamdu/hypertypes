@@ -12,7 +12,7 @@ import           GHC.Generics (Generic)
 import           Hyper
 import           Hyper.Class.Traversable
 import           Hyper.Class.Unify (Unify)
-import           Hyper.Combinator.Compose (Compose(..))
+import           Hyper.Combinator.Compose (HCompose(..))
 import           Hyper.Infer
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Unify.New (newUnbound)
@@ -42,25 +42,25 @@ instance RNodes Prune
 instance c Prune => Recursively c Prune
 instance RTraversable Prune
 
-type instance InferOf (Compose Prune t) = InferOf t
+type instance InferOf (HCompose Prune t) = InferOf t
 
 instance
     ( Infer m t
     , HPointed (InferOf t)
     , HTraversable (InferOf t)
     ) =>
-    Infer m (Compose Prune t) where
-    inferBody (MkCompose Pruned) =
+    Infer m (HCompose Prune t) where
+    inferBody (MkHCompose Pruned) =
         withDict (inferContext (Proxy @m) (Proxy @t)) $
         hpure (Proxy @(Unify m) #> MkContainedH newUnbound)
         & hsequence
-        <&> (MkCompose Pruned, )
-    inferBody (MkCompose (Unpruned (MkCompose x))) =
+        <&> (MkHCompose Pruned, )
+    inferBody (MkHCompose (Unpruned (MkHCompose x))) =
         hmap
-        ( \_ (MkCompose (InferChild i)) ->
-            i <&> (\(InferredChild r t) -> InferredChild (MkCompose r) t)
+        ( \_ (MkHCompose (InferChild i)) ->
+            i <&> (\(InferredChild r t) -> InferredChild (MkHCompose r) t)
             & InferChild
         ) x
         & inferBody
-        <&> Lens._1 %~ MkCompose . Unpruned . MkCompose
+        <&> Lens._1 %~ MkHCompose . Unpruned . MkHCompose
     inferContext m t = withDict (inferContext m t) Dict

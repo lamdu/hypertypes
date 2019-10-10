@@ -25,7 +25,6 @@ import           GHC.Generics (Generic)
 import           Hyper
 import           Hyper.Class.Traversable
 import           Hyper.Class.Unify (Unify(..), UVarOf, BindingDict(..))
-import           Hyper.Combinator.Flip
 import           Hyper.Recurse
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Unify.Constraints
@@ -53,29 +52,29 @@ Lens.makePrisms ''GTerm
 makeCommonInstances [''GTerm]
 makeHTraversableAndBases ''GTerm
 
-instance RNodes a => HNodes (Flip GTerm a) where
-    type HNodesConstraint (Flip GTerm a) c = (c a, Recursive c)
-    type HWitnessType (Flip GTerm a) = HRecWitness a
+instance RNodes a => HNodes (HFlip GTerm a) where
+    type HNodesConstraint (HFlip GTerm a) c = (c a, Recursive c)
+    type HWitnessType (HFlip GTerm a) = HRecWitness a
     {-# INLINE hLiftConstraint #-}
     hLiftConstraint (HWitness HRecSelf) = const id
     hLiftConstraint (HWitness (HRecSub c n)) = hLiftConstraintH c n
 
 hLiftConstraintH ::
     forall a c b n r.
-    (RNodes a, HNodesConstraint (Flip GTerm a) c) =>
+    (RNodes a, HNodesConstraint (HFlip GTerm a) c) =>
     HWitness a b -> HRecWitness b n -> Proxy c -> (c n => r) -> r
 hLiftConstraintH c n =
     withDict (recurse (Proxy @(RNodes a))) $
     withDict (recurse (Proxy @(c a))) $
     hLiftConstraint c (Proxy @RNodes)
     ( hLiftConstraint c (Proxy @c)
-        (hLiftConstraint (HWitness @(Flip GTerm _) n))
+        (hLiftConstraint (HWitness @(HFlip GTerm _) n))
     )
 
-instance Recursively HFunctor ast => HFunctor (Flip GTerm ast) where
+instance Recursively HFunctor ast => HFunctor (HFlip GTerm ast) where
     {-# INLINE hmap #-}
     hmap f =
-        _Flip %~
+        _HFlip %~
         \case
         GMono x -> f (HWitness HRecSelf) x & GMono
         GPoly x -> f (HWitness HRecSelf) x & GPoly
@@ -84,12 +83,12 @@ instance Recursively HFunctor ast => HFunctor (Flip GTerm ast) where
             hmap
             ( \cw ->
                 hLiftConstraint cw (Proxy @(Recursively HFunctor)) $
-                Lens.from _Flip %~
+                Lens.from _HFlip %~
                 hmap (f . (\(HWitness nw) -> HWitness (HRecSub cw nw)))
             ) x
             & GBody
 
-instance Recursively HFoldable ast => HFoldable (Flip GTerm ast) where
+instance Recursively HFoldable ast => HFoldable (HFlip GTerm ast) where
     {-# INLINE hfoldMap #-}
     hfoldMap f =
         \case
@@ -101,24 +100,24 @@ instance Recursively HFoldable ast => HFoldable (Flip GTerm ast) where
             ( \cw ->
                 hLiftConstraint cw (Proxy @(Recursively HFoldable)) $
                 hfoldMap (f . (\(HWitness nw) -> HWitness (HRecSub cw nw)))
-                . (_Flip #)
+                . (_HFlip #)
             ) x
-        . (^. _Flip)
+        . (^. _HFlip)
 
-instance RTraversable ast => HTraversable (Flip GTerm ast) where
+instance RTraversable ast => HTraversable (HFlip GTerm ast) where
     {-# INLINE hsequence #-}
-    hsequence (MkFlip fx) =
-        case fx of
+    hsequence =
+        \case
         GMono x -> runContainedH x <&> GMono
         GPoly x -> runContainedH x <&> GPoly
         GBody x ->
             withDict (recurse (Proxy @(RTraversable ast))) $
             -- HTraversable will be required when not implied by Recursively
             htraverse
-            ( Proxy @RTraversable #> Lens.from _Flip hsequence
+            ( Proxy @RTraversable #> Lens.from _HFlip hsequence
             ) x
             <&> GBody
-        <&> MkFlip
+        & _HFlip
 
 -- | Generalize a unification term pointed by the given variable to a `GTerm`.
 -- Unification variables that are scoped within the term

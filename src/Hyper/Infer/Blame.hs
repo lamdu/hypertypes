@@ -53,7 +53,6 @@ import           Hyper.Class.Infer
 import           Hyper.Class.Traversable (ContainedH(..))
 import           Hyper.Class.Unify (Unify, UVarOf)
 import           Hyper.Combinator.Ann (ann)
-import           Hyper.Combinator.Flip
 import           Hyper.Infer.Result
 import           Hyper.Recurse
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
@@ -195,6 +194,6 @@ blame order topLevelType e =
             ( Proxy @(Blame m) #*#
                 \w (a :*: InferResult i0 :*: InferResult i1) ->
                 [(order a, tryUnify w i0 i1)]
-            ) (_Flip # p)
+            ) (_HFlip # p)
             & sortOn fst & traverse_ snd
         finalize p

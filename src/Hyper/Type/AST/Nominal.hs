@@ -31,7 +31,6 @@ import           Hyper
 import           Hyper.Class.Has (HasChild(..))
 import           Hyper.Class.Traversable (ContainedH(..))
 import           Hyper.Class.ZipMatch (ZipMatch(..))
-import           Hyper.Combinator.Flip (Flip, _Flip)
 import           Hyper.Infer
 import           Hyper.Recurse
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
@@ -185,7 +184,7 @@ instance (RNodes t, HNodes (NomVarTypes t)) => HNodes (LoadedNominalDecl t) wher
         )
     type HWitnessType (LoadedNominalDecl t) = W_LoadedNominalDecl t
     {-# INLINE hLiftConstraint #-}
-    hLiftConstraint (HWitness (E_LoadedNominalDecl_Body w)) = hLiftConstraint @(Flip GTerm _) (HWitness w)
+    hLiftConstraint (HWitness (E_LoadedNominalDecl_Body w)) = hLiftConstraint @(HFlip GTerm _) (HWitness w)
     hLiftConstraint (HWitness (E_LoadedNominalDecl_NomVarTypes w)) = hLiftConstraint w
 
 instance
@@ -194,7 +193,7 @@ instance
     {-# INLINE hmap #-}
     hmap f (LoadedNominalDecl mp mf t) =
         LoadedNominalDecl (onMap mp) (onMap mf)
-        (t & Lens.from _Flip %~ hmap (\(HWitness w) -> f (HWitness (E_LoadedNominalDecl_Body w))))
+        (t & Lens.from _HFlip %~ hmap (\(HWitness w) -> f (HWitness (E_LoadedNominalDecl_Body w))))
         where
             onMap = hmap (\w -> _QVarInstances . Lens.mapped %~ f (HWitness (E_LoadedNominalDecl_NomVarTypes w)))
 
@@ -204,7 +203,7 @@ instance
     {-# INLINE hfoldMap #-}
     hfoldMap f (LoadedNominalDecl mp mf t) =
         onMap mp <> onMap mf <>
-        hfoldMap (\(HWitness w) -> f (HWitness (E_LoadedNominalDecl_Body w))) (_Flip # t)
+        hfoldMap (\(HWitness w) -> f (HWitness (E_LoadedNominalDecl_Body w))) (_HFlip # t)
         where
             onMap =
                 hfoldMap (\w -> foldMap (f (HWitness (E_LoadedNominalDecl_NomVarTypes w)))
@@ -218,7 +217,7 @@ instance
         LoadedNominalDecl
         <$> onMap p
         <*> onMap f
-        <*> Lens.from _Flip hsequence t
+        <*> Lens.from _HFlip hsequence t
         where
             onMap = htraverse (const ((_QVarInstances . traverse) runContainedH))
 

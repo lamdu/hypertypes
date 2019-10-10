@@ -18,7 +18,6 @@ import           Data.Proxy
 import           Data.STRef
 import           Data.String (IsString(..))
 import           Hyper
-import           Hyper.Combinator.Flip
 import           Hyper.Infer
 import           Hyper.Type.AST.App
 import           Hyper.Type.AST.Lam
@@ -90,11 +89,11 @@ instance VarType Name LangB where
         where
             r ::
                 forall m. Unify m Typ =>
-                Map Name (Tree (Flip GTerm Typ) (UVarOf m)) ->
+                Map Name (Tree (HFlip GTerm Typ) (UVarOf m)) ->
                 m (Tree (UVarOf m) Typ)
             r x =
                 withDict (unifyRecursive (Proxy @m) (Proxy @Typ)) $
-                x ^?! Lens.ix h . _Flip & instantiate
+                x ^?! Lens.ix h . _HFlip & instantiate
 
 instance
     ( MonadScopeLevel m
@@ -138,7 +137,7 @@ instance RTraversableInferOf LangB
 
 -- Monads for inferring `LangB`:
 
-newtype ScopeTypes v = ScopeTypes (Map Name (Flip GTerm Typ v))
+newtype ScopeTypes v = ScopeTypes (Map Name (HFlip GTerm Typ v))
     deriving stock Generic
     deriving newtype (Semigroup, Monoid)
 
@@ -189,10 +188,10 @@ instance HasScope PureInferB ScopeTypes where
     getScope = Lens.view varSchemes
 
 instance LocalScopeType Name (Tree UVar Typ) PureInferB where
-    localScopeType h v = local (varSchemes . _ScopeTypes . Lens.at h ?~ MkFlip (GMono v))
+    localScopeType h v = local (varSchemes . _ScopeTypes . Lens.at h ?~ MkHFlip (GMono v))
 
 instance LocalScopeType Name (Tree (GTerm UVar) Typ) PureInferB where
-    localScopeType h v = local (varSchemes . _ScopeTypes . Lens.at h ?~ MkFlip v)
+    localScopeType h v = local (varSchemes . _ScopeTypes . Lens.at h ?~ MkHFlip v)
 
 instance MonadScopeLevel PureInferB where
     localLevel = local (scopeLevel . _ScopeLevel +~ 1)
@@ -254,10 +253,10 @@ instance HasScope (STInferB s) ScopeTypes where
     getScope = Lens.view (Lens._1 . varSchemes)
 
 instance LocalScopeType Name (Tree (STUVar s) Typ) (STInferB s) where
-    localScopeType h v = local (Lens._1 . varSchemes . _ScopeTypes . Lens.at h ?~ MkFlip (GMono v))
+    localScopeType h v = local (Lens._1 . varSchemes . _ScopeTypes . Lens.at h ?~ MkHFlip (GMono v))
 
 instance LocalScopeType Name (Tree (GTerm (STUVar s)) Typ) (STInferB s) where
-    localScopeType h v = local (Lens._1 . varSchemes . _ScopeTypes . Lens.at h ?~ MkFlip v)
+    localScopeType h v = local (Lens._1 . varSchemes . _ScopeTypes . Lens.at h ?~ MkHFlip v)
 
 instance MonadScopeLevel (STInferB s) where
     localLevel = local (Lens._1 . scopeLevel . _ScopeLevel +~ 1)

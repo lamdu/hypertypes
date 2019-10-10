@@ -13,7 +13,7 @@ import Hyper.Class.Apply (HApplicative)
 import Hyper.Class.Functor (HFunctor(..))
 import Hyper.Class.Nodes (HWitness, (#>))
 import Hyper.Class.Recursive (Recursively(..))
-import Hyper.Combinator.Compose (Compose, _Compose)
+import Hyper.Combinator.Compose (HCompose, _HCompose)
 import Hyper.Type (Tree)
 import Hyper.Type.Pure (Pure(..), _Pure)
 
@@ -23,7 +23,7 @@ import Prelude.Compat
 class HApplicative h => HMonad h where
     hjoin ::
         Recursively HFunctor p =>
-        Tree (Compose h h) p ->
+        Tree (HCompose h h) p ->
         Tree h p
 
 instance HMonad Pure where
@@ -31,15 +31,15 @@ instance HMonad Pure where
         withDict (recursively (p x)) $
         _Pure #
         hmap (Proxy @(Recursively HFunctor) #> hjoin)
-        (x ^. _Compose . _Pure . _Compose . _Pure . _Compose)
+        (x ^. _HCompose . _Pure . _HCompose . _Pure . _HCompose)
         where
-            p :: Tree (Compose Pure Pure) p -> Proxy (HFunctor p)
+            p :: Tree (HCompose Pure Pure) p -> Proxy (HFunctor p)
             p _ = Proxy
 
 -- | A variant of 'Control.Monad.(>>=)' for 'Hyper.Type.HyperType's
 hbind ::
     (HMonad h, Recursively HFunctor p) =>
     Tree h p ->
-    (forall n. HWitness h n -> Tree p n -> Tree (Compose h p) n) ->
+    (forall n. HWitness h n -> Tree p n -> Tree (HCompose h p) n) ->
     Tree h p
-hbind x f = _Compose # hmap f x & hjoin
+hbind x f = _HCompose # hmap f x & hjoin

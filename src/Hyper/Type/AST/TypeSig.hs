@@ -12,7 +12,6 @@ import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import           Generics.Constraints (Constraints)
 import           Hyper
-import           Hyper.Combinator.Flip (_Flip)
 import           Hyper.Infer
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Type.AST.Scheme
@@ -61,7 +60,7 @@ instance
         do
             InferredChild xI xR <- inferChild x
             InferredChild sI sR <- inferChild s
-            (t, ()) <- instantiateWith (pure ()) USkolem (sR ^. _Flip)
+            (t, ()) <- instantiateWith (pure ()) USkolem (sR ^. _HFlip)
             xR & inferredType (Proxy @term) #%%~ unify t
                 <&> (TypeSig xI sI, )
         & localLevel

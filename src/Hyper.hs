@@ -14,6 +14,7 @@ import Hyper.Class.Recursive as X (Recursively(..), RNodes, RTraversable)
 import Hyper.Class.Traversable as X (HTraversable(..), htraverse, htraverse1)
 import Hyper.Combinator.Ann as X (Ann(..))
 import Hyper.Combinator.ANode as X
+import Hyper.Combinator.Flip as X
 import Hyper.TH.Apply as X (makeHApplicativeBases)
 import Hyper.TH.HasPlain as X (makeHasHPlain)
 import Hyper.TH.Traversable as X (makeHTraversableApplyAndBases, makeHTraversableAndBases)

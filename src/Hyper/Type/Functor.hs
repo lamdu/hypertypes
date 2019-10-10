@@ -46,15 +46,15 @@ instance Monad f => HMonad (F f) where
     hjoin =
         ( _F %~
             ( >>=
-                ( mapped %~ t . (^. _Compose)
-                ) . (^. _Compose . _F)
+                ( mapped %~ t . (^. _HCompose)
+                ) . (^. _HCompose . _F)
             )
-        ) . (^. _Compose)
+        ) . (^. _HCompose)
         where
             t ::
                 forall p.
                 Recursively HFunctor p =>
-                Tree p (Compose (F f) (F f)) ->
+                Tree p (HCompose (F f) (F f)) ->
                 Tree p (F f)
             t =
                 withDict (recursively (Proxy @(HFunctor p))) $

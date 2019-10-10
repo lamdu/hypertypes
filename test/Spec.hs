@@ -11,7 +11,6 @@ import           Data.Proxy
 import qualified Data.Set as Set
 import           Hyper
 import           Hyper.Combinator.Ann (ann)
-import           Hyper.Combinator.Flip
 import           Hyper.Infer
 import           Hyper.Unify
 import           Hyper.Unify.Apply
@@ -182,7 +181,7 @@ inferExpr ::
     m (Tree Pure (TypeOf t))
 inferExpr x =
     infer (wrap (const (Ann (Const ()))) x)
-    >>= Lens.from _Flip
+    >>= Lens.from _HFlip
         (htraverse
             ( Proxy @(Infer m) #*# Proxy @RTraversableInferOf #*#
                 \w (Const () :*: InferResult i) ->
@@ -277,7 +276,7 @@ withEnv l act =
         let addEnv x =
                 x
                 & nominals %~ addNoms
-                & varSchemes . _ScopeTypes . Lens.at "return" ?~ MkFlip ret
+                & varSchemes . _ScopeTypes . Lens.at "return" ?~ MkHFlip ret
         local (l %~ addEnv) act
 
 prettyPrint :: Pretty a => a -> IO ()
