@@ -120,3 +120,23 @@ instance
                 <&> (_HCompose #)
             )
         <&> (_HCompose #)
+
+instance
+    ( HNodes a, HNodes b
+    , HNodesConstraint a (HComposeConstraint0 RNodes b)
+    ) => RNodes (HCompose a b)
+
+instance
+    ( HNodes h0, HNodes h1
+    , c (HCompose h0 h1)
+    , HNodesConstraint h0 (HComposeConstraint0 RNodes h1)
+    , HNodesConstraint h0 (HComposeConstraint0 (Recursively c) h1)
+    ) => Recursively c (HCompose h0 h1)
+
+instance
+    ( HTraversable a, HTraversable b
+    , HNodesConstraint a (HComposeConstraint0 RNodes b)
+    , HNodesConstraint a (HComposeConstraint0 (Recursively HFunctor) b)
+    , HNodesConstraint a (HComposeConstraint0 (Recursively HFoldable) b)
+    , HNodesConstraint a (HComposeConstraint0 RTraversable b)
+    ) => RTraversable (HCompose a b)
