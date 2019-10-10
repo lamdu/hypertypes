@@ -36,7 +36,8 @@
 
 module Hyper.Infer.Blame
     ( blame
-    , Blame(..), _Good, _Mismatch
+    , Blame(..)
+    , BlameResult(..), _Good, _Mismatch
     , InferOf'
     ) where
 
@@ -98,7 +99,7 @@ instance Recursive (Blame m) where
             p0 :: Proxy (Blame m t) -> Proxy t
             p0 _ = Proxy
 
--- | A type synonym to help 'BTerm' be more succinct
+-- | A type synonym to help 'BlameResult' be more succinct
 type InferOf' e v = Tree (InferOf (GetHyperType e)) v
 
 prepareH ::
