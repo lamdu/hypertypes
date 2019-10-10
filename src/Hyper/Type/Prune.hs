@@ -1,7 +1,7 @@
 {-# LANGUAGE UndecidableInstances, ScopedTypeVariables, TemplateHaskell, FlexibleInstances #-}
 
 module Hyper.Type.Prune
-    ( Prune(..), W_Prune(..)
+    ( Prune(..), W_Prune(..), _Pruned, _Unpruned
     ) where
 
 import qualified Control.Lens as Lens
