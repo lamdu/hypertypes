@@ -100,18 +100,18 @@ makeZipMatch ''FromNom
 
 instance HNodes v => HNodes (NominalInst n v) where
     type HNodesConstraint (NominalInst n v) c = HNodesConstraint v c
-    type HWitnessType (NominalInst n v) = HWitness v
+    type HWitnessType (NominalInst n v) = HWitnessType v
     {-# INLINE hLiftConstraint #-}
-    hLiftConstraint (HWitness w) = hLiftConstraint w
+    hLiftConstraint (HWitness w) = hLiftConstraint @v (HWitness w)
 
 instance HFunctor v => HFunctor (NominalInst n v) where
     {-# INLINE hmap #-}
-    hmap f = nArgs %~ hmap (\w -> _QVarInstances . Lens.mapped %~ f (HWitness w))
+    hmap f = nArgs %~ hmap (\(HWitness w) -> _QVarInstances . Lens.mapped %~ f (HWitness w))
 
 instance HFoldable v => HFoldable (NominalInst n v) where
     {-# INLINE hfoldMap #-}
     hfoldMap f =
-        hfoldMap (\w -> foldMap (f (HWitness w)) . (^. _QVarInstances)) . (^. nArgs)
+        hfoldMap (\(HWitness w) -> foldMap (f (HWitness w)) . (^. _QVarInstances)) . (^. nArgs)
 
 instance HTraversable v => HTraversable (NominalInst n v) where
     {-# INLINE hsequence #-}
