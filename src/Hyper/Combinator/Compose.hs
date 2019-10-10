@@ -12,15 +12,10 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic, (:*:)(..))
-import           Hyper.Class.Apply
-import           Hyper.Class.Foldable
-import           Hyper.Class.Functor
-import           Hyper.Class.Nodes
-import           Hyper.Class.Pointed
+import           Hyper
 import           Hyper.Class.Traversable
 import           Hyper.Class.ZipMatch (ZipMatch(..))
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
-import           Hyper.Type
 
 import           Prelude.Compat
 
