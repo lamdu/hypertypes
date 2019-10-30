@@ -13,6 +13,6 @@ import Hyper.TH.Internal.Instances (makeCommonInstances)
 -- | A 'HyperType' for an inferred term - the output of 'Hyper.Infer.infer'
 newtype InferResult v e =
     InferResult (Tree (InferOf (GetHyperType e)) v)
-    deriving Generic
+    deriving stock Generic
 makePrisms ''InferResult
 makeCommonInstances [''InferResult]

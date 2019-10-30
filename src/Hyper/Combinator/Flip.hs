@@ -18,7 +18,7 @@ import Hyper.Type (Tree, GetHyperType)
 -- For example 'Hyper.Unify.Generalize.GTerm' has instances when flipped.
 newtype HFlip f x h =
     MkHFlip (Tree (f (GetHyperType h)) x)
-    deriving Generic
+    deriving stock Generic
 
 makeCommonInstances [''HFlip]
 

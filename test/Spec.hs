@@ -85,7 +85,7 @@ letGen0 =
 letGen1 :: HPlain LangB
 letGen1 =
     BLetP "five" (BLitP 5) $
-    BLetP "f" (BLamP "x" ("x" `BAppP` "five" `BAppP` "five")) $
+    BLetP "f" (BLamP "x" ("x" `BAppP` "five" `BAppP` "five"))
     "f"
 
 letGen2 :: HPlain LangB
@@ -107,7 +107,7 @@ shouldNotGen =
 
 simpleRec :: HPlain LangB
 simpleRec =
-    BRecExtendP "a" (BLitP 5) $
+    BRecExtendP "a" (BLitP 5)
     BRecEmptyP
 
 extendLit :: HPlain LangB
@@ -118,13 +118,13 @@ extendLit =
 extendDup :: HPlain LangB
 extendDup =
     BRecExtendP "a" (BLitP 7) $
-    BRecExtendP "a" (BLitP 5) $
+    BRecExtendP "a" (BLitP 5)
     BRecEmptyP
 
 extendGood :: HPlain LangB
 extendGood =
     BRecExtendP "b" (BLitP 7) $
-    BRecExtendP "a" (BLitP 5) $
+    BRecExtendP "a" (BLitP 5)
     BRecEmptyP
 
 getAField :: HPlain LangB
@@ -136,7 +136,7 @@ vecApp =
     ( BLamP "y"
         ( BToNomP "Vec" $
             BRecExtendP "x" "x" $
-            BRecExtendP "y" "y" $
+            BRecExtendP "y" "y"
             BRecEmptyP
         )
     )
@@ -150,11 +150,11 @@ unifyRows =
     where
         r0 =
             BRecExtendP "a" (BLitP 5) $
-            BRecExtendP "b" (BLitP 7) $
+            BRecExtendP "b" (BLitP 7)
             BRecEmptyP
         r1 =
             BRecExtendP "b" (BLitP 5) $
-            BRecExtendP "a" (BLitP 7) $
+            BRecExtendP "a" (BLitP 7)
             BRecEmptyP
 
 return5 :: HPlain LangB
@@ -327,7 +327,7 @@ testAlphaEq x y expect =
         when (pureRes /= expect) (putStrLn "WRONG!")
         putStrLn ("Alpha Eq: " ++ show stRes)
         when (stRes /= expect) (putStrLn "WRONG!")
-        return (pureRes == expect && stRes == expect)
+        pure (pureRes == expect && stRes == expect)
     where
         pureRes = Lens.has Lens._Right (execPureInferB (alphaEq x y))
         stRes = Lens.has Lens._Right (runST (execSTInferB (alphaEq x y)))
