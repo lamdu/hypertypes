@@ -6,6 +6,7 @@
 
 module Hyper.Combinator.Compose
     ( HCompose(..), _HCompose, W_HCompose(..)
+    , HComposeConstraint1
     ) where
 
 import qualified Control.Lens as Lens

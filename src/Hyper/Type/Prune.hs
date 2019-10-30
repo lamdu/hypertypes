@@ -12,7 +12,7 @@ import           GHC.Generics (Generic)
 import           Hyper
 import           Hyper.Class.Traversable
 import           Hyper.Class.Unify (Unify)
-import           Hyper.Combinator.Compose (HCompose(..))
+import           Hyper.Combinator.Compose (HCompose(..), HComposeConstraint1)
 import           Hyper.Infer
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Unify.New (newUnbound)
@@ -48,6 +48,7 @@ instance
     ( Infer m t
     , HPointed (InferOf t)
     , HTraversable (InferOf t)
+    , HNodesConstraint t (HComposeConstraint1 (Infer m) Prune)
     ) =>
     Infer m (HCompose Prune t) where
     inferBody (MkHCompose Pruned) =
@@ -63,4 +64,4 @@ instance
         ) x
         & inferBody
         <&> Lens._1 %~ MkHCompose . Unpruned . MkHCompose
-    inferContext m t = withDict (inferContext m t) Dict
+    inferContext m _ = withDict (inferContext m (Proxy @t)) Dict
