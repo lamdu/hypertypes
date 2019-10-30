@@ -14,6 +14,7 @@ import           Hyper.Class.Traversable
 import           Hyper.Class.Unify (Unify)
 import           Hyper.Combinator.Compose (HCompose(..), HComposeConstraint1)
 import           Hyper.Infer
+import           Hyper.Infer.Blame (Blame(..))
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Unify.New (newUnbound)
 
@@ -65,3 +66,16 @@ instance
         & inferBody
         <&> Lens._1 %~ MkHCompose . Unpruned . MkHCompose
     inferContext m _ = withDict (inferContext m (Proxy @t)) Dict
+
+instance
+    ( Blame m t
+    , HNodesConstraint t (HComposeConstraint1 (Infer m) Prune)
+    , HNodesConstraint t (HComposeConstraint1 (Blame m) Prune)
+    , HNodesConstraint t (HComposeConstraint1 RNodes Prune)
+    , HNodesConstraint t (HComposeConstraint1 (Recursively HFunctor) Prune)
+    , HNodesConstraint t (HComposeConstraint1 (Recursively HFoldable) Prune)
+    , HNodesConstraint t (HComposeConstraint1 RTraversable Prune)
+    ) =>
+    Blame m (HCompose Prune t) where
+    inferOfUnify _ = inferOfUnify (Proxy @t)
+    inferOfMatches _ = inferOfMatches (Proxy @t)
