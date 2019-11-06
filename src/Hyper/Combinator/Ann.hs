@@ -2,10 +2,10 @@
 
 module Hyper.Combinator.Ann
     ( Ann(..), hAnn, hVal
-    , Annotated
+    , Annotated, annotation
     ) where
 
-import Control.Lens (makeLenses, from)
+import Control.Lens (Lens', _Wrapped, makeLenses, from)
 import Control.Lens.Operators
 import Data.Constraint
 import Data.Functor.Const (Const)
@@ -52,6 +52,9 @@ hLiftConstraintH c n =
     )
 
 type Annotated a h = Tree (Ann (Const a)) h
+
+annotation :: Lens' (Annotated a h) a
+annotation = hAnn . _Wrapped
 
 instance RNodes a => RNodes (Ann a) where
     {-# INLINE recursiveHNodes #-}
