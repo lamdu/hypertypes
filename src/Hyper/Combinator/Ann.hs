@@ -53,7 +53,7 @@ hLiftConstraintH c n =
 
 type Annotated a h = Tree (Ann (Const a)) h
 
-annotation :: Lens' (Annotated a h) a
+annotation :: Lens' (Ann (Const a) h) a
 annotation = hAnn . _Wrapped
 
 instance RNodes a => RNodes (Ann a) where
