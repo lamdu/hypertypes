@@ -2,22 +2,24 @@
 
 module Hyper.Combinator.Ann
     ( Ann(..), hAnn, hVal
+    , Annotated
     ) where
 
 import Control.Lens (makeLenses, from)
 import Control.Lens.Operators
 import Data.Constraint
+import Data.Functor.Const (Const)
 import Data.Proxy
 import GHC.Generics (Generic)
-import Hyper.Class.Nodes
-import Hyper.Class.Functor
 import Hyper.Class.Foldable
+import Hyper.Class.Functor
+import Hyper.Class.Nodes
 import Hyper.Class.Traversable
 import Hyper.Combinator.Flip
 import Hyper.Recurse
 import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
-import Hyper.Type (type (#))
+import Hyper.Type (type (#), Tree)
 
 import Prelude.Compat
 
@@ -48,6 +50,8 @@ hLiftConstraintH c n =
     ( hLiftConstraint c (Proxy @c)
         (hLiftConstraint (HWitness @(HFlip Ann _) n))
     )
+
+type Annotated a h = Tree (Ann (Const a)) h
 
 instance RNodes a => RNodes (Ann a) where
     {-# INLINE recursiveHNodes #-}
