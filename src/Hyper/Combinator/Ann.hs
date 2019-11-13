@@ -51,11 +51,6 @@ hLiftConstraintH c n =
         (hLiftConstraint (HWitness @(HFlip Ann _) n))
     )
 
-type Annotated a h = Tree (Ann (Const a)) h
-
-annotation :: Lens' (Ann (Const a) h) a
-annotation = hAnn . _Wrapped
-
 instance RNodes a => RNodes (Ann a) where
     {-# INLINE recursiveHNodes #-}
     recursiveHNodes _ = withDict (recursiveHNodes (Proxy @a)) Dict
@@ -102,3 +97,8 @@ instance RTraversable h => HTraversable (HFlip Ann h) where
             <$> runContainedH a
             <*> htraverse (Proxy @RTraversable #> from _HFlip hsequence) b
         )
+
+type Annotated a h = Tree (Ann (Const a)) h
+
+annotation :: Lens' (Ann (Const a) h) a
+annotation = hAnn . _Wrapped
