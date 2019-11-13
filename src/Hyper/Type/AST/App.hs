@@ -35,6 +35,10 @@ makeZipMatch ''App
 makeHTraversableApplyAndBases ''App
 makeCommonInstances [''App]
 
+instance RNodes e => RNodes (App e)
+instance (c (App e), Recursively c e) => Recursively c (App e)
+instance RTraversable e => RTraversable (App e)
+
 instance Pretty (h # expr) => Pretty (App expr h) where
     pPrintPrec lvl p (App f x) =
         pPrintPrec lvl 10 f <+>

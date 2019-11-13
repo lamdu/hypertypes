@@ -36,6 +36,10 @@ makeCommonInstances [''Lam]
 makeHTraversableApplyAndBases ''Lam
 makeZipMatch ''Lam
 
+instance RNodes t => RNodes (Lam v t)
+instance (c (Lam v t), Recursively c t) => Recursively c (Lam v t)
+instance RTraversable t => RTraversable (Lam v t)
+
 instance
     Constraints (Lam v expr h) Pretty =>
     Pretty (Lam v expr h) where

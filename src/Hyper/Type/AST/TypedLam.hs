@@ -33,6 +33,12 @@ makeCommonInstances [''TypedLam]
 makeHTraversableApplyAndBases ''TypedLam
 makeZipMatch ''TypedLam
 
+instance (RNodes t, RNodes e) => RNodes (TypedLam v t e)
+instance
+    (c (TypedLam v t e), Recursively c t, Recursively c e) =>
+    Recursively c (TypedLam v t e)
+instance (RTraversable t, RTraversable e) => RTraversable (TypedLam v t e)
+
 instance
     Constraints (TypedLam var typ expr h) Pretty =>
     Pretty (TypedLam var typ expr h) where
