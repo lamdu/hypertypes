@@ -1,5 +1,5 @@
 module Hyper.Type.Cont
-    ( HCont(..)
+    ( HCont(..), _HCont
     ) where
 
 import Control.Lens (Iso, iso)

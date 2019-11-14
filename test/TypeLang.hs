@@ -80,6 +80,8 @@ Lens.makeLenses ''Types
 makeZipMatch ''Types
 makeZipMatch ''Typ
 makeZipMatch ''Row
+makeHContext ''Typ
+makeHContext ''Row
 makeHTraversableApplyAndBases ''Types
 makeHTraversableAndBases ''Typ
 makeHTraversableAndBases ''Row
