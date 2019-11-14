@@ -44,6 +44,7 @@ newtype Var v (expr :: HyperType) (h :: AHyperType) = Var v
 Lens.makePrisms ''Var
 makeHTraversableApplyAndBases ''Var
 makeZipMatch ''Var
+makeHContext ''Var
 
 instance Pretty v => Pretty (Var v expr h) where
     pPrintPrec lvl p (Var v) = pPrintPrec lvl p v

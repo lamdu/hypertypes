@@ -97,6 +97,8 @@ makeHTraversableApplyAndBases ''ToNom
 makeHTraversableApplyAndBases ''FromNom
 makeZipMatch ''ToNom
 makeZipMatch ''FromNom
+makeHContext ''ToNom
+makeHContext ''FromNom
 
 instance HNodes v => HNodes (NominalInst n v) where
     type HNodesConstraint (NominalInst n v) c = HNodesConstraint v c

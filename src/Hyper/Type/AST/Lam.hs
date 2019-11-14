@@ -35,6 +35,7 @@ makeLenses ''Lam
 makeCommonInstances [''Lam]
 makeHTraversableApplyAndBases ''Lam
 makeZipMatch ''Lam
+makeHContext ''Lam
 
 instance RNodes t => RNodes (Lam v t)
 instance (c (Lam v t), Recursively c t) => Recursively c (Lam v t)

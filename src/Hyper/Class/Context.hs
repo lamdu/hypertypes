@@ -7,7 +7,12 @@ module Hyper.Class.Context
 
 import Data.Constraint (withDict)
 import Data.Proxy (Proxy(..))
-import Hyper
+import GHC.Generics ((:*:)(..))
+import Hyper.Combinator.Ann (Ann(..))
+import Hyper.Class.Functor (HFunctor(..))
+import Hyper.Class.Nodes ((#*#), (#>))
+import Hyper.Class.Recursive (Recursively(..))
+import Hyper.Type (Tree)
 import Hyper.Type.Cont (HCont(..))
 
 import Prelude.Compat

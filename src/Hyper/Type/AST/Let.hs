@@ -35,6 +35,7 @@ makeLenses ''Let
 makeCommonInstances [''Let]
 makeHTraversableApplyAndBases ''Let
 makeZipMatch ''Let
+makeHContext ''Let
 
 instance
     Constraints (Let v expr h) Pretty =>

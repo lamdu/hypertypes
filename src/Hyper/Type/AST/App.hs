@@ -32,6 +32,7 @@ data App expr h = App
 
 makeLenses ''App
 makeZipMatch ''App
+makeHContext ''App
 makeHTraversableApplyAndBases ''App
 makeCommonInstances [''App]
 

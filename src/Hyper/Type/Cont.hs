@@ -3,7 +3,7 @@ module Hyper.Type.Cont
     ) where
 
 import Control.Lens (Iso, iso)
-import Hyper (HyperType, Tree)
+import Hyper.Type (HyperType, Tree)
 
 newtype HCont r (p :: HyperType) h = HCont (p h -> r)
 

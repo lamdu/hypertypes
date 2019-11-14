@@ -58,6 +58,7 @@ makeLenses ''RowExtend
 makeLenses ''FlatRowExtends
 makeCommonInstances [''FlatRowExtends]
 makeZipMatch ''RowExtend
+makeHContext ''RowExtend
 makeHTraversableApplyAndBases ''RowExtend
 makeHTraversableApplyAndBases ''FlatRowExtends
 makeDerivings [''Eq, ''Ord] [''RowExtend]

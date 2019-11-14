@@ -32,6 +32,7 @@ makeLenses ''TypedLam
 makeCommonInstances [''TypedLam]
 makeHTraversableApplyAndBases ''TypedLam
 makeZipMatch ''TypedLam
+makeHContext ''TypedLam
 
 instance (RNodes t, RNodes e) => RNodes (TypedLam v t e)
 instance

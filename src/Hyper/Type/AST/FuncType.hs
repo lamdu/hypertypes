@@ -32,6 +32,7 @@ data FuncType typ h = FuncType
 
 makeLenses ''FuncType
 makeZipMatch ''FuncType
+makeHContext ''FuncType
 makeHTraversableApplyAndBases ''FuncType
 makeDerivings [''Eq, ''Ord] [''FuncType]
 makeInstances [''Binary, ''NFData] [''FuncType]
