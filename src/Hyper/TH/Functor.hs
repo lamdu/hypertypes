@@ -11,6 +11,7 @@ import           Control.Lens.Operators
 import           Hyper.Class.Functor
 import           Hyper.TH.Internal.Utils
 import           Language.Haskell.TH
+import           Language.Haskell.TH.Datatype (ConstructorVariant)
 
 import           Prelude.Compat
 
@@ -37,14 +38,14 @@ varF = mkName "_f"
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
-    tiConstructors info ^.. traverse . Lens._2 . traverse . Lens._Right >>= ctxForPat
+    tiConstructors info ^.. traverse . Lens._3 . traverse . Lens._Right >>= ctxForPat
     where
         ctxForPat (InContainer t pat) = (ConT ''Functor `AppT` t) : ctxForPat pat
         ctxForPat (GenEmbed t) = [ConT ''HFunctor `AppT` t]
         ctxForPat _ = []
 
-makeHMapCtr :: Int -> NodeWitnesses -> (Name, [Either Type CtrTypePattern]) -> (Pat, Body)
-makeHMapCtr i wit (cName, cFields) =
+makeHMapCtr :: Int -> NodeWitnesses -> (Name, ConstructorVariant, [Either Type CtrTypePattern]) -> (Pat, Body)
+makeHMapCtr i wit (cName, _, cFields) =
     (ConP cName (cVars <&> VarP), body)
     where
         cVars =

@@ -87,8 +87,11 @@ data Field
     = NodeField FieldInfo
     | FlatFields FlatInfo
 
-makeCtr :: Name -> (Name, [Either Type CtrTypePattern]) -> Q (Con, Clause, Clause, [Type])
-makeCtr param (cName, cFields) =
+makeCtr ::
+    Name ->
+    (Name, D.ConstructorVariant, [Either Type CtrTypePattern]) ->
+    Q (Con, Clause, Clause, [Type])
+makeCtr param (cName, _, cFields) =
     traverse (forField True) cFields
     <&>
     \xs ->
@@ -160,7 +163,7 @@ makeCtr param (cName, cFields) =
                 patType (InContainer t' p') = t' `AppT` patType p'
         forPat isTop (FlatEmbed x) =
             case tiConstructors x of
-            [(n, xs)] -> traverse (forField False) xs <&> FlatInfo isTop n <&> FlatFields
+            [(n, _, xs)] -> traverse (forField False) xs <&> FlatInfo isTop n <&> FlatFields
             _ -> forGen isTop (tiInstance x)
         forGen isTop t =
             case unapply t of

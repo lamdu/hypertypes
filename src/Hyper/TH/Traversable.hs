@@ -18,6 +18,7 @@ import           Hyper.TH.Functor (makeHFunctor)
 import           Hyper.TH.Internal.Utils
 import           Hyper.TH.Nodes (makeHNodes)
 import           Language.Haskell.TH
+import           Language.Haskell.TH.Datatype (ConstructorVariant)
 
 import           Prelude.Compat
 
@@ -57,13 +58,13 @@ makeHTraversableForType :: TypeInfo -> DecsQ
 makeHTraversableForType info =
     instanceD (simplifyContext (makeContext info)) (appT (conT ''HTraversable) (pure (tiInstance info)))
     [ InlineP 'hsequence Inline FunLike AllPhases & PragmaD & pure
-    , funD 'hsequence (tiConstructors info <&> pure . uncurry makeCons)
+    , funD 'hsequence (tiConstructors info <&> pure . makeCons)
     ]
     <&> (:[])
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
-    tiConstructors info ^.. traverse . Lens._2 . traverse . Lens._Right >>= ctxForPat
+    tiConstructors info ^.. traverse . Lens._3 . traverse . Lens._Right >>= ctxForPat
     where
         ctxForPat (InContainer t pat) = (ConT ''Traversable `AppT` t) : ctxForPat pat
         ctxForPat (GenEmbed t) = [ConT ''HTraversable `AppT` t]
@@ -71,8 +72,8 @@ makeContext info =
         ctxForPat _ = []
 
 makeCons ::
-    Name -> [Either Type CtrTypePattern] -> Clause
-makeCons cName cFields =
+    (Name, ConstructorVariant, [Either Type CtrTypePattern]) -> Clause
+makeCons (cName, _, cFields) =
     Clause [consPat cName consVars] body []
     where
         body =

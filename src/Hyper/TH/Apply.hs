@@ -8,17 +8,18 @@ module Hyper.TH.Apply
     , makeHApplicativeBases
     ) where
 
-import Control.Applicative (liftA2)
-import Control.Lens.Operators
-import GHC.Generics ((:*:)(..))
-import Hyper.Class.Apply
-import Hyper.TH.Functor (makeHFunctor)
-import Hyper.TH.Internal.Utils
-import Hyper.TH.Nodes (makeHNodes)
-import Hyper.TH.Pointed (makeHPointed)
-import Language.Haskell.TH
+import           Control.Applicative (liftA2)
+import qualified Control.Lens as Lens
+import           Control.Lens.Operators
+import           GHC.Generics ((:*:)(..))
+import           Hyper.Class.Apply
+import           Hyper.TH.Functor (makeHFunctor)
+import           Hyper.TH.Internal.Utils
+import           Hyper.TH.Nodes (makeHNodes)
+import           Hyper.TH.Pointed (makeHPointed)
+import           Language.Haskell.TH
 
-import Prelude.Compat
+import           Prelude.Compat
 
 -- | Generate instances of 'HApply',
 -- 'Hyper.Class.Functor.HFunctor', 'Hyper.Class.Pointed.HPointed' and 'Hyper.Class.Nodes.HNodes',
@@ -47,7 +48,7 @@ makeHApply typeName = makeTypeInfo typeName >>= makeHApplyForType
 makeHApplyForType :: TypeInfo -> DecsQ
 makeHApplyForType info =
     do
-        (name, fields) <-
+        (name, _, fields) <-
             case tiConstructors info of
             [x] -> pure x
             _ -> fail "makeHApply only supports types with a single constructor"
@@ -76,7 +77,7 @@ makeHApplyForType info =
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
-    tiConstructors info >>= snd >>= ctxFor
+    tiConstructors info >>= (^. Lens._3) >>= ctxFor
     where
         ctxFor (Right x) = ctxForPat x
         ctxFor (Left x) = [ConT ''Semigroup `AppT` x]

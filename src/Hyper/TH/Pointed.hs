@@ -6,12 +6,14 @@ module Hyper.TH.Pointed
     ( makeHPointed
     ) where
 
-import Control.Lens.Operators
-import Hyper.Class.Pointed
-import Hyper.TH.Internal.Utils
-import Language.Haskell.TH
+import qualified Control.Lens as Lens
+import           Control.Lens.Operators
+import           Hyper.Class.Pointed
+import           Hyper.TH.Internal.Utils
+import           Language.Haskell.TH
+import           Language.Haskell.TH.Datatype (ConstructorVariant)
 
-import Prelude.Compat
+import           Prelude.Compat
 
 -- | Generate a 'HPointed' instance
 makeHPointed :: Name -> DecsQ
@@ -32,7 +34,7 @@ makeHPointedForType info =
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
-    tiConstructors info >>= snd >>= ctxFor
+    tiConstructors info >>= (^. Lens._3) >>= ctxFor
     where
         ctxFor (Right x) = ctxForPat x
         ctxFor (Left x) = [ConT ''Monoid `AppT` x]
@@ -40,8 +42,8 @@ makeContext info =
         ctxForPat (GenEmbed t) = [ConT ''HPointed `AppT` t]
         ctxForPat _ = []
 
-makeHPureCtr :: TypeInfo -> (Name, [Either Type CtrTypePattern]) -> Q Clause
-makeHPureCtr typeInfo (cName, cFields) =
+makeHPureCtr :: TypeInfo -> (Name, ConstructorVariant, [Either Type CtrTypePattern]) -> Q Clause
+makeHPureCtr typeInfo (cName, _, cFields) =
     traverse bodyFor cFields
     <&> foldl AppE (ConE cName)
     <&> NormalB
@@ -52,7 +54,7 @@ makeHPureCtr typeInfo (cName, cFields) =
         bodyForPat (Node t) = VarE varF `AppE` nodeWit wit t & pure
         bodyForPat (FlatEmbed inner) =
             case tiConstructors inner of
-            [(iName, iFields)] -> traverse bodyFor iFields <&> foldl AppE (ConE iName)
+            [(iName, _, iFields)] -> traverse bodyFor iFields <&> foldl AppE (ConE iName)
             _ -> fail "makeHPointed only supports embedded types with a single constructor"
         bodyForPat (GenEmbed t) =
             VarE 'hpure `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))

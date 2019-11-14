@@ -11,6 +11,7 @@ import GHC.Generics ((:*:)(..))
 import Hyper.Class.ZipMatch (ZipMatch(..))
 import Hyper.TH.Internal.Utils
 import Language.Haskell.TH
+import Language.Haskell.TH.Datatype (ConstructorVariant)
 
 import Prelude.Compat
 
@@ -20,7 +21,7 @@ makeZipMatch typeName =
     do
         info <- makeTypeInfo typeName
         -- (dst, var) <- parts info
-        let ctrs = tiConstructors info <&> uncurry makeZipMatchCtr
+        let ctrs = tiConstructors info <&> makeZipMatchCtr
         instanceD
             (simplifyContext (ctrs >>= ccContext))
             (appT (conT ''ZipMatch) (pure (tiInstance info)))
@@ -39,8 +40,8 @@ data CtrCase =
     , ccContext :: [Pred]
     }
 
-makeZipMatchCtr :: Name -> [Either Type CtrTypePattern] -> CtrCase
-makeZipMatchCtr cName cFields =
+makeZipMatchCtr :: (Name, ConstructorVariant, [Either Type CtrTypePattern]) -> CtrCase
+makeZipMatchCtr (cName, _, cFields) =
     CtrCase
     { ccClause = Clause [con fst, con snd] body []
     , ccContext = fieldParts >>= zmfContext

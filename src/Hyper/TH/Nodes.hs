@@ -59,7 +59,7 @@ makeHNodesForType info =
 
 makeContext :: TypeInfo -> [Pred]
 makeContext info =
-    tiConstructors info ^.. traverse . Lens._2 . traverse . Lens._Right >>= ctxForPat
+    tiConstructors info ^.. traverse . Lens._3 . traverse . Lens._Right >>= ctxForPat
     where
         ctxForPat (InContainer _ pat) = ctxForPat pat
         ctxForPat (GenEmbed t) = [ConT ''HNodes `AppT` t]

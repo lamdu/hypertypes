@@ -36,7 +36,7 @@ data TypeInfo = TypeInfo
     , tiInstance :: Type
     , tiParams :: [TyVarBndr]
     , tiHyperParam :: Name
-    , tiConstructors :: [(Name, [Either Type CtrTypePattern])]
+    , tiConstructors :: [(Name, D.ConstructorVariant, [Either Type CtrTypePattern])]
     } deriving Show
 
 data TypeContents = TypeContents
@@ -60,7 +60,7 @@ makeTypeInfo name =
         (dst, var) <- parts info
         let makeCons c =
                 traverse (matchType var) (D.constructorFields c)
-                <&> (D.constructorName c, )
+                <&> (D.constructorName c, D.constructorVariant c, )
         cons <- traverse makeCons (D.datatypeCons info)
         pure TypeInfo
             { tiName = name
@@ -95,7 +95,7 @@ childrenTypesH info =
             then pure mempty
             else
                 modify (Lens.contains (tiInstance info) .~ True) *>
-                traverse addPat (tiConstructors info ^.. traverse . Lens._2 . traverse . Lens._Right)
+                traverse addPat (tiConstructors info ^.. traverse . Lens._3 . traverse . Lens._Right)
                     <&> mconcat
     where
         addPat (FlatEmbed inner) = childrenTypesH inner
@@ -136,9 +136,9 @@ matchType var (x `AppT` VarT h)
                         D.constructorFields i
                         <&> D.applySubstitution subst
                         & traverse (matchType var)
-                        <&> (D.constructorName i, )
+                        <&> (D.constructorName i, D.constructorVariant i, )
                 cons <- traverse makeCons (D.datatypeCons inner)
-                if var `notElem` (D.freeVariablesWellScoped (cons ^.. traverse . Lens._2 . traverse . Lens._Left) <&> D.tvName)
+                if var `notElem` (D.freeVariablesWellScoped (cons ^.. traverse . Lens._3 . traverse . Lens._Left) <&> D.tvName)
                     then
                         FlatEmbed TypeInfo
                         { tiName = c
@@ -245,7 +245,7 @@ makeNodeOf info =
         niceTypeName = tiName info & niceName
         nodeBase = "W_" <> niceTypeName <> "_"
         embedBase = "E_" <> niceTypeName <> "_"
-        pats = tiConstructors info >>= snd
+        pats = tiConstructors info >>= (^. Lens._3)
         makeNiceType (ConT x) = niceName x
         makeNiceType (AppT x y) = makeNiceType x <> "_" <> makeNiceType y
         makeNiceType (VarT x) = takeWhile (/= '_') (show x)
@@ -256,7 +256,7 @@ makeNodeOf info =
             <&> \t -> (t, mkName (nodeBase <> makeNiceType t))
         nodesForPat (Node t) = [t]
         nodesForPat (InContainer _ pat) = nodesForPat pat
-        nodesForPat (FlatEmbed x) = tiConstructors x ^.. traverse . Lens._2 . traverse . Lens._Right >>= nodesForPat
+        nodesForPat (FlatEmbed x) = tiConstructors x ^.. traverse . Lens._3 . traverse . Lens._Right >>= nodesForPat
         nodesForPat _ = []
         nodeGadtType t n = n `AppT` t
         embeds =
@@ -264,7 +264,7 @@ makeNodeOf info =
             <&> \t -> (t, mkName (embedBase <> makeNiceType t))
         embedsForPat (GenEmbed t) = [t]
         embedsForPat (InContainer _ pat) = embedsForPat pat
-        embedsForPat (FlatEmbed x) = tiConstructors x ^.. traverse . Lens._2 . traverse . Lens._Right >>= embedsForPat
+        embedsForPat (FlatEmbed x) = tiConstructors x ^.. traverse . Lens._3 . traverse . Lens._Right >>= embedsForPat
         embedsForPat _ = []
         embedGadtType t n =
             ArrowT
