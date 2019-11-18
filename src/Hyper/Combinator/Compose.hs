@@ -15,10 +15,10 @@ import           Data.Constraint (Constraint, Dict(..), withDict)
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import           Hyper
-import           Hyper.Class.Context
+import           Hyper.Class.Context (HContext(..))
 import           Hyper.Class.Traversable (ContainedH(..))
 import           Hyper.Class.ZipMatch (ZipMatch(..))
-import           Hyper.Combinator.Cont
+import           Hyper.Combinator.Cont (HCont(..))
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
 
 import           Prelude.Compat

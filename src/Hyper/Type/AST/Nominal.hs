@@ -28,9 +28,11 @@ import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import           Generics.Constraints (Constraints)
 import           Hyper
+import           Hyper.Class.Context (HContext(..))
 import           Hyper.Class.Has (HasChild(..))
 import           Hyper.Class.Traversable (ContainedH(..))
 import           Hyper.Class.ZipMatch (ZipMatch(..))
+import           Hyper.Combinator.Cont (HCont(..))
 import           Hyper.Infer
 import           Hyper.Recurse
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
@@ -143,6 +145,27 @@ instance
                     <&> QVarInstances
                 )
             <&> NominalInst xId
+
+instance
+    ( HFunctor varTypes
+    , HContext varTypes
+    , HNodesConstraint varTypes OrdQVar
+    ) => HContext (NominalInst nomId varTypes) where
+    hcontext (NominalInst n args) =
+        hcontext args
+        & hmap
+            ( Proxy @OrdQVar #>
+                \(HCont c :*: x) ->
+                x & _QVarInstances . Lens.imapped %@~
+                \k v ->
+                HCont
+                ( \newV ->
+                    x
+                    & _QVarInstances . Lens.at k ?~ newV
+                    & c & NominalInst n
+                ) :*: v
+            )
+        & NominalInst n
 
 instance Constraints (ToNom nomId term h) Pretty => Pretty (ToNom nomId term h) where
     pPrintPrec lvl p (ToNom nomId term) =
