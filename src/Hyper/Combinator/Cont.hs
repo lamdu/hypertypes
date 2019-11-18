@@ -1,4 +1,4 @@
-module Hyper.Type.Cont
+module Hyper.Combinator.Cont
     ( HCont(..), _HCont
     ) where
 

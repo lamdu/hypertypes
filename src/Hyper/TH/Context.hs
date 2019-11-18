@@ -9,8 +9,8 @@ import           Control.Lens.Operators
 import           GHC.Generics
 import           Hyper.Class.Context
 import           Hyper.Class.Functor
+import           Hyper.Combinator.Cont (HCont(..), _HCont)
 import           Hyper.TH.Internal.Utils
-import           Hyper.Type.Cont
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Datatype (ConstructorVariant(..))
 

@@ -9,11 +9,11 @@ import Data.Constraint (withDict)
 import Data.Proxy (Proxy(..))
 import GHC.Generics ((:*:)(..))
 import Hyper.Combinator.Ann (Ann(..))
+import Hyper.Combinator.Cont (HCont(..))
 import Hyper.Class.Functor (HFunctor(..))
 import Hyper.Class.Nodes ((#*#), (#>))
 import Hyper.Class.Recursive (Recursively(..))
 import Hyper.Type (Tree)
-import Hyper.Type.Cont (HCont(..))
 
 import Prelude.Compat
 
