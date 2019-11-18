@@ -15,8 +15,10 @@ import           Data.Constraint (Constraint, Dict(..), withDict)
 import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import           Hyper
+import           Hyper.Class.Context
 import           Hyper.Class.Traversable (ContainedH(..))
 import           Hyper.Class.ZipMatch (ZipMatch(..))
+import           Hyper.Combinator.Cont
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
 
 import           Prelude.Compat
@@ -139,6 +141,19 @@ instance
                 <&> (_HCompose #)
             )
         <&> (_HCompose #)
+
+instance (HFunctor h0, HContext h0, HFunctor h1, HContext h1) => HContext (HCompose h0 h1) where
+    hcontext =
+        _HCompose %~
+        hmap
+        ( \_ (HCont c0 :*: x0) ->
+            x0 & _HCompose %~
+            hmap
+            ( \_ (HCont c1 :*: x1) ->
+                x1 & _HCompose %~
+                (HCont ((_HCompose #) . c0 . (_HCompose #) . c1 . (_HCompose #)) :*:)
+            ) . hcontext
+        ) . hcontext
 
 instance
     ( HNodes a, HNodes b

@@ -28,6 +28,7 @@ makeCommonInstances [''Prune]
 Lens.makePrisms ''Prune
 makeHTraversableAndBases ''Prune
 makeZipMatch ''Prune
+makeHContext ''Prune
 
 -- `HPointed` and `HApplicative` instances in the spirit of `Maybe`
 
