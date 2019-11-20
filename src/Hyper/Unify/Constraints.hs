@@ -33,7 +33,7 @@ class (PartialOrd c, Semigroup c) => TypeConstraints c where
     toScopeConstraints :: c -> c
 
 -- | A class for unification monads with scope levels
-class Monad m => MonadScopeConstraints t m where
+class Monad m => MonadScopeConstraints m t where
     -- | Get the current scope constraint
     scopeConstraints :: Proxy t -> m (TypeConstraintsOf t)
 
