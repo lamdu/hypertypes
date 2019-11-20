@@ -81,10 +81,11 @@ instance
     (Pretty (Tree varTypes QVars), Pretty (h # typ)) =>
     Pretty (Scheme varTypes typ h) where
 
-    pPrintPrec lvl p (Scheme forAlls typ) =
-        pPrintPrec lvl 0 forAlls <+>
-        pPrintPrec lvl 0 typ
-        & maybeParens (p > 0)
+    pPrintPrec lvl p (Scheme forAlls typ)
+        | Pretty.isEmpty f = pPrintPrec lvl p typ
+        | otherwise = f <+> pPrintPrec lvl 0 typ & maybeParens (p > 0)
+        where
+            f = pPrintPrec lvl 0 forAlls
 
 instance
     (Pretty (TypeConstraintsOf typ), Pretty (QVar typ)) =>
@@ -254,7 +255,7 @@ saveH (GPoly x) =
                 scopeConstraints (Proxy @typ) <&> (<> l)
                 >>= newQuantifiedVariable & lift
             Lens._1 . getChild %=
-                (\v -> v & _QVars . Lens.at r ?~ l :: Tree QVars typ)
+                (\v -> v & _QVars . Lens.at r ?~ generalizeConstraints l :: Tree QVars typ)
             Lens._2 %= (bindVar binding x (USkolem l) :)
             let result = _Pure . quantifiedVar # r
             UResolved result & bindVar binding x & lift

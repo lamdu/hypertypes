@@ -48,7 +48,9 @@ instance TypeConstraints ScopeLevel where
     toScopeConstraints = id
 
 instance Pretty ScopeLevel where
-    pPrint (ScopeLevel x) = Pretty.text "scope#" <> pPrint x
+    pPrint (ScopeLevel x)
+        | x == maxBound = Pretty.text "*"
+        | otherwise = Pretty.text "scope#" <> pPrint x
 
 instance NFData ScopeLevel
 instance Binary ScopeLevel

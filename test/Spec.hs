@@ -13,6 +13,7 @@ import           Hyper
 import           Hyper.Infer
 import           Hyper.Unify
 import           Hyper.Unify.Apply
+import           Hyper.Unify.Generalize
 import           Hyper.Unify.QuantifiedVar
 import           Hyper.Recurse
 import           Hyper.Type.AST.NamelessScope (EmptyScope)
@@ -173,23 +174,26 @@ inferExpr ::
     forall m t.
     ( HasInferredType t
     , Infer m t
+    , HasScheme Types m (TypeOf t)
     , RTraversable t
     , RTraversableInferOf t
     ) =>
     Tree Pure t ->
-    m (Tree Pure (TypeOf t))
+    m (Tree Pure (Scheme Types (TypeOf t)))
 inferExpr x =
-    infer (wrap (const (Ann (Const ()))) x)
-    >>= Lens.from _HFlip
-        (htraverse
+    do
+        inferRes <- infer (wrap (const (Ann (Const ()))) x)
+        result <-
+            inferRes ^# hAnn . Lens._2 . _InferResult . inferredType (Proxy @t)
+            & generalize
+            >>= saveScheme
+        result <$
+            htraverse_
             ( Proxy @(Infer m) #*# Proxy @RTraversableInferOf #*#
                 \w (Const () :*: InferResult i) ->
                 withDict (inferContext (Proxy @m) (p0 w)) $
-                htraverse (Proxy @(UnifyGen m) #> applyBindings) i
-                <&> InferResult
-            )
-        )
-    <&> (^# hAnn . _InferResult . inferredType (Proxy @t))
+                htraverse_ (Proxy @(UnifyGen m) #> void . applyBindings) i
+            ) (_HFlip # inferRes)
     where
         p0 :: HWitness a n -> Proxy n
         p0 _ = Proxy
@@ -388,25 +392,25 @@ main =
         when (numFails > 0) exitFailure
     where
         tests =
-            [ testA lamXYx5      "Right ((Int -> t0) -> t1 -> t0)"
+            [ testA lamXYx5      "Right (∀t0(*). ∀t1(*). (Int -> t0) -> t1 -> t0)"
             , testA infinite     "Left (t0 occurs in itself, expands to: t0 -> t1)"
             , testA skolem       "Left (SkolemEscape: t0)"
-            , testA validForAll  "Right (t0 -> t0)"
+            , testA validForAll  "Right (∀t0(*). t0 -> t0)"
             , testA nomLam       "Right (Map[key: Int, value: Int] -> Map[key: Int, value: Int])"
             , testB letGen0      "Right Int"
-            , testB letGen1      "Right ((Int -> Int -> t0) -> t0)"
-            , testB letGen2      "Right ((a : (a : t0 :*: r0) :*: r1) -> t0)"
+            , testB letGen1      "Right (∀t0(*). (Int -> Int -> t0) -> t0)"
+            , testB letGen2      "Right (∀t0(*). ∀r0(∌ [a]). ∀r1(∌ [a]). (a : (a : t0 :*: r0) :*: r1) -> t0)"
             , testB genInf       "Left (t0 occurs in itself, expands to: t0 -> t1)"
-            , testB shouldNotGen "Right (t0 -> t0)"
+            , testB shouldNotGen "Right (∀t0(*). t0 -> t0)"
             , testB simpleRec    "Right (a : Int :*: {})"
             , testB extendLit    "Left (Mismatch Int r0)"
-            , testB extendDup    "Left (ConstraintsViolation (a : Int :*: {}) (Forbidden fields: [a]))"
+            , testB extendDup    "Left (ConstraintsViolation (a : Int :*: {}) (∌ [a]))"
             , testB extendGood   "Right (b : Int :*: a : Int :*: {})"
             , testB unifyRows    "Right (((b : Int :*: a : Int :*: {}) -> Int -> Int) -> Int)"
-            , testB getAField    "Right ((a : t0 :*: r0) -> t0)"
-            , testB vecApp       "Right (t0 -> t0 -> Vec[elem: t0])"
-            , testB usePhantom   "Right PhantomInt[phantom: t0]"
-            , testB return5      "Right Mut[value: Int, effects: r0]"
+            , testB getAField    "Right (∀t0(*). ∀r0(∌ [a]). (a : t0 :*: r0) -> t0)"
+            , testB vecApp       "Right (∀t0(*). t0 -> t0 -> Vec[elem: t0])"
+            , testB usePhantom   "Right (∀t0(*). PhantomInt[phantom: t0])"
+            , testB return5      "Right (∀r0(*). Mut[value: Int, effects: r0])"
             , testB returnOk     "Right LocalMut[value: Int]"
             , testB nomSkolem0   "Left (SkolemEscape: r0)"
             , testB nomSkolem1   "Left (SkolemEscape: r0)"

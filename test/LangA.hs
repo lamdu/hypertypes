@@ -244,3 +244,8 @@ instance MonadInstantiate (STInferA s) Row where
     lookupQVar x =
         Lens.view (Lens._1 . iaInstantiations . tRow . _QVarInstances . Lens.at x)
         >>= maybe (throwError (QVarNotInScope x)) pure
+
+instance HasScheme Types PureInferA Typ
+instance HasScheme Types PureInferA Row
+instance HasScheme Types (STInferA s) Typ
+instance HasScheme Types (STInferA s) Row

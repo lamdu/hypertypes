@@ -98,9 +98,9 @@ instance Pretty Name where
     pPrint (Name x) = Pretty.text x
 
 instance Pretty RConstraints where
-    pPrintPrec _ p (RowConstraints f _) =
-        Pretty.text "Forbidden fields:" <+> pPrint (f ^.. Lens.folded)
-        & maybeParens (p > 10)
+    pPrintPrec _ p (RowConstraints f _)
+        | f == mempty = Pretty.text "*"
+        | otherwise = Pretty.text "∌" <+> pPrint (f ^.. Lens.folded) & maybeParens (p > 10)
 
 instance Constraints (Types h) Pretty => Pretty (Types h) where
     pPrintPrec lvl p (Types typ row) =
