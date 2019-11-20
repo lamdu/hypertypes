@@ -1,0 +1,2 @@
+#!/bin/sh
+runhaskell -isrc -itest -XConstraintKinds -XDataKinds -XDefaultSignatures -XDeriveGeneric -XDerivingStrategies -XGADTs -XGeneralizedNewtypeDeriving -XLambdaCase -XMultiParamTypeClasses -XRankNTypes -XScopedTypeVariables -XStandaloneDeriving -XTupleSections -XTypeApplications -XTypeOperators -XTypeFamilies -XNoImplicitPrelude $(dirname "$0")/Spec.hs
