@@ -143,11 +143,11 @@ type instance UVarOf PureInferA = UVar
 instance MonadScopeLevel PureInferA where
     localLevel = local (iaScopeLevel . _ScopeLevel +~ 1)
 
-instance MonadScopeConstraints ScopeLevel PureInferA where
-    scopeConstraints = Lens.view iaScopeLevel
+instance MonadScopeConstraints Typ PureInferA where
+    scopeConstraints _ = Lens.view iaScopeLevel
 
-instance MonadScopeConstraints RConstraints PureInferA where
-    scopeConstraints = Lens.view iaScopeLevel <&> RowConstraints mempty
+instance MonadScopeConstraints Row PureInferA where
+    scopeConstraints _ = Lens.view iaScopeLevel <&> RowConstraints mempty
 
 instance MonadQuantify ScopeLevel Name PureInferA where
     newQuantifiedVariable _ =
@@ -206,11 +206,11 @@ type instance UVarOf (STInferA s) = STUVar s
 instance MonadScopeLevel (STInferA s) where
     localLevel = local (Lens._1 . iaScopeLevel . _ScopeLevel +~ 1)
 
-instance MonadScopeConstraints ScopeLevel (STInferA s) where
-    scopeConstraints = Lens.view (Lens._1 . iaScopeLevel)
+instance MonadScopeConstraints Typ (STInferA s) where
+    scopeConstraints _ = Lens.view (Lens._1 . iaScopeLevel)
 
-instance MonadScopeConstraints RConstraints (STInferA s) where
-    scopeConstraints = Lens.view (Lens._1 . iaScopeLevel) <&> RowConstraints mempty
+instance MonadScopeConstraints Row (STInferA s) where
+    scopeConstraints _ = Lens.view (Lens._1 . iaScopeLevel) <&> RowConstraints mempty
 
 instance MonadQuantify ScopeLevel Name (STInferA s) where
     newQuantifiedVariable _ = newStQuantified (Lens._2 . tTyp) <&> Name . ('t':) . show

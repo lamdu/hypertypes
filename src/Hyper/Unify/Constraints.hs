@@ -12,6 +12,7 @@ module Hyper.Unify.Constraints
 import Algebra.PartialOrd (PartialOrd(..))
 import Control.Lens (makeLenses)
 import Data.Kind (Type)
+import Data.Proxy (Proxy)
 import Hyper (Tree, HyperType, GetHyperType)
 
 import Prelude.Compat
@@ -32,9 +33,9 @@ class (PartialOrd c, Semigroup c) => TypeConstraints c where
     toScopeConstraints :: c -> c
 
 -- | A class for unification monads with scope levels
-class Monad m => MonadScopeConstraints c m where
+class Monad m => MonadScopeConstraints t m where
     -- | Get the current scope constraint
-    scopeConstraints :: m c
+    scopeConstraints :: Proxy t -> m (TypeConstraintsOf t)
 
 -- | A class for terms that have constraints.
 --

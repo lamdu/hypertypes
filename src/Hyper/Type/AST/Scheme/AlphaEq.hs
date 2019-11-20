@@ -23,12 +23,12 @@ import           Hyper.Unify.Term (UTerm(..), uBody)
 import           Prelude.Compat
 
 makeQVarInstancesInScope ::
-    Unify m typ =>
+    forall m typ. Unify m typ =>
     Tree QVars typ -> m (Tree (QVarInstances (UVarOf m)) typ)
 makeQVarInstancesInScope (QVars foralls) =
     traverse makeSkolem foralls <&> QVarInstances
     where
-        makeSkolem c = scopeConstraints >>= newVar binding . USkolem . (c <>)
+        makeSkolem c = scopeConstraints (Proxy @typ) >>= newVar binding . USkolem . (c <>)
 
 schemeBodyToType ::
     (Unify m typ, HasChild varTypes typ, Ord (QVar typ)) =>

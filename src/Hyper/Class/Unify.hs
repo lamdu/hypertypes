@@ -53,7 +53,7 @@ class
     , ZipMatch t
     , HasTypeConstraints t
     , HasQuantifiedVar t
-    , MonadScopeConstraints (TypeConstraintsOf t) m
+    , MonadScopeConstraints t m
     , MonadQuantify (TypeConstraintsOf t) (QVar t) m
     ) => Unify m t where
 

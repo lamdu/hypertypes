@@ -118,7 +118,8 @@ instance
             InferredChild vI vT <- inferChild v
             InferredChild rI rT <- inferChild r
             restR <-
-                scopeConstraints <&> rForbiddenFields . Lens.contains h .~ True
+                scopeConstraints (Proxy @Row)
+                <&> rForbiddenFields . Lens.contains h .~ True
                 >>= newVar binding . UUnbound
             _ <- TRec restR & newTerm >>= unify (rT ^. _ANode)
             RowExtend h (vT ^. _ANode) restR & RExtend & newTerm
@@ -196,11 +197,11 @@ instance LocalScopeType Name (Tree (GTerm UVar) Typ) PureInferB where
 instance MonadScopeLevel PureInferB where
     localLevel = local (scopeLevel . _ScopeLevel +~ 1)
 
-instance MonadScopeConstraints ScopeLevel PureInferB where
-    scopeConstraints = Lens.view scopeLevel
+instance MonadScopeConstraints Typ PureInferB where
+    scopeConstraints _ = Lens.view scopeLevel
 
-instance MonadScopeConstraints RConstraints PureInferB where
-    scopeConstraints = Lens.view scopeLevel <&> RowConstraints mempty
+instance MonadScopeConstraints Row PureInferB where
+    scopeConstraints _ = Lens.view scopeLevel <&> RowConstraints mempty
 
 instance MonadQuantify ScopeLevel Name PureInferB where
     newQuantifiedVariable _ =
@@ -261,11 +262,11 @@ instance LocalScopeType Name (Tree (GTerm (STUVar s)) Typ) (STInferB s) where
 instance MonadScopeLevel (STInferB s) where
     localLevel = local (Lens._1 . scopeLevel . _ScopeLevel +~ 1)
 
-instance MonadScopeConstraints ScopeLevel (STInferB s) where
-    scopeConstraints = Lens.view (Lens._1 . scopeLevel)
+instance MonadScopeConstraints Typ (STInferB s) where
+    scopeConstraints _ = Lens.view (Lens._1 . scopeLevel)
 
-instance MonadScopeConstraints RConstraints (STInferB s) where
-    scopeConstraints = Lens.view (Lens._1 . scopeLevel) <&> RowConstraints mempty
+instance MonadScopeConstraints Row (STInferB s) where
+    scopeConstraints _ = Lens.view (Lens._1 . scopeLevel) <&> RowConstraints mempty
 
 instance MonadQuantify ScopeLevel Name (STInferB s) where
     newQuantifiedVariable _ = newStQuantified (Lens._2 . tTyp) <&> Name . ('t':) . show

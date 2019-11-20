@@ -20,6 +20,7 @@ import           Data.Binary (Binary)
 import           Data.Foldable (sequenceA_)
 import           Data.Map (Map)
 import qualified Data.Map as Map
+import           Data.Proxy (Proxy(..))
 import           Data.Set (Set)
 import           GHC.Generics (Generic)
 import           Generics.Constraints (Constraints, makeDerivings, makeInstances)
@@ -153,6 +154,7 @@ rowExtendStructureMismatch match extend (c0, r0) (c1, r1) =
 -- Returns a unification variable for the element and for the whole row.
 {-# INLINE rowElementInfer #-}
 rowElementInfer ::
+    forall m valTyp rowTyp.
     ( Unify m valTyp
     , Unify m rowTyp
     , RowConstraints (TypeConstraintsOf rowTyp)
@@ -163,7 +165,7 @@ rowElementInfer ::
 rowElementInfer extendToRow h =
     do
         restVar <-
-            scopeConstraints
+            scopeConstraints (Proxy @rowTyp)
             >>= newVar binding . UUnbound . (forbidden . contains h .~ True)
         part <- newUnbound
         whole <- RowExtend h part restVar & extendToRow & newTerm

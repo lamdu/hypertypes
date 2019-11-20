@@ -250,7 +250,9 @@ saveH (GPoly x) =
     \case
     USkolem l ->
         do
-            r <- scopeConstraints <&> (<> l) >>= newQuantifiedVariable & lift
+            r <-
+                scopeConstraints (Proxy @typ) <&> (<> l)
+                >>= newQuantifiedVariable & lift
             Lens._1 . getChild %=
                 (\v -> v & _QVars . Lens.at r ?~ l :: Tree QVars typ)
             Lens._2 %= (bindVar binding x (USkolem l) :)

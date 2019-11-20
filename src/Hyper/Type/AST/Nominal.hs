@@ -306,6 +306,7 @@ lookupParams ::
 lookupParams =
     htraverse (Proxy @(Unify m) #> (_QVarInstances . traverse) lookupParam)
     where
+        lookupParam :: forall t. Unify m t => Tree (UVarOf m) t -> m (Tree (UVarOf m) t)
         lookupParam v =
             lookupVar binding v
             >>=
@@ -313,7 +314,7 @@ lookupParams =
             UInstantiated r -> pure r
             USkolem l ->
                 -- This is a phantom-type, wasn't instantiated by `instantiate`.
-                scopeConstraints <&> (<> l) >>= newVar binding . UUnbound
+                scopeConstraints (Proxy @t) <&> (<> l) >>= newVar binding . UUnbound
             _ -> error "unexpected state at nominal's parameter"
 
 type instance InferOf (ToNom n e) = NominalInst n (NomVarTypes (TypeOf e))

@@ -129,7 +129,7 @@ generalize ::
 generalize v0 =
     do
         (v1, u) <- semiPruneLookup v0
-        c <- scopeConstraints
+        c <- scopeConstraints (Proxy @t)
         case u of
             UUnbound l | toScopeConstraints l `leq` c ->
                 GPoly v1 <$
@@ -155,7 +155,7 @@ generalize v0 =
 
 {-# INLINE instantiateForAll #-}
 instantiateForAll ::
-    Unify m t =>
+    forall m t. Unify m t =>
     (TypeConstraintsOf t -> Tree (UTerm (UVarOf m)) t) ->
     Tree (UVarOf m) t ->
     WriterT [m ()] m (Tree (UVarOf m) t)
@@ -166,7 +166,7 @@ instantiateForAll cons x =
     USkolem l ->
         do
             tell [bindVar binding x (USkolem l)]
-            r <- scopeConstraints <&> (<> l) >>= newVar binding . cons & lift
+            r <- scopeConstraints (Proxy @t) <&> (<> l) >>= newVar binding . cons & lift
             UInstantiated r & bindVar binding x & lift
             pure r
     UInstantiated v -> pure v

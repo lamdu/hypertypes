@@ -1,4 +1,5 @@
 -- | Generate new unification variables
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Hyper.Unify.New
     ( newUnbound, newTerm, unfreeze
@@ -15,13 +16,13 @@ import Prelude.Compat
 
 -- | Create a new unbound unification variable in the current scope
 {-# INLINE newUnbound #-}
-newUnbound :: Unify m t => m (Tree (UVarOf m) t)
-newUnbound = scopeConstraints >>= newVar binding . UUnbound
+newUnbound :: forall m t. Unify m t => m (Tree (UVarOf m) t)
+newUnbound = scopeConstraints (Proxy @t) >>= newVar binding . UUnbound
 
 -- | Create a new unification term with a given body
 {-# INLINE newTerm #-}
-newTerm :: Unify m t => Tree t (UVarOf m) -> m (Tree (UVarOf m) t)
-newTerm x = scopeConstraints >>= newVar binding . UTerm . (`UTermBody` x)
+newTerm :: forall m t. Unify m t => Tree t (UVarOf m) -> m (Tree (UVarOf m) t)
+newTerm x = scopeConstraints (Proxy @t) >>= newVar binding . UTerm . (`UTermBody` x)
 
 -- | Embed a pure term as a unification term
 {-# INLINE unfreeze #-}
