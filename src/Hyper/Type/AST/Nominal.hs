@@ -248,7 +248,7 @@ instance
 
 {-# INLINE loadBody #-}
 loadBody ::
-    ( Unify m typ
+    ( UnifyGen m typ
     , HasChild varTypes typ
     , Ord (QVar typ)
     ) =>
@@ -299,14 +299,14 @@ lookupParams ::
     forall m varTypes.
     ( Applicative m
     , HTraversable varTypes
-    , HNodesConstraint varTypes (Unify m)
+    , HNodesConstraint varTypes (UnifyGen m)
     ) =>
     Tree varTypes (QVarInstances (UVarOf m)) ->
     m (Tree varTypes (QVarInstances (UVarOf m)))
 lookupParams =
-    htraverse (Proxy @(Unify m) #> (_QVarInstances . traverse) lookupParam)
+    htraverse (Proxy @(UnifyGen m) #> (_QVarInstances . traverse) lookupParam)
     where
-        lookupParam :: forall t. Unify m t => Tree (UVarOf m) t -> m (Tree (UVarOf m) t)
+        lookupParam :: forall t. UnifyGen m t => Tree (UVarOf m) t -> m (Tree (UVarOf m) t)
         lookupParam v =
             lookupVar binding v
             >>=
@@ -323,8 +323,8 @@ instance
     ( MonadScopeLevel m
     , MonadNominals nomId (TypeOf expr) m
     , HTraversable (NomVarTypes (TypeOf expr))
-    , HNodesConstraint (NomVarTypes (TypeOf expr)) (Unify m)
-    , Unify m (TypeOf expr)
+    , HNodesConstraint (NomVarTypes (TypeOf expr)) (UnifyGen m)
+    , UnifyGen m (TypeOf expr)
     , HasInferredType expr
     , Infer m expr
     ) =>
@@ -339,7 +339,7 @@ instance
                     LoadedNominalDecl params foralls gen <- getNominalDecl nomId
                     recover <-
                         htraverse_
-                        ( Proxy @(Unify m) #>
+                        ( Proxy @(UnifyGen m) #>
                             traverse_ (instantiateForAll USkolem) . (^. _QVarInstances)
                         ) foralls
                         & execWriterT
@@ -356,8 +356,8 @@ instance
     , HasNominalInst nomId (TypeOf expr)
     , MonadNominals nomId (TypeOf expr) m
     , HTraversable (NomVarTypes (TypeOf expr))
-    , HNodesConstraint (NomVarTypes (TypeOf expr)) (Unify m)
-    , Unify m (TypeOf expr)
+    , HNodesConstraint (NomVarTypes (TypeOf expr)) (UnifyGen m)
+    , UnifyGen m (TypeOf expr)
     ) =>
     Infer m (FromNom nomId expr) where
 

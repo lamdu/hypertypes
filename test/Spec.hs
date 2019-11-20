@@ -185,7 +185,7 @@ inferExpr x =
             ( Proxy @(Infer m) #*# Proxy @RTraversableInferOf #*#
                 \w (Const () :*: InferResult i) ->
                 withDict (inferContext (Proxy @m) (p0 w)) $
-                htraverse (Proxy @(Unify m) #> applyBindings) i
+                htraverse (Proxy @(UnifyGen m) #> applyBindings) i
                 <&> InferResult
             )
         )
@@ -257,7 +257,7 @@ returnScheme =
     \(Lens.Identity val) _ -> TFunP val mutType
 
 withEnv ::
-    ( Unify m Row, MonadReader env m
+    ( UnifyGen m Row, MonadReader env m
     , HasScheme Types m Typ
     ) =>
     Lens.LensLike' Lens.Identity env (InferScope (UVarOf m)) -> m a -> m a

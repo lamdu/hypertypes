@@ -23,7 +23,8 @@ import           Hyper.Unify.Term (UTerm(..), uBody)
 import           Prelude.Compat
 
 makeQVarInstancesInScope ::
-    forall m typ. Unify m typ =>
+    forall m typ.
+    UnifyGen m typ =>
     Tree QVars typ -> m (Tree (QVarInstances (UVarOf m)) typ)
 makeQVarInstancesInScope (QVars foralls) =
     traverse makeSkolem foralls <&> QVarInstances
@@ -31,7 +32,7 @@ makeQVarInstancesInScope (QVars foralls) =
         makeSkolem c = scopeConstraints (Proxy @typ) >>= newVar binding . USkolem . (c <>)
 
 schemeBodyToType ::
-    (Unify m typ, HasChild varTypes typ, Ord (QVar typ)) =>
+    (UnifyGen m typ, HasChild varTypes typ, Ord (QVar typ)) =>
     Tree varTypes (QVarInstances (UVarOf m)) -> Tree typ (UVarOf m) -> m (Tree (UVarOf m) typ)
 schemeBodyToType foralls x =
     case x ^? quantifiedVar >>= getForAll of
@@ -44,13 +45,13 @@ schemeToRestrictedType ::
     forall m varTypes typ.
     ( Monad m
     , HTraversable varTypes
-    , HNodesConstraint varTypes (Unify m)
+    , HNodesConstraint varTypes (UnifyGen m)
     , HasScheme varTypes m typ
     ) =>
     Tree Pure (Scheme varTypes typ) -> m (Tree (UVarOf m) typ)
 schemeToRestrictedType (Pure (Scheme vars typ)) =
     do
-        foralls <- htraverse (Proxy @(Unify m) #> makeQVarInstancesInScope) vars
+        foralls <- htraverse (Proxy @(UnifyGen m) #> makeQVarInstancesInScope) vars
         wrapM (Proxy @(HasScheme varTypes m) #>> schemeBodyToType foralls) typ
 
 goUTerm ::
@@ -98,7 +99,7 @@ goUVar xv yv =
 -- Check for alpha equality. Raises a `unifyError` when mismatches.
 alphaEq ::
     ( HTraversable varTypes
-    , HNodesConstraint varTypes (Unify m)
+    , HNodesConstraint varTypes (UnifyGen m)
     , HasScheme varTypes m typ
     ) =>
     Tree Pure (Scheme varTypes typ) ->

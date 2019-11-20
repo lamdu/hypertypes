@@ -13,7 +13,7 @@ import Hyper
 import Hyper.Infer
 import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.Type.AST.FuncType
-import Hyper.Unify (Unify, unify)
+import Hyper.Unify (UnifyGen, unify)
 import Hyper.Unify.New (newTerm, newUnbound)
 import Text.PrettyPrint ((<+>))
 import Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
@@ -57,7 +57,7 @@ instance
     ( Infer m expr
     , HasInferredType expr
     , HasFuncType (TypeOf expr)
-    , Unify m (TypeOf expr)
+    , UnifyGen m (TypeOf expr)
     ) =>
     Infer m (App expr) where
 

@@ -120,8 +120,8 @@ verifyRowExtendConstraints toChildC c (RowExtend h v rest)
 {-# INLINE rowExtendStructureMismatch #-}
 rowExtendStructureMismatch ::
     Ord key =>
-    ( Unify m rowTyp
-    , Unify m valTyp
+    ( UnifyGen m rowTyp
+    , UnifyGen m valTyp
     ) =>
     (forall c. Unify m c => Tree (UVarOf m) c -> Tree (UVarOf m) c -> m (Tree (UVarOf m) c)) ->
     Prism' (Tree rowTyp (UVarOf m))
@@ -155,8 +155,8 @@ rowExtendStructureMismatch match extend (c0, r0) (c1, r1) =
 {-# INLINE rowElementInfer #-}
 rowElementInfer ::
     forall m valTyp rowTyp.
-    ( Unify m valTyp
-    , Unify m rowTyp
+    ( UnifyGen m valTyp
+    , UnifyGen m rowTyp
     , RowConstraints (TypeConstraintsOf rowTyp)
     ) =>
     (Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) (UVarOf m) -> Tree rowTyp (UVarOf m)) ->

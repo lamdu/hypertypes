@@ -19,7 +19,7 @@ import Data.Constraint (withDict)
 import Data.Maybe (fromMaybe)
 import Data.Proxy (Proxy(..))
 import Hyper
-import Hyper.Class.Unify (Unify(..), UVarOf, BindingDict(..))
+import Hyper.Class.Unify (Unify(..), UnifyGen(..), UVarOf, BindingDict(..))
 import Hyper.Class.ZipMatch (zipMatchA)
 import Hyper.Unify.Constraints
 import Hyper.Unify.Error (UnifyError(..))

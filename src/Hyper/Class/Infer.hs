@@ -80,13 +80,13 @@ class (Monad m, HFunctor t) => Infer m t where
     inferContext ::
         Proxy m ->
         Proxy t ->
-        Dict (HNodesConstraint t (Infer m), HNodesConstraint (InferOf t) (Unify m))
+        Dict (HNodesConstraint t (Infer m), HNodesConstraint (InferOf t) (UnifyGen m))
     {-# INLINE inferContext #-}
     default inferContext ::
-        (HNodesConstraint t (Infer m), HNodesConstraint (InferOf t) (Unify m)) =>
+        (HNodesConstraint t (Infer m), HNodesConstraint (InferOf t) (UnifyGen m)) =>
         Proxy m ->
         Proxy t ->
-        Dict (HNodesConstraint t (Infer m), HNodesConstraint (InferOf t) (Unify m))
+        Dict (HNodesConstraint t (Infer m), HNodesConstraint (InferOf t) (UnifyGen m))
     inferContext _ _ = Dict
 
 instance Recursive (Infer m) where

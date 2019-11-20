@@ -1,6 +1,6 @@
 -- | Generalization of type schemes
 
-{-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleContexts, FlexibleInstances #-}
 
 module Hyper.Unify.Generalize
     ( generalize, instantiate
@@ -24,7 +24,7 @@ import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import           Hyper
 import           Hyper.Class.Traversable
-import           Hyper.Class.Unify (Unify(..), UVarOf, BindingDict(..))
+import           Hyper.Class.Unify (Unify(..), UnifyGen(..), UVarOf, BindingDict(..))
 import           Hyper.Recurse
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Unify.Constraints
@@ -124,7 +124,7 @@ instance RTraversable ast => HTraversable (HFlip GTerm ast) where
 -- become universally quantified skolems.
 generalize ::
     forall m t.
-    Unify m t =>
+    UnifyGen m t =>
     Tree (UVarOf m) t -> m (Tree (GTerm (UVarOf m)) t)
 generalize v0 =
     do
@@ -140,14 +140,14 @@ generalize v0 =
                 bindVar binding v1 (USkolem (generalizeConstraints l))
             USkolem l | toScopeConstraints l `leq` c -> pure (GPoly v1)
             UTerm t ->
-                withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
+                withDict (unifyNewRecursive (Proxy @m) (Proxy @t)) $
                 do
                     bindVar binding v1 (UResolving t)
-                    r <- htraverse (Proxy @(Unify m) #> generalize) (t ^. uBody)
+                    r <- htraverse (Proxy @(UnifyGen m) #> generalize) (t ^. uBody)
                     r <$ bindVar binding v1 (UTerm t)
                 <&>
                 \b ->
-                if hfoldMap (Proxy @(Unify m) #> All . Lens.has _GMono) b ^. Lens._Wrapped
+                if hfoldMap (Proxy @(UnifyGen m) #> All . Lens.has _GMono) b ^. Lens._Wrapped
                 then GMono v1
                 else GBody b
             UResolving t -> GMono v1 <$ occursError v1 t
@@ -155,7 +155,7 @@ generalize v0 =
 
 {-# INLINE instantiateForAll #-}
 instantiateForAll ::
-    forall m t. Unify m t =>
+    forall m t. UnifyGen m t =>
     (TypeConstraintsOf t -> Tree (UTerm (UVarOf m)) t) ->
     Tree (UVarOf m) t ->
     WriterT [m ()] m (Tree (UVarOf m) t)
@@ -176,20 +176,20 @@ instantiateForAll cons x =
 {-# INLINE instantiateH #-}
 instantiateH ::
     forall m t.
-    Unify m t =>
+    UnifyGen m t =>
     (forall n. TypeConstraintsOf n -> Tree (UTerm (UVarOf m)) n) ->
     Tree (GTerm (UVarOf m)) t ->
     WriterT [m ()] m (Tree (UVarOf m) t)
 instantiateH _ (GMono x) = pure x
 instantiateH cons (GPoly x) = instantiateForAll cons x
 instantiateH cons (GBody x) =
-    withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
-    htraverse (Proxy @(Unify m) #> instantiateH cons) x >>= lift . newTerm
+    withDict (unifyNewRecursive (Proxy @m) (Proxy @t)) $
+    htraverse (Proxy @(UnifyGen m) #> instantiateH cons) x >>= lift . newTerm
 
 {-# INLINE instantiateWith #-}
 instantiateWith ::
     forall m t a.
-    Unify m t =>
+    UnifyGen m t =>
     m a ->
     (forall n. TypeConstraintsOf n -> Tree (UTerm (UVarOf m)) n) ->
     Tree (GTerm (UVarOf m)) t ->
@@ -205,6 +205,6 @@ instantiateWith action cons g =
 -- for the quantified variables
 {-# INLINE instantiate #-}
 instantiate ::
-    Unify m t =>
+    UnifyGen m t =>
     Tree (GTerm (UVarOf m)) t -> m (Tree (UVarOf m) t)
 instantiate g = instantiateWith (pure ()) UUnbound g <&> (^. Lens._1)

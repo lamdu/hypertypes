@@ -111,7 +111,7 @@ instance Ord (QVar (GetHyperType typ)) => Lens.At (QVars typ) where
 
 type instance InferOf (Scheme v t) = HFlip GTerm t
 
-class Unify m t => MonadInstantiate m t where
+class UnifyGen m t => MonadInstantiate m t where
     localInstantiations ::
         Tree (QVarInstances (UVarOf m)) t ->
         m a ->
@@ -121,7 +121,7 @@ class Unify m t => MonadInstantiate m t where
 instance
     ( Monad m
     , HasInferredValue typ
-    , Unify m typ
+    , UnifyGen m typ
     , HTraversable varTypes
     , HNodesConstraint varTypes (MonadInstantiate m)
     , RTraversable typ
@@ -146,7 +146,7 @@ inferType ::
     ( InferOf t ~ ANode t
     , HTraversable t
     , HNodesConstraint t HasInferredValue
-    , Unify m t
+    , UnifyGen m t
     , MonadInstantiate m t
     ) =>
     Tree t (InferChild m h) ->
@@ -170,7 +170,7 @@ makeQVarInstances (QVars foralls) =
 
 {-# INLINE loadBody #-}
 loadBody ::
-    ( Unify m typ
+    ( UnifyGen m typ
     , HasChild varTypes typ
     , Ord (QVar typ)
     ) =>
@@ -188,7 +188,7 @@ loadBody foralls x =
         getForAll v = foralls ^? getChild . _QVarInstances . Lens.ix v
 
 class
-    (Unify m t, HasChild varTypes t, Ord (QVar t)) =>
+    (UnifyGen m t, HasChild varTypes t, Ord (QVar t)) =>
     HasScheme varTypes m t where
 
     hasSchemeRecursive ::
@@ -216,14 +216,14 @@ loadScheme ::
     forall m varTypes typ.
     ( Monad m
     , HTraversable varTypes
-    , HNodesConstraint varTypes (Unify m)
+    , HNodesConstraint varTypes (UnifyGen m)
     , HasScheme varTypes m typ
     ) =>
     Tree Pure (Scheme varTypes typ) ->
     m (Tree (GTerm (UVarOf m)) typ)
 loadScheme (Pure (Scheme vars typ)) =
     do
-        foralls <- htraverse (Proxy @(Unify m) #> makeQVarInstances) vars
+        foralls <- htraverse (Proxy @(UnifyGen m) #> makeQVarInstances) vars
         wrapM (Proxy @(HasScheme varTypes m) #>> loadBody foralls) typ
 
 saveH ::

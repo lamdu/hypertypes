@@ -28,7 +28,7 @@ import           Hyper
 import           Hyper.Class.Infer.Infer1
 import           Hyper.Infer
 import           Hyper.Type.AST.FuncType
-import           Hyper.Unify (Unify(..), UVarOf)
+import           Hyper.Unify (UnifyGen, UVarOf)
 import           Hyper.Unify.New (newUnbound)
 
 import           Prelude.Compat
@@ -92,7 +92,7 @@ instance
     , HasInferOf1 t
     , InferOf1IndexConstraint t ~ DeBruijnIndex
     , DeBruijnIndex h
-    , Unify m (TypeOf (t h))
+    , UnifyGen m (TypeOf (t h))
     , MonadReader env m
     , HasScopeTypes (UVarOf m) (TypeOf (t h)) env
     , HasInferredType (t h)
@@ -120,7 +120,7 @@ instance
     ( MonadReader env m
     , HasScopeTypes (UVarOf m) (TypeOf (t h)) env
     , DeBruijnIndex h
-    , Unify m (TypeOf (t h))
+    , UnifyGen m (TypeOf (t h))
     ) =>
     Infer m (ScopeVar t h) where
 

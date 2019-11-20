@@ -213,7 +213,7 @@ instance
     inferBody = inferType
 
 rStructureMismatch ::
-    (Unify m Typ, Unify m Row) =>
+    (UnifyGen m Typ, UnifyGen m Row) =>
     (forall c. Unify m c => Tree (UVarOf m) c -> Tree (UVarOf m) c -> m (Tree (UVarOf m) c)) ->
     Tree (UTermBody (UVarOf m)) Row -> Tree (UTermBody (UVarOf m)) Row -> m ()
 rStructureMismatch match (UTermBody c0 (RExtend r0)) (UTermBody c1 (RExtend r1)) =

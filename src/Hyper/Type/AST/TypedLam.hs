@@ -14,7 +14,7 @@ import           Hyper.Class.Has (HasChild(..))
 import           Hyper.Infer
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Type.AST.FuncType (FuncType(..), HasFuncType(..))
-import           Hyper.Unify (Unify, UVarOf)
+import           Hyper.Unify (UnifyGen, UVarOf)
 import           Hyper.Unify.New (newTerm)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
@@ -55,7 +55,7 @@ instance
     ( Infer m t
     , Infer m e
     , HasInferredType e
-    , Unify m (TypeOf e)
+    , UnifyGen m (TypeOf e)
     , HasFuncType (TypeOf e)
     , HasChild (InferOf t) (TypeOf e)
     , LocalScopeType v (Tree (UVarOf m) (TypeOf e)) m

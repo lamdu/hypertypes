@@ -15,7 +15,7 @@ import           Hyper
 import           Hyper.Infer
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Type.AST.Scheme
-import           Hyper.Unify (Unify, unify)
+import           Hyper.Unify (UnifyGen, unify)
 import           Hyper.Unify.Generalize (instantiateWith)
 import           Hyper.Unify.Term (UTerm(..))
 import           Text.PrettyPrint ((<+>))
@@ -48,9 +48,9 @@ instance
     , HasInferredValue (TypeOf term)
     , HTraversable vars
     , HTraversable (InferOf term)
-    , HNodesConstraint (InferOf term) (Unify m)
+    , HNodesConstraint (InferOf term) (UnifyGen m)
     , HNodesConstraint vars (MonadInstantiate m)
-    , Unify m (TypeOf term)
+    , UnifyGen m (TypeOf term)
     , Infer m (TypeOf term)
     , Infer m term
     ) =>

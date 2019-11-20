@@ -88,7 +88,7 @@ instance VarType Name LangB where
         r t
         where
             r ::
-                forall m. Unify m Typ =>
+                forall m. UnifyGen m Typ =>
                 Map Name (Tree (HFlip GTerm Typ) (UVarOf m)) ->
                 m (Tree (UVarOf m) Typ)
             r x =
@@ -99,7 +99,7 @@ instance
     ( MonadScopeLevel m
     , LocalScopeType Name (Tree (UVarOf m) Typ) m
     , LocalScopeType Name (Tree (GTerm (UVarOf m)) Typ) m
-    , Unify m Typ, Unify m Row
+    , UnifyGen m Typ, UnifyGen m Row
     , HasScope m ScopeTypes
     , MonadNominals Name Typ m
     ) =>
@@ -197,10 +197,10 @@ instance LocalScopeType Name (Tree (GTerm UVar) Typ) PureInferB where
 instance MonadScopeLevel PureInferB where
     localLevel = local (scopeLevel . _ScopeLevel +~ 1)
 
-instance MonadScopeConstraints PureInferB Typ where
+instance UnifyGen PureInferB Typ where
     scopeConstraints _ = Lens.view scopeLevel
 
-instance MonadScopeConstraints PureInferB Row where
+instance UnifyGen PureInferB Row where
     scopeConstraints _ = Lens.view scopeLevel <&> RowConstraints mempty
 
 instance MonadQuantify ScopeLevel Name PureInferB where
@@ -262,10 +262,10 @@ instance LocalScopeType Name (Tree (GTerm (STUVar s)) Typ) (STInferB s) where
 instance MonadScopeLevel (STInferB s) where
     localLevel = local (Lens._1 . scopeLevel . _ScopeLevel +~ 1)
 
-instance MonadScopeConstraints (STInferB s) Typ where
+instance UnifyGen (STInferB s) Typ where
     scopeConstraints _ = Lens.view (Lens._1 . scopeLevel)
 
-instance MonadScopeConstraints (STInferB s) Row where
+instance UnifyGen (STInferB s) Row where
     scopeConstraints _ = Lens.view (Lens._1 . scopeLevel) <&> RowConstraints mempty
 
 instance MonadQuantify ScopeLevel Name (STInferB s) where

@@ -17,7 +17,7 @@ import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import           Hyper
 import           Hyper.Infer
-import           Hyper.Unify (Unify, UVarOf)
+import           Hyper.Unify (UnifyGen, UVarOf)
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 
 import           Prelude.Compat
@@ -30,7 +30,7 @@ class HasScope m s where
 class VarType var expr where
     -- | Instantiate a type for a variable in a given scope
     varType ::
-        Unify m (TypeOf expr) =>
+        UnifyGen m (TypeOf expr) =>
         Proxy expr -> var -> Tree (ScopeOf expr) (UVarOf m) ->
         m (Tree (UVarOf m) (TypeOf expr))
 
@@ -57,7 +57,7 @@ instance HasInferredType (Var v t) where
     inferredType _ = _ANode
 
 instance
-    ( Unify m (TypeOf expr)
+    ( UnifyGen m (TypeOf expr)
     , HasScope m (ScopeOf expr)
     , VarType v expr
     , Monad m

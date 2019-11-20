@@ -143,10 +143,10 @@ type instance UVarOf PureInferA = UVar
 instance MonadScopeLevel PureInferA where
     localLevel = local (iaScopeLevel . _ScopeLevel +~ 1)
 
-instance MonadScopeConstraints PureInferA Typ where
+instance UnifyGen PureInferA Typ where
     scopeConstraints _ = Lens.view iaScopeLevel
 
-instance MonadScopeConstraints PureInferA Row where
+instance UnifyGen PureInferA Row where
     scopeConstraints _ = Lens.view iaScopeLevel <&> RowConstraints mempty
 
 instance MonadQuantify ScopeLevel Name PureInferA where
@@ -206,10 +206,10 @@ type instance UVarOf (STInferA s) = STUVar s
 instance MonadScopeLevel (STInferA s) where
     localLevel = local (Lens._1 . iaScopeLevel . _ScopeLevel +~ 1)
 
-instance MonadScopeConstraints (STInferA s) Typ where
+instance UnifyGen (STInferA s) Typ where
     scopeConstraints _ = Lens.view (Lens._1 . iaScopeLevel)
 
-instance MonadScopeConstraints (STInferA s) Row where
+instance UnifyGen (STInferA s) Row where
     scopeConstraints _ = Lens.view (Lens._1 . iaScopeLevel) <&> RowConstraints mempty
 
 instance MonadQuantify ScopeLevel Name (STInferA s) where

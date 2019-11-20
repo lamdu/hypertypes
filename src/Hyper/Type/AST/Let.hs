@@ -10,7 +10,7 @@ import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import           Generics.Constraints (Constraints)
 import           Hyper
-import           Hyper.Class.Unify (Unify, UVarOf)
+import           Hyper.Class.Unify (UnifyGen, UVarOf)
 import           Hyper.Infer
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Unify.Generalize (GTerm, generalize)
@@ -51,9 +51,9 @@ type instance InferOf (Let v e) = InferOf e
 instance
     ( MonadScopeLevel m
     , LocalScopeType v (Tree (GTerm (UVarOf m)) (TypeOf expr)) m
-    , Unify m (TypeOf expr)
+    , UnifyGen m (TypeOf expr)
     , HasInferredType expr
-    , HNodesConstraint (InferOf expr) (Unify m)
+    , HNodesConstraint (InferOf expr) (UnifyGen m)
     , HTraversable (InferOf expr)
     , Infer m expr
     ) =>

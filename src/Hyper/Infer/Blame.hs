@@ -52,7 +52,7 @@ import           GHC.Generics (Generic)
 import           Hyper
 import           Hyper.Class.Infer
 import           Hyper.Class.Traversable (ContainedH(..))
-import           Hyper.Class.Unify (Unify, UVarOf)
+import           Hyper.Class.Unify (UnifyGen, UVarOf)
 import           Hyper.Infer.Result
 import           Hyper.Recurse
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
@@ -109,7 +109,7 @@ prepareH ::
     m (Tree (Ann (a :*: InferResult (UVarOf m) :*: InferResult (UVarOf m))) exp)
 prepareH t =
     withDict (inferContext (Proxy @m) (Proxy @exp)) $
-    hpure (Proxy @(Unify m) #> MkContainedH newUnbound)
+    hpure (Proxy @(UnifyGen m) #> MkContainedH newUnbound)
     & hsequence
     >>= (`prepare` t)
 
@@ -141,7 +141,7 @@ tryUnify _ i0 i1 =
     withDict (inferContext (Proxy @m) (Proxy @exp)) $
     do
         inferOfUnify (Proxy @exp) i0 i1
-        htraverse_ (Proxy @(Unify m) #> occursCheck) i0
+        htraverse_ (Proxy @(UnifyGen m) #> occursCheck) i0
     & (`catchError` const (pure ()))
 
 data BlameResult v e

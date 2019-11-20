@@ -11,7 +11,7 @@ import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import           Hyper
 import           Hyper.Class.Traversable
-import           Hyper.Class.Unify (Unify)
+import           Hyper.Class.Unify (UnifyGen)
 import           Hyper.Combinator.Compose (HCompose(..), HComposeConstraint1)
 import           Hyper.Infer
 import           Hyper.Infer.Blame (Blame(..))
@@ -55,7 +55,7 @@ instance
     Infer m (HCompose Prune t) where
     inferBody (MkHCompose Pruned) =
         withDict (inferContext (Proxy @m) (Proxy @t)) $
-        hpure (Proxy @(Unify m) #> MkContainedH newUnbound)
+        hpure (Proxy @(UnifyGen m) #> MkContainedH newUnbound)
         & hsequence
         <&> (MkHCompose Pruned, )
     inferBody (MkHCompose (Unpruned (MkHCompose x))) =

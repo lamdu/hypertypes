@@ -13,7 +13,7 @@ import           Hyper
 import           Hyper.Infer
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Type.AST.FuncType
-import           Hyper.Unify (Unify, UVarOf)
+import           Hyper.Unify (UnifyGen, UVarOf)
 import           Hyper.Unify.New (newUnbound, newTerm)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
@@ -53,7 +53,7 @@ type instance InferOf (Lam v t) = ANode (TypeOf t)
 
 instance
     ( Infer m t
-    , Unify m (TypeOf t)
+    , UnifyGen m (TypeOf t)
     , HasFuncType (TypeOf t)
     , HasInferredType t
     , LocalScopeType v (Tree (UVarOf m) (TypeOf t)) m
