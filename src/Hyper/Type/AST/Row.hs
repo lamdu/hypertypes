@@ -126,16 +126,16 @@ rowExtendStructureMismatch ::
     (forall c. Unify m c => Tree (UVarOf m) c -> Tree (UVarOf m) c -> m (Tree (UVarOf m) c)) ->
     Prism' (Tree rowTyp (UVarOf m))
         (Tree (RowExtend key valTyp rowTyp) (UVarOf m)) ->
-    (TypeConstraintsOf rowTyp, Tree (RowExtend key valTyp rowTyp) (UVarOf m)) ->
-    (TypeConstraintsOf rowTyp, Tree (RowExtend key valTyp rowTyp) (UVarOf m)) ->
+    Tree (RowExtend key valTyp rowTyp) (UVarOf m) ->
+    Tree (RowExtend key valTyp rowTyp) (UVarOf m) ->
     m ()
-rowExtendStructureMismatch match extend (c0, r0) (c1, r1) =
+rowExtendStructureMismatch match extend r0 r1 =
     do
         flat0 <- flattenRowExtend nextExtend r0
         flat1 <- flattenRowExtend nextExtend r1
         Map.intersectionWith match (flat0 ^. freExtends) (flat1 ^. freExtends)
             & sequenceA_
-        restVar <- c0 <> c1 & UUnbound & newVar binding
+        restVar <- newUnbound
         let side x y =
                 unflattenRow mkExtend FlatRowExtends
                 { _freExtends =
