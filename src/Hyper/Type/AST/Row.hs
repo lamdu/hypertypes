@@ -29,7 +29,7 @@ import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Unify
 import           Hyper.Unify.Lookup (semiPruneLookup)
 import           Hyper.Unify.New (newTerm, newUnbound)
-import           Hyper.Unify.Term (UTerm(..), _UTerm, uBody)
+import           Hyper.Unify.Term (UTerm(..), _UTerm, UTermBody(..), uBody)
 import           Text.Show.Combinators ((@|), showCon)
 
 import           Prelude.Compat
@@ -120,8 +120,8 @@ verifyRowExtendConstraints toChildC c (RowExtend h v rest)
 {-# INLINE rowExtendStructureMismatch #-}
 rowExtendStructureMismatch ::
     Ord key =>
-    ( UnifyGen m rowTyp
-    , UnifyGen m valTyp
+    ( Unify m rowTyp
+    , Unify m valTyp
     ) =>
     (forall c. Unify m c => Tree (UVarOf m) c -> Tree (UVarOf m) c -> m (Tree (UVarOf m) c)) ->
     Prism' (Tree rowTyp (UVarOf m))
@@ -135,7 +135,7 @@ rowExtendStructureMismatch match extend r0 r1 =
         flat1 <- flattenRowExtend nextExtend r1
         Map.intersectionWith match (flat0 ^. freExtends) (flat1 ^. freExtends)
             & sequenceA_
-        restVar <- newUnbound
+        restVar <- UUnbound mempty & newVar binding
         let side x y =
                 unflattenRow mkExtend FlatRowExtends
                 { _freExtends =
@@ -146,7 +146,7 @@ rowExtendStructureMismatch match extend r0 r1 =
         _ <- side flat1 flat0
         pure ()
     where
-        mkExtend ext = extend # ext & newTerm
+        mkExtend ext = UTermBody mempty (extend # ext) & UTerm & newVar binding
         nextExtend v = semiPruneLookup v <&> (^? Lens._2 . _UTerm . uBody . extend)
 
 -- Helper for infering row usages of a row element,

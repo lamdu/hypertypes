@@ -16,7 +16,7 @@ import Hyper (Tree, HyperType, GetHyperType)
 import Prelude.Compat
 
 -- | A class for constraints for unification variables.
-class (PartialOrd c, Semigroup c) => TypeConstraints c where
+class (PartialOrd c, Monoid c) => TypeConstraints c where
     -- | Remove scope constraints.
     --
     -- When generalizing unification variables into universally
