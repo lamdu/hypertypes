@@ -38,9 +38,9 @@ type family UVarOf (m :: Type -> Type) :: HyperType
 -- * 'Hyper.Unify.Binding.bindingDict' for pure state based unification
 -- * 'Hyper.Unify.Binding.ST.stBinding' for 'Control.Monad.ST.ST' based unification
 data BindingDict v m t = BindingDict
-    { lookupVar :: Tree v t -> m (Tree (UTerm v) t)
-    , newVar :: Tree (UTerm v) t -> m (Tree v t)
-    , bindVar :: Tree v t -> Tree (UTerm v) t -> m ()
+    { lookupVar :: !(Tree v t -> m (Tree (UTerm v) t))
+    , newVar :: !(Tree (UTerm v) t -> m (Tree v t))
+    , bindVar :: !(Tree v t -> Tree (UTerm v) t -> m ())
     }
 
 -- | @Unify m t@ enables 'Hyper.Unify.unify' to perform unification for @t@ in the 'Monad' @m@.
