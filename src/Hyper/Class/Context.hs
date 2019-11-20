@@ -25,19 +25,19 @@ class HContext h where
 recursiveContexts ::
     (Recursively HContext h, Recursively HFunctor h) =>
     Tree (Ann p) h ->
-    Tree (Ann (HCont (Tree (Ann p) h) p :*: p)) h
+    Tree (Ann (HCont (Tree (Ann p) h) (Ann p) :*: p)) h
 recursiveContexts = recursiveContextsWith . (HCont id :*:)
 
 recursiveContextsWith ::
     forall h p r.
     (Recursively HContext h, Recursively HFunctor h) =>
     Tree (HCont r (Ann p) :*: Ann p) h ->
-    Tree (Ann (HCont r p :*: p)) h
+    Tree (Ann (HCont r (Ann p) :*: p)) h
 recursiveContextsWith (HCont s0 :*: Ann a b) =
     withDict (recursively (Proxy @(HContext h))) $
     withDict (recursively (Proxy @(HFunctor h)))
     Ann
-    { _hAnn = HCont (s0 . (`Ann` b)) :*: a
+    { _hAnn = HCont s0 :*: a
     , _hVal =
         hmap
         ( Proxy @(Recursively HContext) #*# Proxy @(Recursively HFunctor) #>
