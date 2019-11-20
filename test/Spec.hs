@@ -158,6 +158,22 @@ unifyRows =
             BRecExtendP "a" (BLitP 7)
             BRecEmptyP
 
+openRows :: HPlain LangB
+openRows =
+    BLamP "x" $
+    BLamP "y" $
+    BLamP "f" $
+    "f" `BAppP` r0 `BAppP` ("f" `BAppP` r1 `BAppP` BLitP 12)
+    where
+        r0 =
+            BRecExtendP "a" (BLitP 5) $
+            BRecExtendP "b" (BLitP 7) $
+            BVarP "x"
+        r1 =
+            BRecExtendP "c" (BLitP 5) $
+            BRecExtendP "a" (BLitP 7) $
+            BVarP "y"
+
 return5 :: HPlain LangB
 return5 = "return" `BAppP` BLitP 5
 
@@ -282,8 +298,11 @@ withEnv l act =
                 & varSchemes . _ScopeTypes . Lens.at "return" ?~ MkHFlip ret
         local (l %~ addEnv) act
 
+prettyStyle :: Pretty a => a -> String
+prettyStyle = Pretty.renderStyle (Pretty.Style Pretty.OneLineMode 0 0) . pPrint
+
 prettyPrint :: Pretty a => a -> IO ()
-prettyPrint = print . pPrint
+prettyPrint = putStrLn . prettyStyle
 
 testCommon ::
     (Pretty (Tree lang Pure), Pretty a, Eq a) =>
@@ -302,7 +321,7 @@ testCommon expr expect pureRes stRes =
         all fst checks & pure
     where
         checks =
-            [ (Pretty.text expect == pPrint pureRes, putStrLn ("FAIL! Expected:\n" <> expect))
+            [ (expect == prettyStyle pureRes, putStrLn ("FAIL! Expected:\n" <> expect))
             , (pureRes == stRes, putStrLn "FAIL! Different result in ST:" *> prettyPrint stRes)
             ]
 
@@ -407,6 +426,7 @@ main =
             , testB extendDup    "Left (ConstraintsViolation (a : Int :*: {}) (∌ [a]))"
             , testB extendGood   "Right (b : Int :*: a : Int :*: {})"
             , testB unifyRows    "Right (((b : Int :*: a : Int :*: {}) -> Int -> Int) -> Int)"
+            , testB openRows     "Right (∀r0(∌ [a, b, c]). (c : Int :*: r0) -> (b : Int :*: r0) -> ((c : Int :*: a : Int :*: b : Int :*: r0) -> Int -> Int) -> Int)"
             , testB getAField    "Right (∀t0(*). ∀r0(∌ [a]). (a : t0 :*: r0) -> t0)"
             , testB vecApp       "Right (∀t0(*). t0 -> t0 -> Vec[elem: t0])"
             , testB usePhantom   "Right (∀t0(*). PhantomInt[phantom: t0])"
