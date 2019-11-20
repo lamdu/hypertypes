@@ -282,11 +282,11 @@ prettyPrint :: Pretty a => a -> IO ()
 prettyPrint = print . pPrint
 
 testCommon ::
-    (Pretty (Tree lang Pure)) =>
+    (Pretty (Tree lang Pure), Pretty a, Eq a) =>
     Tree Pure lang ->
     String ->
-    Either (Tree TypeError Pure) (Tree Pure Typ) ->
-    Either (Tree TypeError Pure) (Tree Pure Typ) ->
+    Either (Tree TypeError Pure) a ->
+    Either (Tree TypeError Pure) a ->
     IO Bool
 testCommon expr expect pureRes stRes =
     do
