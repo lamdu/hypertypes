@@ -83,7 +83,7 @@ instance Recursively HFunctor ast => HFunctor (HFlip GTerm ast) where
             hmap
             ( \cw ->
                 hLiftConstraint cw (Proxy @(Recursively HFunctor)) $
-                Lens.from _HFlip %~
+                hflipped %~
                 hmap (f . (\(HWitness nw) -> HWitness (HRecSub cw nw)))
             ) x
             & GBody
@@ -113,9 +113,7 @@ instance RTraversable ast => HTraversable (HFlip GTerm ast) where
         GBody x ->
             withDict (recurse (Proxy @(RTraversable ast))) $
             -- HTraversable will be required when not implied by Recursively
-            htraverse
-            ( Proxy @RTraversable #> Lens.from _HFlip hsequence
-            ) x
+            htraverse (Proxy @RTraversable #> hflipped hsequence) x
             <&> GBody
         & _HFlip
 

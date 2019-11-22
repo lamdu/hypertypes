@@ -218,7 +218,7 @@ instance
     {-# INLINE hmap #-}
     hmap f (LoadedNominalDecl mp mf t) =
         LoadedNominalDecl (onMap mp) (onMap mf)
-        (t & Lens.from _HFlip %~ hmap (\(HWitness w) -> f (HWitness (E_LoadedNominalDecl_Body w))))
+        (t & hflipped %~ hmap (\(HWitness w) -> f (HWitness (E_LoadedNominalDecl_Body w))))
         where
             onMap = hmap (\w -> _QVarInstances . Lens.mapped %~ f (HWitness (E_LoadedNominalDecl_NomVarTypes w)))
 
@@ -242,7 +242,7 @@ instance
         LoadedNominalDecl
         <$> onMap p
         <*> onMap f
-        <*> Lens.from _HFlip hsequence t
+        <*> hflipped hsequence t
         where
             onMap = htraverse (const ((_QVarInstances . traverse) runContainedH))
 

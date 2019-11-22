@@ -4,9 +4,10 @@
 
 module Hyper.Combinator.Flip
     ( HFlip(..), _HFlip
+    , hflipped
     ) where
 
-import Control.Lens (Iso, iso)
+import Control.Lens (Iso, iso, from)
 import GHC.Generics (Generic)
 import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.Type (Tree, GetHyperType)
@@ -33,3 +34,11 @@ _HFlip ::
     (Tree (f0 k0) x0)
     (Tree (f1 k1) x1)
 _HFlip = iso (\(MkHFlip x) -> x) MkHFlip
+
+hflipped ::
+    Iso
+    (Tree (f0 k0) x0)
+    (Tree (f1 k1) x1)
+    (Tree (HFlip f0 x0) k0)
+    (Tree (HFlip f1 x1) k1)
+hflipped = from _HFlip
