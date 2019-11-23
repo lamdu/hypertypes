@@ -15,8 +15,9 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.State (State, evalState, execStateT, gets, modify)
+import qualified Data.Char as Char
 import           Data.Foldable (traverse_)
-import           Data.List (nub)
+import           Data.List (nub, intercalate)
 import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Data.Maybe (fromMaybe)
@@ -246,14 +247,17 @@ makeNodeOf info =
         nodeBase = "W_" <> niceTypeName <> "_"
         embedBase = "E_" <> niceTypeName <> "_"
         pats = tiConstructors info >>= (^. Lens._3)
-        makeNiceType (ConT x) = niceName x
-        makeNiceType (AppT x y) = makeNiceType x <> "_" <> makeNiceType y
-        makeNiceType (VarT x) = takeWhile (/= '_') (show x)
+        makeNiceType (ConT x) =
+            case niceName x of
+            n@(c:_) | Char.isAlpha c -> [n]
+            _ -> [] -- Skip operators
+        makeNiceType (AppT x y) = makeNiceType x <> makeNiceType y
+        makeNiceType (VarT x) = [takeWhile (/= '_') (show x)]
         makeNiceType (SigT x _) = makeNiceType x
         makeNiceType x = error ("TODO: Witness name generator is partial! Need to support " <> show x)
         nodes =
             pats ^.. traverse . Lens._Right >>= nodesForPat & nub
-            <&> \t -> (t, mkName (nodeBase <> makeNiceType t))
+            <&> \t -> (t, mkName (nodeBase <> intercalate "_" (makeNiceType t)))
         nodesForPat (Node t) = [t]
         nodesForPat (InContainer _ pat) = nodesForPat pat
         nodesForPat (FlatEmbed x) = tiConstructors x ^.. traverse . Lens._3 . traverse . Lens._Right >>= nodesForPat
@@ -261,7 +265,7 @@ makeNodeOf info =
         nodeGadtType t n = n `AppT` t
         embeds =
             pats ^.. traverse . Lens._Right >>= embedsForPat & nub
-            <&> \t -> (t, mkName (embedBase <> makeNiceType t))
+            <&> \t -> (t, mkName (embedBase <> intercalate "_" (makeNiceType t)))
         embedsForPat (GenEmbed t) = [t]
         embedsForPat (InContainer _ pat) = embedsForPat pat
         embedsForPat (FlatEmbed x) = tiConstructors x ^.. traverse . Lens._3 . traverse . Lens._Right >>= embedsForPat
