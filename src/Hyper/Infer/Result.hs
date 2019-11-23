@@ -2,9 +2,10 @@
 
 module Hyper.Infer.Result
     ( InferResult(..), _InferResult
+    , inferResult
     ) where
 
-import Control.Lens (makePrisms)
+import Control.Lens (Iso, makePrisms)
 import Control.Lens.Operators
 import GHC.Generics (Generic)
 import Hyper
@@ -19,6 +20,15 @@ newtype InferResult v e =
     deriving stock Generic
 makePrisms ''InferResult
 makeCommonInstances [''InferResult]
+
+-- An iso for the common case where the infer result of a term is a single value.
+inferResult ::
+    InferOf e ~ ANode t =>
+    Iso (Tree (InferResult v0) e)
+        (Tree (InferResult v1) e)
+        (Tree v0 t)
+        (Tree v1 t)
+inferResult = _InferResult . _ANode
 
 instance HNodes (InferOf e) => HNodes (HFlip InferResult e) where
     type HNodesConstraint (HFlip InferResult e) c = HNodesConstraint (InferOf e) c
