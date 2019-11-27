@@ -21,7 +21,6 @@ import           Control.Lens.Operators
 import           Control.Monad.Reader (MonadReader, local)
 import           Data.Constraint
 import           Data.Kind (Type)
-import           Data.Proxy (Proxy(..))
 import           Data.Sequence (Seq)
 import qualified Data.Sequence as Sequence
 import           Hyper

@@ -7,8 +7,6 @@ module Hyper.Type.AST.App
 
 import Control.Lens (Traversal, makeLenses)
 import Control.Lens.Operators
-import Data.Proxy (Proxy(..))
-import GHC.Generics (Generic)
 import Hyper
 import Hyper.Infer
 import Hyper.TH.Internal.Instances (makeCommonInstances)

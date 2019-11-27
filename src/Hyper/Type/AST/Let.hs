@@ -6,8 +6,6 @@ module Hyper.Type.AST.Let
 
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
-import           Data.Proxy (Proxy(..))
-import           GHC.Generics (Generic)
 import           Generics.Constraints (Constraints)
 import           Hyper
 import           Hyper.Class.Unify (UnifyGen, UVarOf)

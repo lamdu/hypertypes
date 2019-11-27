@@ -15,9 +15,7 @@ module Hyper.Unify
 
 import Algebra.PartialOrd (PartialOrd(..))
 import Control.Lens.Operators
-import Data.Constraint (withDict)
 import Data.Maybe (fromMaybe)
-import Data.Proxy (Proxy(..))
 import Hyper
 import Hyper.Class.Unify (Unify(..), UnifyGen(..), UVarOf, BindingDict(..))
 import Hyper.Class.ZipMatch (zipMatchA)

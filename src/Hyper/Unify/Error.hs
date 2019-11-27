@@ -9,7 +9,6 @@ module Hyper.Unify.Error
     ) where
 
 import           Control.Lens (makePrisms)
-import           GHC.Generics (Generic)
 import           Generics.Constraints (Constraints)
 import           Hyper
 import           Hyper.TH.Internal.Instances (makeCommonInstances)

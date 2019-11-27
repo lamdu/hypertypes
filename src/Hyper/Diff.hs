@@ -13,9 +13,6 @@ module Hyper.Diff
 
 import Control.Lens (makeLenses, makePrisms)
 import Control.Lens.Operators
-import Data.Constraint (withDict)
-import Data.Proxy (Proxy(..))
-import GHC.Generics (Generic)
 import Hyper
 import Hyper.Class.ZipMatch (ZipMatch(..))
 import Hyper.Recurse

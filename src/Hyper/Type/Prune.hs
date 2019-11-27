@@ -6,9 +6,6 @@ module Hyper.Type.Prune
 
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Data.Constraint (Dict(..), withDict)
-import           Data.Proxy (Proxy(..))
-import           GHC.Generics (Generic)
 import           Hyper
 import           Hyper.Class.Traversable
 import           Hyper.Class.Unify (UnifyGen)

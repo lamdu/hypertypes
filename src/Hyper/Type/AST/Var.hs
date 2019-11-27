@@ -13,8 +13,6 @@ import           Control.DeepSeq (NFData)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
-import           Data.Proxy (Proxy(..))
-import           GHC.Generics (Generic)
 import           Hyper
 import           Hyper.Infer
 import           Hyper.Unify (UnifyGen, UVarOf)

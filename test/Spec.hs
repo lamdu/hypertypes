@@ -5,9 +5,7 @@ import           Control.Lens.Operators
 import           Control.Monad.Except
 import           Control.Monad.RWS
 import           Control.Monad.ST
-import           Data.Constraint
 import qualified Data.Map as Map
-import           Data.Proxy
 import qualified Data.Set as Set
 import           Hyper
 import           Hyper.Infer

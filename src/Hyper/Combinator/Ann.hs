@@ -7,12 +7,12 @@ module Hyper.Combinator.Ann
 
 import Control.Lens (Lens', _Wrapped, makeLenses, from)
 import Control.Lens.Operators
-import Data.Constraint
+import Data.Constraint (Dict(..), withDict)
 import Data.Functor.Const (Const)
-import Data.Proxy
+import Data.Proxy (Proxy(..))
 import GHC.Generics (Generic)
-import Hyper.Class.Foldable
-import Hyper.Class.Functor
+import Hyper.Class.Foldable (HFoldable(..))
+import Hyper.Class.Functor (HFunctor(..))
 import Hyper.Class.Nodes
 import Hyper.Class.Traversable
 import Hyper.Combinator.Flip

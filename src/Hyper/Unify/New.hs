@@ -4,8 +4,7 @@ module Hyper.Unify.New
     ( newUnbound, newTerm, unfreeze
     ) where
 
-import Data.Proxy (Proxy(..))
-import Hyper (Tree, Pure)
+import Hyper
 import Hyper.Class.Unify (Unify(..), UnifyGen(..), UVarOf, BindingDict(..))
 import Hyper.Recurse
 import Hyper.Unify.Term (UTerm(..), UTermBody(..))

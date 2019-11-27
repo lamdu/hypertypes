@@ -10,8 +10,6 @@ module Hyper.Class.Infer
 import           Control.Lens (makeLenses, makePrisms)
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Data.Constraint (Dict(..), withDict)
-import           Data.Proxy (Proxy(..))
 import           GHC.Generics
 import           Hyper
 import           Hyper.Class.Unify

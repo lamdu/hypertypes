@@ -10,8 +10,6 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.ST.Class (MonadST(..))
 import           Data.Array.ST (STArray, newArray, readArray, writeArray)
-import           Data.Constraint (withDict)
-import           Data.Proxy (Proxy(..))
 import qualified Data.Sequence as Sequence
 import           Hyper
 import           Hyper.Class.Has (HasChild(..))

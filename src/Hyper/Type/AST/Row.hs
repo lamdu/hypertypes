@@ -20,9 +20,7 @@ import           Data.Binary (Binary)
 import           Data.Foldable (sequenceA_)
 import           Data.Map (Map)
 import qualified Data.Map as Map
-import           Data.Proxy (Proxy(..))
 import           Data.Set (Set)
-import           GHC.Generics (Generic)
 import           Generics.Constraints (Constraints, makeDerivings, makeInstances)
 import           Hyper
 import           Hyper.TH.Internal.Instances (makeCommonInstances)

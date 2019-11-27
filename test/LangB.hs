@@ -12,9 +12,7 @@ import           Control.Monad.RWS
 import           Control.Monad.Reader
 import           Control.Monad.ST
 import           Control.Monad.ST.Class (MonadST(..))
-import           Data.Constraint
 import           Data.Map (Map)
-import           Data.Proxy
 import           Data.STRef
 import           Data.String (IsString(..))
 import           Hyper
@@ -35,7 +33,6 @@ import           Hyper.Unify.New
 import           Hyper.Unify.QuantifiedVar
 import           Hyper.Unify.Term
 import           Generics.Constraints (makeDerivings)
-import           GHC.Generics (Generic)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)

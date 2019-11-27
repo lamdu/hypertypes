@@ -9,7 +9,6 @@ import           Control.DeepSeq (NFData)
 import           Control.Lens (Prism', makeLenses)
 import           Control.Lens.Operators
 import           Data.Binary (Binary)
-import           GHC.Generics (Generic)
 import           Generics.Constraints (makeDerivings, makeInstances)
 import           Hyper
 import           Text.PrettyPrint ((<+>))

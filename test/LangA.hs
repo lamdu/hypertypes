@@ -15,7 +15,6 @@ import           Control.Monad.Reader
 import           Control.Monad.ST
 import           Control.Monad.ST.Class (MonadST(..))
 import           Data.Constraint
-import           Data.Proxy (Proxy(..))
 import           Data.STRef
 import           Hyper
 import           Hyper.Class.Infer.Infer1

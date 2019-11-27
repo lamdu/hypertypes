@@ -7,9 +7,7 @@ module Hyper.Type.AST.Scheme.AlphaEq
 
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Data.Constraint
 import           Data.Maybe (fromMaybe)
-import           Data.Proxy (Proxy(..))
 import           Hyper
 import           Hyper.Class.Has (HasChild(..))
 import           Hyper.Class.ZipMatch (zipMatch_)

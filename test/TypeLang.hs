@@ -13,7 +13,6 @@ import           Control.Monad.ST.Class (MonadST(..))
 import           Data.STRef
 import           Data.Set (Set)
 import           Data.String (IsString)
-import           GHC.Generics (Generic)
 import           Generic.Data
 import           Generics.Constraints (Constraints, makeDerivings)
 import           Hyper

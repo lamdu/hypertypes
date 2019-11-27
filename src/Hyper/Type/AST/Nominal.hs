@@ -24,8 +24,6 @@ import           Control.Monad.Trans.Writer (execWriterT)
 import           Data.Binary (Binary)
 import           Data.Foldable (traverse_)
 import qualified Data.Map as Map
-import           Data.Proxy (Proxy(..))
-import           GHC.Generics (Generic)
 import           Generics.Constraints (Constraints)
 import           Hyper
 import           Hyper.Class.Context (HContext(..))

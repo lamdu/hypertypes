@@ -14,7 +14,6 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Data.Constraint (withDict)
 import           Data.Proxy (Proxy(..))
-import           GHC.Generics
 import           Hyper
 import           Hyper.Class.Infer
 import           Hyper.Class.Infer.Env

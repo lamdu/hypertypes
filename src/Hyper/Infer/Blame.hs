@@ -44,11 +44,8 @@ module Hyper.Infer.Blame
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Except (MonadError(..))
-import           Data.Constraint (Dict(..), withDict)
 import           Data.Foldable (traverse_)
 import           Data.List (sortOn)
-import           Data.Proxy (Proxy(..))
-import           GHC.Generics (Generic)
 import           Hyper
 import           Hyper.Class.Infer
 import           Hyper.Class.Traversable (ContainedH(..))

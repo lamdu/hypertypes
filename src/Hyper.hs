@@ -2,8 +2,10 @@
 
 module Hyper (module X) where
 
+import Data.Constraint as X (Constraint, Dict(..), withDict)
 import Data.Functor.Const as X (Const(..))
-import GHC.Generics as X ((:*:)(..))
+import Data.Proxy as X (Proxy(..))
+import GHC.Generics as X (Generic, (:*:)(..))
 import Hyper.Class.Apply as X (HApply(..), HApplicative, liftH2)
 import Hyper.Class.Foldable as X (HFoldable(..), hfoldMap, hfolded1, htraverse_, htraverse1_)
 import Hyper.Class.Functor as X (HFunctor(..), hmapped1)

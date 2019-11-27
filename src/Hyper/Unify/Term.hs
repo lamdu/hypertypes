@@ -12,7 +12,6 @@ module Hyper.Unify.Term
     ) where
 
 import Control.Lens (makeLenses, makePrisms)
-import GHC.Generics (Generic)
 import Hyper
 import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.Unify.Constraints (TypeConstraintsOf)

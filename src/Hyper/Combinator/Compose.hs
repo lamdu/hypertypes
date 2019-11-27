@@ -11,9 +11,6 @@ module Hyper.Combinator.Compose
 
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Data.Constraint (Constraint, Dict(..), withDict)
-import           Data.Proxy (Proxy(..))
-import           GHC.Generics (Generic)
 import           Hyper
 import           Hyper.Class.Context (HContext(..))
 import           Hyper.Class.Traversable (ContainedH(..))

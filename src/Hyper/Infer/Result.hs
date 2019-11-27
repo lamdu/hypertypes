@@ -7,7 +7,6 @@ module Hyper.Infer.Result
 
 import Control.Lens (Iso, makePrisms)
 import Control.Lens.Operators
-import GHC.Generics (Generic)
 import Hyper
 import Hyper.Class.Infer
 import Hyper.TH.Internal.Instances (makeCommonInstances)

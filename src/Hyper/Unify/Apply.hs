@@ -8,8 +8,6 @@ import Control.Lens.Operators
 import Control.Monad (unless)
 import Control.Monad.Trans.Class (MonadTrans(..))
 import Control.Monad.Trans.State (runStateT, get, put)
-import Data.Constraint (withDict)
-import Data.Proxy (Proxy(..))
 import Hyper
 import Hyper.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import Hyper.Unify.Lookup (semiPruneLookup)

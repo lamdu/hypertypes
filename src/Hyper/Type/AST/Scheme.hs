@@ -16,10 +16,8 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.State (StateT(..))
-import           Data.Constraint
 import           Data.Map (Map)
 import qualified Data.Map as Map
-import           Data.Proxy (Proxy(..))
 import           GHC.Generics (Generic)
 import           Hyper
 import           Hyper.Class.Has (HasChild(..))

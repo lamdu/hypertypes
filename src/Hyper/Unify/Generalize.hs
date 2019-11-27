@@ -18,10 +18,7 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.Writer (WriterT(..), tell)
-import           Data.Constraint (withDict)
 import           Data.Monoid (All(..))
-import           Data.Proxy (Proxy(..))
-import           GHC.Generics (Generic)
 import           Hyper
 import           Hyper.Class.Traversable
 import           Hyper.Class.Unify (Unify(..), UnifyGen(..), UVarOf, BindingDict(..))

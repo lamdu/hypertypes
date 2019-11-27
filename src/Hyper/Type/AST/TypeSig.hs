@@ -8,8 +8,6 @@ module Hyper.Type.AST.TypeSig
 
 import           Control.Lens (makeLenses)
 import           Control.Lens.Operators
-import           Data.Proxy (Proxy(..))
-import           GHC.Generics (Generic)
 import           Generics.Constraints (Constraints)
 import           Hyper
 import           Hyper.Infer
