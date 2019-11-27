@@ -18,7 +18,7 @@ import           Prelude.Compat
 -- | A mapping of keys to terms.
 --
 -- Apart from the data type, a 'ZipMatch' instance is also provided.
-newtype TermMap h expr f = TermMap (Map h (f # expr))
+newtype TermMap h expr f = TermMap (Map h (f :# expr))
     deriving stock Generic
 
 Lens.makePrisms ''TermMap

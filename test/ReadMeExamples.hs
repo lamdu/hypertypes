@@ -16,13 +16,13 @@ import Prelude
 
 data Expr h
     = EVar Text
-    | EApp (h # Expr) (h # Expr)
-    | ELam Text (h # Typ) (h # Expr)
+    | EApp (h :# Expr) (h :# Expr)
+    | ELam Text (h :# Typ) (h :# Expr)
     deriving Generic
 
 data Typ h
     = TInt
-    | TFunc (h # Typ) (h # Typ)
+    | TFunc (h :# Typ) (h :# Typ)
     deriving Generic
 
 makeDerivings [''Eq, ''Ord, ''Show] [''Expr, ''Typ]

@@ -11,10 +11,10 @@ import GHC.Generics (Generic)
 import Hyper.Class.Has (HasChild(..))
 import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
-import Hyper.Type (Tree, type (#))
+import Hyper.Type (Tree, type (:#))
 
 -- | @ANode c@ is a 'Hyper.Type.HyperType' with a single child node of type @c@
-newtype ANode c h = MkANode (h # c)
+newtype ANode c h = MkANode (h :# c)
     deriving stock Generic
 
 -- | An 'Iso' from 'ANode' its child node.

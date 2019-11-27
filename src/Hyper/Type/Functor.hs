@@ -16,7 +16,7 @@ import Hyper.Class.Recursive (RNodes, Recursively(..), RTraversable)
 import Hyper.Combinator.Compose
 import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
-import Hyper.Type (Tree, type (#))
+import Hyper.Type (Tree, type (:#))
 
 import Prelude.Compat
 
@@ -25,7 +25,7 @@ import Prelude.Compat
 -- * @F Maybe@ can be used to encode structures with missing values
 -- * @F (Either Text)@ can be used to encode results of parsing where structure components
 --   may fail to parse.
-newtype F f h = F (f (h # F f))
+newtype F f h = F (f (h :# F f))
     deriving stock Generic
 
 -- | An 'Iso' from 'F' to its content.

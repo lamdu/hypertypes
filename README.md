@@ -218,16 +218,16 @@ The `hypertypes` representation of the above AST example:
 ```Haskell
 data Expr h
     = EVar Text
-    | EApp (h # Expr) (h # Expr)
-    | ELam Text (h # Typ) (h # Expr)
+    | EApp (h :# Expr) (h :# Expr)
+    | ELam Text (h :# Typ) (h :# Expr)
 data Typ h
     = TInt
-    | TFunc (h # Typ) (h # Typ)
+    | TFunc (h :# Typ) (h :# Typ)
 ```
 
-Sub-expressions are nested using the `#` type operator. On the left side of `#` is `Expr`'s type parameter `h` which is the "nest type", and on the right side `Expr` and `Typ` are the nested nodes.
+Sub-expressions are nested using the `:#` type operator. On the left side of `:#` is `Expr`'s type parameter `h` which is the "nest type", and on the right side `Expr` and `Typ` are the nested nodes.
 
-`#` is defined as:
+`:#` is defined as:
 
 ```Haskell
 -- A type parameterized by a hypertype
@@ -240,7 +240,7 @@ newtype AHyperType = AHyperType { getHyperType :: HyperType }
 type family GetHyperType h where
     GetHyperType ('AHyperType t) = t
 
-type p # q = (GetHyperType p) ('AHyperType q)
+type p :# q = (GetHyperType p) ('AHyperType q)
 -- AHyperType is DataKinds syntax for using AHyperType in types
 ```
 
@@ -289,7 +289,7 @@ Explanations for the above:
 To write it more consicely, the `HasHPlain` class, along with a `TemplateHaskell` generator for it, exists:
 
 ```Haskell
-> let e = hPlain # verboseExpr
+> let e = hPlain :# verboseExpr
 -- Note: This (#) comes from Control.Lens
 
 > e
@@ -496,8 +496,8 @@ As an example of a reusable term let's look at the definition of `App`:
 ```Haskell
 -- | A term for function applications.
 data App expr h = App
-    { _appFunc :: h # expr
-    , _appArg :: h # expr
+    { _appFunc :: h :# expr
+    , _appArg :: h :# expr
     }
 ```
 

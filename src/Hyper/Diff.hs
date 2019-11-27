@@ -33,7 +33,7 @@ data Diff a b e
 -- but their children may differ.
 data CommonBody a b e = MkCommonBody
     { _anns :: (a :*: b) e
-    , _val :: e # Diff a b
+    , _val :: e :# Diff a b
     } deriving Generic
 
 makePrisms ''Diff
@@ -77,7 +77,7 @@ foldDiffs f (CommonBody (MkCommonBody _ x)) =
 
 data DiffP h
     = CommonSubTreeP (HPlain (GetHyperType h))
-    | CommonBodyP (h # DiffP)
+    | CommonBodyP (h :# DiffP)
     | DifferentP (HPlain (GetHyperType h)) (HPlain (GetHyperType h))
     deriving Generic
 makePrisms ''DiffP

@@ -40,7 +40,7 @@ import           Prelude.Compat
 -- | A type scheme representing a polymorphic type.
 data Scheme varTypes typ h = Scheme
     { _sForAlls :: Tree varTypes QVars
-    , _sTyp :: h # typ
+    , _sTyp :: h :# typ
     } deriving Generic
 
 newtype QVars typ = QVars
@@ -76,7 +76,7 @@ instance
     mempty = QVars Map.empty
 
 instance
-    (Pretty (Tree varTypes QVars), Pretty (h # typ)) =>
+    (Pretty (Tree varTypes QVars), Pretty (h :# typ)) =>
     Pretty (Scheme varTypes typ h) where
 
     pPrintPrec lvl p (Scheme forAlls typ)

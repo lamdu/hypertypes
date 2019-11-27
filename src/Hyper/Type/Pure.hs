@@ -13,11 +13,11 @@ import Control.Lens (Iso, iso)
 import GHC.Generics (Generic)
 import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
-import Hyper.Type (Tree, type (#))
+import Hyper.Type (Tree, type (:#))
 import Text.PrettyPrint.HughesPJClass (Pretty(..))
 
 -- | A 'Hyper.Type.HyperType' to express the simplest plain form of a nested higher-kinded data structure
-newtype Pure h = Pure (h # Pure)
+newtype Pure h = Pure (h :# Pure)
     deriving stock Generic
 
 makeHTraversableApplyAndBases ''Pure
@@ -31,5 +31,5 @@ makeCommonInstances [''Pure]
 _Pure :: Iso (Tree Pure h) (Tree Pure j) (Tree h Pure) (Tree j Pure)
 _Pure = iso (\(Pure x) -> x) Pure
 
-instance Pretty (h # Pure) => Pretty (Pure h) where
+instance Pretty (h :# Pure) => Pretty (Pure h) where
     pPrintPrec lvl p (Pure x) = pPrintPrec lvl p x

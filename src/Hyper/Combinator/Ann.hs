@@ -19,13 +19,13 @@ import Hyper.Combinator.Flip
 import Hyper.Recurse
 import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
-import Hyper.Type (type (#), Tree)
+import Hyper.Type (type (:#), Tree)
 
 import Prelude.Compat
 
 data Ann a h = Ann
     { _hAnn :: a h
-    , _hVal :: h # Ann a
+    , _hVal :: h :# Ann a
     } deriving Generic
 makeLenses ''Ann
 

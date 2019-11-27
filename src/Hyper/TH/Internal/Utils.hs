@@ -26,7 +26,7 @@ import qualified Data.Set as Set
 import           GHC.Generics (Generic)
 import           Generic.Data (Generically(..))
 import           Hyper.Class.Nodes
-import           Hyper.Type (AHyperType(..), GetHyperType, type (#))
+import           Hyper.Type (AHyperType(..), GetHyperType, type (:#))
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
 
@@ -117,10 +117,10 @@ matchType var (ConT get `AppT` VarT h `AppT` (PromotedT aHyper `AppT` x))
     | get == ''GetHyperType && aHyper == 'AHyperType && h == var =
         Node x & Right & pure
 matchType var (InfixT (VarT h) hash x)
-    | hash == ''(#) && h == var =
+    | hash == ''(:#) && h == var =
         Node x & Right & pure
 matchType var (ConT hash `AppT` VarT h `AppT` x)
-    | hash == ''(#) && h == var =
+    | hash == ''(:#) && h == var =
         Node x & Right & pure
 matchType var (x `AppT` VarT h)
     | h == var && x /= ConT ''GetHyperType =

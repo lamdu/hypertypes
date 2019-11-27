@@ -21,7 +21,7 @@ import Prelude.Compat
 -- | A unification term with a known body
 data UTermBody v ast = UTermBody
     { _uConstraints :: TypeConstraintsOf (GetHyperType ast)
-    , _uBody :: ast # v
+    , _uBody :: ast :# v
     } deriving Generic
 
 -- | A unification term pointed by a unification variable

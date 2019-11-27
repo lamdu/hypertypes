@@ -7,7 +7,7 @@
 module Hyper.Type
     ( HyperType
     , AHyperType(..), GetHyperType
-    , Tree, type (#)
+    , Tree, type (:#)
     , asTree
     ) where
 
@@ -38,7 +38,7 @@ type family GetHyperType h where
 type Tree h p = (h ('AHyperType p) :: Type)
 
 -- | A type synonym to express child nodes in nested-HKDs
-type h # p = Tree (GetHyperType h) p
+type h :# p = Tree (GetHyperType h) p
 
 -- | An 'id' variant which tells the type checker that its argument is a 'Tree'.
 --

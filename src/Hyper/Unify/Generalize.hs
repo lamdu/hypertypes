@@ -42,7 +42,7 @@ data GTerm v ast
         -- ^ Points to a quantified variable (instantiation will
         -- create fresh unification terms) (`Hyper.Unify.Term.USkolem`
         -- or `Hyper.Unify.Term.UResolved`)
-    | GBody (ast # GTerm v) -- ^ Term with some polymorphic parts
+    | GBody (ast :# GTerm v) -- ^ Term with some polymorphic parts
     deriving Generic
 
 Lens.makePrisms ''GTerm

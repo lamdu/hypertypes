@@ -47,7 +47,7 @@ data LangB h
     | BLet (Let Name LangB h)
     | BRecEmpty
     | BRecExtend (RowExtend Name LangB LangB h)
-    | BGetField (h # LangB) Name
+    | BGetField (h :# LangB) Name
     | BToNom (ToNom Name LangB h)
     deriving Generic
 

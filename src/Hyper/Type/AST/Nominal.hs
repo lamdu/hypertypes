@@ -70,7 +70,7 @@ data NominalInst nomId varTypes h = NominalInst
 -- Introduces the nominal's foralled type variables into the value's scope.
 data ToNom nomId term h = ToNom
     { _tnId :: nomId
-    , _tnVal :: h # term
+    , _tnVal :: h :# term
     } deriving Generic
 
 -- | Access the data in a nominally typed value.
@@ -170,8 +170,8 @@ instance Constraints (ToNom nomId term h) Pretty => Pretty (ToNom nomId term h) 
         (pPrint nomId <> Pretty.text "#") <+> pPrintPrec lvl 11 term
         & maybeParens (p > 10)
 
-class    (Pretty (QVar h), Pretty (outer # h)) => PrettyConstraints outer h
-instance (Pretty (QVar h), Pretty (outer # h)) => PrettyConstraints outer h
+class    (Pretty (QVar h), Pretty (outer :# h)) => PrettyConstraints outer h
+instance (Pretty (QVar h), Pretty (outer :# h)) => PrettyConstraints outer h
 
 instance
     ( Pretty nomId

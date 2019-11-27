@@ -42,7 +42,7 @@ newtype Name =
 data Typ h
     = TInt
     | TFun (FuncType Typ h)
-    | TRec (h # Row)
+    | TRec (h :# Row)
     | TVar Name
     | TNom (NominalInst Name Types h)
     deriving Generic
@@ -60,8 +60,8 @@ data RConstraints = RowConstraints
     deriving (Semigroup, Monoid) via Generically RConstraints
 
 data Types h = Types
-    { _tTyp :: h # Typ
-    , _tRow :: h # Row
+    { _tTyp :: h :# Typ
+    , _tRow :: h :# Row
     } deriving Generic
 
 data TypeError h

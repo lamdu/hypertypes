@@ -34,7 +34,7 @@ import           Prelude.Compat
 
 data EmptyScope deriving Show
 
-newtype Scope expr a h = Scope (h # expr (Maybe a))
+newtype Scope expr a h = Scope (h :# expr (Maybe a))
 Lens.makePrisms ''Scope
 
 newtype ScopeVar (expr :: Type -> HyperType) a (h :: AHyperType) = ScopeVar a
@@ -61,7 +61,7 @@ instance DeBruijnIndex a => DeBruijnIndex (Maybe a) where
                 | x == 0 = Just Nothing
                 | otherwise = (x - 1) ^? deBruijnIndex <&> Just
 
-newtype ScopeTypes t v = ScopeTypes (Seq (v # t))
+newtype ScopeTypes t v = ScopeTypes (Seq (v :# t))
     deriving newtype (Semigroup, Monoid)
 
 Lens.makePrisms ''ScopeTypes

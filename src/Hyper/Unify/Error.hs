@@ -21,10 +21,10 @@ import           Prelude.Compat
 
 -- | An error that occurred during unification
 data UnifyError t h
-    = SkolemUnified (h # t) (h # t)
+    = SkolemUnified (h :# t) (h :# t)
       -- ^ A universally quantified variable was unified with a
       -- different type
-    | SkolemEscape (h # t)
+    | SkolemEscape (h :# t)
       -- ^ A universally quantified variable escapes its scope
     | ConstraintsViolation (t h) (TypeConstraintsOf t)
       -- ^ A term violates constraints that should apply to it

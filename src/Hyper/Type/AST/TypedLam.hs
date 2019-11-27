@@ -22,8 +22,8 @@ import           Prelude.Compat
 
 data TypedLam var typ expr h = TypedLam
     { _tlIn :: var
-    , _tlInType :: h # typ
-    , _tlOut :: h # expr
+    , _tlInType :: h :# typ
+    , _tlOut :: h :# expr
     } deriving Generic
 
 makeLenses ''TypedLam
