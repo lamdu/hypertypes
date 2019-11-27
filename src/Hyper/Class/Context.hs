@@ -13,26 +13,26 @@ import Hyper.Combinator.Cont (HCont(..))
 import Hyper.Class.Functor (HFunctor(..))
 import Hyper.Class.Nodes ((#*#), (#>))
 import Hyper.Class.Recursive (Recursively(..))
-import Hyper.Type (Tree)
+import Hyper.Type (type (#))
 
 import Prelude.Compat
 
 class HContext h where
     hcontext ::
-        Tree h p ->
-        Tree h (HCont (Tree h p) p :*: p)
+        h # p ->
+        h # (HCont (h # p) p :*: p)
 
 recursiveContexts ::
     (Recursively HContext h, Recursively HFunctor h) =>
-    Tree (Ann p) h ->
-    Tree (Ann (HCont (Tree (Ann p) h) (Ann p) :*: p)) h
+    Ann p # h ->
+    Ann (HCont (Ann p # h) (Ann p) :*: p) # h
 recursiveContexts = recursiveContextsWith . (HCont id :*:)
 
 recursiveContextsWith ::
     forall h p r.
     (Recursively HContext h, Recursively HFunctor h) =>
-    Tree (HCont r (Ann p) :*: Ann p) h ->
-    Tree (Ann (HCont r (Ann p) :*: p)) h
+    (HCont r (Ann p) :*: Ann p) # h ->
+    Ann (HCont r (Ann p) :*: p) # h
 recursiveContextsWith (HCont s0 :*: Ann a b) =
     withDict (recursively (Proxy @(HContext h))) $
     withDict (recursively (Proxy @(HFunctor h)))

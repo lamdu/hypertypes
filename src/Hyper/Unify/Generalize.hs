@@ -120,7 +120,7 @@ instance RTraversable ast => HTraversable (HFlip GTerm ast) where
 generalize ::
     forall m t.
     UnifyGen m t =>
-    Tree (UVarOf m) t -> m (Tree (GTerm (UVarOf m)) t)
+    UVarOf m # t -> m (GTerm (UVarOf m) # t)
 generalize v0 =
     do
         (v1, u) <- semiPruneLookup v0
@@ -151,9 +151,9 @@ generalize v0 =
 {-# INLINE instantiateForAll #-}
 instantiateForAll ::
     forall m t. UnifyGen m t =>
-    (TypeConstraintsOf t -> Tree (UTerm (UVarOf m)) t) ->
-    Tree (UVarOf m) t ->
-    WriterT [m ()] m (Tree (UVarOf m) t)
+    (TypeConstraintsOf t -> UTerm (UVarOf m) # t) ->
+    UVarOf m # t ->
+    WriterT [m ()] m (UVarOf m # t)
 instantiateForAll cons x =
     lookupVar binding x & lift
     >>=
@@ -172,9 +172,9 @@ instantiateForAll cons x =
 instantiateH ::
     forall m t.
     UnifyGen m t =>
-    (forall n. TypeConstraintsOf n -> Tree (UTerm (UVarOf m)) n) ->
-    Tree (GTerm (UVarOf m)) t ->
-    WriterT [m ()] m (Tree (UVarOf m) t)
+    (forall n. TypeConstraintsOf n -> UTerm (UVarOf m) # n) ->
+    GTerm (UVarOf m) # t ->
+    WriterT [m ()] m (UVarOf m # t)
 instantiateH _ (GMono x) = pure x
 instantiateH cons (GPoly x) = instantiateForAll cons x
 instantiateH cons (GBody x) =
@@ -186,9 +186,9 @@ instantiateWith ::
     forall m t a.
     UnifyGen m t =>
     m a ->
-    (forall n. TypeConstraintsOf n -> Tree (UTerm (UVarOf m)) n) ->
-    Tree (GTerm (UVarOf m)) t ->
-    m (Tree (UVarOf m) t, a)
+    (forall n. TypeConstraintsOf n -> UTerm (UVarOf m) # n) ->
+    GTerm (UVarOf m) # t ->
+    m (UVarOf m # t, a)
 instantiateWith action cons g =
     do
         (r, recover) <-
@@ -201,5 +201,5 @@ instantiateWith action cons g =
 {-# INLINE instantiate #-}
 instantiate ::
     UnifyGen m t =>
-    Tree (GTerm (UVarOf m)) t -> m (Tree (UVarOf m) t)
+    GTerm (UVarOf m) # t -> m (UVarOf m # t)
 instantiate g = instantiateWith (pure ()) UUnbound g <&> (^. Lens._1)

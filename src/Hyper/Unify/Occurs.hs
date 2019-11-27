@@ -22,7 +22,7 @@ import Prelude.Compat
 -- | Format and throw an occurs check error
 occursError ::
     Unify m t =>
-    Tree (UVarOf m) t -> Tree (UTermBody (UVarOf m)) t -> m a
+    UVarOf m # t -> UTermBody (UVarOf m) # t -> m a
 occursError v (UTermBody c b) =
     do
         q <- newQuantifiedVariable c
@@ -34,7 +34,7 @@ occursError v (UTermBody c b) =
 occursCheck ::
     forall m t.
     Unify m t =>
-    Tree (UVarOf m) t -> m ()
+    UVarOf m # t -> m ()
 occursCheck v0 =
     semiPruneLookup v0
     >>=

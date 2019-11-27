@@ -48,7 +48,7 @@ type instance InferOf (Let v e) = InferOf e
 
 instance
     ( MonadScopeLevel m
-    , LocalScopeType v (Tree (GTerm (UVarOf m)) (TypeOf expr)) m
+    , LocalScopeType v (GTerm (UVarOf m) # TypeOf expr) m
     , UnifyGen m (TypeOf expr)
     , HasInferredType expr
     , HNodesConstraint (InferOf expr) (UnifyGen m)

@@ -5,7 +5,7 @@ module Hyper.Type.AST.NamelessScope.InvDeBruijn
 import Control.Lens (Prism', iso)
 import Control.Lens.Operators
 import Data.Proxy (Proxy(..))
-import Hyper.Type (Tree)
+import Hyper.Type (type (#))
 import Hyper.Type.AST.NamelessScope (DeBruijnIndex(..), EmptyScope, Scope(..), ScopeVar(..))
 
 import Prelude.Compat
@@ -28,8 +28,8 @@ inverseDeBruijnIndex =
 scope ::
     forall expr a f.
     InvDeBruijnIndex a =>
-    (Int -> Tree f (expr (Maybe a))) ->
-    Tree (Scope expr a) f
+    (Int -> f # expr (Maybe a)) ->
+    Scope expr a # f
 scope f = Scope (f (inverseDeBruijnIndex # (Nothing :: Maybe a)))
 
 scopeVar :: InvDeBruijnIndex a => Int -> ScopeVar expr a f

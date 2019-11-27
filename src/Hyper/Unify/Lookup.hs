@@ -16,8 +16,8 @@ import Prelude.Compat
 {-# INLINE semiPruneLookup #-}
 semiPruneLookup ::
     Unify m t =>
-    Tree (UVarOf m) t ->
-    m (Tree (UVarOf m) t, Tree (UTerm (UVarOf m)) t)
+    UVarOf m # t ->
+    m (UVarOf m # t, UTerm (UVarOf m) # t)
 semiPruneLookup v0 =
     lookupVar binding v0
     >>=

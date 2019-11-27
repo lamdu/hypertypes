@@ -15,7 +15,7 @@ import Data.Proxy (Proxy(..))
 import Hyper.Class.Nodes (HNodes(..))
 import Hyper.Class.Recursive
 import Hyper.Class.ZipMatch (ZipMatch)
-import Hyper.Type (Tree, HyperType)
+import Hyper.Type (HyperType, type (#))
 import Hyper.Unify.Constraints
 import Hyper.Unify.Error (UnifyError(..))
 import Hyper.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify)
@@ -39,9 +39,9 @@ type family UVarOf (m :: Type -> Type) :: HyperType
 -- * 'Hyper.Unify.Binding.bindingDict' for pure state based unification
 -- * 'Hyper.Unify.Binding.ST.stBinding' for 'Control.Monad.ST.ST' based unification
 data BindingDict v m t = BindingDict
-    { lookupVar :: !(Tree v t -> m (Tree (UTerm v) t))
-    , newVar :: !(Tree (UTerm v) t -> m (Tree v t))
-    , bindVar :: !(Tree v t -> Tree (UTerm v) t -> m ())
+    { lookupVar :: !(v # t -> m (UTerm v # t))
+    , newVar :: !(UTerm v # t -> m (v # t))
+    , bindVar :: !(v # t -> UTerm v # t -> m ())
     }
 
 -- | @Unify m t@ enables 'Hyper.Unify.unify' to perform unification for @t@ in the 'Monad' @m@.
@@ -49,7 +49,7 @@ data BindingDict v m t = BindingDict
 -- The 'unifyRecursive' method represents the constraint that @Unify m@ applies to all recursive child nodes.
 -- It replaces context for 'Unify' to avoid @UndecidableSuperClasses@.
 class
-    ( Eq (Tree (UVarOf m) t)
+    ( Eq (UVarOf m # t)
     , RTraversable t
     , ZipMatch t
     , HasTypeConstraints t
@@ -65,7 +65,7 @@ class
     --
     -- If 'unifyError' is called then unification has failed.
     -- A compiler implementation may present an error message based on the provided 'UnifyError' when this occurs.
-    unifyError :: Tree (UnifyError t) (UVarOf m) -> m a
+    unifyError :: UnifyError t # UVarOf m -> m a
 
     -- | What to do when top-levels of terms being unified do not match.
     --
@@ -75,8 +75,8 @@ class
     -- like record field extentions with the fields ordered differently.
     -- Those would override the default implementation to handle the unification of mismatching structures.
     structureMismatch ::
-        (forall c. Unify m c => Tree (UVarOf m) c -> Tree (UVarOf m) c -> m (Tree (UVarOf m) c)) ->
-        Tree (UTermBody (UVarOf m)) t -> Tree (UTermBody (UVarOf m)) t -> m ()
+        (forall c. Unify m c => UVarOf m # c -> UVarOf m # c -> m (UVarOf m # c)) ->
+        UTermBody (UVarOf m) # t -> UTermBody (UVarOf m) # t -> m ()
     structureMismatch _ x y = unifyError (Mismatch (x ^. uBody) (y ^. uBody))
 
     -- TODO: Putting documentation here causes duplication in the haddock documentation

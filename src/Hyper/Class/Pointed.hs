@@ -7,7 +7,7 @@ module Hyper.Class.Pointed
 import Data.Functor.Const (Const(..))
 import GHC.Generics ((:*:)(..), (:+:)(..))
 import Hyper.Class.Nodes (HNodes, HWitness(..))
-import Hyper.Type (Tree)
+import Hyper.Type (type (#))
 
 import Prelude.Compat
 
@@ -16,8 +16,8 @@ class HNodes h => HPointed h where
     -- | Construct a value from a generator of @h@'s nodes
     -- (a generator which can generate a tree of any type given a witness that it is a node of @h@)
     hpure ::
-        (forall n. HWitness h n -> Tree p n) ->
-        Tree h p
+        (forall n. HWitness h n -> p # n) ->
+        h # p
 
 instance Monoid a => HPointed (Const a) where
     {-# INLINE hpure #-}

@@ -52,14 +52,14 @@ type family NomVarTypes (t :: HyperType) :: HyperType
 
 -- | A declaration of a nominal type.
 data NominalDecl typ h = NominalDecl
-    { _nParams :: Tree (NomVarTypes typ) QVars
+    { _nParams :: NomVarTypes typ # QVars
     , _nScheme :: Scheme (NomVarTypes typ) typ h
     } deriving Generic
 
 -- | An instantiation of a nominal type
 data NominalInst nomId varTypes h = NominalInst
     { _nId :: nomId
-    , _nArgs :: Tree varTypes (QVarInstances (GetHyperType h))
+    , _nArgs :: varTypes # QVarInstances (GetHyperType h)
     } deriving Generic
 
 -- | Nominal data constructor.
@@ -82,9 +82,9 @@ newtype FromNom nomId (term :: HyperType) (h :: AHyperType) = FromNom nomId
 
 -- | A nominal declaration loaded into scope in an inference monad.
 data LoadedNominalDecl typ v = LoadedNominalDecl
-    { _lnParams :: Tree (NomVarTypes typ) (QVarInstances (GetHyperType v))
-    , _lnForalls :: Tree (NomVarTypes typ) (QVarInstances (GetHyperType v))
-    , _lnType :: Tree (GTerm (GetHyperType v)) typ
+    { _lnParams :: NomVarTypes typ # QVarInstances (GetHyperType v)
+    , _lnForalls :: NomVarTypes typ # QVarInstances (GetHyperType v)
+    , _lnType :: GTerm (GetHyperType v) # typ
     } deriving Generic
 
 makeLenses ''NominalDecl
@@ -250,10 +250,10 @@ loadBody ::
     , HasChild varTypes typ
     , Ord (QVar typ)
     ) =>
-    Tree varTypes (QVarInstances (UVarOf m)) ->
-    Tree varTypes (QVarInstances (UVarOf m)) ->
-    Tree typ (GTerm (UVarOf m)) ->
-    m (Tree (GTerm (UVarOf m)) typ)
+    varTypes # QVarInstances (UVarOf m) ->
+    varTypes # QVarInstances (UVarOf m) ->
+    typ # GTerm (UVarOf m) ->
+    m (GTerm (UVarOf m) # typ)
 loadBody params foralls x =
     case x ^? quantifiedVar >>= get of
     Just r -> GPoly r & pure
@@ -274,8 +274,8 @@ loadNominalDecl ::
     , HNodesConstraint (NomVarTypes typ) (Unify m)
     , HasScheme (NomVarTypes typ) m typ
     ) =>
-    Tree Pure (NominalDecl typ) ->
-    m (Tree (LoadedNominalDecl typ) (UVarOf m))
+    Pure # NominalDecl typ ->
+    m (LoadedNominalDecl typ # UVarOf m)
 loadNominalDecl (Pure (NominalDecl params (Scheme foralls typ))) =
     do
         paramsL <- htraverse (Proxy @(Unify m) #> makeQVarInstances) params
@@ -287,10 +287,10 @@ loadNominalDecl (Pure (NominalDecl params (Scheme foralls typ))) =
             <&> LoadedNominalDecl paramsL forallsL
 
 class MonadNominals nomId typ m where
-    getNominalDecl :: nomId -> m (Tree (LoadedNominalDecl typ) (UVarOf m))
+    getNominalDecl :: nomId -> m (LoadedNominalDecl typ # UVarOf m)
 
 class HasNominalInst nomId typ where
-    nominalInst :: Prism' (Tree typ h) (Tree (NominalInst nomId (NomVarTypes typ)) h)
+    nominalInst :: Prism' (typ # h) (NominalInst nomId (NomVarTypes typ) # h)
 
 {-# INLINE lookupParams #-}
 lookupParams ::
@@ -299,12 +299,12 @@ lookupParams ::
     , HTraversable varTypes
     , HNodesConstraint varTypes (UnifyGen m)
     ) =>
-    Tree varTypes (QVarInstances (UVarOf m)) ->
-    m (Tree varTypes (QVarInstances (UVarOf m)))
+    varTypes # QVarInstances (UVarOf m) ->
+    m (varTypes # QVarInstances (UVarOf m))
 lookupParams =
     htraverse (Proxy @(UnifyGen m) #> (_QVarInstances . traverse) lookupParam)
     where
-        lookupParam :: forall t. UnifyGen m t => Tree (UVarOf m) t -> m (Tree (UVarOf m) t)
+        lookupParam :: forall t. UnifyGen m t => UVarOf m # t -> m (UVarOf m # t)
         lookupParam v =
             lookupVar binding v
             >>=

@@ -15,7 +15,7 @@ import Prelude.Compat
 
 -- | A 'HyperType' for an inferred term - the output of 'Hyper.Infer.infer'
 newtype InferResult v e =
-    InferResult (Tree (InferOf (GetHyperType e)) v)
+    InferResult (InferOf (GetHyperType e) # v)
     deriving stock Generic
 makePrisms ''InferResult
 makeCommonInstances [''InferResult]
@@ -23,10 +23,10 @@ makeCommonInstances [''InferResult]
 -- An iso for the common case where the infer result of a term is a single value.
 inferResult ::
     InferOf e ~ ANode t =>
-    Iso (Tree (InferResult v0) e)
-        (Tree (InferResult v1) e)
-        (Tree v0 t)
-        (Tree v1 t)
+    Iso (InferResult v0 # e)
+        (InferResult v1 # e)
+        (v0 # t)
+        (v1 # t)
 inferResult = _InferResult . _ANode
 
 instance HNodes (InferOf e) => HNodes (HFlip InferResult e) where

@@ -11,7 +11,7 @@ module Hyper.Unify.Constraints
 import Algebra.PartialOrd (PartialOrd(..))
 import Control.Lens (makeLenses)
 import Data.Kind (Type)
-import Hyper (Tree, HyperType, GetHyperType)
+import Hyper (HyperType, GetHyperType, type (#))
 
 import Prelude.Compat
 
@@ -43,8 +43,8 @@ class
     -- verifier on children
     verifyConstraints ::
         TypeConstraintsOf ast ->
-        Tree ast h ->
-        Maybe (Tree ast (WithConstraint h))
+        ast # h ->
+        Maybe (ast # WithConstraint h)
 
 -- | A 'HyperType' to represent a term alongside a constraint.
 --

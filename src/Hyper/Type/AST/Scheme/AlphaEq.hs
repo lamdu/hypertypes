@@ -23,7 +23,7 @@ import           Prelude.Compat
 makeQVarInstancesInScope ::
     forall m typ.
     UnifyGen m typ =>
-    Tree QVars typ -> m (Tree (QVarInstances (UVarOf m)) typ)
+    QVars # typ -> m (QVarInstances (UVarOf m) # typ)
 makeQVarInstancesInScope (QVars foralls) =
     traverse makeSkolem foralls <&> QVarInstances
     where
@@ -31,7 +31,7 @@ makeQVarInstancesInScope (QVars foralls) =
 
 schemeBodyToType ::
     (UnifyGen m typ, HasChild varTypes typ, Ord (QVar typ)) =>
-    Tree varTypes (QVarInstances (UVarOf m)) -> Tree typ (UVarOf m) -> m (Tree (UVarOf m) typ)
+    varTypes # QVarInstances (UVarOf m) -> typ # UVarOf m -> m (UVarOf m # typ)
 schemeBodyToType foralls x =
     case x ^? quantifiedVar >>= getForAll of
     Nothing -> newTerm x
@@ -46,7 +46,7 @@ schemeToRestrictedType ::
     , HNodesConstraint varTypes (UnifyGen m)
     , HasScheme varTypes m typ
     ) =>
-    Tree Pure (Scheme varTypes typ) -> m (Tree (UVarOf m) typ)
+    Pure # Scheme varTypes typ -> m (UVarOf m # typ)
 schemeToRestrictedType (Pure (Scheme vars typ)) =
     do
         foralls <- htraverse (Proxy @(UnifyGen m) #> makeQVarInstancesInScope) vars
@@ -55,8 +55,8 @@ schemeToRestrictedType (Pure (Scheme vars typ)) =
 goUTerm ::
     forall m t.
     Unify m t =>
-    Tree (UVarOf m) t -> Tree (UTerm (UVarOf m)) t ->
-    Tree (UVarOf m) t -> Tree (UTerm (UVarOf m)) t ->
+    UVarOf m # t -> UTerm (UVarOf m) # t ->
+    UVarOf m # t -> UTerm (UVarOf m) # t ->
     m ()
 goUTerm xv USkolem{} yv USkolem{} =
     do
@@ -87,7 +87,7 @@ goUTerm _ _ _ _ = error "unexpected state at alpha-eq"
 
 goUVar ::
     Unify m t =>
-    Tree (UVarOf m) t -> Tree (UVarOf m) t -> m ()
+    UVarOf m # t -> UVarOf m # t -> m ()
 goUVar xv yv =
     do
         xu <- lookupVar binding xv
@@ -100,8 +100,8 @@ alphaEq ::
     , HNodesConstraint varTypes (UnifyGen m)
     , HasScheme varTypes m typ
     ) =>
-    Tree Pure (Scheme varTypes typ) ->
-    Tree Pure (Scheme varTypes typ) ->
+    Pure # Scheme varTypes typ ->
+    Pure # Scheme varTypes typ ->
     m ()
 alphaEq s0 s1 =
     do

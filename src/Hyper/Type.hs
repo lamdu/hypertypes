@@ -7,8 +7,8 @@
 module Hyper.Type
     ( HyperType
     , AHyperType(..), GetHyperType
-    , Tree, type (:#)
-    , asTree
+    , type (#), type (:#)
+    , asHyper
     ) where
 
 import Data.Kind (Type)
@@ -29,22 +29,22 @@ newtype AHyperType = AHyperType HyperType
 -- * 'GetHyperType' is injective, but due to no support for constrained type families,
 --   [that's not expressible at the moment](https://ghc.haskell.org/trac/ghc/ticket/15691).
 -- * Because 'GetHyperType' can't declared as bijective, uses of it may restrict inference.
---   In those cases wrapping terms with the 'asTree' helper assists Haskell's type inference
+--   In those cases wrapping terms with the 'asHyper' helper assists Haskell's type inference
 --   as if Haskell knew that 'GetHyperType' was bijective.
 type family GetHyperType h where
     GetHyperType ('AHyperType t) = t
 
 -- | A type synonym to express nested-HKD structures
-type Tree h p = (h ('AHyperType p) :: Type)
+type h # p = (h ('AHyperType p) :: Type)
 
 -- | A type synonym to express child nodes in nested-HKDs
-type h :# p = Tree (GetHyperType h) p
+type h :# p = GetHyperType h # p
 
--- | An 'id' variant which tells the type checker that its argument is a 'Tree'.
+-- | An 'id' variant which tells the type checker that its argument is a hypertype.
 --
 -- See the notes for 'GetHyperType' which expand on why this might be used.
 --
--- Note that 'asTree' may often be used during development to assist the inference of incomplete code,
+-- Note that 'asHyper' may often be used during development to assist the inference of incomplete code,
 -- but removed once the code is complete.
-asTree :: Tree h p -> Tree h p
-asTree = id
+asHyper :: h # p -> h # p
+asHyper = id

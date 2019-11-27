@@ -39,7 +39,7 @@ import           Prelude.Compat
 
 -- | A type scheme representing a polymorphic type.
 data Scheme varTypes typ h = Scheme
-    { _sForAlls :: Tree varTypes QVars
+    { _sForAlls :: varTypes # QVars
     , _sTyp :: h :# typ
     } deriving Generic
 
@@ -76,7 +76,7 @@ instance
     mempty = QVars Map.empty
 
 instance
-    (Pretty (Tree varTypes QVars), Pretty (h :# typ)) =>
+    (Pretty (varTypes # QVars), Pretty (h :# typ)) =>
     Pretty (Scheme varTypes typ h) where
 
     pPrintPrec lvl p (Scheme forAlls typ)
@@ -87,7 +87,7 @@ instance
 
 instance
     (Pretty (TypeConstraintsOf typ), Pretty (QVar typ)) =>
-    Pretty (Tree QVars typ) where
+    Pretty (QVars # typ) where
 
     pPrint (QVars qvars) =
         Map.toList qvars
@@ -112,10 +112,10 @@ type instance InferOf (Scheme v t) = HFlip GTerm t
 
 class UnifyGen m t => MonadInstantiate m t where
     localInstantiations ::
-        Tree (QVarInstances (UVarOf m)) t ->
+        QVarInstances (UVarOf m) # t ->
         m a ->
         m a
-    lookupQVar :: QVar t -> m (Tree (UVarOf m) t)
+    lookupQVar :: QVar t -> m (UVarOf m # t)
 
 instance
     ( Monad m
@@ -148,8 +148,8 @@ inferType ::
     , UnifyGen m t
     , MonadInstantiate m t
     ) =>
-    Tree t (InferChild m h) ->
-    m (Tree t h, Tree (InferOf t) (UVarOf m))
+    t # InferChild m h ->
+    m (t # h, InferOf t # UVarOf m)
 inferType x =
     case x ^? quantifiedVar of
     Just q -> lookupQVar q <&> (quantifiedVar # q, ) . MkANode
@@ -163,7 +163,7 @@ inferType x =
 {-# INLINE makeQVarInstances #-}
 makeQVarInstances ::
     Unify m typ =>
-    Tree QVars typ -> m (Tree (QVarInstances (UVarOf m)) typ)
+    QVars # typ -> m (QVarInstances (UVarOf m) # typ)
 makeQVarInstances (QVars foralls) =
     traverse (newVar binding . USkolem) foralls <&> QVarInstances
 
@@ -173,9 +173,9 @@ loadBody ::
     , HasChild varTypes typ
     , Ord (QVar typ)
     ) =>
-    Tree varTypes (QVarInstances (UVarOf m)) ->
-    Tree typ (GTerm (UVarOf m)) ->
-    m (Tree (GTerm (UVarOf m)) typ)
+    varTypes # QVarInstances (UVarOf m) ->
+    typ # GTerm (UVarOf m) ->
+    m (GTerm (UVarOf m) # typ)
 loadBody foralls x =
     case x ^? quantifiedVar >>= getForAll of
     Just r -> GPoly r & pure
@@ -218,8 +218,8 @@ loadScheme ::
     , HNodesConstraint varTypes (UnifyGen m)
     , HasScheme varTypes m typ
     ) =>
-    Tree Pure (Scheme varTypes typ) ->
-    m (Tree (GTerm (UVarOf m)) typ)
+    Pure # Scheme varTypes typ ->
+    m (GTerm (UVarOf m) # typ)
 loadScheme (Pure (Scheme vars typ)) =
     do
         foralls <- htraverse (Proxy @(UnifyGen m) #> makeQVarInstances) vars
@@ -228,8 +228,8 @@ loadScheme (Pure (Scheme vars typ)) =
 saveH ::
     forall typ varTypes m.
     (Monad m, HasScheme varTypes m typ) =>
-    Tree (GTerm (UVarOf m)) typ ->
-    StateT (Tree varTypes QVars, [m ()]) m (Tree Pure typ)
+    GTerm (UVarOf m) # typ ->
+    StateT (varTypes # QVars, [m ()]) m (Pure # typ)
 saveH (GBody x) =
     withDict (hasSchemeRecursive (Proxy @varTypes) (Proxy @m) (Proxy @typ)) $
     htraverse (Proxy @(HasScheme varTypes m) #> saveH) x <&> (_Pure #)
@@ -253,7 +253,7 @@ saveH (GPoly x) =
                 scopeConstraints (Proxy @typ) <&> (<> l)
                 >>= newQuantifiedVariable & lift
             Lens._1 . getChild %=
-                (\v -> v & _QVars . Lens.at r ?~ generalizeConstraints l :: Tree QVars typ)
+                (\v -> v & _QVars . Lens.at r ?~ generalizeConstraints l :: QVars # typ)
             Lens._2 %= (bindVar binding x (USkolem l) :)
             let result = _Pure . quantifiedVar # r
             UResolved result & bindVar binding x & lift
@@ -266,8 +266,8 @@ saveScheme ::
     , HPointed varTypes
     , HasScheme varTypes m typ
     ) =>
-    Tree (GTerm (UVarOf m)) typ ->
-    m (Tree Pure (Scheme varTypes typ))
+    GTerm (UVarOf m) # typ ->
+    m (Pure # Scheme varTypes typ)
 saveScheme x =
     do
         (t, (v, recover)) <-

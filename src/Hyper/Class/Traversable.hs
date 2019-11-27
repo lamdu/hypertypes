@@ -16,7 +16,7 @@ import GHC.Generics.Lens (_M1, _Rec1)
 import Hyper.Class.Foldable (HFoldable)
 import Hyper.Class.Functor (HFunctor(..), hmapped1)
 import Hyper.Class.Nodes (HNodes(..), HWitness)
-import Hyper.Type (AHyperType, Tree)
+import Hyper.Type (AHyperType, type (#))
 
 import Prelude.Compat
 
@@ -28,10 +28,10 @@ newtype ContainedH f p (h :: AHyperType) = MkContainedH { runContainedH :: f (p 
 -- | An 'Iso' for the 'ContainedH' @newtype@
 {-# INLINE _ContainedH #-}
 _ContainedH ::
-    Iso (Tree (ContainedH f0 p0) k0)
-        (Tree (ContainedH f1 p1) k1)
-        (f0 (Tree p0 k0))
-        (f1 (Tree p1 k1))
+    Iso (ContainedH f0 p0 # k0)
+        (ContainedH f1 p1 # k1)
+        (f0 (p0 # k0))
+        (f1 (p1 # k1))
 _ContainedH = iso runContainedH MkContainedH
 
 -- | A variant of 'Traversable' for 'Hyper.Type.HyperType's
@@ -39,13 +39,13 @@ class (HFunctor h, HFoldable h) => HTraversable h where
     -- | 'HTraversable' variant of 'sequenceA'
     hsequence ::
         Applicative f =>
-        Tree h (ContainedH f p) ->
-        f (Tree h p)
+        h # ContainedH f p ->
+        f (h # p)
     {-# INLINE hsequence #-}
     default hsequence ::
         (Generic1 h, HTraversable (Rep1 h), Applicative f) =>
-        Tree h (ContainedH f p) ->
-        f (Tree h p)
+        h # ContainedH f p ->
+        f (h # p)
     hsequence = fmap to1 . hsequence . from1
 
 instance HTraversable (Const a) where
@@ -73,9 +73,9 @@ instance HTraversable h => HTraversable (Rec1 h) where
 {-# INLINE htraverse #-}
 htraverse ::
     (Applicative f, HTraversable h) =>
-    (forall n. HWitness h n -> Tree p n -> f (Tree q n)) ->
-    Tree h p ->
-    f (Tree h q)
+    (forall n. HWitness h n -> p # n -> f (q # n)) ->
+    h # p ->
+    f (h # q)
 htraverse f = hsequence . hmap (fmap MkContainedH . f)
 
 -- | 'HTraversable' variant of 'traverse' for 'Hyper.Type.HyperType's with a single node type.
@@ -84,5 +84,5 @@ htraverse f = hsequence . hmap (fmap MkContainedH . f)
 {-# INLINE htraverse1 #-}
 htraverse1 ::
     (HTraversable h, HNodesConstraint h ((~) n)) =>
-    Traversal (Tree h p) (Tree h q) (Tree p n) (Tree q n)
+    Traversal (h # p) (h # q) (p # n) (q # n)
 htraverse1 f = hsequence . (hmapped1 %~ (MkContainedH . f))

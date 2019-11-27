@@ -26,8 +26,8 @@ import Prelude.Compat
 applyBindings ::
     forall m t.
     Unify m t =>
-    Tree (UVarOf m) t ->
-    m (Tree Pure t)
+    UVarOf m # t ->
+    m (Pure # t)
 applyBindings v0 =
     semiPruneLookup v0
     >>=

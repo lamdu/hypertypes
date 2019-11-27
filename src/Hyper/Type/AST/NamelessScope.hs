@@ -69,9 +69,9 @@ makeHTraversableApplyAndBases ''ScopeTypes
 
 -- TODO: Replace this class with ones from Infer
 class HasScopeTypes v t env where
-    scopeTypes :: Lens' env (Tree (ScopeTypes t) v)
+    scopeTypes :: Lens' env (ScopeTypes t # v)
 
-instance HasScopeTypes v t (Tree (ScopeTypes t) v) where
+instance HasScopeTypes v t (ScopeTypes t # v) where
     scopeTypes = id
 
 type instance InferOf (Scope t h) = FuncType (TypeOf (t h))

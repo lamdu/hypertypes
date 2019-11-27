@@ -35,7 +35,7 @@ data InferredChild v h t = InferredChild
         -- ^ Inferred node.
         --
         -- An 'inferBody' implementation needs to place this value in the corresponding child node of the inferred term body
-    , _inType :: !(Tree (InferOf (GetHyperType t)) v)
+    , _inType :: !(InferOf (GetHyperType t) # v)
         -- ^ The inference result for the child node.
         --
         -- An 'inferBody' implementation may use it to perform unifications with it.
@@ -65,12 +65,12 @@ makePrisms ''InferChild
 class (Monad m, HFunctor t) => Infer m t where
     -- | Infer the body of an expression given the inference actions for its child nodes.
     inferBody ::
-        Tree t (InferChild m h) ->
-        m (Tree t h, Tree (InferOf t) (UVarOf m))
+        t # InferChild m h ->
+        m (t # h, InferOf t # UVarOf m)
     default inferBody ::
         (Generic1 t, Infer m (Rep1 t), InferOf t ~ InferOf (Rep1 t)) =>
-        Tree t (InferChild m h) ->
-        m (Tree t h, Tree (InferOf t) (UVarOf m))
+        t # InferChild m h ->
+        m (t # h, InferOf t # UVarOf m)
     inferBody =
         fmap (Lens._1 %~ to1) . inferBody . from1
 

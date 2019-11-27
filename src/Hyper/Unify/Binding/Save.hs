@@ -23,8 +23,8 @@ import           Prelude.Compat
 saveUTerm ::
     forall m typeVars t.
     (Unify m t, Recursively (HasChild typeVars) t) =>
-    Tree (UTerm (UVarOf m)) t ->
-    StateT (Tree typeVars Binding, [m ()]) m (Tree (UTerm UVar) t)
+    UTerm (UVarOf m) # t ->
+    StateT (typeVars # Binding, [m ()]) m (UTerm UVar # t)
 saveUTerm (UUnbound c) = UUnbound c & pure
 saveUTerm (USkolem c) = USkolem c & pure
 saveUTerm (UToVar v) = saveVar v <&> UToVar
@@ -37,8 +37,8 @@ saveUTerm UConverted{} = error "converting variable again"
 saveVar ::
     forall m t typeVars.
     (Unify m t, Recursively (HasChild typeVars) t) =>
-    Tree (UVarOf m) t ->
-    StateT (Tree typeVars Binding, [m ()]) m (Tree UVar t)
+    UVarOf m # t ->
+    StateT (typeVars # Binding, [m ()]) m (UVar # t)
 saveVar v =
     withDict (recursively (Proxy @(HasChild typeVars t))) $
     lookupVar binding v & lift
@@ -58,8 +58,8 @@ saveVar v =
 saveBody ::
     forall m typeVars t.
     (Unify m t, Recursively (HasChild typeVars) t) =>
-    Tree t (UVarOf m) ->
-    StateT (Tree typeVars Binding, [m ()]) m (Tree t UVar)
+    t # UVarOf m ->
+    StateT (typeVars # Binding, [m ()]) m (t # UVar)
 saveBody =
     withDict (recurse (Proxy @(Unify m t))) $
     withDict (recursively (Proxy @(HasChild typeVars t))) $
@@ -74,8 +74,8 @@ saveBody =
 -- to their serialized identifiers.
 save ::
     (Unify m t, Recursively (HasChild typeVars) t) =>
-    Tree t (UVarOf m) ->
-    StateT (Tree typeVars Binding) m (Tree t UVar)
+    t # UVarOf m ->
+    StateT (typeVars # Binding) m (t # UVar)
 save collection =
     StateT $
     \dstState ->

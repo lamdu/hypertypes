@@ -21,7 +21,7 @@ import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Prelude.Compat
 
 -- | Compose two 'HyperType's as an external and internal layer
-newtype HCompose a b h = MkHCompose { getHCompose :: Tree a (HCompose b (GetHyperType h)) }
+newtype HCompose a b h = MkHCompose { getHCompose :: a # HCompose b (GetHyperType h) }
     deriving stock Generic
 
 makeCommonInstances [''HCompose]
@@ -30,8 +30,8 @@ makeCommonInstances [''HCompose]
 {-# INLINE _HCompose #-}
 _HCompose ::
     Lens.Iso
-    (Tree (HCompose a0 b0) h0) (Tree (HCompose a1 b1) h1)
-    (Tree a0 (HCompose b0 h0)) (Tree a1 (HCompose b1 h1))
+    (HCompose a0 b0 # h0) (HCompose a1 b1 # h1)
+    (a0 # HCompose b0 h0) (a1 # HCompose b1 h1)
 _HCompose = Lens.iso getHCompose MkHCompose
 
 data W_HCompose a b n where

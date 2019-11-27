@@ -10,14 +10,14 @@ module Hyper.Class.HasPlain
     ) where
 
 import Control.Lens (Iso')
-import Hyper.Type (Tree)
+import Hyper.Type (type (#))
 import Hyper.Type.Pure (Pure)
 
 import Prelude.Compat
 
--- | A class for a plain form of a @Tree Pure h@
+-- | A class for a plain form of a @Pure # h@
 class Show (HPlain h) => HasHPlain h where
     -- | Plain form data type
     data HPlain h
     -- | An 'Control.Lens.Iso' between the plain form and 'Hyper.Type.HyperType' form
-    hPlain :: Iso' (HPlain h) (Tree Pure h)
+    hPlain :: Iso' (HPlain h) (Pure # h)

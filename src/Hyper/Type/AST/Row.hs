@@ -71,9 +71,9 @@ instance
 {-# INLINE flattenRowExtend #-}
 flattenRowExtend ::
     (Ord key, Monad m) =>
-    (Tree v rest -> m (Maybe (Tree (RowExtend key val rest) v))) ->
-    Tree (RowExtend key val rest) v ->
-    m (Tree (FlatRowExtends key val rest) v)
+    (v # rest -> m (Maybe (RowExtend key val rest # v))) ->
+    RowExtend key val rest # v ->
+    m (FlatRowExtends key val rest # v)
 flattenRowExtend nextExtend (RowExtend h v rest) =
     flattenRow nextExtend rest
     <&> freExtends %~ Map.unionWith (error "Colliding keys") (Map.singleton h v)
@@ -81,9 +81,9 @@ flattenRowExtend nextExtend (RowExtend h v rest) =
 {-# INLINE flattenRow #-}
 flattenRow ::
     (Ord key, Monad m) =>
-    (Tree v rest -> m (Maybe (Tree (RowExtend key val rest) v))) ->
-    Tree v rest ->
-    m (Tree (FlatRowExtends key val rest) v)
+    (v # rest -> m (Maybe (RowExtend key val rest # v))) ->
+    v # rest ->
+    m (FlatRowExtends key val rest # v)
 flattenRow nextExtend x =
     nextExtend x
     >>= maybe (pure (FlatRowExtends mempty x)) (flattenRowExtend nextExtend)
@@ -91,8 +91,8 @@ flattenRow nextExtend x =
 {-# INLINE unflattenRow #-}
 unflattenRow ::
     Monad m =>
-    (Tree (RowExtend key val rest) v -> m (Tree v rest)) ->
-    Tree (FlatRowExtends key val rest) v -> m (Tree v rest)
+    (RowExtend key val rest # v -> m (v # rest)) ->
+    FlatRowExtends key val rest # v -> m (v # rest)
 unflattenRow mkExtend (FlatRowExtends fields rest) =
     Map.toList fields & foldM f rest
     where
@@ -105,8 +105,8 @@ verifyRowExtendConstraints ::
     RowConstraints (TypeConstraintsOf rowTyp) =>
     (TypeConstraintsOf rowTyp -> TypeConstraintsOf valTyp) ->
     TypeConstraintsOf rowTyp ->
-    Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) h ->
-    Maybe (Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) (WithConstraint h))
+    RowExtend (RowKey rowTyp) valTyp rowTyp # h ->
+    Maybe (RowExtend (RowKey rowTyp) valTyp rowTyp # WithConstraint h)
 verifyRowExtendConstraints toChildC c (RowExtend h v rest)
     | c ^. forbidden . contains h = Nothing
     | otherwise =
@@ -121,11 +121,10 @@ rowExtendStructureMismatch ::
     ( Unify m rowTyp
     , Unify m valTyp
     ) =>
-    (forall c. Unify m c => Tree (UVarOf m) c -> Tree (UVarOf m) c -> m (Tree (UVarOf m) c)) ->
-    Prism' (Tree rowTyp (UVarOf m))
-        (Tree (RowExtend key valTyp rowTyp) (UVarOf m)) ->
-    Tree (RowExtend key valTyp rowTyp) (UVarOf m) ->
-    Tree (RowExtend key valTyp rowTyp) (UVarOf m) ->
+    (forall c. Unify m c => UVarOf m # c -> UVarOf m # c -> m (UVarOf m # c)) ->
+    Prism' (rowTyp # UVarOf m) (RowExtend key valTyp rowTyp # UVarOf m) ->
+    RowExtend key valTyp rowTyp # UVarOf m ->
+    RowExtend key valTyp rowTyp # UVarOf m ->
     m ()
 rowExtendStructureMismatch match extend r0 r1 =
     do
@@ -157,9 +156,9 @@ rowElementInfer ::
     , UnifyGen m rowTyp
     , RowConstraints (TypeConstraintsOf rowTyp)
     ) =>
-    (Tree (RowExtend (RowKey rowTyp) valTyp rowTyp) (UVarOf m) -> Tree rowTyp (UVarOf m)) ->
+    (RowExtend (RowKey rowTyp) valTyp rowTyp # UVarOf m -> rowTyp # UVarOf m) ->
     RowKey rowTyp ->
-    m (Tree (UVarOf m) valTyp, Tree (UVarOf m) rowTyp)
+    m (UVarOf m # valTyp, UVarOf m # rowTyp)
 rowElementInfer extendToRow h =
     do
         restVar <-

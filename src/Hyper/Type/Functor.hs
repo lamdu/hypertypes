@@ -16,7 +16,7 @@ import Hyper.Class.Recursive (RNodes, Recursively(..), RTraversable)
 import Hyper.Combinator.Compose
 import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
-import Hyper.Type (Tree, type (:#))
+import Hyper.Type (type (#), type (:#))
 
 import Prelude.Compat
 
@@ -33,10 +33,10 @@ newtype F f h = F (f (h :# F f))
 -- Using `_F` rather than the 'F' data constructor is recommended,
 -- because it helps the type inference know that @F f@ is parameterized with a 'Hyper.Type.HyperType'.
 _F ::
-    Iso (Tree (F f0) k0)
-        (Tree (F f1) k1)
-        (f0 (Tree k0 (F f0)))
-        (f1 (Tree k1 (F f1)))
+    Iso (F f0 # k0)
+        (F f1 # k1)
+        (f0 (k0 # F f0))
+        (f1 (k1 # F f1))
 _F = iso (\(F x) -> x) F
 
 makeCommonInstances [''F]
@@ -54,8 +54,8 @@ instance Monad f => HMonad (F f) where
             t ::
                 forall p.
                 Recursively HFunctor p =>
-                Tree p (HCompose (F f) (F f)) ->
-                Tree p (F f)
+                p # HCompose (F f) (F f) ->
+                p # F f
             t =
                 withDict (recursively (Proxy @(HFunctor p))) $
                 hmap (Proxy @(Recursively HFunctor) #> hjoin)

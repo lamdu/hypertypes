@@ -18,7 +18,7 @@ import qualified Data.Sequence as Sequence
 import           GHC.Generics (Generic)
 import           Hyper.Class.Unify (BindingDict(..))
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
-import           Hyper.Type (Tree, AHyperType)
+import           Hyper.Type (AHyperType, type (#))
 import           Hyper.Unify.Term
 
 import           Prelude.Compat
@@ -44,7 +44,7 @@ emptyBinding = Binding mempty
 {-# INLINE bindingDict #-}
 bindingDict ::
     MonadState s m =>
-    ALens' s (Tree Binding t) ->
+    ALens' s (Binding # t) ->
     BindingDict UVar m t
 bindingDict l =
     BindingDict

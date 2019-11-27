@@ -10,7 +10,7 @@ module Hyper.Combinator.Flip
 import Control.Lens (Iso, iso, from)
 import GHC.Generics (Generic)
 import Hyper.TH.Internal.Instances (makeCommonInstances)
-import Hyper.Type (Tree, GetHyperType)
+import Hyper.Type (type (#), GetHyperType)
 
 -- | Flip the order of the last two type parameters of a 'Hyper.Type.HyperType'.
 --
@@ -18,7 +18,7 @@ import Hyper.Type (Tree, GetHyperType)
 -- are available on the flipped 'Hyper.Type.HyperType'.
 -- For example 'Hyper.Unify.Generalize.GTerm' has instances when flipped.
 newtype HFlip f x h =
-    MkHFlip (Tree (f (GetHyperType h)) x)
+    MkHFlip (f (GetHyperType h) # x)
     deriving stock Generic
 
 makeCommonInstances [''HFlip]
@@ -29,16 +29,16 @@ makeCommonInstances [''HFlip]
 -- because it helps the type inference know that @ANode c@ is parameterized with a 'Hyper.Type.HyperType'.
 _HFlip ::
     Iso
-    (Tree (HFlip f0 x0) k0)
-    (Tree (HFlip f1 x1) k1)
-    (Tree (f0 k0) x0)
-    (Tree (f1 k1) x1)
+    (HFlip f0 x0 # k0)
+    (HFlip f1 x1 # k1)
+    (f0 k0 # x0)
+    (f1 k1 # x1)
 _HFlip = iso (\(MkHFlip x) -> x) MkHFlip
 
 hflipped ::
     Iso
-    (Tree (f0 k0) x0)
-    (Tree (f1 k1) x1)
-    (Tree (HFlip f0 x0) k0)
-    (Tree (HFlip f1 x1) k1)
+    (f0 k0 # x0)
+    (f1 k1 # x1)
+    (HFlip f0 x0 # k0)
+    (HFlip f1 x1 # k1)
 hflipped = from _HFlip

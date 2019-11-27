@@ -163,7 +163,7 @@ instance HasTypeConstraints Row where
     verifyConstraints c (RExtend x) =
         verifyRowExtendConstraints (^. rScope) c x <&> RExtend
 
-type PureInferState = (Tree Types Binding, Tree Types UVar)
+type PureInferState = (Types # Binding, Types # UVar)
 
 emptyPureInferState :: PureInferState
 emptyPureInferState =
@@ -171,7 +171,7 @@ emptyPureInferState =
     , Types (UVar 0) (UVar 0)
     )
 
-type STNameGen s = Tree Types (Const (STRef s Int))
+type STNameGen s = Types # Const (STRef s Int)
 
 instance (c Typ, c Row) => Recursively c Typ
 instance (c Typ, c Row) => Recursively c Row
@@ -213,8 +213,8 @@ instance
 
 rStructureMismatch ::
     (UnifyGen m Typ, UnifyGen m Row) =>
-    (forall c. Unify m c => Tree (UVarOf m) c -> Tree (UVarOf m) c -> m (Tree (UVarOf m) c)) ->
-    Tree (UTermBody (UVarOf m)) Row -> Tree (UTermBody (UVarOf m)) Row -> m ()
+    (forall c. Unify m c => UVarOf m # c -> UVarOf m # c -> m (UVarOf m # c)) ->
+    UTermBody (UVarOf m) # Row -> UTermBody (UVarOf m) # Row -> m ()
 rStructureMismatch match (UTermBody _c0 (RExtend r0)) (UTermBody _c1 (RExtend r1)) =
     rowExtendStructureMismatch match _RExtend r0 r1
 rStructureMismatch _ x y = unifyError (Mismatch (x ^. uBody) (y ^. uBody))

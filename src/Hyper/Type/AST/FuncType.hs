@@ -49,4 +49,4 @@ instance Show (h :# typ) => Show (FuncType typ h) where
 -- It is used by the 'Hyper.Class.Infer.Infer' instances of 'Hyper.Type.AST.App.App' and 'Hyper.Type.AST.Lam.Lam'
 -- to work for any AST which provides 'HasFuncType'.
 class HasFuncType typ where
-    funcType :: Prism' (Tree typ h) (Tree (FuncType typ) h)
+    funcType :: Prism' (typ # h) (FuncType typ # h)

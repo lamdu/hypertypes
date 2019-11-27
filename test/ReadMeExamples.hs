@@ -50,14 +50,14 @@ data RExpr h
 
 makeHasHPlain [''Expr, ''Typ, ''RExpr]
 
-verboseExpr :: Tree Pure Expr
+verboseExpr :: Pure # Expr
 verboseExpr = Pure (ELam "x" (Pure TInt) (Pure (EVar "x")))
 
 exprA, exprB :: HPlain RExpr
 exprA = RLamP "x" TIntP (RVarP "x")
 exprB = RLamP "x" (TFuncP TIntP TIntP) (RVarP "x")
 
-d :: Tree DiffP RExpr
+d :: DiffP # RExpr
 d = diffP exprA exprB
 
 formatDiff :: (Show a, Show b) => w -> a -> b -> String

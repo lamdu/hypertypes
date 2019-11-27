@@ -274,14 +274,14 @@ How do we represent an expression of the example language declared above?
 Let's start with the verbose way:
 
 ```Haskell
-verboseExpr :: Tree Pure Expr
+verboseExpr :: Pure # Expr
 verboseExpr =
     Pure (ELam "x" (Pure TInt) (Pure (EVar "x")))
 ```
 
 Explanations for the above:
 
-* `Tree Pure Expr` is a type synonym for `Pure ('AHyperType Expr)`
+* `Pure # Expr` is a type synonym for `Pure ('AHyperType Expr)`
 * `Pure` is the simplest "pass-through" nest type
 * The above is quite verbose with a lot of instances of `Pure` and many parentheses
 * Writing an expression of the above `RExpr` would be even more verbose due to additional `Var` and `TypedLam` data constructors!
@@ -329,7 +329,7 @@ CommonBodyP
 )
 
 > :t d
-d :: Tree DiffP Expr
+d :: DiffP # Expr
 -- (An Expr with the DiffP nest type)
 ```
 
@@ -342,7 +342,7 @@ diffP ::
     , Recursively ZipMatch h
     , Recursively HasHPlain h
     ) =>
-    HPlain h -> HPlain h -> Tree DiffP h
+    HPlain h -> HPlain h -> DiffP # h
 ```
 
 `diffP` can compute the diff for any AST that is recursively traversable, can be matched, and has a plain representation.
@@ -363,7 +363,7 @@ foldDiffsP ::
     , Recursively HasHPlain h
     ) =>
     (forall n. HasHPlain n => HRecWitness h n -> HPlain n -> HPlain n -> r) ->
-    Tree DiffP h ->
+    DiffP # h ->
     r
 ```
 
@@ -381,9 +381,9 @@ Let's look at how `HFunctor` is defined:
 class HNodes h => HFunctor h where
     -- | 'HFunctor' variant of 'fmap'
     hmap ::
-        (forall n. HWitness h n -> Tree p n -> Tree q n) ->
-        Tree h p ->
-        Tree h q
+        (forall n. HWitness h n -> p # n -> q # n) ->
+        h # p ->
+        h # q
 ```
 
 `HFunctor` can change an `h`'s nest-type from `p` to `q`.

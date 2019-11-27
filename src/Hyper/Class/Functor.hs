@@ -13,7 +13,7 @@ import Data.Functor.Const (Const(..))
 import GHC.Generics
 import Data.Proxy (Proxy(..))
 import Hyper.Class.Nodes (HNodes(..), HWitness(..), _HWitness, (#>))
-import Hyper.Type (Tree)
+import Hyper.Type (type (#))
 
 import Prelude.Compat
 
@@ -24,15 +24,15 @@ class HNodes h => HFunctor h where
     -- Applied a given mapping for @h@'s nodes (trees along witnesses that they are nodes of @h@)
     -- to result with a new tree, potentially with a different nest type.
     hmap ::
-        (forall n. HWitness h n -> Tree p n -> Tree q n) ->
-        Tree h p ->
-        Tree h q
+        (forall n. HWitness h n -> p # n -> q # n) ->
+        h # p ->
+        h # q
     {-# INLINE hmap #-}
     default hmap ::
         (Generic1 h, HFunctor (Rep1 h), HWitnessType h ~ HWitnessType (Rep1 h)) =>
-        (forall n. HWitness h n -> Tree p n -> Tree q n) ->
-        Tree h p ->
-        Tree h q
+        (forall n. HWitness h n -> p # n -> q # n) ->
+        h # p ->
+        h # q
     hmap f = to1 . hmap (f . (_HWitness %~ id)) . from1
 
 instance HFunctor (Const a) where
@@ -60,5 +60,5 @@ deriving newtype instance HFunctor h => HFunctor (Rec1 h)
 hmapped1 ::
     forall h n p q.
     (HFunctor h, HNodesConstraint h ((~) n)) =>
-    Setter (Tree h p) (Tree h q) (Tree p n) (Tree q n)
+    Setter (h # p) (h # q) (p # n) (q # n)
 hmapped1 = sets (\f -> hmap (Proxy @((~) n) #> f))

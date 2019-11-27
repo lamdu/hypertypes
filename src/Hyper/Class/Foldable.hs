@@ -15,7 +15,7 @@ import Data.Functor.Const (Const(..))
 import Data.Proxy (Proxy(..))
 import GHC.Generics
 import Hyper.Class.Nodes (HNodes(..), HWitness(..), _HWitness, (#>))
-import Hyper.Type (Tree)
+import Hyper.Type (type (#))
 
 import Prelude.Compat
 
@@ -27,16 +27,16 @@ class HNodes h => HFoldable h where
     -- into a monoid and concats its results for all nodes.
     hfoldMap ::
         Monoid a =>
-        (forall n. HWitness h n -> Tree p n -> a) ->
-        Tree h p ->
+        (forall n. HWitness h n -> p # n -> a) ->
+        h # p ->
         a
     {-# INLINE hfoldMap #-}
     default hfoldMap ::
         ( Generic1 h, HFoldable (Rep1 h), HWitnessType h ~ HWitnessType (Rep1 h)
         , Monoid a
         ) =>
-        (forall n. HWitness h n -> Tree p n -> a) ->
-        Tree h p ->
+        (forall n. HWitness h n -> p # n -> a) ->
+        h # p ->
         a
     hfoldMap f = hfoldMap (f . (_HWitness %~ id)) . from1
 
@@ -67,9 +67,9 @@ hfolded1 ::
     ( HFoldable h
     , HNodesConstraint h ((~) n)
     ) =>
-    Fold (Tree h p) (Tree p n)
+    Fold (h # p) (p # n)
 hfolded1 =
-    folding (hfoldMap @_ @[Tree p n] (Proxy @((~) n) #> pure))
+    folding (hfoldMap @_ @[p # n] (Proxy @((~) n) #> pure))
 
 -- | 'HFoldable' variant of 'Data.Foldable.traverse_'
 --
@@ -78,8 +78,8 @@ hfolded1 =
 {-# INLINE htraverse_ #-}
 htraverse_ ::
     (Applicative f, HFoldable h) =>
-    (forall c. HWitness h c -> Tree m c -> f ()) ->
-    Tree h m ->
+    (forall c. HWitness h c -> m # c -> f ()) ->
+    h # m ->
     f ()
 htraverse_ f = sequenceA_ . hfoldMap (fmap (:[]) . f)
 
@@ -90,7 +90,7 @@ htraverse1_ ::
     ( Applicative f, HFoldable h
     , HNodesConstraint h ((~) n)
     ) =>
-    (Tree p n -> f ()) ->
-    Tree h p ->
+    (p # n -> f ()) ->
+    h # p ->
     f ()
 htraverse1_ f = htraverse_ (Proxy @((~) n) #> f)

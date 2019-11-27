@@ -107,9 +107,9 @@ instance (DeBruijnIndex h, TermInfer1Deps env m) => Infer m (LangA h) where
 -- Monads for inferring `LangA`:
 
 data LangAInferEnv v = LangAInferEnv
-    { _iaScopeTypes :: Tree (ScopeTypes Typ) v
+    { _iaScopeTypes :: ScopeTypes Typ # v
     , _iaScopeLevel :: ScopeLevel
-    , _iaInstantiations :: Tree Types (QVarInstances v)
+    , _iaInstantiations :: Types # QVarInstances v
     }
 Lens.makeLenses ''LangAInferEnv
 
@@ -123,16 +123,16 @@ instance HasScopeTypes v Typ (LangAInferEnv v) where scopeTypes = iaScopeTypes
 newtype PureInferA a =
     PureInferA
     ( RWST (LangAInferEnv UVar) () PureInferState
-        (Either (Tree TypeError Pure)) a
+        (Either (TypeError # Pure)) a
     )
     deriving newtype
     ( Functor, Applicative, Monad
-    , MonadError (Tree TypeError Pure)
+    , MonadError (TypeError # Pure)
     , MonadReader (LangAInferEnv UVar)
     , MonadState PureInferState
     )
 
-execPureInferA :: PureInferA a -> Either (Tree TypeError Pure) a
+execPureInferA :: PureInferA a -> Either (TypeError # Pure) a
 execPureInferA (PureInferA act) =
     runRWST act emptyLangAInferEnv emptyPureInferState
     <&> (^. Lens._1)
@@ -186,15 +186,15 @@ instance MonadInstantiate PureInferA Row where
 newtype STInferA s a =
     STInferA
     ( ReaderT (LangAInferEnv (STUVar s), STNameGen s)
-        (ExceptT (Tree TypeError Pure) (ST s)) a
+        (ExceptT (TypeError # Pure) (ST s)) a
     )
     deriving newtype
     ( Functor, Applicative, Monad, MonadST
-    , MonadError (Tree TypeError Pure)
+    , MonadError (TypeError # Pure)
     , MonadReader (LangAInferEnv (STUVar s), STNameGen s)
     )
 
-execSTInferA :: STInferA s a -> ST s (Either (Tree TypeError Pure) a)
+execSTInferA :: STInferA s a -> ST s (Either (TypeError # Pure) a)
 execSTInferA (STInferA act) =
     do
         qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)

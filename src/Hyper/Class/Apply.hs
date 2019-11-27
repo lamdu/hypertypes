@@ -12,7 +12,7 @@ import GHC.Generics ((:*:)(..))
 import Hyper.Class.Functor (HFunctor(..))
 import Hyper.Class.Nodes (HWitness)
 import Hyper.Class.Pointed (HPointed)
-import Hyper.Type (Tree)
+import Hyper.Type (type (#))
 
 import Prelude.Compat
 
@@ -26,9 +26,9 @@ class HFunctor h => HApply h where
     -- >>> hzip (Person name0 age0) (Person name1 age1)
     -- Person (Pair name0 name1) (Pair age0 age1)
     hzip ::
-        Tree h p ->
-        Tree h q ->
-        Tree h (p :*: q)
+        h # p ->
+        h # q ->
+        h # (p :*: q)
 
 -- | A variant of 'Applicative' for 'Hyper.Type.HyperType's.
 class    (HPointed h, HApply h) => HApplicative h
@@ -46,8 +46,8 @@ instance (HApply a, HApply b) => HApply (a :*: b) where
 {-# INLINE liftH2 #-}
 liftH2 ::
     HApply h =>
-    (forall n. HWitness h n -> Tree p n -> Tree q n -> Tree r n) ->
-    Tree h p ->
-    Tree h q ->
-    Tree h r
+    (forall n. HWitness h n -> p # n -> q # n -> r # n) ->
+    h # p ->
+    h # q ->
+    h # r
 liftH2 f x = hmap (\w (a :*: b) -> f w a b) . hzip x

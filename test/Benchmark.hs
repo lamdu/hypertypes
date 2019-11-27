@@ -12,13 +12,13 @@ import TypeLang
 fields :: [String]
 fields = [ "a" ++ show i | i <- [0 :: Int .. 100] ]
 
-record :: [String] -> Tree Pure Typ
+record :: [String] -> Pure # Typ
 record = (^. hPlain) . TRecP . foldr (\k -> RExtendP (Name k) TIntP) REmptyP
 
-recordFwd :: Tree Pure Typ
+recordFwd :: Pure # Typ
 recordFwd = record fields
 
-recordBwd :: Tree Pure Typ
+recordBwd :: Pure # Typ
 recordBwd = record (reverse fields)
 
 unifyLargeRows :: Benchmarkable

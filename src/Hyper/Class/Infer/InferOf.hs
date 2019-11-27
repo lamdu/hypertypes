@@ -15,7 +15,7 @@ import Hyper.Class.Infer (InferOf)
 import Hyper.Class.Nodes (HNodes(..))
 import Hyper.Class.Recursive (Recursive(..), Recursively)
 import Hyper.Class.Traversable (HTraversable)
-import Hyper.Type (HyperType, Tree)
+import Hyper.Type (HyperType, type (#))
 
 import Prelude.Compat
 
@@ -24,12 +24,12 @@ class HasInferredType t where
     -- | The type of @t@
     type TypeOf t :: HyperType
     -- A 'Control.Lens.Lens' from an inference result to an inferred type
-    inferredType :: Proxy t -> ALens' (Tree (InferOf t) v) (Tree v (TypeOf t))
+    inferredType :: Proxy t -> ALens' (InferOf t # v) (v # TypeOf t)
 
 -- | @HasInferredValue t@ represents that @InferOf t@ contains an inferred value for @t@.
 class HasInferredValue t where
     -- | A 'Control.Lens.Lens' from an inference result to an inferred value
-    inferredValue :: Lens' (Tree (InferOf t) v) (Tree v t)
+    inferredValue :: Lens' (InferOf t # v) (v # t)
 
 class    HFunctor (InferOf h) => HFunctorInferOf h
 instance HFunctor (InferOf h) => HFunctorInferOf h

@@ -69,15 +69,15 @@ class
     -- | Unify the types/values in infer results
     inferOfUnify ::
         Proxy t ->
-        Tree (InferOf t) (UVarOf m) ->
-        Tree (InferOf t) (UVarOf m) ->
+        InferOf t # UVarOf m ->
+        InferOf t # UVarOf m ->
         m ()
 
     -- | Check whether two infer results are the same
     inferOfMatches ::
         Proxy t ->
-        Tree (InferOf t) (UVarOf m) ->
-        Tree (InferOf t) (UVarOf m) ->
+        InferOf t # UVarOf m ->
+        InferOf t # UVarOf m ->
         m Bool
 
     -- TODO: Putting documentation here causes duplication in the haddock documentation
@@ -97,13 +97,13 @@ instance Recursive (Blame m) where
             p0 _ = Proxy
 
 -- | A type synonym to help 'BlameResult' be more succinct
-type InferOf' e v = Tree (InferOf (GetHyperType e)) v
+type InferOf' e v = InferOf (GetHyperType e) # v
 
 prepareH ::
     forall m exp a.
     Blame m exp =>
-    Tree (Ann a) exp ->
-    m (Tree (Ann (a :*: InferResult (UVarOf m) :*: InferResult (UVarOf m))) exp)
+    Ann a # exp ->
+    m (Ann (a :*: InferResult (UVarOf m) :*: InferResult (UVarOf m)) # exp)
 prepareH t =
     withDict (inferContext (Proxy @m) (Proxy @exp)) $
     hpure (Proxy @(UnifyGen m) #> MkContainedH newUnbound)
@@ -113,9 +113,9 @@ prepareH t =
 prepare ::
     forall m exp a.
     Blame m exp =>
-    Tree (InferOf exp) (UVarOf m) ->
-    Tree (Ann a) exp ->
-    m (Tree (Ann (a :*: InferResult (UVarOf m) :*: InferResult (UVarOf m))) exp)
+    InferOf exp # UVarOf m ->
+    Ann a # exp ->
+    m (Ann (a :*: InferResult (UVarOf m) :*: InferResult (UVarOf m)) # exp)
 prepare resFromPosition (Ann a x) =
     withDict (recurse (Proxy @(Blame m exp))) $
     hmap
@@ -131,8 +131,8 @@ tryUnify ::
     forall err m top exp.
     (MonadError err m, Blame m exp) =>
     HWitness top exp ->
-    Tree (InferOf exp) (UVarOf m) ->
-    Tree (InferOf exp) (UVarOf m) ->
+    InferOf exp # UVarOf m ->
+    InferOf exp # UVarOf m ->
     m ()
 tryUnify _ i0 i1 =
     withDict (inferContext (Proxy @m) (Proxy @exp)) $
@@ -151,8 +151,8 @@ makeCommonInstances [''BlameResult]
 finalize ::
     forall a m exp.
     Blame m exp =>
-    Tree (Ann (a :*: InferResult (UVarOf m) :*: InferResult (UVarOf m))) exp ->
-    m (Tree (Ann (a :*: BlameResult (UVarOf m))) exp)
+    Ann (a :*: InferResult (UVarOf m) :*: InferResult (UVarOf m)) # exp ->
+    m (Ann (a :*: BlameResult (UVarOf m)) # exp)
 finalize (Ann (a :*: InferResult i0 :*: InferResult i1) x) =
     withDict (recurse (Proxy @(Blame m exp))) $
     do
@@ -180,10 +180,10 @@ blame ::
     , MonadError err m
     , Blame m exp
     ) =>
-    (forall n. Tree a n -> priority) ->
-    Tree (InferOf exp) (UVarOf m) ->
-    Tree (Ann a) exp ->
-    m (Tree (Ann (a :*: BlameResult (UVarOf m))) exp)
+    (forall n. a # n -> priority) ->
+    InferOf exp # UVarOf m ->
+    Ann a # exp ->
+    m (Ann (a :*: BlameResult (UVarOf m)) # exp)
 blame order topLevelType e =
     do
         p <- prepare topLevelType e

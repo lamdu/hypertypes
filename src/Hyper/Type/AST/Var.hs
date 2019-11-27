@@ -23,14 +23,14 @@ import           Prelude.Compat
 type family ScopeOf (t :: HyperType) :: HyperType
 
 class HasScope m s where
-    getScope :: m (Tree s (UVarOf m))
+    getScope :: m (s # UVarOf m)
 
 class VarType var expr where
     -- | Instantiate a type for a variable in a given scope
     varType ::
         UnifyGen m (TypeOf expr) =>
-        Proxy expr -> var -> Tree (ScopeOf expr) (UVarOf m) ->
-        m (Tree (UVarOf m) (TypeOf expr))
+        Proxy expr -> var -> ScopeOf expr # UVarOf m ->
+        m (UVarOf m # TypeOf expr)
 
 -- | Parameterized by term AST and not by its type AST
 -- (which currently is its only part used),

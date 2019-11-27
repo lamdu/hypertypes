@@ -35,8 +35,8 @@ import Prelude.Compat
 updateConstraints ::
     Unify m t =>
     TypeConstraintsOf t ->
-    Tree (UVarOf m) t ->
-    Tree (UTerm (UVarOf m)) t ->
+    UVarOf m # t ->
+    UTerm (UVarOf m) # t ->
     m ()
 updateConstraints !newConstraints v x =
     case x of
@@ -54,8 +54,8 @@ updateConstraints !newConstraints v x =
 updateTermConstraints ::
     forall m t.
     Unify m t =>
-    Tree (UVarOf m) t ->
-    Tree (UTermBody (UVarOf m)) t ->
+    UVarOf m # t ->
+    UTermBody (UVarOf m) # t ->
     TypeConstraintsOf t ->
     m ()
 updateTermConstraints v t newConstraints
@@ -74,7 +74,7 @@ updateTermConstraints v t newConstraints
 {-# INLINE updateTermConstraintsH #-}
 updateTermConstraintsH ::
     Unify m t =>
-    Tree (WithConstraint (UVarOf m)) t ->
+    WithConstraint (UVarOf m) # t ->
     m ()
 updateTermConstraintsH (WithConstraint c v0) =
     do
@@ -86,7 +86,7 @@ updateTermConstraintsH (WithConstraint c v0) =
 unify ::
     forall m t.
     Unify m t =>
-    Tree (UVarOf m) t -> Tree (UVarOf m) t -> m (Tree (UVarOf m) t)
+    UVarOf m # t -> UVarOf m # t -> m (UVarOf m # t)
 unify x0 y0
     | x0 == y0 = pure x0
     | otherwise =
@@ -104,9 +104,9 @@ unify x0 y0
 {-# INLINE unifyUnbound #-}
 unifyUnbound ::
     Unify m t =>
-    Tree (UVarOf m) t -> TypeConstraintsOf t ->
-    Tree (UVarOf m) t -> Tree (UTerm (UVarOf m)) t ->
-    m (Tree (UVarOf m) t)
+    UVarOf m # t -> TypeConstraintsOf t ->
+    UVarOf m # t -> UTerm (UVarOf m) # t ->
+    m (UVarOf m # t)
 unifyUnbound xv level yv yt =
     do
         updateConstraints level yv yt
@@ -116,9 +116,9 @@ unifyUnbound xv level yv yt =
 unifyUTerms ::
     forall m t.
     Unify m t =>
-    Tree (UVarOf m) t -> Tree (UTerm (UVarOf m)) t ->
-    Tree (UVarOf m) t -> Tree (UTerm (UVarOf m)) t ->
-    m (Tree (UVarOf m) t)
+    UVarOf m # t -> UTerm (UVarOf m) # t ->
+    UVarOf m # t -> UTerm (UVarOf m) # t ->
+    m (UVarOf m # t)
 unifyUTerms xv (UUnbound level) yv yt = unifyUnbound xv level yv yt
 unifyUTerms xv xt yv (UUnbound level) = unifyUnbound yv level xv xt
 unifyUTerms xv USkolem{} yv _ = xv <$ unifyError (SkolemUnified xv yv)

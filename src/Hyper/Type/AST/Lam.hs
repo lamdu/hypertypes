@@ -54,7 +54,7 @@ instance
     , UnifyGen m (TypeOf t)
     , HasFuncType (TypeOf t)
     , HasInferredType t
-    , LocalScopeType v (Tree (UVarOf m) (TypeOf t)) m
+    , LocalScopeType v (UVarOf m # TypeOf t) m
     ) =>
     Infer m (Lam v t) where
 

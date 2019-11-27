@@ -192,8 +192,8 @@ inferExpr ::
     , RTraversable t
     , RTraversableInferOf t
     ) =>
-    Tree Pure t ->
-    m (Tree Pure (Scheme Types (TypeOf t)))
+    Pure # t ->
+    m (Pure # Scheme Types (TypeOf t))
 inferExpr x =
     do
         inferRes <- infer (wrap (const (Ann (Const ()))) x)
@@ -212,7 +212,7 @@ inferExpr x =
         p0 :: HWitness a n -> Proxy n
         p0 _ = Proxy
 
-vecNominalDecl :: Tree Pure (NominalDecl Typ)
+vecNominalDecl :: Pure # NominalDecl Typ
 vecNominalDecl =
     _Pure # NominalDecl
     { _nParams =
@@ -232,7 +232,7 @@ vecNominalDecl =
         }
     }
 
-phantomIntNominalDecl :: Tree Pure (NominalDecl Typ)
+phantomIntNominalDecl :: Pure # NominalDecl Typ
 phantomIntNominalDecl =
     _Pure # NominalDecl
     { _nParams =
@@ -257,7 +257,7 @@ mutType =
 
 -- A nominal type with foralls:
 -- "newtype LocalMut a = forall s. Mut s a"
-localMutNominalDecl :: Tree Pure (NominalDecl Typ)
+localMutNominalDecl :: Pure # NominalDecl Typ
 localMutNominalDecl =
     _Pure # NominalDecl
     { _nParams =
@@ -269,7 +269,7 @@ localMutNominalDecl =
         forAll (Lens.Const ()) (Lens.Identity "effects") (\_ _ -> mutType) ^. _Pure
     }
 
-returnScheme :: Tree Pure (Scheme Types Typ)
+returnScheme :: Pure # Scheme Types Typ
 returnScheme =
     forAll (Lens.Identity "value") (Lens.Identity "effects") $
     \(Lens.Identity val) _ -> TFunP val mutType
@@ -303,11 +303,11 @@ prettyPrint :: Pretty a => a -> IO ()
 prettyPrint = putStrLn . prettyStyle
 
 testCommon ::
-    (Pretty (Tree lang Pure), Pretty a, Eq a) =>
-    Tree Pure lang ->
+    (Pretty (lang # Pure), Pretty a, Eq a) =>
+    Pure # lang ->
     String ->
-    Either (Tree TypeError Pure) a ->
-    Either (Tree TypeError Pure) a ->
+    Either (TypeError # Pure) a ->
+    Either (TypeError # Pure) a ->
     IO Bool
 testCommon expr expect pureRes stRes =
     do
@@ -339,7 +339,7 @@ testB p expect =
         pureRes = execPureInferB (withEnv id (inferExpr expr))
         stRes = runST (execSTInferB (withEnv Lens._1 (inferExpr expr)))
 
-testAlphaEq :: Tree Pure (Scheme Types Typ) -> Tree Pure (Scheme Types Typ) -> Bool -> IO Bool
+testAlphaEq :: Pure # Scheme Types Typ -> Pure # Scheme Types Typ -> Bool -> IO Bool
 testAlphaEq x y expect =
     do
         putStrLn ""
@@ -353,13 +353,13 @@ testAlphaEq x y expect =
         pureRes = Lens.has Lens._Right (execPureInferB (alphaEq x y))
         stRes = Lens.has Lens._Right (runST (execSTInferB (alphaEq x y)))
 
-intsRecord :: [Name] -> Tree Pure (Scheme Types Typ)
+intsRecord :: [Name] -> Pure # Scheme Types Typ
 intsRecord = uniType . TRecP . foldr (\k r -> RExtendP k TIntP r) REmptyP
 
-intToInt :: Tree Pure (Scheme Types Typ)
+intToInt :: Pure # Scheme Types Typ
 intToInt = TFunP TIntP TIntP & uniType
 
-uniType :: HPlain Typ -> Tree Pure (Scheme Types Typ)
+uniType :: HPlain Typ -> Pure # Scheme Types Typ
 uniType typ =
     _Pure # Scheme
     { _sForAlls = Types (QVars mempty) (QVars mempty)
@@ -370,7 +370,7 @@ forAll ::
     (Traversable t, Traversable u) =>
     t Name -> u Name ->
     (t (HPlain Typ) -> u (HPlain Row) -> HPlain Typ) ->
-    Tree Pure (Scheme Types Typ)
+    Pure # Scheme Types Typ
 forAll tvs rvs body =
     _Pure #
     Scheme (Types (foralls tvs) (foralls rvs))
@@ -381,20 +381,20 @@ forAll tvs rvs body =
             , QVar typ ~ Name
             , Monoid (TypeConstraintsOf typ)
             ) =>
-            f Name -> Tree QVars typ
+            f Name -> QVars # typ
         foralls xs =
             xs ^.. Lens.folded <&> (, mempty)
             & Map.fromList & QVars
 
 forAll1 ::
     Name -> (HPlain Typ -> HPlain Typ) ->
-    Tree Pure (Scheme Types Typ)
+    Pure # Scheme Types Typ
 forAll1 t body =
     forAll (Lens.Identity t) (Lens.Const ()) $ \(Lens.Identity tv) _ -> body tv
 
 forAll1r ::
     Name -> (HPlain Row -> HPlain Typ) ->
-    Tree Pure (Scheme Types Typ)
+    Pure # Scheme Types Typ
 forAll1r t body =
     forAll (Lens.Const ()) (Lens.Identity t) $ \_ (Lens.Identity tv) -> body tv
 

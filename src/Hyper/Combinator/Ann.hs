@@ -19,7 +19,7 @@ import Hyper.Combinator.Flip
 import Hyper.Recurse
 import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
-import Hyper.Type (type (:#), Tree)
+import Hyper.Type (type (#), type (:#))
 
 import Prelude.Compat
 
@@ -98,7 +98,7 @@ instance RTraversable h => HTraversable (HFlip Ann h) where
             <*> htraverse (Proxy @RTraversable #> from _HFlip hsequence) b
         )
 
-type Annotated a h = Tree (Ann (Const a)) h
+type Annotated a h = Ann (Const a) # h
 
-annotation :: Lens' (Ann (Const a) h) a
+annotation :: Lens' (Ann (Const a) # h) a
 annotation = hAnn . _Wrapped

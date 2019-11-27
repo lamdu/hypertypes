@@ -30,56 +30,56 @@ data HRecWitness h n where
     HRecSelf :: HRecWitness h h
     HRecSub :: HWitness h c -> HRecWitness c n -> HRecWitness h n
 
--- | Monadically convert a 'Pure' 'Tree' to a different 'HyperType' from the bottom up
+-- | Monadically convert a 'Pure' to a different 'HyperType' from the bottom up
 {-# INLINE wrapM #-}
 wrapM ::
     forall m h w.
     (Monad m, RTraversable h) =>
-    (forall n. HRecWitness h n -> Tree n w -> m (Tree w n)) ->
-    Tree Pure h ->
-    m (Tree w h)
+    (forall n. HRecWitness h n -> n # w -> m (w # n)) ->
+    Pure # h ->
+    m (w # h)
 wrapM f x =
     withDict (recurse (Proxy @(RTraversable h))) $
     x ^. _Pure
     & htraverse (Proxy @RTraversable #*# \w -> wrapM (f . HRecSub w))
     >>= f HRecSelf
 
--- | Monadically unwrap a 'Tree' from the top down, replacing its 'HyperType' with 'Pure'
+-- | Monadically unwrap a tree from the top down, replacing its 'HyperType' with 'Pure'
 {-# INLINE unwrapM #-}
 unwrapM ::
     forall m h w.
     (Monad m, RTraversable h) =>
-    (forall n. HRecWitness h n -> Tree w n -> m (Tree n w)) ->
-    Tree w h ->
-    m (Tree Pure h)
+    (forall n. HRecWitness h n -> w # n -> m (n # w)) ->
+    w # h ->
+    m (Pure # h)
 unwrapM f x =
     withDict (recurse (Proxy @(RTraversable h))) $
     f HRecSelf x
     >>= htraverse (Proxy @RTraversable #*# \w -> unwrapM (f . HRecSub w))
     <&> (_Pure #)
 
--- | Wrap a 'Pure' 'Tree' to a different 'HyperType' from the bottom up
+-- | Wrap a 'Pure' to a different 'HyperType' from the bottom up
 {-# INLINE wrap #-}
 wrap ::
     forall h w.
     Recursively HFunctor h =>
-    (forall n. HRecWitness h n -> Tree n w -> Tree w n) ->
-    Tree Pure h ->
-    Tree w h
+    (forall n. HRecWitness h n -> n # w -> w # n) ->
+    Pure # h ->
+    w # h
 wrap f x =
     withDict (recursively (Proxy @(HFunctor h))) $
     x ^. _Pure
     & hmap (Proxy @(Recursively HFunctor) #*# \w -> wrap (f . HRecSub w))
     & f HRecSelf
 
--- | Unwrap a 'Tree' from the top down, replacing its 'HyperType' with 'Pure'
+-- | Unwrap a tree from the top down, replacing its 'HyperType' with 'Pure'
 {-# INLINE unwrap #-}
 unwrap ::
     forall h w.
     Recursively HFunctor h =>
-    (forall n. HRecWitness h n -> Tree w n -> Tree n w) ->
-    Tree w h ->
-    Tree Pure h
+    (forall n. HRecWitness h n -> w # n -> n # w) ->
+    w # h ->
+    Pure # h
 unwrap f x =
     withDict (recursively (Proxy @(HFunctor h))) $
     _Pure #
@@ -90,8 +90,8 @@ unwrap f x =
 {-# INLINE fold #-}
 fold ::
     Recursively HFunctor h =>
-    (forall n. HRecWitness h n -> Tree n (Const a) -> a) ->
-    Tree Pure h ->
+    (forall n. HRecWitness h n -> n # Const a -> a) ->
+    Pure # h ->
     a
 fold f = getConst . wrap (fmap Const . f)
 
@@ -99,18 +99,18 @@ fold f = getConst . wrap (fmap Const . f)
 {-# INLINE unfold #-}
 unfold ::
     Recursively HFunctor h =>
-    (forall n. HRecWitness h n -> a -> Tree n (Const a)) ->
+    (forall n. HRecWitness h n -> a -> n # Const a) ->
     a ->
-    Tree Pure h
+    Pure # h
 unfold f = unwrap (fmap (. getConst) f) . Const
 
--- | Fold over all of the recursive child nodes of a 'Tree' in pre-order
+-- | Fold over all of the recursive child nodes of a tree in pre-order
 {-# INLINE foldMapRecursive #-}
 foldMapRecursive ::
     forall h p a.
     (Recursively HFoldable h, Recursively HFoldable p, Monoid a) =>
-    (forall n q. HRecWitness h n -> Tree n q -> a) ->
-    Tree h p ->
+    (forall n q. HRecWitness h n -> n # q -> a) ->
+    h # p ->
     a
 foldMapRecursive f x =
     withDict (recursively (Proxy @(HFoldable h))) $

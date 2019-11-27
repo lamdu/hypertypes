@@ -13,7 +13,7 @@ import Control.Lens (Iso, iso)
 import GHC.Generics (Generic)
 import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
-import Hyper.Type (Tree, type (:#))
+import Hyper.Type (type (#), type (:#))
 import Text.PrettyPrint.HughesPJClass (Pretty(..))
 
 -- | A 'Hyper.Type.HyperType' to express the simplest plain form of a nested higher-kinded data structure
@@ -28,7 +28,7 @@ makeCommonInstances [''Pure]
 -- Using `_Pure` rather than the 'Pure' data constructor is recommended,
 -- because it helps the type inference know that 'Pure' is parameterized with a 'Hyper.Type.HyperType'.
 {-# INLINE _Pure #-}
-_Pure :: Iso (Tree Pure h) (Tree Pure j) (Tree h Pure) (Tree j Pure)
+_Pure :: Iso (Pure # h) (Pure # j) (h # Pure) (j # Pure)
 _Pure = iso (\(Pure x) -> x) Pure
 
 instance Pretty (h :# Pure) => Pretty (Pure h) where

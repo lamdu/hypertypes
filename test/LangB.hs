@@ -63,7 +63,7 @@ instance HasInferredType LangB where
     type TypeOf LangB = Typ
     inferredType _ = _ANode
 
-instance Pretty (Tree LangB Pure) where
+instance Pretty (LangB # Pure) where
     pPrintPrec _ _ (BLit i) = pPrint i
     pPrintPrec _ _ BRecEmpty = Pretty.text "{}"
     pPrintPrec lvl p (BRecExtend (RowExtend h v r)) =
@@ -86,16 +86,16 @@ instance VarType Name LangB where
         where
             r ::
                 forall m. UnifyGen m Typ =>
-                Map Name (Tree (HFlip GTerm Typ) (UVarOf m)) ->
-                m (Tree (UVarOf m) Typ)
+                Map Name (HFlip GTerm Typ # UVarOf m) ->
+                m (UVarOf m # Typ)
             r x =
                 withDict (unifyRecursive (Proxy @m) (Proxy @Typ)) $
                 x ^?! Lens.ix h . _HFlip & instantiate
 
 instance
     ( MonadScopeLevel m
-    , LocalScopeType Name (Tree (UVarOf m) Typ) m
-    , LocalScopeType Name (Tree (GTerm (UVarOf m)) Typ) m
+    , LocalScopeType Name (UVarOf m # Typ) m
+    , LocalScopeType Name (GTerm (UVarOf m) # Typ) m
     , UnifyGen m Typ, UnifyGen m Row
     , HasScope m ScopeTypes
     , MonadNominals Name Typ m
@@ -149,9 +149,9 @@ instance IsString (HPlain LangB) where
 Lens.makePrisms ''ScopeTypes
 
 data InferScope v = InferScope
-    { _varSchemes :: Tree ScopeTypes v
+    { _varSchemes :: ScopeTypes # v
     , _scopeLevel :: ScopeLevel
-    , _nominals :: Map Name (Tree (LoadedNominalDecl Typ) v)
+    , _nominals :: Map Name (LoadedNominalDecl Typ # v)
     }
 Lens.makeLenses ''InferScope
 
@@ -161,18 +161,18 @@ emptyInferScope = InferScope mempty (ScopeLevel 0) mempty
 newtype PureInferB a =
     PureInferB
     ( RWST (InferScope UVar) () PureInferState
-        (Either (Tree TypeError Pure)) a
+        (Either (TypeError # Pure)) a
     )
     deriving newtype
     ( Functor, Applicative, Monad
-    , MonadError (Tree TypeError Pure)
+    , MonadError (TypeError # Pure)
     , MonadReader (InferScope UVar)
     , MonadState PureInferState
     )
 
 Lens.makePrisms ''PureInferB
 
-execPureInferB :: PureInferB a -> Either (Tree TypeError Pure) a
+execPureInferB :: PureInferB a -> Either (TypeError # Pure) a
 execPureInferB act =
     runRWST (act ^. _PureInferB) emptyInferScope emptyPureInferState
     <&> (^. Lens._1)
@@ -185,10 +185,10 @@ instance MonadNominals Name Typ PureInferB where
 instance HasScope PureInferB ScopeTypes where
     getScope = Lens.view varSchemes
 
-instance LocalScopeType Name (Tree UVar Typ) PureInferB where
+instance LocalScopeType Name (UVar # Typ) PureInferB where
     localScopeType h v = local (varSchemes . _ScopeTypes . Lens.at h ?~ MkHFlip (GMono v))
 
-instance LocalScopeType Name (Tree (GTerm UVar) Typ) PureInferB where
+instance LocalScopeType Name (GTerm UVar # Typ) PureInferB where
     localScopeType h v = local (varSchemes . _ScopeTypes . Lens.at h ?~ MkHFlip v)
 
 instance MonadScopeLevel PureInferB where
@@ -227,16 +227,16 @@ instance HasScheme Types PureInferB Row
 newtype STInferB s a =
     STInferB
     (ReaderT (InferScope (STUVar s), STNameGen s)
-        (ExceptT (Tree TypeError Pure) (ST s)) a)
+        (ExceptT (TypeError # Pure) (ST s)) a)
     deriving newtype
     ( Functor, Applicative, Monad, MonadST
-    , MonadError (Tree TypeError Pure)
+    , MonadError (TypeError # Pure)
     , MonadReader (InferScope (STUVar s), STNameGen s)
     )
 
 Lens.makePrisms ''STInferB
 
-execSTInferB :: STInferB s a -> ST s (Either (Tree TypeError Pure) a)
+execSTInferB :: STInferB s a -> ST s (Either (TypeError # Pure) a)
 execSTInferB act =
     do
         qvarGen <- Types <$> (newSTRef 0 <&> Const) <*> (newSTRef 0 <&> Const)
@@ -250,10 +250,10 @@ instance MonadNominals Name Typ (STInferB s) where
 instance HasScope (STInferB s) ScopeTypes where
     getScope = Lens.view (Lens._1 . varSchemes)
 
-instance LocalScopeType Name (Tree (STUVar s) Typ) (STInferB s) where
+instance LocalScopeType Name (STUVar s # Typ) (STInferB s) where
     localScopeType h v = local (Lens._1 . varSchemes . _ScopeTypes . Lens.at h ?~ MkHFlip (GMono v))
 
-instance LocalScopeType Name (Tree (GTerm (STUVar s)) Typ) (STInferB s) where
+instance LocalScopeType Name (GTerm (STUVar s) # Typ) (STInferB s) where
     localScopeType h v = local (Lens._1 . varSchemes . _ScopeTypes . Lens.at h ?~ MkHFlip v)
 
 instance MonadScopeLevel (STInferB s) where

@@ -17,7 +17,7 @@ import Hyper.Class.Foldable (HFoldable, htraverse_, htraverse1_)
 import Hyper.Class.Functor (HFunctor(..))
 import Hyper.Class.Nodes (HNodes(..), HWitness)
 import Hyper.Class.Traversable (HTraversable, htraverse)
-import Hyper.Type (Tree)
+import Hyper.Type (type (#))
 import Hyper.Type.Pure (Pure(..), _Pure)
 
 import Prelude.Compat
@@ -37,10 +37,10 @@ class ZipMatch h where
     -- Just (NewPerson (Pair p0 p1))
     -- >>> zipMatch (NewPerson p) (NewCake c)
     -- Nothing
-    zipMatch :: Tree h p -> Tree h q -> Maybe (Tree h (p :*: q))
+    zipMatch :: h # p -> h # q -> Maybe (h # (p :*: q))
     default zipMatch ::
         (Generic1 h, ZipMatch (Rep1 h)) =>
-        Tree h p -> Tree h q -> Maybe (Tree h (p :*: q))
+        h # p -> h # q -> Maybe (h # (p :*: q))
     zipMatch x =
         fmap to1 . zipMatch (from1 x) . from1
 
@@ -70,30 +70,30 @@ deriving newtype instance ZipMatch h => ZipMatch (Rec1 h)
 {-# INLINE zipMatch2 #-}
 zipMatch2 ::
     (ZipMatch h, HFunctor h) =>
-    (forall n. HWitness h n -> Tree p n -> Tree q n -> Tree r n) ->
-    Tree h p -> Tree h q -> Maybe (Tree h r)
+    (forall n. HWitness h n -> p # n -> q # n -> r # n) ->
+    h # p -> h # q -> Maybe (h # r)
 zipMatch2 f x y = zipMatch x y <&> hmap (\w (a :*: b) -> f w a b)
 
 -- | An 'Applicative' variant of 'zipMatch2'
 {-# INLINE zipMatchA #-}
 zipMatchA ::
     (Applicative f, ZipMatch h, HTraversable h) =>
-    (forall n. HWitness h n -> Tree p n -> Tree q n -> f (Tree r n)) ->
-    Tree h p -> Tree h q -> Maybe (f (Tree h r))
+    (forall n. HWitness h n -> p # n -> q # n -> f (r # n)) ->
+    h # p -> h # q -> Maybe (f (h # r))
 zipMatchA f x y = zipMatch x y <&> htraverse (\w (a :*: b) -> f w a b)
 
 -- | A variant of 'zipMatchA' where the 'Applicative' actions do not contain results
 {-# INLINE zipMatch_ #-}
 zipMatch_ ::
     (Applicative f, ZipMatch h, HFoldable h) =>
-    (forall n. HWitness h n -> Tree p n -> Tree q n -> f ()) ->
-    Tree h p -> Tree h q -> Maybe (f ())
+    (forall n. HWitness h n -> p # n -> q # n -> f ()) ->
+    h # p -> h # q -> Maybe (f ())
 zipMatch_ f x y = zipMatch x y <&> htraverse_ (\w (a :*: b) -> f w a b)
 
 -- | A variant of 'zipMatch_' for 'Hyper.Type.HyperType's with a single node type (avoids using @RankNTypes@)
 {-# INLINE zipMatch1_ #-}
 zipMatch1_ ::
     (Applicative f, ZipMatch h, HFoldable h, HNodesConstraint h ((~) n)) =>
-    (Tree p n -> Tree q n -> f ()) ->
-    Tree h p -> Tree h q -> Maybe (f ())
+    (p # n -> q # n -> f ()) ->
+    h # p -> h # q -> Maybe (f ())
 zipMatch1_ f x y = zipMatch x y <&> htraverse1_ (\(a :*: b) -> f a b)

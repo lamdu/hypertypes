@@ -43,7 +43,7 @@ makeLenses ''CommonBody
 diff ::
     forall t a b.
     (Recursively ZipMatch t, RTraversable t) =>
-    Tree (Ann a) t -> Tree (Ann b) t -> Tree (Diff a b) t
+    Ann a # t -> Ann b # t -> Diff a b # t
 diff x@(Ann xA xB) y@(Ann yA yB) =
     withDict (recursively (Proxy @(ZipMatch t))) $
     withDict (recurse (Proxy @(RTraversable t))) $
@@ -63,8 +63,8 @@ diff x@(Ann xA xB) y@(Ann yA yB) =
 foldDiffs ::
     forall r h a b.
     (Monoid r, Recursively HFoldable h) =>
-    (forall n. HRecWitness h n -> Tree (Ann a) n -> Tree (Ann b) n -> r) ->
-    Tree (Diff a b) h ->
+    (forall n. HRecWitness h n -> Ann a # n -> Ann b # n -> r) ->
+    Diff a b # h ->
     r
 foldDiffs _ CommonSubTree{} = mempty
 foldDiffs f (Different (x :*: y)) = f HRecSelf x y
@@ -85,7 +85,7 @@ makePrisms ''DiffP
 diffP ::
     forall h.
     (Recursively ZipMatch h, Recursively HasHPlain h, RTraversable h) =>
-    HPlain h -> HPlain h -> Tree DiffP h
+    HPlain h -> HPlain h -> DiffP # h
 diffP x y =
     withDict (recursively (Proxy @(HasHPlain h))) $
     diffPH (x ^. hPlain) (y ^. hPlain)
@@ -93,7 +93,7 @@ diffP x y =
 diffPH ::
     forall h.
     (Recursively ZipMatch h, Recursively HasHPlain h, RTraversable h) =>
-    Tree Pure h -> Tree Pure h -> Tree DiffP h
+    Pure # h -> Pure # h -> DiffP # h
 diffPH x y =
     withDict (recursively (Proxy @(ZipMatch h))) $
     withDict (recursively (Proxy @(HasHPlain h))) $
@@ -119,7 +119,7 @@ foldDiffsP ::
     forall r h.
     (Monoid r, Recursively HFoldable h, Recursively HasHPlain h) =>
     (forall n. HasHPlain n => HRecWitness h n -> HPlain n -> HPlain n -> r) ->
-    Tree DiffP h ->
+    DiffP # h ->
     r
 foldDiffsP f =
     withDict (recursively (Proxy @(HasHPlain h))) $
