@@ -86,16 +86,16 @@ makeHContextCtr (cName, _, [cField]) =
             VarE 'hmap
             `AppE`
             ( VarE 'const `AppE`
-                (InfixE
-                    ( Just
-                        ( InfixE
-                            (Just (VarE 'Lens._1))
-                            (VarE '(.))
-                            (Just (VarE '_HCont))
-                        )
+                InfixE
+                ( Just
+                    ( InfixE
+                        (Just (VarE 'Lens._1))
+                        (VarE '(.))
+                        (Just (VarE '_HCont))
                     )
-                    (VarE '(Lens.%~))
-                    (Just (InfixE (Just (ConE cName)) (VarE '(.)) Nothing)))
+                )
+                (VarE '(Lens.%~))
+                (Just (InfixE (Just (ConE cName)) (VarE '(.)) Nothing))
             ) `AppE` (VarE 'hcontext `AppE` VarE cVar)
             & pure
         cVar = mkName "_c"
