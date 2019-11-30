@@ -9,6 +9,7 @@ module Hyper.Combinator.ANode
 import Control.Lens (Iso, iso)
 import GHC.Generics (Generic)
 import Hyper.Class.Has (HasChild(..))
+import Hyper.Class.Recursive (RNodes, Recursively, RTraversable)
 import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
 import Hyper.Type (type (#), type (:#))
@@ -31,3 +32,7 @@ makeCommonInstances [''ANode]
 instance HasChild (ANode c) c where
     {-# INLINE getChild #-}
     getChild = _ANode
+
+instance RNodes n => RNodes (ANode n)
+instance (c (ANode n), Recursively c n) => Recursively c (ANode n)
+instance RTraversable n => RTraversable (ANode n)
