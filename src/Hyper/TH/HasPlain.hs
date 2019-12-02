@@ -49,10 +49,10 @@ makeHasHPlainForType info =
                 , funD 'hPlain
                     [ clause []
                         ( normalB
-                            (infixE
-                                (Just (varE 'Lens.iso `appE` varE fromPlain `appE` varE toPlain))
-                                (varE '(.))
-                                (Just (varE 'Lens.from `appE` varE '_Pure))
+                            ((VarE 'Lens.iso `AppE` VarE fromPlain `AppE` VarE toPlain)
+                                `dot`
+                                (VarE 'Lens.from `AppE` VarE '_Pure)
+                                & pure
                             )
                         )
                         [ funD toPlain (ctrs <&> pure . (^. Lens._2))

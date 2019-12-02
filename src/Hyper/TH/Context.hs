@@ -87,13 +87,7 @@ makeHContextCtr (cName, _, [cField]) =
             `AppE`
             ( VarE 'const `AppE`
                 InfixE
-                ( Just
-                    ( InfixE
-                        (Just (VarE 'Lens._1))
-                        (VarE '(.))
-                        (Just (VarE '_HCont))
-                    )
-                )
+                (Just (VarE 'Lens._1 `dot` VarE '_HCont))
                 (VarE '(Lens.%~))
                 (Just (InfixE (Just (ConE cName)) (VarE '(.)) Nothing))
             ) `AppE` (VarE 'hcontext `AppE` VarE cVar)

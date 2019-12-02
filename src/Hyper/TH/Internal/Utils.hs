@@ -9,6 +9,7 @@ module Hyper.TH.Internal.Utils
     , parts, toTuple, matchType, niceName
     , applicativeStyle, unapply, getVar, makeConstructorVars
     , consPat, simplifyContext, childrenTypes
+    , dot
     ) where
 
 import qualified Control.Lens as Lens
@@ -237,7 +238,7 @@ makeNodeOf info =
             <&> AppE (ConE 'HWitness)
         , embedWit =
             embeds <&> Lens._2 %~ ConE & Map.fromList & getWit
-            <&> InfixE (Just (ConE 'HWitness)) (VarE '(.)) . Just
+            <&> (ConE 'HWitness `dot`)
         , nodeWitCtrs = nodes <&> snd
         , embedWitCtrs = embeds <&> snd
         }
@@ -279,3 +280,6 @@ makeNodeOf info =
         getWit m h =
             m ^? Lens.ix h
             & fromMaybe (LitE (StringL ("Cant find witness for " <> show h <> " in " <> show m)))
+
+dot :: Exp -> Exp -> Exp
+dot x y = InfixE (Just x) (VarE '(.)) (Just y)

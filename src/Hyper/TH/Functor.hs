@@ -58,7 +58,7 @@ makeHMapCtr i wit (cName, _, cFields) =
         bodyFor (Right x) v = bodyForPat x `AppE` VarE v
         bodyFor Left{} v = VarE v
         bodyForPat (Node t) = VarE varF `AppE` nodeWit wit t
-        bodyForPat (GenEmbed t) = VarE 'hmap `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))
+        bodyForPat (GenEmbed t) = VarE 'hmap `AppE` (VarE varF `dot` embedWit wit t)
         bodyForPat (InContainer _ pat) = bodyForPat pat & AppE (VarE 'fmap)
         bodyForPat (FlatEmbed x) =
             LamCaseE

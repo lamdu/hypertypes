@@ -65,7 +65,7 @@ makeHFoldMapCtr i wit (cName, _, cFields) =
         bodyFor (Right x) = bodyForPat x
         bodyFor Left{} = []
         bodyForPat (Node t) = [VarE varF `AppE` nodeWit wit t]
-        bodyForPat (GenEmbed t) = [VarE 'hfoldMap `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))]
+        bodyForPat (GenEmbed t) = [VarE 'hfoldMap `AppE` (VarE varF `dot` embedWit wit t)]
         bodyForPat (InContainer _ pat) = bodyForPat pat <&> AppE (VarE 'foldMap)
         bodyForPat (FlatEmbed x) =
             [ LamCaseE

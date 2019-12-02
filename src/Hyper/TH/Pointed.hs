@@ -57,7 +57,7 @@ makeHPureCtr typeInfo (cName, _, cFields) =
             [(iName, _, iFields)] -> traverse bodyFor iFields <&> foldl AppE (ConE iName)
             _ -> fail "makeHPointed only supports embedded types with a single constructor"
         bodyForPat (GenEmbed t) =
-            VarE 'hpure `AppE` InfixE (Just (VarE varF)) (VarE '(.)) (Just (embedWit wit t))
+            VarE 'hpure `AppE` (VarE varF `dot` embedWit wit t)
             & pure
         bodyForPat (InContainer _ pat) =
             bodyForPat pat <&> AppE (VarE 'pure)
