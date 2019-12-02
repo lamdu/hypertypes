@@ -57,7 +57,9 @@ makeHContextCtr (cName, RecordConstructor fieldNames, cFields) =
             ( Just
                 ( ConE 'HCont `AppE`
                     LamE [VarP varField]
-                    ( RecUpdE (VarE varWhole)
+                    ( ConE 'Lens.Const
+                        `AppE`
+                        RecUpdE (VarE varWhole)
                         [(f, VarE varField)]
                     )
                 )
@@ -75,7 +77,7 @@ makeHContextCtr (cName, _, [cField]) =
         bodyFor Left{} = VarE cVar & pure
         bodyFor (Right Node{}) =
             InfixE
-            (Just (ConE 'HCont `AppE` ConE cName))
+            (Just (ConE 'HCont `AppE` (ConE 'Lens.Const `dot` ConE cName)))
             (ConE '(:*:))
             (Just (VarE cVar))
             & pure
@@ -87,9 +89,9 @@ makeHContextCtr (cName, _, [cField]) =
             `AppE`
             ( VarE 'const `AppE`
                 InfixE
-                (Just (VarE 'Lens._1 `dot` VarE '_HCont))
+                (Just (VarE 'Lens._1 `dot` VarE '_HCont `dot` VarE 'Lens.mapped `dot` VarE 'Lens._Wrapped))
                 (VarE '(Lens.%~))
-                (Just (InfixE (Just (ConE cName)) (VarE '(.)) Nothing))
+                (Just (ConE cName))
             ) `AppE` (VarE 'hcontext `AppE` VarE cVar)
             & pure
         cVar = mkName "_c"

@@ -148,7 +148,7 @@ instance (HFunctor h0, HContext h0, HFunctor h1, HContext h1) => HContext (HComp
             hmap
             ( \_ (HCont c1 :*: x1) ->
                 x1 & _HCompose %~
-                (HCont ((_HCompose #) . c0 . (_HCompose #) . c1 . (_HCompose #)) :*:)
+                (HCont (Const . (_HCompose #) . getConst . c0 . (_HCompose #) . getConst . c1 . (_HCompose #)) :*:)
             ) . hcontext
         ) . hcontext
 

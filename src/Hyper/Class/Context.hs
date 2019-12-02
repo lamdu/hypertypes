@@ -6,6 +6,7 @@ module Hyper.Class.Context
     ) where
 
 import Data.Constraint (withDict)
+import Data.Functor.Const (Const(..))
 import Data.Proxy (Proxy(..))
 import GHC.Generics ((:*:)(..))
 import Hyper.Combinator.Ann (Ann(..))
@@ -20,19 +21,19 @@ import Prelude.Compat
 class HContext h where
     hcontext ::
         h # p ->
-        h # (HCont (h # p) p :*: p)
+        h # (HCont (Const (h # p)) p :*: p)
 
 recursiveContexts ::
     (Recursively HContext h, Recursively HFunctor h) =>
     Ann p # h ->
-    Ann (HCont (Ann p # h) (Ann p) :*: p) # h
-recursiveContexts = recursiveContextsWith . (HCont id :*:)
+    Ann (HCont (Const (Ann p # h)) (Ann p) :*: p) # h
+recursiveContexts = recursiveContextsWith . (HCont Const :*:)
 
 recursiveContextsWith ::
     forall h p r.
     (Recursively HContext h, Recursively HFunctor h) =>
-    (HCont r (Ann p) :*: Ann p) # h ->
-    Ann (HCont r (Ann p) :*: p) # h
+    (HCont (Const r) (Ann p) :*: Ann p) # h ->
+    Ann (HCont (Const r) (Ann p) :*: p) # h
 recursiveContextsWith (HCont s0 :*: Ann a b) =
     withDict (recursively (Proxy @(HContext h))) $
     withDict (recursively (Proxy @(HFunctor h)))
@@ -42,6 +43,6 @@ recursiveContextsWith (HCont s0 :*: Ann a b) =
         hmap
         ( Proxy @(Recursively HContext) #*# Proxy @(Recursively HFunctor) #>
             \(HCont s1 :*: x) ->
-            recursiveContextsWith (HCont (s0 . Ann a . s1) :*: x)
+            recursiveContextsWith (HCont (Const . getConst . s0 . Ann a . getConst . s1) :*: x)
         ) (hcontext b)
     }

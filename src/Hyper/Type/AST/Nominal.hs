@@ -160,7 +160,8 @@ instance
                 ( \newV ->
                     x
                     & _QVarInstances . Lens.at k ?~ newV
-                    & c & NominalInst n
+                    & c & getConst & NominalInst n
+                    & Const
                 ) :*: v
             )
         & NominalInst n
