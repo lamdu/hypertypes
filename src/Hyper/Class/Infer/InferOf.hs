@@ -3,7 +3,7 @@
 module Hyper.Class.Infer.InferOf
     ( HasInferredType(..)
     , HasInferredValue(..)
-    , HFunctorInferOf, HFoldableInferOf, RTraversableInferOf
+    , InferOfConstraint(..), RTraversableInferOf
     ) where
 
 import Control.Lens (ALens', Lens')
@@ -31,13 +31,16 @@ class HasInferredValue t where
     -- | A 'Control.Lens.Lens' from an inference result to an inferred value
     inferredValue :: Lens' (InferOf t # v) (v # t)
 
-class    HFunctor (InferOf h) => HFunctorInferOf h
-instance HFunctor (InferOf h) => HFunctorInferOf h
-class    HFoldable (InferOf h) => HFoldableInferOf h
-instance HFoldable (InferOf h) => HFoldableInferOf h
+class InferOfConstraint c h where
+    inferOfConstraint :: proxy0 c -> proxy1 h -> Dict (c (InferOf h))
+    default inferOfConstraint :: c (InferOf h) => proxy0 c -> proxy1 h -> Dict (c (InferOf h))
+    inferOfConstraint _ _ = Dict
+
+instance HFunctor (InferOf h) => InferOfConstraint HFunctor h
+instance HFoldable (InferOf h) => InferOfConstraint HFoldable h
 
 class
-    (HTraversable (InferOf h), Recursively HFunctorInferOf h, Recursively HFoldableInferOf h) =>
+    (HTraversable (InferOf h), Recursively (InferOfConstraint HFunctor) h, Recursively (InferOfConstraint HFoldable) h) =>
     RTraversableInferOf h where
     rTraversableInferOfRec ::
         Proxy h -> Dict (HNodesConstraint h RTraversableInferOf)

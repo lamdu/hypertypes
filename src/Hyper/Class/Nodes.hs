@@ -1,13 +1,16 @@
 -- | A class for witness types and lifting of constraints to the child nodes of a 'HyperType'
 
 {-# LANGUAGE EmptyCase, UndecidableInstances, TemplateHaskell, FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Hyper.Class.Nodes
     ( HNodes(..), HWitness(..), _HWitness
     , (#>), (#*#)
+    , HNodesHaveConstraint(..)
     ) where
 
 import Control.Lens (makePrisms)
+import Data.Constraint (Dict(..))
 import Data.Functor.Const (Const(..))
 import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy(..))
@@ -97,3 +100,10 @@ infixr 0 #*#
     (HNodes h, HNodesConstraint h c) =>
     Proxy c -> (HWitness h n -> (c n => r)) -> HWitness h n -> r
 (#*#) p r w = (p #> r) w w
+
+-- | Defunctionalized HNodesConstraint which can be curried
+class HNodesHaveConstraint c h where
+    hNodesHaveConstraint :: proxy0 c -> proxy1 h -> Dict (HNodesConstraint h c)
+
+instance HNodesConstraint h c => HNodesHaveConstraint c h where
+    hNodesHaveConstraint _ _ = Dict
