@@ -96,13 +96,13 @@ class Unify m t => UnifyGen m t where
     -- | Get the current scope constraint
     scopeConstraints :: Proxy t -> m (TypeConstraintsOf t)
 
-    unifyNewRecursive :: Proxy m -> Proxy t -> Dict (HNodesConstraint t (UnifyGen m))
-    {-# INLINE unifyNewRecursive #-}
-    default unifyNewRecursive ::
+    unifyGenRecursive :: Proxy m -> Proxy t -> Dict (HNodesConstraint t (UnifyGen m))
+    {-# INLINE unifyGenRecursive #-}
+    default unifyGenRecursive ::
         HNodesConstraint t (UnifyGen m) =>
         Proxy m -> Proxy t -> Dict (HNodesConstraint t (UnifyGen m))
-    unifyNewRecursive _ _ = Dict
+    unifyGenRecursive _ _ = Dict
 
 instance Recursive (UnifyGen m) where
     {-# INLINE recurse #-}
-    recurse = unifyNewRecursive (Proxy @m) . proxyArgument
+    recurse = unifyGenRecursive (Proxy @m) . proxyArgument

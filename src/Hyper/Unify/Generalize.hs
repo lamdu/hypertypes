@@ -135,7 +135,7 @@ generalize v0 =
                 bindVar binding v1 (USkolem (generalizeConstraints l))
             USkolem l | toScopeConstraints l `leq` c -> pure (GPoly v1)
             UTerm t ->
-                withDict (unifyNewRecursive (Proxy @m) (Proxy @t)) $
+                withDict (unifyGenRecursive (Proxy @m) (Proxy @t)) $
                 do
                     bindVar binding v1 (UResolving t)
                     r <- htraverse (Proxy @(UnifyGen m) #> generalize) (t ^. uBody)
@@ -178,7 +178,7 @@ instantiateH ::
 instantiateH _ (GMono x) = pure x
 instantiateH cons (GPoly x) = instantiateForAll cons x
 instantiateH cons (GBody x) =
-    withDict (unifyNewRecursive (Proxy @m) (Proxy @t)) $
+    withDict (unifyGenRecursive (Proxy @m) (Proxy @t)) $
     htraverse (Proxy @(UnifyGen m) #> instantiateH cons) x >>= lift . newTerm
 
 {-# INLINE instantiateWith #-}
