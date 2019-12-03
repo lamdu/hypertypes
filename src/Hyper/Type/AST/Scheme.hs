@@ -201,11 +201,7 @@ class
     hasSchemeRecursive _ _ _ = Dict
 
 instance Recursive (HasScheme varTypes m) where
-    recurse =
-        hasSchemeRecursive (Proxy @varTypes) (Proxy @m) . p
-        where
-            p :: Proxy (HasScheme varTypes m t) -> Proxy t
-            p _ = Proxy
+    recurse = hasSchemeRecursive (Proxy @varTypes) (Proxy @m) . proxyArgument
 
 -- | Load scheme into unification monad so that different instantiations share
 -- the scheme's monomorphic parts -

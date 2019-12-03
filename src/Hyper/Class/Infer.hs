@@ -90,12 +90,7 @@ class (Monad m, HFunctor t) => Infer m t where
 instance Recursive (Infer m) where
     {-# INLINE recurse #-}
     recurse p =
-        withDict (inferContext (p0 p) (p1 p)) Dict
-        where
-            p0 :: Proxy (Infer m t) -> Proxy m
-            p0 _ = Proxy
-            p1 :: Proxy (Infer m t) -> Proxy t
-            p1 _ = Proxy
+        withDict (inferContext (Proxy @m) (proxyArgument p)) Dict
 
 type instance InferOf (a :+: b) = InferOf a
 

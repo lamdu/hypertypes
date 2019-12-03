@@ -6,6 +6,7 @@ module Hyper.Class.Recursive
     ( Recursive(..)
     , Recursively(..)
     , RNodes(..), RTraversable(..)
+    , proxyArgument
     ) where
 
 import Data.Constraint (Dict(..), withDict)
@@ -38,12 +39,13 @@ class HNodes h => RNodes h where
 instance RNodes Pure
 instance RNodes (Const a)
 
-argP :: Proxy (f h :: Constraint) -> Proxy (h :: HyperType)
-argP _ = Proxy
+-- | Helper Proxy combinator that is useful in many instances of 'Recursive'
+proxyArgument :: Proxy (f h :: Constraint) -> Proxy (h :: HyperType)
+proxyArgument _ = Proxy
 
 instance Recursive RNodes where
     {-# INLINE recurse #-}
-    recurse = recursiveHNodes . argP
+    recurse = recursiveHNodes . proxyArgument
 
 -- | A constraint lifted to apply recursively.
 --
@@ -84,4 +86,4 @@ instance RTraversable (Const a)
 
 instance Recursive RTraversable where
     {-# INLINE recurse #-}
-    recurse = recursiveHTraversable . argP
+    recurse = recursiveHTraversable . proxyArgument

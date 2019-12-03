@@ -90,11 +90,7 @@ class
     blamableRecursive _ _ = Dict
 
 instance Recursive (Blame m) where
-    recurse p =
-        blamableRecursive (Proxy @m) (p0 p)
-        where
-            p0 :: Proxy (Blame m t) -> Proxy t
-            p0 _ = Proxy
+    recurse = blamableRecursive (Proxy @m) . proxyArgument
 
 -- | A type synonym to help 'BlameResult' be more succinct
 type InferOf' e v = InferOf (GetHyperType e) # v

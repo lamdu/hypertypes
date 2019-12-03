@@ -13,7 +13,7 @@ import Hyper.Class.Foldable (HFoldable)
 import Hyper.Class.Functor (HFunctor)
 import Hyper.Class.Infer (InferOf)
 import Hyper.Class.Nodes (HNodes(..))
-import Hyper.Class.Recursive (Recursive(..), Recursively)
+import Hyper.Class.Recursive (Recursive(..), Recursively, proxyArgument)
 import Hyper.Class.Traversable (HTraversable)
 import Hyper.Type (HyperType, type (#))
 
@@ -49,8 +49,4 @@ class
 
 instance Recursive RTraversableInferOf where
     {-# INLINE recurse #-}
-    recurse =
-        rTraversableInferOfRec . p
-        where
-            p :: Proxy (RTraversableInferOf h) -> Proxy h
-            p _ = Proxy
+    recurse = rTraversableInferOfRec . proxyArgument

@@ -89,11 +89,7 @@ class
 
 instance Recursive (Unify m) where
     {-# INLINE recurse #-}
-    recurse =
-        unifyRecursive (Proxy @m) . p
-        where
-            p :: Proxy (Unify m t) -> Proxy t
-            p _ = Proxy
+    recurse = unifyRecursive (Proxy @m) . proxyArgument
 
 -- | A class for unification monads with scope levels
 class Unify m t => UnifyGen m t where
@@ -109,8 +105,4 @@ class Unify m t => UnifyGen m t where
 
 instance Recursive (UnifyGen m) where
     {-# INLINE recurse #-}
-    recurse =
-        unifyNewRecursive (Proxy @m) . p
-        where
-            p :: Proxy (UnifyGen m t) -> Proxy t
-            p _ = Proxy
+    recurse = unifyNewRecursive (Proxy @m) . proxyArgument
