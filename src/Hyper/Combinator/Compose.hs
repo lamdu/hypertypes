@@ -43,16 +43,14 @@ instance (HNodes a, HNodes b) => HNodes (HCompose a b) where
     {-# INLINE hLiftConstraint #-}
     hLiftConstraint (HWitness (W_HCompose w0 w1)) p r =
         hLiftConstraint w0 (p0 p) $
-        withDict (hComposeConstraint0 p (Proxy @b) (p1 w0)) $
-        hLiftConstraint w1 (p2 p w0) $
+        withDict (hComposeConstraint0 p (Proxy @b) w0) $
+        hLiftConstraint w1 (p1 p w0) $
         withDict (d0 p w0 w1) r
         where
             p0 :: Proxy c -> Proxy (HComposeConstraint0 c b)
             p0 _ = Proxy
-            p1 :: HWitness h n -> Proxy n
-            p1 _ = Proxy
-            p2 :: Proxy c -> HWitness a a0 -> Proxy (HComposeConstraint1 c a0)
-            p2 _ _ = Proxy
+            p1 :: proxy0 c -> proxy1 a0 -> Proxy (HComposeConstraint1 c a0)
+            p1 _ _ = Proxy
             d0 ::
                 HComposeConstraint1 c a0 b0 =>
                 Proxy c -> HWitness a a0 -> HWitness b b0 -> Dict (c (HCompose a0 b0))
@@ -60,7 +58,7 @@ instance (HNodes a, HNodes b) => HNodes (HCompose a b) where
 
 class HComposeConstraint0 (c :: HyperType -> Constraint) (b :: HyperType) (h0 :: HyperType) where
     hComposeConstraint0 ::
-        Proxy c -> Proxy b -> Proxy h0 ->
+        proxy0 c -> proxy1 b -> proxy2 h0 ->
         Dict (HNodesConstraint b (HComposeConstraint1 c h0))
 
 instance HNodesConstraint b (HComposeConstraint1 c h0) => HComposeConstraint0 c b h0 where

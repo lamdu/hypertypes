@@ -205,12 +205,9 @@ inferExpr x =
             htraverse_
             ( Proxy @(Infer m) #*# Proxy @RTraversableInferOf #*#
                 \w (Const () :*: InferResult i) ->
-                withDict (inferContext (Proxy @m) (p0 w)) $
+                withDict (inferContext (Proxy @m) w) $
                 htraverse_ (Proxy @(UnifyGen m) #> void . applyBindings) i
             ) (_HFlip # inferRes)
-    where
-        p0 :: HWitness a n -> Proxy n
-        p0 _ = Proxy
 
 vecNominalDecl :: Pure # NominalDecl Typ
 vecNominalDecl =

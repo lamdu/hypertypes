@@ -76,14 +76,14 @@ class (Monad m, HFunctor t) => Infer m t where
 
     -- TODO: Putting documentation here causes duplication in the haddock documentation
     inferContext ::
-        Proxy m ->
-        Proxy t ->
+        proxy0 m ->
+        proxy1 t ->
         Dict (HNodesConstraint t (Infer m), HNodesConstraint (InferOf t) (UnifyGen m))
     {-# INLINE inferContext #-}
     default inferContext ::
         (HNodesConstraint t (Infer m), HNodesConstraint (InferOf t) (UnifyGen m)) =>
-        Proxy m ->
-        Proxy t ->
+        proxy0 m ->
+        proxy1 t ->
         Dict (HNodesConstraint t (Infer m), HNodesConstraint (InferOf t) (UnifyGen m))
     inferContext _ _ = Dict
 
