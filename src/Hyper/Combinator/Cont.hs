@@ -5,11 +5,13 @@ module Hyper.Combinator.Cont
 import Control.Lens (Iso, iso)
 import Hyper.Type (HyperType, type (#))
 
-newtype HCont r (p :: HyperType) h = HCont (p h -> r h)
+-- TODO:
+-- Is Cont the appropriate name for this combinator? or maybe HFunc?
+newtype HCont (i :: HyperType) o h = HCont (i h -> o h)
 
 _HCont ::
-    Iso (HCont r0 p0 # h0)
-        (HCont r1 p1 # h1)
-        (p0 # h0 -> r0 # h0)
-        (p1 # h1 -> r1 # h1)
+    Iso (HCont i0 o0 # h0)
+        (HCont i1 o1 # h1)
+        (i0 # h0 -> o0 # h0)
+        (i1 # h1 -> o1 # h1)
 _HCont = iso (\(HCont x) -> x) HCont
