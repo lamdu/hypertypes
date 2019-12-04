@@ -58,7 +58,7 @@ inferUVarsApplyBindings ::
     Ann (a :*: InferResult (UVarOf m)) # t ->
     m (Ann (a :*: InferResult (Pure :*: UVarOf m)) # t)
 inferUVarsApplyBindings =
-    hflipped $ htraverse $
+    htraverseFlipped $
     Proxy @RTraversableInferOf #*#
     Proxy @(InferResultsConstraint (Unify m)) #>
     Lens._2 f
@@ -73,6 +73,6 @@ inferUVarsApplyBindings =
         f = withDict (recursively (Proxy @(InferOfConstraint (HNodesHaveConstraint (Unify m)) n))) $
             withDict (inferOfConstraint (Proxy @(HNodesHaveConstraint (Unify m))) (Proxy @n)) $
             withDict (hNodesHaveConstraint (Proxy @(Unify m)) (Proxy @(InferOf n))) $
-            hflipped $ htraverse $
+            htraverseFlipped $
             Proxy @(Unify m) #>
             \x -> applyBindings x <&> (:*: x)
