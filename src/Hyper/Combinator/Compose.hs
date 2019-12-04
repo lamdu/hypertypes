@@ -15,7 +15,7 @@ import           Hyper
 import           Hyper.Class.Context (HContext(..))
 import           Hyper.Class.Traversable (ContainedH(..))
 import           Hyper.Class.ZipMatch (ZipMatch(..))
-import           Hyper.Combinator.Cont (HCont(..))
+import           Hyper.Combinator.Func (HFunc(..))
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
 
 import           Prelude.Compat
@@ -141,12 +141,12 @@ instance (HFunctor h0, HContext h0, HFunctor h1, HContext h1) => HContext (HComp
     hcontext =
         _HCompose %~
         hmap
-        ( \_ (HCont c0 :*: x0) ->
+        ( \_ (HFunc c0 :*: x0) ->
             x0 & _HCompose %~
             hmap
-            ( \_ (HCont c1 :*: x1) ->
+            ( \_ (HFunc c1 :*: x1) ->
                 x1 & _HCompose %~
-                (HCont (Const . (_HCompose #) . getConst . c0 . (_HCompose #) . getConst . c1 . (_HCompose #)) :*:)
+                (HFunc (Const . (_HCompose #) . getConst . c0 . (_HCompose #) . getConst . c1 . (_HCompose #)) :*:)
             ) . hcontext
         ) . hcontext
 

@@ -9,7 +9,7 @@ import           Control.Lens.Operators
 import           GHC.Generics
 import           Hyper.Class.Context
 import           Hyper.Class.Functor
-import           Hyper.Combinator.Cont (HCont(..), _HCont)
+import           Hyper.Combinator.Func (HFunc(..), _HFunc)
 import           Hyper.TH.Internal.Utils
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Datatype (ConstructorVariant(..))
@@ -55,7 +55,7 @@ makeHContextCtr (cName, RecordConstructor fieldNames, cFields) =
         bodyFor (Right Node{}) (f, v) =
             InfixE
             ( Just
-                ( ConE 'HCont `AppE`
+                ( ConE 'HFunc `AppE`
                     LamE [VarP varField]
                     ( ConE 'Lens.Const
                         `AppE`
@@ -77,7 +77,7 @@ makeHContextCtr (cName, _, [cField]) =
         bodyFor Left{} = VarE cVar & pure
         bodyFor (Right Node{}) =
             InfixE
-            (Just (ConE 'HCont `AppE` (ConE 'Lens.Const `dot` ConE cName)))
+            (Just (ConE 'HFunc `AppE` (ConE 'Lens.Const `dot` ConE cName)))
             (ConE '(:*:))
             (Just (VarE cVar))
             & pure
@@ -89,7 +89,7 @@ makeHContextCtr (cName, _, [cField]) =
             `AppE`
             ( VarE 'const `AppE`
                 InfixE
-                (Just (VarE 'Lens._1 `dot` VarE '_HCont `dot` VarE 'Lens.mapped `dot` VarE 'Lens._Wrapped))
+                (Just (VarE 'Lens._1 `dot` VarE '_HFunc `dot` VarE 'Lens.mapped `dot` VarE 'Lens._Wrapped))
                 (VarE '(Lens.%~))
                 (Just (ConE cName))
             ) `AppE` (VarE 'hcontext `AppE` VarE cVar)

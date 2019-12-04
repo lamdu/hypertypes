@@ -30,7 +30,7 @@ import           Hyper.Class.Context (HContext(..))
 import           Hyper.Class.Has (HasChild(..))
 import           Hyper.Class.Traversable (ContainedH(..))
 import           Hyper.Class.ZipMatch (ZipMatch(..))
-import           Hyper.Combinator.Cont (HCont(..))
+import           Hyper.Combinator.Func (HFunc(..))
 import           Hyper.Infer
 import           Hyper.Recurse
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
@@ -153,10 +153,10 @@ instance
         hcontext args
         & hmap
             ( Proxy @OrdQVar #>
-                \(HCont c :*: x) ->
+                \(HFunc c :*: x) ->
                 x & _QVarInstances . Lens.imapped %@~
                 \k v ->
-                HCont
+                HFunc
                 ( \newV ->
                     x
                     & _QVarInstances . Lens.at k ?~ newV
