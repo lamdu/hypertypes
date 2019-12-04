@@ -1,13 +1,16 @@
 -- | A combinator to flip the order of the last two type parameters of a 'Hyper.Type.HyperType'.
 
-{-# LANGUAGE TemplateHaskell, UndecidableInstances #-}
+{-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleContexts #-}
 
 module Hyper.Combinator.Flip
     ( HFlip(..), _HFlip
     , hflipped
+    , htraverseFlipped
     ) where
 
 import Control.Lens (iso, from)
+import Hyper.Class.Nodes (HWitness)
+import Hyper.Class.Traversable (HTraversable, htraverse)
 import Hyper.Type (type (#), GetHyperType)
 
 import Hyper.Internal.Prelude
@@ -42,3 +45,11 @@ hflipped ::
     (HFlip f0 x0 # k0)
     (HFlip f1 x1 # k1)
 hflipped = from _HFlip
+
+-- | Convinience function for traversal over second last 'HyperType' argument.
+htraverseFlipped ::
+    (Applicative f, HTraversable (HFlip h a)) =>
+    (forall n. HWitness (HFlip h a) n -> p # n -> f (q # n)) ->
+    h p # a ->
+    f (h q # a)
+htraverseFlipped f = hflipped (htraverse f)
