@@ -9,16 +9,12 @@ module Hyper.Type.AST.Var
     , ScopeOf, HasScope(..)
     ) where
 
-import           Control.DeepSeq (NFData)
-import qualified Control.Lens as Lens
-import           Control.Lens.Operators
-import           Data.Binary (Binary)
-import           Hyper
-import           Hyper.Infer
-import           Hyper.Unify (UnifyGen, UVarOf)
-import           Text.PrettyPrint.HughesPJClass (Pretty(..))
+import Hyper
+import Hyper.Infer
+import Hyper.Unify (UnifyGen, UVarOf)
+import Text.PrettyPrint.HughesPJClass (Pretty(..))
 
-import           Prelude.Compat
+import Hyper.Internal.Prelude
 
 type family ScopeOf (t :: HyperType) :: HyperType
 
@@ -39,7 +35,7 @@ newtype Var v (expr :: HyperType) (h :: AHyperType) = Var v
     deriving newtype (Eq, Ord, Binary, NFData)
     deriving stock (Show, Generic)
 
-Lens.makePrisms ''Var
+makePrisms ''Var
 makeHTraversableApplyAndBases ''Var
 makeZipMatch ''Var
 makeHContext ''Var

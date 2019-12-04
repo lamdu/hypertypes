@@ -9,11 +9,10 @@ module Hyper.Unify.Constraints
     ) where
 
 import Algebra.PartialOrd (PartialOrd(..))
-import Control.Lens (makeLenses)
 import Data.Kind (Type)
 import Hyper (HyperType, GetHyperType, type (#))
 
-import Prelude.Compat
+import Hyper.Internal.Prelude
 
 -- | A class for constraints for unification variables.
 class (PartialOrd c, Monoid c) => TypeConstraints c where

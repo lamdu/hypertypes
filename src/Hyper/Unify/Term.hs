@@ -11,12 +11,10 @@ module Hyper.Unify.Term
     , UTermBody(..), uBody, uConstraints
     ) where
 
-import Control.Lens (makeLenses, makePrisms)
 import Hyper
-import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.Unify.Constraints (TypeConstraintsOf)
 
-import Prelude.Compat
+import Hyper.Internal.Prelude
 
 -- | A unification term with a known body
 data UTermBody v ast = UTermBody

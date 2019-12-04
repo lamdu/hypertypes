@@ -9,26 +9,20 @@ module Hyper.Combinator.Compose
     , HComposeConstraint1
     ) where
 
-import qualified Control.Lens as Lens
-import           Control.Lens.Operators
-import           Data.Constraint (Dict(..), Constraint, withDict)
-import           Data.Functor.Const (Const(..))
-import           Data.Proxy (Proxy(..))
-import           GHC.Generics (Generic, (:*:)(..))
-import           Hyper.Class.Apply (HApply(..))
-import           Hyper.Class.Context (HContext(..))
-import           Hyper.Class.Foldable (HFoldable(..))
-import           Hyper.Class.Functor (HFunctor(..))
-import           Hyper.Class.Nodes (HNodes(..), HWitness(..))
-import           Hyper.Class.Pointed (HPointed(..))
-import           Hyper.Class.Traversable (HTraversable(..), ContainedH(..), htraverse)
-import           Hyper.Class.Recursive (RNodes(..), Recursively(..), RTraversable)
-import           Hyper.Class.ZipMatch (ZipMatch(..))
-import           Hyper.Combinator.Func (HFunc(..))
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
-import           Hyper.Type (HyperType, GetHyperType, type (#))
+import Control.Lens (iso)
+import Hyper.Class.Apply (HApply(..))
+import Hyper.Class.Context (HContext(..))
+import Hyper.Class.Foldable (HFoldable(..))
+import Hyper.Class.Functor (HFunctor(..))
+import Hyper.Class.Nodes (HNodes(..), HWitness(..))
+import Hyper.Class.Pointed (HPointed(..))
+import Hyper.Class.Traversable (HTraversable(..), ContainedH(..), htraverse)
+import Hyper.Class.Recursive (RNodes(..), Recursively(..), RTraversable)
+import Hyper.Class.ZipMatch (ZipMatch(..))
+import Hyper.Combinator.Func (HFunc(..))
+import Hyper.Type (HyperType, GetHyperType, type (#))
 
-import           Prelude.Compat
+import Hyper.Internal.Prelude
 
 -- | Compose two 'HyperType's as an external and internal layer
 newtype HCompose a b h = MkHCompose { getHCompose :: a # HCompose b (GetHyperType h) }
@@ -39,10 +33,10 @@ makeCommonInstances [''HCompose]
 -- | An 'Control.Lens.Iso' for the 'HCompose' @newtype@
 {-# INLINE _HCompose #-}
 _HCompose ::
-    Lens.Iso
+    Iso
     (HCompose a0 b0 # h0) (HCompose a1 b1 # h1)
     (a0 # HCompose b0 h0) (a1 # HCompose b1 h1)
-_HCompose = Lens.iso getHCompose MkHCompose
+_HCompose = iso getHCompose MkHCompose
 
 data W_HCompose a b n where
     W_HCompose :: HWitness a a0 -> HWitness b b0 -> W_HCompose a b (HCompose a0 b0)

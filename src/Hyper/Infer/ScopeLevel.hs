@@ -6,15 +6,11 @@ module Hyper.Infer.ScopeLevel
     ) where
 
 import           Algebra.PartialOrd (PartialOrd(..))
-import           Control.DeepSeq (NFData)
-import           Control.Lens (makePrisms)
-import           Data.Binary (Binary)
-import           GHC.Generics (Generic)
 import           Hyper.Unify.Constraints (TypeConstraints(..))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 -- | A representation of scope nesting level,
 -- for use in let-generalization and skolem escape detection.

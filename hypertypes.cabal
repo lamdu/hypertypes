@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7f6b1c759d61f234e574058a5b64a67b8e19e6aa8739ca4303246478913ea9c9
+-- hash: 8e0f9826d065462a3741830cfec1d69353451f5fa7bdf0face4af61091be90eb
 
 name:           hypertypes
 version:        0.1.0.1
@@ -100,7 +100,7 @@ library
       Hyper.Unify.QuantifiedVar
       Hyper.Unify.Term
   other-modules:
-      Hyper.TH.Internal.Instances
+      Hyper.Internal.Prelude
       Hyper.TH.Internal.Utils
   hs-source-dirs:
       src

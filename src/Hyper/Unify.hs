@@ -14,8 +14,6 @@ module Hyper.Unify
     ) where
 
 import Algebra.PartialOrd (PartialOrd(..))
-import Control.Lens.Operators
-import Data.Maybe (fromMaybe)
 import Hyper
 import Hyper.Class.Unify (Unify(..), UnifyGen(..), UVarOf, BindingDict(..))
 import Hyper.Class.ZipMatch (zipMatchA)
@@ -25,7 +23,7 @@ import Hyper.Unify.Lookup (semiPruneLookup)
 import Hyper.Unify.Occurs (occursError)
 import Hyper.Unify.Term (UTerm(..), UTermBody(..), uConstraints, uBody)
 
-import Prelude.Compat
+import Hyper.Internal.Prelude
 
 -- TODO: implement when need / better understand motivations for -
 -- occursIn, seenAs, getFreeVars, freshen, equals, equiv

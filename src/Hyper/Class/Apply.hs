@@ -7,14 +7,12 @@ module Hyper.Class.Apply
     , liftH2
     ) where
 
-import Data.Functor.Const (Const(..))
-import GHC.Generics ((:*:)(..))
 import Hyper.Class.Functor (HFunctor(..))
 import Hyper.Class.Nodes (HWitness)
 import Hyper.Class.Pointed (HPointed)
 import Hyper.Type (type (#))
 
-import Prelude.Compat
+import Hyper.Internal.Prelude
 
 -- | A variant of 'Data.Functor.Apply.Apply' for 'Hyper.Type.HyperType's.
 --

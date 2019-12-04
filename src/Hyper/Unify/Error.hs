@@ -8,16 +8,14 @@ module Hyper.Unify.Error
     , _Occurs, _Mismatch
     ) where
 
-import           Control.Lens (makePrisms)
 import           Generics.Constraints (Constraints)
 import           Hyper
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Unify.Constraints (TypeConstraintsOf)
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 -- | An error that occurred during unification
 data UnifyError t h

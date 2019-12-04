@@ -7,7 +7,6 @@ module Hyper.Unify.Binding.ST.Load
     ) where
 
 import qualified Control.Lens as Lens
-import           Control.Lens.Operators
 import           Control.Monad.ST.Class (MonadST(..))
 import           Data.Array.ST (STArray, newArray, readArray, writeArray)
 import qualified Data.Sequence as Sequence
@@ -19,10 +18,10 @@ import           Hyper.Unify.Binding (Binding(..), _Binding, UVar(..))
 import           Hyper.Unify.Binding.ST (STUVar)
 import           Hyper.Unify.Term (UTerm(..), uBody)
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 newtype ConvertState s t = ConvertState (STArray s Int (Maybe (STUVar s t)))
-Lens.makePrisms ''ConvertState
+makePrisms ''ConvertState
 
 makeConvertState :: MonadST m => Binding # t -> m (ConvertState (World m) # t)
 makeConvertState (Binding x) =

@@ -4,13 +4,10 @@ module Hyper.Type.AST.TypedLam
     ( TypedLam(..), tlIn, tlInType, tlOut, W_TypedLam(..)
     ) where
 
-import           Control.Lens (makeLenses)
-import           Control.Lens.Operators
 import           Generics.Constraints (Constraints)
 import           Hyper
 import           Hyper.Class.Has (HasChild(..))
 import           Hyper.Infer
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Type.AST.FuncType (FuncType(..), HasFuncType(..))
 import           Hyper.Unify (UnifyGen, UVarOf)
 import           Hyper.Unify.New (newTerm)
@@ -18,7 +15,7 @@ import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 data TypedLam var typ expr h = TypedLam
     { _tlIn :: var

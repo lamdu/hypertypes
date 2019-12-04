@@ -15,7 +15,6 @@ module Hyper.Unify.Generalize
 
 import           Algebra.PartialOrd (PartialOrd(..))
 import qualified Control.Lens as Lens
-import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.Writer (WriterT(..), tell)
 import           Data.Monoid (All(..))
@@ -23,14 +22,13 @@ import           Hyper
 import           Hyper.Class.Traversable
 import           Hyper.Class.Unify (Unify(..), UnifyGen(..), UVarOf, BindingDict(..))
 import           Hyper.Recurse
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Unify.Constraints
 import           Hyper.Unify.Lookup (semiPruneLookup)
 import           Hyper.Unify.New
 import           Hyper.Unify.Occurs (occursError)
 import           Hyper.Unify.Term (UTerm(..), uBody)
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 -- | An efficient representation of a type scheme arising from
 -- generalizing a unification term. Type subexpressions which are
@@ -45,7 +43,7 @@ data GTerm v ast
     | GBody (ast :# GTerm v) -- ^ Term with some polymorphic parts
     deriving Generic
 
-Lens.makePrisms ''GTerm
+makePrisms ''GTerm
 makeCommonInstances [''GTerm]
 makeHTraversableAndBases ''GTerm
 

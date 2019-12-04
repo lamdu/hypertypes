@@ -5,10 +5,6 @@ module Hyper.Class.Context
     , recursiveContexts, recursiveContextsWith
     ) where
 
-import Data.Constraint (withDict)
-import Data.Functor.Const (Const(..))
-import Data.Proxy (Proxy(..))
-import GHC.Generics ((:*:)(..))
 import Hyper.Combinator.Ann (Ann(..))
 import Hyper.Combinator.Func (HFunc(..))
 import Hyper.Class.Functor (HFunctor(..))
@@ -16,7 +12,7 @@ import Hyper.Class.Nodes ((#*#), (#>))
 import Hyper.Class.Recursive (Recursively(..))
 import Hyper.Type (type (#))
 
-import Prelude.Compat
+import Hyper.Internal.Prelude
 
 class HContext h where
     hcontext ::

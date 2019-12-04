@@ -8,14 +8,11 @@ module Hyper.Class.Functor
     ) where
 
 import Control.Lens (Setter, sets)
-import Control.Lens.Operators
-import Data.Functor.Const (Const(..))
 import GHC.Generics
-import Data.Proxy (Proxy(..))
 import Hyper.Class.Nodes (HNodes(..), HWitness(..), _HWitness, (#>))
 import Hyper.Type (type (#))
 
-import Prelude.Compat
+import Hyper.Internal.Prelude
 
 -- | A variant of 'Functor' for 'HyperType's
 class HNodes h => HFunctor h where

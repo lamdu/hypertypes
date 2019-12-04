@@ -4,12 +4,11 @@ module Hyper.Class.Pointed
     ( HPointed(..)
     ) where
 
-import Data.Functor.Const (Const(..))
-import GHC.Generics ((:*:)(..), (:+:)(..))
+import GHC.Generics ((:+:)(..))
 import Hyper.Class.Nodes (HNodes, HWitness(..))
 import Hyper.Type (type (#))
 
-import Prelude.Compat
+import Hyper.Internal.Prelude
 
 -- | A variant of 'Data.Pointed.Pointed' for 'Hyper.Type.HyperType's
 class HNodes h => HPointed h where

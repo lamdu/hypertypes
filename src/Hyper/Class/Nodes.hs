@@ -10,12 +10,11 @@ module Hyper.Class.Nodes
     ) where
 
 import Control.Lens (makePrisms)
-import Data.Constraint (Dict(..))
-import Data.Functor.Const (Const(..))
-import Data.Kind (Constraint, Type)
-import Data.Proxy (Proxy(..))
+import Data.Kind (Type)
 import GHC.Generics
 import Hyper.Type
+
+import Hyper.Internal.Prelude
 
 newtype HWitness h n = HWitness (HWitnessType h n)
 

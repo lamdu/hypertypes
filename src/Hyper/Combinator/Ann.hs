@@ -5,23 +5,17 @@ module Hyper.Combinator.Ann
     , Annotated, annotation
     ) where
 
-import Control.Lens (Lens', _Wrapped, makeLenses, from)
-import Control.Lens.Operators
-import Data.Constraint (Dict(..), withDict)
-import Data.Functor.Const (Const)
-import Data.Proxy (Proxy(..))
-import GHC.Generics (Generic)
+import Control.Lens (Lens', _Wrapped, from)
 import Hyper.Class.Foldable (HFoldable(..))
 import Hyper.Class.Functor (HFunctor(..))
 import Hyper.Class.Nodes
 import Hyper.Class.Traversable
 import Hyper.Combinator.Flip
 import Hyper.Recurse
-import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
 import Hyper.Type (type (#), type (:#))
 
-import Prelude.Compat
+import Hyper.Internal.Prelude
 
 data Ann a h = Ann
     { _hAnn :: a h

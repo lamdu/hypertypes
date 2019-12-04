@@ -6,12 +6,9 @@ module Hyper.Infer.Result
     ) where
 
 import Control.Lens (Iso, makePrisms)
-import Control.Lens.Operators
 import Hyper
 import Hyper.Class.Infer
-import Hyper.TH.Internal.Instances (makeCommonInstances)
-
-import Prelude.Compat
+import Hyper.Internal.Prelude
 
 -- | A 'HyperType' for an inferred term - the output of 'Hyper.Infer.infer'
 newtype InferResult v e =

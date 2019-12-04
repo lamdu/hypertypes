@@ -7,15 +7,13 @@ module Hyper.Class.Infer
     , InferredChild(..), inType, inRep
     ) where
 
-import           Control.Lens (makeLenses, makePrisms)
 import qualified Control.Lens as Lens
-import           Control.Lens.Operators
 import           GHC.Generics
 import           Hyper
 import           Hyper.Class.Unify
 import           Hyper.Recurse
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 -- | @InferOf e@ is the inference result of @e@.
 --

@@ -6,9 +6,6 @@ module Hyper.Class.Monad
     ( HMonad(..), hbind
     ) where
 
-import Control.Lens.Operators
-import Data.Constraint (withDict)
-import Data.Proxy (Proxy(..))
 import Hyper.Class.Apply (HApplicative)
 import Hyper.Class.Functor (HFunctor(..))
 import Hyper.Class.Nodes (HWitness, (#>))
@@ -17,7 +14,7 @@ import Hyper.Combinator.Compose (HCompose, _HCompose)
 import Hyper.Type (type (#))
 import Hyper.Type.Pure (Pure(..), _Pure)
 
-import Prelude.Compat
+import Hyper.Internal.Prelude
 
 -- | A variant of 'Control.Monad.Monad' for 'Hyper.Type.HyperType's
 class HApplicative h => HMonad h where

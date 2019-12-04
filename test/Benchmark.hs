@@ -1,8 +1,8 @@
 import Control.Exception (evaluate)
-import Control.Lens.Operators
 import Criterion (Benchmarkable, whnfIO)
 import Criterion.Main (bench, defaultMain)
 import Hyper
+import Hyper.Internal.Prelude
 import Hyper.Unify
 import Hyper.Unify.New (unfreeze)
 import LangB

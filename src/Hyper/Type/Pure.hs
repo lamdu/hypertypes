@@ -9,12 +9,12 @@ module Hyper.Type.Pure
     ( Pure(..), _Pure, W_Pure(..)
     ) where
 
-import Control.Lens (Iso, iso)
-import GHC.Generics (Generic)
-import Hyper.TH.Internal.Instances (makeCommonInstances)
+import Control.Lens (iso)
 import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
 import Hyper.Type (type (#), type (:#))
 import Text.PrettyPrint.HughesPJClass (Pretty(..))
+
+import Hyper.Internal.Prelude
 
 -- | A 'Hyper.Type.HyperType' to express the simplest plain form of a nested higher-kinded data structure
 newtype Pure h = Pure (h :# Pure)

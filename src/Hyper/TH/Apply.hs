@@ -10,8 +10,6 @@ module Hyper.TH.Apply
 
 import           Control.Applicative (liftA2)
 import qualified Control.Lens as Lens
-import           Control.Lens.Operators
-import           GHC.Generics ((:*:)(..))
 import           Hyper.Class.Apply
 import           Hyper.TH.Functor (makeHFunctor)
 import           Hyper.TH.Internal.Utils
@@ -19,7 +17,7 @@ import           Hyper.TH.Nodes (makeHNodes)
 import           Hyper.TH.Pointed (makeHPointed)
 import           Language.Haskell.TH
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 -- | Generate instances of 'HApply',
 -- 'Hyper.Class.Functor.HFunctor', 'Hyper.Class.Pointed.HPointed' and 'Hyper.Class.Nodes.HNodes',

@@ -5,24 +5,22 @@ module Hyper.Type.Prune
     ) where
 
 import qualified Control.Lens as Lens
-import           Control.Lens.Operators
 import           Hyper
 import           Hyper.Class.Traversable
 import           Hyper.Class.Unify (UnifyGen)
 import           Hyper.Combinator.Compose (HComposeConstraint1)
 import           Hyper.Infer
 import           Hyper.Infer.Blame (Blame(..))
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Unify.New (newUnbound)
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 data Prune h =
     Pruned | Unpruned (h :# Prune)
     deriving Generic
 
 makeCommonInstances [''Prune]
-Lens.makePrisms ''Prune
+makePrisms ''Prune
 makeHTraversableAndBases ''Prune
 makeZipMatch ''Prune
 makeHContext ''Prune

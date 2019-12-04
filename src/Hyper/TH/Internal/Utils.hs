@@ -13,25 +13,19 @@ module Hyper.TH.Internal.Utils
     ) where
 
 import qualified Control.Lens as Lens
-import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.State (State, evalState, execStateT, gets, modify)
 import qualified Data.Char as Char
-import           Data.Foldable (traverse_)
 import           Data.List (nub, intercalate)
-import           Data.Map (Map)
 import qualified Data.Map as Map
-import           Data.Maybe (fromMaybe)
-import           Data.Set (Set)
 import qualified Data.Set as Set
-import           GHC.Generics (Generic)
 import           Generic.Data (Generically(..))
 import           Hyper.Class.Nodes
 import           Hyper.Type (AHyperType(..), GetHyperType, type (:#))
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 data TypeInfo = TypeInfo
     { tiName :: Name

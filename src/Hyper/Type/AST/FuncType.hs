@@ -5,10 +5,7 @@ module Hyper.Type.AST.FuncType
     , HasFuncType(..)
     ) where
 
-import           Control.DeepSeq (NFData)
-import           Control.Lens (Prism', makeLenses)
-import           Control.Lens.Operators
-import           Data.Binary (Binary)
+import           Control.Lens (Prism')
 import           Generics.Constraints (makeDerivings, makeInstances)
 import           Hyper
 import           Text.PrettyPrint ((<+>))
@@ -16,7 +13,7 @@ import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 import           Text.Show.Combinators ((@|), showCon)
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 -- | A term for the types of functions. Analogues to @(->)@ in Haskell.
 --

@@ -11,29 +11,26 @@ module Hyper.Unify.Binding
 
 import           Control.Lens (ALens')
 import qualified Control.Lens as Lens
-import           Control.Lens.Operators
 import           Control.Monad.State (MonadState(..))
 import           Data.Sequence
 import qualified Data.Sequence as Sequence
-import           GHC.Generics (Generic)
 import           Hyper.Class.Unify (BindingDict(..))
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Type (AHyperType, type (#))
 import           Hyper.Unify.Term
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 -- | A unification variable identifier pure state based unification
 newtype UVar (t :: AHyperType) = UVar Int
     deriving stock (Generic, Show)
     deriving newtype (Eq, Ord)
-Lens.makePrisms ''UVar
+makePrisms ''UVar
 
 -- | The state of unification variables implemented in a pure data structure
 newtype Binding t = Binding (Seq (UTerm UVar t))
     deriving stock Generic
 
-Lens.makePrisms ''Binding
+makePrisms ''Binding
 makeCommonInstances [''Binding]
 
 -- | An empty 'Binding'

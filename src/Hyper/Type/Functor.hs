@@ -4,16 +4,11 @@ module Hyper.Type.Functor
     ( F(..), _F, W_F(..)
     ) where
 
-import Control.Lens (Iso, iso, mapped)
-import Control.Lens.Operators
-import Data.Constraint (withDict)
-import Data.Proxy (Proxy(..))
-import GHC.Generics (Generic)
+import Control.Lens (iso, mapped)
 import Hyper
 import Hyper.Class.Monad (HMonad(..))
-import Hyper.TH.Internal.Instances (makeCommonInstances)
 
-import Prelude.Compat
+import Hyper.Internal.Prelude
 
 -- | Lift a 'Functor', or type constructor of kind @Type -> Type@ to a 'Hyper.Type.HyperType'.
 --

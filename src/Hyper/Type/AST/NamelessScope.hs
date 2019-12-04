@@ -17,9 +17,8 @@ module Hyper.Type.AST.NamelessScope
 
 import           Control.Lens (Lens', Prism')
 import qualified Control.Lens as Lens
-import           Control.Lens.Operators
 import           Control.Monad.Reader (MonadReader, local)
-import           Data.Constraint
+import           Data.Constraint ((:-), (\\))
 import           Data.Kind (Type)
 import           Data.Sequence (Seq)
 import qualified Data.Sequence as Sequence
@@ -30,7 +29,7 @@ import           Hyper.Type.AST.FuncType
 import           Hyper.Unify (UnifyGen, UVarOf)
 import           Hyper.Unify.New (newUnbound)
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 data EmptyScope deriving Show
 

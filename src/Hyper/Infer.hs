@@ -17,9 +17,6 @@ module Hyper.Infer
     ) where
 
 import qualified Control.Lens as Lens
-import           Control.Lens.Operators
-import           Data.Constraint (withDict)
-import           Data.Proxy (Proxy(..))
 import           Hyper
 import           Hyper.Class.Infer
 import           Hyper.Class.Infer.Env
@@ -30,7 +27,7 @@ import           Hyper.Infer.ScopeLevel
 import           Hyper.Unify (Unify, UVarOf)
 import           Hyper.Unify.Apply (applyBindings)
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 -- | Perform Hindley-Milner type inference of a term
 {-# INLINE infer #-}

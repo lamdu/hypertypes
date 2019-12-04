@@ -5,20 +5,18 @@ module Hyper.Type.AST.Scheme.AlphaEq
     ( alphaEq
     ) where
 
-import qualified Control.Lens as Lens
-import           Control.Lens.Operators
-import           Data.Maybe (fromMaybe)
-import           Hyper
-import           Hyper.Class.Has (HasChild(..))
-import           Hyper.Class.ZipMatch (zipMatch_)
-import           Hyper.Recurse (wrapM, (#>>))
-import           Hyper.Type.AST.Scheme
-import           Hyper.Unify
-import           Hyper.Unify.New (newTerm)
-import           Hyper.Unify.QuantifiedVar
-import           Hyper.Unify.Term (UTerm(..), uBody)
+import Control.Lens (ix)
+import Hyper
+import Hyper.Class.Has (HasChild(..))
+import Hyper.Class.ZipMatch (zipMatch_)
+import Hyper.Recurse (wrapM, (#>>))
+import Hyper.Type.AST.Scheme
+import Hyper.Unify
+import Hyper.Unify.New (newTerm)
+import Hyper.Unify.QuantifiedVar
+import Hyper.Unify.Term (UTerm(..), uBody)
 
-import           Prelude.Compat
+import Hyper.Internal.Prelude
 
 makeQVarInstancesInScope ::
     forall m typ.
@@ -37,7 +35,7 @@ schemeBodyToType foralls x =
     Nothing -> newTerm x
     Just r -> pure r
     where
-        getForAll v = foralls ^? getChild . _QVarInstances . Lens.ix v
+        getForAll v = foralls ^? getChild . _QVarInstances . ix v
 
 schemeToRestrictedType ::
     forall m varTypes typ.

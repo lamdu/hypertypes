@@ -11,14 +11,10 @@ module Hyper.Diff
     , foldDiffsP
     ) where
 
-import Control.Lens (makeLenses, makePrisms)
-import Control.Lens.Operators
 import Hyper
 import Hyper.Class.ZipMatch (ZipMatch(..))
+import Hyper.Internal.Prelude
 import Hyper.Recurse
-import Hyper.TH.Internal.Instances (makeCommonInstances)
-
-import Prelude.Compat
 
 -- | A 'HyperType' which represents the difference between two annotated trees.
 -- The annotation types also function as tokens

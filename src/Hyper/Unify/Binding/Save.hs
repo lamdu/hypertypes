@@ -7,7 +7,6 @@ module Hyper.Unify.Binding.Save
     ) where
 
 import qualified Control.Lens as Lens
-import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.State (StateT(..))
 import qualified Data.Sequence as Sequence
@@ -18,7 +17,7 @@ import           Hyper.Recurse
 import           Hyper.Unify.Binding (Binding, _Binding, UVar(..))
 import           Hyper.Unify.Term (UTerm(..), uBody)
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 saveUTerm ::
     forall m typeVars t.

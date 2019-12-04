@@ -11,26 +11,19 @@ module Hyper.Type.AST.Row
     , rowElementInfer
     ) where
 
-import           Control.DeepSeq (NFData)
-import           Control.Lens (Prism', Lens', makeLenses, contains)
+import           Control.Lens (Prism', Lens', contains)
 import qualified Control.Lens as Lens
-import           Control.Lens.Operators
 import           Control.Monad (foldM)
-import           Data.Binary (Binary)
-import           Data.Foldable (sequenceA_)
-import           Data.Map (Map)
 import qualified Data.Map as Map
-import           Data.Set (Set)
 import           Generics.Constraints (Constraints, makeDerivings, makeInstances)
 import           Hyper
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Unify
 import           Hyper.Unify.Lookup (semiPruneLookup)
 import           Hyper.Unify.New (newTerm, newUnbound)
 import           Hyper.Unify.Term (UTerm(..), _UTerm, UTermBody(..), uBody)
 import           Text.Show.Combinators ((@|), showCon)
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 class
     (Ord (RowConstraintsKey constraints), TypeConstraints constraints) =>

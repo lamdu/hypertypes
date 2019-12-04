@@ -13,18 +13,14 @@ module Hyper.Type.AST.Scheme
     ) where
 
 import qualified Control.Lens as Lens
-import           Control.Lens.Operators
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.State (StateT(..))
-import           Data.Map (Map)
 import qualified Data.Map as Map
-import           GHC.Generics (Generic)
 import           Hyper
 import           Hyper.Class.Has (HasChild(..))
 import           Hyper.Class.Recursive
 import           Hyper.Infer
 import           Hyper.Recurse
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Unify
 import           Hyper.Unify.Generalize
 import           Hyper.Unify.Lookup (semiPruneLookup)
@@ -35,7 +31,7 @@ import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 -- | A type scheme representing a polymorphic type.
 data Scheme varTypes typ h = Scheme
@@ -50,9 +46,9 @@ newtype QVars typ = QVars
 newtype QVarInstances h typ = QVarInstances (Map (QVar (GetHyperType typ)) (h typ))
     deriving stock Generic
 
-Lens.makeLenses ''Scheme
-Lens.makePrisms ''QVars
-Lens.makePrisms ''QVarInstances
+makeLenses ''Scheme
+makePrisms ''QVars
+makePrisms ''QVarInstances
 makeCommonInstances [''Scheme, ''QVars, ''QVarInstances]
 makeHTraversableApplyAndBases ''Scheme
 

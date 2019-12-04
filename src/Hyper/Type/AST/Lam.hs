@@ -4,12 +4,9 @@ module Hyper.Type.AST.Lam
     ( Lam(..), lamIn, lamOut, W_Lam(..)
     ) where
 
-import           Control.Lens (makeLenses)
-import           Control.Lens.Operators
 import           Generics.Constraints (Constraints)
 import           Hyper
 import           Hyper.Infer
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Type.AST.FuncType
 import           Hyper.Unify (UnifyGen, UVarOf)
 import           Hyper.Unify.New (newUnbound, newTerm)
@@ -17,7 +14,7 @@ import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 -- | A term for lambda abstractions.
 --

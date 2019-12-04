@@ -5,18 +5,15 @@ module Hyper.Type.AST.App
     , appChildren
     ) where
 
-import Control.Lens (Traversal, makeLenses)
-import Control.Lens.Operators
 import Hyper
 import Hyper.Infer
-import Hyper.TH.Internal.Instances (makeCommonInstances)
 import Hyper.Type.AST.FuncType
 import Hyper.Unify (UnifyGen, unify)
 import Hyper.Unify.New (newTerm, newUnbound)
 import Text.PrettyPrint ((<+>))
 import Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
-import Prelude.Compat
+import Hyper.Internal.Prelude
 
 -- | A term for function applications.
 --

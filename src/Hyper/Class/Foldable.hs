@@ -9,15 +9,11 @@ module Hyper.Class.Foldable
     ) where
 
 import Control.Lens (Fold, folding)
-import Control.Lens.Operators
-import Data.Foldable (sequenceA_)
-import Data.Functor.Const (Const(..))
-import Data.Proxy (Proxy(..))
 import GHC.Generics
 import Hyper.Class.Nodes (HNodes(..), HWitness(..), _HWitness, (#>))
 import Hyper.Type (type (#))
 
-import Prelude.Compat
+import Hyper.Internal.Prelude
 
 -- | A variant of 'Foldable' for 'Hyper.Type.HyperType's
 class HNodes h => HFoldable h where

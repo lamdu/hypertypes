@@ -6,12 +6,9 @@ module Hyper.Type.AST.TypeSig
     ( TypeSig(..), tsType, tsTerm, W_TypeSig(..)
     ) where
 
-import           Control.Lens (makeLenses)
-import           Control.Lens.Operators
 import           Generics.Constraints (Constraints)
 import           Hyper
 import           Hyper.Infer
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Type.AST.Scheme
 import           Hyper.Unify (UnifyGen, unify)
 import           Hyper.Unify.Generalize (instantiateWith)
@@ -20,7 +17,7 @@ import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 data TypeSig vars term h = TypeSig
     { _tsTerm :: h :# term

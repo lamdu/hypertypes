@@ -16,13 +16,9 @@ module Hyper.Type.AST.Nominal
     ) where
 
 import           Control.Applicative (Alternative(..))
-import           Control.DeepSeq (NFData)
-import           Control.Lens (Prism', makeLenses, makePrisms)
+import           Control.Lens (Prism')
 import qualified Control.Lens as Lens
-import           Control.Lens.Operators
 import           Control.Monad.Trans.Writer (execWriterT)
-import           Data.Binary (Binary)
-import           Data.Foldable (traverse_)
 import qualified Data.Map as Map
 import           Generics.Constraints (Constraints)
 import           Hyper
@@ -32,7 +28,6 @@ import           Hyper.Class.Traversable (ContainedH(..))
 import           Hyper.Class.ZipMatch (ZipMatch(..))
 import           Hyper.Infer
 import           Hyper.Recurse
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Type.AST.FuncType (FuncType(..))
 import           Hyper.Type.AST.Map (TermMap(..), _TermMap)
 import           Hyper.Type.AST.Scheme
@@ -45,7 +40,7 @@ import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 type family NomVarTypes (t :: HyperType) :: HyperType
 

@@ -8,10 +8,7 @@ module Hyper.Class.Unify
     , BindingDict(..)
     ) where
 
-import Control.Lens.Operators
-import Data.Constraint (Dict(..))
 import Data.Kind (Type)
-import Data.Proxy (Proxy(..))
 import Hyper.Class.Nodes (HNodes(..))
 import Hyper.Class.Recursive
 import Hyper.Class.ZipMatch (ZipMatch)
@@ -21,7 +18,7 @@ import Hyper.Unify.Error (UnifyError(..))
 import Hyper.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify)
 import Hyper.Unify.Term (UTerm, UTermBody, uBody)
 
-import Prelude.Compat
+import Hyper.Internal.Prelude
 
 -- | Unification variable type for a unification monad
 type family UVarOf (m :: Type -> Type) :: HyperType

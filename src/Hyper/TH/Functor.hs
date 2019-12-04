@@ -7,13 +7,12 @@ module Hyper.TH.Functor
     ) where
 
 import qualified Control.Lens as Lens
-import           Control.Lens.Operators
 import           Hyper.Class.Functor
 import           Hyper.TH.Internal.Utils
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Datatype (ConstructorVariant)
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 -- | Generate a 'HFunctor' instance
 makeHFunctor :: Name -> DecsQ

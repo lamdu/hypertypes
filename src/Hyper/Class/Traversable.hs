@@ -8,9 +8,7 @@ module Hyper.Class.Traversable
     , htraverse, htraverse1
     ) where
 
-import Control.Lens (Traversal, Iso, iso)
-import Control.Lens.Operators
-import Data.Functor.Const (Const(..))
+import Control.Lens (iso)
 import GHC.Generics
 import GHC.Generics.Lens (_M1, _Rec1)
 import Hyper.Class.Foldable (HFoldable)
@@ -18,7 +16,7 @@ import Hyper.Class.Functor (HFunctor(..), hmapped1)
 import Hyper.Class.Nodes (HNodes(..), HWitness)
 import Hyper.Type (AHyperType, type (#))
 
-import Prelude.Compat
+import Hyper.Internal.Prelude
 
 -- | A 'Hyper.Type.HyperType' containing a tree inside an action.
 --

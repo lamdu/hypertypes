@@ -4,19 +4,16 @@ module Hyper.Type.AST.Let
     ( Let(..), letVar, letEquals, letIn, W_Let(..)
     ) where
 
-import           Control.Lens (makeLenses)
-import           Control.Lens.Operators
 import           Generics.Constraints (Constraints)
 import           Hyper
 import           Hyper.Class.Unify (UnifyGen, UVarOf)
 import           Hyper.Infer
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Unify.Generalize (GTerm, generalize)
 import           Text.PrettyPrint (($+$), (<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 -- | A term for let-expressions with let-generalization.
 --

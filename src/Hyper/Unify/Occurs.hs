@@ -6,7 +6,6 @@ module Hyper.Unify.Occurs
       occursError
     ) where
 
-import Control.Lens.Operators
 import Control.Monad (unless, when)
 import Control.Monad.Trans.Class (MonadTrans(..))
 import Control.Monad.Trans.State (execStateT, get, put)
@@ -17,7 +16,7 @@ import Hyper.Unify.Lookup (semiPruneLookup)
 import Hyper.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify(..))
 import Hyper.Unify.Term (UTerm(..), UTermBody(..), uBody)
 
-import Prelude.Compat
+import Hyper.Internal.Prelude
 
 -- | Format and throw an occurs check error
 occursError ::

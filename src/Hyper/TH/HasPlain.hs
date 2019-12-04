@@ -7,7 +7,6 @@ module Hyper.TH.HasPlain
     ) where
 
 import qualified Control.Lens as Lens
-import           Control.Lens.Operators
 import qualified Data.Map as Map
 import           Hyper.Class.HasPlain
 import           Hyper.TH.Internal.Utils
@@ -16,7 +15,7 @@ import           Hyper.Type.Pure (Pure(..), _Pure)
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 -- | Generate a 'HasHPlain' instance
 makeHasHPlain :: [Name] -> DecsQ

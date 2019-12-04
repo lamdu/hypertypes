@@ -49,7 +49,7 @@ default-extensions:
 library:
   source-dirs: src
   other-modules:
-  - Hyper.TH.Internal.Instances
+  - Hyper.Internal.Prelude
   - Hyper.TH.Internal.Utils
   dependencies:
   - array

@@ -10,7 +10,6 @@ module Hyper.TH.Traversable
     ) where
 
 import qualified Control.Lens as Lens
-import           Control.Lens.Operators
 import           Hyper.Class.Traversable
 import           Hyper.TH.Apply (makeHApplicativeBases)
 import           Hyper.TH.Foldable (makeHFoldable)
@@ -20,7 +19,7 @@ import           Hyper.TH.Nodes (makeHNodes)
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Datatype (ConstructorVariant)
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 -- | Generate 'HTraversable' and 'Hyper.Class.Apply.HApply' instances along with all of their base classes:
 -- 'Hyper.Class.Foldable.HFoldable', 'Hyper.Class.Functor.HFunctor',

@@ -7,10 +7,10 @@ module Hyper.Combinator.Flip
     , hflipped
     ) where
 
-import Control.Lens (Iso, iso, from)
-import GHC.Generics (Generic)
-import Hyper.TH.Internal.Instances (makeCommonInstances)
+import Control.Lens (iso, from)
 import Hyper.Type (type (#), GetHyperType)
+
+import Hyper.Internal.Prelude
 
 -- | Flip the order of the last two type parameters of a 'Hyper.Type.HyperType'.
 --

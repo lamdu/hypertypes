@@ -9,9 +9,6 @@ module Hyper.Class.ZipMatch
     , zipMatch_, zipMatch1_
     ) where
 
-import Control.Lens.Operators
-import Control.Monad (guard)
-import Data.Functor.Const (Const(..))
 import GHC.Generics
 import Hyper.Class.Foldable (HFoldable, htraverse_, htraverse1_)
 import Hyper.Class.Functor (HFunctor(..))
@@ -20,7 +17,7 @@ import Hyper.Class.Traversable (HTraversable, htraverse)
 import Hyper.Type (type (#))
 import Hyper.Type.Pure (Pure(..), _Pure)
 
-import Prelude.Compat
+import Hyper.Internal.Prelude
 
 -- | A class to match term structures.
 --

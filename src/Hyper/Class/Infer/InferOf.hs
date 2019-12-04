@@ -7,8 +7,6 @@ module Hyper.Class.Infer.InferOf
     ) where
 
 import Control.Lens (ALens', Lens')
-import Data.Constraint (Dict(..))
-import Data.Proxy (Proxy(..))
 import Hyper.Class.Foldable (HFoldable)
 import Hyper.Class.Functor (HFunctor)
 import Hyper.Class.Infer (InferOf)
@@ -17,7 +15,7 @@ import Hyper.Class.Recursive (Recursive(..), Recursively, proxyArgument)
 import Hyper.Class.Traversable (HTraversable)
 import Hyper.Type (HyperType, type (#))
 
-import Prelude.Compat
+import Hyper.Internal.Prelude
 
 -- | @HasInferredType t@ represents that @InferOf t@ contains a @TypeOf t@, which represents its inferred type.
 class HasInferredType t where

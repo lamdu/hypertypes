@@ -5,8 +5,6 @@ module Hyper.TH.Context
     ) where
 
 import qualified Control.Lens as Lens
-import           Control.Lens.Operators
-import           GHC.Generics
 import           Hyper.Class.Context
 import           Hyper.Class.Functor
 import           Hyper.Combinator.Func (HFunc(..), _HFunc)
@@ -14,8 +12,7 @@ import           Hyper.TH.Internal.Utils
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Datatype (ConstructorVariant(..))
 
-import           Prelude.Compat
-
+import           Hyper.Internal.Prelude
 
 makeHContext :: Name -> DecsQ
 makeHContext typeName = makeTypeInfo typeName >>= makeHContextForType

@@ -4,7 +4,6 @@ module Hyper.Unify.Apply
     ( applyBindings
     ) where
 
-import Control.Lens.Operators
 import Control.Monad (unless)
 import Control.Monad.Trans.Class (MonadTrans(..))
 import Control.Monad.Trans.State (runStateT, get, put)
@@ -15,7 +14,7 @@ import Hyper.Unify.Occurs (occursError)
 import Hyper.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify(..))
 import Hyper.Unify.Term (UTerm(..), uBody)
 
-import Prelude.Compat
+import Hyper.Internal.Prelude
 
 -- | Resolve a term from a unification variable.
 --

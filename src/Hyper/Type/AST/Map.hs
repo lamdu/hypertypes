@@ -5,15 +5,11 @@ module Hyper.Type.AST.Map
     ) where
 
 import qualified Control.Lens as Lens
-import           Control.Lens.Operators
-import           Data.Map (Map)
 import qualified Data.Map as Map
-import           GHC.Generics (Generic)
 import           Hyper
 import           Hyper.Class.ZipMatch (ZipMatch(..))
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 -- | A mapping of keys to terms.
 --
@@ -21,7 +17,7 @@ import           Prelude.Compat
 newtype TermMap h expr f = TermMap (Map h (f :# expr))
     deriving stock Generic
 
-Lens.makePrisms ''TermMap
+makePrisms ''TermMap
 makeCommonInstances [''TermMap]
 makeHTraversableApplyAndBases ''TermMap
 

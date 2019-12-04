@@ -7,7 +7,6 @@ module Hyper.TH.Nodes
     ) where
 
 import qualified Control.Lens as Lens
-import           Control.Lens.Operators
 import qualified Data.Set as Set
 import           GHC.Generics (V1)
 import           Hyper.Class.Nodes
@@ -15,7 +14,7 @@ import           Hyper.TH.Internal.Utils
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 -- | Generate a 'HNodes' instance
 makeHNodes :: Name -> DecsQ

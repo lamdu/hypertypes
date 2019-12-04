@@ -42,9 +42,7 @@ module Hyper.Infer.Blame
     ) where
 
 import qualified Control.Lens as Lens
-import           Control.Lens.Operators
 import           Control.Monad.Except (MonadError(..))
-import           Data.Foldable (traverse_)
 import           Data.List (sortOn)
 import           Hyper
 import           Hyper.Class.Infer
@@ -52,11 +50,10 @@ import           Hyper.Class.Traversable (ContainedH(..))
 import           Hyper.Class.Unify (UnifyGen, UVarOf)
 import           Hyper.Infer.Result
 import           Hyper.Recurse
-import           Hyper.TH.Internal.Instances (makeCommonInstances)
 import           Hyper.Unify.New (newUnbound)
 import           Hyper.Unify.Occurs (occursCheck)
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 -- | Class implementing some primitives needed by the 'blame' algorithm
 --
@@ -141,7 +138,7 @@ data BlameResult v e
     = Good (InferOf' e v)
     | Mismatch (InferOf' e v, InferOf' e v)
     deriving Generic
-Lens.makePrisms ''BlameResult
+makePrisms ''BlameResult
 makeCommonInstances [''BlameResult]
 
 finalize ::

@@ -7,13 +7,12 @@ module Hyper.TH.Pointed
     ) where
 
 import qualified Control.Lens as Lens
-import           Control.Lens.Operators
 import           Hyper.Class.Pointed
 import           Hyper.TH.Internal.Utils
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Datatype (ConstructorVariant)
 
-import           Prelude.Compat
+import           Hyper.Internal.Prelude
 
 -- | Generate a 'HPointed' instance
 makeHPointed :: Name -> DecsQ
