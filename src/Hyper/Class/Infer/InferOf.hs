@@ -31,11 +31,9 @@ class HasInferredValue t where
 
 class InferOfConstraint c h where
     inferOfConstraint :: proxy0 c -> proxy1 h -> Dict (c (InferOf h))
-    default inferOfConstraint :: c (InferOf h) => proxy0 c -> proxy1 h -> Dict (c (InferOf h))
-    inferOfConstraint _ _ = Dict
 
-instance HFunctor (InferOf h) => InferOfConstraint HFunctor h
-instance HFoldable (InferOf h) => InferOfConstraint HFoldable h
+instance c (InferOf h) => InferOfConstraint c h where
+    inferOfConstraint _ _ = Dict
 
 class
     (HTraversable (InferOf h), Recursively (InferOfConstraint HFunctor) h, Recursively (InferOfConstraint HFoldable) h) =>
