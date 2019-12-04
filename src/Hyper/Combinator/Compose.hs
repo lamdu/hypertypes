@@ -11,12 +11,22 @@ module Hyper.Combinator.Compose
 
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
-import           Hyper
+import           Data.Constraint (Dict(..), Constraint, withDict)
+import           Data.Functor.Const (Const(..))
+import           Data.Proxy (Proxy(..))
+import           GHC.Generics (Generic, (:*:)(..))
+import           Hyper.Class.Apply (HApply(..))
 import           Hyper.Class.Context (HContext(..))
-import           Hyper.Class.Traversable (ContainedH(..))
+import           Hyper.Class.Foldable (HFoldable(..))
+import           Hyper.Class.Functor (HFunctor(..))
+import           Hyper.Class.Nodes (HNodes(..), HWitness(..))
+import           Hyper.Class.Pointed (HPointed(..))
+import           Hyper.Class.Traversable (HTraversable(..), ContainedH(..), htraverse)
+import           Hyper.Class.Recursive (RNodes(..), Recursively(..), RTraversable)
 import           Hyper.Class.ZipMatch (ZipMatch(..))
 import           Hyper.Combinator.Func (HFunc(..))
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
+import           Hyper.Type (HyperType, GetHyperType, type (#))
 
 import           Prelude.Compat
 

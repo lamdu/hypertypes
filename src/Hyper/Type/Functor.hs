@@ -9,14 +9,9 @@ import Control.Lens.Operators
 import Data.Constraint (withDict)
 import Data.Proxy (Proxy(..))
 import GHC.Generics (Generic)
-import Hyper.Class.Functor (HFunctor(..))
+import Hyper
 import Hyper.Class.Monad (HMonad(..))
-import Hyper.Class.Nodes ((#>))
-import Hyper.Class.Recursive (RNodes, Recursively(..), RTraversable)
-import Hyper.Combinator.Compose
 import Hyper.TH.Internal.Instances (makeCommonInstances)
-import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
-import Hyper.Type (type (#), type (:#))
 
 import Prelude.Compat
 

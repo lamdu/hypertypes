@@ -9,7 +9,7 @@ import           Control.Lens.Operators
 import           Hyper
 import           Hyper.Class.Traversable
 import           Hyper.Class.Unify (UnifyGen)
-import           Hyper.Combinator.Compose (HCompose(..), HComposeConstraint1)
+import           Hyper.Combinator.Compose (HComposeConstraint1)
 import           Hyper.Infer
 import           Hyper.Infer.Blame (Blame(..))
 import           Hyper.TH.Internal.Instances (makeCommonInstances)

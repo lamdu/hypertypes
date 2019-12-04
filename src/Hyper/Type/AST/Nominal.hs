@@ -30,7 +30,6 @@ import           Hyper.Class.Context (HContext(..))
 import           Hyper.Class.Has (HasChild(..))
 import           Hyper.Class.Traversable (ContainedH(..))
 import           Hyper.Class.ZipMatch (ZipMatch(..))
-import           Hyper.Combinator.Func (HFunc(..))
 import           Hyper.Infer
 import           Hyper.Recurse
 import           Hyper.TH.Internal.Instances (makeCommonInstances)
