@@ -25,7 +25,7 @@ import Hyper.Type (HyperType, GetHyperType, type (#))
 import Hyper.Internal.Prelude
 
 -- | Compose two 'HyperType's as an external and internal layer
-newtype HCompose a b h = MkHCompose { getHCompose :: a # HCompose b (GetHyperType h) }
+newtype HCompose a b h = HCompose { getHCompose :: a # HCompose b (GetHyperType h) }
     deriving stock Generic
 
 makeCommonInstances [''HCompose]
@@ -36,7 +36,7 @@ _HCompose ::
     Iso
     (HCompose a0 b0 # h0) (HCompose a1 b1 # h1)
     (a0 # HCompose b0 h0) (a1 # HCompose b1 h1)
-_HCompose = iso getHCompose MkHCompose
+_HCompose = iso getHCompose HCompose
 
 data W_HCompose a b n where
     W_HCompose :: HWitness a a0 -> HWitness b b0 -> W_HCompose a b (HCompose a0 b0)
@@ -98,13 +98,13 @@ instance (HFunctor a, HFunctor b) => HFunctor (HCompose a b) where
 
 instance (HApply a, HApply b) => HApply (HCompose a b) where
     {-# INLINE hzip #-}
-    hzip (MkHCompose a0) =
+    hzip (HCompose a0) =
         _HCompose %~
         hmap
-        ( \_ (MkHCompose b0 :*: MkHCompose b1) ->
+        ( \_ (HCompose b0 :*: HCompose b1) ->
             _HCompose #
             hmap
-            ( \_ (MkHCompose i0 :*: MkHCompose i1) ->
+            ( \_ (HCompose i0 :*: HCompose i1) ->
                 _HCompose # (i0 :*: i1)
             ) (hzip b0 b1)
         )
@@ -130,13 +130,13 @@ instance
     (ZipMatch h0, ZipMatch h1, HTraversable h0, HFunctor h1) =>
     ZipMatch (HCompose h0 h1) where
     {-# INLINE zipMatch #-}
-    zipMatch (MkHCompose x) (MkHCompose y) =
+    zipMatch (HCompose x) (HCompose y) =
         zipMatch x y
         >>= htraverse
-            (\_ (MkHCompose cx :*: MkHCompose cy) ->
+            (\_ (HCompose cx :*: HCompose cy) ->
                 zipMatch cx cy
                 <&> hmap
-                    (\_ (MkHCompose bx :*: MkHCompose by) -> bx :*: by & MkHCompose)
+                    (\_ (HCompose bx :*: HCompose by) -> bx :*: by & HCompose)
                 <&> (_HCompose #)
             )
         <&> (_HCompose #)

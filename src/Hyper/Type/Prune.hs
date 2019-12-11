@@ -48,19 +48,19 @@ instance
     , HNodesConstraint t (HComposeConstraint1 (Infer m) Prune)
     ) =>
     Infer m (HCompose Prune t) where
-    inferBody (MkHCompose Pruned) =
+    inferBody (HCompose Pruned) =
         withDict (inferContext (Proxy @m) (Proxy @t)) $
         hpure (Proxy @(UnifyGen m) #> MkContainedH newUnbound)
         & hsequence
-        <&> (MkHCompose Pruned, )
-    inferBody (MkHCompose (Unpruned (MkHCompose x))) =
+        <&> (_HCompose # Pruned, )
+    inferBody (HCompose (Unpruned (HCompose x))) =
         hmap
-        ( \_ (MkHCompose (InferChild i)) ->
-            i <&> (\(InferredChild r t) -> InferredChild (MkHCompose r) t)
+        ( \_ (HCompose (InferChild i)) ->
+            i <&> (\(InferredChild r t) -> InferredChild (_HCompose # r) t)
             & InferChild
         ) x
         & inferBody
-        <&> Lens._1 %~ MkHCompose . Unpruned . MkHCompose
+        <&> Lens._1 %~ HCompose . Unpruned . HCompose
     inferContext m _ = withDict (inferContext m (Proxy @t)) Dict
 
 instance
