@@ -60,7 +60,7 @@ instance
             & InferChild
         ) x
         & inferBody
-        <&> Lens._1 %~ HCompose . Unpruned . HCompose
+        <&> Lens._1 %~ (hcomposed _Unpruned #)
     inferContext m _ = withDict (inferContext m (Proxy @t)) Dict
 
 instance

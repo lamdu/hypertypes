@@ -7,9 +7,10 @@
 module Hyper.Combinator.Compose
     ( HCompose(..), _HCompose, W_HCompose(..)
     , HComposeConstraint1
+    , hcomposed
     ) where
 
-import Control.Lens (iso)
+import Control.Lens (Profunctor, Optic, iso)
 import Hyper.Class.Apply (HApply(..))
 import Hyper.Class.Context (HContext(..))
 import Hyper.Class.Foldable (HFoldable(..))
@@ -173,3 +174,17 @@ instance
     , HNodesConstraint a (HComposeConstraint0 (Recursively HFoldable) b)
     , HNodesConstraint a (HComposeConstraint0 RTraversable b)
     ) => RTraversable (HCompose a b)
+
+hcomposed ::
+    (Profunctor p, Functor f) =>
+    Optic p f
+        (a0 # HCompose b0 c0)
+        (a1 # HCompose b1 c1)
+        (HCompose a2 b2 # c2)
+        (HCompose a3 b3 # c3) ->
+    Optic p f
+        (HCompose a0 b0 # c0)
+        (HCompose a1 b1 # c1)
+        (a2 # HCompose b2 c2)
+        (a3 # HCompose b3 c3)
+hcomposed f = _HCompose . f . _HCompose
