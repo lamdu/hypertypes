@@ -202,20 +202,20 @@ instance UnifyGen PureInferB Row where
 
 instance MonadQuantify ScopeLevel Name PureInferB where
     newQuantifiedVariable _ =
-        Lens._2 . tTyp . _UVar <<+= 1 <&> Name . ('t':) . show
+        pisFreshUVars . tTyp . _UVar <<+= 1 <&> Name . ('t':) . show
 
 instance MonadQuantify RConstraints Name PureInferB where
     newQuantifiedVariable _ =
-        Lens._2 . tRow . _UVar <<+= 1 <&> Name . ('r':) . show
+        pisFreshUVars . tRow . _UVar <<+= 1 <&> Name . ('r':) . show
 
 instance Unify PureInferB Typ where
-    binding = bindingDict (Lens._1 . tTyp)
+    binding = bindingDict (pisBindings . tTyp)
     unifyError e =
         htraverse (Proxy @(Unify PureInferB) #> applyBindings) e
         >>= throwError . TypError
 
 instance Unify PureInferB Row where
-    binding = bindingDict (Lens._1 . tRow)
+    binding = bindingDict (pisBindings . tRow)
     structureMismatch = rStructureMismatch
     unifyError e =
         htraverse (Proxy @(Unify PureInferB) #> applyBindings) e

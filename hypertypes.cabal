@@ -99,8 +99,8 @@ library
       Hyper.Unify.Occurs
       Hyper.Unify.QuantifiedVar
       Hyper.Unify.Term
-  other-modules:
       Hyper.Internal.Prelude
+  other-modules:
       Hyper.TH.Internal.Utils
   hs-source-dirs:
       src

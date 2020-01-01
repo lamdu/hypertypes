@@ -70,11 +70,17 @@ data TypeError h
     | QVarNotInScope Name
     deriving Generic
 
+data PureInferState = PureInferState
+    { _pisBindings :: Types # Binding
+    , _pisFreshUVars :: Types # UVar
+    }
+
 Lens.makePrisms ''Typ
 Lens.makePrisms ''Row
 Lens.makePrisms ''TypeError
 Lens.makeLenses ''RConstraints
 Lens.makeLenses ''Types
+Lens.makeLenses ''PureInferState
 
 makeZipMatch ''Types
 makeZipMatch ''Typ
@@ -163,13 +169,12 @@ instance HasTypeConstraints Row where
     verifyConstraints c (RExtend x) =
         verifyRowExtendConstraints (^. rScope) c x <&> RExtend
 
-type PureInferState = (Types # Binding, Types # UVar)
-
 emptyPureInferState :: PureInferState
 emptyPureInferState =
-    ( Types emptyBinding emptyBinding
-    , Types (UVar 0) (UVar 0)
-    )
+    PureInferState
+    { _pisBindings = Types emptyBinding emptyBinding
+    , _pisFreshUVars = Types (UVar 0) (UVar 0)
+    }
 
 type STNameGen s = Types # Const (STRef s Int)
 
