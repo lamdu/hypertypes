@@ -202,11 +202,11 @@ instance UnifyGen PureInferB Row where
 
 instance MonadQuantify ScopeLevel Name PureInferB where
     newQuantifiedVariable _ =
-        pisFreshUVars . tTyp . _UVar <<+= 1 <&> Name . ('t':) . show
+        pisFreshQVars . tTyp . _UVar <<+= 1 <&> Name . ('t':) . show
 
 instance MonadQuantify RConstraints Name PureInferB where
     newQuantifiedVariable _ =
-        pisFreshUVars . tRow . _UVar <<+= 1 <&> Name . ('r':) . show
+        pisFreshQVars . tRow . _UVar <<+= 1 <&> Name . ('r':) . show
 
 instance Unify PureInferB Typ where
     binding = bindingDict (pisBindings . tTyp)

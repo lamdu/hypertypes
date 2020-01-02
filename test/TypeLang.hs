@@ -72,7 +72,7 @@ data TypeError h
 
 data PureInferState = PureInferState
     { _pisBindings :: Types # Binding
-    , _pisFreshUVars :: Types # UVar
+    , _pisFreshQVars :: Types # UVar
     }
 
 Lens.makePrisms ''Typ
@@ -173,7 +173,7 @@ emptyPureInferState :: PureInferState
 emptyPureInferState =
     PureInferState
     { _pisBindings = Types emptyBinding emptyBinding
-    , _pisFreshUVars = Types (UVar 0) (UVar 0)
+    , _pisFreshQVars = Types (UVar 0) (UVar 0)
     }
 
 type STNameGen s = Types # Const (STRef s Int)
