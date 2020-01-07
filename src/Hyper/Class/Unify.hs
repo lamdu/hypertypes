@@ -16,7 +16,7 @@ import Hyper.Type (HyperType, type (#))
 import Hyper.Unify.Constraints
 import Hyper.Unify.Error (UnifyError(..))
 import Hyper.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify)
-import Hyper.Unify.Term (UTerm, UTermBody, uBody)
+import Hyper.Unify.Term (UTerm)
 
 import Hyper.Internal.Prelude
 
@@ -73,8 +73,8 @@ class
     -- Those would override the default implementation to handle the unification of mismatching structures.
     structureMismatch ::
         (forall c. Unify m c => UVarOf m # c -> UVarOf m # c -> m (UVarOf m # c)) ->
-        UTermBody (UVarOf m) # t -> UTermBody (UVarOf m) # t -> m ()
-    structureMismatch _ x y = unifyError (Mismatch (x ^. uBody) (y ^. uBody))
+        t # UVarOf m -> t # UVarOf m -> m ()
+    structureMismatch _ x y = unifyError (Mismatch x y)
 
     -- TODO: Putting documentation here causes duplication in the haddock documentation
     unifyRecursive :: Proxy m -> Proxy t -> Dict (HNodesConstraint t (Unify m))

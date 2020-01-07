@@ -27,7 +27,6 @@ import           Hyper.Type.AST.Scheme
 import           Hyper.Unify
 import           Hyper.Unify.Binding
 import           Hyper.Unify.QuantifiedVar
-import           Hyper.Unify.Term
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
@@ -219,10 +218,10 @@ instance
 rStructureMismatch ::
     (UnifyGen m Typ, UnifyGen m Row) =>
     (forall c. Unify m c => UVarOf m # c -> UVarOf m # c -> m (UVarOf m # c)) ->
-    UTermBody (UVarOf m) # Row -> UTermBody (UVarOf m) # Row -> m ()
-rStructureMismatch match (UTermBody _c0 (RExtend r0)) (UTermBody _c1 (RExtend r1)) =
+    Row # UVarOf m -> Row # UVarOf m -> m ()
+rStructureMismatch match (RExtend r0) (RExtend r1) =
     rowExtendStructureMismatch match _RExtend r0 r1
-rStructureMismatch _ x y = unifyError (Mismatch (x ^. uBody) (y ^. uBody))
+rStructureMismatch _ x y = unifyError (Mismatch x y)
 
 readModifySTRef :: MonadST m => STRef (World m) a -> (a -> a) -> m a
 readModifySTRef ref func =

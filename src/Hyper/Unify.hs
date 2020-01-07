@@ -126,7 +126,7 @@ unifyUTerms xv (UTerm xt) yv (UTerm yt) =
     do
         bindVar binding yv (UToVar xv)
         zipMatchA (Proxy @(Unify m) #> unify) (xt ^. uBody) (yt ^. uBody)
-            & fromMaybe (xt ^. uBody <$ structureMismatch unify xt yt)
+            & fromMaybe (xt ^. uBody <$ structureMismatch unify (xt ^. uBody) (yt ^. uBody))
             >>= bindVar binding xv . UTerm . UTermBody (xt ^. uConstraints <> yt ^. uConstraints)
         pure xv
 unifyUTerms _ _ _ _ = error "This shouldn't happen in unification stage"
