@@ -90,7 +90,7 @@ doesn't need to change when adding more field types, so such changes don't propa
 Note that various helper classes such as
 `Rank2.Functor`
 and `Rank2.Traversable` (from the [`rank2classes`](https://hackage.haskell.org/package/rank2classes) package)
-allow us to conviniently convert between `Person Identity` and `Person Maybe`.
+allow us to conveniently convert between `Person Identity` and `Person Maybe`.
 
 #### HKD for nested structures
 
