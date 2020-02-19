@@ -92,7 +92,7 @@ instance RTraversable h => HTraversable (HFlip Ann h) where
             <*> htraverse (Proxy @RTraversable #> from _HFlip hsequence) b
         )
 
-type Annotated a h = Ann (Const a) # h
+type Annotated a = Ann (Const a)
 
-annotation :: Lens' (Ann (Const a) # h) a
+annotation :: Lens' (Annotated a # h) a
 annotation = hAnn . _Wrapped
