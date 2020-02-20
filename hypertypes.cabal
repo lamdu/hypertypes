@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8e0f9826d065462a3741830cfec1d69353451f5fa7bdf0face4af61091be90eb
+-- hash: 19645f2b7985ab94bfe4817862b539350be83bb33237a8b387195edd69780cc8
 
 name:           hypertypes
 version:        0.1.0.1
@@ -140,7 +140,7 @@ test-suite hypertypes-test
   hs-source-dirs:
       test
   default-extensions: ConstraintKinds DataKinds DefaultSignatures DeriveGeneric DerivingStrategies GADTs GeneralizedNewtypeDeriving LambdaCase MultiParamTypeClasses RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeOperators TypeFamilies
-  ghc-options: -Wall -Wcompat -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Wcompat -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.9 && <5
     , constraints

@@ -86,6 +86,7 @@ tests:
     ghc-options:
     - -Wall
     - -Wcompat
+    - -Wredundant-constraints
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N

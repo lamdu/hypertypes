@@ -67,7 +67,6 @@ makeContext info =
     where
         ctxForPat (InContainer t pat) = (ConT ''Traversable `AppT` t) : ctxForPat pat
         ctxForPat (GenEmbed t) = [ConT ''HTraversable `AppT` t]
-        ctxForPat (FlatEmbed t) = [ConT ''HTraversable `AppT` tiInstance t]
         ctxForPat _ = []
 
 makeCons ::
