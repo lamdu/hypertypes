@@ -351,7 +351,7 @@ testAlphaEq x y expect =
         stRes = Lens.has Lens._Right (runST (execSTInferB (alphaEq x y)))
 
 intsRecord :: [Name] -> Pure # Scheme Types Typ
-intsRecord = uniType . TRecP . foldr (\k r -> RExtendP k TIntP r) REmptyP
+intsRecord = uniType . TRecP . foldr (`RExtendP` TIntP) REmptyP
 
 intToInt :: Pure # Scheme Types Typ
 intToInt = TFunP TIntP TIntP & uniType
