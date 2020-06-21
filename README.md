@@ -428,7 +428,6 @@ When mapping over an `Expr` we can:
 * `FlexibleContexts`, `FlexibleInstances` and `UndecidableInstances` are required to specify many constraints
 * `GADTs` and `RankNTypes` enable functions like `hmap` which get `forall`ed functions with witness parameters
 * `MultiParamTypeClasses` is needed for the `Unify` and `Infer` type classes
-* `PolyKinds` is used for re-using combinators such as `Product` and `Sum` rather than defining specifically kinded variants of them
 * `ScopedTypeVariables` and `TypeApplications` assist writing short code that type checks
 
 Many harmless syntactic extensions are also used:
@@ -487,7 +486,7 @@ This enables re-usability of the AST elements `Val` and `Add` in various ASTs, w
 
 Like DTALC, `hypertypes` has:
 
-* Instances for combinators such as `Product` and `Sum`, so that these can be used to build ASTs
+* Instances type for combinators such as `:+:` and `:*:`, so that these can be used to build ASTs
 * Implementations of common AST terms in the `Hyper.Type.AST` module hierarchy (`App`, `Lam`, `Let`, `Var`, `TypeSig` and others)
 * Classes like `HFunctor`, `HTraversable`, `Unify`, `Infer` with instances for the provided AST terms
 
@@ -505,7 +504,7 @@ Unlike a DTALC-based apply, which would be parameterized by a single type parame
 
 Unlike the original DTALC paper which isn't suitable for mutually recursive ASTs, in `hypertypes` one would have to declare an explicit expression type for each expression type for use as `App`'s `expr` type parameter. Similarly, `multirec`'s DTALC variant also requires explicitly declaring type indices.
 
-While it is possible to declare ASTs as `newtype`s wrapping `Sum`s and `Product`s of existing terms and deriving all the instances via `GeneralizedNewtypeDeriving`, our usage and examples declare types in the straight forward way, with named data constructors, as we think results in more readable and performant code.
+While it is possible to declare ASTs as `newtype`s wrapping `:+:`s of existing terms and deriving all the instances via `GeneralizedNewtypeDeriving`, our usage and examples declare types in the straight forward way, with named data constructors, as we think results in more readable and performant code.
 
 ### bound
 
