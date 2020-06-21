@@ -5,7 +5,6 @@ module Hyper.Infer.Result
     , inferResult
     ) where
 
-import Control.Lens (Iso, makePrisms)
 import Hyper
 import Hyper.Class.Infer
 import Hyper.Internal.Prelude

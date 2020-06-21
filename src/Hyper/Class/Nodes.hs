@@ -9,7 +9,6 @@ module Hyper.Class.Nodes
     , HNodesHaveConstraint(..)
     ) where
 
-import Control.Lens (makePrisms)
 import Data.Kind (Type)
 import GHC.Generics
 import Hyper.Type

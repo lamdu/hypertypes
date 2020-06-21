@@ -3,7 +3,7 @@
 module ReadMeExamples where
 
 import Data.Text
-import GHC.Generics (Generic, Generic1)
+import GHC.Generics (Generic1)
 import Generics.Constraints (makeDerivings)
 import Hyper
 import Hyper.Class.ZipMatch
