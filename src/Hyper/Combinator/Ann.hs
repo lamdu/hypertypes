@@ -37,12 +37,12 @@ hLiftConstraintH ::
     forall a c b n r.
     (RNodes a, HNodesConstraint (HFlip Ann a) c) =>
     HWitness a b -> HRecWitness b n -> Proxy c -> (c n => r) -> r
-hLiftConstraintH c n p =
+hLiftConstraintH c n p f =
     withDict (recurse (Proxy @(RNodes a))) $
     withDict (recurse (Proxy @(c a))) $
     hLiftConstraint c (Proxy @RNodes)
     ( hLiftConstraint c p
-        (hLiftConstraint (HWitness @(HFlip Ann _) n) p)
+        (hLiftConstraint (HWitness @(HFlip Ann _) n) p f)
     )
 
 instance RNodes a => RNodes (Ann a) where
