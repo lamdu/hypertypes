@@ -24,7 +24,7 @@ import           Hyper.Class.Unify (Unify(..), UnifyGen(..), UVarOf, BindingDict
 import           Hyper.Recurse
 import           Hyper.Unify.Constraints
 import           Hyper.Unify.Lookup (semiPruneLookup)
-import           Hyper.Unify.New
+import           Hyper.Unify.New (newTerm)
 import           Hyper.Unify.Occurs (occursError)
 import           Hyper.Unify.Term (UTerm(..), uBody)
 
@@ -58,12 +58,12 @@ hLiftConstraintH ::
     forall a c b n r.
     (RNodes a, HNodesConstraint (HFlip GTerm a) c) =>
     HWitness a b -> HRecWitness b n -> Proxy c -> (c n => r) -> r
-hLiftConstraintH c n =
+hLiftConstraintH c n p =
     withDict (recurse (Proxy @(RNodes a))) $
     withDict (recurse (Proxy @(c a))) $
     hLiftConstraint c (Proxy @RNodes)
-    ( hLiftConstraint c (Proxy @c)
-        (hLiftConstraint (HWitness @(HFlip GTerm _) n))
+    ( hLiftConstraint c p
+        (hLiftConstraint (HWitness @(HFlip GTerm _) n) p)
     )
 
 instance Recursively HFunctor ast => HFunctor (HFlip GTerm ast) where
