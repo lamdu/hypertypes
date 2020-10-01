@@ -190,6 +190,7 @@ instance
                 \(h, v) ->
                 (pPrint h <> Pretty.text ":") <+> pPrint v
 
+{-# ANN module "HLint: ignore Use camelCase" #-}
 data W_LoadedNominalDecl t n where
     E_LoadedNominalDecl_Body :: HRecWitness t n -> W_LoadedNominalDecl t n
     E_LoadedNominalDecl_NomVarTypes :: HWitness (NomVarTypes t) n -> W_LoadedNominalDecl t n

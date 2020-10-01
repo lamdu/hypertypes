@@ -39,6 +39,7 @@ _HCompose ::
     (a0 # HCompose b0 h0) (a1 # HCompose b1 h1)
 _HCompose = iso getHCompose HCompose
 
+{-# ANN module "HLint: ignore Use camelCase" #-}
 data W_HCompose a b n where
     W_HCompose :: HWitness a a0 -> HWitness b b0 -> W_HCompose a b (HCompose a0 b0)
 
