@@ -3,11 +3,12 @@
 -- | A simple 'Hyper.Type.HyperType' with a single child node
 
 module Hyper.Combinator.ANode
-    ( ANode(..), _ANode, W_ANode(..)
+    ( ANode(..), _ANode, W_ANode(..), MorphWitness(..)
     ) where
 
 import Control.Lens (iso)
 import Hyper.Class.Has (HasChild(..))
+import Hyper.Class.Morph (HMorph(..))
 import Hyper.Class.Recursive (RNodes, Recursively, RTraversable)
 import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
 import Hyper.Type (type (#), type (:#))
@@ -36,3 +37,8 @@ instance HasChild (ANode c) c where
 instance RNodes n => RNodes (ANode n)
 instance (c (ANode n), Recursively c n) => Recursively c (ANode n)
 instance RTraversable n => RTraversable (ANode n)
+
+instance HMorph (ANode a) (ANode b) where
+    data instance MorphWitness _ _ _ _ where
+        M_ANode :: MorphWitness (ANode a) (ANode b) a b
+    morphMap f = _ANode %~ f M_ANode

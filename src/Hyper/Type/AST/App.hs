@@ -1,11 +1,11 @@
 {-# LANGUAGE FlexibleInstances, UndecidableInstances, TemplateHaskell #-}
 
 module Hyper.Type.AST.App
-    ( App(..), appFunc, appArg, W_App(..)
-    , appChildren
+    ( App(..), appFunc, appArg, W_App(..), MorphWitness(..)
     ) where
 
 import Hyper
+import Hyper.Class.Morph (HMorph(..))
 import Hyper.Infer
 import Hyper.Type.AST.FuncType
 import Hyper.Unify (UnifyGen, unify)
@@ -35,16 +35,16 @@ instance RNodes e => RNodes (App e)
 instance (c (App e), Recursively c e) => Recursively c (App e)
 instance RTraversable e => RTraversable (App e)
 
+instance HMorph (App a) (App b) where
+    data instance MorphWitness _ _ _ _ where
+        M_App :: MorphWitness (App a) (App b) a b
+    morphMap f (App x y) = App (f M_App x) (f M_App y)
+
 instance Pretty (h :# expr) => Pretty (App expr h) where
     pPrintPrec lvl p (App f x) =
         pPrintPrec lvl 10 f <+>
         pPrintPrec lvl 11 x
         & maybeParens (p > 10)
-
--- | Type changing traversal from 'App' to its child nodes
-appChildren ::
-    Traversal (App t0 f0) (App t1 f1) (f0 :# t0) (f1 :# t1)
-appChildren f (App x0 x1) = App <$> f x0 <*> f x1
 
 type instance InferOf (App e) = ANode (TypeOf e)
 

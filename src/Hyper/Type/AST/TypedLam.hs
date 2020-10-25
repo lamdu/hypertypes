@@ -1,12 +1,13 @@
 {-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances #-}
 
 module Hyper.Type.AST.TypedLam
-    ( TypedLam(..), tlIn, tlInType, tlOut, W_TypedLam(..)
+    ( TypedLam(..), tlIn, tlInType, tlOut, W_TypedLam(..), MorphWitness(..)
     ) where
 
 import           Generics.Constraints (Constraints)
 import           Hyper
 import           Hyper.Class.Has (HasChild(..))
+import           Hyper.Class.Morph (HMorph(..))
 import           Hyper.Infer
 import           Hyper.Type.AST.FuncType (FuncType(..), HasFuncType(..))
 import           Hyper.Unify (UnifyGen, UVarOf)
@@ -34,6 +35,12 @@ instance
     (c (TypedLam v t e), Recursively c t, Recursively c e) =>
     Recursively c (TypedLam v t e)
 instance (RTraversable t, RTraversable e) => RTraversable (TypedLam v t e)
+
+instance HMorph (TypedLam v t0 e0) (TypedLam v t1 e1) where
+    data instance MorphWitness _ _ _ _ where
+        M_TypedLam_InType :: MorphWitness (TypedLam v t0 e0) (TypedLam v t1 e1) t0 t1
+        M_TypedLam_Out :: MorphWitness (TypedLam k t0 e0) (TypedLam k t1 e1) e0 e1
+    morphMap f (TypedLam i t e) = TypedLam i (f M_TypedLam_InType t) (f M_TypedLam_Out e)
 
 instance
     Constraints (TypedLam var typ expr h) Pretty =>

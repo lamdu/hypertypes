@@ -1,12 +1,13 @@
 {-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances #-}
 
 module Hyper.Type.AST.Map
-    ( TermMap(..), _TermMap, W_TermMap(..)
+    ( TermMap(..), _TermMap, W_TermMap(..), MorphWitness(..)
     ) where
 
 import qualified Control.Lens as Lens
 import qualified Data.Map as Map
 import           Hyper
+import           Hyper.Class.Morph (HMorph(..))
 import           Hyper.Class.ZipMatch (ZipMatch(..))
 
 import           Hyper.Internal.Prelude
@@ -29,6 +30,11 @@ instance Eq h => ZipMatch (TermMap h expr) where
             zipMatchList (Map.toList x) (Map.toList y)
             <&> traverse . Lens._2 %~ uncurry (:*:)
             <&> TermMap . Map.fromAscList
+
+instance HMorph (TermMap h a) (TermMap h b) where
+    data instance MorphWitness _ _ _ _ where
+        M_TermMap :: MorphWitness (TermMap h a) (TermMap h b) a b
+    morphMap f = _TermMap %~ fmap (f M_TermMap)
 
 {-# INLINE zipMatchList #-}
 zipMatchList :: Eq k => [(k, a)] -> [(k, b)] -> Maybe [(k, (a, b))]

@@ -1,11 +1,12 @@
 {-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances #-}
 
 module Hyper.Type.AST.Let
-    ( Let(..), letVar, letEquals, letIn, W_Let(..)
+    ( Let(..), letVar, letEquals, letIn, W_Let(..), MorphWitness(..)
     ) where
 
 import           Generics.Constraints (Constraints)
 import           Hyper
+import           Hyper.Class.Morph (HMorph(..))
 import           Hyper.Class.Unify (UnifyGen, UVarOf)
 import           Hyper.Infer
 import           Hyper.Unify.Generalize (GTerm, generalize)
@@ -31,6 +32,11 @@ makeCommonInstances [''Let]
 makeHTraversableApplyAndBases ''Let
 makeZipMatch ''Let
 makeHContext ''Let
+
+instance HMorph (Let v a) (Let v b) where
+    data instance MorphWitness _ _ _ _ where
+        M_Let :: MorphWitness (Let v a) (Let v b) a b
+    morphMap f (Let v x y) = Let v (f M_Let x) (f M_Let y)
 
 instance
     Constraints (Let v expr h) Pretty =>

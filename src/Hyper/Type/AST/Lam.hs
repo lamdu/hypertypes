@@ -1,11 +1,12 @@
 {-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances #-}
 
 module Hyper.Type.AST.Lam
-    ( Lam(..), lamIn, lamOut, W_Lam(..)
+    ( Lam(..), lamIn, lamOut, W_Lam(..), MorphWitness(..)
     ) where
 
 import           Generics.Constraints (Constraints)
 import           Hyper
+import           Hyper.Class.Morph (HMorph(..))
 import           Hyper.Infer
 import           Hyper.Type.AST.FuncType
 import           Hyper.Unify (UnifyGen, UVarOf)
@@ -35,6 +36,11 @@ makeHContext ''Lam
 instance RNodes t => RNodes (Lam v t)
 instance (c (Lam v t), Recursively c t) => Recursively c (Lam v t)
 instance RTraversable t => RTraversable (Lam v t)
+
+instance HMorph (Lam v a) (Lam v b) where
+    data instance MorphWitness _ _ _ _ where
+        M_Lam :: MorphWitness (Lam v a) (Lam v b) a b
+    morphMap f = lamOut %~ f M_Lam
 
 instance
     Constraints (Lam v expr h) Pretty =>

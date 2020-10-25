@@ -1,13 +1,14 @@
 {-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances #-}
 
 module Hyper.Type.AST.FuncType
-    ( FuncType(..), funcIn, funcOut, W_FuncType(..)
+    ( FuncType(..), funcIn, funcOut, W_FuncType(..), MorphWitness(..)
     , HasFuncType(..)
     ) where
 
 import           Control.Lens (Prism')
 import           Generics.Constraints (makeDerivings, makeInstances)
 import           Hyper
+import           Hyper.Class.Morph (HMorph(..))
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
@@ -32,6 +33,11 @@ makeHContext ''FuncType
 makeHTraversableApplyAndBases ''FuncType
 makeDerivings [''Eq, ''Ord] [''FuncType]
 makeInstances [''Binary, ''NFData] [''FuncType]
+
+instance HMorph (FuncType a) (FuncType b) where
+    data instance MorphWitness _ _ _ _ where
+        M_FuncType :: MorphWitness (FuncType a) (FuncType b) a b
+    morphMap f (FuncType x y) = FuncType (f M_FuncType x) (f M_FuncType y)
 
 instance Pretty (h :# typ) => Pretty (FuncType typ h) where
     pPrintPrec lvl p (FuncType i o) =
