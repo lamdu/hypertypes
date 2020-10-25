@@ -2,7 +2,7 @@
 
 module Hyper.Class.Context
     ( HContext(..)
-    , recursiveContexts, recursiveContextsWith
+    , recursiveContexts
     ) where
 
 import Hyper.Combinator.Ann (Ann(..))
@@ -15,10 +15,12 @@ import Hyper.Type (type (#))
 import Hyper.Internal.Prelude
 
 class HContext h where
+    -- | Add next to each node a function to replace it in the parent with a different value
     hcontext ::
         h # p ->
         h # (HFunc p (Const (h # p)) :*: p)
 
+-- | Add in the node annotations a function to replace each node in the top-level node
 recursiveContexts ::
     (Recursively HContext h, Recursively HFunctor h) =>
     Ann p # h ->
