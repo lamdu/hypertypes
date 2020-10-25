@@ -343,7 +343,7 @@ instance
             (ToNom nomId valI, NominalInst nomId paramsT)
                 <$ unify typ (valR ^# inferredType (Proxy @expr))
 
-type instance InferOf (FromNom n e) = FuncType (TypeOf e)
+type instance InferOf (FromNom _ e) = FuncType (TypeOf e)
 
 instance
     ( Infer m expr

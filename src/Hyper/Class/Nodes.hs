@@ -58,7 +58,7 @@ class HNodes (h :: HyperType) where
 makePrisms ''HWitness
 
 instance HNodes (Const a) where
-    type HNodesConstraint (Const a) x = ()
+    type HNodesConstraint (Const a) _ = ()
     type HWitnessType (Const a) = V1
     {-# INLINE hLiftConstraint #-}
     hLiftConstraint = \case{}

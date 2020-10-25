@@ -44,7 +44,7 @@ instance
         <+> Pretty.text "→" <+> pPrintPrec lvl 0 o
         & maybeParens (p > 0)
 
-type instance InferOf (Lam v t) = ANode (TypeOf t)
+type instance InferOf (Lam _ t) = ANode (TypeOf t)
 
 instance
     ( Infer m t

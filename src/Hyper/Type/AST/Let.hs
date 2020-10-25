@@ -41,7 +41,7 @@ instance
         $+$ pPrintPrec lvl 0 i
         & maybeParens (p > 0)
 
-type instance InferOf (Let v e) = InferOf e
+type instance InferOf (Let _ e) = InferOf e
 
 instance
     ( MonadScopeLevel m

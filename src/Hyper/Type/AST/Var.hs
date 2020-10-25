@@ -43,7 +43,7 @@ makeHContext ''Var
 instance Pretty v => Pretty (Var v expr h) where
     pPrintPrec lvl p (Var v) = pPrintPrec lvl p v
 
-type instance InferOf (Var v t) = ANode (TypeOf t)
+type instance InferOf (Var _ t) = ANode (TypeOf t)
 
 instance HasInferredType (Var v t) where
     type instance (TypeOf (Var v t)) = TypeOf t

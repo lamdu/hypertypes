@@ -104,7 +104,7 @@ instance Ord (QVar (GetHyperType typ)) => Lens.Ixed (QVars typ)
 instance Ord (QVar (GetHyperType typ)) => Lens.At (QVars typ) where
     at h = _QVars . Lens.at h
 
-type instance InferOf (Scheme v t) = HFlip GTerm t
+type instance InferOf (Scheme _ t) = HFlip GTerm t
 
 class UnifyGen m t => MonadInstantiate m t where
     localInstantiations ::

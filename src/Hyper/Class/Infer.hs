@@ -90,7 +90,7 @@ instance Recursive (Infer m) where
     recurse p =
         withDict (inferContext (Proxy @m) (proxyArgument p)) Dict
 
-type instance InferOf (a :+: b) = InferOf a
+type instance InferOf (a :+: _) = InferOf a
 
 instance (InferOf a ~ InferOf b, Infer m a, Infer m b) => Infer m (a :+: b) where
     {-# INLINE inferBody #-}
@@ -102,7 +102,7 @@ instance (InferOf a ~ InferOf b, Infer m a, Infer m b) => Infer m (a :+: b) wher
         withDict (inferContext p (Proxy @a)) $
         withDict (inferContext p (Proxy @b)) Dict
 
-type instance InferOf (M1 i c h) = InferOf h
+type instance InferOf (M1 _ _ h) = InferOf h
 
 instance Infer m h => Infer m (M1 i c h) where
     {-# INLINE inferBody #-}
