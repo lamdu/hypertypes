@@ -32,9 +32,11 @@ instance Eq h => ZipMatch (TermMap h expr) where
             <&> TermMap . Map.fromAscList
 
 instance HMorph (TermMap h a) (TermMap h b) where
+    type instance MorphConstraint (TermMap h a) (TermMap h b) c = c a b
     data instance MorphWitness _ _ _ _ where
         M_TermMap :: MorphWitness (TermMap h a) (TermMap h b) a b
     morphMap f = _TermMap %~ fmap (f M_TermMap)
+    morphLiftConstraint M_TermMap _ = id
 
 {-# INLINE zipMatchList #-}
 zipMatchList :: Eq k => [(k, a)] -> [(k, b)] -> Maybe [(k, (a, b))]

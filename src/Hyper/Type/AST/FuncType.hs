@@ -35,9 +35,11 @@ makeDerivings [''Eq, ''Ord] [''FuncType]
 makeInstances [''Binary, ''NFData] [''FuncType]
 
 instance HMorph (FuncType a) (FuncType b) where
+    type instance MorphConstraint (FuncType a) (FuncType b) c = c a b
     data instance MorphWitness _ _ _ _ where
         M_FuncType :: MorphWitness (FuncType a) (FuncType b) a b
     morphMap f (FuncType x y) = FuncType (f M_FuncType x) (f M_FuncType y)
+    morphLiftConstraint M_FuncType _ = id
 
 instance Pretty (h :# typ) => Pretty (FuncType typ h) where
     pPrintPrec lvl p (FuncType i o) =

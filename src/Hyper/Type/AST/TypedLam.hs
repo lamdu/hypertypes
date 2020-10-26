@@ -37,10 +37,13 @@ instance
 instance (RTraversable t, RTraversable e) => RTraversable (TypedLam v t e)
 
 instance HMorph (TypedLam v t0 e0) (TypedLam v t1 e1) where
+    type instance MorphConstraint (TypedLam v t0 e0) (TypedLam v t1 e1) c = (c t0 t1, c e0 e1)
     data instance MorphWitness _ _ _ _ where
         M_TypedLam_InType :: MorphWitness (TypedLam v t0 e0) (TypedLam v t1 e1) t0 t1
         M_TypedLam_Out :: MorphWitness (TypedLam k t0 e0) (TypedLam k t1 e1) e0 e1
     morphMap f (TypedLam i t e) = TypedLam i (f M_TypedLam_InType t) (f M_TypedLam_Out e)
+    morphLiftConstraint M_TypedLam_InType _ = id
+    morphLiftConstraint M_TypedLam_Out _ = id
 
 instance
     Constraints (TypedLam var typ expr h) Pretty =>

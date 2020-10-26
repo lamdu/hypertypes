@@ -36,9 +36,11 @@ instance (c (App e), Recursively c e) => Recursively c (App e)
 instance RTraversable e => RTraversable (App e)
 
 instance HMorph (App a) (App b) where
+    type instance MorphConstraint (App a) (App b) c = c a b
     data instance MorphWitness _ _ _ _ where
         M_App :: MorphWitness (App a) (App b) a b
     morphMap f (App x y) = App (f M_App x) (f M_App y)
+    morphLiftConstraint M_App _ = id
 
 instance Pretty (h :# expr) => Pretty (App expr h) where
     pPrintPrec lvl p (App f x) =

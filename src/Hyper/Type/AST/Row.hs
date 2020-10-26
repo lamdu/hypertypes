@@ -59,10 +59,13 @@ makeDerivings [''Eq, ''Ord] [''RowExtend]
 makeInstances [''Binary, ''NFData] [''RowExtend]
 
 instance HMorph (RowExtend k v0 r0) (RowExtend k v1 r1) where
+    type instance MorphConstraint (RowExtend k v0 r0) (RowExtend k v1 r1) c = (c v0 v1, c r0 r1)
     data instance MorphWitness _ _ _ _ where
         M_RowExtend_Val :: MorphWitness (RowExtend k v0 r0) (RowExtend k v1 r1) v0 v1
         M_RowExtend_Rest :: MorphWitness (RowExtend k v0 r0) (RowExtend k v1 r1) r0 r1
     morphMap f (RowExtend k v r) = RowExtend k (f M_RowExtend_Val v) (f M_RowExtend_Rest r)
+    morphLiftConstraint M_RowExtend_Val _ = id
+    morphLiftConstraint M_RowExtend_Rest _ = id
 
 instance
     Constraints (RowExtend key val rest h) Show =>

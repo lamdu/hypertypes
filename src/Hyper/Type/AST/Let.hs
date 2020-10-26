@@ -34,9 +34,11 @@ makeZipMatch ''Let
 makeHContext ''Let
 
 instance HMorph (Let v a) (Let v b) where
+    type instance MorphConstraint (Let v a) (Let v b) c = c a b
     data instance MorphWitness _ _ _ _ where
         M_Let :: MorphWitness (Let v a) (Let v b) a b
     morphMap f (Let v x y) = Let v (f M_Let x) (f M_Let y)
+    morphLiftConstraint M_Let _ = id
 
 instance
     Constraints (Let v expr h) Pretty =>
