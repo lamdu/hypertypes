@@ -10,7 +10,6 @@ module Hyper.Type.AST.Var
     ) where
 
 import Hyper
-import Hyper.Class.Morph (HMorph(..))
 import Hyper.Infer
 import Hyper.Unify (UnifyGen, UVarOf)
 import Text.PrettyPrint.HughesPJClass (Pretty(..))
@@ -40,12 +39,7 @@ makePrisms ''Var
 makeHTraversableApplyAndBases ''Var
 makeZipMatch ''Var
 makeHContext ''Var
-
-instance HMorph (Var v a) (Var v b) where
-    type instance MorphConstraint (Var v a) (Var v b) _ = ()
-    data instance MorphWitness _ _ _ _
-    morphMap _ = _Var %~ id
-    morphLiftConstraint = \case
+makeHMorph ''Var
 
 instance Pretty v => Pretty (Var v expr h) where
     pPrintPrec lvl p (Var v) = pPrintPrec lvl p v

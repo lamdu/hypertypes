@@ -30,7 +30,7 @@ makeHMorphForType info =
         Nothing (witnesses ^.. traverse . Lens._2) []
         & pure
     , funD 'morphMap (tiConstructors info <&> pure . morphCon)
-    , funD 'morphLiftConstraint (witnesses ^.. traverse . Lens._1 <&> pure . mkLiftConstraint)
+    , funD 'morphLiftConstraint (liftConstraintClauses <&> pure)
     ]
     <&> (:[])
     where
@@ -67,6 +67,9 @@ makeHMorphForType info =
                 bodyFor (Right (Node x)) v = VarE varF `AppE` ConE (witnesses ^?! Lens.ix x . Lens._1) `AppE` VarE v
                 bodyFor _ _ = error "TODO"
         varF = mkName "_f"
+        liftConstraintClauses
+            | Map.null witnesses = [Clause [] (NormalB (LamCaseE [])) []]
+            | otherwise = witnesses ^.. traverse . Lens._1 <&> mkLiftConstraint
         mkLiftConstraint n = Clause [ConP n [], WildP] (NormalB (VarE 'id)) []
 
 type MorphSubsts = (Map Name Type, Map Name Type)
