@@ -29,7 +29,7 @@ makeHMorphForType info =
         (ConT ''MorphWitness `AppT` WildCardT `AppT` WildCardT `AppT` WildCardT `AppT` WildCardT)
         Nothing (witnesses ^.. traverse . Lens._2) []
         & pure
-    , funD 'morphMap (tiConstructors info <&> pure . morphCon)
+    , funD 'morphMap (tiConstructors info <&> pure . mkMorphCon)
     , funD 'morphLiftConstraint (liftConstraintClauses <&> pure)
     ]
     <&> (:[])
@@ -55,24 +55,38 @@ makeHMorphForType info =
                 , (n, GadtC [n] [] (ConT ''MorphWitness `AppT` src `AppT` dst `appSubsts` x))
                 )
             ) & Map.fromList
-        morphCon (n, _, fields) =
-            Clause [VarP varF, ConP n (cVars <&> VarP)]
-            (NormalB (foldl AppE (ConE n) (zipWith bodyFor fields cVars)))
-            []
-            where
-                cVars =
-                    [0 :: Int ..] <&> show <&> ('x':) <&> mkName
-                    & take (length fields)
-                bodyFor Left{} v = VarE v
-                bodyFor (Right x) v = bodyForPat x `AppE` VarE v
-                bodyForPat (Node x) = VarE varF `AppE` ConE (witnesses ^?! Lens.ix x . Lens._1)
-                bodyForPat (InContainer _ pat) = VarE 'fmap `AppE` bodyForPat pat
-                bodyForPat _ = error "TODO"
-        varF = mkName "_f"
         liftConstraintClauses
             | Map.null witnesses = [Clause [] (NormalB (LamCaseE [])) []]
             | otherwise = witnesses ^.. traverse . Lens._1 <&> mkLiftConstraint
         mkLiftConstraint n = Clause [ConP n [], WildP] (NormalB (VarE 'id)) []
+        mkMorphCon con =
+            Clause [VarP varF, p] b []
+            where
+                (p, b) = morphCon 0 witnesses con
+
+varF :: Name
+varF = mkName "_f"
+
+morphCon :: Int -> Map Type (Name, Con) -> (Name, a, [Either b CtrTypePattern]) -> (Pat, Body)
+morphCon i witnesses (n, _, fields) =
+    ( ConP n (cVars <&> VarP)
+    , NormalB (foldl AppE (ConE n) (zipWith bodyFor fields cVars))
+    )
+    where
+        cVars =
+            [i ..] <&> show <&> ('x':) <&> mkName
+            & take (length fields)
+        bodyFor Left{} v = VarE v
+        bodyFor (Right x) v = bodyForPat x `AppE` VarE v
+        bodyForPat (Node x) = VarE varF `AppE` ConE (witnesses ^?! Lens.ix x . Lens._1)
+        bodyForPat (InContainer _ pat) = VarE 'fmap `AppE` bodyForPat pat
+        bodyForPat (FlatEmbed x) =
+            LamCaseE
+            (tiConstructors x
+                <&> morphCon (i + length cVars) witnesses
+                <&> \(p, b) -> Match p b []
+            )
+        bodyForPat GenEmbed{} = error "TODO morphCon support for GenEmbed"
 
 type MorphSubsts = (Map Name Type, Map Name Type)
 

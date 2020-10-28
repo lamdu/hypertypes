@@ -86,6 +86,7 @@ makeZipMatch ''Typ
 makeZipMatch ''Row
 makeHContext ''Typ
 makeHContext ''Row
+makeHMorph ''Row
 makeHTraversableApplyAndBases ''Types
 makeHTraversableAndBases ''Typ
 makeHTraversableAndBases ''Row
