@@ -64,8 +64,10 @@ makeHMorphForType info =
                     [0 :: Int ..] <&> show <&> ('x':) <&> mkName
                     & take (length fields)
                 bodyFor Left{} v = VarE v
-                bodyFor (Right (Node x)) v = VarE varF `AppE` ConE (witnesses ^?! Lens.ix x . Lens._1) `AppE` VarE v
-                bodyFor _ _ = error "TODO"
+                bodyFor (Right x) v = bodyForPat x `AppE` VarE v
+                bodyForPat (Node x) = VarE varF `AppE` ConE (witnesses ^?! Lens.ix x . Lens._1)
+                bodyForPat (InContainer _ pat) = VarE 'fmap `AppE` bodyForPat pat
+                bodyForPat _ = error "TODO"
         varF = mkName "_f"
         liftConstraintClauses
             | Map.null witnesses = [Clause [] (NormalB (LamCaseE [])) []]
