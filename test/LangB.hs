@@ -52,6 +52,7 @@ data LangB h
     deriving Generic
 
 makeHTraversableAndBases ''LangB
+makeHMorph ''LangB
 instance c LangB => Recursively c LangB
 instance RNodes LangB
 instance RTraversable LangB

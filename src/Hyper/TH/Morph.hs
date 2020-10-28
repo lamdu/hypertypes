@@ -44,21 +44,40 @@ makeHMorphForType info =
             <> (tcEmbeds contents ^.. Lens.folded <&>
                 \x -> ConT ''MorphConstraint `appSubsts` x `AppT` VarT constraintVar)
         appSubsts x t = x `AppT` D.applySubstitution s0 t `AppT` D.applySubstitution s1 t
-        witnesses =
-            -- TODO: Embeds
-            tcChildren contents ^.. Lens.folded
-            <&>
-            ( \x ->
-                let n = "M_" <> niceName (tiName info) <> "_" <> mkNiceTypeName x & mkName
-                in
-                ( x
-                , (n, GadtC [n] [] (ConT ''MorphWitness `AppT` src `AppT` dst `appSubsts` x))
+        nodeWits =
+            tcChildren contents ^.. Lens.folded <&>
+            \x ->
+            let n = witPrefix <> mkNiceTypeName x & mkName in
+            ( x
+            , (n, GadtC [n] [] (appSubsts morphWithNessOf x))
+            )
+        embedWits =
+            tcEmbeds contents ^.. Lens.folded <&>
+            \x ->
+            let n = witPrefix <> mkNiceTypeName x & mkName in
+            ( x
+            , ( n
+                , GadtC [n] []
+                    ( ArrowT `AppT` (ConT ''MorphWitness `appSubsts` x `AppT` varA `AppT` varB)
+                        `AppT` (morphWithNessOf `AppT` varA `AppT` varB))
                 )
-            ) & Map.fromList
+            )
+        witnesses = nodeWits <> embedWits & Map.fromList
+        varA = VarT (mkName "a")
+        varB = VarT (mkName "b")
+        witPrefix = "M_" <> niceName (tiName info) <> "_"
+        morphWithNessOf = ConT ''MorphWitness `AppT` src `AppT` dst
         liftConstraintClauses
             | Map.null witnesses = [Clause [] (NormalB (LamCaseE [])) []]
-            | otherwise = witnesses ^.. traverse . Lens._1 <&> mkLiftConstraint
-        mkLiftConstraint n = Clause [ConP n [], WildP] (NormalB (VarE 'id)) []
+            | otherwise =
+                (nodeWits ^.. traverse . Lens._2 . Lens._1 <&> liftNodeConstraint) <>
+                (embedWits ^.. traverse . Lens._2 . Lens._1 <&> liftEmbedConstraint)
+        liftNodeConstraint n = Clause [ConP n [], WildP] (NormalB (VarE 'id)) []
+        liftEmbedConstraint n =
+            Clause [ConP n [VarP varW], VarP varProxy]
+            (NormalB (VarE 'morphLiftConstraint `AppE` VarE varW `AppE` VarE varProxy)) []
+        varW = mkName "w"
+        varProxy = mkName "p"
         mkMorphCon con =
             Clause [VarP varF, p] b []
             where
@@ -86,7 +105,8 @@ morphCon i witnesses (n, _, fields) =
                 <&> morphCon (i + length cVars) witnesses
                 <&> \(p, b) -> Match p b []
             )
-        bodyForPat GenEmbed{} = error "TODO morphCon support for GenEmbed"
+        bodyForPat (GenEmbed t) =
+            VarE 'morphMap `AppE` (VarE varF `dot` ConE (witnesses ^?! Lens.ix t . Lens._1))
 
 type MorphSubsts = (Map Name Type, Map Name Type)
 
