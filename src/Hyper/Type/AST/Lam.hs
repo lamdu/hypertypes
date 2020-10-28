@@ -6,7 +6,6 @@ module Hyper.Type.AST.Lam
 
 import           Generics.Constraints (Constraints)
 import           Hyper
-import           Hyper.Class.Morph (HMorph(..))
 import           Hyper.Infer
 import           Hyper.Type.AST.FuncType
 import           Hyper.Unify (UnifyGen, UVarOf)
@@ -32,17 +31,11 @@ makeCommonInstances [''Lam]
 makeHTraversableApplyAndBases ''Lam
 makeZipMatch ''Lam
 makeHContext ''Lam
+makeHMorph ''Lam
 
 instance RNodes t => RNodes (Lam v t)
 instance (c (Lam v t), Recursively c t) => Recursively c (Lam v t)
 instance RTraversable t => RTraversable (Lam v t)
-
-instance HMorph (Lam v a) (Lam v b) where
-    type instance MorphConstraint (Lam v a) (Lam v b) c = c a b
-    data instance MorphWitness _ _ _ _ where
-        M_Lam :: MorphWitness (Lam v a) (Lam v b) a b
-    morphMap f = lamOut %~ f M_Lam
-    morphLiftConstraint M_Lam _ = id
 
 instance
     Constraints (Lam v expr h) Pretty =>

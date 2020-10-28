@@ -22,6 +22,7 @@ import Hyper.Combinator.Func as X
 import Hyper.TH.Apply as X (makeHApplicativeBases)
 import Hyper.TH.Context as X (makeHContext)
 import Hyper.TH.HasPlain as X (makeHasHPlain)
+import Hyper.TH.Morph as X (makeHMorph)
 import Hyper.TH.Traversable as X (makeHTraversableApplyAndBases, makeHTraversableAndBases)
 import Hyper.TH.ZipMatch as X (makeZipMatch)
 import Hyper.Type as X

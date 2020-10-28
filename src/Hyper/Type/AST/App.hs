@@ -5,7 +5,6 @@ module Hyper.Type.AST.App
     ) where
 
 import Hyper
-import Hyper.Class.Morph (HMorph(..))
 import Hyper.Infer
 import Hyper.Type.AST.FuncType
 import Hyper.Unify (UnifyGen, unify)
@@ -28,19 +27,13 @@ data App expr h = App
 makeLenses ''App
 makeZipMatch ''App
 makeHContext ''App
+makeHMorph ''App
 makeHTraversableApplyAndBases ''App
 makeCommonInstances [''App]
 
 instance RNodes e => RNodes (App e)
 instance (c (App e), Recursively c e) => Recursively c (App e)
 instance RTraversable e => RTraversable (App e)
-
-instance HMorph (App a) (App b) where
-    type instance MorphConstraint (App a) (App b) c = c a b
-    data instance MorphWitness _ _ _ _ where
-        M_App :: MorphWitness (App a) (App b) a b
-    morphMap f (App x y) = App (f M_App x) (f M_App y)
-    morphLiftConstraint M_App _ = id
 
 instance Pretty (h :# expr) => Pretty (App expr h) where
     pPrintPrec lvl p (App f x) =

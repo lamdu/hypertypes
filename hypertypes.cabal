@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f78e12aa7cfa4660053591380c9a5f86cfae3cc0c09c887def9604743938100f
+-- hash: 77a898fa49cd9c299de87e6798ab485b35b2269b65629580de943474bcc73074
 
 name:           hypertypes
 version:        0.1.0.1
@@ -64,6 +64,7 @@ library
       Hyper.TH.Foldable
       Hyper.TH.Functor
       Hyper.TH.HasPlain
+      Hyper.TH.Morph
       Hyper.TH.Nodes
       Hyper.TH.Pointed
       Hyper.TH.Traversable
