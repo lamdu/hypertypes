@@ -6,9 +6,9 @@ module Hyper.Type.AST.TypedLam
 
 import           Generics.Constraints (Constraints)
 import           Hyper
-import           Hyper.Class.Optic (HLens, hLens)
+import           Hyper.Class.Optic (HLens, HSubset(..), HSubset', hLens)
 import           Hyper.Infer
-import           Hyper.Type.AST.FuncType (FuncType(..), HasFuncType(..))
+import           Hyper.Type.AST.FuncType (FuncType(..))
 import           Hyper.Unify (UnifyGen, UVarOf)
 import           Hyper.Unify.New (newTerm)
 import           Text.PrettyPrint ((<+>))
@@ -52,7 +52,7 @@ instance
     , Infer m e
     , HasInferredType e
     , UnifyGen m (TypeOf e)
-    , HasFuncType (TypeOf e)
+    , HSubset' (TypeOf e) (FuncType (TypeOf e))
     , HLens (InferOf t) (TypeOf e)
     , LocalScopeType v (UVarOf m # TypeOf e) m
     ) =>
@@ -64,7 +64,7 @@ instance
             InferredChild tI tR <- inferChild t
             let tT = tR ^. hLens
             InferredChild rI rR <- inferChild r & localScopeType p tT
-            funcType # FuncType tT (rR ^# inferredType (Proxy @e))
+            hSubset # FuncType tT (rR ^# inferredType (Proxy @e))
                 & newTerm
                 <&> MkANode
                 <&> (TypedLam p tI rI,)

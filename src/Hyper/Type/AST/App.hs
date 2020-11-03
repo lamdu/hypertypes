@@ -5,6 +5,7 @@ module Hyper.Type.AST.App
     ) where
 
 import Hyper
+import Hyper.Class.Optic (HSubset(..), HSubset')
 import Hyper.Infer
 import Hyper.Type.AST.FuncType
 import Hyper.Unify (UnifyGen, unify)
@@ -46,7 +47,7 @@ type instance InferOf (App e) = ANode (TypeOf e)
 instance
     ( Infer m expr
     , HasInferredType expr
-    , HasFuncType (TypeOf expr)
+    , HSubset' (TypeOf expr) (FuncType (TypeOf expr))
     , UnifyGen m (TypeOf expr)
     ) =>
     Infer m (App expr) where
@@ -58,6 +59,6 @@ instance
             InferredChild funcI funcR <- inferChild func
             funcRes <- newUnbound
             (App funcI argI, MkANode funcRes) <$
-                (newTerm (funcType # FuncType (argR ^# l) funcRes) >>= unify (funcR ^# l))
+                (newTerm (hSubset # FuncType (argR ^# l) funcRes) >>= unify (funcR ^# l))
         where
             l = inferredType (Proxy @expr)

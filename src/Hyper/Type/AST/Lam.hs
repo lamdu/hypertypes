@@ -6,6 +6,7 @@ module Hyper.Type.AST.Lam
 
 import           Generics.Constraints (Constraints)
 import           Hyper
+import           Hyper.Class.Optic (HSubset(..), HSubset')
 import           Hyper.Infer
 import           Hyper.Type.AST.FuncType
 import           Hyper.Unify (UnifyGen, UVarOf)
@@ -50,7 +51,7 @@ type instance InferOf (Lam _ t) = ANode (TypeOf t)
 instance
     ( Infer m t
     , UnifyGen m (TypeOf t)
-    , HasFuncType (TypeOf t)
+    , HSubset' (TypeOf t) (FuncType (TypeOf t))
     , HasInferredType t
     , LocalScopeType v (UVarOf m # TypeOf t) m
     ) =>
@@ -61,7 +62,7 @@ instance
         do
             varType <- newUnbound
             InferredChild rI rR <- inferChild r & localScopeType p varType
-            funcType # FuncType varType (rR ^# inferredType (Proxy @t))
+            hSubset # FuncType varType (rR ^# inferredType (Proxy @t))
                 & newTerm
                 <&> MkANode
                 <&> (Lam p rI,)

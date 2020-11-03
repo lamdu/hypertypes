@@ -195,8 +195,7 @@ instance HasQuantifiedVar Row where
     type QVar Row = Name
     quantifiedVar = _RVar
 
-instance HasFuncType Typ where
-    funcType = _TFun
+instance HSubset Typ Typ (FuncType Typ) (FuncType Typ) where hSubset = _TFun
 
 instance HasScopeTypes v Typ a => HasScopeTypes v Typ (a, x) where
     scopeTypes = Lens._1 . scopeTypes

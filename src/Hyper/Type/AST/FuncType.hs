@@ -1,11 +1,9 @@
-{-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances, TemplateHaskell #-}
 
 module Hyper.Type.AST.FuncType
     ( FuncType(..), funcIn, funcOut, W_FuncType(..), MorphWitness(..)
-    , HasFuncType(..)
     ) where
 
-import           Control.Lens (Prism')
 import           Generics.Constraints (makeDerivings, makeInstances)
 import           Hyper
 import           Text.PrettyPrint ((<+>))
@@ -18,9 +16,6 @@ import           Hyper.Internal.Prelude
 -- | A term for the types of functions. Analogues to @(->)@ in Haskell.
 --
 -- @FuncType typ@s express types of functions of @typ@.
---
--- The data type comes along with the 'HasFuncType' class
--- for code to be able to work for any type AST supporting the types of functions.
 data FuncType typ h = FuncType
     { _funcIn  :: h :# typ
     , _funcOut :: h :# typ
@@ -41,10 +36,3 @@ instance Pretty (h :# typ) => Pretty (FuncType typ h) where
 
 instance Show (h :# typ) => Show (FuncType typ h) where
     showsPrec p (FuncType i o) = (showCon "FuncType" @| i @| o) p
-
--- | HasFuncType is a class of 'HyperType's representing types that support the types of functions.
---
--- It is used by the 'Hyper.Class.Infer.Infer' instances of 'Hyper.Type.AST.App.App' and 'Hyper.Type.AST.Lam.Lam'
--- to work for any AST which provides 'HasFuncType'.
-class HasFuncType typ where
-    funcType :: Prism' (typ # h) (FuncType typ # h)

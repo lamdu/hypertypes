@@ -6,6 +6,7 @@ module Hyper.Class.Optic
     ( HOptic(..)
     , HLens, HTraversal, HSetter, HPrism, HIso
     , hLens
+    , HSubset(..), HSubset'
     ) where
 
 import Control.Lens
@@ -27,3 +28,8 @@ type HIso = HOptic Profunctor Functor
 
 hLens :: HLens s a => Lens' (s # h) (h # a)
 hLens = hOptic (Proxy @((~) (->))) (Proxy @Functor)
+
+class HSubset s t a b where
+    hSubset :: Prism (s # h) (t # h) (a # h) (b # h)
+
+type HSubset' s a = HSubset s s a a
