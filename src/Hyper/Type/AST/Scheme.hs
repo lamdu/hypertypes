@@ -17,7 +17,7 @@ import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.State (StateT(..))
 import qualified Data.Map as Map
 import           Hyper
-import           Hyper.Class.Has (HasChild(..))
+import           Hyper.Class.Optic (HLens, hLens)
 import           Hyper.Infer
 import           Hyper.Recurse
 import           Hyper.Unify
@@ -165,7 +165,7 @@ makeQVarInstances (QVars foralls) =
 {-# INLINE loadBody #-}
 loadBody ::
     ( UnifyGen m typ
-    , HasChild varTypes typ
+    , HLens varTypes typ
     , Ord (QVar typ)
     ) =>
     varTypes # QVarInstances (UVarOf m) ->
@@ -179,10 +179,10 @@ loadBody foralls x =
         Just xm -> newTerm xm <&> GMono
         Nothing -> GBody x & pure
     where
-        getForAll v = foralls ^? getChild . _QVarInstances . Lens.ix v
+        getForAll v = foralls ^? hLens . _QVarInstances . Lens.ix v
 
 class
-    (UnifyGen m t, HasChild varTypes t, Ord (QVar t)) =>
+    (UnifyGen m t, HLens varTypes t, Ord (QVar t)) =>
     HasScheme varTypes m t where
 
     hasSchemeRecursive ::
@@ -243,7 +243,7 @@ saveH (GPoly x) =
             r <-
                 scopeConstraints (Proxy @typ) <&> (<> l)
                 >>= newQuantifiedVariable & lift
-            Lens._1 . getChild %=
+            Lens._1 . hLens %=
                 (\v -> v & _QVars . Lens.at r ?~ generalizeConstraints l :: QVars # typ)
             Lens._2 %= (bindVar binding x (USkolem l) :)
             let result = _Pure . quantifiedVar # r

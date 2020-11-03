@@ -11,7 +11,7 @@ import           Control.Monad.ST.Class (MonadST(..))
 import           Data.Array.ST (STArray, newArray, readArray, writeArray)
 import qualified Data.Sequence as Sequence
 import           Hyper
-import           Hyper.Class.Has (HasChild(..))
+import           Hyper.Class.Optic (HLens, hLens)
 import           Hyper.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           Hyper.Recurse
 import           Hyper.Unify.Binding (Binding(..), _Binding, UVar(..))
@@ -32,7 +32,7 @@ loadUTerm ::
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
     , Unify m t
-    , Recursively (HasChild typeVars) t
+    , Recursively (HLens typeVars) t
     ) =>
     typeVars # Binding -> typeVars # ConvertState (World m) ->
     UTerm UVar # t -> m (UTerm (STUVar (World m)) # t)
@@ -50,13 +50,13 @@ loadVar ::
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
     , Unify m t
-    , Recursively (HasChild typeVars) t
+    , Recursively (HLens typeVars) t
     ) =>
     typeVars # Binding -> typeVars # ConvertState (World m) ->
     UVar # t -> m (STUVar (World m) # t)
 loadVar src conv (UVar v) =
-    withDict (recursively (Proxy @(HasChild typeVars t))) $
-    let tConv = conv ^. getChild . _ConvertState
+    withDict (recursively (Proxy @(HLens typeVars t))) $
+    let tConv = conv ^. hLens . _ConvertState
     in
     readArray tConv v & liftST
     >>=
@@ -66,7 +66,7 @@ loadVar src conv (UVar v) =
         do
             u <-
                 loadUTerm src conv
-                (src ^?! getChild . _Binding . Lens.ix v)
+                (src ^?! hLens . _Binding . Lens.ix v)
             r <- newVar binding u
             r <$ liftST (writeArray tConv v (Just r))
 
@@ -75,15 +75,15 @@ loadBody ::
     ( MonadST m
     , UVarOf m ~ STUVar (World m)
     , Unify m t
-    , Recursively (HasChild typeVars) t
+    , Recursively (HLens typeVars) t
     ) =>
     typeVars # Binding -> typeVars # ConvertState (World m) ->
     t # UVar -> m (t # STUVar (World m))
 loadBody src conv =
     withDict (recurse (Proxy @(Unify m t))) $
-    withDict (recursively (Proxy @(HasChild typeVars t))) $
+    withDict (recursively (Proxy @(HLens typeVars t))) $
     htraverse
-    ( Proxy @(Unify m) #*# Proxy @(Recursively (HasChild typeVars))
+    ( Proxy @(Unify m) #*# Proxy @(Recursively (HLens typeVars))
         #> loadVar src conv
     )
 
@@ -95,7 +95,7 @@ load ::
     , UVarOf m ~ STUVar (World m)
     , HTraversable typeVars
     , Unify m t
-    , Recursively (HasChild typeVars) t
+    , Recursively (HLens typeVars) t
     ) =>
     typeVars # Binding -> t # UVar -> m (t #STUVar (World m))
 load src collection =

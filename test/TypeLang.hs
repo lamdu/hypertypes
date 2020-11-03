@@ -16,7 +16,7 @@ import           Data.String (IsString)
 import           Generic.Data
 import           Generics.Constraints (Constraints, makeDerivings)
 import           Hyper
-import           Hyper.Class.Has
+import           Hyper.Class.Optic
 import           Hyper.Class.Unify
 import           Hyper.Infer
 import           Hyper.Type.AST.FuncType
@@ -136,8 +136,8 @@ instance Constraints (Types h) Pretty => Pretty (Row h) where
         & maybeParens (p > 1)
     pPrintPrec _ _ (RVar s) = pPrint s
 
-instance HasChild Types Typ where getChild = tTyp
-instance HasChild Types Row where getChild = tRow
+instance HOptic ((~) (->)) Functor Types Typ where hOptic _ _ = tTyp
+instance HOptic ((~) (->)) Functor Types Row where hOptic _ _ = tRow
 
 instance PartialOrd RConstraints where
     RowConstraints f0 s0 `leq` RowConstraints f1 s1 = f0 `leq` f1 && s0 `leq` s1

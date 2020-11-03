@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 77a898fa49cd9c299de87e6798ab485b35b2269b65629580de943474bcc73074
+-- hash: 192cf2c087d613d00392ac2c17599d2314fd7e1413da84deb58ec3b2e7a4e40a
 
 name:           hypertypes
 version:        0.1.0.1
@@ -34,7 +34,6 @@ library
       Hyper.Class.Context
       Hyper.Class.Foldable
       Hyper.Class.Functor
-      Hyper.Class.Has
       Hyper.Class.HasPlain
       Hyper.Class.Infer
       Hyper.Class.Infer.Env
@@ -43,6 +42,7 @@ library
       Hyper.Class.Monad
       Hyper.Class.Morph
       Hyper.Class.Nodes
+      Hyper.Class.Optic
       Hyper.Class.Pointed
       Hyper.Class.Recursive
       Hyper.Class.Traversable
