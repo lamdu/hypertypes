@@ -18,7 +18,6 @@ import           Control.Monad.Trans.State (StateT(..))
 import qualified Data.Map as Map
 import           Hyper
 import           Hyper.Class.Has (HasChild(..))
-import           Hyper.Class.Recursive
 import           Hyper.Infer
 import           Hyper.Recurse
 import           Hyper.Unify
