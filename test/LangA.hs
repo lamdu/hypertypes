@@ -25,7 +25,6 @@ import           Hyper.Type.AST.NamelessScope.InvDeBruijn
 import           Hyper.Type.AST.Scheme
 import           Hyper.Type.AST.TypeSig
 import           Hyper.Unify
-import           Hyper.Unify.Apply
 import           Hyper.Unify.Binding
 import           Hyper.Unify.Binding.ST
 import           Hyper.Unify.New
@@ -158,16 +157,10 @@ instance MonadQuantify RConstraints Name PureInferA where
 
 instance Unify PureInferA Typ where
     binding = bindingDict (pisBindings . tTyp)
-    unifyError e =
-        htraverse (Proxy @(Unify PureInferA) #> applyBindings) e
-        >>= throwError . TypError
 
 instance Unify PureInferA Row where
     binding = bindingDict (pisBindings . tRow)
     structureMismatch = rStructureMismatch
-    unifyError e =
-        htraverse (Proxy @(Unify PureInferA) #> applyBindings) e
-        >>= throwError . RowError
 
 instance MonadInstantiate PureInferA Typ where
     localInstantiations (QVarInstances x) =
@@ -219,16 +212,10 @@ instance MonadQuantify RConstraints Name (STInferA s) where
 
 instance Unify (STInferA s) Typ where
     binding = stBinding
-    unifyError e =
-        htraverse (Proxy @(Unify (STInferA s)) #> applyBindings) e
-        >>= throwError . TypError
 
 instance Unify (STInferA s) Row where
     binding = stBinding
     structureMismatch = rStructureMismatch
-    unifyError e =
-        htraverse (Proxy @(Unify (STInferA s)) #> applyBindings) e
-        >>= throwError . RowError
 
 instance MonadInstantiate (STInferA s) Typ where
     localInstantiations (QVarInstances x) =

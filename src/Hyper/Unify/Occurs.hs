@@ -2,31 +2,16 @@
 
 module Hyper.Unify.Occurs
     ( occursCheck
-    , -- Helper used for fused occurs-check in unification and apply bindings
-      occursError
     ) where
 
 import Control.Monad (unless, when)
 import Control.Monad.Trans.Class (MonadTrans(..))
 import Control.Monad.Trans.State (execStateT, get, put)
 import Hyper
-import Hyper.Class.Unify (Unify(..), UVarOf, BindingDict(..))
-import Hyper.Unify.Error (UnifyError(..))
-import Hyper.Unify.Lookup (semiPruneLookup)
-import Hyper.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify(..))
-import Hyper.Unify.Term (UTerm(..), UTermBody(..), uBody)
+import Hyper.Class.Unify (Unify(..), UVarOf, BindingDict(..), semiPruneLookup, occursError)
+import Hyper.Unify.Term (UTerm(..), uBody)
 
 import Hyper.Internal.Prelude
-
--- | Format and throw an occurs check error
-occursError ::
-    Unify m t =>
-    UVarOf m # t -> UTermBody (UVarOf m) # t -> m a
-occursError v (UTermBody c b) =
-    do
-        q <- newQuantifiedVariable c
-        bindVar binding v (UResolved (_Pure . quantifiedVar # q))
-        unifyError (Occurs (quantifiedVar # q) b)
 
 -- | Occurs check
 {-# INLINE occursCheck #-}

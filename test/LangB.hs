@@ -25,7 +25,6 @@ import           Hyper.Type.AST.Row
 import           Hyper.Type.AST.Scheme
 import           Hyper.Type.AST.Var
 import           Hyper.Unify
-import           Hyper.Unify.Apply
 import           Hyper.Unify.Binding
 import           Hyper.Unify.Binding.ST
 import           Hyper.Unify.Generalize
@@ -211,16 +210,10 @@ instance MonadQuantify RConstraints Name PureInferB where
 
 instance Unify PureInferB Typ where
     binding = bindingDict (pisBindings . tTyp)
-    unifyError e =
-        htraverse (Proxy @(Unify PureInferB) #> applyBindings) e
-        >>= throwError . TypError
 
 instance Unify PureInferB Row where
     binding = bindingDict (pisBindings . tRow)
     structureMismatch = rStructureMismatch
-    unifyError e =
-        htraverse (Proxy @(Unify PureInferB) #> applyBindings) e
-        >>= throwError . RowError
 
 instance HasScheme Types PureInferB Typ
 instance HasScheme Types PureInferB Row
@@ -274,16 +267,10 @@ instance MonadQuantify RConstraints Name (STInferB s) where
 
 instance Unify (STInferB s) Typ where
     binding = stBinding
-    unifyError e =
-        htraverse (Proxy @(Unify (STInferB s)) #> applyBindings) e
-        >>= throwError . TypError
 
 instance Unify (STInferB s) Row where
     binding = stBinding
     structureMismatch = rStructureMismatch
-    unifyError e =
-        htraverse (Proxy @(Unify (STInferB s)) #> applyBindings) e
-        >>= throwError . RowError
 
 instance HasScheme Types (STInferB s) Typ
 instance HasScheme Types (STInferB s) Row

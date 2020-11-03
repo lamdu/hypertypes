@@ -20,12 +20,10 @@ import           Control.Monad.Trans.Writer (WriterT(..), tell)
 import           Data.Monoid (All(..))
 import           Hyper
 import           Hyper.Class.Traversable
-import           Hyper.Class.Unify (Unify(..), UnifyGen(..), UVarOf, BindingDict(..))
+import           Hyper.Class.Unify
 import           Hyper.Recurse
 import           Hyper.Unify.Constraints
-import           Hyper.Unify.Lookup (semiPruneLookup)
 import           Hyper.Unify.New (newTerm)
-import           Hyper.Unify.Occurs (occursError)
 import           Hyper.Unify.Term (UTerm(..), uBody)
 
 import           Hyper.Internal.Prelude

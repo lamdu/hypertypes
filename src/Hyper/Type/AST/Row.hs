@@ -19,7 +19,6 @@ import qualified Data.Map as Map
 import           Generics.Constraints (Constraints, makeDerivings, makeInstances)
 import           Hyper
 import           Hyper.Unify
-import           Hyper.Unify.Lookup (semiPruneLookup)
 import           Hyper.Unify.New (newTerm, newUnbound)
 import           Hyper.Unify.Term (UTerm(..), _UTerm, UTermBody(..), uBody)
 import           Text.Show.Combinators ((@|), showCon)

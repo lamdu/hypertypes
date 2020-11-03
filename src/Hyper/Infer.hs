@@ -24,8 +24,7 @@ import           Hyper.Class.Infer.InferOf
 import           Hyper.Class.Nodes (HNodesHaveConstraint(..))
 import           Hyper.Infer.Result
 import           Hyper.Infer.ScopeLevel
-import           Hyper.Unify (Unify, UVarOf)
-import           Hyper.Unify.Apply (applyBindings)
+import           Hyper.Unify (Unify, UVarOf, applyBindings)
 
 import           Hyper.Internal.Prelude
 

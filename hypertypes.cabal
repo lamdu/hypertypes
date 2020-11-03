@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 192cf2c087d613d00392ac2c17599d2314fd7e1413da84deb58ec3b2e7a4e40a
+-- hash: 294efe30b6e701bc0cc874947a0af35ad1e282312b2a41ef702ecb6b0b5a3917
 
 name:           hypertypes
 version:        0.1.0.1
@@ -88,7 +88,6 @@ library
       Hyper.Type.Prune
       Hyper.Type.Pure
       Hyper.Unify
-      Hyper.Unify.Apply
       Hyper.Unify.Binding
       Hyper.Unify.Binding.Save
       Hyper.Unify.Binding.ST
@@ -96,7 +95,6 @@ library
       Hyper.Unify.Constraints
       Hyper.Unify.Error
       Hyper.Unify.Generalize
-      Hyper.Unify.Lookup
       Hyper.Unify.New
       Hyper.Unify.Occurs
       Hyper.Unify.QuantifiedVar

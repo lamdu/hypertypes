@@ -6,17 +6,25 @@ module Hyper.Class.Unify
     ( Unify(..), UVarOf
     , UnifyGen(..)
     , BindingDict(..)
+    , applyBindings, semiPruneLookup, occursError
     ) where
 
+import Control.Monad (unless)
+import Control.Monad.Error.Class (MonadError(..))
+import Control.Monad.Trans.Class (MonadTrans(..))
+import Control.Monad.Trans.State (runStateT, get, put)
 import Data.Kind (Type)
-import Hyper.Class.Nodes (HNodes(..))
+import Hyper.Class.Nodes (HNodes(..), (#>))
+import Hyper.Class.Optic (HSubset(..), HSubset')
 import Hyper.Class.Recursive
+import Hyper.Class.Traversable (htraverse)
 import Hyper.Class.ZipMatch (ZipMatch)
 import Hyper.Type (HyperType, type (#))
+import Hyper.Type.Pure (Pure, _Pure)
 import Hyper.Unify.Constraints
 import Hyper.Unify.Error (UnifyError(..))
-import Hyper.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify)
-import Hyper.Unify.Term (UTerm)
+import Hyper.Unify.QuantifiedVar (MonadQuantify(..), HasQuantifiedVar(..))
+import Hyper.Unify.Term (UTerm(..), UTermBody(..), uBody)
 
 import Hyper.Internal.Prelude
 
@@ -63,6 +71,13 @@ class
     -- If 'unifyError' is called then unification has failed.
     -- A compiler implementation may present an error message based on the provided 'UnifyError' when this occurs.
     unifyError :: UnifyError t # UVarOf m -> m a
+    default unifyError ::
+        (MonadError (e # Pure) m, HSubset' e (UnifyError t)) =>
+        UnifyError t # (UVarOf m) -> m a
+    unifyError e =
+        withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
+        htraverse (Proxy @(Unify m) #> applyBindings) e
+        >>= throwError . (hSubset #)
 
     -- | What to do when top-levels of terms being unified do not match.
     --
@@ -103,3 +118,75 @@ class Unify m t => UnifyGen m t where
 instance Recursive (UnifyGen m) where
     {-# INLINE recurse #-}
     recurse = unifyGenRecursive (Proxy @m) . proxyArgument
+
+-- | Look up a variable, and return last variable pointing to result.
+-- Prunes all variables on way to point to the last variable
+-- (path-compression ala union-find).
+{-# INLINE semiPruneLookup #-}
+semiPruneLookup ::
+    Unify m t =>
+    UVarOf m # t ->
+    m (UVarOf m # t, UTerm (UVarOf m) # t)
+semiPruneLookup v0 =
+    lookupVar binding v0
+    >>=
+    \case
+    UToVar v1 ->
+        do
+            (v, r) <- semiPruneLookup v1
+            bindVar binding v0 (UToVar v)
+            pure (v, r)
+    t -> pure (v0, t)
+
+-- | Resolve a term from a unification variable.
+--
+-- Note that this must be done after
+-- all unifications involving the term and its children are done,
+-- as it replaces unification state with cached resolved terms.
+{-# INLINE applyBindings #-}
+applyBindings ::
+    forall m t.
+    Unify m t =>
+    UVarOf m # t ->
+    m (Pure # t)
+applyBindings v0 =
+    semiPruneLookup v0
+    >>=
+    \(v1, x) ->
+    let result r = r <$ bindVar binding v1 (UResolved r)
+        quantify c =
+            newQuantifiedVariable c <&> (_Pure . quantifiedVar #)
+            >>= result
+    in
+    case x of
+    UResolving t -> occursError v1 t
+    UResolved t -> pure t
+    UUnbound c -> quantify c
+    USkolem c -> quantify c
+    UTerm b ->
+        do
+            (r, anyChild) <-
+                withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
+                htraverse
+                ( Proxy @(Unify m) #>
+                    \c ->
+                    do
+                        get >>= lift . (`unless` bindVar binding v1 (UResolving b))
+                        put True
+                        applyBindings c & lift
+                ) (b ^. uBody)
+                & (`runStateT` False)
+            _Pure # r & if anyChild then result else pure
+    UToVar{} -> error "lookup not expected to result in var"
+    UConverted{} -> error "conversion state not expected in applyBindings"
+    UInstantiated{} -> error "applyBindings during instantiation"
+
+-- | Format and throw an occurs check error
+occursError ::
+    Unify m t =>
+    UVarOf m # t -> UTermBody (UVarOf m) # t -> m a
+occursError v (UTermBody c b) =
+    do
+        q <- newQuantifiedVariable c
+        bindVar binding v (UResolved (_Pure . quantifiedVar # q))
+        unifyError (Occurs (quantifiedVar # q) b)

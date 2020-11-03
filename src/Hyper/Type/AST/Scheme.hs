@@ -22,7 +22,6 @@ import           Hyper.Infer
 import           Hyper.Recurse
 import           Hyper.Unify
 import           Hyper.Unify.Generalize
-import           Hyper.Unify.Lookup (semiPruneLookup)
 import           Hyper.Unify.New (newTerm)
 import           Hyper.Unify.QuantifiedVar (HasQuantifiedVar(..), MonadQuantify(..), OrdQVar)
 import           Hyper.Unify.Term (UTerm(..), uBody)

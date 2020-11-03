@@ -15,12 +15,10 @@ module Hyper.Unify
 
 import Algebra.PartialOrd (PartialOrd(..))
 import Hyper
-import Hyper.Class.Unify (Unify(..), UnifyGen(..), UVarOf, BindingDict(..))
+import Hyper.Class.Unify
 import Hyper.Class.ZipMatch (zipMatchA)
 import Hyper.Unify.Constraints
 import Hyper.Unify.Error (UnifyError(..))
-import Hyper.Unify.Lookup (semiPruneLookup)
-import Hyper.Unify.Occurs (occursError)
 import Hyper.Unify.Term (UTerm(..), UTermBody(..), uConstraints, uBody)
 
 import Hyper.Internal.Prelude

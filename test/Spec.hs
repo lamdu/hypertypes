@@ -10,7 +10,6 @@ import qualified Data.Set as Set
 import           Hyper
 import           Hyper.Infer
 import           Hyper.Unify
-import           Hyper.Unify.Apply
 import           Hyper.Unify.Generalize
 import           Hyper.Unify.QuantifiedVar
 import           Hyper.Recurse

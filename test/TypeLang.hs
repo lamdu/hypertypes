@@ -8,6 +8,7 @@ import           Control.Applicative
 import           Control.Lens (ALens')
 import qualified Control.Lens as Lens
 import           Control.Lens.Operators
+import           Control.Monad.Except
 import           Control.Monad.Reader (MonadReader)
 import           Control.Monad.ST.Class (MonadST(..))
 import           Data.STRef
@@ -17,7 +18,6 @@ import           Generic.Data
 import           Generics.Constraints (Constraints, makeDerivings)
 import           Hyper
 import           Hyper.Class.Optic
-import           Hyper.Class.Unify
 import           Hyper.Infer
 import           Hyper.Type.AST.FuncType
 import           Hyper.Type.AST.NamelessScope
@@ -196,6 +196,8 @@ instance HasQuantifiedVar Row where
     quantifiedVar = _RVar
 
 instance HSubset Typ Typ (FuncType Typ) (FuncType Typ) where hSubset = _TFun
+instance HSubset TypeError TypeError (UnifyError Typ) (UnifyError Typ) where hSubset = _TypError
+instance HSubset TypeError TypeError (UnifyError Row) (UnifyError Row) where hSubset = _RowError
 
 instance HasScopeTypes v Typ a => HasScopeTypes v Typ (a, x) where
     scopeTypes = Lens._1 . scopeTypes
