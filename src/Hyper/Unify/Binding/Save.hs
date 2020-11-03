@@ -11,7 +11,7 @@ import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.State (StateT(..))
 import qualified Data.Sequence as Sequence
 import           Hyper
-import           Hyper.Class.Optic (HLens, hLens)
+import           Hyper.Class.Optic (HNodeLens(..))
 import           Hyper.Class.Unify (Unify(..), UVarOf, BindingDict(..))
 import           Hyper.Recurse
 import           Hyper.Unify.Binding (Binding, _Binding, UVar(..))
@@ -21,7 +21,7 @@ import           Hyper.Internal.Prelude
 
 saveUTerm ::
     forall m typeVars t.
-    (Unify m t, Recursively (HLens typeVars) t) =>
+    (Unify m t, Recursively (HNodeLens typeVars) t) =>
     UTerm (UVarOf m) # t ->
     StateT (typeVars # Binding, [m ()]) m (UTerm UVar # t)
 saveUTerm (UUnbound c) = UUnbound c & pure
@@ -35,35 +35,35 @@ saveUTerm UConverted{} = error "converting variable again"
 
 saveVar ::
     forall m t typeVars.
-    (Unify m t, Recursively (HLens typeVars) t) =>
+    (Unify m t, Recursively (HNodeLens typeVars) t) =>
     UVarOf m # t ->
     StateT (typeVars # Binding, [m ()]) m (UVar # t)
 saveVar v =
-    withDict (recursively (Proxy @(HLens typeVars t))) $
+    withDict (recursively (Proxy @(HNodeLens typeVars t))) $
     lookupVar binding v & lift
     >>=
     \case
     UConverted i -> pure (UVar i)
     srcBody ->
         do
-            pb <- Lens.use (Lens._1 . hLens)
+            pb <- Lens.use (Lens._1 . hNodeLens)
             let r = pb ^. _Binding & Sequence.length
             UConverted r & bindVar binding v & lift
             Lens._2 %= (<> [bindVar binding v srcBody])
             dstBody <- saveUTerm srcBody
-            Lens._1 . hLens .= (pb & _Binding %~ (Sequence.|> dstBody))
+            Lens._1 . hNodeLens .= (pb & _Binding %~ (Sequence.|> dstBody))
             UVar r & pure
 
 saveBody ::
     forall m typeVars t.
-    (Unify m t, Recursively (HLens typeVars) t) =>
+    (Unify m t, Recursively (HNodeLens typeVars) t) =>
     t # UVarOf m ->
     StateT (typeVars # Binding, [m ()]) m (t # UVar)
 saveBody =
     withDict (recurse (Proxy @(Unify m t))) $
-    withDict (recursively (Proxy @(HLens typeVars t))) $
+    withDict (recursively (Proxy @(HNodeLens typeVars t))) $
     htraverse
-    ( Proxy @(Unify m) #*# Proxy @(Recursively (HLens typeVars))
+    ( Proxy @(Unify m) #*# Proxy @(Recursively (HNodeLens typeVars))
         #> saveVar
     )
 
@@ -72,7 +72,7 @@ saveBody =
 -- and transform the value's unification variables
 -- to their serialized identifiers.
 save ::
-    (Unify m t, Recursively (HLens typeVars) t) =>
+    (Unify m t, Recursively (HNodeLens typeVars) t) =>
     t # UVarOf m ->
     StateT (typeVars # Binding) m (t # UVar)
 save collection =

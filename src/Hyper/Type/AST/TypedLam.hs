@@ -6,7 +6,7 @@ module Hyper.Type.AST.TypedLam
 
 import           Generics.Constraints (Constraints)
 import           Hyper
-import           Hyper.Class.Optic (HLens, HSubset(..), HSubset', hLens)
+import           Hyper.Class.Optic (HNodeLens(..), HSubset(..), HSubset')
 import           Hyper.Infer
 import           Hyper.Type.AST.FuncType (FuncType(..))
 import           Hyper.Unify (UnifyGen, UVarOf)
@@ -53,7 +53,7 @@ instance
     , HasInferredType e
     , UnifyGen m (TypeOf e)
     , HSubset' (TypeOf e) (FuncType (TypeOf e))
-    , HLens (InferOf t) (TypeOf e)
+    , HNodeLens (InferOf t) (TypeOf e)
     , LocalScopeType v (UVarOf m # TypeOf e) m
     ) =>
     Infer m (TypedLam v t e) where
@@ -62,7 +62,7 @@ instance
     inferBody (TypedLam p t r) =
         do
             InferredChild tI tR <- inferChild t
-            let tT = tR ^. hLens
+            let tT = tR ^. hNodeLens
             InferredChild rI rR <- inferChild r & localScopeType p tT
             hSubset # FuncType tT (rR ^# inferredType (Proxy @e))
                 & newTerm

@@ -243,7 +243,7 @@ instance
 {-# INLINE loadBody #-}
 loadBody ::
     ( UnifyGen m typ
-    , HLens varTypes typ
+    , HNodeLens varTypes typ
     , Ord (QVar typ)
     ) =>
     varTypes # QVarInstances (UVarOf m) ->
@@ -259,8 +259,8 @@ loadBody params foralls x =
         Nothing -> GBody x & pure
     where
         get v =
-            params ^? hLens . _QVarInstances . Lens.ix v <|>
-            foralls ^? hLens . _QVarInstances . Lens.ix v
+            params ^? hNodeLens . _QVarInstances . Lens.ix v <|>
+            foralls ^? hNodeLens . _QVarInstances . Lens.ix v
 
 {-# INLINE loadNominalDecl #-}
 loadNominalDecl ::

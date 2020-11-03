@@ -136,8 +136,8 @@ instance Constraints (Types h) Pretty => Pretty (Row h) where
         & maybeParens (p > 1)
     pPrintPrec _ _ (RVar s) = pPrint s
 
-instance HOptic ((~) (->)) Functor Types Typ where hOptic _ _ = tTyp
-instance HOptic ((~) (->)) Functor Types Row where hOptic _ _ = tRow
+instance HNodeLens Types Typ where hNodeLens = tTyp
+instance HNodeLens Types Row where hNodeLens = tRow
 
 instance PartialOrd RConstraints where
     RowConstraints f0 s0 `leq` RowConstraints f1 s1 = f0 `leq` f1 && s0 `leq` s1

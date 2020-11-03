@@ -7,7 +7,7 @@ module Hyper.Type.AST.Scheme.AlphaEq
 
 import Control.Lens (ix)
 import Hyper
-import Hyper.Class.Optic (HLens, hLens)
+import Hyper.Class.Optic (HNodeLens(..))
 import Hyper.Class.ZipMatch (zipMatch_)
 import Hyper.Recurse (wrapM, (#>>))
 import Hyper.Type.AST.Scheme
@@ -28,14 +28,14 @@ makeQVarInstancesInScope (QVars foralls) =
         makeSkolem c = scopeConstraints (Proxy @typ) >>= newVar binding . USkolem . (c <>)
 
 schemeBodyToType ::
-    (UnifyGen m typ, HLens varTypes typ, Ord (QVar typ)) =>
+    (UnifyGen m typ, HNodeLens varTypes typ, Ord (QVar typ)) =>
     varTypes # QVarInstances (UVarOf m) -> typ # UVarOf m -> m (UVarOf m # typ)
 schemeBodyToType foralls x =
     case x ^? quantifiedVar >>= getForAll of
     Nothing -> newTerm x
     Just r -> pure r
     where
-        getForAll v = foralls ^? hLens . _QVarInstances . ix v
+        getForAll v = foralls ^? hNodeLens . _QVarInstances . ix v
 
 schemeToRestrictedType ::
     forall m varTypes typ.

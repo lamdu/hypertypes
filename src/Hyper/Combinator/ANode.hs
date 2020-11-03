@@ -7,7 +7,7 @@ module Hyper.Combinator.ANode
     ) where
 
 import Control.Lens (iso)
-import Hyper.Class.Optic (HOptic(..))
+import Hyper.Class.Optic (HNodeLens(..))
 import Hyper.Class.Morph (HMorph(..))
 import Hyper.Class.Recursive (RNodes, Recursively, RTraversable)
 import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
@@ -30,7 +30,7 @@ _ANode = iso (\(MkANode x) -> x) MkANode
 makeHTraversableApplyAndBases ''ANode
 makeCommonInstances [''ANode]
 
-instance HOptic ((~) (->)) Functor (ANode c) c where hOptic _ _ = _ANode -- HLens
+instance HNodeLens (ANode c) c where hNodeLens = _ANode
 
 instance RNodes n => RNodes (ANode n)
 instance (c (ANode n), Recursively c n) => Recursively c (ANode n)
