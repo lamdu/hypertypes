@@ -89,6 +89,7 @@ makeCommonInstances [''NominalDecl, ''NominalInst, ''ToNom, ''LoadedNominalDecl]
 makeHTraversableAndBases ''NominalDecl
 makeHTraversableApplyAndBases ''ToNom
 makeHTraversableApplyAndBases ''FromNom
+makeHMorph ''ToNom
 makeZipMatch ''ToNom
 makeZipMatch ''FromNom
 makeHContext ''ToNom
