@@ -49,7 +49,9 @@ instance SugarToCore LangSugar LangCore
 desugar :: Pure # LangSugar -> Pure # LangCore
 desugar (Pure body) =
     case body of
-    SBase x -> morphMap (Proxy @SugarToCore #?> desugar) x & core
+    SBase x ->
+        -- Note how we desugar all of the base forms without any boilerplate!
+        morphMap (Proxy @SugarToCore #?> desugar) x & core
     SLet x ->
         cLam v i `cApp` e
         where
@@ -62,7 +64,8 @@ desugar (Pure body) =
         foldr step (desugar e) g
         where
             step (c, t) r =
-                cAddLamCase "True" (desugar t) (cAddLamCase "False" r cAbsurd)
+                cAddLamCase "True" (cLam "_" (desugar t))
+                (cAddLamCase "False" (cLam "_" r) cAbsurd)
                 `cApp` desugar c
     where
         core = Pure . LangCore
@@ -70,3 +73,9 @@ desugar (Pure body) =
         cLam v = core . CLam . Lam v
         cAbsurd = core CLamCaseEmpty
         cAddLamCase c h = core . CLamCaseExtend . RowExtend c h
+
+class (s ~ LangCore, t ~ LangSugar) => CoreToSugar s t
+instance CoreToSugar LangCore LangSugar
+
+coreToSugar :: Pure # LangCore -> Pure # LangSugar
+coreToSugar (Pure (LangCore body)) = morphMap (Proxy @CoreToSugar #?> coreToSugar) body & SBase & Pure
