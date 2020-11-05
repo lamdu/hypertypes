@@ -1,18 +1,19 @@
-{-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell, OverloadedStrings, FlexibleContexts, UndecidableInstances, FlexibleInstances #-}
 
 module LangC where
 
 import TypeLang (Name)
 
 import Control.Lens.Operators
-import Data.List.NonEmpty (NonEmpty)
+import Data.List.NonEmpty (NonEmpty(..), cons)
 import Hyper
-import Hyper.Class.Morph
+import Hyper.Class.Morph (morphMapped1)
+import Hyper.Recurse ((##>>), wrap)
 import Hyper.Type.AST.App (App(..))
-import Hyper.Type.AST.Lam (Lam(..))
+import Hyper.Type.AST.Lam (Lam(..), lamOut)
 import Hyper.Type.AST.Let (Let(..))
 import Hyper.Type.AST.Row (RowExtend(..))
-import Hyper.Type.AST.Var (Var)
+import Hyper.Type.AST.Var (Var(..))
 
 import Prelude
 
@@ -33,15 +34,27 @@ data CoreForms l h
     | CInject (h :# l) Name
     deriving Generic
 
-makeHMorph ''CoreForms
-
 newtype LangCore h = LangCore (CoreForms LangCore h)
+
+data IfThen h = IfThen (h :# LangSugar) (h :# LangSugar)
+data Case h = Case Name Name (h :# LangSugar)
 
 data LangSugar h
     = SBase (CoreForms LangSugar h)
     | SLet (Let Name LangSugar h)
-    | SCase (h :# LangSugar) [(Name, Name, h :# LangSugar)]
-    | SIfElse (NonEmpty (h :# LangSugar, h :# LangSugar)) (h :# LangSugar)
+    | SCase (h :# LangSugar) [Case h]
+    | SIfElse (NonEmpty (IfThen h)) (h :# LangSugar)
+
+makeHMorph ''CoreForms
+makeHTraversableAndBases ''CoreForms
+makeHTraversableAndBases ''LangCore
+makeHTraversableAndBases ''IfThen
+makeHTraversableAndBases ''Case
+makeHTraversableAndBases ''LangSugar
+
+instance RNodes LangSugar
+instance RTraversable LangSugar
+instance c LangSugar => Recursively c LangSugar
 
 desugar :: Pure # LangSugar -> Pure # LangCore
 desugar (Pure body) =
@@ -56,11 +69,11 @@ desugar (Pure body) =
     SCase e h ->
         foldr step cAbsurd h `cApp` desugar e
         where
-            step (c, v, b) = cAddLamCase c (v `cLam` desugar b)
+            step (Case c v b) = cAddLamCase c (v `cLam` desugar b)
     SIfElse g e ->
         foldr step (desugar e) g
         where
-            step (c, t) r =
+            step (IfThen c t) r =
                 cAddLamCase "True" (cLam "_" (desugar t))
                 (cAddLamCase "False" (cLam "_" r) cAbsurd)
                 `cApp` desugar c
@@ -71,5 +84,41 @@ desugar (Pure body) =
         cAbsurd = core CLamCaseEmpty
         cAddLamCase c h = core . CLamCaseExtend . RowExtend c h
 
+-- Lift core language into the surface language
 coreToSugar :: Pure # LangCore -> Pure # LangSugar
 coreToSugar (Pure (LangCore x)) = x & morphMapped1 %~ coreToSugar & SBase & Pure
+
+-- Convert top-level expression to sugared form when possible
+sugarizeTop :: LangSugar # Pure -> LangSugar # Pure
+sugarizeTop top@(SBase (CApp (App (Pure (SBase func)) arg))) =
+    case func of
+    CLam (Lam v b) -> Let v arg b & SLet
+    CLamCaseExtend (RowExtend c (Pure (SBase (CLam h))) r) ->
+        go (pure (c, h)) r
+        where
+            go cases (Pure (SBase CLamCaseEmpty)) =
+                case cases of
+                ("True", t) :| [("False", f)] | checkIf t f -> makeIf t f
+                ("False", f) :| [("True", t)] | checkIf t f -> makeIf t f
+                _ ->
+                    cases ^.. traverse
+                    <&> (\(n, Lam v b) -> Case n v b)
+                    & SCase arg
+                where
+                    makeIf t f =
+                        case f ^. lamOut of
+                        Pure (SIfElse is e) -> SIfElse (cons i is) e
+                        _ -> SIfElse (pure i) (f ^. lamOut)
+                        where
+                            i = IfThen arg (t ^. lamOut)
+            checkIf t f = checkIfBranch t && checkIfBranch f
+            checkIfBranch (Lam v b) = not (usesVar v b)
+    _ -> top
+sugarizeTop x = x
+
+usesVar :: Name -> Pure # LangSugar -> Bool
+usesVar v (Pure (SBase (CVar (Var x)))) = v == x
+usesVar v (Pure x) = any (usesVar v) (x ^.. hfolded1)
+
+sugarize :: Pure # LangSugar -> Pure # LangSugar
+sugarize = wrap (Proxy @((~) LangSugar) ##>> Pure . sugarizeTop)
