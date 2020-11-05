@@ -73,7 +73,7 @@ class
     unifyError :: UnifyError t # UVarOf m -> m a
     default unifyError ::
         (MonadError (e # Pure) m, HSubset' e (UnifyError t)) =>
-        UnifyError t # (UVarOf m) -> m a
+        UnifyError t # UVarOf m -> m a
     unifyError e =
         withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
         htraverse (Proxy @(Unify m) #> applyBindings) e

@@ -83,4 +83,4 @@ htraverse f = hsequence . hmap (fmap MkContainedH . f)
 htraverse1 ::
     (HTraversable h, HNodesConstraint h ((~) n)) =>
     Traversal (h # p) (h # q) (p # n) (q # n)
-htraverse1 f = hsequence . (hmapped1 %~ (MkContainedH . f))
+htraverse1 f = hsequence . (hmapped1 %~ MkContainedH . f)
