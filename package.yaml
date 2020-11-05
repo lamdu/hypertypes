@@ -81,6 +81,7 @@ tests:
     other-modules:
     - LangA
     - LangB
+    - LangC
     - ReadMeExamples
     - TypeLang
     ghc-options:

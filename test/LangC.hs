@@ -7,7 +7,7 @@ import TypeLang (Name)
 import Control.Lens.Operators
 import Data.List.NonEmpty (NonEmpty)
 import Hyper
-import Hyper.Class.Morph (HMorph(..), (#?>))
+import Hyper.Class.Morph
 import Hyper.Type.AST.App (App(..))
 import Hyper.Type.AST.Lam (Lam(..))
 import Hyper.Type.AST.Let (Let(..))
@@ -43,8 +43,7 @@ data LangSugar h
     | SCase (h :# LangSugar) [(Name, Name, h :# LangSugar)]
     | SIfElse (NonEmpty (h :# LangSugar, h :# LangSugar)) (h :# LangSugar)
 
-class (s ~ LangSugar, t ~ LangCore) => SugarToCore s t
-instance SugarToCore LangSugar LangCore
+type SugarToCore = HIs2 LangSugar LangCore
 
 desugar :: Pure # LangSugar -> Pure # LangCore
 desugar (Pure body) =
@@ -74,8 +73,5 @@ desugar (Pure body) =
         cAbsurd = core CLamCaseEmpty
         cAddLamCase c h = core . CLamCaseExtend . RowExtend c h
 
-class (s ~ LangCore, t ~ LangSugar) => CoreToSugar s t
-instance CoreToSugar LangCore LangSugar
-
 coreToSugar :: Pure # LangCore -> Pure # LangSugar
-coreToSugar (Pure (LangCore body)) = morphMap (Proxy @CoreToSugar #?> coreToSugar) body & SBase & Pure
+coreToSugar (Pure (LangCore body)) = morphMap (Proxy @(HIs2 LangCore LangSugar) #?> coreToSugar) body & SBase & Pure

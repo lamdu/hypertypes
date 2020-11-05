@@ -1,7 +1,11 @@
+{-# LANGUAGE FlexibleInstances #-}
+
 -- | An extension of 'HFunctor' for parameterized 'Hyper.Type.HyperType's
 
 module Hyper.Class.Morph
-    ( HMorph(..), HMorphWithConstraint, morphTraverse, (#?>)
+    ( HMorph(..), HMorphWithConstraint
+    , morphTraverse, (#?>)
+    , HIs2
     ) where
 
 import Data.Kind (Type)
@@ -42,3 +46,6 @@ morphTraverse f = hsequence . morphMap (fmap MkContainedH . f)
     (HMorph s t, MorphConstraint s t c) =>
     Proxy c -> (c a b => r) -> MorphWitness s t a b -> r
 (#?>) p r w = morphLiftConstraint w p r
+
+class (i0 ~ t0, i1 ~ t1) => HIs2 (i0 :: HyperType) (i1 :: HyperType) t0 t1
+instance HIs2 a b a b
