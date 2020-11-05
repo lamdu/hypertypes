@@ -43,18 +43,16 @@ data LangSugar h
     | SCase (h :# LangSugar) [(Name, Name, h :# LangSugar)]
     | SIfElse (NonEmpty (h :# LangSugar, h :# LangSugar)) (h :# LangSugar)
 
-type SugarToCore = HIs2 LangSugar LangCore
-
 desugar :: Pure # LangSugar -> Pure # LangCore
 desugar (Pure body) =
     case body of
     SBase x ->
         -- Note how we desugar all of the base forms without any boilerplate!
-        morphMap (Proxy @SugarToCore #?> desugar) x & core
+        x & morphMapped1 %~ desugar & core
     SLet x ->
         cLam v i `cApp` e
         where
-            Let v i e = morphMap (Proxy @SugarToCore #?> desugar) x
+            Let v i e = x & morphMapped1 %~ desugar
     SCase e h ->
         foldr step cAbsurd h `cApp` desugar e
         where
@@ -74,4 +72,4 @@ desugar (Pure body) =
         cAddLamCase c h = core . CLamCaseExtend . RowExtend c h
 
 coreToSugar :: Pure # LangCore -> Pure # LangSugar
-coreToSugar (Pure (LangCore body)) = morphMap (Proxy @(HIs2 LangCore LangSugar) #?> coreToSugar) body & SBase & Pure
+coreToSugar (Pure (LangCore x)) = x & morphMapped1 %~ coreToSugar & SBase & Pure

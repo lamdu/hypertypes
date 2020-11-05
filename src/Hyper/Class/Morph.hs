@@ -5,9 +5,10 @@
 module Hyper.Class.Morph
     ( HMorph(..), HMorphWithConstraint
     , morphTraverse, (#?>)
-    , HIs2
+    , HIs2, morphMapped1, morphTraverse1
     ) where
 
+import Control.Lens (Setter, sets)
 import Data.Kind (Type)
 import Hyper.Class.Traversable (HTraversable(..), ContainedH(..))
 import Hyper.Type (type (#), HyperType)
@@ -49,3 +50,14 @@ morphTraverse f = hsequence . morphMap (fmap MkContainedH . f)
 
 class (i0 ~ t0, i1 ~ t1) => HIs2 (i0 :: HyperType) (i1 :: HyperType) t0 t1
 instance HIs2 a b a b
+
+morphMapped1 ::
+    forall a b s t p q.
+    HMorphWithConstraint s t (HIs2 a b) =>
+    Setter (s # p) (t # q) (p # a) (q # b)
+morphMapped1 = sets (\f -> morphMap (Proxy @(HIs2 a b) #?> f))
+
+morphTraverse1 ::
+    (HMorphWithConstraint s t (HIs2 a b), HTraversable t) =>
+    Traversal (s # p) (t # q) (p # a) (q # b)
+morphTraverse1 f = hsequence . (morphMapped1 %~ MkContainedH . f)
