@@ -93,8 +93,8 @@ sugarizeTop :: LangSugar # Pure -> LangSugar # Pure
 sugarizeTop top@(SBase (CApp (App (Pure (SBase func)) arg))) =
     case func of
     CLam (Lam v b) -> Let v arg b & SLet
-    CLamCaseExtend (RowExtend c (Pure (SBase (CLam h))) r) ->
-        go (pure (c, h)) r
+    CLamCaseExtend (RowExtend c0 (Pure (SBase (CLam h0))) r0) ->
+        go ((c0, h0) :| []) r0
         where
             go cases (Pure (SBase CLamCaseEmpty)) =
                 case cases of
@@ -111,6 +111,9 @@ sugarizeTop top@(SBase (CApp (App (Pure (SBase func)) arg))) =
                         _ -> SIfElse (pure i) (f ^. lamOut)
                         where
                             i = IfThen arg (t ^. lamOut)
+            go cases (Pure (SBase (CLamCaseExtend (RowExtend c (Pure (SBase (CLam h))) r)))) =
+                go (cons (c, h) cases) r
+            go _ _ = top
             checkIf t f = checkIfBranch t && checkIfBranch f
             checkIfBranch (Lam v b) = not (usesVar v b)
     _ -> top
