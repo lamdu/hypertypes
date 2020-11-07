@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskellQuotes #-}
+{-# LANGUAGE TemplateHaskellQuotes, CPP #-}
 
 module Hyper.TH.Morph
     ( makeHMorph
@@ -25,8 +25,12 @@ makeHMorphForType info =
         (Just [pure (PlainTV constraintVar)])
         ([src, dst, VarT constraintVar] <&> pure)
         (simplifyContext morphConstraint <&> toTuple)
-    , DataInstD [] Nothing
-        (ConT ''MorphWitness `AppT` WildCardT `AppT` WildCardT `AppT` WildCardT `AppT` WildCardT)
+    , DataInstD []
+#if MIN_VERSION_template_haskell(2,15,0)
+        Nothing (ConT ''MorphWitness `AppT` src `AppT` dst `AppT` WildCardT `AppT` WildCardT)
+#else
+        ''MorphWitness [src, dst, WildCardT, WildCardT]
+#endif
         Nothing (witnesses ^.. traverse . Lens._2) []
         & pure
     , funD 'morphMap (tiConstructors info <&> pure . mkMorphCon)

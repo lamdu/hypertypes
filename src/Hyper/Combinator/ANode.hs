@@ -38,7 +38,7 @@ instance RTraversable n => RTraversable (ANode n)
 
 instance HMorph (ANode a) (ANode b) where
     type instance MorphConstraint (ANode a) (ANode b) c = c a b
-    data instance MorphWitness _ _ _ _ where
+    data instance MorphWitness (ANode a) (ANode b) _ _ where
         M_ANode :: MorphWitness (ANode a) (ANode b) a b
     morphMap f = _ANode %~ f M_ANode
     morphLiftConstraint M_ANode _ = id
