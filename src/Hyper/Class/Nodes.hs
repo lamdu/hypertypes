@@ -24,14 +24,14 @@ newtype HWitness h n = HWitness (HWitnessType h n)
 -- for processing child nodes which requires a constraint on the nodes.
 class HNodes (h :: HyperType) where
     -- | Lift a constraint to apply to the child nodes
-    type family HNodesConstraint h (c :: (HyperType -> Constraint)) :: Constraint
+    type HNodesConstraint h (c :: (HyperType -> Constraint)) :: Constraint
     type instance HNodesConstraint h c = HNodesConstraint (Rep1 h) c
 
     -- | @HWitness h n@ is a witness that @n@ is a node of @h@.
     --
     -- A value quantified with @forall n. HWitness h n -> ... n@,
     -- is equivalent for a "for-some" where the possible values for @n@ are the nodes of @h@.
-    type family HWitnessType h :: HyperType -> Type
+    type HWitnessType h :: HyperType -> Type
     type instance HWitnessType h = HWitnessType (Rep1 h)
 
     -- | Lift a rank-n value with a constraint which the child nodes satisfy

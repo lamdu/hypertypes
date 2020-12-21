@@ -11,12 +11,12 @@ import Hyper.Infer
 import Hyper.Type (HyperType)
 
 class HasTypeOf1 t where
-    type family TypeOf1 t :: HyperType
+    type TypeOf1 t :: HyperType
     typeAst :: Proxy (t h) -> Dict (TypeOf (t h) ~ TypeOf1 t)
 
 class HasInferOf1 t where
-    type family InferOf1 t :: HyperType
-    type family InferOf1IndexConstraint t :: Type -> Constraint
+    type InferOf1 t :: HyperType
+    type InferOf1IndexConstraint t :: Type -> Constraint
     hasInferOf1 :: Proxy (t h) -> Dict (InferOf (t h) ~ InferOf1 t)
 
 class HasInferOf1 t => Infer1 m t where

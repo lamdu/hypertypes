@@ -17,9 +17,9 @@ import Hyper.Internal.Prelude
 
 -- | A type-varying variant of 'HFunctor' which can modify type parameters of the mapped 'HyperType'
 class HMorph s t where
-    type family MorphConstraint s t (c :: (HyperType -> HyperType -> Constraint)) :: Constraint
+    type MorphConstraint s t (c :: (HyperType -> HyperType -> Constraint)) :: Constraint
 
-    data family MorphWitness s t :: HyperType -> HyperType -> Type
+    data MorphWitness s t :: HyperType -> HyperType -> Type
 
     morphMap ::
         (forall a b. MorphWitness s t a b -> p # a -> q # b) ->

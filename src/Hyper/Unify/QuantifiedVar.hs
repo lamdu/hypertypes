@@ -16,7 +16,7 @@ import Prelude.Compat
 -- | Class for types which have quantified variables
 class HasQuantifiedVar (t :: HyperType) where
     -- | The type of quantified variable identifiers
-    type family QVar t
+    type QVar t
     -- | A `Prism'` from a type to its quantified variable term
     quantifiedVar :: Prism' (t f) (QVar t)
 

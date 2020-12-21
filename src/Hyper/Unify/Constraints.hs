@@ -36,7 +36,7 @@ class
     TypeConstraints (TypeConstraintsOf ast) =>
     HasTypeConstraints (ast :: HyperType) where
 
-    type family TypeConstraintsOf (ast :: HyperType) :: Type
+    type TypeConstraintsOf (ast :: HyperType) :: Type
 
     -- | Verify constraints on the ast and apply the given child
     -- verifier on children
