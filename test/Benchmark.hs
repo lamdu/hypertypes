@@ -10,7 +10,7 @@ import Text.PrettyPrint.HughesPJClass (prettyShow)
 import TypeLang
 
 fields :: [String]
-fields = [ "a" ++ show i | i <- [0 :: Int .. 100] ]
+fields = [ 'a' : show i | i <- [0 :: Int .. 100] ]
 
 record :: [String] -> Pure # Typ
 record = (^. hPlain) . TRecP . foldr (\k -> RExtendP (Name k) TIntP) REmptyP

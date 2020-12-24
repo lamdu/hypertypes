@@ -11,8 +11,7 @@ import           Hyper.Infer
 import           Hyper.Type.AST.FuncType
 import           Hyper.Unify (UnifyGen, UVarOf)
 import           Hyper.Unify.New (newUnbound, newTerm)
-import           Text.PrettyPrint ((<+>))
-import qualified Text.PrettyPrint as Pretty
+import qualified Text.PrettyPrint as P
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 import           Hyper.Internal.Prelude
@@ -42,8 +41,8 @@ instance
     Constraints (Lam v expr h) Pretty =>
     Pretty (Lam v expr h) where
     pPrintPrec lvl p (Lam i o) =
-        (Pretty.text "λ" <> pPrintPrec lvl 0 i)
-        <+> Pretty.text "→" <+> pPrintPrec lvl 0 o
+        (P.text "λ" <> pPrintPrec lvl 0 i)
+        P.<+> P.text "→" P.<+> pPrintPrec lvl 0 o
         & maybeParens (p > 0)
 
 type instance InferOf (Lam _ t) = ANode (TypeOf t)

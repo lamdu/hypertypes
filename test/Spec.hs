@@ -341,9 +341,9 @@ testAlphaEq x y expect =
     do
         putStrLn ""
         prettyPrint (x, y)
-        putStrLn ("Alpha Eq: " ++ show pureRes)
+        putStrLn ("Alpha Eq: " <> show pureRes)
         when (pureRes /= expect) (putStrLn "WRONG!")
-        putStrLn ("Alpha Eq: " ++ show stRes)
+        putStrLn ("Alpha Eq: " <> show stRes)
         when (stRes /= expect) (putStrLn "WRONG!")
         pure (pureRes == expect && stRes == expect)
     where

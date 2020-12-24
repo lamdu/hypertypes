@@ -32,8 +32,7 @@ import           Hyper.Unify.New
 import           Hyper.Unify.QuantifiedVar
 import           Hyper.Unify.Term
 import           Generics.Constraints (makeDerivings)
-import           Text.PrettyPrint ((<+>))
-import qualified Text.PrettyPrint as Pretty
+import qualified Text.PrettyPrint as P
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 import           Prelude
@@ -65,19 +64,18 @@ instance HasInferredType LangB where
 
 instance Pretty (LangB # Pure) where
     pPrintPrec _ _ (BLit i) = pPrint i
-    pPrintPrec _ _ BRecEmpty = Pretty.text "{}"
+    pPrintPrec _ _ BRecEmpty = P.text "{}"
     pPrintPrec lvl p (BRecExtend (RowExtend h v r)) =
-        pPrintPrec lvl 20 h <+>
-        Pretty.text "=" <+>
-        (pPrintPrec lvl 2 v <> Pretty.text ",") <+>
+        pPrintPrec lvl 20 h P.<+>
+        P.text "=" P.<+>
+        (pPrintPrec lvl 2 v <> P.text ",") P.<+>
         pPrintPrec lvl 1 r
         & maybeParens (p > 1)
     pPrintPrec lvl p (BApp x) = pPrintPrec lvl p x
     pPrintPrec lvl p (BVar x) = pPrintPrec lvl p x
     pPrintPrec lvl p (BLam x) = pPrintPrec lvl p x
     pPrintPrec lvl p (BLet x) = pPrintPrec lvl p x
-    pPrintPrec lvl p (BGetField w h) =
-        pPrintPrec lvl p w <> Pretty.text "." <> pPrint h
+    pPrintPrec lvl p (BGetField w h) = pPrintPrec lvl p w <> P.text "." <> pPrint h
     pPrintPrec lvl p (BToNom n) = pPrintPrec lvl p n
 
 instance VarType Name LangB where

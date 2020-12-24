@@ -24,9 +24,7 @@ makeZipMatch typeName =
             (simplifyContext (ctrs >>= ccContext))
             (appT (conT ''ZipMatch) (pure (tiInstance info)))
             [ InlineP 'zipMatch Inline FunLike AllPhases & PragmaD & pure
-            , funD 'zipMatch
-                ( (ctrs <&> pure . ccClause) ++ [pure tailClause]
-                )
+            , funD 'zipMatch ((ctrs <&> ccClause) <> [tailClause] <&> pure)
             ]
             <&> (:[])
     where

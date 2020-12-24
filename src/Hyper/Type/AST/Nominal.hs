@@ -36,8 +36,7 @@ import           Hyper.Unify.Generalize (GTerm(..), _GMono, instantiateWith, ins
 import           Hyper.Unify.New (newTerm)
 import           Hyper.Unify.QuantifiedVar (HasQuantifiedVar(..), OrdQVar)
 import           Hyper.Unify.Term (UTerm(..))
-import           Text.PrettyPrint ((<+>))
-import qualified Text.PrettyPrint as Pretty
+import qualified Text.PrettyPrint as P
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
 
 import           Hyper.Internal.Prelude
@@ -163,7 +162,7 @@ instance
 
 instance Constraints (ToNom nomId term h) Pretty => Pretty (ToNom nomId term h) where
     pPrintPrec lvl p (ToNom nomId term) =
-        (pPrint nomId <> Pretty.text "#") <+> pPrintPrec lvl 11 term
+        (pPrint nomId <> P.text "#") P.<+> pPrintPrec lvl 11 term
         & maybeParens (p > 10)
 
 class    (Pretty (QVar h), Pretty (outer :# h)) => PrettyConstraints outer h
@@ -182,14 +181,11 @@ instance
         (hfoldMap (Proxy @(PrettyConstraints h) #> mkArgs) vars)
         where
             joinArgs [] = mempty
-            joinArgs xs =
-                Pretty.text "[" <>
-                Pretty.sep (Pretty.punctuate (Pretty.text ",") xs)
-                <> Pretty.text "]"
+            joinArgs xs = P.text "[" <> P.sep (P.punctuate (P.text ",") xs) <> P.text "]"
             mkArgs (QVarInstances m) =
                 Map.toList m <&>
                 \(h, v) ->
-                (pPrint h <> Pretty.text ":") <+> pPrint v
+                (pPrint h <> P.text ":") P.<+> pPrint v
 
 {-# ANN module "HLint: ignore Use camelCase" #-}
 data W_LoadedNominalDecl t n where
