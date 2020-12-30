@@ -1,12 +1,12 @@
-{-# LANGUAGE TemplateHaskellQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Hyper.TH.Context
     ( makeHContext
     ) where
 
 import qualified Control.Lens as Lens
-import           Hyper.Class.Context
-import           Hyper.Class.Functor
+import           Hyper.Class.Context (HContext(..))
+import           Hyper.Class.Functor (HFunctor(..))
 import           Hyper.Combinator.Func (HFunc(..), _HFunc)
 import           Hyper.TH.Internal.Utils
 import           Language.Haskell.TH
@@ -19,7 +19,7 @@ makeHContext typeName = makeTypeInfo typeName >>= makeHContextForType
 
 makeHContextForType :: TypeInfo -> DecsQ
 makeHContextForType info =
-    instanceD (simplifyContext (makeContext info)) (appT (conT ''HContext) (pure (tiInstance info)))
+    instanceD (simplifyContext (makeContext info)) [t|HContext $(pure (tiInstance info))|]
     [ InlineP 'hcontext Inline FunLike AllPhases & PragmaD & pure
     , funD 'hcontext (tiConstructors info <&> makeHContextCtr)
     ]
@@ -37,59 +37,37 @@ makeContext info =
 makeHContextCtr ::
     (Name, ConstructorVariant, [Either Type CtrTypePattern]) -> Q Clause
 makeHContextCtr (cName, _, []) =
-    Clause [ConP cName []] (NormalB (ConE cName)) [] & pure
+    clause [conP cName []] (normalB (conE cName)) []
 makeHContextCtr (cName, RecordConstructor fieldNames, cFields) =
-    zipWith bodyFor cFields (zip fieldNames cVars)
-    & sequenceA
-    <&> foldl AppE (ConE cName)
-    <&> NormalB
-    <&> \x -> Clause [varWhole `AsP` ConP cName (cVars <&> VarP)] x []
+    clause [varWhole `asP` conP cName (cVars <&> varP)]
+    (normalB (foldl appE (conE cName) (zipWith bodyFor cFields (zip fieldNames cVars)))) []
     where
         cVars =
             [(0 :: Int) ..] <&> show <&> ("_x" <>) <&> mkName
             & take (length cFields)
-        bodyFor Left{} (_, v) = VarE v & pure
+        bodyFor Left{} (_, v) = varE v
         bodyFor (Right Node{}) (f, v) =
-            InfixE
-            ( Just
-                ( ConE 'HFunc `AppE`
-                    LamE [VarP varField]
-                    ( ConE 'Lens.Const
-                        `AppE`
-                        RecUpdE (VarE varWhole)
-                        [(f, VarE varField)]
-                    )
-                )
-            ) (ConE '(:*:)) (Just (VarE v))
-            & pure
+            [|HFunc
+                $(lamE [varP varField]
+                    [|Lens.Const $(recUpdE (varE varWhole) [pure (f, VarE varField)])|])
+                :*: $(varE v)|]
         bodyFor _ _ = fail "makeHContext only works for simple record fields"
         varWhole = mkName "_whole"
         varField = mkName "_field"
 makeHContextCtr (cName, _, [cField]) =
-    bodyFor cField
-    <&> AppE (ConE cName)
-    <&> NormalB
-    <&> \x -> Clause [ConP cName [VarP cVar]] x []
+    clause [conP cName [varP cVar]] (normalB (n `appE` bodyFor cField)) []
     where
-        bodyFor Left{} = VarE cVar & pure
-        bodyFor (Right Node{}) =
-            InfixE
-            (Just (ConE 'HFunc `AppE` (ConE 'Lens.Const `dot` ConE cName)))
-            (ConE '(:*:))
-            (Just (VarE cVar))
-            & pure
+        n = conE cName
+        v = varE cVar
+        bodyFor Left{} = v
+        bodyFor (Right Node{}) = [|HFunc (Lens.Const . $n) :*: $v|]
         bodyFor (Right GenEmbed{}) = embed
         bodyFor (Right FlatEmbed{}) = embed
         bodyFor _ = fail "makeHContext only works for simple fields"
         embed =
-            VarE 'hmap
-            `AppE`
-            ( VarE 'const `AppE`
-                InfixE
-                (Just (VarE 'Lens._1 `dot` VarE '_HFunc `dot` VarE 'Lens.mapped `dot` VarE 'Lens._Wrapped))
-                (VarE '(Lens.%~))
-                (Just (ConE cName))
-            ) `AppE` (VarE 'hcontext `AppE` VarE cVar)
-            & pure
+            [|hmap
+                (const (Lens._1 . _HFunc . Lens.mapped . Lens._Wrapped Lens.%~ $n))
+                (hcontext $v)
+            |]
         cVar = mkName "_c"
 makeHContextCtr _ = fail "makeHContext: unsupported constructor"

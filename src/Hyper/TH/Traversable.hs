@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskellQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- | Generate 'HTraversable' and related instances via @TemplateHaskell@
 
@@ -10,7 +10,7 @@ module Hyper.TH.Traversable
     ) where
 
 import qualified Control.Lens as Lens
-import           Hyper.Class.Traversable
+import           Hyper.Class.Traversable (HTraversable(..), ContainedH(..))
 import           Hyper.TH.Apply (makeHApplicativeBases)
 import           Hyper.TH.Foldable (makeHFoldable)
 import           Hyper.TH.Functor (makeHFunctor)
@@ -55,34 +55,34 @@ makeHTraversable typeName = makeTypeInfo typeName >>= makeHTraversableForType
 
 makeHTraversableForType :: TypeInfo -> DecsQ
 makeHTraversableForType info =
-    instanceD (simplifyContext (makeContext info)) (appT (conT ''HTraversable) (pure (tiInstance info)))
+    instanceD (makeContext info >>= simplifyContext) [t|HTraversable $(pure (tiInstance info))|]
     [ InlineP 'hsequence Inline FunLike AllPhases & PragmaD & pure
-    , funD 'hsequence (tiConstructors info <&> pure . makeCons)
+    , funD 'hsequence (tiConstructors info <&> makeCons)
     ]
     <&> (:[])
 
-makeContext :: TypeInfo -> [Pred]
+makeContext :: TypeInfo -> Q [Pred]
 makeContext info =
-    tiConstructors info ^.. traverse . Lens._3 . traverse . Lens._Right >>= ctxForPat
+    tiConstructors info ^.. traverse . Lens._3 . traverse . Lens._Right >>= ctxForPat & sequenceA
     where
-        ctxForPat (InContainer t pat) = (ConT ''Traversable `AppT` t) : ctxForPat pat
-        ctxForPat (GenEmbed t) = [ConT ''HTraversable `AppT` t]
+        ctxForPat (InContainer t pat) = [t|Traversable $(pure t)|] : ctxForPat pat
+        ctxForPat (GenEmbed t) = [[t|HTraversable $(pure t)|]]
         ctxForPat _ = []
 
 makeCons ::
-    (Name, ConstructorVariant, [Either Type CtrTypePattern]) -> Clause
+    (Name, ConstructorVariant, [Either Type CtrTypePattern]) -> ClauseQ
 makeCons (cName, _, cFields) =
-    Clause [consPat cName consVars] body []
+    clause [consPat cName consVars] body []
     where
         body =
             consVars <&> f
-            & applicativeStyle (ConE cName)
-            & NormalB
+            & applicativeStyle (conE cName)
+            & normalB
         consVars = makeConstructorVars "x" cFields
-        f (pat, name) = bodyFor pat `AppE` VarE name
+        f (pat, name) = bodyFor pat `appE` varE name
         bodyFor (Right x) = bodyForPat x
-        bodyFor Left{} = VarE 'pure
-        bodyForPat Node{} = VarE 'runContainedH
-        bodyForPat FlatEmbed{} = VarE 'hsequence
-        bodyForPat GenEmbed{} = VarE 'hsequence
-        bodyForPat (InContainer _ pat) = VarE 'traverse `AppE` bodyForPat pat
+        bodyFor Left{} = [|pure|]
+        bodyForPat Node{} = [|runContainedH|]
+        bodyForPat FlatEmbed{} = [|hsequence|]
+        bodyForPat GenEmbed{} = [|hsequence|]
+        bodyForPat (InContainer _ pat) = [|traverse $(bodyForPat pat)|]

@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskellQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- | Generate 'ZipMatch' instances via @TemplateHaskell@
 
@@ -6,6 +6,7 @@ module Hyper.TH.ZipMatch
     ( makeZipMatch
     ) where
 
+import Control.Lens (both)
 import Hyper.Class.ZipMatch (ZipMatch(..))
 import Hyper.TH.Internal.Utils
 import Language.Haskell.TH
@@ -21,42 +22,42 @@ makeZipMatch typeName =
         -- (dst, var) <- parts info
         let ctrs = tiConstructors info <&> makeZipMatchCtr
         instanceD
-            (simplifyContext (ctrs >>= ccContext))
+            (ctrs >>= ccContext & sequenceA >>= simplifyContext)
             (appT (conT ''ZipMatch) (pure (tiInstance info)))
             [ InlineP 'zipMatch Inline FunLike AllPhases & PragmaD & pure
-            , funD 'zipMatch ((ctrs <&> ccClause) <> [tailClause] <&> pure)
+            , funD 'zipMatch ((ctrs <&> ccClause) <> [tailClause])
             ]
             <&> (:[])
     where
-        tailClause = Clause [WildP, WildP] (NormalB (ConE 'Nothing)) []
+        tailClause = clause [wildP, wildP] (normalB [|Nothing|]) []
 
 data CtrCase =
     CtrCase
-    { ccClause :: Clause
-    , ccContext :: [Pred]
+    { ccClause :: Q Clause
+    , ccContext :: [Q Pred]
     }
 
 makeZipMatchCtr :: (Name, ConstructorVariant, [Either Type CtrTypePattern]) -> CtrCase
 makeZipMatchCtr (cName, _, cFields) =
     CtrCase
-    { ccClause = Clause [con fst, con snd] body []
+    { ccClause = clause [con fst, con snd] body []
     , ccContext = fieldParts >>= zmfContext
     }
     where
-        con f = ConP cName (cVars <&> f <&> VarP)
+        con f = conP cName (cVars <&> f <&> varP)
         cVars =
             [0::Int ..] <&> show <&> (\n -> (mkName ('x':n), mkName ('y':n)))
             & take (length cFields)
         body
-            | null checks = NormalB bodyExp
-            | otherwise = GuardedB [(NormalG (foldl1 mkAnd checks), bodyExp)]
+            | null checks = normalB bodyExp
+            | otherwise = guardedB [(,) <$> normalG (foldl1 mkAnd checks) <*> bodyExp]
         checks = fieldParts >>= zmfConds
-        mkAnd x y = InfixE (Just x) (VarE '(&&)) (Just y)
-        fieldParts = zipWith field cVars cFields
-        bodyExp = applicativeStyle (ConE cName) (fieldParts <&> zmfResult)
+        mkAnd x y = infixE (Just x) (varE '(&&)) (Just y)
+        fieldParts = zipWith field (cVars <&> both %~ varE) cFields
+        bodyExp = applicativeStyle (conE cName) (fieldParts <&> zmfResult)
         field (x, y) (Right Node{}) =
             ZipMatchField
-            { zmfResult = ConE 'Just `AppE` (ConE '(:*:) `AppE` VarE x `AppE` VarE y)
+            { zmfResult = [|Just ($x :*: $y)|]
             , zmfConds = []
             , zmfContext = []
             }
@@ -65,19 +66,19 @@ makeZipMatchCtr (cName, _, cFields) =
         field _ (Right InContainer{}) = error "TODO"
         field (x, y) (Left t) =
             ZipMatchField
-            { zmfResult = ConE 'Just `AppE` VarE x
-            , zmfConds = [InfixE (Just (VarE x)) (VarE '(==)) (Just (VarE y))]
-            , zmfContext = [ConT ''Eq `AppT` t]
+            { zmfResult = [|Just $x|]
+            , zmfConds =  [[|$x == $y|]]
+            , zmfContext = [[t|Eq $(pure t)|]]
             }
         embed t x y =
             ZipMatchField
-            { zmfResult = VarE 'zipMatch `AppE` VarE x `AppE` VarE y
+            { zmfResult = [|zipMatch $x $y|]
             , zmfConds = []
-            , zmfContext = [ConT ''ZipMatch `AppT` t]
+            , zmfContext = [[t|ZipMatch $(pure t)|]]
             }
 
 data ZipMatchField = ZipMatchField
-    { zmfResult :: Exp
-    , zmfConds :: [Exp]
-    , zmfContext :: [Pred]
+    { zmfResult :: Q Exp
+    , zmfConds :: [Q Exp]
+    , zmfContext :: [Q Pred]
     }

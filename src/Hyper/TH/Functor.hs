@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskellQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- | Generate 'HFunctor' instances via @TemplateHaskell@
 
@@ -7,7 +7,7 @@ module Hyper.TH.Functor
     ) where
 
 import qualified Control.Lens as Lens
-import           Hyper.Class.Functor
+import           Hyper.Class.Functor (HFunctor(..))
 import           Hyper.TH.Internal.Utils
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Datatype (ConstructorVariant)
@@ -20,48 +20,49 @@ makeHFunctor typeName = makeTypeInfo typeName >>= makeHFunctorForType
 
 makeHFunctorForType :: TypeInfo -> DecsQ
 makeHFunctorForType info =
-    instanceD (simplifyContext (makeContext info)) (appT (conT ''HFunctor) (pure (tiInstance info)))
+    instanceD (makeContext info >>= simplifyContext) [t|HFunctor $(pure (tiInstance info))|]
     [ InlineP 'hmap Inline FunLike AllPhases & PragmaD & pure
-    , funD 'hmap (tiConstructors info <&> pure . makeCtr)
+    , funD 'hmap (tiConstructors info <&> makeCtr)
     ]
     <&> (:[])
     where
         (_, wit) = makeNodeOf info
         makeCtr ctr =
-            Clause [VarP varF, pat] body []
+            clause [varP varF, pat] body []
             where
                 (pat, body) = makeHMapCtr 0 wit ctr
 
 varF :: Name
 varF = mkName "_f"
 
-makeContext :: TypeInfo -> [Pred]
+makeContext :: TypeInfo -> Q [Pred]
 makeContext info =
-    tiConstructors info ^.. traverse . Lens._3 . traverse . Lens._Right >>= ctxForPat
+    tiConstructors info ^.. traverse . Lens._3 . traverse . Lens._Right >>= ctxForPat & sequenceA
     where
-        ctxForPat (InContainer t pat) = (ConT ''Functor `AppT` t) : ctxForPat pat
-        ctxForPat (GenEmbed t) = [ConT ''HFunctor `AppT` t]
+        ctxForPat (InContainer t pat) = [t|Functor $(pure t)|] : ctxForPat pat
+        ctxForPat (GenEmbed t) = [[t|HFunctor $(pure t)|]]
         ctxForPat _ = []
 
-makeHMapCtr :: Int -> NodeWitnesses -> (Name, ConstructorVariant, [Either Type CtrTypePattern]) -> (Pat, Body)
+makeHMapCtr :: Int -> NodeWitnesses -> (Name, ConstructorVariant, [Either Type CtrTypePattern]) -> (Q Pat, Q Body)
 makeHMapCtr i wit (cName, _, cFields) =
-    (ConP cName (cVars <&> VarP), body)
+    (conP cName (cVars <&> varP), body)
     where
         cVars =
             [i ..] <&> show <&> ('x':) <&> mkName
             & take (length cFields)
         body =
             zipWith bodyFor cFields cVars
-            & foldl AppE (ConE cName)
-            & NormalB
-        bodyFor (Right x) v = bodyForPat x `AppE` VarE v
-        bodyFor Left{} v = VarE v
-        bodyForPat (Node t) = VarE varF `AppE` nodeWit wit t
-        bodyForPat (GenEmbed t) = VarE 'hmap `AppE` (VarE varF `dot` embedWit wit t)
-        bodyForPat (InContainer _ pat) = bodyForPat pat & AppE (VarE 'fmap)
+            & foldl appE (conE cName)
+            & normalB
+        bodyFor (Right x) v = bodyForPat x `appE` varE v
+        bodyFor Left{} v = varE v
+        f = varE varF
+        bodyForPat (Node t) = [|$f $(nodeWit wit t)|]
+        bodyForPat (GenEmbed t) = [|hmap ($f . $(embedWit wit t))|]
+        bodyForPat (InContainer _ pat) = [|fmap $(bodyForPat pat)|]
         bodyForPat (FlatEmbed x) =
-            LamCaseE
+            lamCaseE
             (tiConstructors x
                 <&> makeHMapCtr (i + length cVars) wit
-                <&> \(p, b) -> Match p b []
+                <&> \(p, b) -> match p b []
             )

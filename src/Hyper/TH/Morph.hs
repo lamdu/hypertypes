@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskellQuotes, CPP #-}
+{-# LANGUAGE TemplateHaskell, CPP #-}
 
 module Hyper.TH.Morph
     ( makeHMorph
@@ -6,7 +6,7 @@ module Hyper.TH.Morph
 
 import qualified Control.Lens as Lens
 import qualified Data.Map as Map
-import           Hyper.Class.Morph
+import           Hyper.Class.Morph (HMorph(..))
 import           Hyper.TH.Internal.Utils
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
@@ -19,22 +19,17 @@ makeHMorph typeName = makeTypeInfo typeName >>= makeHMorphForType
 makeHMorphForType :: TypeInfo -> DecsQ
 makeHMorphForType info =
     -- TODO: Contexts
-    instanceD (pure []) (conT ''HMorph `appT` pure src `appT` pure dst)
+    instanceD (pure []) [t|HMorph $(pure src) $(pure dst)|]
     [ D.tySynInstDCompat
         ''MorphConstraint
         (Just [pure (PlainTV constraintVar)])
         ([src, dst, VarT constraintVar] <&> pure)
         (simplifyContext morphConstraint <&> toTuple)
-    , DataInstD []
-#if MIN_VERSION_template_haskell(2,15,0)
-        Nothing (ConT ''MorphWitness `AppT` src `AppT` dst `AppT` WildCardT `AppT` WildCardT)
-#else
-        ''MorphWitness [src, dst, WildCardT, WildCardT]
-#endif
+    , dataInstD
+        (pure []) ''MorphWitness [pure src, pure dst, [t|_|], [t|_|]]
         Nothing (witnesses ^.. traverse . Lens._2) []
-        & pure
-    , funD 'morphMap (tiConstructors info <&> pure . mkMorphCon)
-    , funD 'morphLiftConstraint (liftConstraintClauses <&> pure)
+    , funD 'morphMap (tiConstructors info <&> mkMorphCon)
+    , funD 'morphLiftConstraint liftConstraintClauses
     ]
     <&> (:[])
     where
@@ -53,7 +48,7 @@ makeHMorphForType info =
             \x ->
             let n = witPrefix <> mkNiceTypeName x & mkName in
             ( x
-            , (n, GadtC [n] [] (appSubsts morphWithNessOf x))
+            , (n, gadtC [n] [] (pure (appSubsts morphWithNessOf x)))
             )
         embedWits =
             tcEmbeds contents ^.. Lens.folded <&>
@@ -61,10 +56,9 @@ makeHMorphForType info =
             let n = witPrefix <> mkNiceTypeName x & mkName in
             ( x
             , ( n
-                , GadtC [n] []
-                    ( ArrowT `AppT` (ConT ''MorphWitness `appSubsts` x `AppT` varA `AppT` varB)
-                        `AppT` (morphWithNessOf `AppT` varA `AppT` varB))
-                )
+                , gadtC [n] []
+                    [t|$(pure (ConT ''MorphWitness `appSubsts` x `AppT` varA `AppT` varB)) ->
+                        $(pure morphWithNessOf) $(pure varA) $(pure varB)|])
             )
         witnesses = nodeWits <> embedWits & Map.fromList
         varA = VarT (mkName "a")
@@ -72,45 +66,45 @@ makeHMorphForType info =
         witPrefix = "M_" <> niceName (tiName info) <> "_"
         morphWithNessOf = ConT ''MorphWitness `AppT` src `AppT` dst
         liftConstraintClauses
-            | Map.null witnesses = [Clause [] (NormalB (LamCaseE [])) []]
+            | Map.null witnesses = [clause [] (normalB (lamCaseE [])) []]
             | otherwise =
                 (nodeWits ^.. traverse . Lens._2 . Lens._1 <&> liftNodeConstraint) <>
                 (embedWits ^.. traverse . Lens._2 . Lens._1 <&> liftEmbedConstraint)
-        liftNodeConstraint n = Clause [ConP n [], WildP] (NormalB (VarE 'id)) []
+        liftNodeConstraint n = clause [conP n [], wildP] (normalB [|id|]) []
         liftEmbedConstraint n =
-            Clause [ConP n [VarP varW], VarP varProxy]
-            (NormalB (VarE 'morphLiftConstraint `AppE` VarE varW `AppE` VarE varProxy)) []
+            clause [conP n [varP varW], varP varProxy]
+            (normalB [|morphLiftConstraint $(varE varW) $(varE varProxy)|]) []
         varW = mkName "w"
         varProxy = mkName "p"
         mkMorphCon con =
-            Clause [VarP varF, p] b []
+            clause [varP varF, p] b []
             where
                 (p, b) = morphCon 0 witnesses con
 
 varF :: Name
 varF = mkName "_f"
 
-morphCon :: Int -> Map Type (Name, Con) -> (Name, a, [Either b CtrTypePattern]) -> (Pat, Body)
+morphCon :: Int -> Map Type (Name, a) -> (Name, b, [Either c CtrTypePattern]) -> (Q Pat, Q Body)
 morphCon i witnesses (n, _, fields) =
-    ( ConP n (cVars <&> VarP)
-    , NormalB (foldl AppE (ConE n) (zipWith bodyFor fields cVars))
+    ( conP n (cVars <&> varP)
+    , normalB (foldl appE (conE n) (zipWith bodyFor fields cVars))
     )
     where
         cVars =
             [i ..] <&> show <&> ('x':) <&> mkName
             & take (length fields)
-        bodyFor Left{} v = VarE v
-        bodyFor (Right x) v = bodyForPat x `AppE` VarE v
-        bodyForPat (Node x) = VarE varF `AppE` ConE (witnesses ^?! Lens.ix x . Lens._1)
-        bodyForPat (InContainer _ pat) = VarE 'fmap `AppE` bodyForPat pat
+        f = varE varF
+        bodyFor Left{} v = varE v
+        bodyFor (Right x) v = [|$(bodyForPat x) $(varE v)|]
+        bodyForPat (Node x) = [|$f $(conE (witnesses ^?! Lens.ix x . Lens._1))|]
+        bodyForPat (InContainer _ pat) = [|fmap $(bodyForPat pat)|]
         bodyForPat (FlatEmbed x) =
-            LamCaseE
+            lamCaseE
             (tiConstructors x
                 <&> morphCon (i + length cVars) witnesses
-                <&> \(p, b) -> Match p b []
+                <&> \(p, b) -> match p b []
             )
-        bodyForPat (GenEmbed t) =
-            VarE 'morphMap `AppE` (VarE varF `dot` ConE (witnesses ^?! Lens.ix t . Lens._1))
+        bodyForPat (GenEmbed t) = [|morphMap ($f . $(conE (witnesses ^?! Lens.ix t . Lens._1)))|]
 
 type MorphSubsts = (Map Name Type, Map Name Type)
 

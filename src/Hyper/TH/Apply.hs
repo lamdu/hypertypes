@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskellQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- | Generate 'HApply' and related instances via @TemplateHaskell@
 
@@ -10,7 +10,7 @@ module Hyper.TH.Apply
 
 import           Control.Applicative (liftA2)
 import qualified Control.Lens as Lens
-import           Hyper.Class.Apply
+import           Hyper.Class.Apply (HApply(..))
 import           Hyper.TH.Functor (makeHFunctor)
 import           Hyper.TH.Internal.Utils
 import           Hyper.TH.Nodes (makeHNodes)
@@ -52,34 +52,32 @@ makeHApplyForType info =
             _ -> fail "makeHApply only supports types with a single constructor"
         let xVars = makeConstructorVars "x" fields
         let yVars = makeConstructorVars "y" fields
-        instanceD (simplifyContext (makeContext info)) (appT (conT ''HApply) (pure (tiInstance info)))
+        instanceD (makeContext info >>= simplifyContext) [t|HApply $(pure (tiInstance info))|]
             [ InlineP 'hzip Inline FunLike AllPhases & PragmaD & pure
             , funD 'hzip
-                [ Clause
+                [ clause
                     [ consPat name xVars
                     , consPat name yVars
-                    ] (NormalB (foldl AppE (ConE name) (zipWith f xVars yVars))) []
-                    & pure
+                    ] (normalB (foldl appE (conE name) (zipWith f xVars yVars))) []
                 ]
             ]
             <&> (:[])
     where
         bodyFor (Right x) = bodyForPat x
-        bodyFor Left{} = VarE '(<>)
-        bodyForPat Node{} = ConE '(:*:)
-        bodyForPat GenEmbed{} = VarE 'hzip
-        bodyForPat FlatEmbed{} = VarE 'hzip
-        bodyForPat (InContainer _ pat) = VarE 'liftA2 `AppE` bodyForPat pat
-        f (p, x) (_, y) =
-            bodyFor p `AppE` VarE x `AppE` VarE y
+        bodyFor Left{} = [|(<>)|]
+        bodyForPat Node{} = [|(:*:)|]
+        bodyForPat GenEmbed{} = [|hzip|]
+        bodyForPat FlatEmbed{} = [|hzip|]
+        bodyForPat (InContainer _ pat) = [|liftA2 $(bodyForPat pat)|]
+        f (p, x) (_, y) = [|$(bodyFor p) $(varE x) $(varE y)|]
 
-makeContext :: TypeInfo -> [Pred]
+makeContext :: TypeInfo -> Q [Pred]
 makeContext info =
-    tiConstructors info >>= (^. Lens._3) >>= ctxFor
+    tiConstructors info >>= (^. Lens._3) >>= ctxFor & sequenceA
     where
         ctxFor (Right x) = ctxForPat x
-        ctxFor (Left x) = [ConT ''Semigroup `AppT` x]
-        ctxForPat (InContainer t pat) = (ConT ''Applicative `AppT` t) : ctxForPat pat
-        ctxForPat (GenEmbed t) = [ConT ''HApply `AppT` t]
-        ctxForPat (FlatEmbed t) = [ConT ''HApply `AppT` tiInstance t]
+        ctxFor (Left x) = [[t|Semigroup $(pure x)|]]
+        ctxForPat (InContainer t pat) = [t|Applicative $(pure t)|] : ctxForPat pat
+        ctxForPat (GenEmbed t) = [[t|HApply $(pure t)|]]
+        ctxForPat (FlatEmbed t) = [[t|HApply $(pure (tiInstance t))|]]
         ctxForPat _ = []

@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskellQuotes, DerivingVia #-}
+{-# LANGUAGE TemplateHaskell, DerivingVia #-}
 
 -- Helpers for TemplateHaskell instance generators
 
@@ -9,7 +9,6 @@ module Hyper.TH.Internal.Utils
     , parts, toTuple, matchType, niceName, mkNiceTypeName
     , applicativeStyle, unapply, getVar, makeConstructorVars
     , consPat, simplifyContext, childrenTypes
-    , dot
     ) where
 
 import qualified Control.Lens as Lens
@@ -20,7 +19,7 @@ import           Data.List (nub, intercalate)
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import           Generic.Data (Generically(..))
-import           Hyper.Class.Nodes
+import           Hyper.Class.Nodes (HWitness(..))
 import           Hyper.Type (AHyperType(..), GetHyperType, type (:#))
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
@@ -164,20 +163,19 @@ getVar _ = Nothing
 toTuple :: Foldable t => t Type -> Type
 toTuple xs = foldl AppT (TupleT (length xs)) xs
 
-applicativeStyle :: Exp -> [Exp] -> Exp
+applicativeStyle :: Q Exp -> [Q Exp] -> Q Exp
 applicativeStyle f =
-    foldl ap (AppE (VarE 'pure) f)
+    foldl ap [|pure $f|]
     where
-        ap x y = InfixE (Just x) (VarE '(<*>)) (Just y)
+        ap x y = [|$x <*> $y|]
 
 makeConstructorVars :: String -> [a] -> [(a, Name)]
 makeConstructorVars prefix fields =
     [0::Int ..] <&> show <&> (('_':prefix) <>) <&> mkName
     & zip fields
 
-consPat :: Name -> [(a, Name)] -> Pat
-consPat c vars =
-    ConP c (vars <&> snd <&> VarP)
+consPat :: Name -> [(a, Name)] -> Q Pat
+consPat c vars = conP c (vars <&> snd <&> varP)
 
 simplifyContext :: [Pred] -> CxtQ
 simplifyContext preds =
@@ -213,8 +211,8 @@ simplifyContext preds =
         yep c xs = Lens._2 . Lens.contains (foldl AppT c xs) .= True
 
 data NodeWitnesses = NodeWitnesses
-    { nodeWit :: Type -> Exp
-    , embedWit :: Type -> Exp
+    { nodeWit :: Type -> Q Exp
+    , embedWit :: Type -> Q Exp
     , nodeWitCtrs :: [Name]
     , embedWitCtrs :: [Name]
     }
@@ -222,17 +220,13 @@ data NodeWitnesses = NodeWitnesses
 niceName :: Name -> String
 niceName = reverse . takeWhile (/= '.') . reverse . show
 
-makeNodeOf :: TypeInfo -> ([Type -> Con], NodeWitnesses)
+makeNodeOf :: TypeInfo -> ([Type -> Q Con], NodeWitnesses)
 makeNodeOf info =
     ( (nodes <&> Lens._1 %~ nodeGadtType) <> (embeds <&> Lens._1 %~ embedGadtType)
-        <&> \(t, n) c -> GadtC [n] [] (t c)
+        <&> \(t, n) c -> t c <&> GadtC [n] []
     , NodeWitnesses
-        { nodeWit =
-            nodes <&> Lens._2 %~ ConE & Map.fromList & getWit
-            <&> AppE (ConE 'HWitness)
-        , embedWit =
-            embeds <&> Lens._2 %~ ConE & Map.fromList & getWit
-            <&> (ConE 'HWitness `dot`)
+        { nodeWit = nodes & Map.fromList & getWit <&> \x -> [|HWitness $(conE x)|]
+        , embedWit = embeds & Map.fromList & getWit <&> \x -> [|HWitness . $(conE x)|]
         , nodeWitCtrs = nodes <&> snd
         , embedWitCtrs = embeds <&> snd
         }
@@ -249,7 +243,7 @@ makeNodeOf info =
         nodesForPat (InContainer _ pat) = nodesForPat pat
         nodesForPat (FlatEmbed x) = tiConstructors x ^.. traverse . Lens._3 . traverse . Lens._Right >>= nodesForPat
         nodesForPat _ = []
-        nodeGadtType t n = n `AppT` t
+        nodeGadtType t n = n `AppT` t & pure
         embeds =
             pats ^.. traverse . Lens._Right >>= embedsForPat & nub
             <&> \t -> (t, mkName (embedBase <> mkNiceTypeName t))
@@ -257,15 +251,12 @@ makeNodeOf info =
         embedsForPat (InContainer _ pat) = embedsForPat pat
         embedsForPat (FlatEmbed x) = tiConstructors x ^.. traverse . Lens._3 . traverse . Lens._Right >>= embedsForPat
         embedsForPat _ = []
-        embedGadtType t n =
-            ArrowT
-            `AppT` (ConT ''HWitness `AppT` t `AppT` VarT nodeVar)
-            `AppT` (n `AppT` VarT nodeVar)
-        nodeVar = mkName "node"
-        getWit :: Map Type Exp -> Type -> Exp
+        embedGadtType t n = [t|HWitness $(pure t) $nodeVar -> $(pure n) $nodeVar|]
+        nodeVar = mkName "node" & varT
+        getWit :: Map Type Name -> Type -> Name
         getWit m h =
             m ^? Lens.ix h
-            & fromMaybe (LitE (StringL ("Cant find witness for " <> show h <> " in " <> show m)))
+            & fromMaybe (error ("Cant find witness for " <> show h <> " in " <> show m))
 
 mkNiceTypeName :: Type -> String
 mkNiceTypeName =
@@ -279,6 +270,3 @@ mkNiceTypeName =
         makeNiceType (VarT x) = [takeWhile (/= '_') (show x)]
         makeNiceType (SigT x _) = makeNiceType x
         makeNiceType x = error ("TODO: Witness name generator is partial! Need to support " <> show x)
-
-dot :: Exp -> Exp -> Exp
-dot x y = InfixE (Just x) (VarE '(.)) (Just y)

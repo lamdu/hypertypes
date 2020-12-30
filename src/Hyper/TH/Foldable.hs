@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskellQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- | Generate 'HFoldable' instances via @TemplateHaskell@
 
@@ -7,7 +7,7 @@ module Hyper.TH.Foldable
     ) where
 
 import qualified Control.Lens as Lens
-import           Hyper.Class.Foldable
+import           Hyper.Class.Foldable (HFoldable(..))
 import           Hyper.TH.Internal.Utils
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Datatype (ConstructorVariant)
@@ -20,56 +20,57 @@ makeHFoldable typeName = makeTypeInfo typeName >>= makeHFoldableForType
 
 makeHFoldableForType :: TypeInfo -> DecsQ
 makeHFoldableForType info =
-    instanceD (simplifyContext (makeContext info)) (appT (conT ''HFoldable) (pure (tiInstance info)))
+    instanceD (makeContext info >>= simplifyContext) [t|HFoldable $(pure (tiInstance info))|]
     [ InlineP 'hfoldMap Inline FunLike AllPhases & PragmaD & pure
-    , funD 'hfoldMap (tiConstructors info <&> pure . makeCtr)
+    , funD 'hfoldMap (tiConstructors info <&> makeCtr)
     ]
     <&> (:[])
     where
         (_, wit) = makeNodeOf info
         makeCtr ctr =
-            Clause [VarP varF, pat] body []
+            clause [varP varF, pat] body []
             where
                 (pat, body) = makeHFoldMapCtr 0 wit ctr
 
-makeContext :: TypeInfo -> [Pred]
+makeContext :: TypeInfo -> Q [Pred]
 makeContext info =
-    tiConstructors info ^.. traverse . Lens._3 . traverse . Lens._Right >>= ctxForPat
+    tiConstructors info ^.. traverse . Lens._3 . traverse . Lens._Right >>= ctxForPat & sequenceA
     where
-        ctxForPat (InContainer t pat) = (ConT ''Foldable `AppT` t) : ctxForPat pat
-        ctxForPat (GenEmbed t) = [ConT ''HFoldable `AppT` t]
+        ctxForPat (InContainer t pat) = [t|Foldable $(pure t)|] : ctxForPat pat
+        ctxForPat (GenEmbed t) = [[t|HFoldable $(pure t)|]]
         ctxForPat _ = []
 
 varF :: Name
 varF = mkName "_f"
 
-makeHFoldMapCtr :: Int -> NodeWitnesses -> (Name, ConstructorVariant, [Either Type CtrTypePattern]) -> (Pat, Body)
+makeHFoldMapCtr :: Int -> NodeWitnesses -> (Name, ConstructorVariant, [Either Type CtrTypePattern]) -> (Q Pat, Q Body)
 makeHFoldMapCtr i wit (cName, _, cFields) =
-    (ConP cName (cVars <&> VarP), body)
+    (conP cName (cVars <&> varP), body)
     where
         cVars =
             [i ..] <&> show <&> ("_x" <>) <&> mkName
             & take (length cFields)
         bodyParts =
-            zipWith (\x y -> x <&> (`AppE` y))
+            zipWith (\x y -> x <&> (`appE` y))
             (cFields <&> bodyFor)
-            (cVars <&> VarE)
+            (cVars <&> varE)
             & concat
         body =
             case bodyParts of
-            [] -> VarE 'mempty
+            [] -> [|mempty|]
             _ -> foldl1 append bodyParts
-            & NormalB
-        append x y = InfixE (Just x) (VarE '(<>)) (Just y)
+            & normalB
+        append x y = [|$x <> $y|]
+        f = varE varF
         bodyFor (Right x) = bodyForPat x
         bodyFor Left{} = []
-        bodyForPat (Node t) = [VarE varF `AppE` nodeWit wit t]
-        bodyForPat (GenEmbed t) = [VarE 'hfoldMap `AppE` (VarE varF `dot` embedWit wit t)]
-        bodyForPat (InContainer _ pat) = bodyForPat pat <&> AppE (VarE 'foldMap)
+        bodyForPat (Node t) = [[|$f $(nodeWit wit t)|]]
+        bodyForPat (GenEmbed t) = [[|hfoldMap ($f . $(embedWit wit t))|]]
+        bodyForPat (InContainer _ pat) = bodyForPat pat <&> appE [|foldMap|]
         bodyForPat (FlatEmbed x) =
-            [ LamCaseE
+            [ lamCaseE
                 (tiConstructors x
                     <&> makeHFoldMapCtr (i + length cVars) wit
-                    <&> \(p, b) -> Match p b []
+                    <&> \(p, b) -> match p b []
                 )
             ]

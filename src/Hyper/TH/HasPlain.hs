@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskellQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- | Generate 'HasHPlain' instances via @TemplateHaskell@
 
@@ -38,24 +38,18 @@ makeHasHPlainForType info =
         plainsCtx <- plains <&> AppT (ConT ''HasHPlain) & simplifyContext
         showCtx <- typs <&> AppT (ConT ''Show) & simplifyContext
         let makeDeriv cls =
-                typs <&> AppT (ConT cls) & simplifyContext
-                <&>
-                \ctx -> StandaloneDerivD Nothing ctx (ConT cls `AppT` (ConT ''HPlain `AppT` tiInstance info))
+                standaloneDerivD
+                (typs <&> AppT (ConT cls) & simplifyContext)
+                [t|$(conT cls) (HPlain $(pure (tiInstance info)))|]
         (:) <$> instanceD
                 (pure (showCtx <> plainsCtx))
-                (pure (ConT ''HasHPlain `AppT` tiInstance info))
+                [t|HasHPlain $(pure (tiInstance  info))|]
                 [ dataInstD (pure []) ''HPlain [pure (tiInstance info)] Nothing (ctrs <&> pure . (^. Lens._1)) []
                 , funD 'hPlain
                     [ clause []
-                        ( normalB
-                            ((VarE 'Lens.iso `AppE` VarE fromPlain `AppE` VarE toPlain)
-                                `dot`
-                                (VarE 'Lens.from `AppE` VarE '_Pure)
-                                & pure
-                            )
-                        )
-                        [ funD toPlain (ctrs <&> pure . (^. Lens._2))
-                        , funD fromPlain (ctrs <&> pure . (^. Lens._3))
+                        (normalB [|Lens.iso $(varE fromPlain) $(varE toPlain) . Lens.from _Pure|])
+                        [ funD toPlain (ctrs <&> (^. Lens._2))
+                        , funD fromPlain (ctrs <&> (^. Lens._3))
                         ]
                     ]
                 ]
@@ -72,8 +66,8 @@ makeHasHPlainForType info =
 
 data FieldInfo = FieldInfo
     { fieldPlainType :: Type
-    , fieldToPlain :: Exp -> Exp
-    , fieldFromPlain :: Exp -> Exp
+    , fieldToPlain :: Q Exp -> Q Exp
+    , fieldFromPlain :: Q Exp -> Q Exp
     }
 
 data FlatInfo = FlatInfo
@@ -89,7 +83,7 @@ data Field
 makeCtr ::
     Name ->
     (Name, D.ConstructorVariant, [Either Type CtrTypePattern]) ->
-    Q (Con, Clause, Clause, [Type])
+    Q (Con, ClauseQ, ClauseQ, [Type])
 makeCtr param (cName, _, cFields) =
     traverse (forField True) cFields
     <&>
@@ -100,21 +94,20 @@ makeCtr param (cName, _, cFields) =
     ( plainTypes
         <&> (Bang NoSourceUnpackedness NoSourceStrictness, )
         & NormalC pcon
-    , zipWith ($) (xs >>= toPlainFields) (cVars <&> VarE)
-        & foldl AppE (ConE pcon)
-        & NormalB
-        & \x ->
-            Clause [ConP cName (toPlainPat cVars xs ^. Lens._1)] x []
+    , zipWith (>>=) (cVars <&> varE) (xs >>= toPlainFields)
+        & foldl appE (conE pcon)
+        & normalB
+        <&> (\x -> Clause [ConP cName (toPlainPat cVars xs ^. Lens._1)] x [])
     , fromPlainFields cVars xs ^. Lens._1
-        & foldl AppE (ConE cName)
-        & NormalB
-        & \x -> Clause [ConP pcon (cVars <&> VarP)] x []
+        & foldl appE (conE cName)
+        & normalB
+        <&> \x -> Clause [ConP pcon (cVars <&> VarP)] x []
     , xs >>= fieldContext
     )
     where
         plainFieldTypes (NodeField x) = [fieldPlainType x]
         plainFieldTypes (FlatFields x) = flatFields x >>= plainFieldTypes
-        toPlainFields (NodeField x) = [fieldToPlain x]
+        toPlainFields (NodeField x) = [fieldToPlain x . pure]
         toPlainFields (FlatFields x) = flatFields x >>= toPlainFields
         toPlainPat cs [] = ([], cs)
         toPlainPat (c:cs) (NodeField{} : xs) = toPlainPat cs xs & Lens._1 %~ (VarP c :)
@@ -128,38 +121,36 @@ makeCtr param (cName, _, cFields) =
         toPlainPat [] _ = error "out of variables"
         fromPlainFields cs [] = ([], cs)
         fromPlainFields (c:cs) (NodeField x : xs) =
-            fromPlainFields cs xs & Lens._1 %~ (fieldFromPlain x (VarE c) :)
+            fromPlainFields cs xs & Lens._1 %~ (fieldFromPlain x (varE c) :)
         fromPlainFields cs0 (FlatFields x : xs) =
             fromPlainFields cs1 xs & Lens._1 %~ (res :)
             where
                 res | flatIsEmbed x = embed
-                    | otherwise = ConE 'Pure `AppE` embed
-                embed = foldl AppE (ConE (flatCtr x)) r
+                    | otherwise = [|Pure $embed|]
+                embed = foldl appE (conE (flatCtr x)) r
                 (r, cs1) = fromPlainFields cs0 (flatFields x)
         fromPlainFields [] _ = error "out of variables"
         pcon =
             show cName & reverse & takeWhile (/= '.') & reverse
             & (<> "P") & mkName
         forField _ (Left t) =
-            NodeField FieldInfo
-            { fieldPlainType = normalizeType t
-            , fieldToPlain = id
-            , fieldFromPlain = id
-            } & pure
+            FieldInfo
+            <$> normalizeType t
+            ?? id ?? id <&> NodeField
         forField isTop (Right x) = forPat isTop x
         forPat isTop (Node x) = forGen isTop x
         forPat isTop (GenEmbed x) = forGen isTop x
         forPat _ (InContainer t p) =
-            NodeField FieldInfo
-            { fieldPlainType = t `AppT` patType p
-            , fieldToPlain = AppE (VarE 'fmap `AppE` InfixE (Just (VarE 'hPlain)) (VarE '(#)) Nothing)
-            , fieldFromPlain = AppE (VarE 'fmap `AppE` InfixE Nothing (VarE '(^.)) (Just (VarE 'hPlain)))
-            } & pure
+            FieldInfo
+            <$> [t|$(pure t) $(patType p)|]
+            ?? (\x -> [|(hPlain #) <$> $x|])
+            ?? (\x -> [|(^. hPlain) <$> $x|])
+            <&> NodeField
             where
-                patType (Node x) = ConT ''HPlain `AppT` x
-                patType (GenEmbed x) = ConT ''HPlain `AppT` x
-                patType (FlatEmbed x) = ConT ''HPlain `AppT` tiInstance x
-                patType (InContainer t' p') = t' `AppT` patType p'
+                patType (Node x) = [t|HPlain $(pure x)|]
+                patType (GenEmbed x) = [t|HPlain $(pure x)|]
+                patType (FlatEmbed x) = [t|HPlain $(pure (tiInstance x))|]
+                patType (InContainer t' p') = pure t' `appT` patType p'
         forPat isTop (FlatEmbed x) =
             case tiConstructors x of
             [(n, _, xs)] -> traverse (forField False) xs <&> FlatInfo isTop n <&> FlatFields
@@ -190,14 +181,14 @@ makeCtr param (cName, _, cFields) =
             _ -> gen
             where
                 gen =
-                    NodeField FieldInfo
-                    { fieldPlainType = ConT ''HPlain `AppT` t
-                    , fieldToPlain = InfixE (Just (VarE 'hPlain)) (VarE '(#)) . Just
-                    , fieldFromPlain = \f -> InfixE (Just f) (VarE '(^.)) (Just (VarE 'hPlain))
-                    } & pure
+                    FieldInfo
+                    <$> [t|HPlain $(pure t)|]
+                    ?? (\x -> [|hPlain # $x|])
+                    ?? (\f -> [|$f ^. hPlain|])
+                    <&> NodeField
         normalizeType (ConT g `AppT` VarT v)
-            | g == ''GetHyperType && v == param = ConT ''Pure
-        normalizeType (x `AppT` y) = normalizeType x `AppT` normalizeType y
-        normalizeType x = x
+            | g == ''GetHyperType && v == param = [t|Pure|]
+        normalizeType (x `AppT` y) = normalizeType x `appT` normalizeType y
+        normalizeType x = pure x
         fieldContext (NodeField x) = [fieldPlainType x]
         fieldContext (FlatFields x) = flatFields x >>= fieldContext

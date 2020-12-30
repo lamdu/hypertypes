@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskellQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- | Generate 'HPointed' instances via @TemplateHaskell@
 
@@ -7,7 +7,7 @@ module Hyper.TH.Pointed
     ) where
 
 import qualified Control.Lens as Lens
-import           Hyper.Class.Pointed
+import           Hyper.Class.Pointed (HPointed(..))
 import           Hyper.TH.Internal.Utils
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Datatype (ConstructorVariant)
@@ -25,40 +25,35 @@ makeHPointedForType info =
             case tiConstructors info of
             [x] -> pure x
             _ -> fail "makeHPointed only supports types with a single constructor"
-        instanceD (simplifyContext (makeContext info)) (appT (conT ''HPointed) (pure (tiInstance info)))
+        instanceD (makeContext info >>= simplifyContext) [t|HPointed $(pure (tiInstance info))|]
             [ InlineP 'hpure Inline FunLike AllPhases & PragmaD & pure
             , funD 'hpure [makeHPureCtr info cons]
             ]
     <&> (:[])
 
-makeContext :: TypeInfo -> [Pred]
+makeContext :: TypeInfo -> Q [Pred]
 makeContext info =
-    tiConstructors info >>= (^. Lens._3) >>= ctxFor
+    tiConstructors info >>= (^. Lens._3) >>= ctxFor & sequenceA
     where
         ctxFor (Right x) = ctxForPat x
-        ctxFor (Left x) = [ConT ''Monoid `AppT` x]
-        ctxForPat (InContainer t pat) = (ConT ''Applicative `AppT` t) : ctxForPat pat
-        ctxForPat (GenEmbed t) = [ConT ''HPointed `AppT` t]
+        ctxFor (Left x) = [[t|Monoid $(pure x)|]]
+        ctxForPat (InContainer t pat) = [t|Applicative $(pure t)|] : ctxForPat pat
+        ctxForPat (GenEmbed t) = [[t|HPointed $(pure t)|]]
         ctxForPat _ = []
 
 makeHPureCtr :: TypeInfo -> (Name, ConstructorVariant, [Either Type CtrTypePattern]) -> Q Clause
 makeHPureCtr typeInfo (cName, _, cFields) =
-    traverse bodyFor cFields
-    <&> foldl AppE (ConE cName)
-    <&> NormalB
-    <&> \x -> Clause [VarP varF] x []
+    clause [varP varF] (normalB (foldl appE (conE cName) (cFields <&> bodyFor))) []
     where
         bodyFor (Right x) = bodyForPat x
-        bodyFor Left{} = VarE 'mempty & pure
-        bodyForPat (Node t) = VarE varF `AppE` nodeWit wit t & pure
+        bodyFor Left{} = [|mempty|]
+        f = varE varF
+        bodyForPat (Node t) = [|$f $(nodeWit wit t)|]
         bodyForPat (FlatEmbed inner) =
             case tiConstructors inner of
-            [(iName, _, iFields)] -> traverse bodyFor iFields <&> foldl AppE (ConE iName)
+            [(iName, _, iFields)] -> iFields <&> bodyFor & foldl appE (conE iName)
             _ -> fail "makeHPointed only supports embedded types with a single constructor"
-        bodyForPat (GenEmbed t) =
-            VarE 'hpure `AppE` (VarE varF `dot` embedWit wit t)
-            & pure
-        bodyForPat (InContainer _ pat) =
-            bodyForPat pat <&> AppE (VarE 'pure)
+        bodyForPat (GenEmbed t) = [|hpure ($f . $(embedWit wit t))|]
+        bodyForPat (InContainer _ pat) = [|pure $(bodyForPat pat)|]
         varF = mkName "_f"
         (_, wit) = makeNodeOf typeInfo
