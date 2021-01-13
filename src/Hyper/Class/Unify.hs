@@ -179,7 +179,10 @@ applyBindings v0 =
             _Pure # r & if anyChild then result else pure
     UToVar{} -> error "lookup not expected to result in var"
     UConverted{} -> error "conversion state not expected in applyBindings"
-    UInstantiated{} -> error "applyBindings during instantiation"
+    UInstantiated{} ->
+        -- This can happen in alphaEq,
+        -- where UInstantiated marks that var from one side matches var in the other.
+        quantify mempty
 
 -- | Format and throw an occurs check error
 occursError ::
