@@ -46,6 +46,14 @@ default-extensions:
 - TypeOperators
 - TypeFamilies
 
+ghc-options:
+- -fexpose-all-unfoldings
+- -Wall
+- -Wcompat
+- -Wredundant-constraints
+ghc-prof-options:
+- -fexpose-all-unfoldings
+
 library:
   source-dirs: src
   other-modules:
@@ -64,15 +72,9 @@ library:
   default-extensions:
   - NoImplicitPrelude
   ghc-options:
-  - -fexpose-all-unfoldings
-  - -Wall
   - -Wnoncanonical-monad-instances
-  - -Wcompat
   - -Wincomplete-record-updates
   - -Wincomplete-uni-patterns
-  - -Wredundant-constraints
-  ghc-prof-options:
-  - -fexpose-all-unfoldings
 
 tests:
   hypertypes-test:
@@ -85,9 +87,6 @@ tests:
     - ReadMeExamples
     - TypeLang
     ghc-options:
-    - -Wall
-    - -Wcompat
-    - -Wredundant-constraints
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
@@ -104,12 +103,9 @@ benchmarks:
     - TypeLang
     ghc-options:
     - -O2
-    - -Wall
     - -Wnoncanonical-monad-instances
-    - -Wcompat
     - -Wincomplete-record-updates
     - -Wincomplete-uni-patterns
-    - -Wredundant-constraints
     dependencies:
     - criterion
     - hypertypes

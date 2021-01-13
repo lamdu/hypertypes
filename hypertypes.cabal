@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: be26339ce5d721b6ab0d4b37e6322091c95099f47db2383706202859a27b095d
+-- hash: 605ecbd79ec00816f319b1736bbce878d8910a53631321e26135a6e0cca961c4
 
 name:           hypertypes
 version:        0.1.0.1
@@ -105,7 +105,7 @@ library
   hs-source-dirs:
       src
   default-extensions: ConstraintKinds DataKinds DefaultSignatures DeriveGeneric DerivingStrategies GADTs GeneralizedNewtypeDeriving LambdaCase MultiParamTypeClasses RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeOperators TypeFamilies NoImplicitPrelude
-  ghc-options: -fexpose-all-unfoldings -Wall -Wnoncanonical-monad-instances -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
+  ghc-options: -fexpose-all-unfoldings -Wall -Wcompat -Wredundant-constraints -Wnoncanonical-monad-instances -Wincomplete-record-updates -Wincomplete-uni-patterns
   ghc-prof-options: -fexpose-all-unfoldings
   build-depends:
       QuickCheck
@@ -141,7 +141,8 @@ test-suite hypertypes-test
   hs-source-dirs:
       test
   default-extensions: ConstraintKinds DataKinds DefaultSignatures DeriveGeneric DerivingStrategies GADTs GeneralizedNewtypeDeriving LambdaCase MultiParamTypeClasses RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeOperators TypeFamilies
-  ghc-options: -Wall -Wcompat -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -fexpose-all-unfoldings -Wall -Wcompat -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  ghc-prof-options: -fexpose-all-unfoldings
   build-depends:
       base >=4.9 && <5
     , constraints
@@ -167,7 +168,8 @@ benchmark hypertypes-bench
   hs-source-dirs:
       test
   default-extensions: ConstraintKinds DataKinds DefaultSignatures DeriveGeneric DerivingStrategies GADTs GeneralizedNewtypeDeriving LambdaCase MultiParamTypeClasses RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeOperators TypeFamilies
-  ghc-options: -O2 -Wall -Wnoncanonical-monad-instances -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
+  ghc-options: -fexpose-all-unfoldings -Wall -Wcompat -Wredundant-constraints -O2 -Wnoncanonical-monad-instances -Wincomplete-record-updates -Wincomplete-uni-patterns
+  ghc-prof-options: -fexpose-all-unfoldings
   build-depends:
       base >=4.9 && <5
     , constraints
