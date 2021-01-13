@@ -442,6 +442,7 @@ main =
             , testAlphaEq (forAll1r "a" TRecP) (uniType TIntP) False
             , testAlphaEq (forAll1r "a" TRecP) (forAll1r "b" TRecP) True
             , testAlphaEq (mkOpenRec "a" "x" "y") (mkOpenRec "b" "y" "x") True
+            , testAlphaEq (valH0 (TVarP "a")) (valH0 (TRecP REmptyP)) False
             ]
         mkOpenRec a x y =
             _Pure #
@@ -454,3 +455,11 @@ main =
                 & RExtendP y TIntP
                 ) ^. hPlain
             )
+        valH0 x =
+            TFunP (TVarP "a") (TRecP (RExtendP "t" x (RVarP "c"))) ^. hPlain
+            & Scheme
+                ( Types
+                    (QVars (mempty & Lens.at "a" ?~ mempty))
+                    (QVars (mempty & Lens.at "c" ?~ RowConstraints (Set.fromList ["t"]) mempty))
+                )
+            & Pure
