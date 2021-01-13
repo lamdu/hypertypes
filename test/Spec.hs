@@ -4,19 +4,20 @@ import qualified Control.Lens as Lens
 import           Control.Lens.Operators
 import           Control.Monad.Except
 import           Control.Monad.RWS
-import           Control.Monad.ST
+import           Control.Monad.ST (runST)
+import           Data.Functor.Identity (Identity(..))
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import           Hyper
 import           Hyper.Infer
 import           Hyper.Unify
-import           Hyper.Unify.Generalize
-import           Hyper.Unify.QuantifiedVar
-import           Hyper.Recurse
+import           Hyper.Unify.Generalize (generalize)
+import           Hyper.Unify.QuantifiedVar (HasQuantifiedVar(..))
+import           Hyper.Recurse (wrap)
 import           Hyper.Type.AST.NamelessScope (EmptyScope)
-import           Hyper.Type.AST.Nominal
+import           Hyper.Type.AST.Nominal (NominalDecl(..), loadNominalDecl)
 import           Hyper.Type.AST.Scheme
-import           Hyper.Type.AST.Scheme.AlphaEq
+import           Hyper.Type.AST.Scheme.AlphaEq (alphaEq)
 import           LangA
 import           LangB
 import           LangC ()
@@ -263,19 +264,19 @@ localMutNominalDecl =
         , _tTyp = mempty & Lens.at "value" ?~ mempty
         }
     , _nScheme =
-        forAll (Lens.Const ()) (Lens.Identity "effects") (\_ _ -> mutType) ^. _Pure
+        forAll (Const ()) (Identity "effects") (\_ _ -> mutType) ^. _Pure
     }
 
 returnScheme :: Pure # Scheme Types Typ
 returnScheme =
-    forAll (Lens.Identity "value") (Lens.Identity "effects") $
-    \(Lens.Identity val) _ -> TFunP val mutType
+    forAll (Identity "value") (Identity "effects") $
+    \(Identity val) _ -> TFunP val mutType
 
 withEnv ::
     ( UnifyGen m Row, MonadReader env m
     , HasScheme Types m Typ
     ) =>
-    Lens.LensLike' Lens.Identity env (InferScope (UVarOf m)) -> m a -> m a
+    Lens.LensLike' Identity env (InferScope (UVarOf m)) -> m a -> m a
 withEnv l act =
     do
         vec <- loadNominalDecl vecNominalDecl
@@ -387,13 +388,13 @@ forAll1 ::
     Name -> (HPlain Typ -> HPlain Typ) ->
     Pure # Scheme Types Typ
 forAll1 t body =
-    forAll (Lens.Identity t) (Lens.Const ()) $ \(Lens.Identity tv) _ -> body tv
+    forAll (Identity t) (Const ()) $ \(Identity tv) _ -> body tv
 
 forAll1r ::
     Name -> (HPlain Row -> HPlain Typ) ->
     Pure # Scheme Types Typ
 forAll1r t body =
-    forAll (Lens.Const ()) (Lens.Identity t) $ \_ (Lens.Identity tv) -> body tv
+    forAll (Const ()) (Identity t) $ \_ (Identity tv) -> body tv
 
 main :: IO ()
 main =
