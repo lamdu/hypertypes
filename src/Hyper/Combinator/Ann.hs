@@ -2,10 +2,10 @@
 
 module Hyper.Combinator.Ann
     ( Ann(..), hAnn, hVal
-    , Annotated, annotation
+    , Annotated, annotation, annValue
     ) where
 
-import Control.Lens (Lens', _Wrapped, from)
+import Control.Lens (Lens, Lens', _Wrapped, from)
 import Hyper.Class.Foldable (HFoldable(..))
 import Hyper.Class.Functor (HFunctor(..))
 import Hyper.Class.Nodes
@@ -96,3 +96,7 @@ type Annotated a = Ann (Const a)
 
 annotation :: Lens' (Annotated a # h) a
 annotation = hAnn . _Wrapped
+
+-- | Polymorphic lens to an @Annotated@ value
+annValue :: Lens (Annotated a # h0) (Annotated a # h1) (h0 # Annotated a) (h1 # Annotated a)
+annValue f (Ann (Const a) b) = f b <&> Ann (Const a)
