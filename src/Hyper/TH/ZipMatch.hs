@@ -52,7 +52,7 @@ makeZipMatchCtr (cName, _, cFields) =
             | null checks = normalB bodyExp
             | otherwise = guardedB [(,) <$> normalG (foldl1 mkAnd checks) <*> bodyExp]
         checks = fieldParts >>= zmfConds
-        mkAnd x y = infixE (Just x) (varE '(&&)) (Just y)
+        mkAnd x y = [|$x && $y|]
         fieldParts = zipWith field (cVars <&> both %~ varE) cFields
         bodyExp = applicativeStyle (conE cName) (fieldParts <&> zmfResult)
         field (x, y) (Right Node{}) =
