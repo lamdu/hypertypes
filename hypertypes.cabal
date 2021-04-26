@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: bf60ebefdf0cfa45380741508680d8fca89416732fbb1515e92a340a5d27b2c3
+-- hash: c96744c124a7114be775b7e89258ad24e3e652a3ec0f115338131a9d5e8b7cb1
 
 name:           hypertypes
 version:        0.1.0.1
@@ -136,6 +136,7 @@ test-suite hypertypes-test
       LangA
       LangB
       LangC
+      LangD
       ReadMeExamples
       TypeLang
       Paths_hypertypes
