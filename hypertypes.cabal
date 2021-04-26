@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 16b5ff7d2e7f121e24bbab20960b0d5193889027b173b126c026c2200681a5b2
+-- hash: bf60ebefdf0cfa45380741508680d8fca89416732fbb1515e92a340a5d27b2c3
 
 name:           hypertypes
 version:        0.1.0.1
@@ -37,7 +37,6 @@ library
       Hyper.Class.HasPlain
       Hyper.Class.Infer
       Hyper.Class.Infer.Env
-      Hyper.Class.Infer.Infer1
       Hyper.Class.Infer.InferOf
       Hyper.Class.Monad
       Hyper.Class.Morph
@@ -75,8 +74,6 @@ library
       Hyper.Type.AST.Lam
       Hyper.Type.AST.Let
       Hyper.Type.AST.Map
-      Hyper.Type.AST.NamelessScope
-      Hyper.Type.AST.NamelessScope.InvDeBruijn
       Hyper.Type.AST.Nominal
       Hyper.Type.AST.Row
       Hyper.Type.AST.Scheme
@@ -133,6 +130,9 @@ test-suite hypertypes-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Hyper.Class.Infer.Infer1
+      Hyper.Type.AST.NamelessScope
+      Hyper.Type.AST.NamelessScope.InvDeBruijn
       LangA
       LangB
       LangC

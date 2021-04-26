@@ -16,6 +16,7 @@ module Hyper.Type.AST.NamelessScope
     ) where
 
 import           Control.Lens (Lens', Prism')
+import           Control.Lens.Operators
 import qualified Control.Lens as Lens
 import           Control.Monad.Reader (MonadReader, local)
 import           Data.Constraint ((:-), (\\))
@@ -28,8 +29,6 @@ import           Hyper.Infer
 import           Hyper.Type.AST.FuncType
 import           Hyper.Unify (UnifyGen, UVarOf)
 import           Hyper.Unify.New (newUnbound)
-
-import           Hyper.Internal.Prelude
 
 data EmptyScope deriving Show
 
