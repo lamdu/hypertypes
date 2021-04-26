@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 605ecbd79ec00816f319b1736bbce878d8910a53631321e26135a6e0cca961c4
+-- hash: 16b5ff7d2e7f121e24bbab20960b0d5193889027b173b126c026c2200681a5b2
 
 name:           hypertypes
 version:        0.1.0.1
@@ -138,6 +138,7 @@ test-suite hypertypes-test
       LangC
       ReadMeExamples
       TypeLang
+      Paths_hypertypes
   hs-source-dirs:
       test
   default-extensions: ConstraintKinds DataKinds DefaultSignatures DeriveGeneric DerivingStrategies GADTs GeneralizedNewtypeDeriving LambdaCase MultiParamTypeClasses RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeOperators TypeFamilies
@@ -157,6 +158,9 @@ test-suite hypertypes-test
     , pretty
     , text
     , transformers
+  if false
+    other-modules:
+        Benchmark
   default-language: Haskell2010
 
 benchmark hypertypes-bench

@@ -80,12 +80,10 @@ tests:
   hypertypes-test:
     main: Spec.hs
     source-dirs: test
-    other-modules:
-    - LangA
-    - LangB
-    - LangC
-    - ReadMeExamples
-    - TypeLang
+    when:
+    - condition: false
+      other-modules:
+      - Benchmark
     ghc-options:
     - -threaded
     - -rtsopts

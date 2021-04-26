@@ -20,8 +20,6 @@ import           Hyper.Type.AST.Scheme
 import           Hyper.Type.AST.Scheme.AlphaEq (alphaEq)
 import           LangA
 import           LangB
-import           LangC ()
-import           ReadMeExamples ()
 import           System.Exit (exitFailure)
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..))
