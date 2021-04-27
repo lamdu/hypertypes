@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell, UndecidableInstances #-}
 module LangD where
 
 import           Hyper
@@ -11,7 +11,5 @@ newtype B i k = B (i (k :# A i))
 makeHNodes ''A
 makeHNodes ''B
 
--- The following does not compile
--- makeHFunctor ''A
-
 makeHFunctor ''B
+makeHFunctor ''A
