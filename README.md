@@ -513,7 +513,7 @@ While it is possible to declare ASTs as `newtype`s wrapping `:+:`s of existing t
 An intereseting aspect of `bound`'s ASTs is that recursively they are made of an infinite amount of types.
 
 When implementing `hypertypes` we had the explicit goal of making sure that such ASTs are expressible with it,
-and for this reason the `Hyper.Type.AST.NamelessScope` module implementing it is provided, and the test suite includes
+and for this reason the `Hyper.Type.AST.NamelessScope` module in the tests implementing it is provided, and the test suite includes
 a language implementation based on it (`LangA` in the tests).
 
 ### lens
