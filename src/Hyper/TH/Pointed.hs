@@ -39,6 +39,7 @@ makeContext info =
         ctxFor (Left x) = [[t|Monoid $(pure x)|]]
         ctxForPat (InContainer t pat) = [t|Applicative $(pure t)|] : ctxForPat pat
         ctxForPat (GenEmbed t) = [[t|HPointed $(pure t)|]]
+        ctxForPat (FlatEmbed t) = [[t|HPointed $(pure (tiInstance t))|]]
         ctxForPat _ = []
 
 makeHPureCtr :: TypeInfo -> (Name, ConstructorVariant, [Either Type CtrTypePattern]) -> Q Clause

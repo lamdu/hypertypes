@@ -38,6 +38,7 @@ makeContext info =
     where
         ctxForPat (InContainer t pat) = [t|Foldable $(pure t)|] : ctxForPat pat
         ctxForPat (GenEmbed t) = [[t|HFoldable $(pure t)|]]
+        ctxForPat (FlatEmbed t) = [[t|HFoldable $(pure (tiInstance t))|]]
         ctxForPat _ = []
 
 varF :: Name

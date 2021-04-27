@@ -67,6 +67,7 @@ makeContext info =
     where
         ctxForPat (InContainer t pat) = [t|Traversable $(pure t)|] : ctxForPat pat
         ctxForPat (GenEmbed t) = [[t|HTraversable $(pure t)|]]
+        ctxForPat (FlatEmbed t) = [[t|HTraversable $(pure (tiInstance t))|]]
         ctxForPat _ = []
 
 makeCons ::
