@@ -41,6 +41,7 @@ makeContext info =
     where
         ctxForPat (InContainer t pat) = [t|Functor $(pure t)|] : ctxForPat pat
         ctxForPat (GenEmbed t) = [[t|HFunctor $(pure t)|]]
+        ctxForPat (FlatEmbed t) = [[t|HFunctor $(pure (tiInstance t))|]]
         ctxForPat _ = []
 
 makeHMapCtr :: Int -> NodeWitnesses -> (Name, ConstructorVariant, [Either Type CtrTypePattern]) -> (Q Pat, Q Body)

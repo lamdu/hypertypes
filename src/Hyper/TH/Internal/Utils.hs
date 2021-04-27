@@ -201,7 +201,7 @@ simplifyContext preds =
                         >>=
                         \case
                         [InstanceD _ context other _] ->
-                            D.unifyTypes [foldl AppT (ConT c) xs, other] & lift
+                            D.unifyTypes [other, foldl AppT (ConT c) xs] & lift
                             <&> (`D.applySubstitution` context)
                             >>= goPreds
                         _ -> yep (ConT c) xs
