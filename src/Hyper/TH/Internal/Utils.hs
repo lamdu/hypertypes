@@ -54,7 +54,7 @@ makeTypeInfo name =
         info <- D.reifyDatatype name
         (dst, var) <- parts info
         let makeCons c =
-                traverse (matchType var) (D.constructorFields c)
+                traverse (matchType name var) (D.constructorFields c)
                 <&> (D.constructorName c, D.constructorVariant c, )
         cons <- traverse makeCons (D.datatypeCons info)
         pure TypeInfo
@@ -106,20 +106,20 @@ unapply =
         go as (AppT f a) = go (a:as) f
         go as x = (x, as)
 
-matchType :: Name -> Type -> Q (Either Type CtrTypePattern)
-matchType var (ConT get `AppT` VarT h `AppT` (PromotedT aHyper `AppT` x))
+matchType :: Name -> Name -> Type -> Q (Either Type CtrTypePattern)
+matchType _ var (ConT get `AppT` VarT h `AppT` (PromotedT aHyper `AppT` x))
     | get == ''GetHyperType && aHyper == 'AHyperType && h == var =
         Node x & Right & pure
-matchType var (InfixT (VarT h) hash x)
+matchType _ var (InfixT (VarT h) hash x)
     | hash == ''(:#) && h == var =
         Node x & Right & pure
-matchType var (ConT hash `AppT` VarT h `AppT` x)
+matchType _ var (ConT hash `AppT` VarT h `AppT` x)
     | hash == ''(:#) && h == var =
         Node x & Right & pure
-matchType var (x `AppT` VarT h)
+matchType top var (x `AppT` VarT h)
     | h == var && x /= ConT ''GetHyperType =
         case unapply x of
-        (ConT c, args) ->
+        (ConT c, args) | c /= top ->
             do
                 inner <- D.reifyDatatype c
                 let innerVars = D.datatypeVars inner <&> D.tvName
@@ -130,7 +130,7 @@ matchType var (x `AppT` VarT h)
                 let makeCons i =
                         D.constructorFields i
                         <&> D.applySubstitution subst
-                        & traverse (matchType var)
+                        & traverse (matchType top var)
                         <&> (D.constructorName i, D.constructorVariant i, )
                 cons <- traverse makeCons (D.datatypeCons inner)
                 if var `notElem` (D.freeVariablesWellScoped (cons ^.. traverse . Lens._3 . traverse . Lens._Left) <&> D.tvName)
@@ -146,14 +146,14 @@ matchType var (x `AppT` VarT h)
                         GenEmbed x & pure
         _ -> GenEmbed x & pure
         <&> Right
-matchType var x@(AppT f a) =
+matchType top var x@(AppT f a) =
     -- TODO: check if applied over a functor-kinded type.
-    matchType var a
+    matchType top var a
     <&>
     \case
     Left{} -> Left x
     Right pat -> InContainer f pat & Right
-matchType _ t = Left t & pure
+matchType _ _ t = Left t & pure
 
 getVar :: Type -> Maybe Name
 getVar (VarT x) = Just x

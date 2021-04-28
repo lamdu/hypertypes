@@ -27,7 +27,7 @@ makeOne typeName = makeTypeInfo typeName >>= makeHasHPlainForType
 makeHasHPlainForType :: TypeInfo -> Q [Dec]
 makeHasHPlainForType info =
     do
-        ctrs <- traverse (makeCtr (tiHyperParam info)) (tiConstructors info)
+        ctrs <- traverse (makeCtr (tiName info) (tiHyperParam info)) (tiConstructors info)
         let typs = ctrs >>= (^. Lens._4) & filter (not . anHPlainOfCons)
         let plains =
                 typs
@@ -82,9 +82,10 @@ data Field
 
 makeCtr ::
     Name ->
+    Name ->
     (Name, D.ConstructorVariant, [Either Type CtrTypePattern]) ->
     Q (Con, ClauseQ, ClauseQ, [Type])
-makeCtr param (cName, _, cFields) =
+makeCtr top param (cName, _, cFields) =
     traverse (forField True) cFields
     <&>
     \xs ->
@@ -173,7 +174,7 @@ makeCtr param (cName, _, cFields) =
                             [x] ->
                                 D.constructorFields x
                                 <&> D.applySubstitution subst
-                                & traverse (matchType param)
+                                & traverse (matchType top param)
                                 >>= traverse (forField False)
                                 <&> FlatInfo isTop (D.constructorName x)
                                 <&> FlatFields
