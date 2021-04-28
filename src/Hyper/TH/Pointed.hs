@@ -33,14 +33,14 @@ makeHPointedForType info =
 
 makeContext :: TypeInfo -> Q [Pred]
 makeContext info =
-    tiConstructors info >>= (^. Lens._3) >>= ctxFor & sequenceA
+    tiConstructors info >>= (^. Lens._3) & traverse ctxFor <&> mconcat
     where
         ctxFor (Right x) = ctxForPat x
-        ctxFor (Left x) = [[t|Monoid $(pure x)|]]
-        ctxForPat (InContainer t pat) = [t|Applicative $(pure t)|] : ctxForPat pat
-        ctxForPat (GenEmbed t) = [[t|HPointed $(pure t)|]]
-        ctxForPat (FlatEmbed t) = [[t|HPointed $(pure (tiInstance t))|]]
-        ctxForPat _ = []
+        ctxFor (Left x) = [t|Monoid $(pure x)|] <&> (:[])
+        ctxForPat (InContainer t pat) = (:) <$> [t|Applicative $(pure t)|] <*> ctxForPat pat
+        ctxForPat (GenEmbed t) = [t|HPointed $(pure t)|] <&> (:[])
+        ctxForPat (FlatEmbed t) = makeContext t
+        ctxForPat _ = pure []
 
 makeHPureCtr :: TypeInfo -> (Name, ConstructorVariant, [Either Type CtrTypePattern]) -> Q Clause
 makeHPureCtr typeInfo (cName, _, cFields) =

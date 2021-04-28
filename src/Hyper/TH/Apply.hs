@@ -73,11 +73,11 @@ makeHApplyForType info =
 
 makeContext :: TypeInfo -> Q [Pred]
 makeContext info =
-    tiConstructors info >>= (^. Lens._3) >>= ctxFor & sequenceA
+    tiConstructors info >>= (^. Lens._3) & traverse ctxFor <&> mconcat
     where
         ctxFor (Right x) = ctxForPat x
-        ctxFor (Left x) = [[t|Semigroup $(pure x)|]]
-        ctxForPat (InContainer t pat) = [t|Applicative $(pure t)|] : ctxForPat pat
-        ctxForPat (GenEmbed t) = [[t|HApply $(pure t)|]]
-        ctxForPat (FlatEmbed t) = [[t|HApply $(pure (tiInstance t))|]]
-        ctxForPat _ = []
+        ctxFor (Left x) = [t|Semigroup $(pure x)|] <&> (:[])
+        ctxForPat (InContainer t pat) = (:) <$> [t|Applicative $(pure t)|] <*> ctxForPat pat
+        ctxForPat (GenEmbed t) = [t|HApply $(pure t)|] <&> (:[])
+        ctxForPat (FlatEmbed t) = makeContext t
+        ctxForPat _ = pure []

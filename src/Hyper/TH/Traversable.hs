@@ -63,12 +63,13 @@ makeHTraversableForType info =
 
 makeContext :: TypeInfo -> Q [Pred]
 makeContext info =
-    tiConstructors info ^.. traverse . Lens._3 . traverse . Lens._Right >>= ctxForPat & sequenceA
+    tiConstructors info ^.. traverse . Lens._3 . traverse . Lens._Right
+    & traverse ctxForPat <&> mconcat
     where
-        ctxForPat (InContainer t pat) = [t|Traversable $(pure t)|] : ctxForPat pat
-        ctxForPat (GenEmbed t) = [[t|HTraversable $(pure t)|]]
-        ctxForPat (FlatEmbed t) = [[t|HTraversable $(pure (tiInstance t))|]]
-        ctxForPat _ = []
+        ctxForPat (InContainer t pat) = (:) <$> [t|Traversable $(pure t)|] <*> ctxForPat pat
+        ctxForPat (GenEmbed t) = [t|HTraversable $(pure t)|] <&> (:[])
+        ctxForPat (FlatEmbed t) = makeContext t
+        ctxForPat _ = pure []
 
 makeCons ::
     (Name, ConstructorVariant, [Either Type CtrTypePattern]) -> ClauseQ

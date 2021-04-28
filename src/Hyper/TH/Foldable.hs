@@ -34,12 +34,13 @@ makeHFoldableForType info =
 
 makeContext :: TypeInfo -> Q [Pred]
 makeContext info =
-    tiConstructors info ^.. traverse . Lens._3 . traverse . Lens._Right >>= ctxForPat & sequenceA
+    tiConstructors info ^.. traverse . Lens._3 . traverse . Lens._Right
+    & traverse ctxForPat <&> mconcat
     where
-        ctxForPat (InContainer t pat) = [t|Foldable $(pure t)|] : ctxForPat pat
-        ctxForPat (GenEmbed t) = [[t|HFoldable $(pure t)|]]
-        ctxForPat (FlatEmbed t) = [[t|HFoldable $(pure (tiInstance t))|]]
-        ctxForPat _ = []
+        ctxForPat (InContainer t pat) = (:) <$> [t|Foldable $(pure t)|] <*> ctxForPat pat
+        ctxForPat (GenEmbed t) = [t|HFoldable $(pure t)|] <&> (:[])
+        ctxForPat (FlatEmbed t) = makeContext t
+        ctxForPat _ = pure []
 
 varF :: Name
 varF = mkName "_f"
