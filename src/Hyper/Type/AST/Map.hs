@@ -27,7 +27,7 @@ instance Eq h => ZipMatch (TermMap h expr) where
     zipMatch (TermMap x) (TermMap y)
         | Map.size x /= Map.size y = Nothing
         | otherwise =
-            zipMatchList (Map.toList x) (Map.toList y)
+            zipMatchList (x ^@.. Lens.itraversed) (y ^@.. Lens.itraversed)
             <&> traverse . Lens._2 %~ uncurry (:*:)
             <&> TermMap . Map.fromAscList
 

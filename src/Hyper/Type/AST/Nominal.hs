@@ -19,7 +19,6 @@ import           Control.Applicative (Alternative(..))
 import           Control.Lens (Prism')
 import qualified Control.Lens as Lens
 import           Control.Monad.Trans.Writer (execWriterT)
-import qualified Data.Map as Map
 import           Generics.Constraints (Constraints)
 import           Hyper
 import           Hyper.Class.Context (HContext(..))
@@ -183,7 +182,7 @@ instance
             joinArgs [] = mempty
             joinArgs xs = P.text "[" <> P.sep (P.punctuate (P.text ",") xs) <> P.text "]"
             mkArgs (QVarInstances m) =
-                Map.toList m <&>
+                m ^@.. Lens.itraversed <&>
                 \(h, v) ->
                 (pPrint h <> P.text ":") P.<+> pPrint v
 

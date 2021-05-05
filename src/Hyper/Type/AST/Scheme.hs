@@ -67,7 +67,7 @@ instance
     , Semigroup (TypeConstraintsOf (GetHyperType typ))
     ) =>
     Monoid (QVars typ) where
-    mempty = QVars Map.empty
+    mempty = QVars mempty
 
 instance
     (Pretty (varTypes # QVars), Pretty (h :# typ)) =>
@@ -84,7 +84,7 @@ instance
     Pretty (QVars # typ) where
 
     pPrint (QVars qvars) =
-        Map.toList qvars
+        qvars ^@.. Lens.itraversed
         <&> printVar
         <&> (Pretty.text "∀" <>) <&> (<> Pretty.text ".") & Pretty.hsep
         where

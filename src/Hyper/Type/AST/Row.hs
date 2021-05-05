@@ -88,7 +88,7 @@ unflattenRow ::
     (RowExtend key val rest # v -> m (v # rest)) ->
     FlatRowExtends key val rest # v -> m (v # rest)
 unflattenRow mkExtend (FlatRowExtends fields rest) =
-    Map.toList fields & foldM f rest
+    fields ^@.. Lens.itraversed & foldM f rest
     where
         f acc (key, val) = RowExtend key val acc & mkExtend
 
