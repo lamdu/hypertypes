@@ -17,7 +17,6 @@ import           Control.Monad.Trans.State (State, evalState, execStateT, gets, 
 import qualified Data.Char as Char
 import           Data.List (nub, intercalate)
 import qualified Data.Map as Map
-import qualified Data.Set as Set
 import           Generic.Data (Generically(..))
 import           Hyper.Class.Nodes (HWitness(..))
 import           Hyper.Type (AHyperType(..), GetHyperType, type (:#))
@@ -94,8 +93,8 @@ childrenTypesH info =
                     <&> mconcat
     where
         addPat (FlatEmbed inner) = childrenTypesH inner
-        addPat (Node x) = pure mempty { tcChildren = Set.singleton x }
-        addPat (GenEmbed x) = pure mempty { tcEmbeds = Set.singleton x }
+        addPat (Node x) = pure mempty { tcChildren = mempty & Lens.contains x .~ True }
+        addPat (GenEmbed x) = pure mempty { tcEmbeds = mempty & Lens.contains x .~ True }
         addPat (InContainer _ x) = addPat x
 
 unapply :: Type -> (Type, [Type])
@@ -179,10 +178,8 @@ consPat c vars = conP c (vars <&> snd <&> varP)
 
 simplifyContext :: [Pred] -> CxtQ
 simplifyContext preds =
-    goPreds preds
-    & (`execStateT` (mempty :: Set (Name, [Type]), mempty :: Set Pred))
-    <&> snd
-    <&> Set.toList
+    execStateT (goPreds preds) (mempty :: Set (Name, [Type]), mempty :: Set Pred)
+    <&> (^.. Lens._2 . Lens.folded)
     where
         goPreds ps = ps <&> unapply & traverse_ go
         go (c, [VarT v]) =

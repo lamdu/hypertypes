@@ -7,7 +7,6 @@ module Hyper.TH.Nodes
     ) where
 
 import qualified Control.Lens as Lens
-import qualified Data.Set as Set
 import           GHC.Generics (V1)
 import           Hyper.Class.Nodes (HNodes(..), HWitness(..))
 import           Hyper.TH.Internal.Utils
@@ -51,9 +50,9 @@ makeHNodesForType info =
         c = varT constraintVar
         contents = childrenTypes info
         nodesConstraint =
-            (Set.toList (tcChildren contents) <&> (c `appT`) . pure)
-            <> (Set.toList (tcEmbeds contents) <&> \x -> [t|HNodesConstraint $(pure x) $c|])
-            <> (Set.toList (tcOthers contents) <&> pure)
+            (tcChildren contents ^.. Lens.folded <&> (c `appT`) . pure)
+            <> (tcEmbeds contents ^.. Lens.folded <&> \x -> [t|HNodesConstraint $(pure x) $c|])
+            <> (tcOthers contents ^.. Lens.folded <&> pure)
             & sequenceA
 
 makeContext :: TypeInfo -> [Pred]
