@@ -164,14 +164,14 @@ instance Unify PureInferA Row where
 
 instance MonadInstantiate PureInferA Typ where
     localInstantiations (QVarInstances x) =
-        local (iaInstantiations . tTyp . _QVarInstances %~ (x <>))
+        local (iaInstantiations . tTyp . _QVarInstances <>~ x)
     lookupQVar x =
         Lens.view (iaInstantiations . tTyp . _QVarInstances . Lens.at x)
         >>= maybe (throwError (QVarNotInScope x)) pure
 
 instance MonadInstantiate PureInferA Row where
     localInstantiations (QVarInstances x) =
-        local (iaInstantiations . tRow . _QVarInstances %~ (x <>))
+        local (iaInstantiations . tRow . _QVarInstances <>~ x)
     lookupQVar x =
         Lens.view (iaInstantiations . tRow . _QVarInstances . Lens.at x)
         >>= maybe (throwError (QVarNotInScope x)) pure
@@ -219,14 +219,14 @@ instance Unify (STInferA s) Row where
 
 instance MonadInstantiate (STInferA s) Typ where
     localInstantiations (QVarInstances x) =
-        local (Lens._1 . iaInstantiations . tTyp . _QVarInstances %~ (x <>))
+        local (Lens._1 . iaInstantiations . tTyp . _QVarInstances <>~ x)
     lookupQVar x =
         Lens.view (Lens._1 . iaInstantiations . tTyp . _QVarInstances . Lens.at x)
         >>= maybe (throwError (QVarNotInScope x)) pure
 
 instance MonadInstantiate (STInferA s) Row where
     localInstantiations (QVarInstances x) =
-        local (Lens._1 . iaInstantiations . tRow . _QVarInstances %~ (x <>))
+        local (Lens._1 . iaInstantiations . tRow . _QVarInstances <>~ x)
     lookupQVar x =
         Lens.view (Lens._1 . iaInstantiations . tRow . _QVarInstances . Lens.at x)
         >>= maybe (throwError (QVarNotInScope x)) pure

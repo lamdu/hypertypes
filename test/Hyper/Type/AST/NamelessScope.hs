@@ -18,7 +18,7 @@ module Hyper.Type.AST.NamelessScope
 import           Control.Lens (Lens', Prism')
 import           Control.Lens.Operators
 import qualified Control.Lens as Lens
-import           Control.Monad.Reader (MonadReader, local)
+import           Control.Monad.Reader (MonadReader)
 import           Data.Constraint ((:-), (\\))
 import           Data.Kind (Type)
 import           Data.Sequence (Seq)
@@ -102,7 +102,7 @@ instance
         do
             varType <- newUnbound
             inferChild x
-                & local (scopeTypes . _ScopeTypes %~ (varType Sequence.<|))
+                & Lens.locally (scopeTypes . _ScopeTypes) (varType Sequence.<|)
                 <&>
                 \(InferredChild xI xR) ->
                 ( Scope xI
