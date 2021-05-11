@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c96744c124a7114be775b7e89258ad24e3e652a3ec0f115338131a9d5e8b7cb1
+-- hash: d25a0b3f8c7b76db97429b9b8756f4f2966f3352a921733dd51db840869bb422
 
 name:           hypertypes
 version:        0.1.0.1
@@ -101,7 +101,24 @@ library
       Hyper.TH.Internal.Utils
   hs-source-dirs:
       src
-  default-extensions: ConstraintKinds DataKinds DefaultSignatures DeriveGeneric DerivingStrategies GADTs GeneralizedNewtypeDeriving LambdaCase MultiParamTypeClasses RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeOperators TypeFamilies NoImplicitPrelude
+  default-extensions:
+      ConstraintKinds
+      DataKinds
+      DefaultSignatures
+      DeriveGeneric
+      DerivingStrategies
+      GADTs
+      GeneralizedNewtypeDeriving
+      LambdaCase
+      MultiParamTypeClasses
+      RankNTypes
+      ScopedTypeVariables
+      StandaloneDeriving
+      TupleSections
+      TypeApplications
+      TypeOperators
+      TypeFamilies
+      NoImplicitPrelude
   ghc-options: -fexpose-all-unfoldings -Wall -Wcompat -Wredundant-constraints -Wnoncanonical-monad-instances -Wincomplete-record-updates -Wincomplete-uni-patterns
   ghc-prof-options: -fexpose-all-unfoldings
   build-depends:
@@ -142,7 +159,23 @@ test-suite hypertypes-test
       Paths_hypertypes
   hs-source-dirs:
       test
-  default-extensions: ConstraintKinds DataKinds DefaultSignatures DeriveGeneric DerivingStrategies GADTs GeneralizedNewtypeDeriving LambdaCase MultiParamTypeClasses RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeOperators TypeFamilies
+  default-extensions:
+      ConstraintKinds
+      DataKinds
+      DefaultSignatures
+      DeriveGeneric
+      DerivingStrategies
+      GADTs
+      GeneralizedNewtypeDeriving
+      LambdaCase
+      MultiParamTypeClasses
+      RankNTypes
+      ScopedTypeVariables
+      StandaloneDeriving
+      TupleSections
+      TypeApplications
+      TypeOperators
+      TypeFamilies
   ghc-options: -fexpose-all-unfoldings -Wall -Wcompat -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   ghc-prof-options: -fexpose-all-unfoldings
   build-depends:
@@ -159,9 +192,6 @@ test-suite hypertypes-test
     , pretty
     , text
     , transformers
-  if false
-    other-modules:
-        Benchmark
   default-language: Haskell2010
 
 benchmark hypertypes-bench
@@ -172,7 +202,23 @@ benchmark hypertypes-bench
       TypeLang
   hs-source-dirs:
       test
-  default-extensions: ConstraintKinds DataKinds DefaultSignatures DeriveGeneric DerivingStrategies GADTs GeneralizedNewtypeDeriving LambdaCase MultiParamTypeClasses RankNTypes ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeOperators TypeFamilies
+  default-extensions:
+      ConstraintKinds
+      DataKinds
+      DefaultSignatures
+      DeriveGeneric
+      DerivingStrategies
+      GADTs
+      GeneralizedNewtypeDeriving
+      LambdaCase
+      MultiParamTypeClasses
+      RankNTypes
+      ScopedTypeVariables
+      StandaloneDeriving
+      TupleSections
+      TypeApplications
+      TypeOperators
+      TypeFamilies
   ghc-options: -fexpose-all-unfoldings -Wall -Wcompat -Wredundant-constraints -O2 -Wnoncanonical-monad-instances -Wincomplete-record-updates -Wincomplete-uni-patterns
   ghc-prof-options: -fexpose-all-unfoldings
   build-depends:
