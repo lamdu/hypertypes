@@ -1,7 +1,5 @@
 -- | A variant of 'Data.Functor.Apply.Apply' for 'Hyper.Type.HyperType's
 
-{-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
-
 module Hyper.Class.Apply
     ( HApply(..), HApplicative
     , liftH2
@@ -29,8 +27,7 @@ class HFunctor h => HApply h where
         h # (p :*: q)
 
 -- | A variant of 'Applicative' for 'Hyper.Type.HyperType's.
-class    (HPointed h, HApply h) => HApplicative h
-instance (HPointed h, HApply h) => HApplicative h
+type HApplicative h = (HPointed h, HApply h)
 
 instance Semigroup a => HApply (Const a) where
     {-# INLINE hzip #-}
