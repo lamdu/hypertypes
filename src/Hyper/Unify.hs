@@ -5,6 +5,7 @@
 module Hyper.Unify
     ( unify
     , module Hyper.Class.Unify
+    , module Hyper.Unify.Binding
     , module Hyper.Unify.Constraints
     , module Hyper.Unify.Error
 
@@ -17,6 +18,7 @@ import Algebra.PartialOrd (PartialOrd(..))
 import Hyper
 import Hyper.Class.Unify
 import Hyper.Class.ZipMatch (zipMatchA)
+import Hyper.Unify.Binding (UVar)
 import Hyper.Unify.Constraints
 import Hyper.Unify.Error (UnifyError(..))
 import Hyper.Unify.Term (UTerm(..), UTermBody(..), uConstraints, uBody)
