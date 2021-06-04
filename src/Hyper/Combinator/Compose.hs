@@ -12,17 +12,15 @@ module Hyper.Combinator.Compose
 
 import Control.Lens (Profunctor, Optic, Iso', iso)
 import Hyper.Class.Apply (HApply(..))
-import Hyper.Class.Context (HContext(..))
 import Hyper.Class.Foldable (HFoldable(..))
-import Hyper.Class.Functor
+import Hyper.Class.Functor (HFunctor(..), hiso)
 import Hyper.Class.Nodes (HNodes(..), HWitness(..), (#>))
 import Hyper.Class.Pointed (HPointed(..))
 import Hyper.Class.Traversable (HTraversable(..), ContainedH(..), htraverse)
 import Hyper.Class.Recursive (RNodes(..), Recursively(..), RTraversable)
 import Hyper.Class.ZipMatch (ZipMatch(..))
-import Hyper.Combinator.Func (HFunc(..))
 import Hyper.Type (HyperType, GetHyperType, type (#))
-import Hyper.Type.Pure
+import Hyper.Type.Pure (Pure, _Pure)
 
 import Hyper.Internal.Prelude
 
@@ -143,19 +141,6 @@ instance
                 <&> (_HCompose #)
             )
         <&> (_HCompose #)
-
-instance (HFunctor h0, HContext h0, HFunctor h1, HContext h1) => HContext (HCompose h0 h1) where
-    hcontext =
-        _HCompose %~
-        hmap
-        ( \_ (HFunc c0 :*: x0) ->
-            x0 & _HCompose %~
-            hmap
-            ( \_ (HFunc c1 :*: x1) ->
-                x1 & _HCompose %~
-                (HFunc (Const . (_HCompose #) . getConst . c0 . (_HCompose #) . getConst . c1 . (_HCompose #)) :*:)
-            ) . hcontext
-        ) . hcontext
 
 instance
     ( HNodes a, HNodes b
