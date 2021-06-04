@@ -5,9 +5,10 @@
 module Hyper.Class.Functor
     ( HFunctor(..)
     , hmapped1
+    , hiso
     ) where
 
-import Control.Lens (Setter, sets)
+import Control.Lens (Setter, Iso', sets, iso)
 import GHC.Generics
 import Hyper.Class.Nodes (HNodes(..), HWitness(..), _HWitness, (#>))
 import Hyper.Type (type (#))
@@ -59,3 +60,12 @@ hmapped1 ::
     (HFunctor h, HNodesConstraint h ((~) n)) =>
     Setter (h # p) (h # q) (p # n) (q # n)
 hmapped1 = sets (\f -> hmap (Proxy @((~) n) #> f))
+
+-- | Define 'Iso's for 'HFunctor's
+--
+-- TODO: Is there an equivalent for this in lens that we can name this after?
+hiso ::
+    HFunctor h =>
+    (forall n. HWitness h n -> Iso' (p # n) (q # n)) ->
+    Iso' (h # p) (h # q)
+hiso f = iso (hmap (\w -> (^. f w))) (hmap (\w -> (f w #)))

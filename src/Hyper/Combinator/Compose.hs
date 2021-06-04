@@ -7,14 +7,14 @@
 module Hyper.Combinator.Compose
     ( HCompose(..), _HCompose, W_HCompose(..)
     , HComposeConstraint1
-    , decompose, hcomposed
+    , decompose, decompose', hcomposed
     ) where
 
-import Control.Lens (Profunctor, Optic, iso)
+import Control.Lens (Profunctor, Optic, Iso', iso)
 import Hyper.Class.Apply (HApply(..))
 import Hyper.Class.Context (HContext(..))
 import Hyper.Class.Foldable (HFoldable(..))
-import Hyper.Class.Functor (HFunctor(..))
+import Hyper.Class.Functor
 import Hyper.Class.Nodes (HNodes(..), HWitness(..), (#>))
 import Hyper.Class.Pointed (HPointed(..))
 import Hyper.Class.Traversable (HTraversable(..), ContainedH(..), htraverse)
@@ -196,20 +196,17 @@ decompose ::
     forall a0 b0 a1 b1.
     (Recursively HFunctor a0, Recursively HFunctor b0, Recursively HFunctor a1, Recursively HFunctor b1) =>
     Iso (Pure # HCompose a0 b0) (Pure # HCompose a1 b1) (a0 # b0) (a1 # b1)
-decompose =
+decompose = iso (^. decompose') (decompose' #)
+
+decompose' ::
+    forall a b.
+    (Recursively HFunctor a, Recursively HFunctor b) =>
+    Iso' (Pure # HCompose a b) (a # b)
+decompose' =
+    withDict (recursively (Proxy @(HFunctor a))) $
+    withDict (recursively (Proxy @(HFunctor b))) $
     _Pure . _HCompose .
-    iso
-    ( withDict (recursively (Proxy @(HFunctor a0))) $
-        withDict (recursively (Proxy @(HFunctor b0))) $
-        hmap
-        ( Proxy @(Recursively HFunctor) #>
-            hmap ( Proxy @(Recursively HFunctor) #> (^. _HCompose . decompose)) . (^. _HCompose)
-        )
-    )
-    ( withDict (recursively (Proxy @(HFunctor a1))) $
-        withDict (recursively (Proxy @(HFunctor b1))) $
-        hmap
-        ( Proxy @(Recursively HFunctor) #>
-            (_HCompose #) . hmap (Proxy @(Recursively HFunctor) #> (_HCompose . decompose #))
-        )
+    hiso
+    ( Proxy @(Recursively HFunctor) #>
+        _HCompose . hiso ( Proxy @(Recursively HFunctor) #> _HCompose . decompose')
     )
