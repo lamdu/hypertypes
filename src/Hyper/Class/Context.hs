@@ -1,12 +1,13 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts, FlexibleInstances #-}
 
 module Hyper.Class.Context
     ( HContext(..)
     , recursiveContexts, annContexts
     ) where
 
-import Control.Lens (mapped, _Wrapped, _1)
+import Control.Lens (mapped, from, _Wrapped, _1, _2)
 import Hyper.Combinator.Compose (HCompose(..), _HCompose, decompose)
+import Hyper.Combinator.Flip
 import Hyper.Combinator.Func (HFunc(..), _HFunc)
 import Hyper.Class.Functor (HFunctor(..))
 import Hyper.Class.Nodes ((#*#), (#>))
@@ -44,6 +45,26 @@ instance (HFunctor h0, HContext h0, HFunctor h1, HContext h1) => HContext (HComp
                 (HFunc (Const . (_HCompose #) . getConst . c0 . (_HCompose #) . getConst . c1 . (_HCompose #)) :*:)
             ) . hcontext
         ) . hcontext
+
+instance (Recursively HContext h, Recursively HFunctor h) => HContext (HFlip Ann h) where
+    -- The context of (HFlip Ann h) differs from annContexts in that
+    -- only the annotation itself is replaced rather than the whole subexpression.
+    hcontext =
+        hmap (const (_1 . _HFunc . mapped . _Wrapped %~ (_HFlip #))) . (from hflipped %~ f . annContexts)
+        where
+            f ::
+                forall n p r.
+                Recursively HFunctor n =>
+                Ann (HFunc (Ann p) (Const r) :*: p) # n -> Ann (HFunc p (Const r) :*: p) # n
+            f (Ann (HFunc func :*: a) b) =
+                withDict (recursively (Proxy @(HFunctor n))) $
+                Ann (HFunc (func . (`Ann` g b)) :*: a) (hmap (Proxy @(Recursively HFunctor) #> f) b)
+            g ::
+                forall n a b.
+                Recursively HFunctor n => n # Ann (a :*: b) -> n # Ann b
+            g =
+                withDict (recursively (Proxy @(HFunctor n))) $
+                hmap (Proxy @(Recursively HFunctor) #> hflipped %~ hmap (const (^. _2)))
 
 -- | Add in the node annotations a function to replace each node in the top-level node
 recursiveContexts ::
