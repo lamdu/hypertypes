@@ -1,4 +1,4 @@
-{-# LANGUAGE UndecidableInstances, ScopedTypeVariables, TemplateHaskell, FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances #-}
 
 module Hyper.Type.Prune
     ( Prune(..), W_Prune(..), _Pruned, _Unpruned

@@ -1,5 +1,5 @@
 -- | Generate new unification variables
-{-# LANGUAGE ScopedTypeVariables, FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Hyper.Unify.New
     ( newUnbound, newTerm, unfreeze
     ) where
