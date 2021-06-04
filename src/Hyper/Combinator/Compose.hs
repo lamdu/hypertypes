@@ -2,12 +2,12 @@
 --
 -- Inspired by [hyperfunctions' @Category@ instance](http://hackage.haskell.org/package/hyperfunctions-0/docs/Control-Monad-Hyper.html).
 
-{-# LANGUAGE UndecidableInstances, FlexibleInstances, TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances, FlexibleInstances, FlexibleContexts, TemplateHaskell #-}
 
 module Hyper.Combinator.Compose
     ( HCompose(..), _HCompose, W_HCompose(..)
     , HComposeConstraint1
-    , hcomposed
+    , decompose, hcomposed
     ) where
 
 import Control.Lens (Profunctor, Optic, iso)
@@ -15,13 +15,14 @@ import Hyper.Class.Apply (HApply(..))
 import Hyper.Class.Context (HContext(..))
 import Hyper.Class.Foldable (HFoldable(..))
 import Hyper.Class.Functor (HFunctor(..))
-import Hyper.Class.Nodes (HNodes(..), HWitness(..))
+import Hyper.Class.Nodes (HNodes(..), HWitness(..), (#>))
 import Hyper.Class.Pointed (HPointed(..))
 import Hyper.Class.Traversable (HTraversable(..), ContainedH(..), htraverse)
 import Hyper.Class.Recursive (RNodes(..), Recursively(..), RTraversable)
 import Hyper.Class.ZipMatch (ZipMatch(..))
 import Hyper.Combinator.Func (HFunc(..))
 import Hyper.Type (HyperType, GetHyperType, type (#))
+import Hyper.Type.Pure
 
 import Hyper.Internal.Prelude
 
@@ -189,3 +190,26 @@ hcomposed ::
         (a2 # HCompose b2 c2)
         (a3 # HCompose b3 c3)
 hcomposed f = _HCompose . f . _HCompose
+
+-- | Inject Pure between two hypertypes.
+decompose ::
+    forall a0 b0 a1 b1.
+    (Recursively HFunctor a0, Recursively HFunctor b0, Recursively HFunctor a1, Recursively HFunctor b1) =>
+    Iso (Pure # HCompose a0 b0) (Pure # HCompose a1 b1) (a0 # b0) (a1 # b1)
+decompose =
+    _Pure . _HCompose .
+    iso
+    ( withDict (recursively (Proxy @(HFunctor a0))) $
+        withDict (recursively (Proxy @(HFunctor b0))) $
+        hmap
+        ( Proxy @(Recursively HFunctor) #>
+            hmap ( Proxy @(Recursively HFunctor) #> (^. _HCompose . decompose)) . (^. _HCompose)
+        )
+    )
+    ( withDict (recursively (Proxy @(HFunctor a1))) $
+        withDict (recursively (Proxy @(HFunctor b1))) $
+        hmap
+        ( Proxy @(Recursively HFunctor) #>
+            (_HCompose #) . hmap (Proxy @(Recursively HFunctor) #> (_HCompose . decompose #))
+        )
+    )
