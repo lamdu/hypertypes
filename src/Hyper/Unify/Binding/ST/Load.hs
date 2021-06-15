@@ -9,7 +9,6 @@ module Hyper.Unify.Binding.ST.Load
 import qualified Control.Lens as Lens
 import           Control.Monad.ST.Class (MonadST(..))
 import           Data.Array.ST (STArray, newArray, readArray, writeArray)
-import qualified Data.Sequence as Sequence
 import           Hyper
 import           Hyper.Class.Optic (HNodeLens(..))
 import           Hyper.Class.Unify (Unify(..), UVarOf, BindingDict(..))
@@ -25,7 +24,7 @@ makePrisms ''ConvertState
 
 makeConvertState :: MonadST m => Binding # t -> m (ConvertState (World m) # t)
 makeConvertState (Binding x) =
-    newArray (0, Sequence.length x) Nothing & liftST <&> ConvertState
+    newArray (0, length x) Nothing & liftST <&> ConvertState
 
 loadUTerm ::
     forall m typeVars t.

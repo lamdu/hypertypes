@@ -47,7 +47,7 @@ saveVar v =
     srcBody ->
         do
             pb <- Lens.use (Lens._1 . hNodeLens)
-            let r = pb ^. _Binding & Sequence.length
+            let r = pb ^. _Binding & length
             UConverted r & bindVar binding v & lift
             Lens._2 %= (<> [bindVar binding v srcBody])
             dstBody <- saveUTerm srcBody
