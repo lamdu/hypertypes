@@ -13,7 +13,6 @@ import           Control.Lens (ALens')
 import qualified Control.Lens as Lens
 import           Control.Monad.State (MonadState(..))
 import           Data.Sequence (Seq)
-import qualified Data.Sequence as Sequence
 import           Hyper.Class.Unify (BindingDict(..))
 import           Hyper.Type (AHyperType, type (#))
 import           Hyper.Unify.Term
@@ -51,7 +50,7 @@ bindingDict l =
         <&> (^?! Lens.ix h)
     , newVar =
         \x ->
-        Lens.cloneLens l . _Binding <<%= (Sequence.|> x)
+        Lens.cloneLens l . _Binding <<%= (Lens.|> x)
         <&> length <&> UVar
     , bindVar =
         \(UVar h) v ->

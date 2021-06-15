@@ -9,7 +9,6 @@ module Hyper.Unify.Binding.Save
 import qualified Control.Lens as Lens
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import           Control.Monad.Trans.State (StateT(..))
-import qualified Data.Sequence as Sequence
 import           Hyper
 import           Hyper.Class.Optic (HNodeLens(..))
 import           Hyper.Class.Unify (Unify(..), UVarOf, BindingDict(..))
@@ -51,7 +50,7 @@ saveVar v =
             UConverted r & bindVar binding v & lift
             Lens._2 %= (<> [bindVar binding v srcBody])
             dstBody <- saveUTerm srcBody
-            Lens._1 . hNodeLens .= (pb & _Binding %~ (Sequence.|> dstBody))
+            Lens._1 . hNodeLens .= (pb & _Binding %~ (Lens.|> dstBody))
             UVar r & pure
 
 saveBody ::
