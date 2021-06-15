@@ -6,9 +6,9 @@ module Hyper.Unify.Binding.ST.Load
     ( load
     ) where
 
-import qualified Control.Lens as Lens
 import           Control.Monad.ST.Class (MonadST(..))
 import           Data.Array.ST (STArray, newArray, readArray, writeArray)
+import qualified Data.RRBVector as Vec
 import           Hyper
 import           Hyper.Class.Optic (HNodeLens(..))
 import           Hyper.Class.Unify (Unify(..), UVarOf, BindingDict(..))
@@ -65,7 +65,7 @@ loadVar src conv (UVar v) =
         do
             u <-
                 loadUTerm src conv
-                (src ^?! hNodeLens . _Binding . Lens.ix v)
+                ((src ^. hNodeLens . _Binding) Vec.! v)
             r <- newVar binding u
             r <$ liftST (writeArray tConv v (Just r))
 

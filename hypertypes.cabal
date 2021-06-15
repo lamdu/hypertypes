@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d25a0b3f8c7b76db97429b9b8756f4f2966f3352a921733dd51db840869bb422
+-- hash: 9d72aafdbe2fd99a80a555dc2453e076ca539f449d82c904eeeddecd109070b5
 
 name:           hypertypes
 version:        0.1.0.1
@@ -137,6 +137,7 @@ library
     , monad-st
     , mtl
     , pretty
+    , rrb-vector
     , show-combinators
     , template-haskell
     , th-abstraction >=0.3

@@ -65,6 +65,7 @@ library:
   - binary
   - deepseq
   - pretty
+  - rrb-vector
   - QuickCheck
   - show-combinators
   - template-haskell

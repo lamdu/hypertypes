@@ -12,8 +12,8 @@ module Hyper.Unify.Binding
 import           Control.Lens (ALens')
 import qualified Control.Lens as Lens
 import           Control.Monad.State (MonadState(..))
-import           Data.Sequence (Seq)
-import qualified Data.Sequence as Sequence
+import           Data.RRBVector (Vector)
+import qualified Data.RRBVector as Vec
 import           Hyper.Class.Unify (BindingDict(..))
 import           Hyper.Type (AHyperType, type (#))
 import           Hyper.Unify.Term
@@ -27,7 +27,7 @@ newtype UVar (t :: AHyperType) = UVar Int
 makePrisms ''UVar
 
 -- | The state of unification variables implemented in a pure data structure
-newtype Binding t = Binding (Seq (UTerm UVar t))
+newtype Binding t = Binding (Vector (UTerm UVar t))
     deriving stock Generic
 
 makePrisms ''Binding
@@ -48,12 +48,12 @@ bindingDict l =
     { lookupVar =
         \(UVar h) ->
         Lens.use (Lens.cloneLens l . _Binding)
-        <&> (^?! Lens.ix h)
+        <&> (Vec.! h)
     , newVar =
         \x ->
-        Lens.cloneLens l . _Binding <<%= (Sequence.|> x)
+        Lens.cloneLens l . _Binding <<%= (Vec.|> x)
         <&> length <&> UVar
     , bindVar =
         \(UVar h) v ->
-        Lens.cloneLens l . _Binding . Lens.ix h .= v
+        Lens.cloneLens l . _Binding %= Vec.update h v
     }
