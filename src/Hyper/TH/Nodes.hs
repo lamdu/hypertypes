@@ -24,7 +24,7 @@ makeHNodesForType info =
     [ instanceD (simplifyContext (makeContext info)) [t|HNodes $(pure (tiInstance info))|]
         [ D.tySynInstDCompat
             ''HNodesConstraint
-            (Just [pure (PlainTV constraintVar)])
+            (Just [pure (plainTV constraintVar)])
             [pure (tiInstance info), c]
             (nodesConstraint >>= simplifyContext <&> toTuple)
         , D.tySynInstDCompat ''HWitnessType Nothing [pure (tiInstance info)] witType
@@ -39,7 +39,7 @@ makeHNodesForType info =
             | otherwise =
                 ( tiParams info <&> varT . D.tvName & foldl appT (conT witTypeName)
                 , [dataD (pure []) witTypeName
-                    (tiParams info <> [PlainTV (mkName "node")])
+                    (tiParams info <> [plainTV (mkName "node")])
                     Nothing (nodeOfCons <&> (witType >>=)) []
                     ]
                 )

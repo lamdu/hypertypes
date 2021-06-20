@@ -22,13 +22,14 @@ import           Hyper.Class.Nodes (HWitness(..))
 import           Hyper.Type (AHyperType(..), GetHyperType, type (:#))
 import           Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
+import           Language.Haskell.TH.Datatype.TyVarBndr
 
 import           Hyper.Internal.Prelude
 
 data TypeInfo = TypeInfo
     { tiName :: Name
     , tiInstance :: Type
-    , tiParams :: [TyVarBndr]
+    , tiParams :: [TyVarBndrUnit]
     , tiHyperParam :: Name
     , tiConstructors :: [(Name, D.ConstructorVariant, [Either Type CtrTypePattern])]
     } deriving Show
@@ -69,10 +70,13 @@ parts info =
     case D.datatypeVars info of
     [] -> fail "expected type constructor which requires arguments"
     xs ->
-        case last xs of
-        KindedTV var (ConT aHyper) | aHyper == ''AHyperType -> pure (res, var)
-        PlainTV var -> pure (res, var)
-        _ -> fail "expected last argument to be a AHyperType variable"
+        elimTV
+        (pure . (,) res)
+        ( \var c ->
+            case c of
+            ConT aHyper | aHyper == ''AHyperType -> pure (res, var)
+            _ -> fail "expected last argument to be a AHyperType variable"
+        ) (last xs)
         where
             res =
                 foldl AppT (ConT (D.datatypeName info)) (init xs <&> VarT . D.tvName)

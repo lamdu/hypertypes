@@ -22,7 +22,7 @@ makeHMorphForType info =
     instanceD (pure []) [t|HMorph $(pure src) $(pure dst)|]
     [ D.tySynInstDCompat
         ''MorphConstraint
-        (Just [pure (PlainTV constraintVar)])
+        (Just [pure (plainTV constraintVar)])
         ([src, dst, VarT constraintVar] <&> pure)
         (simplifyContext morphConstraint <&> toTuple)
     , dataInstD
