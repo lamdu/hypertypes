@@ -193,5 +193,5 @@ decompose' =
     _Pure . _HCompose .
     hiso
     ( Proxy @(Recursively HFunctor) #>
-        _HCompose . hiso ( Proxy @(Recursively HFunctor) #> _HCompose . decompose')
+        _HCompose . hiso (Proxy @(Recursively HFunctor) #> _HCompose . decompose')
     )
