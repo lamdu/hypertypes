@@ -49,7 +49,7 @@ instance RNodes a => HNodes (HFlip GTerm a) where
     type HNodesConstraint (HFlip GTerm a) c = (c a, Recursive c)
     type HWitnessType (HFlip GTerm a) = HRecWitness a
     {-# INLINE hLiftConstraint #-}
-    hLiftConstraint (HWitness HRecSelf) = const id
+    hLiftConstraint (HWitness HRecSelf) = \_ x -> x
     hLiftConstraint (HWitness (HRecSub c n)) = hLiftConstraintH c n
 
 hLiftConstraintH ::
