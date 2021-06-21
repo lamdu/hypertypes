@@ -16,6 +16,7 @@ import           Hyper.Internal.Prelude
 makeHMorph :: Name -> DecsQ
 makeHMorph typeName = makeTypeInfo typeName >>= makeHMorphForType
 
+{-# ANN module "HLint: ignore Use id" #-}
 makeHMorphForType :: TypeInfo -> DecsQ
 makeHMorphForType info =
     -- TODO: Contexts
@@ -70,7 +71,7 @@ makeHMorphForType info =
             | otherwise =
                 (nodeWits ^.. traverse . Lens._2 . Lens._1 <&> liftNodeConstraint) <>
                 (embedWits ^.. traverse . Lens._2 . Lens._1 <&> liftEmbedConstraint)
-        liftNodeConstraint n = clause [conP n [], wildP] (normalB [|id|]) []
+        liftNodeConstraint n = clause [conP n [], wildP] (normalB [|\x -> x|]) []
         liftEmbedConstraint n =
             clause [conP n [varP varW], varP varProxy]
             (normalB [|morphLiftConstraint $(varE varW) $(varE varProxy)|]) []

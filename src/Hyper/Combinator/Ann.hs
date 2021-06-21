@@ -29,7 +29,7 @@ makeCommonInstances [''Ann]
 instance RNodes h => HNodes (HFlip Ann h) where
     type HNodesConstraint (HFlip Ann h) c = (Recursive c, c h)
     type HWitnessType (HFlip Ann h) = HRecWitness h
-    hLiftConstraint (HWitness HRecSelf) = const id
+    hLiftConstraint (HWitness HRecSelf) = \_ x -> x
     hLiftConstraint (HWitness (HRecSub w0 w1)) = hLiftConstraintH w0 w1
 
 -- TODO: Dedup this and similar code in Hyper.Unify.Generalize

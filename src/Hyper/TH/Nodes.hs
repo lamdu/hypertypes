@@ -69,7 +69,7 @@ makeHLiftConstraints wit
     | otherwise = clauses
     where
         clauses = (nodeWitCtrs wit <&> liftNode) <> (embedWitCtrs wit <&> liftEmbed)
-        liftNode x = clause [conP 'HWitness [conP x []]] (normalB [|const id|]) []
+        liftNode x = clause [conP 'HWitness [conP x []]] (normalB [|\_ r -> r|]) []
         liftEmbed x =
             clause [conP 'HWitness [conP x [varP witVar]]]
             (normalB [|hLiftConstraint $(varE witVar)|]) []

@@ -151,5 +151,5 @@ infixr 0 #**#
 {-# INLINE (#**#) #-}
 (#**#) ::
     (Recursive c, c h, RNodes h) =>
-    Proxy c -> (HRecWitness h n -> (c n => r)) -> HRecWitness h n -> r
+    Proxy c -> (c n => HRecWitness h n -> r) -> HRecWitness h n -> r
 (#**#) p r w = (p #>> r) w w

@@ -96,7 +96,7 @@ infixr 0 #*#
 {-# INLINE (#*#) #-}
 (#*#) ::
     (HNodes h, HNodesConstraint h c) =>
-    Proxy c -> (HWitness h n -> (c n => r)) -> HWitness h n -> r
+    Proxy c -> (c n => HWitness h n -> r) -> HWitness h n -> r
 (#*#) p r w = (p #> r) w w
 
 -- | Defunctionalized HNodesConstraint which can be curried

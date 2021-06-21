@@ -8,7 +8,7 @@ module Hyper.Class.Functor
     , hiso
     ) where
 
-import Control.Lens (Setter, Iso', sets, iso)
+import Control.Lens (Setter, Iso', AnIso', sets, iso, cloneIso)
 import GHC.Generics
 import Hyper.Class.Nodes (HNodes(..), HWitness(..), _HWitness, (#>))
 import Hyper.Type (type (#))
@@ -66,6 +66,6 @@ hmapped1 = sets (\f -> hmap (Proxy @((~) n) #> f))
 -- TODO: Is there an equivalent for this in lens that we can name this after?
 hiso ::
     HFunctor h =>
-    (forall n. HWitness h n -> Iso' (p # n) (q # n)) ->
+    (forall n. HWitness h n -> AnIso' (p # n) (q # n)) ->
     Iso' (h # p) (h # q)
-hiso f = iso (hmap (\w -> (^. f w))) (hmap (\w -> (f w #)))
+hiso f = iso (hmap (\w -> (^. cloneIso (f w)))) (hmap (\w -> (cloneIso (f w) #)))

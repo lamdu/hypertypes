@@ -41,4 +41,4 @@ instance HMorph (ANode a) (ANode b) where
     data instance MorphWitness (ANode a) (ANode b) _ _ where
         M_ANode :: MorphWitness (ANode a) (ANode b) a b
     morphMap f = _ANode %~ f M_ANode
-    morphLiftConstraint M_ANode _ = id
+    morphLiftConstraint M_ANode _ x = x
