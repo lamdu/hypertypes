@@ -57,9 +57,11 @@ makeHMorphForType info =
             let n = witPrefix <> mkNiceTypeName x & mkName in
             ( x
             , ( n
-                , gadtC [n] []
-                    [t|$(pure (ConT ''MorphWitness `appSubsts` x `AppT` varA `AppT` varB)) ->
-                        $(pure morphWithNessOf) $(pure varA) $(pure varB)|])
+                , gadtC [n]
+                    [ bangType (bang noSourceUnpackedness noSourceStrictness)
+                        (pure (ConT ''MorphWitness `appSubsts` x `AppT` varA `AppT` varB))
+                    ] (pure (morphWithNessOf `AppT` varA `AppT` varB))
+              )
             )
         witnesses = nodeWits <> embedWits & Map.fromList
         varA = VarT (mkName "a")

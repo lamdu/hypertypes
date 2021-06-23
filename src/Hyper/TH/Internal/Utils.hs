@@ -223,8 +223,7 @@ niceName = reverse . takeWhile (/= '.') . reverse . show
 
 makeNodeOf :: TypeInfo -> ([Type -> Q Con], NodeWitnesses)
 makeNodeOf info =
-    ( (nodes <&> Lens._1 %~ nodeGadtType) <> (embeds <&> Lens._1 %~ embedGadtType)
-        <&> \(t, n) c -> t c <&> GadtC [n] []
+    ( (nodes <&> nodeGadtType) <> (embeds <&> embedGadtType)
     , NodeWitnesses
         { nodeWit = nodes & Map.fromList & getWit <&> \x -> [|HWitness $(conE x)|]
         , embedWit = embeds & Map.fromList & getWit <&> \x -> [|HWitness . $(conE x)|]
@@ -244,7 +243,7 @@ makeNodeOf info =
         nodesForPat (InContainer _ pat) = nodesForPat pat
         nodesForPat (FlatEmbed x) = tiConstructors x ^.. traverse . Lens._3 . traverse . Lens._Right >>= nodesForPat
         nodesForPat _ = []
-        nodeGadtType t n = n `AppT` t & pure
+        nodeGadtType (t, n) c = gadtC [n] [] (pure (c `AppT` t))
         embeds =
             pats ^.. traverse . Lens._Right >>= embedsForPat & nub
             <&> \t -> (t, mkName (embedBase <> mkNiceTypeName t))
@@ -252,7 +251,11 @@ makeNodeOf info =
         embedsForPat (InContainer _ pat) = embedsForPat pat
         embedsForPat (FlatEmbed x) = tiConstructors x ^.. traverse . Lens._3 . traverse . Lens._Right >>= embedsForPat
         embedsForPat _ = []
-        embedGadtType t n = [t|HWitness $(pure t) $nodeVar -> $(pure n) $nodeVar|]
+        embedGadtType (t, n) c =
+            gadtC [n]
+            [ bangType (bang noSourceUnpackedness noSourceStrictness)
+                [t|HWitness $(pure t) $nodeVar|]
+            ] [t|$(pure c) $nodeVar|]
         nodeVar = mkName "node" & varT
         getWit :: Map Type Name -> Type -> Name
         getWit m h =
