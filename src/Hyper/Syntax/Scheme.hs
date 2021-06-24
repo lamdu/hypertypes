@@ -2,7 +2,7 @@
 
 {-# LANGUAGE TemplateHaskell, FlexibleContexts, FlexibleInstances, UndecidableInstances #-}
 
-module Hyper.Type.AST.Scheme
+module Hyper.Syntax.Scheme
     ( Scheme(..), sForAlls, sTyp, W_Scheme(..)
     , QVars(..), _QVars
     , HasScheme(..), loadScheme, saveScheme

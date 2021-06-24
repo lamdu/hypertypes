@@ -2,14 +2,14 @@
 
 {-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances #-}
 
-module Hyper.Type.AST.TypeSig
+module Hyper.Syntax.TypeSig
     ( TypeSig(..), tsType, tsTerm, W_TypeSig(..)
     ) where
 
 import           Generics.Constraints (Constraints)
 import           Hyper
 import           Hyper.Infer
-import           Hyper.Type.AST.Scheme
+import           Hyper.Syntax.Scheme
 import           Hyper.Unify (UnifyGen, unify)
 import           Hyper.Unify.Generalize (instantiateWith)
 import           Hyper.Unify.Term (UTerm(..))

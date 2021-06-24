@@ -6,7 +6,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FlexibleInstances, TemplateHaskell, EmptyCase, EmptyDataDeriving #-}
 
-module Hyper.Type.AST.NamelessScope
+module Hyper.Syntax.NamelessScope
     ( Scope(..), _Scope, W_Scope(..)
     , ScopeVar(..), _ScopeVar
     , EmptyScope
@@ -26,7 +26,7 @@ import qualified Data.Sequence as Sequence
 import           Hyper
 import           Hyper.Class.Infer.Infer1
 import           Hyper.Infer
-import           Hyper.Type.AST.FuncType
+import           Hyper.Syntax.FuncType
 import           Hyper.Unify (UnifyGen, UVarOf)
 import           Hyper.Unify.New (newUnbound)
 

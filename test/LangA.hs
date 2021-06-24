@@ -19,11 +19,11 @@ import           Data.STRef
 import           Hyper
 import           Hyper.Class.Infer.Infer1
 import           Hyper.Infer
-import           Hyper.Type.AST.App
-import           Hyper.Type.AST.NamelessScope
-import           Hyper.Type.AST.NamelessScope.InvDeBruijn
-import           Hyper.Type.AST.Scheme
-import           Hyper.Type.AST.TypeSig
+import           Hyper.Syntax.App
+import           Hyper.Syntax.NamelessScope
+import           Hyper.Syntax.NamelessScope.InvDeBruijn
+import           Hyper.Syntax.Scheme
+import           Hyper.Syntax.TypeSig
 import           Hyper.Unify
 import           Hyper.Unify.Binding
 import           Hyper.Unify.Binding.ST

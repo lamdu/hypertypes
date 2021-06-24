@@ -1,13 +1,13 @@
 {-# LANGUAGE FlexibleInstances, UndecidableInstances, TemplateHaskell #-}
 
-module Hyper.Type.AST.App
+module Hyper.Syntax.App
     ( App(..), appFunc, appArg, W_App(..), MorphWitness(..)
     ) where
 
 import Hyper
 import Hyper.Class.Optic (HSubset(..), HSubset')
 import Hyper.Infer
-import Hyper.Type.AST.FuncType
+import Hyper.Syntax.FuncType
 import Hyper.Unify (UnifyGen, unify)
 import Hyper.Unify.New (newTerm, newUnbound)
 import Text.PrettyPrint ((<+>))

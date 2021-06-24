@@ -8,9 +8,9 @@ import Generics.Constraints (makeDerivings)
 import Hyper
 import Hyper.Class.ZipMatch
 import Hyper.Diff
-import Hyper.Type.AST.App
-import Hyper.Type.AST.Var
-import Hyper.Type.AST.TypedLam
+import Hyper.Syntax.App
+import Hyper.Syntax.Var
+import Hyper.Syntax.TypedLam
 
 import Prelude
 

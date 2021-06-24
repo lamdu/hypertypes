@@ -1,7 +1,7 @@
 -- | Alpha-equality for schemes
 {-# LANGUAGE FlexibleContexts #-}
 
-module Hyper.Type.AST.Scheme.AlphaEq
+module Hyper.Syntax.Scheme.AlphaEq
     ( alphaEq
     ) where
 
@@ -10,7 +10,7 @@ import Hyper
 import Hyper.Class.Optic (HNodeLens(..))
 import Hyper.Class.ZipMatch (zipMatch_)
 import Hyper.Recurse (wrapM, (#>>))
-import Hyper.Type.AST.Scheme
+import Hyper.Syntax.Scheme
 import Hyper.Unify
 import Hyper.Unify.New (newTerm)
 import Hyper.Unify.QuantifiedVar

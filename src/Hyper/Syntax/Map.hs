@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances #-}
 
-module Hyper.Type.AST.Map
+module Hyper.Syntax.Map
     ( TermMap(..), _TermMap, W_TermMap(..), MorphWitness(..)
     ) where
 

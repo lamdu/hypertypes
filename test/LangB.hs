@@ -17,13 +17,13 @@ import           Data.STRef
 import           Data.String (IsString(..))
 import           Hyper
 import           Hyper.Infer
-import           Hyper.Type.AST.App
-import           Hyper.Type.AST.Lam
-import           Hyper.Type.AST.Let
-import           Hyper.Type.AST.Nominal
-import           Hyper.Type.AST.Row
-import           Hyper.Type.AST.Scheme
-import           Hyper.Type.AST.Var
+import           Hyper.Syntax.App
+import           Hyper.Syntax.Lam
+import           Hyper.Syntax.Let
+import           Hyper.Syntax.Nominal
+import           Hyper.Syntax.Row
+import           Hyper.Syntax.Scheme
+import           Hyper.Syntax.Var
 import           Hyper.Unify
 import           Hyper.Unify.Binding
 import           Hyper.Unify.Binding.ST

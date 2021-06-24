@@ -3,7 +3,7 @@
 {-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
 {-# LANGUAGE FlexibleContexts, TemplateHaskell, EmptyCase #-}
 
-module Hyper.Type.AST.Nominal
+module Hyper.Syntax.Nominal
     ( NominalDecl(..), nParams, nScheme, W_NominalDecl(..)
     , NominalInst(..), nId, nArgs
     , ToNom(..), tnId, tnVal, W_ToNom(..)
@@ -27,9 +27,9 @@ import           Hyper.Class.Traversable (ContainedH(..))
 import           Hyper.Class.ZipMatch (ZipMatch(..))
 import           Hyper.Infer
 import           Hyper.Recurse
-import           Hyper.Type.AST.FuncType (FuncType(..))
-import           Hyper.Type.AST.Map (TermMap(..), _TermMap)
-import           Hyper.Type.AST.Scheme
+import           Hyper.Syntax.FuncType (FuncType(..))
+import           Hyper.Syntax.Map (TermMap(..), _TermMap)
+import           Hyper.Syntax.Scheme
 import           Hyper.Unify
 import           Hyper.Unify.Generalize (GTerm(..), _GMono, instantiateWith, instantiateForAll)
 import           Hyper.Unify.New (newTerm)

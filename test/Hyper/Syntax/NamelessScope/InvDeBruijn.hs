@@ -1,12 +1,12 @@
-module Hyper.Type.AST.NamelessScope.InvDeBruijn
+module Hyper.Syntax.NamelessScope.InvDeBruijn
     ( InvDeBruijnIndex(..), inverseDeBruijnIndex, scope, scopeVar
     ) where
 
 import Control.Lens (Prism', iso)
 import Control.Lens.Operators
 import Data.Proxy (Proxy(..))
+import Hyper.Syntax.NamelessScope (DeBruijnIndex(..), EmptyScope, Scope(..), ScopeVar(..))
 import Hyper.Type (type (#))
-import Hyper.Type.AST.NamelessScope (DeBruijnIndex(..), EmptyScope, Scope(..), ScopeVar(..))
 
 class DeBruijnIndex a => InvDeBruijnIndex a where
     deBruijnIndexMax :: Proxy a -> Int

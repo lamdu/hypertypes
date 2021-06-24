@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances #-}
 
-module Hyper.Type.AST.Lam
+module Hyper.Syntax.Lam
     ( Lam(..), lamIn, lamOut, W_Lam(..), MorphWitness(..)
     ) where
 
@@ -8,7 +8,7 @@ import           Generics.Constraints (Constraints)
 import           Hyper
 import           Hyper.Class.Optic (HSubset(..), HSubset')
 import           Hyper.Infer
-import           Hyper.Type.AST.FuncType
+import           Hyper.Syntax.FuncType
 import           Hyper.Unify (UnifyGen, UVarOf)
 import           Hyper.Unify.New (newUnbound, newTerm)
 import qualified Text.PrettyPrint as P

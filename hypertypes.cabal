@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2cd28816c22eeee72d7eaf5cbf22e66156807737fd967437f6ccdd5108df3649
+-- hash: e2219d9183be9fcb6c8bdc800395996ff857258976804f68015e0968d7490b69
 
 name:           hypertypes
-version:        0.1.0.2
+version:        0.2.0
 synopsis:       Typed ASTs
 description:    Please see the README on GitHub at <https://github.com/lamdu/hypertypes#readme>
 category:       Algorithms, Compilers/Interpreters, Language, Logic, Unification
@@ -58,6 +58,18 @@ library
       Hyper.Infer.Result
       Hyper.Infer.ScopeLevel
       Hyper.Recurse
+      Hyper.Syntax.App
+      Hyper.Syntax.FuncType
+      Hyper.Syntax.Lam
+      Hyper.Syntax.Let
+      Hyper.Syntax.Map
+      Hyper.Syntax.Nominal
+      Hyper.Syntax.Row
+      Hyper.Syntax.Scheme
+      Hyper.Syntax.Scheme.AlphaEq
+      Hyper.Syntax.TypedLam
+      Hyper.Syntax.TypeSig
+      Hyper.Syntax.Var
       Hyper.TH.Apply
       Hyper.TH.Context
       Hyper.TH.Foldable
@@ -69,18 +81,6 @@ library
       Hyper.TH.Traversable
       Hyper.TH.ZipMatch
       Hyper.Type
-      Hyper.Type.AST.App
-      Hyper.Type.AST.FuncType
-      Hyper.Type.AST.Lam
-      Hyper.Type.AST.Let
-      Hyper.Type.AST.Map
-      Hyper.Type.AST.Nominal
-      Hyper.Type.AST.Row
-      Hyper.Type.AST.Scheme
-      Hyper.Type.AST.Scheme.AlphaEq
-      Hyper.Type.AST.TypedLam
-      Hyper.Type.AST.TypeSig
-      Hyper.Type.AST.Var
       Hyper.Type.Functor
       Hyper.Type.Prune
       Hyper.Type.Pure
@@ -148,8 +148,8 @@ test-suite hypertypes-test
   main-is: Spec.hs
   other-modules:
       Hyper.Class.Infer.Infer1
-      Hyper.Type.AST.NamelessScope
-      Hyper.Type.AST.NamelessScope.InvDeBruijn
+      Hyper.Syntax.NamelessScope
+      Hyper.Syntax.NamelessScope.InvDeBruijn
       LangA
       LangB
       LangC

@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances, TemplateHaskell #-}
 
-module Hyper.Type.AST.FuncType
+module Hyper.Syntax.FuncType
     ( FuncType(..), funcIn, funcOut, W_FuncType(..), MorphWitness(..)
     ) where
 

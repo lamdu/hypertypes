@@ -3,7 +3,7 @@
 {-# LANGUAGE UndecidableInstances, EmptyCase #-}
 {-# LANGUAGE FlexibleInstances, TemplateHaskell, FlexibleContexts #-}
 
-module Hyper.Type.AST.Var
+module Hyper.Syntax.Var
     ( Var(..), _Var
     , VarType(..)
     , ScopeOf, HasScope(..)

@@ -14,10 +14,10 @@ import           Hyper.Unify
 import           Hyper.Unify.Generalize (generalize)
 import           Hyper.Unify.QuantifiedVar (HasQuantifiedVar(..))
 import           Hyper.Recurse (wrap)
-import           Hyper.Type.AST.NamelessScope (EmptyScope)
-import           Hyper.Type.AST.Nominal (NominalDecl(..), loadNominalDecl)
-import           Hyper.Type.AST.Scheme
-import           Hyper.Type.AST.Scheme.AlphaEq (alphaEq)
+import           Hyper.Syntax.NamelessScope (EmptyScope)
+import           Hyper.Syntax.Nominal (NominalDecl(..), loadNominalDecl)
+import           Hyper.Syntax.Scheme
+import           Hyper.Syntax.Scheme.AlphaEq (alphaEq)
 import           LangA
 import           LangB
 import           System.Exit (exitFailure)
