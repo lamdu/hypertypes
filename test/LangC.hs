@@ -9,11 +9,8 @@ import Data.List.NonEmpty (NonEmpty(..), cons)
 import Hyper
 import Hyper.Class.Morph (morphMapped1)
 import Hyper.Recurse ((##>>), wrap)
-import Hyper.Syntax.App (App(..))
-import Hyper.Syntax.Lam (Lam(..), lamOut)
-import Hyper.Syntax.Let (Let(..))
+import Hyper.Syntax
 import Hyper.Syntax.Row (RowExtend(..))
-import Hyper.Syntax.Var (Var(..))
 
 import Prelude
 

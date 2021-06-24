@@ -19,14 +19,14 @@ import           Generics.Constraints (Constraints, makeDerivings)
 import           Hyper
 import           Hyper.Class.Optic
 import           Hyper.Infer
-import           Hyper.Syntax.FuncType
+import           Hyper.Syntax
 import           Hyper.Syntax.NamelessScope
 import           Hyper.Syntax.Nominal
 import           Hyper.Syntax.Row
 import           Hyper.Syntax.Scheme
 import           Hyper.Unify
 import           Hyper.Unify.Binding
-import           Hyper.Unify.QuantifiedVar
+import           Hyper.Unify.QuantifiedVar ( HasQuantifiedVar(..) )
 import           Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
 import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)

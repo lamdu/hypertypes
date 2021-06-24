@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e2219d9183be9fcb6c8bdc800395996ff857258976804f68015e0968d7490b69
+-- hash: f881e46757f47faabde3d397a11103f590732349775c272d331fba75e60336f6
 
 name:           hypertypes
 version:        0.2.0
@@ -58,6 +58,7 @@ library
       Hyper.Infer.Result
       Hyper.Infer.ScopeLevel
       Hyper.Recurse
+      Hyper.Syntax
       Hyper.Syntax.App
       Hyper.Syntax.FuncType
       Hyper.Syntax.Lam

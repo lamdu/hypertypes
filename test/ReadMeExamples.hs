@@ -2,15 +2,13 @@
 
 module ReadMeExamples where
 
-import Data.Text
+import Data.Text (Text)
 import GHC.Generics (Generic1)
 import Generics.Constraints (makeDerivings)
 import Hyper
-import Hyper.Class.ZipMatch
-import Hyper.Diff
-import Hyper.Syntax.App
-import Hyper.Syntax.Var
-import Hyper.Syntax.TypedLam
+import Hyper.Class.ZipMatch (ZipMatch)
+import Hyper.Diff (DiffP, diffP)
+import Hyper.Syntax (App, TypedLam, Var)
 
 import Prelude
 
