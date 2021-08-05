@@ -500,9 +500,9 @@ data App expr h = App
 
 Unlike a DTALC-based apply, which would be parameterized by a single type parameter `(a :: Type)`, `App` is parameterized on two type parameters, `(expr :: HyperType)` and `(h :: AHyperType)`. `expr` represents the node type of `App expr`'s child nodes and `h` is the tree's fix-point. This enables using `App` in mutually recursive ASTs where it may be parameterized by several different `expr`s.
 
-Unlike the original DTALC paper which isn't suitable for mutually recursive ASTs, in `hypertypes` one would have to declare an explicit expression type for each expression type for use as `App`'s `expr` type parameter. Similarly, `multirec`'s DTALC variant also requires explicitly declaring type indices.
+Unlike DTALC, in `hypertypes` one typically needs to explicitly declare the datatypes for their expression types so that they can be used as `App`'s `expr` type parameter. Similarly, `multirec`'s DTALC variant also requires explicitly declaring type indices.
 
-While it is possible to declare ASTs as `newtype`s wrapping `:+:`s of existing terms and deriving all the instances via `GeneralizedNewtypeDeriving`, our usage and examples declare types in the straight forward way, with named data constructors, as we think results in more readable and performant code.
+While it is possible to declare ASTs as `newtype`s wrapping `:+:`s of existing terms and deriving all the instances via `GeneralizedNewtypeDeriving`, our usage and examples declare types in the straight forward way, with named data constructors, as we think that this results in more readable and performant code.
 
 ### bound
 
