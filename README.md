@@ -434,8 +434,6 @@ Many harmless syntactic extensions are also used:
 
 * `DerivingStrategies`, `LambdaCase`, `TupleSections`, `TypeOperators`
 
-Some extensions we use but would like to avoid (we're looking for alternative solutions but haven't found them):
-
 ## How does hypertypes compare/relate to
 
 Note that comparisons to `multirec`, HKD, `recursion-schemes`, `rank2classes`, and `unification-fd` were discussed above.
