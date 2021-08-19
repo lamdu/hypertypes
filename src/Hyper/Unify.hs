@@ -45,7 +45,7 @@ updateConstraints !newConstraints v x =
         | newConstraints `leq` l -> pure ()
         | otherwise -> SkolemEscape v & unifyError
     UTerm t -> updateTermConstraints v t newConstraints
-    UResolving t -> () <$ occursError v t
+    UResolving t -> occursError v t & void
     _ -> error "This shouldn't happen in unification stage"
 
 {-# INLINE updateTermConstraints #-}

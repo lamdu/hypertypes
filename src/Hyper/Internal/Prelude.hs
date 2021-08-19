@@ -9,7 +9,7 @@ module Hyper.Internal.Prelude
 import Control.DeepSeq as X (NFData)
 import Control.Lens as X (Traversal, Iso, makeLenses, makePrisms)
 import Control.Lens.Operators as X
-import Control.Monad as X (guard)
+import Control.Monad as X (guard, void)
 import Data.Binary as X (Binary)
 import Data.Constraint as X (Dict(..), Constraint, withDict)
 import Data.Foldable as X (traverse_, sequenceA_)
