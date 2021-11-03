@@ -8,6 +8,8 @@ import Data.Proxy (Proxy(..))
 import Hyper.Syntax.NamelessScope (DeBruijnIndex(..), EmptyScope, Scope(..), ScopeVar(..))
 import Hyper.Type (type (#))
 
+import Prelude
+
 class DeBruijnIndex a => InvDeBruijnIndex a where
     deBruijnIndexMax :: Proxy a -> Int
 

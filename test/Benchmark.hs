@@ -9,6 +9,8 @@ import LangB
 import Text.PrettyPrint.HughesPJClass (prettyShow)
 import TypeLang
 
+import Prelude
+
 fields :: [String]
 fields = [ 'a' : show i | i <- [0 :: Int .. 100] ]
 

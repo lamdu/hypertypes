@@ -44,6 +44,7 @@ default-extensions:
 - TypeApplications
 - TypeOperators
 - TypeFamilies
+- NoImplicitPrelude
 
 ghc-options:
 - -fexpose-all-unfoldings
@@ -69,8 +70,6 @@ library:
   - template-haskell
   - transformers
   - th-abstraction >= 0.3
-  default-extensions:
-  - NoImplicitPrelude
   ghc-options:
   - -Wnoncanonical-monad-instances
   - -Wincomplete-record-updates

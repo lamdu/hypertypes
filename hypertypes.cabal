@@ -176,6 +176,7 @@ test-suite hypertypes-test
       TypeApplications
       TypeOperators
       TypeFamilies
+      NoImplicitPrelude
   ghc-options: -fexpose-all-unfoldings -Wall -Wcompat -Wredundant-constraints -Wunused-packages -threaded -rtsopts -with-rtsopts=-N
   ghc-prof-options: -fexpose-all-unfoldings
   build-depends:
@@ -218,6 +219,7 @@ benchmark hypertypes-bench
       TypeApplications
       TypeOperators
       TypeFamilies
+      NoImplicitPrelude
   ghc-options: -fexpose-all-unfoldings -Wall -Wcompat -Wredundant-constraints -Wunused-packages -O2 -Wnoncanonical-monad-instances -Wincomplete-record-updates -Wincomplete-uni-patterns
   ghc-prof-options: -fexpose-all-unfoldings
   build-depends:

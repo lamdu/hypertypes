@@ -30,6 +30,8 @@ import           Hyper.Syntax.FuncType
 import           Hyper.Unify (UnifyGen, UVarOf)
 import           Hyper.Unify.New (newUnbound)
 
+import           Prelude
+
 data EmptyScope deriving Show
 
 newtype Scope expr a h = Scope (h :# expr (Maybe a))
