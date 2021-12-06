@@ -10,17 +10,18 @@ module Hyper.Combinator.Compose
     , decompose, decompose', hcomposed
     ) where
 
-import Control.Lens (Profunctor, Optic, Iso', iso)
-import Hyper.Class.Apply (HApply(..))
-import Hyper.Class.Foldable (HFoldable(..))
-import Hyper.Class.Functor (HFunctor(..), hiso)
-import Hyper.Class.Nodes (HNodes(..), HWitness(..), (#>))
-import Hyper.Class.Pointed (HPointed(..))
-import Hyper.Class.Traversable (HTraversable(..), ContainedH(..), htraverse)
-import Hyper.Class.Recursive (RNodes(..), Recursively(..), RTraversable)
-import Hyper.Class.ZipMatch (ZipMatch(..))
-import Hyper.Type (HyperType, GetHyperType, type (#))
-import Hyper.Type.Pure (Pure, _Pure)
+import           Control.Lens (Profunctor, Optic, Iso', iso)
+import           Hyper.Class.Apply (HApply(..))
+import           Hyper.Class.Foldable (HFoldable(..))
+import           Hyper.Class.Functor (HFunctor(..), hiso)
+import           Hyper.Class.Nodes (HNodes(..), HWitness(..), (#>))
+import           Hyper.Class.Pointed (HPointed(..))
+import           Hyper.Class.Recursive (RNodes(..), Recursively(..), RTraversable)
+import           Hyper.Class.Traversable (HTraversable(..), ContainedH(..), htraverse)
+import           Hyper.Class.ZipMatch (ZipMatch(..))
+import           Hyper.Type (HyperType, GetHyperType, type (#))
+import           Hyper.Type.Pure (Pure, _Pure)
+import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 
 import Hyper.Internal.Prelude
 
@@ -29,6 +30,9 @@ newtype HCompose a b h = HCompose { getHCompose :: a # HCompose b (GetHyperType 
     deriving stock Generic
 
 makeCommonInstances [''HCompose]
+
+instance Pretty (a # HCompose b (GetHyperType h)) => Pretty (HCompose a b h) where
+    pPrintPrec level prec (HCompose x) = pPrintPrec level prec x
 
 -- | An 'Control.Lens.Iso' for the 'HCompose' @newtype@
 {-# INLINE _HCompose #-}

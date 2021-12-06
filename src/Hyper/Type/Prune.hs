@@ -12,12 +12,18 @@ import           Hyper.Combinator.Compose (HComposeConstraint1)
 import           Hyper.Infer
 import           Hyper.Infer.Blame (Blame(..))
 import           Hyper.Unify.New (newUnbound)
+import qualified Text.PrettyPrint as Pretty
+import           Text.PrettyPrint.HughesPJClass (Pretty(..))
 
 import           Hyper.Internal.Prelude
 
 data Prune h =
     Pruned | Unpruned (h :# Prune)
     deriving Generic
+
+instance Pretty (h :# Prune) => Pretty (Prune h) where
+    pPrintPrec _ _ Pruned = Pretty.text "<pruned>"
+    pPrintPrec level prec (Unpruned x) = pPrintPrec level prec x
 
 makeCommonInstances [''Prune]
 makePrisms ''Prune
