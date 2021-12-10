@@ -46,7 +46,7 @@ updateConstraints !newConstraints v x =
         | otherwise -> SkolemEscape v & unifyError
     UTerm t -> updateTermConstraints v t newConstraints
     UResolving t -> occursError v t & void
-    _ -> error "This shouldn't happen in unification stage"
+    _ -> error "updateConstraints: This shouldn't happen in unification stage"
 
 {-# INLINE updateTermConstraints #-}
 updateTermConstraints ::
@@ -129,4 +129,4 @@ unifyUTerms xv (UTerm xt) yv (UTerm yt) =
             & fromMaybe (xt ^. uBody <$ structureMismatch unify (xt ^. uBody) (yt ^. uBody))
             >>= bindVar binding xv . UTerm . UTermBody (xt ^. uConstraints <> yt ^. uConstraints)
         pure xv
-unifyUTerms _ _ _ _ = error "This shouldn't happen in unification stage"
+unifyUTerms _ _ _ _ = error "unifyUTerms: This shouldn't happen in unification stage"
