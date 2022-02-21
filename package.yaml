@@ -51,6 +51,7 @@ ghc-options:
 - -Wall
 - -Wcompat
 - -Wredundant-constraints
+- -Wunused-packages
 ghc-prof-options:
 - -fexpose-all-unfoldings
 
@@ -65,7 +66,6 @@ library:
   - binary
   - deepseq
   - pretty
-  - QuickCheck
   - show-combinators
   - template-haskell
   - th-abstraction >= 0.3

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f881e46757f47faabde3d397a11103f590732349775c272d331fba75e60336f6
+-- hash: 2c3ff40345bf0ac35bde85775f7126394f877704861435e78687940f05cd4eef
 
 name:           hypertypes
 version:        0.2.0
@@ -120,11 +120,10 @@ library
       TypeOperators
       TypeFamilies
       NoImplicitPrelude
-  ghc-options: -fexpose-all-unfoldings -Wall -Wcompat -Wredundant-constraints -Wnoncanonical-monad-instances -Wincomplete-record-updates -Wincomplete-uni-patterns
+  ghc-options: -fexpose-all-unfoldings -Wall -Wcompat -Wredundant-constraints -Wunused-packages -Wnoncanonical-monad-instances -Wincomplete-record-updates -Wincomplete-uni-patterns
   ghc-prof-options: -fexpose-all-unfoldings
   build-depends:
-      QuickCheck
-    , array
+      array
     , base >=4.9 && <5
     , base-compat
     , binary
@@ -177,7 +176,7 @@ test-suite hypertypes-test
       TypeApplications
       TypeOperators
       TypeFamilies
-  ghc-options: -fexpose-all-unfoldings -Wall -Wcompat -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -fexpose-all-unfoldings -Wall -Wcompat -Wredundant-constraints -Wunused-packages -threaded -rtsopts -with-rtsopts=-N
   ghc-prof-options: -fexpose-all-unfoldings
   build-depends:
       base >=4.9 && <5
@@ -220,7 +219,7 @@ benchmark hypertypes-bench
       TypeApplications
       TypeOperators
       TypeFamilies
-  ghc-options: -fexpose-all-unfoldings -Wall -Wcompat -Wredundant-constraints -O2 -Wnoncanonical-monad-instances -Wincomplete-record-updates -Wincomplete-uni-patterns
+  ghc-options: -fexpose-all-unfoldings -Wall -Wcompat -Wredundant-constraints -Wunused-packages -O2 -Wnoncanonical-monad-instances -Wincomplete-record-updates -Wincomplete-uni-patterns
   ghc-prof-options: -fexpose-all-unfoldings
   build-depends:
       base >=4.9 && <5
