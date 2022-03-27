@@ -25,7 +25,6 @@ dependencies:
 - lens
 - monad-st
 - mtl
-- transformers
 - pretty
 
 default-extensions:
@@ -68,6 +67,7 @@ library:
   - pretty
   - show-combinators
   - template-haskell
+  - transformers
   - th-abstraction >= 0.3
   default-extensions:
   - NoImplicitPrelude

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2c3ff40345bf0ac35bde85775f7126394f877704861435e78687940f05cd4eef
+-- hash: e5ce176019f998eeb469dc3ec2940190676052a57f4cf8d6a158ab5eea1f1cbc
 
 name:           hypertypes
 version:        0.2.0
@@ -191,7 +191,6 @@ test-suite hypertypes-test
     , mtl
     , pretty
     , text
-    , transformers
   default-language: Haskell2010
 
 benchmark hypertypes-bench
@@ -234,5 +233,4 @@ benchmark hypertypes-bench
     , monad-st
     , mtl
     , pretty
-    , transformers
   default-language: Haskell2010
