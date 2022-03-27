@@ -4,7 +4,7 @@
 -- equivalent of 'Pure' is called @self@ in
 -- [Hyperfunctions papers](https://arxiv.org/abs/1309.5135).
 
-{-# LANGUAGE UndecidableInstances, TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleContexts #-}
 module Hyper.Type.Pure
     ( Pure(..), _Pure, W_Pure(..)
     ) where

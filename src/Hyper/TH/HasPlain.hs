@@ -98,11 +98,11 @@ makeCtr top param (cName, _, cFields) =
     , zipWith (>>=) (cVars <&> varE) (xs >>= toPlainFields)
         & foldl appE (conE pcon)
         & normalB
-        <&> (\x -> Clause [ConP cName (toPlainPat cVars xs ^. Lens._1)] x [])
+        & (clause [conP cName (toPlainPat cVars xs ^. Lens._1)] ?? [])
     , fromPlainFields cVars xs ^. Lens._1
         & foldl appE (conE cName)
         & normalB
-        <&> \x -> Clause [ConP pcon (cVars <&> VarP)] x []
+        & (clause [conP pcon (cVars <&> varP)] ?? [])
     , xs >>= fieldContext
     )
     where
@@ -111,13 +111,13 @@ makeCtr top param (cName, _, cFields) =
         toPlainFields (NodeField x) = [fieldToPlain x . pure]
         toPlainFields (FlatFields x) = flatFields x >>= toPlainFields
         toPlainPat cs [] = ([], cs)
-        toPlainPat (c:cs) (NodeField{} : xs) = toPlainPat cs xs & Lens._1 %~ (VarP c :)
+        toPlainPat (c:cs) (NodeField{} : xs) = toPlainPat cs xs & Lens._1 %~ (varP c :)
         toPlainPat cs0 (FlatFields x : xs) =
             toPlainPat cs1 xs & Lens._1 %~ (res :)
             where
                 res | flatIsEmbed x = embed
-                    | otherwise = ConP 'Pure [embed]
-                embed = ConP (flatCtr x) r
+                    | otherwise = conP 'Pure [embed]
+                embed = conP (flatCtr x) r
                 (r, cs1) = toPlainPat cs0 (flatFields x)
         toPlainPat [] _ = error "out of variables"
         fromPlainFields cs [] = ([], cs)

@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances, FlexibleContexts #-}
 
 module Hyper.Combinator.Ann
     ( Ann(..), hAnn, hVal

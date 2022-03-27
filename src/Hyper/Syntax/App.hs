@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, UndecidableInstances, TemplateHaskell #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances, TemplateHaskell, FlexibleContexts #-}
 
 module Hyper.Syntax.App
     ( App(..), appFunc, appArg, W_App(..), MorphWitness(..)

@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances, FlexibleContexts #-}
 
 module Hyper.Syntax.TypedLam
     ( TypedLam(..), tlIn, tlInType, tlOut, W_TypedLam(..), MorphWitness(..)

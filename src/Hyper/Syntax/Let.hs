@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances, FlexibleContexts #-}
 
 module Hyper.Syntax.Let
     ( Let(..), letVar, letEquals, letIn, W_Let(..), MorphWitness(..)

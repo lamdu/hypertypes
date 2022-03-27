@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances, FlexibleContexts #-}
 
 module Hyper.Syntax.Map
     ( TermMap(..), _TermMap, W_TermMap(..), MorphWitness(..)

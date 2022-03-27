@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances, FlexibleContexts #-}
 
 module Hyper.Syntax.Lam
     ( Lam(..), lamIn, lamOut, W_Lam(..), MorphWitness(..)

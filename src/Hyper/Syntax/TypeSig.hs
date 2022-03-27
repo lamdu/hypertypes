@@ -1,6 +1,6 @@
 -- | Type signatures
 
-{-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances, FlexibleContexts #-}
 
 module Hyper.Syntax.TypeSig
     ( TypeSig(..), tsType, tsTerm, W_TypeSig(..)

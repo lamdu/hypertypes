@@ -1,4 +1,4 @@
-{-# LANGUAGE UndecidableInstances, TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleContexts #-}
 
 module Hyper.Syntax.FuncType
     ( FuncType(..), funcIn, funcOut, W_FuncType(..), MorphWitness(..)
