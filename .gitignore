@@ -12,3 +12,4 @@
 stack.yaml.lock
 /dist-newstyle/
 .ghc.environment.*
+.DS_Store
