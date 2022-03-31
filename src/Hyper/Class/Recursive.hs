@@ -6,7 +6,7 @@ module Hyper.Class.Recursive
     ( Recursive(..)
     , Recursively(..)
     , RNodes(..), RTraversable(..)
-    , proxyArgument
+    , RecMethod, DefRecMethod, proxyArgument
     ) where
 
 import Hyper.Class.Foldable
@@ -23,13 +23,14 @@ class Recursive c where
     -- | Lift a recursive constraint to the next layer
     recurse :: (HNodes h, c h) => proxy (c h) -> Dict (HNodesConstraint h c)
 
+type RecMethod c h = Proxy h -> Dict (HNodesConstraint h c)
+type DefRecMethod c h = HNodesConstraint h c => RecMethod c h
+
 -- | A class of 'HyperType's which recursively implement 'HNodes'
 class HNodes h => RNodes h where
-    recursiveHNodes :: proxy h -> Dict (HNodesConstraint h RNodes)
+    recursiveHNodes :: RecMethod RNodes h
     {-# INLINE recursiveHNodes #-}
-    default recursiveHNodes ::
-        HNodesConstraint h RNodes =>
-        proxy h -> Dict (HNodesConstraint h RNodes)
+    default recursiveHNodes :: DefRecMethod RNodes h
     recursiveHNodes _ = Dict
 
 instance RNodes Pure
@@ -49,8 +50,7 @@ instance Recursive RNodes where
 -- one will want to create a class such as RTraversable to capture the dependencies,
 -- otherwise using it in class contexts will be quite unergonomic.
 class RNodes h => Recursively c h where
-    recursively ::
-        proxy (c h) -> Dict (c h, HNodesConstraint h (Recursively c))
+    recursively :: proxy (c h) -> Dict (c h, HNodesConstraint h (Recursively c))
     {-# INLINE recursively #-}
     default recursively ::
         (c h, HNodesConstraint h (Recursively c)) =>
@@ -70,11 +70,9 @@ instance c (Const a) => Recursively c (Const a)
 
 -- | A class of 'HyperType's which recursively implement 'HTraversable'
 class (HTraversable h, Recursively HFunctor h, Recursively HFoldable h) => RTraversable h where
-    recursiveHTraversable :: proxy h -> Dict (HNodesConstraint h RTraversable)
+    recursiveHTraversable :: RecMethod RTraversable h
     {-# INLINE recursiveHTraversable #-}
-    default recursiveHTraversable ::
-        HNodesConstraint h RTraversable =>
-        proxy h -> Dict (HNodesConstraint h RTraversable)
+    default recursiveHTraversable :: DefRecMethod RTraversable h
     recursiveHTraversable _ = Dict
 
 instance RTraversable Pure

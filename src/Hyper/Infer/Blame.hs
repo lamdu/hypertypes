@@ -78,12 +78,9 @@ class
         m Bool
 
     -- TODO: Putting documentation here causes duplication in the haddock documentation
-    blamableRecursive ::
-        Proxy m -> Proxy t -> Dict (HNodesConstraint t (Blame m))
+    blamableRecursive :: Proxy m -> RecMethod (Blame m) t
     {-# INLINE blamableRecursive #-}
-    default blamableRecursive ::
-        HNodesConstraint t (Blame m) =>
-        Proxy m -> Proxy t -> Dict (HNodesConstraint t (Blame m))
+    default blamableRecursive :: HNodesConstraint t (Blame m) => Proxy m -> RecMethod (Blame m) t
     blamableRecursive _ _ = Dict
 
 instance Recursive (Blame m) where

@@ -184,14 +184,11 @@ class
     (UnifyGen m t, HNodeLens varTypes t, Ord (QVar t)) =>
     HasScheme varTypes m t where
 
-    hasSchemeRecursive ::
-        Proxy varTypes -> Proxy m -> Proxy t ->
-        Dict (HNodesConstraint t (HasScheme varTypes m))
+    hasSchemeRecursive :: Proxy varTypes -> Proxy m -> RecMethod (HasScheme varTypes m) t
     {-# INLINE hasSchemeRecursive #-}
     default hasSchemeRecursive ::
         HNodesConstraint t (HasScheme varTypes m) =>
-        Proxy varTypes -> Proxy m -> Proxy t ->
-        Dict (HNodesConstraint t (HasScheme varTypes m))
+        Proxy varTypes -> Proxy m -> RecMethod (HasScheme varTypes m) t
     hasSchemeRecursive _ _ _ = Dict
 
 instance Recursive (HasScheme varTypes m) where

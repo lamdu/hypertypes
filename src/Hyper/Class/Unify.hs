@@ -92,11 +92,9 @@ class
     structureMismatch _ x y = unifyError (Mismatch x y)
 
     -- TODO: Putting documentation here causes duplication in the haddock documentation
-    unifyRecursive :: Proxy m -> Proxy t -> Dict (HNodesConstraint t (Unify m))
+    unifyRecursive :: Proxy m -> RecMethod (Unify m) t
     {-# INLINE unifyRecursive #-}
-    default unifyRecursive ::
-        HNodesConstraint t (Unify m) =>
-        Proxy m -> Proxy t -> Dict (HNodesConstraint t (Unify m))
+    default unifyRecursive :: HNodesConstraint t (Unify m) => Proxy m -> RecMethod (Unify m) t
     unifyRecursive _ _ = Dict
 
 instance Recursive (Unify m) where
@@ -108,11 +106,10 @@ class Unify m t => UnifyGen m t where
     -- | Get the current scope constraint
     scopeConstraints :: Proxy t -> m (TypeConstraintsOf t)
 
-    unifyGenRecursive :: Proxy m -> Proxy t -> Dict (HNodesConstraint t (UnifyGen m))
+    unifyGenRecursive :: Proxy m -> RecMethod (UnifyGen m) t
     {-# INLINE unifyGenRecursive #-}
     default unifyGenRecursive ::
-        HNodesConstraint t (UnifyGen m) =>
-        Proxy m -> Proxy t -> Dict (HNodesConstraint t (UnifyGen m))
+        HNodesConstraint t (UnifyGen m) => Proxy m -> RecMethod (UnifyGen m) t
     unifyGenRecursive _ _ = Dict
 
 instance Recursive (UnifyGen m) where

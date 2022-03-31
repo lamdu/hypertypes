@@ -10,8 +10,7 @@ import Control.Lens (ALens', Lens')
 import Hyper.Class.Foldable (HFoldable)
 import Hyper.Class.Functor (HFunctor)
 import Hyper.Class.Infer (InferOf)
-import Hyper.Class.Nodes (HNodes(..))
-import Hyper.Class.Recursive (Recursive(..), Recursively, proxyArgument)
+import Hyper.Class.Recursive
 import Hyper.Class.Traversable (HTraversable)
 import Hyper.Type (HyperType, type (#))
 
@@ -38,12 +37,9 @@ instance c (InferOf h) => InferOfConstraint c h where
 class
     (HTraversable (InferOf h), Recursively (InferOfConstraint HFunctor) h, Recursively (InferOfConstraint HFoldable) h) =>
     RTraversableInferOf h where
-    rTraversableInferOfRec ::
-        Proxy h -> Dict (HNodesConstraint h RTraversableInferOf)
+    rTraversableInferOfRec :: RecMethod RTraversableInferOf h
     {-# INLINE rTraversableInferOfRec #-}
-    default rTraversableInferOfRec ::
-        HNodesConstraint h RTraversableInferOf =>
-        Proxy h -> Dict (HNodesConstraint h RTraversableInferOf)
+    default rTraversableInferOfRec :: DefRecMethod RTraversableInferOf h
     rTraversableInferOfRec _ = Dict
 
 instance Recursive RTraversableInferOf where
