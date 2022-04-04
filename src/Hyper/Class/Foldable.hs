@@ -38,7 +38,7 @@ class HNodes h => HFoldable h where
 
 instance HFoldable (Const a) where
     {-# INLINE hfoldMap #-}
-    hfoldMap _ _ = mempty
+    hfoldMap _ = mempty
 
 instance (HFoldable a, HFoldable b) => HFoldable (a :*: b) where
     {-# INLINE hfoldMap #-}

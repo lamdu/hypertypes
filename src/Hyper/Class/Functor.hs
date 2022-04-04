@@ -8,7 +8,7 @@ module Hyper.Class.Functor
     , hiso
     ) where
 
-import Control.Lens (Setter, Iso', AnIso', sets, iso, cloneIso)
+import Control.Lens (Setter, Iso', AnIso', _Wrapped, sets, iso, cloneIso)
 import GHC.Generics
 import GHC.Generics.Lens (generic1)
 import Hyper.Class.Nodes (HNodes(..), HWitness(..), _HWitness, (#>))
@@ -36,7 +36,7 @@ class HNodes h => HFunctor h where
 
 instance HFunctor (Const a) where
     {-# INLINE hmap #-}
-    hmap _ (Const x) = Const x
+    hmap _ = _Wrapped %~ id
 
 instance (HFunctor a, HFunctor b) => HFunctor (a :*: b) where
     {-# INLINE hmap #-}

@@ -25,7 +25,7 @@ class HContext h where
         h # (HFunc p (Const (h # p)) :*: p)
 
 instance HContext Pure where
-    hcontext = _Pure %~ \x -> HFunc (Const . Pure) :*: x
+    hcontext = _Pure %~ (HFunc (Const . Pure) :*:)
 
 instance (HContext a, HFunctor a) => HContext (Ann a) where
     hcontext (Ann a b) =
@@ -42,7 +42,7 @@ instance (HFunctor h0, HContext h0, HFunctor h1, HContext h1) => HContext (HComp
             hmap
             ( \_ (HFunc c1 :*: x1) ->
                 x1 & _HCompose %~
-                (HFunc (Const . (_HCompose #) . getConst . c0 . (_HCompose #) . getConst . c1 . (_HCompose #)) :*:)
+                (HFunc ((_Wrapped %~ (_HCompose #)) . c0 . (_HCompose #) . getConst . c1 . (_HCompose #)) :*:)
             ) . hcontext
         ) . hcontext
 
