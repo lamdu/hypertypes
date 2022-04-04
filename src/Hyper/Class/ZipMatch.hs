@@ -10,6 +10,7 @@ module Hyper.Class.ZipMatch
     ) where
 
 import GHC.Generics
+import GHC.Generics.Lens (generic1)
 import Hyper.Class.Foldable (HFoldable, htraverse_, htraverse1_)
 import Hyper.Class.Functor (HFunctor(..))
 import Hyper.Class.Nodes (HNodes(..), HWitness)
@@ -38,8 +39,7 @@ class ZipMatch h where
     default zipMatch ::
         (Generic1 h, ZipMatch (Rep1 h)) =>
         h # p -> h # q -> Maybe (h # (p :*: q))
-    zipMatch x =
-        fmap to1 . zipMatch (from1 x) . from1
+    zipMatch = generic1 . zipMatch . from1
 
 instance ZipMatch Pure where
     {-# INLINE zipMatch #-}

@@ -10,6 +10,7 @@ module Hyper.Class.Functor
 
 import Control.Lens (Setter, Iso', AnIso', sets, iso, cloneIso)
 import GHC.Generics
+import GHC.Generics.Lens (generic1)
 import Hyper.Class.Nodes (HNodes(..), HWitness(..), _HWitness, (#>))
 import Hyper.Type (type (#))
 
@@ -31,7 +32,7 @@ class HNodes h => HFunctor h where
         (forall n. HWitness h n -> p # n -> q # n) ->
         h # p ->
         h # q
-    hmap f = to1 . hmap (f . (_HWitness %~ id)) . from1
+    hmap f = generic1 %~ hmap (f . (_HWitness %~ id))
 
 instance HFunctor (Const a) where
     {-# INLINE hmap #-}

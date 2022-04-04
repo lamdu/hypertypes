@@ -10,7 +10,7 @@ module Hyper.Class.Traversable
 
 import Control.Lens (iso)
 import GHC.Generics
-import GHC.Generics.Lens (_M1, _Rec1)
+import GHC.Generics.Lens (_M1, _Rec1, generic1)
 import Hyper.Class.Foldable (HFoldable)
 import Hyper.Class.Functor (HFunctor(..), hmapped1)
 import Hyper.Class.Nodes (HNodes(..), HWitness)
@@ -44,7 +44,7 @@ class (HFunctor h, HFoldable h) => HTraversable h where
         (Generic1 h, HTraversable (Rep1 h), Applicative f) =>
         h # ContainedH f p ->
         f (h # p)
-    hsequence = fmap to1 . hsequence . from1
+    hsequence = generic1 hsequence
 
 instance HTraversable (Const a) where
     {-# INLINE hsequence #-}
