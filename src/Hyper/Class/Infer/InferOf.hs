@@ -29,10 +29,10 @@ class HasInferredValue t where
     inferredValue :: Lens' (InferOf t # v) (v # t)
 
 class InferOfConstraint c h where
-    inferOfConstraint :: proxy0 c -> proxy1 h -> Dict (c (InferOf h))
+    inferOfConstraint :: proxy h -> Dict (c (InferOf h))
 
 instance c (InferOf h) => InferOfConstraint c h where
-    inferOfConstraint _ _ = Dict
+    inferOfConstraint _ = Dict
 
 class
     (HTraversable (InferOf h), Recursively (InferOfConstraint HFunctor) h, Recursively (InferOfConstraint HFoldable) h) =>

@@ -70,7 +70,7 @@ inferUVarsApplyBindings =
             InferResult (UVarOf m) # n ->
             m (InferResult (Pure :*: UVarOf m) # n)
         f = withDict (recursively (Proxy @(InferOfConstraint (HNodesHaveConstraint (Unify m)) n))) $
-            withDict (inferOfConstraint (Proxy @(HNodesHaveConstraint (Unify m))) (Proxy @n)) $
+            withDict (inferOfConstraint @(HNodesHaveConstraint (Unify m)) (Proxy @n)) $
             withDict (hNodesHaveConstraint (Proxy @(Unify m)) (Proxy @(InferOf n))) $
             htraverseFlipped $
             Proxy @(Unify m) #>
