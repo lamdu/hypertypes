@@ -189,7 +189,7 @@ inferExpr ::
     , Infer m t
     , HasScheme Types m (TypeOf t)
     , RTraversable t
-    , RTraversableInferOf t
+    , Recursively (InferOfConstraint HFoldable) t
     ) =>
     Pure # t ->
     m (Pure # Scheme Types (TypeOf t))
@@ -202,9 +202,11 @@ inferExpr x =
             >>= saveScheme
         result <$
             htraverse_
-            ( Proxy @(Infer m) #*# Proxy @RTraversableInferOf #*#
-                \w (Const () :*: InferResult i) ->
+            ( Proxy @(Infer m) #*# Proxy @(Recursively (InferOfConstraint HFoldable)) #*#
+                \(w :: HWitness (HFlip Ann t) n) (Const () :*: InferResult i) ->
                 withDict (inferContext (Proxy @m) w) $
+                withDict (recursively (Proxy @(InferOfConstraint HFoldable n))) $
+                withDict (inferOfConstraint @HFoldable w) $
                 htraverse_ (Proxy @(UnifyGen m) #> void . applyBindings) i
             ) (_HFlip # inferRes)
 

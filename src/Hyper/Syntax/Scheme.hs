@@ -53,7 +53,6 @@ makeHTraversableApplyAndBases ''Scheme
 instance RNodes t => RNodes (Scheme v t)
 instance (c (Scheme v t), Recursively c t) => Recursively c (Scheme v t)
 instance (HTraversable (Scheme v t), RTraversable t) => RTraversable (Scheme v t)
-instance (RTraversable t, RTraversableInferOf t) => RTraversableInferOf (Scheme v t)
 
 instance
     ( Ord (QVar (GetHyperType typ))

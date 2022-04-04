@@ -53,7 +53,6 @@ type instance InferOf (LangA h) = ANode Typ
 
 instance Recursively (InferOfConstraint HFunctor) (LangA h)
 instance Recursively (InferOfConstraint HFoldable) (LangA h)
-instance RTraversableInferOf (LangA h)
 
 instance HasInferredType (LangA h) where
     type TypeOf (LangA h) = Typ

@@ -51,25 +51,28 @@ type InferResultsConstraint c = Recursively (InferOfConstraint (HNodesHaveConstr
 
 inferUVarsApplyBindings ::
     forall m t a.
-    ( Applicative m, RTraversable t, RTraversableInferOf t
+    ( Applicative m, RTraversable t
+    , Recursively (InferOfConstraint HTraversable) t
     , InferResultsConstraint (Unify m) t
     ) =>
     Ann (a :*: InferResult (UVarOf m)) # t ->
     m (Ann (a :*: InferResult (Pure :*: UVarOf m)) # t)
 inferUVarsApplyBindings =
     htraverseFlipped $
-    Proxy @RTraversableInferOf #*#
+    Proxy @(Recursively (InferOfConstraint HTraversable)) #*#
     Proxy @(InferResultsConstraint (Unify m)) #>
     Lens._2 f
     where
         f ::
             forall n.
-            ( HTraversable (InferOf n)
+            ( Recursively (InferOfConstraint HTraversable) n
             , InferResultsConstraint (Unify m) n
             ) =>
             InferResult (UVarOf m) # n ->
             m (InferResult (Pure :*: UVarOf m) # n)
-        f = withDict (recursively (Proxy @(InferOfConstraint (HNodesHaveConstraint (Unify m)) n))) $
+        f = withDict (recursively (Proxy @(InferOfConstraint HTraversable n))) $
+            withDict (recursively (Proxy @(InferOfConstraint (HNodesHaveConstraint (Unify m)) n))) $
+            withDict (inferOfConstraint @HTraversable (Proxy @n)) $
             withDict (inferOfConstraint @(HNodesHaveConstraint (Unify m)) (Proxy @n)) $
             withDict (hNodesHaveConstraint (Proxy @(Unify m)) (Proxy @(InferOf n))) $
             htraverseFlipped $

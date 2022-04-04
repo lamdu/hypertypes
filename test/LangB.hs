@@ -126,8 +126,6 @@ instance
             (BGetField wI h, _ANode # rT) <$
                 (newTerm (TRec wR) >>= unify (wT ^. _ANode))
 
-instance RTraversableInferOf LangB
-
 -- Monads for inferring `LangB`:
 
 newtype ScopeTypes v = ScopeTypes (Map Name (HFlip GTerm Typ v))

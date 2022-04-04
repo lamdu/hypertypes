@@ -3,15 +3,11 @@
 module Hyper.Class.Infer.InferOf
     ( HasInferredType(..)
     , HasInferredValue(..)
-    , InferOfConstraint(..), RTraversableInferOf
+    , InferOfConstraint(..)
     ) where
 
 import Control.Lens (ALens', Lens')
-import Hyper.Class.Foldable (HFoldable)
-import Hyper.Class.Functor (HFunctor)
 import Hyper.Class.Infer (InferOf)
-import Hyper.Class.Recursive
-import Hyper.Class.Traversable (HTraversable)
 import Hyper.Type (HyperType, type (#))
 
 import Hyper.Internal.Prelude
@@ -33,15 +29,3 @@ class InferOfConstraint c h where
 
 instance c (InferOf h) => InferOfConstraint c h where
     inferOfConstraint _ = Dict
-
-class
-    (HTraversable (InferOf h), Recursively (InferOfConstraint HFunctor) h, Recursively (InferOfConstraint HFoldable) h) =>
-    RTraversableInferOf h where
-    rTraversableInferOfRec :: RecMethod RTraversableInferOf h
-    {-# INLINE rTraversableInferOfRec #-}
-    default rTraversableInferOfRec :: DefRecMethod RTraversableInferOf h
-    rTraversableInferOfRec _ = Dict
-
-instance Recursive RTraversableInferOf where
-    {-# INLINE recurse #-}
-    recurse = rTraversableInferOfRec . proxyArgument
