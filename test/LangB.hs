@@ -16,7 +16,9 @@ import           Data.Map (Map)
 import           Data.STRef
 import           Data.String (IsString(..))
 import           Hyper
+import           Hyper.Class.Recursive
 import           Hyper.Infer
+import           Hyper.Infer.Blame
 import           Hyper.Syntax
 import           Hyper.Syntax.Nominal
 import           Hyper.Syntax.Row
@@ -51,6 +53,8 @@ makeHMorph ''LangB
 instance c LangB => Recursively c LangB
 instance RNodes LangB
 instance RTraversable LangB
+
+instance Recursive ((~) LangB) where recurse _ = Dict
 
 type instance InferOf LangB = ANode Typ
 type instance ScopeOf LangB = ScopeTypes
@@ -267,3 +271,10 @@ instance Unify (STInferB s) Row where
 
 instance HasScheme Types (STInferB s) Typ
 instance HasScheme Types (STInferB s) Row
+
+instance Blame PureInferB LangB where
+    inferOfUnify _ x y = unify (x ^. _ANode) (y ^. _ANode) & void
+    inferOfMatches _ x y =
+        (==)
+        <$> (semiPruneLookup (x ^. _ANode) <&> fst)
+        <*> (semiPruneLookup (y ^. _ANode) <&> fst)

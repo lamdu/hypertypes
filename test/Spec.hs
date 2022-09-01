@@ -10,10 +10,13 @@ import qualified Data.Map as Map
 import qualified Data.Set as Set
 import           Hyper
 import           Hyper.Infer
+import           Hyper.Infer.Blame (blame, BlameResult(Good))
 import           Hyper.Unify
+import           Hyper.Unify.New (newUnbound)
 import           Hyper.Unify.Generalize (generalize)
 import           Hyper.Unify.QuantifiedVar (HasQuantifiedVar(..))
 import           Hyper.Recurse (wrap)
+import           Hyper.Syntax (App(..), Var(..))
 import           Hyper.Syntax.NamelessScope (EmptyScope)
 import           Hyper.Syntax.Nominal (NominalDecl(..), loadNominalDecl)
 import           Hyper.Syntax.Scheme
@@ -183,6 +186,9 @@ nomSkolem0 = BLamP "x" (BToNomP "LocalMut" "x")
 nomSkolem1 :: HPlain LangB
 nomSkolem1 = nomSkolem0 `BAppP` return5
 
+addAnns :: Recursively HFunctor h => Pure # h -> Ann (Const ()) # h
+addAnns = wrap (const (Ann (Const ())))
+
 inferExpr ::
     forall m t.
     ( HasInferredType t
@@ -195,7 +201,7 @@ inferExpr ::
     m (Pure # Scheme Types (TypeOf t))
 inferExpr x =
     do
-        inferRes <- infer (wrap (const (Ann (Const ()))) x)
+        inferRes <- infer (addAnns x)
         result <-
             inferRes ^# hAnn . Lens._2 . _InferResult . inferredType (Proxy @t)
             & generalize
@@ -269,8 +275,11 @@ localMutNominalDecl =
 
 returnScheme :: Pure # Scheme Types Typ
 returnScheme =
-    forAll (Identity "value") (Identity "effects") $
-    \(Identity val) _ -> TFunP val mutType
+    forAll (Identity "value") (Identity "effects") (\(Identity val) _ -> TFunP val mutType)
+
+unitToUnitScheme :: Pure # Scheme Types Typ
+unitToUnitScheme =
+    forAll Proxy Proxy (\Proxy Proxy -> TFunP (TRecP REmptyP) (TRecP REmptyP))
 
 withEnv ::
     ( UnifyGen m Row, MonadReader env m
@@ -288,10 +297,12 @@ withEnv l act =
                 & Lens.at "PhantomInt" ?~ phantom
                 & Lens.at "LocalMut" ?~ localMut
         ret <- loadScheme returnScheme
+        unitToUnit <- loadScheme unitToUnitScheme
         let addEnv x =
                 x
                 & nominals %~ addNoms
                 & varSchemes . _ScopeTypes . Lens.at "return" ?~ MkHFlip ret
+                & varSchemes . _ScopeTypes . Lens.at "unitToUnit" ?~ MkHFlip unitToUnit
         local (l %~ addEnv) act
 
 prettyStyle :: Pretty a => a -> String
@@ -350,6 +361,27 @@ testAlphaEq x y expect =
     where
         pureRes = Lens.has Lens._Right (execPureInferB (alphaEq x y))
         stRes = Lens.has Lens._Right (runST (execSTInferB (alphaEq x y)))
+
+testBlame :: Ord a => Annotated a # LangB -> String -> IO Bool
+testBlame term expect =
+    case result of
+    Left{} -> False <$ putStrLn "Unexpected type error in testBlame"
+    Right x ->
+        do
+            putStrLn ""
+            putStrLn formatted
+            when (formatted /= expect) (putStrLn ("Expected:" <> expect))
+            pure (formatted == expect)
+        where
+            formatted = x ^.. hflipped . hfolded1 . Lens._2 <&> fmt
+    where
+        fmt Good{} = '-'
+        fmt _ = 'X'
+        result =
+            do
+                top <- newUnbound
+                blame (^. Lens._Wrapped) (_ANode # top) term
+            & withEnv id & execPureInferB
 
 intsRecord :: [Name] -> Pure # Scheme Types Typ
 intsRecord = uniType . TRecP . foldr (`RExtendP` TIntP) REmptyP
@@ -443,6 +475,13 @@ main =
             , testAlphaEq (forAll1r "a" TRecP) (forAll1r "b" TRecP) True
             , testAlphaEq (mkOpenRec "a" "x" "y") (mkOpenRec "b" "y" "x") True
             , testAlphaEq (valH0 (TVarP "a")) (valH0 (TRecP REmptyP)) False
+            , testBlame (addAnns (BAppP (BVarP "unitToUnit") (BLitP 5) ^. hPlain)) "--X"
+            , testBlame
+                (Ann (Const @Int 2)
+                    (BApp (App
+                        (Ann (Const 1) (BVar (Var "unitToUnit")))
+                        (Ann (Const 0) (BLit 5)))))
+                    "-X-"
             ]
         mkOpenRec a x y =
             _Pure #
