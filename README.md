@@ -6,7 +6,7 @@ They are a solution to the *Expression Problem*, as described by Phil Wadler (19
 
 > The goal is to define a data type by cases, where one can add new cases to the data type and new functions over the data type, without recompiling existing code, and while retaining static type safety.
 
-[*Data types a la carte*](http://www.cs.ru.nl/~W.Swierstra/Publications/DataTypesALaCarte.pdf) (DTALC, Swierstra, 2008) offers a solution for the expression problem which is only applicable for simple recursive expressions, without support for mutually recursive types. In practice, programming language ASTs do tend to be mutually recursive. [`multirec`](http://hackage.haskell.org/package/multirec) (Rodriguez et al, 2009) uses GADTs to encode mutually recursive types but in comparison to DTALC it lacks in the ability to construct the types from re-usable components.
+[*Data types a la carte*](http://www.staff.science.uu.nl/~swier004/publications/2008-jfp.pdf) (DTALC, Swierstra, 2008) offers a solution for the expression problem which is only applicable for simple recursive expressions, without support for mutually recursive types. In practice, programming language ASTs do tend to be mutually recursive. [`multirec`](http://hackage.haskell.org/package/multirec) (Rodriguez et al, 2009) uses GADTs to encode mutually recursive types but in comparison to DTALC it lacks in the ability to construct the types from re-usable components.
 
 Hypertypes allow constructing expressions from re-usable terms like DTALC, which can be rich mutually recursive types like in `multirec`.
 
