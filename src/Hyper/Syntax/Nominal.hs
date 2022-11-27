@@ -1,44 +1,55 @@
+{-# LANGUAGE EmptyCase #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | Nominal (named) types declaration, instantiation, construction, and access.
-
-{-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
-{-# LANGUAGE FlexibleContexts, TemplateHaskell, EmptyCase #-}
-
 module Hyper.Syntax.Nominal
-    ( NominalDecl(..), nParams, nScheme, W_NominalDecl(..)
-    , NominalInst(..), nId, nArgs
-    , ToNom(..), tnId, tnVal, W_ToNom(..)
-    , FromNom(..), _FromNom
-
-    , HasNominalInst(..)
+    ( NominalDecl (..)
+    , nParams
+    , nScheme
+    , W_NominalDecl (..)
+    , NominalInst (..)
+    , nId
+    , nArgs
+    , ToNom (..)
+    , tnId
+    , tnVal
+    , W_ToNom (..)
+    , FromNom (..)
+    , _FromNom
+    , HasNominalInst (..)
     , NomVarTypes
-    , MonadNominals(..)
-    , LoadedNominalDecl, loadNominalDecl
+    , MonadNominals (..)
+    , LoadedNominalDecl
+    , loadNominalDecl
     ) where
 
-import           Control.Applicative (Alternative(..))
-import           Control.Lens (Prism')
+import Control.Applicative (Alternative (..))
+import Control.Lens (Prism')
 import qualified Control.Lens as Lens
-import           Control.Monad.Trans.Writer (execWriterT)
-import           Generics.Constraints (Constraints)
-import           Hyper
-import           Hyper.Class.Context (HContext(..))
-import           Hyper.Class.Optic
-import           Hyper.Class.Traversable (ContainedH(..))
-import           Hyper.Class.ZipMatch (ZipMatch(..))
-import           Hyper.Infer
-import           Hyper.Recurse
-import           Hyper.Syntax.FuncType (FuncType(..))
-import           Hyper.Syntax.Map (TermMap(..), _TermMap)
-import           Hyper.Syntax.Scheme
-import           Hyper.Unify
-import           Hyper.Unify.Generalize (GTerm(..), _GMono, instantiateWith, instantiateForAll)
-import           Hyper.Unify.New (newTerm)
-import           Hyper.Unify.QuantifiedVar (HasQuantifiedVar(..), OrdQVar)
-import           Hyper.Unify.Term (UTerm(..))
+import Control.Monad.Trans.Writer (execWriterT)
+import Generics.Constraints (Constraints)
+import Hyper
+import Hyper.Class.Context (HContext (..))
+import Hyper.Class.Optic
+import Hyper.Class.Traversable (ContainedH (..))
+import Hyper.Class.ZipMatch (ZipMatch (..))
+import Hyper.Infer
+import Hyper.Recurse
+import Hyper.Syntax.FuncType (FuncType (..))
+import Hyper.Syntax.Map (TermMap (..), _TermMap)
+import Hyper.Syntax.Scheme
+import Hyper.Unify
+import Hyper.Unify.Generalize (GTerm (..), instantiateForAll, instantiateWith, _GMono)
+import Hyper.Unify.New (newTerm)
+import Hyper.Unify.QuantifiedVar (HasQuantifiedVar (..), OrdQVar)
+import Hyper.Unify.Term (UTerm (..))
 import qualified Text.PrettyPrint as P
-import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
+import Text.PrettyPrint.HughesPJClass (Pretty (..), maybeParens)
 
-import           Hyper.Internal.Prelude
+import Hyper.Internal.Prelude
 
 type family NomVarTypes (t :: HyperType) :: HyperType
 
@@ -46,13 +57,15 @@ type family NomVarTypes (t :: HyperType) :: HyperType
 data NominalDecl typ h = NominalDecl
     { _nParams :: NomVarTypes typ # QVars
     , _nScheme :: Scheme (NomVarTypes typ) typ h
-    } deriving Generic
+    }
+    deriving (Generic)
 
 -- | An instantiation of a nominal type
 data NominalInst nomId varTypes h = NominalInst
     { _nId :: nomId
     , _nArgs :: varTypes # QVarInstances (GetHyperType h)
-    } deriving Generic
+    }
+    deriving (Generic)
 
 -- | Nominal data constructor.
 --
@@ -63,7 +76,8 @@ data NominalInst nomId varTypes h = NominalInst
 data ToNom nomId term h = ToNom
     { _tnId :: nomId
     , _tnVal :: h :# term
-    } deriving Generic
+    }
+    deriving (Generic)
 
 -- | Access the data in a nominally typed value.
 --
@@ -77,7 +91,8 @@ data LoadedNominalDecl typ v = LoadedNominalDecl
     { _lnParams :: NomVarTypes typ # QVarInstances (GetHyperType v)
     , _lnForalls :: NomVarTypes typ # QVarInstances (GetHyperType v)
     , _lnType :: GTerm (GetHyperType v) # typ
-    } deriving Generic
+    }
+    deriving (Generic)
 
 makeLenses ''NominalDecl
 makeLenses ''NominalInst
@@ -112,7 +127,7 @@ instance HTraversable v => HTraversable (NominalInst n v) where
     {-# INLINE hsequence #-}
     hsequence (NominalInst n v) =
         htraverse (const (_QVarInstances (traverse runContainedH))) v
-        <&> NominalInst n
+            <&> NominalInst n
 
 instance
     ( Eq nomId
@@ -121,70 +136,78 @@ instance
     , HNodesConstraint varTypes ZipMatch
     , HNodesConstraint varTypes OrdQVar
     ) =>
-    ZipMatch (NominalInst nomId varTypes) where
-
+    ZipMatch (NominalInst nomId varTypes)
+    where
     {-# INLINE zipMatch #-}
     zipMatch (NominalInst xId x) (NominalInst yId y)
         | xId /= yId = Nothing
         | otherwise =
             zipMatch x y
-            >>= htraverse
-                ( Proxy @ZipMatch #*# Proxy @OrdQVar #>
-                    \(QVarInstances c0 :*: QVarInstances c1) ->
-                    zipMatch (TermMap c0) (TermMap c1)
-                    <&> (^. _TermMap)
-                    <&> QVarInstances
-                )
-            <&> NominalInst xId
+                >>= htraverse
+                    ( Proxy @ZipMatch #*#
+                        Proxy @OrdQVar #>
+                            \(QVarInstances c0 :*: QVarInstances c1) ->
+                                zipMatch (TermMap c0) (TermMap c1)
+                                    <&> (^. _TermMap)
+                                    <&> QVarInstances
+                    )
+                <&> NominalInst xId
 
 instance
     ( HFunctor varTypes
     , HContext varTypes
     , HNodesConstraint varTypes OrdQVar
-    ) => HContext (NominalInst nomId varTypes) where
+    ) =>
+    HContext (NominalInst nomId varTypes)
+    where
     hcontext (NominalInst n args) =
         hcontext args
-        & hmap
-            ( Proxy @OrdQVar #>
-                \(HFunc c :*: x) ->
-                x & _QVarInstances . Lens.imapped %@~
-                \k v ->
-                HFunc
-                ( \newV ->
-                    x
-                    & _QVarInstances . Lens.at k ?~ newV
-                    & c & getConst & NominalInst n
-                    & Const
-                ) :*: v
-            )
-        & NominalInst n
+            & hmap
+                ( Proxy @OrdQVar #>
+                    \(HFunc c :*: x) ->
+                        x
+                            & _QVarInstances . Lens.imapped
+                                %@~ \k v ->
+                                    HFunc
+                                        ( \newV ->
+                                            x
+                                                & _QVarInstances . Lens.at k ?~ newV
+                                                & c
+                                                & getConst
+                                                & NominalInst n
+                                                & Const
+                                        )
+                                        :*: v
+                )
+            & NominalInst n
 
 instance Constraints (ToNom nomId term h) Pretty => Pretty (ToNom nomId term h) where
     pPrintPrec lvl p (ToNom nomId term) =
         (pPrint nomId <> P.text "#") P.<+> pPrintPrec lvl 11 term
-        & maybeParens (p > 10)
+            & maybeParens (p > 10)
 
-class    (Pretty (QVar h), Pretty (outer :# h)) => PrettyConstraints outer h
+class (Pretty (QVar h), Pretty (outer :# h)) => PrettyConstraints outer h
 instance (Pretty (QVar h), Pretty (outer :# h)) => PrettyConstraints outer h
 
 instance
     ( Pretty nomId
-    , HApply varTypes, HFoldable varTypes
+    , HApply varTypes
+    , HFoldable varTypes
     , HNodesConstraint varTypes (PrettyConstraints h)
     ) =>
-    Pretty (NominalInst nomId varTypes h) where
-
+    Pretty (NominalInst nomId varTypes h)
+    where
     pPrint (NominalInst n vars) =
-        pPrint n <>
-        joinArgs
-        (hfoldMap (Proxy @(PrettyConstraints h) #> mkArgs) vars)
+        pPrint n
+            <> joinArgs
+                (hfoldMap (Proxy @(PrettyConstraints h) #> mkArgs) vars)
         where
             joinArgs [] = mempty
             joinArgs xs = P.text "[" <> P.sep (P.punctuate (P.text ",") xs) <> P.text "]"
             mkArgs (QVarInstances m) =
-                m ^@.. Lens.itraversed <&>
-                \(h, v) ->
-                (pPrint h <> P.text ":") P.<+> pPrint v
+                m ^@.. Lens.itraversed
+                    <&> \(h, v) ->
+                        (pPrint h <> P.text ":") P.<+> pPrint v
 
 {-# ANN module "HLint: ignore Use camelCase" #-}
 data W_LoadedNominalDecl t n where
@@ -192,11 +215,12 @@ data W_LoadedNominalDecl t n where
     E_LoadedNominalDecl_NomVarTypes :: HWitness (NomVarTypes t) n -> W_LoadedNominalDecl t n
 
 instance (RNodes t, HNodes (NomVarTypes t)) => HNodes (LoadedNominalDecl t) where
-    type HNodesConstraint (LoadedNominalDecl t) c =
-        ( HNodesConstraint (NomVarTypes t) c
-        , c t
-        , Recursive c
-        )
+    type
+        HNodesConstraint (LoadedNominalDecl t) c =
+            ( HNodesConstraint (NomVarTypes t) c
+            , c t
+            , Recursive c
+            )
     type HWitnessType (LoadedNominalDecl t) = W_LoadedNominalDecl t
     {-# INLINE hLiftConstraint #-}
     hLiftConstraint (HWitness (E_LoadedNominalDecl_Body w)) = hLiftConstraint @(HFlip GTerm _) (HWitness w)
@@ -204,35 +228,44 @@ instance (RNodes t, HNodes (NomVarTypes t)) => HNodes (LoadedNominalDecl t) wher
 
 instance
     (Recursively HFunctor typ, HFunctor (NomVarTypes typ)) =>
-    HFunctor (LoadedNominalDecl typ) where
+    HFunctor (LoadedNominalDecl typ)
+    where
     {-# INLINE hmap #-}
     hmap f (LoadedNominalDecl mp mf t) =
-        LoadedNominalDecl (onMap mp) (onMap mf)
-        (t & hflipped %~ hmap (\(HWitness w) -> f (HWitness (E_LoadedNominalDecl_Body w))))
+        LoadedNominalDecl
+            (onMap mp)
+            (onMap mf)
+            (t & hflipped %~ hmap (\(HWitness w) -> f (HWitness (E_LoadedNominalDecl_Body w))))
         where
             onMap = hmap (\w -> _QVarInstances . Lens.mapped %~ f (HWitness (E_LoadedNominalDecl_NomVarTypes w)))
 
 instance
     (Recursively HFoldable typ, HFoldable (NomVarTypes typ)) =>
-    HFoldable (LoadedNominalDecl typ) where
+    HFoldable (LoadedNominalDecl typ)
+    where
     {-# INLINE hfoldMap #-}
     hfoldMap f (LoadedNominalDecl mp mf t) =
-        onMap mp <> onMap mf <>
-        hfoldMap (\(HWitness w) -> f (HWitness (E_LoadedNominalDecl_Body w))) (_HFlip # t)
+        onMap mp
+            <> onMap mf
+            <> hfoldMap (\(HWitness w) -> f (HWitness (E_LoadedNominalDecl_Body w))) (_HFlip # t)
         where
             onMap =
-                hfoldMap (\w -> foldMap (f (HWitness (E_LoadedNominalDecl_NomVarTypes w)))
-                . (^. _QVarInstances))
+                hfoldMap
+                    ( \w ->
+                        foldMap (f (HWitness (E_LoadedNominalDecl_NomVarTypes w)))
+                            . (^. _QVarInstances)
+                    )
 
 instance
     (RTraversable typ, HTraversable (NomVarTypes typ)) =>
-    HTraversable (LoadedNominalDecl typ) where
+    HTraversable (LoadedNominalDecl typ)
+    where
     {-# INLINE hsequence #-}
     hsequence (LoadedNominalDecl p f t) =
         LoadedNominalDecl
-        <$> onMap p
-        <*> onMap f
-        <*> hflipped hsequence t
+            <$> onMap p
+            <*> onMap f
+            <*> hflipped hsequence t
         where
             onMap = htraverse (const ((_QVarInstances . traverse) runContainedH))
 
@@ -248,15 +281,15 @@ loadBody ::
     m (GTerm (UVarOf m) # typ)
 loadBody params foralls x =
     case x ^? quantifiedVar >>= get of
-    Just r -> GPoly r & pure
-    Nothing ->
-        case htraverse (const (^? _GMono)) x of
-        Just xm -> newTerm xm <&> GMono
-        Nothing -> GBody x & pure
+        Just r -> GPoly r & pure
+        Nothing ->
+            case htraverse (const (^? _GMono)) x of
+                Just xm -> newTerm xm <&> GMono
+                Nothing -> GBody x & pure
     where
         get v =
-            params ^? hNodeLens . _QVarInstances . Lens.ix v <|>
-            foralls ^? hNodeLens . _QVarInstances . Lens.ix v
+            params ^? hNodeLens . _QVarInstances . Lens.ix v
+                <|> foralls ^? hNodeLens . _QVarInstances . Lens.ix v
 
 {-# INLINE loadNominalDecl #-}
 loadNominalDecl ::
@@ -273,9 +306,10 @@ loadNominalDecl (Pure (NominalDecl params (Scheme foralls typ))) =
         paramsL <- htraverse (Proxy @(Unify m) #> makeQVarInstances) params
         forallsL <- htraverse (Proxy @(Unify m) #> makeQVarInstances) foralls
         wrapM
-            (Proxy @(HasScheme (NomVarTypes typ) m) #>>
+            ( Proxy @(HasScheme (NomVarTypes typ) m) #>>
                 loadBody paramsL forallsL
-            ) typ
+            )
+            typ
             <&> LoadedNominalDecl paramsL forallsL
 
 class MonadNominals nomId typ m where
@@ -299,13 +333,12 @@ lookupParams =
         lookupParam :: forall t. UnifyGen m t => UVarOf m # t -> m (UVarOf m # t)
         lookupParam v =
             lookupVar binding v
-            >>=
-            \case
-            UInstantiated r -> pure r
-            USkolem l ->
-                -- This is a phantom-type, wasn't instantiated by `instantiate`.
-                scopeConstraints (Proxy @t) <&> (<> l) >>= newVar binding . UUnbound
-            _ -> error "unexpected state at nominal's parameter"
+                >>= \case
+                    UInstantiated r -> pure r
+                    USkolem l ->
+                        -- This is a phantom-type, wasn't instantiated by `instantiate`.
+                        scopeConstraints (Proxy @t) <&> (<> l) >>= newVar binding . UUnbound
+                    _ -> error "unexpected state at nominal's parameter"
 
 type instance InferOf (ToNom n e) = NominalInst n (NomVarTypes (TypeOf e))
 
@@ -318,8 +351,8 @@ instance
     , HasInferredType expr
     , Infer m expr
     ) =>
-    Infer m (ToNom nomId expr) where
-
+    Infer m (ToNom nomId expr)
+    where
     {-# INLINE inferBody #-}
     inferBody (ToNom nomId val) =
         do
@@ -329,13 +362,14 @@ instance
                     LoadedNominalDecl params foralls gen <- getNominalDecl nomId
                     recover <-
                         htraverse_
-                        ( Proxy @(UnifyGen m) #>
-                            traverse_ (instantiateForAll USkolem) . (^. _QVarInstances)
-                        ) foralls
-                        & execWriterT
+                            ( Proxy @(UnifyGen m) #>
+                                traverse_ (instantiateForAll USkolem) . (^. _QVarInstances)
+                            )
+                            foralls
+                            & execWriterT
                     (typ, paramsT) <- instantiateWith (lookupParams params) UUnbound gen
                     (v, typ, paramsT) <$ sequence_ recover
-                & localLevel
+                    & localLevel
             (ToNom nomId valI, NominalInst nomId paramsT)
                 <$ unify typ (valR ^# inferredType (Proxy @expr))
 
@@ -349,13 +383,14 @@ instance
     , HNodesConstraint (NomVarTypes (TypeOf expr)) (UnifyGen m)
     , UnifyGen m (TypeOf expr)
     ) =>
-    Infer m (FromNom nomId expr) where
-
+    Infer m (FromNom nomId expr)
+    where
     {-# INLINE inferBody #-}
     inferBody (FromNom nomId) =
         do
             LoadedNominalDecl params _ gen <- getNominalDecl nomId
             (typ, paramsT) <- instantiateWith (lookupParams params) UUnbound gen
-            nominalInst # NominalInst nomId paramsT & newTerm
+            nominalInst # NominalInst nomId paramsT
+                & newTerm
                 <&> (`FuncType` typ)
-        <&> (FromNom nomId, )
+            <&> (FromNom nomId,)

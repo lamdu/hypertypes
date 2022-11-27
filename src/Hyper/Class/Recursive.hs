@@ -1,20 +1,23 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+
 -- | Classes applying on 'HyperType's recursively
-
-{-# LANGUAGE FlexibleContexts, FlexibleInstances #-}
-
 module Hyper.Class.Recursive
-    ( Recursive(..)
-    , Recursively(..)
-    , RNodes(..), RTraversable(..)
-    , RecMethod, DefRecMethod, proxyArgument
+    ( Recursive (..)
+    , Recursively (..)
+    , RNodes (..)
+    , RTraversable (..)
+    , RecMethod
+    , DefRecMethod
+    , proxyArgument
     ) where
 
 import Hyper.Class.Foldable
-import Hyper.Class.Functor (HFunctor(..))
-import Hyper.Class.Nodes (HNodes(..))
+import Hyper.Class.Functor (HFunctor (..))
+import Hyper.Class.Nodes (HNodes (..))
 import Hyper.Class.Traversable
 import Hyper.Type
-import Hyper.Type.Pure (Pure(..))
+import Hyper.Type.Pure (Pure (..))
 
 import Hyper.Internal.Prelude
 
@@ -54,7 +57,8 @@ class RNodes h => Recursively c h where
     {-# INLINE recursively #-}
     default recursively ::
         (c h, HNodesConstraint h (Recursively c)) =>
-        proxy (c h) -> Dict (c h, HNodesConstraint h (Recursively c))
+        proxy (c h) ->
+        Dict (c h, HNodesConstraint h (Recursively c))
     recursively _ = Dict
 
 instance Recursive (Recursively c) where

@@ -1,4 +1,10 @@
-{-# LANGUAGE OverloadedStrings, TemplateHaskell, UndecidableInstances, FlexibleInstances, DerivingVia, PolyKinds, DeriveAnyClass #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module ReadMeExamples where
 
@@ -16,12 +22,12 @@ data Expr h
     = EVar Text
     | EApp (h :# Expr) (h :# Expr)
     | ELam Text (h :# Typ) (h :# Expr)
-    deriving Generic
+    deriving (Generic)
 
 data Typ h
     = TInt
     | TFunc (h :# Typ) (h :# Typ)
-    deriving Generic
+    deriving (Generic)
 
 makeDerivings [''Eq, ''Ord, ''Show] [''Expr, ''Typ]
 makeHTraversableAndBases ''Expr
@@ -41,10 +47,17 @@ data RExpr h
     | RApp (App RExpr h)
     | RLam (TypedLam Text Typ RExpr h)
     deriving
-    ( Generic, Generic1
-    , HNodes, HFunctor, HFoldable, HTraversable, ZipMatch
-    , RNodes, Recursively c, RTraversable
-    )
+        ( Generic
+        , Generic1
+        , HNodes
+        , HFunctor
+        , HFoldable
+        , HTraversable
+        , ZipMatch
+        , RNodes
+        , Recursively c
+        , RTraversable
+        )
 
 makeHasHPlain [''Expr, ''Typ, ''RExpr]
 

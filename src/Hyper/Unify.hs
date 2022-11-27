@@ -1,27 +1,28 @@
--- | Unification
-
 {-# LANGUAGE BangPatterns #-}
 
+-- | Unification
 module Hyper.Unify
     ( unify
     , module Hyper.Class.Unify
     , module Hyper.Unify.Binding
     , module Hyper.Unify.Constraints
     , module Hyper.Unify.Error
-
-    , -- | Exported only for SPECIALIZE pragmas
-      updateConstraints, updateTermConstraints, updateTermConstraintsH
-    , unifyUTerms, unifyUnbound
+      -- | Exported only for SPECIALIZE pragmas
+    , updateConstraints
+    , updateTermConstraints
+    , updateTermConstraintsH
+    , unifyUTerms
+    , unifyUnbound
     ) where
 
-import Algebra.PartialOrd (PartialOrd(..))
+import Algebra.PartialOrd (PartialOrd (..))
 import Hyper
 import Hyper.Class.Unify
 import Hyper.Class.ZipMatch (zipMatchA)
 import Hyper.Unify.Binding (UVar)
 import Hyper.Unify.Constraints
-import Hyper.Unify.Error (UnifyError(..))
-import Hyper.Unify.Term (UTerm(..), UTermBody(..), uConstraints, uBody)
+import Hyper.Unify.Error (UnifyError (..))
+import Hyper.Unify.Term (UTerm (..), UTermBody (..), uBody, uConstraints)
 
 import Hyper.Internal.Prelude
 
@@ -38,15 +39,15 @@ updateConstraints ::
     m ()
 updateConstraints !newConstraints v x =
     case x of
-    UUnbound l
-        | newConstraints `leq` l -> pure ()
-        | otherwise -> bindVar binding v (UUnbound newConstraints)
-    USkolem l
-        | newConstraints `leq` l -> pure ()
-        | otherwise -> SkolemEscape v & unifyError
-    UTerm t -> updateTermConstraints v t newConstraints
-    UResolving t -> occursError v t & void
-    _ -> error "updateConstraints: This shouldn't happen in unification stage"
+        UUnbound l
+            | newConstraints `leq` l -> pure ()
+            | otherwise -> bindVar binding v (UUnbound newConstraints)
+        USkolem l
+            | newConstraints `leq` l -> pure ()
+            | otherwise -> SkolemEscape v & unifyError
+        UTerm t -> updateTermConstraints v t newConstraints
+        UResolving t -> occursError v t & void
+        _ -> error "updateConstraints: This shouldn't happen in unification stage"
 
 {-# INLINE updateTermConstraints #-}
 updateTermConstraints ::
@@ -67,7 +68,7 @@ updateTermConstraints v t newConstraints
                     do
                         htraverse_ (Proxy @(Unify m) #> updateTermConstraintsH) prop
                         UTermBody newConstraints (t ^. uBody) & UTerm & bindVar binding v
-                    \\ unifyRecursive (Proxy @m) (Proxy @t)
+                        \\ unifyRecursive (Proxy @m) (Proxy @t)
 
 {-# INLINE updateTermConstraintsH #-}
 updateTermConstraintsH ::
@@ -84,7 +85,9 @@ updateTermConstraintsH (WithConstraint c v0) =
 unify ::
     forall m t.
     Unify m t =>
-    UVarOf m # t -> UVarOf m # t -> m (UVarOf m # t)
+    UVarOf m # t ->
+    UVarOf m # t ->
+    m (UVarOf m # t)
 unify x0 y0
     | x0 == y0 = pure x0
     | otherwise =
@@ -92,18 +95,19 @@ unify x0 y0
             (x1, xu) <- semiPruneLookup x0
             if x1 == y0
                 then pure x1
-                else
-                    do
-                        (y1, yu) <- semiPruneLookup y0
-                        if x1 == y1
-                            then pure x1
-                            else unifyUTerms x1 xu y1 yu
+                else do
+                    (y1, yu) <- semiPruneLookup y0
+                    if x1 == y1
+                        then pure x1
+                        else unifyUTerms x1 xu y1 yu
 
 {-# INLINE unifyUnbound #-}
 unifyUnbound ::
     Unify m t =>
-    UVarOf m # t -> TypeConstraintsOf t ->
-    UVarOf m # t -> UTerm (UVarOf m) # t ->
+    UVarOf m # t ->
+    TypeConstraintsOf t ->
+    UVarOf m # t ->
+    UTerm (UVarOf m) # t ->
     m (UVarOf m # t)
 unifyUnbound xv level yv yt =
     do
@@ -114,8 +118,10 @@ unifyUnbound xv level yv yt =
 unifyUTerms ::
     forall m t.
     Unify m t =>
-    UVarOf m # t -> UTerm (UVarOf m) # t ->
-    UVarOf m # t -> UTerm (UVarOf m) # t ->
+    UVarOf m # t ->
+    UTerm (UVarOf m) # t ->
+    UVarOf m # t ->
+    UTerm (UVarOf m) # t ->
     m (UVarOf m # t)
 unifyUTerms xv (UUnbound level) yv yt = unifyUnbound xv level yv yt
 unifyUTerms xv xt yv (UUnbound level) = unifyUnbound yv level xv xt
@@ -128,5 +134,5 @@ unifyUTerms xv (UTerm xt) yv (UTerm yt) =
             & fromMaybe (xt ^. uBody <$ structureMismatch unify (xt ^. uBody) (yt ^. uBody))
             >>= bindVar binding xv . UTerm . UTermBody (xt ^. uConstraints <> yt ^. uConstraints)
         pure xv
-    \\ unifyRecursive (Proxy @m) (Proxy @t)
+        \\ unifyRecursive (Proxy @m) (Proxy @t)
 unifyUTerms _ _ _ _ = error "unifyUTerms: This shouldn't happen in unification stage"

@@ -1,7 +1,11 @@
-{-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances, FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hyper.Infer.Result
-    ( InferResult(..), _InferResult
+    ( InferResult (..)
+    , _InferResult
     , inferResult
     ) where
 
@@ -10,16 +14,18 @@ import Hyper.Class.Infer
 import Hyper.Internal.Prelude
 
 -- | A 'HyperType' for an inferred term - the output of 'Hyper.Infer.infer'
-newtype InferResult v e =
-    InferResult (InferOf (GetHyperType e) # v)
-    deriving stock Generic
+newtype InferResult v e
+    = InferResult (InferOf (GetHyperType e) # v)
+    deriving stock (Generic)
+
 makePrisms ''InferResult
 makeCommonInstances [''InferResult]
 
 -- An iso for the common case where the infer result of a term is a single value.
 inferResult ::
     InferOf e ~ ANode t =>
-    Iso (InferResult v0 # e)
+    Iso
+        (InferResult v0 # e)
         (InferResult v1 # e)
         (v0 # t)
         (v1 # t)

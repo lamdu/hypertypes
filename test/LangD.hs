@@ -1,4 +1,6 @@
-{-# LANGUAGE TemplateHaskell, UndecidableInstances #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module LangD where
 
 import Hyper
@@ -10,5 +12,6 @@ makeHTraversableApplyAndBases ''B
 makeHTraversableApplyAndBases ''A
 
 newtype C (k :: AHyperType) = C (C k)
+
 -- The following doesn't work:
 -- makeHNodes ''C

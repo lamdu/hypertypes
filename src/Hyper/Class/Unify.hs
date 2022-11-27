@@ -1,30 +1,32 @@
--- | A class for unification
-
 {-# LANGUAGE FlexibleContexts #-}
 
+-- | A class for unification
 module Hyper.Class.Unify
-    ( Unify(..), UVarOf
-    , UnifyGen(..)
-    , BindingDict(..)
-    , applyBindings, semiPruneLookup, occursError
+    ( Unify (..)
+    , UVarOf
+    , UnifyGen (..)
+    , BindingDict (..)
+    , applyBindings
+    , semiPruneLookup
+    , occursError
     ) where
 
 import Control.Monad (unless)
-import Control.Monad.Error.Class (MonadError(..))
-import Control.Monad.Trans.Class (MonadTrans(..))
-import Control.Monad.Trans.State (runStateT, get, put)
+import Control.Monad.Error.Class (MonadError (..))
+import Control.Monad.Trans.Class (MonadTrans (..))
+import Control.Monad.Trans.State (get, put, runStateT)
 import Data.Kind (Type)
-import Hyper.Class.Nodes (HNodes(..), (#>))
-import Hyper.Class.Optic (HSubset(..), HSubset')
+import Hyper.Class.Nodes (HNodes (..), (#>))
+import Hyper.Class.Optic (HSubset (..), HSubset')
 import Hyper.Class.Recursive
 import Hyper.Class.Traversable (htraverse)
 import Hyper.Class.ZipMatch (ZipMatch)
 import Hyper.Type (HyperType, type (#))
 import Hyper.Type.Pure (Pure, _Pure)
 import Hyper.Unify.Constraints
-import Hyper.Unify.Error (UnifyError(..))
-import Hyper.Unify.QuantifiedVar (MonadQuantify(..), HasQuantifiedVar(..))
-import Hyper.Unify.Term (UTerm(..), UTermBody(..), uBody)
+import Hyper.Unify.Error (UnifyError (..))
+import Hyper.Unify.QuantifiedVar (HasQuantifiedVar (..), MonadQuantify (..))
+import Hyper.Unify.Term (UTerm (..), UTermBody (..), uBody)
 
 import Hyper.Internal.Prelude
 
@@ -61,8 +63,9 @@ class
     , HasQuantifiedVar t
     , Monad m
     , MonadQuantify (TypeConstraintsOf t) (QVar t) m
-    ) => Unify m t where
-
+    ) =>
+    Unify m t
+    where
     -- | The implementation for unification variables binding and lookup
     binding :: BindingDict (UVarOf m) m t
 
@@ -73,11 +76,12 @@ class
     unifyError :: UnifyError t # UVarOf m -> m a
     default unifyError ::
         (MonadError (e # Pure) m, HSubset' e (UnifyError t)) =>
-        UnifyError t # UVarOf m -> m a
+        UnifyError t # UVarOf m ->
+        m a
     unifyError e =
         htraverse (Proxy @(Unify m) #> applyBindings) e
-        >>= throwError . (hSubset #)
-        \\ unifyRecursive (Proxy @m) (Proxy @t)
+            >>= throwError . (hSubset #)
+                \\ unifyRecursive (Proxy @m) (Proxy @t)
 
     -- | What to do when top-levels of terms being unified do not match.
     --
@@ -88,7 +92,9 @@ class
     -- Those would override the default implementation to handle the unification of mismatching structures.
     structureMismatch ::
         (forall c. Unify m c => UVarOf m # c -> UVarOf m # c -> m (UVarOf m # c)) ->
-        t # UVarOf m -> t # UVarOf m -> m ()
+        t # UVarOf m ->
+        t # UVarOf m ->
+        m ()
     structureMismatch _ x y = unifyError (Mismatch x y)
 
     -- TODO: Putting documentation here causes duplication in the haddock documentation
@@ -126,14 +132,13 @@ semiPruneLookup ::
     m (UVarOf m # t, UTerm (UVarOf m) # t)
 semiPruneLookup v0 =
     lookupVar binding v0
-    >>=
-    \case
-    UToVar v1 ->
-        do
-            (v, r) <- semiPruneLookup v1
-            bindVar binding v0 (UToVar v)
-            pure (v, r)
-    t -> pure (v0, t)
+        >>= \case
+            UToVar v1 ->
+                do
+                    (v, r) <- semiPruneLookup v1
+                    bindVar binding v0 (UToVar v)
+                    pure (v, r)
+            t -> pure (v0, t)
 
 -- | Resolve a term from a unification variable.
 --
@@ -148,43 +153,45 @@ applyBindings ::
     m (Pure # t)
 applyBindings v0 =
     semiPruneLookup v0
-    >>=
-    \(v1, x) ->
-    let result r = r <$ bindVar binding v1 (UResolved r)
-        quantify c =
-            newQuantifiedVariable c <&> (_Pure . quantifiedVar #)
-            >>= result
-    in
-    case x of
-    UResolving t -> occursError v1 t
-    UResolved t -> pure t
-    UUnbound c -> quantify c
-    USkolem c -> quantify c
-    UTerm b ->
-        do
-            (r, anyChild) <-
-                htraverse
-                ( Proxy @(Unify m) #>
-                    \c ->
-                    do
-                        get >>= lift . (`unless` bindVar binding v1 (UResolving b))
-                        put True
-                        applyBindings c & lift
-                ) (b ^. uBody)
-                & (`runStateT` False)
-                \\ unifyRecursive (Proxy @m) (Proxy @t)
-            _Pure # r & if anyChild then result else pure
-    UToVar{} -> error "lookup not expected to result in var"
-    UConverted{} -> error "conversion state not expected in applyBindings"
-    UInstantiated{} ->
-        -- This can happen in alphaEq,
-        -- where UInstantiated marks that var from one side matches var in the other.
-        quantify mempty
+        >>= \(v1, x) ->
+            let result r = r <$ bindVar binding v1 (UResolved r)
+                quantify c =
+                    newQuantifiedVariable c
+                        <&> (_Pure . quantifiedVar #)
+                        >>= result
+            in  case x of
+                    UResolving t -> occursError v1 t
+                    UResolved t -> pure t
+                    UUnbound c -> quantify c
+                    USkolem c -> quantify c
+                    UTerm b ->
+                        do
+                            (r, anyChild) <-
+                                htraverse
+                                    ( Proxy @(Unify m) #>
+                                        \c ->
+                                            do
+                                                get >>= lift . (`unless` bindVar binding v1 (UResolving b))
+                                                put True
+                                                applyBindings c & lift
+                                    )
+                                    (b ^. uBody)
+                                    & (`runStateT` False)
+                                        \\ unifyRecursive (Proxy @m) (Proxy @t)
+                            _Pure # r & if anyChild then result else pure
+                    UToVar{} -> error "lookup not expected to result in var"
+                    UConverted{} -> error "conversion state not expected in applyBindings"
+                    UInstantiated{} ->
+                        -- This can happen in alphaEq,
+                        -- where UInstantiated marks that var from one side matches var in the other.
+                        quantify mempty
 
 -- | Format and throw an occurs check error
 occursError ::
     Unify m t =>
-    UVarOf m # t -> UTermBody (UVarOf m) # t -> m a
+    UVarOf m # t ->
+    UTermBody (UVarOf m) # t ->
+    m a
 occursError v (UTermBody c b) =
     do
         q <- newQuantifiedVariable c

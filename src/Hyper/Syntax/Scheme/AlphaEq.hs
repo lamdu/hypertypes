@@ -1,27 +1,28 @@
--- | Alpha-equality for schemes
 {-# LANGUAGE FlexibleContexts #-}
 
+-- | Alpha-equality for schemes
 module Hyper.Syntax.Scheme.AlphaEq
     ( alphaEq
     ) where
 
 import Control.Lens (ix)
 import Hyper
-import Hyper.Class.Optic (HNodeLens(..))
+import Hyper.Class.Optic (HNodeLens (..))
 import Hyper.Class.ZipMatch (zipMatch_)
 import Hyper.Recurse (wrapM, (#>>))
 import Hyper.Syntax.Scheme
 import Hyper.Unify
 import Hyper.Unify.New (newTerm)
 import Hyper.Unify.QuantifiedVar
-import Hyper.Unify.Term (UTerm(..), uBody)
+import Hyper.Unify.Term (UTerm (..), uBody)
 
 import Hyper.Internal.Prelude
 
 makeQVarInstancesInScope ::
     forall m typ.
     UnifyGen m typ =>
-    QVars # typ -> m (QVarInstances (UVarOf m) # typ)
+    QVars # typ ->
+    m (QVarInstances (UVarOf m) # typ)
 makeQVarInstancesInScope (QVars foralls) =
     traverse makeSkolem foralls <&> QVarInstances
     where
@@ -29,11 +30,13 @@ makeQVarInstancesInScope (QVars foralls) =
 
 schemeBodyToType ::
     (UnifyGen m typ, HNodeLens varTypes typ, Ord (QVar typ)) =>
-    varTypes # QVarInstances (UVarOf m) -> typ # UVarOf m -> m (UVarOf m # typ)
+    varTypes # QVarInstances (UVarOf m) ->
+    typ # UVarOf m ->
+    m (UVarOf m # typ)
 schemeBodyToType foralls x =
     case x ^? quantifiedVar >>= getForAll of
-    Nothing -> newTerm x
-    Just r -> pure r
+        Nothing -> newTerm x
+        Just r -> pure r
     where
         getForAll v = foralls ^? hNodeLens . _QVarInstances . ix v
 
@@ -44,7 +47,8 @@ schemeToRestrictedType ::
     , HNodesConstraint varTypes (UnifyGen m)
     , HasScheme varTypes m typ
     ) =>
-    Pure # Scheme varTypes typ -> m (UVarOf m # typ)
+    Pure # Scheme varTypes typ ->
+    m (UVarOf m # typ)
 schemeToRestrictedType (Pure (Scheme vars typ)) =
     do
         foralls <- htraverse (Proxy @(UnifyGen m) #> makeQVarInstancesInScope) vars
@@ -53,8 +57,10 @@ schemeToRestrictedType (Pure (Scheme vars typ)) =
 goUTerm ::
     forall m t.
     Unify m t =>
-    UVarOf m # t -> UTerm (UVarOf m) # t ->
-    UVarOf m # t -> UTerm (UVarOf m) # t ->
+    UVarOf m # t ->
+    UTerm (UVarOf m) # t ->
+    UVarOf m # t ->
+    UTerm (UVarOf m) # t ->
     m ()
 goUTerm xv USkolem{} yv USkolem{} =
     do
@@ -83,13 +89,15 @@ goUTerm xv UUnbound{} yv yu = goUTerm xv yu yv yu -- Term created in structure m
 goUTerm xv xu yv UUnbound{} = goUTerm xv xu yv xu -- Term created in structure mismatch
 goUTerm _ (UTerm xt) _ (UTerm yt) =
     zipMatch_ (Proxy @(Unify m) #> goUVar) (xt ^. uBody) (yt ^. uBody)
-    & fromMaybe (structureMismatch (\x y -> x <$ goUVar x y) (xt ^. uBody) (yt ^. uBody))
-    \\ unifyRecursive (Proxy @m) (Proxy @t)
+        & fromMaybe (structureMismatch (\x y -> x <$ goUVar x y) (xt ^. uBody) (yt ^. uBody))
+            \\ unifyRecursive (Proxy @m) (Proxy @t)
 goUTerm _ _ _ _ = error "unexpected state at alpha-eq"
 
 goUVar ::
     Unify m t =>
-    UVarOf m # t -> UVarOf m # t -> m ()
+    UVarOf m # t ->
+    UVarOf m # t ->
+    m ()
 goUVar xv yv =
     do
         xu <- lookupVar binding xv

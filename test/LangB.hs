@@ -1,40 +1,43 @@
-{-# LANGUAGE TemplateHaskell, FlexibleInstances, FlexibleContexts, UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module LangB where
 
-import           TypeLang
+import TypeLang
 
-import           Control.Applicative
+import Control.Applicative
 import qualified Control.Lens as Lens
-import           Control.Lens.Operators
-import           Control.Monad.Except
-import           Control.Monad.RWS
-import           Control.Monad.Reader
-import           Control.Monad.ST
-import           Control.Monad.ST.Class (MonadST(..))
-import           Data.Map (Map)
-import           Data.STRef
-import           Data.String (IsString(..))
-import           Hyper
-import           Hyper.Class.Recursive
-import           Hyper.Infer
-import           Hyper.Infer.Blame
-import           Hyper.Syntax
-import           Hyper.Syntax.Nominal
-import           Hyper.Syntax.Row
-import           Hyper.Syntax.Scheme
-import           Hyper.Unify
-import           Hyper.Unify.Binding
-import           Hyper.Unify.Binding.ST
-import           Hyper.Unify.Generalize
-import           Hyper.Unify.New
-import           Hyper.Unify.QuantifiedVar
-import           Hyper.Unify.Term
-import           Generics.Constraints (makeDerivings)
+import Control.Lens.Operators
+import Control.Monad.Except
+import Control.Monad.RWS
+import Control.Monad.Reader
+import Control.Monad.ST
+import Control.Monad.ST.Class (MonadST (..))
+import Data.Map (Map)
+import Data.STRef
+import Data.String (IsString (..))
+import Generics.Constraints (makeDerivings)
+import Hyper
+import Hyper.Class.Recursive
+import Hyper.Infer
+import Hyper.Infer.Blame
+import Hyper.Syntax
+import Hyper.Syntax.Nominal
+import Hyper.Syntax.Row
+import Hyper.Syntax.Scheme
+import Hyper.Unify
+import Hyper.Unify.Binding
+import Hyper.Unify.Binding.ST
+import Hyper.Unify.Generalize
+import Hyper.Unify.New
+import Hyper.Unify.QuantifiedVar
+import Hyper.Unify.Term
 import qualified Text.PrettyPrint as P
-import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
+import Text.PrettyPrint.HughesPJClass (Pretty (..), maybeParens)
 
-import           Prelude
+import Prelude
 
 data LangB h
     = BLit Int
@@ -46,7 +49,7 @@ data LangB h
     | BRecExtend (RowExtend Name LangB LangB h)
     | BGetField (h :# LangB) Name
     | BToNom (ToNom Name LangB h)
-    deriving Generic
+    deriving (Generic)
 
 makeHTraversableAndBases ''LangB
 makeHMorph ''LangB
@@ -67,11 +70,11 @@ instance Pretty (LangB # Pure) where
     pPrintPrec _ _ (BLit i) = pPrint i
     pPrintPrec _ _ BRecEmpty = P.text "{}"
     pPrintPrec lvl p (BRecExtend (RowExtend h v r)) =
-        pPrintPrec lvl 20 h P.<+>
-        P.text "=" P.<+>
-        (pPrintPrec lvl 2 v <> P.text ",") P.<+>
-        pPrintPrec lvl 1 r
-        & maybeParens (p > 1)
+        pPrintPrec lvl 20 h
+            P.<+> P.text "="
+            P.<+> (pPrintPrec lvl 2 v <> P.text ",")
+            P.<+> pPrintPrec lvl 1 r
+            & maybeParens (p > 1)
     pPrintPrec lvl p (BApp x) = pPrintPrec lvl p x
     pPrintPrec lvl p (BVar x) = pPrintPrec lvl p x
     pPrintPrec lvl p (BLam x) = pPrintPrec lvl p x
@@ -84,7 +87,8 @@ instance VarType Name LangB where
         r t
         where
             r ::
-                forall m. UnifyGen m Typ =>
+                forall m.
+                UnifyGen m Typ =>
                 Map Name (HFlip GTerm Typ # UVarOf m) ->
                 m (UVarOf m # Typ)
             r x = x ^?! Lens.ix h . _HFlip & instantiate
@@ -93,45 +97,48 @@ instance
     ( MonadScopeLevel m
     , LocalScopeType Name (UVarOf m # Typ) m
     , LocalScopeType Name (GTerm (UVarOf m) # Typ) m
-    , UnifyGen m Typ, UnifyGen m Row
+    , UnifyGen m Typ
+    , UnifyGen m Row
     , HasScope m ScopeTypes
     , MonadNominals Name Typ m
     ) =>
-    Infer m LangB where
-
+    Infer m LangB
+    where
     inferBody (BApp x) = inferBody x <&> Lens._1 %~ BApp
     inferBody (BVar x) = inferBody x <&> Lens._1 %~ BVar
     inferBody (BLam x) = inferBody x <&> Lens._1 %~ BLam
     inferBody (BLet x) = inferBody x <&> Lens._1 %~ BLet
-    inferBody (BLit x) = newTerm TInt <&> (BLit x, ) . MkANode
+    inferBody (BLit x) = newTerm TInt <&> (BLit x,) . MkANode
     inferBody (BToNom x) =
         inferBody x
-        >>= \(b, t) -> TNom t & newTerm <&> (BToNom b, ) . MkANode
+            >>= \(b, t) -> TNom t & newTerm <&> (BToNom b,) . MkANode
     inferBody (BRecExtend (RowExtend h v r)) =
         do
             InferredChild vI vT <- inferChild v
             InferredChild rI rT <- inferChild r
             restR <-
                 scopeConstraints (Proxy @Row)
-                <&> rForbiddenFields . Lens.contains h .~ True
-                >>= newVar binding . UUnbound
+                    <&> rForbiddenFields . Lens.contains h .~ True
+                    >>= newVar binding . UUnbound
             _ <- TRec restR & newTerm >>= unify (rT ^. _ANode)
-            RowExtend h (vT ^. _ANode) restR & RExtend & newTerm
+            RowExtend h (vT ^. _ANode) restR
+                & RExtend
+                & newTerm
                 >>= newTerm . TRec
-                <&> (BRecExtend (RowExtend h vI rI), ) . MkANode
+                <&> (BRecExtend (RowExtend h vI rI),) . MkANode
     inferBody BRecEmpty =
-        newTerm REmpty >>= newTerm . TRec <&> (BRecEmpty, ) . MkANode
+        newTerm REmpty >>= newTerm . TRec <&> (BRecEmpty,) . MkANode
     inferBody (BGetField w h) =
         do
             (rT, wR) <- rowElementInfer RExtend h
             InferredChild wI wT <- inferChild w
-            (BGetField wI h, _ANode # rT) <$
-                (newTerm (TRec wR) >>= unify (wT ^. _ANode))
+            (BGetField wI h, _ANode # rT)
+                <$ (newTerm (TRec wR) >>= unify (wT ^. _ANode))
 
 -- Monads for inferring `LangB`:
 
 newtype ScopeTypes v = ScopeTypes (Map Name (HFlip GTerm Typ v))
-    deriving stock Generic
+    deriving stock (Generic)
     deriving newtype (Semigroup, Monoid)
 
 makeDerivings [''Show] [''LangB, ''ScopeTypes]
@@ -153,24 +160,30 @@ Lens.makeLenses ''InferScope
 emptyInferScope :: InferScope v
 emptyInferScope = InferScope mempty (ScopeLevel 0) mempty
 
-newtype PureInferB a =
-    PureInferB
-    ( RWST (InferScope UVar) () PureInferState
-        (Either (TypeError # Pure)) a
-    )
+newtype PureInferB a
+    = PureInferB
+        ( RWST
+            (InferScope UVar)
+            ()
+            PureInferState
+            (Either (TypeError # Pure))
+            a
+        )
     deriving newtype
-    ( Functor, Applicative, Monad
-    , MonadError (TypeError # Pure)
-    , MonadReader (InferScope UVar)
-    , MonadState PureInferState
-    )
+        ( Functor
+        , Applicative
+        , Monad
+        , MonadError (TypeError # Pure)
+        , MonadReader (InferScope UVar)
+        , MonadState PureInferState
+        )
 
 Lens.makePrisms ''PureInferB
 
 execPureInferB :: PureInferB a -> Either (TypeError # Pure) a
 execPureInferB act =
     runRWST (act ^. _PureInferB) emptyInferScope emptyPureInferState
-    <&> (^. Lens._1)
+        <&> (^. Lens._1)
 
 type instance UVarOf PureInferB = UVar
 
@@ -197,11 +210,11 @@ instance UnifyGen PureInferB Row where
 
 instance MonadQuantify ScopeLevel Name PureInferB where
     newQuantifiedVariable _ =
-        pisFreshQVars . tTyp . Lens._Wrapped <<+= 1 <&> Name . ('t':) . show
+        pisFreshQVars . tTyp . Lens._Wrapped <<+= 1 <&> Name . ('t' :) . show
 
 instance MonadQuantify RConstraints Name PureInferB where
     newQuantifiedVariable _ =
-        pisFreshQVars . tRow . Lens._Wrapped <<+= 1 <&> Name . ('r':) . show
+        pisFreshQVars . tRow . Lens._Wrapped <<+= 1 <&> Name . ('r' :) . show
 
 instance Unify PureInferB Typ where
     binding = bindingDict (pisBindings . tTyp)
@@ -213,15 +226,21 @@ instance Unify PureInferB Row where
 instance HasScheme Types PureInferB Typ
 instance HasScheme Types PureInferB Row
 
-newtype STInferB s a =
-    STInferB
-    (ReaderT (InferScope (STUVar s), STNameGen s)
-        (ExceptT (TypeError # Pure) (ST s)) a)
+newtype STInferB s a
+    = STInferB
+        ( ReaderT
+            (InferScope (STUVar s), STNameGen s)
+            (ExceptT (TypeError # Pure) (ST s))
+            a
+        )
     deriving newtype
-    ( Functor, Applicative, Monad, MonadST
-    , MonadError (TypeError # Pure)
-    , MonadReader (InferScope (STUVar s), STNameGen s)
-    )
+        ( Functor
+        , Applicative
+        , Monad
+        , MonadST
+        , MonadError (TypeError # Pure)
+        , MonadReader (InferScope (STUVar s), STNameGen s)
+        )
 
 Lens.makePrisms ''STInferB
 
@@ -255,10 +274,10 @@ instance UnifyGen (STInferB s) Row where
     scopeConstraints _ = Lens.view (Lens._1 . scopeLevel) <&> RowConstraints mempty
 
 instance MonadQuantify ScopeLevel Name (STInferB s) where
-    newQuantifiedVariable _ = newStQuantified (Lens._2 . tTyp) <&> Name . ('t':) . show
+    newQuantifiedVariable _ = newStQuantified (Lens._2 . tTyp) <&> Name . ('t' :) . show
 
 instance MonadQuantify RConstraints Name (STInferB s) where
-    newQuantifiedVariable _ = newStQuantified (Lens._2 . tRow) <&> Name . ('r':) . show
+    newQuantifiedVariable _ = newStQuantified (Lens._2 . tRow) <&> Name . ('r' :) . show
 
 instance Unify (STInferB s) Typ where
     binding = stBinding
@@ -274,5 +293,5 @@ instance Blame PureInferB LangB where
     inferOfUnify _ x y = unify (x ^. _ANode) (y ^. _ANode) & void
     inferOfMatches _ x y =
         (==)
-        <$> (semiPruneLookup (x ^. _ANode) <&> fst)
-        <*> (semiPruneLookup (y ^. _ANode) <&> fst)
+            <$> (semiPruneLookup (x ^. _ANode) <&> fst)
+            <*> (semiPruneLookup (y ^. _ANode) <&> fst)

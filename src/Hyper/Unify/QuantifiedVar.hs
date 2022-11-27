@@ -1,10 +1,11 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | A class for types that have quantified variables.
-
-{-# LANGUAGE UndecidableInstances, FlexibleInstances, FlexibleContexts #-}
-
 module Hyper.Unify.QuantifiedVar
-    ( HasQuantifiedVar(..)
-    , MonadQuantify(..)
+    ( HasQuantifiedVar (..)
+    , MonadQuantify (..)
     , OrdQVar
     ) where
 
@@ -17,12 +18,14 @@ import Prelude.Compat
 class HasQuantifiedVar (t :: HyperType) where
     -- | The type of quantified variable identifiers
     type QVar t
+
     -- | A `Prism'` from a type to its quantified variable term
     quantifiedVar :: Prism' (t f) (QVar t)
 
 -- | A constraint synonym that represents that
 -- the quantified variable of a type has an 'Ord' instance
-class    (HasQuantifiedVar t, Ord (QVar t)) => OrdQVar t
+class (HasQuantifiedVar t, Ord (QVar t)) => OrdQVar t
+
 instance (HasQuantifiedVar t, Ord (QVar t)) => OrdQVar t
 
 -- | A monad where new quantified variables can be generated

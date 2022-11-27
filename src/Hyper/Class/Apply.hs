@@ -1,11 +1,11 @@
 -- | A variant of 'Data.Functor.Apply.Apply' for 'Hyper.Type.HyperType's
-
 module Hyper.Class.Apply
-    ( HApply(..), HApplicative
+    ( HApply (..)
+    , HApplicative
     , liftH2
     ) where
 
-import Hyper.Class.Functor (HFunctor(..))
+import Hyper.Class.Functor (HFunctor (..))
 import Hyper.Class.Nodes (HWitness)
 import Hyper.Class.Pointed (HPointed)
 import Hyper.Type (type (#))

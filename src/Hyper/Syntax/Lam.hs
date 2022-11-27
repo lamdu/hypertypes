@@ -1,20 +1,27 @@
-{-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances, FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hyper.Syntax.Lam
-    ( Lam(..), lamIn, lamOut, W_Lam(..), MorphWitness(..)
+    ( Lam (..)
+    , lamIn
+    , lamOut
+    , W_Lam (..)
+    , MorphWitness (..)
     ) where
 
-import           Generics.Constraints (Constraints)
-import           Hyper
-import           Hyper.Class.Optic (HSubset(..), HSubset')
-import           Hyper.Infer
-import           Hyper.Syntax.FuncType
-import           Hyper.Unify (UnifyGen, UVarOf)
-import           Hyper.Unify.New (newUnbound, newTerm)
+import Generics.Constraints (Constraints)
+import Hyper
+import Hyper.Class.Optic (HSubset (..), HSubset')
+import Hyper.Infer
+import Hyper.Syntax.FuncType
+import Hyper.Unify (UVarOf, UnifyGen)
+import Hyper.Unify.New (newTerm, newUnbound)
 import qualified Text.PrettyPrint as P
-import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
+import Text.PrettyPrint.HughesPJClass (Pretty (..), maybeParens)
 
-import           Hyper.Internal.Prelude
+import Hyper.Internal.Prelude
 
 -- | A term for lambda abstractions.
 --
@@ -24,7 +31,8 @@ import           Hyper.Internal.Prelude
 data Lam v expr h = Lam
     { _lamIn :: v
     , _lamOut :: h :# expr
-    } deriving Generic
+    }
+    deriving (Generic)
 
 makeLenses ''Lam
 makeCommonInstances [''Lam]
@@ -39,11 +47,13 @@ instance RTraversable t => RTraversable (Lam v t)
 
 instance
     Constraints (Lam v expr h) Pretty =>
-    Pretty (Lam v expr h) where
+    Pretty (Lam v expr h)
+    where
     pPrintPrec lvl p (Lam i o) =
         (P.text "λ" <> pPrintPrec lvl 0 i)
-        P.<+> P.text "→" P.<+> pPrintPrec lvl 0 o
-        & maybeParens (p > 0)
+            P.<+> P.text "→"
+            P.<+> pPrintPrec lvl 0 o
+            & maybeParens (p > 0)
 
 type instance InferOf (Lam _ t) = ANode (TypeOf t)
 
@@ -54,8 +64,8 @@ instance
     , HasInferredType t
     , LocalScopeType v (UVarOf m # TypeOf t) m
     ) =>
-    Infer m (Lam v t) where
-
+    Infer m (Lam v t)
+    where
     {-# INLINE inferBody #-}
     inferBody (Lam p r) =
         do

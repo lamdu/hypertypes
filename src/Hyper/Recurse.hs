@@ -1,23 +1,28 @@
--- | Combinators for processing/constructing trees recursively
-
 {-# LANGUAGE FlexibleContexts #-}
 
+-- | Combinators for processing/constructing trees recursively
 module Hyper.Recurse
     ( module Hyper.Class.Recursive
-    , fold, unfold
-    , wrap, wrapM, unwrap, unwrapM
+    , fold
+    , unfold
+    , wrap
+    , wrapM
+    , unwrap
+    , unwrapM
     , foldMapRecursive
-    , HRecWitness(..)
-    , (#>>), (#**#), (##>>)
+    , HRecWitness (..)
+    , (#>>)
+    , (#**#)
+    , (##>>)
     ) where
 
 import Hyper.Class.Foldable
-import Hyper.Class.Functor (HFunctor(..))
-import Hyper.Class.Nodes (HWitness, (#>), (#*#))
+import Hyper.Class.Functor (HFunctor (..))
+import Hyper.Class.Nodes (HWitness, (#*#), (#>))
 import Hyper.Class.Recursive
 import Hyper.Class.Traversable
 import Hyper.Type
-import Hyper.Type.Pure (Pure(..), _Pure)
+import Hyper.Type.Pure (Pure (..), _Pure)
 
 import Hyper.Internal.Prelude
 
@@ -36,9 +41,9 @@ wrapM ::
     m (w # h)
 wrapM f x =
     x ^. _Pure
-    & htraverse (Proxy @RTraversable #*# \w -> wrapM (f . HRecSub w))
-    >>= f HRecSelf
-    \\ recurse (Proxy @(RTraversable h))
+        & htraverse (Proxy @RTraversable #*# \w -> wrapM (f . HRecSub w))
+        >>= f HRecSelf
+            \\ recurse (Proxy @(RTraversable h))
 
 -- | Monadically unwrap a tree from the top down, replacing its 'HyperType' with 'Pure'
 {-# INLINE unwrapM #-}
@@ -50,9 +55,9 @@ unwrapM ::
     m (Pure # h)
 unwrapM f x =
     f HRecSelf x
-    >>= htraverse (Proxy @RTraversable #*# \w -> unwrapM (f . HRecSub w))
-    <&> (_Pure #)
-    \\ recurse (Proxy @(RTraversable h))
+        >>= htraverse (Proxy @RTraversable #*# \w -> unwrapM (f . HRecSub w))
+        <&> (_Pure #)
+            \\ recurse (Proxy @(RTraversable h))
 
 -- | Wrap a 'Pure' to a different 'HyperType' from the bottom up
 {-# INLINE wrap #-}
@@ -64,9 +69,9 @@ wrap ::
     w # h
 wrap f x =
     x ^. _Pure
-    & hmap (Proxy @(Recursively HFunctor) #*# \w -> wrap (f . HRecSub w))
-    & f HRecSelf
-    \\ recursively (Proxy @(HFunctor h))
+        & hmap (Proxy @(Recursively HFunctor) #*# \w -> wrap (f . HRecSub w))
+        & f HRecSelf
+            \\ recursively (Proxy @(HFunctor h))
 
 -- | Unwrap a tree from the top down, replacing its 'HyperType' with 'Pure'
 {-# INLINE unwrap #-}
@@ -77,10 +82,11 @@ unwrap ::
     w # h ->
     Pure # h
 unwrap f x =
-    _Pure #
-    hmap (Proxy @(Recursively HFunctor) #*# \w -> unwrap (f . HRecSub w))
-    (f HRecSelf x)
-    \\ recursively (Proxy @(HFunctor h))
+    _Pure
+        # hmap
+            (Proxy @(Recursively HFunctor) #*# \w -> unwrap (f . HRecSub w))
+            (f HRecSelf x)
+        \\ recursively (Proxy @(HFunctor h))
 
 -- | Recursively fold up a tree to produce a result (aka catamorphism)
 {-# INLINE fold #-}
@@ -109,14 +115,15 @@ foldMapRecursive ::
     h # p ->
     a
 foldMapRecursive f x =
-    f HRecSelf x <>
-    hfoldMap
-    ( Proxy @(Recursively HFoldable) #*#
-        \w ->
-            hfoldMap (Proxy @(Recursively HFoldable) #> foldMapRecursive (f . HRecSub w))
-            \\ recursively (Proxy @(HFoldable p))
-    ) x
-    \\ recursively (Proxy @(HFoldable h))
+    f HRecSelf x
+        <> hfoldMap
+            ( Proxy @(Recursively HFoldable) #*#
+                \w ->
+                    hfoldMap (Proxy @(Recursively HFoldable) #> foldMapRecursive (f . HRecSub w))
+                        \\ recursively (Proxy @(HFoldable p))
+            )
+            x
+        \\ recursively (Proxy @(HFoldable h))
 
 infixr 0 #>>
 infixr 0 ##>>
@@ -127,24 +134,30 @@ infixr 0 #**#
 (#>>) ::
     forall c h n r.
     (Recursive c, c h, RNodes h) =>
-    Proxy c -> (c n => r) -> HRecWitness h n -> r
+    Proxy c ->
+    (c n => r) ->
+    HRecWitness h n ->
+    r
 (#>>) _ r HRecSelf = r
 (#>>) p r (HRecSub w0 w1) =
     (Proxy @RNodes #*# p #> (p #>> r) w1) w0
-    \\ recurse (Proxy @(RNodes h))
-    \\ recurse (Proxy @(c h))
+        \\ recurse (Proxy @(RNodes h))
+        \\ recurse (Proxy @(c h))
 
 -- | @Proxy @c #> r@ replaces a recursive witness parameter of @r@ with a @Recursively c@ constraint on the witnessed node
 {-# INLINE (##>>) #-}
 (##>>) ::
     forall c h n r.
     Recursively c h =>
-    Proxy c -> (c n => r) -> HRecWitness h n -> r
+    Proxy c ->
+    (c n => r) ->
+    HRecWitness h n ->
+    r
 (##>>) p r =
     \case
-    HRecSelf -> r
-    HRecSub w0 w1 -> (Proxy @(Recursively c) #> (p ##>> r) w1) w0
-    \\ recursively (Proxy @(c h))
+        HRecSelf -> r
+        HRecSub w0 w1 -> (Proxy @(Recursively c) #> (p ##>> r) w1) w0
+        \\ recursively (Proxy @(c h))
 
 -- | A variant of '#>>' which does not consume the witness parameter.
 --
@@ -152,5 +165,8 @@ infixr 0 #**#
 {-# INLINE (#**#) #-}
 (#**#) ::
     (Recursive c, c h, RNodes h) =>
-    Proxy c -> (c n => HRecWitness h n -> r) -> HRecWitness h n -> r
+    Proxy c ->
+    (c n => HRecWitness h n -> r) ->
+    HRecWitness h n ->
+    r
 (#**#) p r w = (p #>> r) w w

@@ -1,15 +1,19 @@
-{-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | A simple 'Hyper.Type.HyperType' with a single child node
-
 module Hyper.Combinator.ANode
-    ( ANode(..), _ANode, W_ANode(..), MorphWitness(..)
+    ( ANode (..)
+    , _ANode
+    , W_ANode (..)
+    , MorphWitness (..)
     ) where
 
 import Control.Lens (iso)
-import Hyper.Class.Optic (HNodeLens(..))
-import Hyper.Class.Morph (HMorph(..))
-import Hyper.Class.Recursive (RNodes, Recursively, RTraversable)
+import Hyper.Class.Morph (HMorph (..))
+import Hyper.Class.Optic (HNodeLens (..))
+import Hyper.Class.Recursive (RNodes, RTraversable, Recursively)
 import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
 import Hyper.Type (type (#), type (:#))
 
@@ -17,7 +21,7 @@ import Hyper.Internal.Prelude
 
 -- | @ANode c@ is a 'Hyper.Type.HyperType' with a single child node of type @c@
 newtype ANode c h = MkANode (h :# c)
-    deriving stock Generic
+    deriving stock (Generic)
 
 -- | An 'Iso' from 'ANode' its child node.
 --
@@ -37,8 +41,8 @@ instance (c (ANode n), Recursively c n) => Recursively c (ANode n)
 instance RTraversable n => RTraversable (ANode n)
 
 instance HMorph (ANode a) (ANode b) where
-    type instance MorphConstraint (ANode a) (ANode b) c = c a b
-    data instance MorphWitness (ANode a) (ANode b) _ _ where
+    type MorphConstraint (ANode a) (ANode b) c = c a b
+    data MorphWitness (ANode a) (ANode b) _ _ where
         M_ANode :: MorphWitness (ANode a) (ANode b) a b
     morphMap f = _ANode %~ f M_ANode
     morphLiftConstraint M_ANode _ x = x

@@ -1,13 +1,16 @@
--- | Generate new unification variables
 {-# LANGUAGE FlexibleContexts #-}
+
+-- | Generate new unification variables
 module Hyper.Unify.New
-    ( newUnbound, newTerm, unfreeze
+    ( newUnbound
+    , newTerm
+    , unfreeze
     ) where
 
 import Hyper
-import Hyper.Class.Unify (Unify(..), UnifyGen(..), UVarOf, BindingDict(..))
+import Hyper.Class.Unify (BindingDict (..), UVarOf, Unify (..), UnifyGen (..))
 import Hyper.Recurse
-import Hyper.Unify.Term (UTerm(..), UTermBody(..))
+import Hyper.Unify.Term (UTerm (..), UTermBody (..))
 
 import Prelude.Compat
 

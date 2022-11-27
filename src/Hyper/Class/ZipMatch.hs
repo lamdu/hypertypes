@@ -1,22 +1,22 @@
--- | A class to match term structures
-
 {-# LANGUAGE FlexibleContexts #-}
 
+-- | A class to match term structures
 module Hyper.Class.ZipMatch
-    ( ZipMatch(..)
+    ( ZipMatch (..)
     , zipMatch2
     , zipMatchA
-    , zipMatch_, zipMatch1_
+    , zipMatch_
+    , zipMatch1_
     ) where
 
 import GHC.Generics
 import GHC.Generics.Lens (generic1)
-import Hyper.Class.Foldable (HFoldable, htraverse_, htraverse1_)
-import Hyper.Class.Functor (HFunctor(..))
-import Hyper.Class.Nodes (HNodes(..), HWitness)
+import Hyper.Class.Foldable (HFoldable, htraverse1_, htraverse_)
+import Hyper.Class.Functor (HFunctor (..))
+import Hyper.Class.Nodes (HNodes (..), HWitness)
 import Hyper.Class.Traversable (HTraversable, htraverse)
 import Hyper.Type (type (#))
-import Hyper.Type.Pure (Pure(..), _Pure)
+import Hyper.Type.Pure (Pure (..), _Pure)
 
 import Hyper.Internal.Prelude
 
@@ -38,7 +38,9 @@ class ZipMatch h where
     zipMatch :: h # p -> h # q -> Maybe (h # (p :*: q))
     default zipMatch ::
         (Generic1 h, ZipMatch (Rep1 h)) =>
-        h # p -> h # q -> Maybe (h # (p :*: q))
+        h # p ->
+        h # q ->
+        Maybe (h # (p :*: q))
     zipMatch = generic1 . zipMatch . from1
 
 instance ZipMatch Pure where
@@ -68,7 +70,9 @@ deriving newtype instance ZipMatch h => ZipMatch (Rec1 h)
 zipMatch2 ::
     (ZipMatch h, HFunctor h) =>
     (forall n. HWitness h n -> p # n -> q # n -> r # n) ->
-    h # p -> h # q -> Maybe (h # r)
+    h # p ->
+    h # q ->
+    Maybe (h # r)
 zipMatch2 f x y = zipMatch x y <&> hmap (\w (a :*: b) -> f w a b)
 
 -- | An 'Applicative' variant of 'zipMatch2'
@@ -76,7 +80,9 @@ zipMatch2 f x y = zipMatch x y <&> hmap (\w (a :*: b) -> f w a b)
 zipMatchA ::
     (Applicative f, ZipMatch h, HTraversable h) =>
     (forall n. HWitness h n -> p # n -> q # n -> f (r # n)) ->
-    h # p -> h # q -> Maybe (f (h # r))
+    h # p ->
+    h # q ->
+    Maybe (f (h # r))
 zipMatchA f x y = zipMatch x y <&> htraverse (\w (a :*: b) -> f w a b)
 
 -- | A variant of 'zipMatchA' where the 'Applicative' actions do not contain results
@@ -84,7 +90,9 @@ zipMatchA f x y = zipMatch x y <&> htraverse (\w (a :*: b) -> f w a b)
 zipMatch_ ::
     (Applicative f, ZipMatch h, HFoldable h) =>
     (forall n. HWitness h n -> p # n -> q # n -> f ()) ->
-    h # p -> h # q -> Maybe (f ())
+    h # p ->
+    h # q ->
+    Maybe (f ())
 zipMatch_ f x y = zipMatch x y <&> htraverse_ (\w (a :*: b) -> f w a b)
 
 -- | A variant of 'zipMatch_' for 'Hyper.Type.HyperType's with a single node type (avoids using @RankNTypes@)
@@ -92,5 +100,7 @@ zipMatch_ f x y = zipMatch x y <&> htraverse_ (\w (a :*: b) -> f w a b)
 zipMatch1_ ::
     (Applicative f, ZipMatch h, HFoldable h, HNodesConstraint h ((~) n)) =>
     (p # n -> q # n -> f ()) ->
-    h # p -> h # q -> Maybe (f ())
+    h # p ->
+    h # q ->
+    Maybe (f ())
 zipMatch1_ f x y = zipMatch x y <&> htraverse1_ (\(a :*: b) -> f a b)

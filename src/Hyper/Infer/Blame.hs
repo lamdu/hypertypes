@@ -1,3 +1,8 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | Hindley-Milner type inference with ergonomic blame assignment.
 --
 -- 'blame' is a type-error blame assignment algorithm for languages with Hindley-Milner type inference,
@@ -31,29 +36,28 @@
 --
 -- Note: If a similar algorithm already existed somewhere,
 -- [I](https://github.com/yairchu/) would very much like to know!
-
-{-# LANGUAGE FlexibleContexts, TemplateHaskell, FlexibleInstances, UndecidableInstances #-}
-
 module Hyper.Infer.Blame
     ( blame
-    , Blame(..)
-    , BlameResult(..), _Good, _Mismatch
+    , Blame (..)
+    , BlameResult (..)
+    , _Good
+    , _Mismatch
     , InferOf'
     ) where
 
 import qualified Control.Lens as Lens
-import           Control.Monad.Except (MonadError(..))
-import           Data.List (sortOn)
-import           Hyper
-import           Hyper.Class.Infer
-import           Hyper.Class.Traversable (ContainedH(..))
-import           Hyper.Class.Unify (UnifyGen, UVarOf)
-import           Hyper.Infer.Result
-import           Hyper.Recurse
-import           Hyper.Unify.New (newUnbound)
-import           Hyper.Unify.Occurs (occursCheck)
+import Control.Monad.Except (MonadError (..))
+import Data.List (sortOn)
+import Hyper
+import Hyper.Class.Infer
+import Hyper.Class.Traversable (ContainedH (..))
+import Hyper.Class.Unify (UVarOf, UnifyGen)
+import Hyper.Infer.Result
+import Hyper.Recurse
+import Hyper.Unify.New (newUnbound)
+import Hyper.Unify.Occurs (occursCheck)
 
-import           Hyper.Internal.Prelude
+import Hyper.Internal.Prelude
 
 -- | Class implementing some primitives needed by the 'blame' algorithm
 --
@@ -61,8 +65,8 @@ import           Hyper.Internal.Prelude
 -- It replaces context for 'Blame' to avoid @UndecidableSuperClasses@.
 class
     (Infer m t, RTraversable t, HTraversable (InferOf t), HPointed (InferOf t)) =>
-    Blame m t where
-
+    Blame m t
+    where
     -- | Unify the types/values in infer results
     inferOfUnify ::
         Proxy t ->
@@ -96,9 +100,9 @@ prepareH ::
     m (Ann (a :*: InferResult (UVarOf m) :*: InferResult (UVarOf m)) # exp)
 prepareH t =
     hpure (Proxy @(UnifyGen m) #> MkContainedH newUnbound)
-    & hsequence
-    >>= (`prepare` t)
-    \\ inferContext (Proxy @m) (Proxy @exp)
+        & hsequence
+        >>= (`prepare` t)
+            \\ inferContext (Proxy @m) (Proxy @exp)
 
 prepare ::
     forall m exp a.
@@ -108,14 +112,14 @@ prepare ::
     m (Ann (a :*: InferResult (UVarOf m) :*: InferResult (UVarOf m)) # exp)
 prepare resFromPosition (Ann a x) =
     hmap
-    ( Proxy @(Blame m) #>
-        InferChild . fmap (\t -> InferredChild t (t ^. hAnn . Lens._2 . Lens._1 . _InferResult)) . prepareH
-    ) x
-    \\ recurse (Proxy @(Blame m exp))
-    & inferBody
-    <&>
-    \(xI, r) ->
-    Ann (a :*: InferResult resFromPosition :*: InferResult r) xI
+        ( Proxy @(Blame m) #>
+            InferChild . fmap (\t -> InferredChild t (t ^. hAnn . Lens._2 . Lens._1 . _InferResult)) . prepareH
+        )
+        x
+        \\ recurse (Proxy @(Blame m exp))
+        & inferBody
+        <&> \(xI, r) ->
+            Ann (a :*: InferResult resFromPosition :*: InferResult r) xI
 
 tryUnify ::
     forall err m top exp.
@@ -129,12 +133,12 @@ tryUnify _ i0 i1 =
         inferOfUnify (Proxy @exp) i0 i1
         htraverse_ (Proxy @(UnifyGen m) #> occursCheck) i0
             \\ inferContext (Proxy @m) (Proxy @exp)
-    & (`catchError` const (pure ()))
+        & (`catchError` const (pure ()))
 
 data BlameResult v e
     = Good (InferOf' e v)
     | Mismatch (InferOf' e v, InferOf' e v)
-    deriving Generic
+    deriving (Generic)
 makePrisms ''BlameResult
 makeCommonInstances [''BlameResult]
 
@@ -151,7 +155,7 @@ finalize (Ann (a :*: InferResult i0 :*: InferResult i1) x) =
                 | otherwise = Mismatch (i0, i1)
         htraverse (Proxy @(Blame m) #> finalize) x
             <&> Ann (a :*: result)
-    \\ recurse (Proxy @(Blame m exp))
+        \\ recurse (Proxy @(Blame m exp))
 
 -- | Perform Hindley-Milner type inference with prioritised blame for type error,
 -- given a prioritisation for the different nodes.
@@ -180,7 +184,9 @@ blame order topLevelType e =
         hfoldMap
             ( Proxy @(Blame m) #*#
                 \w (a :*: InferResult i0 :*: InferResult i1) ->
-                [(order a, tryUnify w i0 i1)]
-            ) (_HFlip # p)
-            & sortOn fst & traverse_ snd
+                    [(order a, tryUnify w i0 i1)]
+            )
+            (_HFlip # p)
+            & sortOn fst
+            & traverse_ snd
         finalize p

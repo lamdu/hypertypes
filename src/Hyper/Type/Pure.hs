@@ -1,24 +1,28 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | A 'Hyper.Type.HyperType' to express the simplest plain form of a nested higher-kinded data structure.
 --
 -- The value level [hyperfunctions](http://hackage.haskell.org/package/hyperfunctions)
 -- equivalent of 'Pure' is called @self@ in
 -- [Hyperfunctions papers](https://arxiv.org/abs/1309.5135).
-
-{-# LANGUAGE UndecidableInstances, TemplateHaskell, FlexibleContexts #-}
 module Hyper.Type.Pure
-    ( Pure(..), _Pure, W_Pure(..)
+    ( Pure (..)
+    , _Pure
+    , W_Pure (..)
     ) where
 
 import Control.Lens (iso)
 import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
 import Hyper.Type (type (#), type (:#))
-import Text.PrettyPrint.HughesPJClass (Pretty(..))
+import Text.PrettyPrint.HughesPJClass (Pretty (..))
 
 import Hyper.Internal.Prelude
 
 -- | A 'Hyper.Type.HyperType' to express the simplest plain form of a nested higher-kinded data structure
 newtype Pure h = Pure (h :# Pure)
-    deriving stock Generic
+    deriving stock (Generic)
 
 makeHTraversableApplyAndBases ''Pure
 makeCommonInstances [''Pure]

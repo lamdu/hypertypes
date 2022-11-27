@@ -1,16 +1,18 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | A class for constraints for unification variables
-
-{-# LANGUAGE FlexibleContexts, TemplateHaskell #-}
-
 module Hyper.Unify.Constraints
-    ( TypeConstraints(..)
-    , HasTypeConstraints(..)
-    , WithConstraint(..), wcConstraint, wcBody
+    ( TypeConstraints (..)
+    , HasTypeConstraints (..)
+    , WithConstraint (..)
+    , wcConstraint
+    , wcBody
     ) where
 
-import Algebra.PartialOrd (PartialOrd(..))
+import Algebra.PartialOrd (PartialOrd (..))
 import Data.Kind (Type)
-import Hyper (HyperType, GetHyperType, type (#))
+import Hyper (GetHyperType, HyperType, type (#))
 
 import Hyper.Internal.Prelude
 
@@ -34,8 +36,8 @@ class (PartialOrd c, Monoid c) => TypeConstraints c where
 -- A dependency of `Hyper.Class.Unify.Unify`
 class
     TypeConstraints (TypeConstraintsOf ast) =>
-    HasTypeConstraints (ast :: HyperType) where
-
+    HasTypeConstraints (ast :: HyperType)
+    where
     type TypeConstraintsOf (ast :: HyperType) :: Type
 
     -- | Verify constraints on the ast and apply the given child
@@ -52,4 +54,5 @@ data WithConstraint h ast = WithConstraint
     { _wcConstraint :: TypeConstraintsOf (GetHyperType ast)
     , _wcBody :: h ast
     }
+
 makeLenses ''WithConstraint

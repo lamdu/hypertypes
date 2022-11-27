@@ -1,9 +1,11 @@
-{-# LANGUAGE FlexibleContexts, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hyper.Class.Infer.InferOf
-    ( HasInferredType(..)
-    , HasInferredValue(..)
-    , InferOfConstraint(..)
+    ( HasInferredType (..)
+    , HasInferredValue (..)
+    , InferOfConstraint (..)
     ) where
 
 import Control.Lens (ALens', Lens')
@@ -16,6 +18,7 @@ import Hyper.Internal.Prelude
 class HasInferredType t where
     -- | The type of @t@
     type TypeOf t :: HyperType
+
     -- A 'Control.Lens.Lens' from an inference result to an inferred type
     inferredType :: Proxy t -> ALens' (InferOf t # v) (v # TypeOf t)
 

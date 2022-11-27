@@ -1,18 +1,22 @@
+{-# LANGUAGE EmptyCase #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | Variables.
-
-{-# LANGUAGE UndecidableInstances, EmptyCase #-}
-{-# LANGUAGE FlexibleInstances, TemplateHaskell, FlexibleContexts #-}
-
 module Hyper.Syntax.Var
-    ( Var(..), _Var
-    , VarType(..)
-    , ScopeOf, HasScope(..)
+    ( Var (..)
+    , _Var
+    , VarType (..)
+    , ScopeOf
+    , HasScope (..)
     ) where
 
 import Hyper
 import Hyper.Infer
-import Hyper.Unify (UnifyGen, UVarOf)
-import Text.PrettyPrint.HughesPJClass (Pretty(..))
+import Hyper.Unify (UVarOf, UnifyGen)
+import Text.PrettyPrint.HughesPJClass (Pretty (..))
 
 import Hyper.Internal.Prelude
 
@@ -25,7 +29,9 @@ class VarType var expr where
     -- | Instantiate a type for a variable in a given scope
     varType ::
         UnifyGen m (TypeOf expr) =>
-        Proxy expr -> var -> ScopeOf expr # UVarOf m ->
+        Proxy expr ->
+        var ->
+        ScopeOf expr # UVarOf m ->
         m (UVarOf m # TypeOf expr)
 
 -- | Parameterized by term AST and not by its type AST
@@ -47,7 +53,7 @@ instance Pretty v => Pretty (Var v expr h) where
 type instance InferOf (Var _ t) = ANode (TypeOf t)
 
 instance HasInferredType (Var v t) where
-    type instance (TypeOf (Var v t)) = TypeOf t
+    type TypeOf (Var v t) = TypeOf t
     {-# INLINE inferredType #-}
     inferredType _ = _ANode
 
@@ -57,8 +63,8 @@ instance
     , VarType v expr
     , Monad m
     ) =>
-    Infer m (Var v expr) where
-
+    Infer m (Var v expr)
+    where
     {-# INLINE inferBody #-}
     inferBody (Var x) =
-        getScope >>= varType (Proxy @expr) x <&> MkANode <&> (Var x, )
+        getScope >>= varType (Proxy @expr) x <&> MkANode <&> (Var x,)

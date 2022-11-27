@@ -1,19 +1,24 @@
-{-# LANGUAGE TemplateHaskell, FlexibleInstances, FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Hyper.Class.Infer
     ( InferOf
-    , Infer(..)
-    , InferChild(..), _InferChild
-    , InferredChild(..), inType, inRep
+    , Infer (..)
+    , InferChild (..)
+    , _InferChild
+    , InferredChild (..)
+    , inType
+    , inRep
     ) where
 
 import qualified Control.Lens as Lens
-import           GHC.Generics
-import           Hyper
-import           Hyper.Class.Unify
-import           Hyper.Recurse
+import GHC.Generics
+import Hyper
+import Hyper.Class.Unify
+import Hyper.Recurse
 
-import           Hyper.Internal.Prelude
+import Hyper.Internal.Prelude
 
 -- | @InferOf e@ is the inference result of @e@.
 --
@@ -30,22 +35,23 @@ type family InferOf (t :: HyperType) :: HyperType
 -- | A 'HyperType' containing an inferred child node
 data InferredChild v h t = InferredChild
     { _inRep :: !(h t)
-        -- ^ Inferred node.
-        --
-        -- An 'inferBody' implementation needs to place this value in the corresponding child node of the inferred term body
+    -- ^ Inferred node.
+    --
+    -- An 'inferBody' implementation needs to place this value in the corresponding child node of the inferred term body
     , _inType :: !(InferOf (GetHyperType t) # v)
-        -- ^ The inference result for the child node.
-        --
-        -- An 'inferBody' implementation may use it to perform unifications with it.
+    -- ^ The inference result for the child node.
+    --
+    -- An 'inferBody' implementation may use it to perform unifications with it.
     }
+
 makeLenses ''InferredChild
 
 -- | A 'HyperType' containing an inference action.
 --
 -- The caller may modify the scope before invoking the action via
 -- 'Hyper.Class.Infer.Env.localScopeType' or 'Hyper.Infer.ScopeLevel.localLevel'
-newtype InferChild m h t =
-    InferChild { inferChild :: m (InferredChild (UVarOf m) h t) }
+newtype InferChild m h t = InferChild {inferChild :: m (InferredChild (UVarOf m) h t)}
+
 makePrisms ''InferChild
 
 -- | @Infer m t@ enables 'Hyper.Infer.infer' to perform type-inference for @t@ in the 'Monad' @m@.

@@ -1,19 +1,27 @@
-{-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances, FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hyper.Syntax.Let
-    ( Let(..), letVar, letEquals, letIn, W_Let(..), MorphWitness(..)
+    ( Let (..)
+    , letVar
+    , letEquals
+    , letIn
+    , W_Let (..)
+    , MorphWitness (..)
     ) where
 
-import           Generics.Constraints (Constraints)
-import           Hyper
-import           Hyper.Class.Unify (UnifyGen, UVarOf)
-import           Hyper.Infer
-import           Hyper.Unify.Generalize (GTerm, generalize)
-import           Text.PrettyPrint (($+$), (<+>))
+import Generics.Constraints (Constraints)
+import Hyper
+import Hyper.Class.Unify (UVarOf, UnifyGen)
+import Hyper.Infer
+import Hyper.Unify.Generalize (GTerm, generalize)
+import Text.PrettyPrint (($+$), (<+>))
 import qualified Text.PrettyPrint as Pretty
-import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
+import Text.PrettyPrint.HughesPJClass (Pretty (..), maybeParens)
 
-import           Hyper.Internal.Prelude
+import Hyper.Internal.Prelude
 
 -- | A term for let-expressions with let-generalization.
 --
@@ -24,7 +32,8 @@ data Let v expr h = Let
     { _letVar :: v
     , _letEquals :: h :# expr
     , _letIn :: h :# expr
-    } deriving (Generic)
+    }
+    deriving (Generic)
 
 makeLenses ''Let
 makeCommonInstances [''Let]
@@ -35,12 +44,15 @@ makeHMorph ''Let
 
 instance
     Constraints (Let v expr h) Pretty =>
-    Pretty (Let v expr h) where
+    Pretty (Let v expr h)
+    where
     pPrintPrec lvl p (Let v e i) =
-        Pretty.text "let" <+> pPrintPrec lvl 0 v <+> Pretty.text "="
-        <+> pPrintPrec lvl 0 e
-        $+$ pPrintPrec lvl 0 i
-        & maybeParens (p > 0)
+        Pretty.text "let"
+            <+> pPrintPrec lvl 0 v
+            <+> Pretty.text "="
+            <+> pPrintPrec lvl 0 e
+            $+$ pPrintPrec lvl 0 i
+            & maybeParens (p > 0)
 
 type instance InferOf (Let _ e) = InferOf e
 
@@ -53,16 +65,16 @@ instance
     , HTraversable (InferOf expr)
     , Infer m expr
     ) =>
-    Infer m (Let v expr) where
-
+    Infer m (Let v expr)
+    where
     inferBody (Let v e i) =
         do
             (eI, eG) <-
                 do
                     InferredChild eI eR <- inferChild e
                     generalize (eR ^# inferredType (Proxy @expr))
-                        <&> (eI ,)
-                & localLevel
+                        <&> (eI,)
+                    & localLevel
             inferChild i
                 & localScopeType v eG
                 <&> \(InferredChild iI iR) -> (Let v eI iI, iR)

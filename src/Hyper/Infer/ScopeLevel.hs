@@ -1,16 +1,17 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Hyper.Infer.ScopeLevel
-    ( ScopeLevel(..), _ScopeLevel
-    , MonadScopeLevel(..)
+    ( ScopeLevel (..)
+    , _ScopeLevel
+    , MonadScopeLevel (..)
     ) where
 
-import           Algebra.PartialOrd (PartialOrd(..))
-import           Hyper.Unify.Constraints (TypeConstraints(..))
+import Algebra.PartialOrd (PartialOrd (..))
+import Hyper.Unify.Constraints (TypeConstraints (..))
 import qualified Text.PrettyPrint as Pretty
-import           Text.PrettyPrint.HughesPJClass (Pretty(..))
+import Text.PrettyPrint.HughesPJClass (Pretty (..))
 
-import           Hyper.Internal.Prelude
+import Hyper.Internal.Prelude
 
 -- | A representation of scope nesting level,
 -- for use in let-generalization and skolem escape detection.
@@ -24,6 +25,7 @@ import           Hyper.Internal.Prelude
 -- logical ordering, for which 'PartialOrd' is used.
 newtype ScopeLevel = ScopeLevel Int
     deriving stock (Eq, Ord, Show, Generic)
+
 makePrisms ''ScopeLevel
 
 instance PartialOrd ScopeLevel where

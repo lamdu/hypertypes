@@ -1,17 +1,24 @@
-{-# LANGUAGE FlexibleInstances, UndecidableInstances, TemplateHaskell, FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hyper.Syntax.App
-    ( App(..), appFunc, appArg, W_App(..), MorphWitness(..)
+    ( App (..)
+    , appFunc
+    , appArg
+    , W_App (..)
+    , MorphWitness (..)
     ) where
 
 import Hyper
-import Hyper.Class.Optic (HSubset(..), HSubset')
+import Hyper.Class.Optic (HSubset (..), HSubset')
 import Hyper.Infer
 import Hyper.Syntax.FuncType
 import Hyper.Unify (UnifyGen, unify)
 import Hyper.Unify.New (newTerm, newUnbound)
 import Text.PrettyPrint ((<+>))
-import Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
+import Text.PrettyPrint.HughesPJClass (Pretty (..), maybeParens)
 
 import Hyper.Internal.Prelude
 
@@ -23,7 +30,8 @@ import Hyper.Internal.Prelude
 data App expr h = App
     { _appFunc :: h :# expr
     , _appArg :: h :# expr
-    } deriving Generic
+    }
+    deriving (Generic)
 
 makeLenses ''App
 makeZipMatch ''App
@@ -38,9 +46,9 @@ instance RTraversable e => RTraversable (App e)
 
 instance Pretty (h :# expr) => Pretty (App expr h) where
     pPrintPrec lvl p (App f x) =
-        pPrintPrec lvl 10 f <+>
-        pPrintPrec lvl 11 x
-        & maybeParens (p > 10)
+        pPrintPrec lvl 10 f
+            <+> pPrintPrec lvl 11 x
+            & maybeParens (p > 10)
 
 type instance InferOf (App e) = ANode (TypeOf e)
 
@@ -50,15 +58,15 @@ instance
     , HSubset' (TypeOf expr) (FuncType (TypeOf expr))
     , UnifyGen m (TypeOf expr)
     ) =>
-    Infer m (App expr) where
-
+    Infer m (App expr)
+    where
     {-# INLINE inferBody #-}
     inferBody (App func arg) =
         do
             InferredChild argI argR <- inferChild arg
             InferredChild funcI funcR <- inferChild func
             funcRes <- newUnbound
-            (App funcI argI, MkANode funcRes) <$
-                (newTerm (hSubset # FuncType (argR ^# l) funcRes) >>= unify (funcR ^# l))
+            (App funcI argI, MkANode funcRes)
+                <$ (newTerm (hSubset # FuncType (argR ^# l) funcRes) >>= unify (funcR ^# l))
         where
             l = inferredType (Proxy @expr)

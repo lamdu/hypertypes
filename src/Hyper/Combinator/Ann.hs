@@ -1,13 +1,20 @@
-{-# LANGUAGE TemplateHaskell, UndecidableInstances, FlexibleInstances, FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hyper.Combinator.Ann
-    ( Ann(..), hAnn, hVal
-    , Annotated, annotation, annValue
+    ( Ann (..)
+    , hAnn
+    , hVal
+    , Annotated
+    , annotation
+    , annValue
     ) where
 
-import Control.Lens (Lens, Lens', _Wrapped, from)
-import Hyper.Class.Foldable (HFoldable(..))
-import Hyper.Class.Functor (HFunctor(..))
+import Control.Lens (Lens, Lens', from, _Wrapped)
+import Hyper.Class.Foldable (HFoldable (..))
+import Hyper.Class.Functor (HFunctor (..))
 import Hyper.Class.Nodes
 import Hyper.Class.Traversable
 import Hyper.Combinator.Flip
@@ -20,7 +27,8 @@ import Hyper.Internal.Prelude
 data Ann a h = Ann
     { _hAnn :: a h
     , _hVal :: h :# Ann a
-    } deriving Generic
+    }
+    deriving (Generic)
 makeLenses ''Ann
 
 makeHTraversableApplyAndBases ''Ann
@@ -36,14 +44,22 @@ instance RNodes h => HNodes (HFlip Ann h) where
 hLiftConstraintH ::
     forall a c b n r.
     (RNodes a, HNodesConstraint (HFlip Ann a) c) =>
-    HWitness a b -> HRecWitness b n -> Proxy c -> (c n => r) -> r
+    HWitness a b ->
+    HRecWitness b n ->
+    Proxy c ->
+    (c n => r) ->
+    r
 hLiftConstraintH c n p f =
-    hLiftConstraint c (Proxy @RNodes)
-    ( hLiftConstraint c p
-        (hLiftConstraint (HWitness @(HFlip Ann _) n) p f)
-        \\ recurse (Proxy @(c a))
-    )
-    \\ recurse (Proxy @(RNodes a))
+    hLiftConstraint
+        c
+        (Proxy @RNodes)
+        ( hLiftConstraint
+            c
+            p
+            (hLiftConstraint (HWitness @(HFlip Ann _) n) p f)
+            \\ recurse (Proxy @(c a))
+        )
+        \\ recurse (Proxy @(RNodes a))
 
 instance RNodes a => RNodes (Ann a) where
     {-# INLINE recursiveHNodes #-}
@@ -60,37 +76,39 @@ instance RTraversable a => RTraversable (Ann a) where
 instance Recursively HFunctor h => HFunctor (HFlip Ann h) where
     {-# INLINE hmap #-}
     hmap f =
-        _HFlip %~
-        \(Ann a b) ->
-        Ann
-        (f (HWitness HRecSelf) a)
-        (hmap
-            ( Proxy @(Recursively HFunctor) #*#
-                \w -> from _HFlip %~ hmap (f . HWitness . HRecSub w . (^. _HWitness))
-            ) b
-            \\ recursively (Proxy @(HFunctor h))
-        )
+        _HFlip
+            %~ \(Ann a b) ->
+                Ann
+                    (f (HWitness HRecSelf) a)
+                    ( hmap
+                        ( Proxy @(Recursively HFunctor) #*#
+                            \w -> from _HFlip %~ hmap (f . HWitness . HRecSub w . (^. _HWitness))
+                        )
+                        b
+                        \\ recursively (Proxy @(HFunctor h))
+                    )
 
 instance Recursively HFoldable h => HFoldable (HFlip Ann h) where
     {-# INLINE hfoldMap #-}
     hfoldMap f (MkHFlip (Ann a b)) =
-        f (HWitness HRecSelf) a <>
-        hfoldMap
-        ( Proxy @(Recursively HFoldable) #*#
-            \w -> hfoldMap (f . HWitness . HRecSub w . (^. _HWitness)) . MkHFlip
-        ) b
-        \\ recursively (Proxy @(HFoldable h))
+        f (HWitness HRecSelf) a
+            <> hfoldMap
+                ( Proxy @(Recursively HFoldable) #*#
+                    \w -> hfoldMap (f . HWitness . HRecSub w . (^. _HWitness)) . MkHFlip
+                )
+                b
+            \\ recursively (Proxy @(HFoldable h))
 
 instance RTraversable h => HTraversable (HFlip Ann h) where
     {-# INLINE hsequence #-}
     hsequence =
         _HFlip
-        ( \(Ann a b) ->
-            Ann
-            <$> runContainedH a
-            <*> htraverse (Proxy @RTraversable #> from _HFlip hsequence) b
-            \\ recurse (Proxy @(RTraversable h))
-        )
+            ( \(Ann a b) ->
+                Ann
+                    <$> runContainedH a
+                    <*> htraverse (Proxy @RTraversable #> from _HFlip hsequence) b
+                        \\ recurse (Proxy @(RTraversable h))
+            )
 
 type Annotated a = Ann (Const a)
 

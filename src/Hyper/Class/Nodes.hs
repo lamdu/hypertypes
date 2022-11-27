@@ -1,12 +1,17 @@
--- | A class for witness types and lifting of constraints to the child nodes of a 'HyperType'
-
-{-# LANGUAGE EmptyCase, UndecidableInstances, TemplateHaskell, FlexibleContexts #-}
+{-# LANGUAGE EmptyCase #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
+-- | A class for witness types and lifting of constraints to the child nodes of a 'HyperType'
 module Hyper.Class.Nodes
-    ( HNodes(..), HWitness(..), _HWitness
-    , (#>), (#*#)
-    , HNodesHaveConstraint(..)
+    ( HNodes (..)
+    , HWitness (..)
+    , _HWitness
+    , (#>)
+    , (#*#)
+    , HNodesHaveConstraint (..)
     ) where
 
 import Data.Kind (Type)
@@ -25,14 +30,16 @@ newtype HWitness h n = HWitness (HWitnessType h n)
 class HNodes (h :: HyperType) where
     -- | Lift a constraint to apply to the child nodes
     type HNodesConstraint h (c :: (HyperType -> Constraint)) :: Constraint
-    type instance HNodesConstraint h c = HNodesConstraint (Rep1 h) c
+
+    type HNodesConstraint h c = HNodesConstraint (Rep1 h) c
 
     -- | @HWitness h n@ is a witness that @n@ is a node of @h@.
     --
     -- A value quantified with @forall n. HWitness h n -> ... n@,
     -- is equivalent for a "for-some" where the possible values for @n@ are the nodes of @h@.
     type HWitnessType h :: HyperType -> Type
-    type instance HWitnessType h = HWitnessType (Rep1 h)
+
+    type HWitnessType h = HWitnessType (Rep1 h)
 
     -- | Lift a rank-n value with a constraint which the child nodes satisfy
     -- to a function from a node witness.
@@ -61,7 +68,7 @@ instance HNodes (Const a) where
     type HNodesConstraint (Const a) _ = ()
     type HWitnessType (Const a) = V1
     {-# INLINE hLiftConstraint #-}
-    hLiftConstraint = \case{}
+    hLiftConstraint = \case {}
 
 instance (HNodes a, HNodes b) => HNodes (a :*: b) where
     type HNodesConstraint (a :*: b) x = (HNodesConstraint a x, HNodesConstraint b x)
@@ -87,7 +94,10 @@ infixr 0 #*#
 {-# INLINE (#>) #-}
 (#>) ::
     (HNodes h, HNodesConstraint h c) =>
-    Proxy c -> (c n => r) -> HWitness h n -> r
+    Proxy c ->
+    (c n => r) ->
+    HWitness h n ->
+    r
 (#>) p r w = hLiftConstraint w p r
 
 -- | A variant of '#>' which does not consume the witness parameter.
@@ -96,7 +106,10 @@ infixr 0 #*#
 {-# INLINE (#*#) #-}
 (#*#) ::
     (HNodes h, HNodesConstraint h c) =>
-    Proxy c -> (c n => HWitness h n -> r) -> HWitness h n -> r
+    Proxy c ->
+    (c n => HWitness h n -> r) ->
+    HWitness h n ->
+    r
 (#*#) p r w = (p #> r) w w
 
 -- | Defunctionalized HNodesConstraint which can be curried

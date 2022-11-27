@@ -1,11 +1,10 @@
 -- | A variant of 'Data.Pointed.Pointed' for 'Hyper.Type.HyperType's
-
 module Hyper.Class.Pointed
-    ( HPointed(..)
+    ( HPointed (..)
     ) where
 
-import GHC.Generics ((:+:)(..))
-import Hyper.Class.Nodes (HNodes, HWitness(..))
+import GHC.Generics ((:+:) (..))
+import Hyper.Class.Nodes (HNodes, HWitness (..))
 import Hyper.Type (type (#))
 
 import Hyper.Internal.Prelude

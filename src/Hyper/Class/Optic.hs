@@ -1,8 +1,9 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 module Hyper.Class.Optic
-    ( HNodeLens(..)
-    , HSubset(..), HSubset'
+    ( HNodeLens (..)
+    , HSubset (..)
+    , HSubset'
     ) where
 
 import Control.Lens (Lens', Prism)

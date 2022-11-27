@@ -1,16 +1,16 @@
--- | A variant of 'Foldable' for 'Hyper.Type.HyperType's
-
 {-# LANGUAGE FlexibleContexts #-}
 
+-- | A variant of 'Foldable' for 'Hyper.Type.HyperType's
 module Hyper.Class.Foldable
-    ( HFoldable(..)
+    ( HFoldable (..)
     , hfolded1
-    , htraverse_, htraverse1_
+    , htraverse_
+    , htraverse1_
     ) where
 
 import Control.Lens (Fold, folding)
 import GHC.Generics
-import Hyper.Class.Nodes (HNodes(..), HWitness(..), _HWitness, (#>))
+import Hyper.Class.Nodes (HNodes (..), HWitness (..), (#>), _HWitness)
 import Hyper.Type (type (#))
 
 import Hyper.Internal.Prelude
@@ -28,7 +28,9 @@ class HNodes h => HFoldable h where
         a
     {-# INLINE hfoldMap #-}
     default hfoldMap ::
-        ( Generic1 h, HFoldable (Rep1 h), HWitnessType h ~ HWitnessType (Rep1 h)
+        ( Generic1 h
+        , HFoldable (Rep1 h)
+        , HWitnessType h ~ HWitnessType (Rep1 h)
         , Monoid a
         ) =>
         (forall n. HWitness h n -> p # n -> a) ->
@@ -43,8 +45,8 @@ instance HFoldable (Const a) where
 instance (HFoldable a, HFoldable b) => HFoldable (a :*: b) where
     {-# INLINE hfoldMap #-}
     hfoldMap f (x :*: y) =
-        hfoldMap (f . HWitness . L1) x <>
-        hfoldMap (f . HWitness . R1) y
+        hfoldMap (f . HWitness . L1) x
+            <> hfoldMap (f . HWitness . R1) y
 
 instance (HFoldable a, HFoldable b) => HFoldable (a :+: b) where
     {-# INLINE hfoldMap #-}
@@ -77,13 +79,14 @@ htraverse_ ::
     (forall c. HWitness h c -> m # c -> f ()) ->
     h # m ->
     f ()
-htraverse_ f = sequenceA_ . hfoldMap (fmap (:[]) . f)
+htraverse_ f = sequenceA_ . hfoldMap (fmap (: []) . f)
 
 -- | 'HFoldable' variant of 'Data.Foldable.traverse_' for 'Hyper.Type.HyperType's with a single node type (avoids using @RankNTypes@)
 {-# INLINE htraverse1_ #-}
 htraverse1_ ::
     forall f h n p.
-    ( Applicative f, HFoldable h
+    ( Applicative f
+    , HFoldable h
     , HNodesConstraint h ((~) n)
     ) =>
     (p # n -> f ()) ->

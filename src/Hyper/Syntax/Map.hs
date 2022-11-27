@@ -1,21 +1,27 @@
-{-# LANGUAGE TemplateHaskell, FlexibleInstances, UndecidableInstances, FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hyper.Syntax.Map
-    ( TermMap(..), _TermMap, W_TermMap(..), MorphWitness(..)
+    ( TermMap (..)
+    , _TermMap
+    , W_TermMap (..)
+    , MorphWitness (..)
     ) where
 
 import qualified Control.Lens as Lens
 import qualified Data.Map as Map
-import           Hyper
-import           Hyper.Class.ZipMatch (ZipMatch(..))
+import Hyper
+import Hyper.Class.ZipMatch (ZipMatch (..))
 
-import           Hyper.Internal.Prelude
+import Hyper.Internal.Prelude
 
 -- | A mapping of keys to terms.
 --
 -- Apart from the data type, a 'ZipMatch' instance is also provided.
 newtype TermMap h expr f = TermMap (Map h (f :# expr))
-    deriving stock Generic
+    deriving stock (Generic)
 
 makePrisms ''TermMap
 makeCommonInstances [''TermMap]
@@ -28,8 +34,8 @@ instance Eq h => ZipMatch (TermMap h expr) where
         | Map.size x /= Map.size y = Nothing
         | otherwise =
             zipMatchList (x ^@.. Lens.itraversed) (y ^@.. Lens.itraversed)
-            <&> traverse . Lens._2 %~ uncurry (:*:)
-            <&> TermMap . Map.fromAscList
+                <&> traverse . Lens._2 %~ uncurry (:*:)
+                <&> TermMap . Map.fromAscList
 
 {-# INLINE zipMatchList #-}
 zipMatchList :: Eq k => [(k, a)] -> [(k, b)] -> Maybe [(k, (a, b))]

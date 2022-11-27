@@ -1,7 +1,6 @@
 -- | Traits of inference monads.
-
 module Hyper.Class.Infer.Env
-    ( LocalScopeType(..)
+    ( LocalScopeType (..)
     ) where
 
 -- | @LocalScopeType var scheme m@ represents that

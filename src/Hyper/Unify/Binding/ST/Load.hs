@@ -1,23 +1,23 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | Load serialized a binding state to 'Control.Monad.ST.ST' based bindings
-
-{-# LANGUAGE TemplateHaskell, FlexibleContexts #-}
-
 module Hyper.Unify.Binding.ST.Load
     ( load
     ) where
 
 import qualified Control.Lens as Lens
-import           Control.Monad.ST.Class (MonadST(..))
-import           Data.Array.ST (STArray, newArray, readArray, writeArray)
-import           Hyper
-import           Hyper.Class.Optic (HNodeLens(..))
-import           Hyper.Class.Unify (Unify(..), UVarOf, BindingDict(..))
-import           Hyper.Recurse
-import           Hyper.Unify.Binding (Binding(..), _Binding, UVar(..))
-import           Hyper.Unify.Binding.ST (STUVar)
-import           Hyper.Unify.Term (UTerm(..), uBody)
+import Control.Monad.ST.Class (MonadST (..))
+import Data.Array.ST (STArray, newArray, readArray, writeArray)
+import Hyper
+import Hyper.Class.Optic (HNodeLens (..))
+import Hyper.Class.Unify (BindingDict (..), UVarOf, Unify (..))
+import Hyper.Recurse
+import Hyper.Unify.Binding (Binding (..), UVar (..), _Binding)
+import Hyper.Unify.Binding.ST (STUVar)
+import Hyper.Unify.Term (UTerm (..), uBody)
 
-import           Hyper.Internal.Prelude
+import Hyper.Internal.Prelude
 
 newtype ConvertState s t = ConvertState (STArray s Int (Maybe (STUVar s t)))
 makePrisms ''ConvertState
@@ -33,8 +33,10 @@ loadUTerm ::
     , Unify m t
     , Recursively (HNodeLens typeVars) t
     ) =>
-    typeVars # Binding -> typeVars # ConvertState (World m) ->
-    UTerm UVar # t -> m (UTerm (STUVar (World m)) # t)
+    typeVars # Binding ->
+    typeVars # ConvertState (World m) ->
+    UTerm UVar # t ->
+    m (UTerm (STUVar (World m)) # t)
 loadUTerm _ _ (UUnbound c) = UUnbound c & pure
 loadUTerm _ _ (USkolem c) = USkolem c & pure
 loadUTerm src conv (UToVar v) = loadVar src conv v <&> UToVar
@@ -51,23 +53,26 @@ loadVar ::
     , Unify m t
     , Recursively (HNodeLens typeVars) t
     ) =>
-    typeVars # Binding -> typeVars # ConvertState (World m) ->
-    UVar # t -> m (STUVar (World m) # t)
+    typeVars # Binding ->
+    typeVars # ConvertState (World m) ->
+    UVar # t ->
+    m (STUVar (World m) # t)
 loadVar src conv (UVar v) =
     withDict (recursively (Proxy @(HNodeLens typeVars t))) $
-    let tConv = conv ^. hNodeLens . _ConvertState
-    in
-    readArray tConv v & liftST
-    >>=
-    \case
-    Just x -> pure x
-    Nothing ->
-        do
-            u <-
-                loadUTerm src conv
-                (src ^?! hNodeLens . _Binding . Lens.ix v)
-            r <- newVar binding u
-            r <$ liftST (writeArray tConv v (Just r))
+        let tConv = conv ^. hNodeLens . _ConvertState
+        in  readArray tConv v
+                & liftST
+                >>= \case
+                    Just x -> pure x
+                    Nothing ->
+                        do
+                            u <-
+                                loadUTerm
+                                    src
+                                    conv
+                                    (src ^?! hNodeLens . _Binding . Lens.ix v)
+                            r <- newVar binding u
+                            r <$ liftST (writeArray tConv v (Just r))
 
 loadBody ::
     forall m typeVars t.
@@ -76,15 +81,18 @@ loadBody ::
     , Unify m t
     , Recursively (HNodeLens typeVars) t
     ) =>
-    typeVars # Binding -> typeVars # ConvertState (World m) ->
-    t # UVar -> m (t # STUVar (World m))
+    typeVars # Binding ->
+    typeVars # ConvertState (World m) ->
+    t # UVar ->
+    m (t # STUVar (World m))
 loadBody src conv =
     htraverse
-    ( Proxy @(Unify m) #*# Proxy @(Recursively (HNodeLens typeVars))
-        #> loadVar src conv
-    )
-    \\ recurse (Proxy @(Unify m t))
-    \\ recursively (Proxy @(HNodeLens typeVars t))
+        ( Proxy @(Unify m) #*#
+            Proxy @(Recursively (HNodeLens typeVars)) #>
+                loadVar src conv
+        )
+        \\ recurse (Proxy @(Unify m t))
+        \\ recursively (Proxy @(HNodeLens typeVars t))
 
 -- | Load a given serialized unification
 -- and a value with serialized unification variable identifiers
@@ -96,7 +104,9 @@ load ::
     , Unify m t
     , Recursively (HNodeLens typeVars) t
     ) =>
-    typeVars # Binding -> t # UVar -> m (t #STUVar (World m))
+    typeVars # Binding ->
+    t # UVar ->
+    m (t # STUVar (World m))
 load src collection =
     do
         conv <- htraverse (const makeConvertState) src

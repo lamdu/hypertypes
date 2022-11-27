@@ -1,19 +1,20 @@
--- | A variant of 'Traversable' for 'Hyper.Type.HyperType's
-
 {-# LANGUAGE FlexibleContexts #-}
 
+-- | A variant of 'Traversable' for 'Hyper.Type.HyperType's
 module Hyper.Class.Traversable
-    ( HTraversable(..)
-    , ContainedH(..), _ContainedH
-    , htraverse, htraverse1
+    ( HTraversable (..)
+    , ContainedH (..)
+    , _ContainedH
+    , htraverse
+    , htraverse1
     ) where
 
 import Control.Lens (iso)
 import GHC.Generics
-import GHC.Generics.Lens (_M1, _Rec1, generic1)
+import GHC.Generics.Lens (generic1, _M1, _Rec1)
 import Hyper.Class.Foldable (HFoldable)
-import Hyper.Class.Functor (HFunctor(..), hmapped1)
-import Hyper.Class.Nodes (HNodes(..), HWitness)
+import Hyper.Class.Functor (HFunctor (..), hmapped1)
+import Hyper.Class.Nodes (HNodes (..), HWitness)
 import Hyper.Type (AHyperType, type (#))
 
 import Hyper.Internal.Prelude
@@ -21,12 +22,13 @@ import Hyper.Internal.Prelude
 -- | A 'Hyper.Type.HyperType' containing a tree inside an action.
 --
 -- Used to express 'hsequence'.
-newtype ContainedH f p (h :: AHyperType) = MkContainedH { runContainedH :: f (p h) }
+newtype ContainedH f p (h :: AHyperType) = MkContainedH {runContainedH :: f (p h)}
 
 -- | An 'Iso' for the 'ContainedH' @newtype@
 {-# INLINE _ContainedH #-}
 _ContainedH ::
-    Iso (ContainedH f0 p0 # k0)
+    Iso
+        (ContainedH f0 p0 # k0)
         (ContainedH f1 p1 # k1)
         (f0 (p0 # k0))
         (f1 (p1 # k1))

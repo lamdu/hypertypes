@@ -3,11 +3,12 @@
 -- This infinite definition is expressible using the 'AHyperType' 'Data.Kind.Kind' for hypertypes.
 --
 -- For more information see the [README](https://github.com/lamdu/hypertypes/blob/master/README.md).
-
 module Hyper.Type
     ( HyperType
-    , AHyperType(..), GetHyperType
-    , type (#), type (:#)
+    , AHyperType (..)
+    , GetHyperType
+    , type (#)
+    , type (:#)
     , asHyper
     ) where
 

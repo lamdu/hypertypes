@@ -1,38 +1,46 @@
+{-# LANGUAGE EmptyCase #-}
+{-# LANGUAGE EmptyDataDeriving #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | A 'HyperType' based implementation of "locally-nameless" terms,
 -- inspired by the [bound](http://hackage.haskell.org/package/bound) library
 -- and the technique from Bird & Paterson's
 -- ["de Bruijn notation as a nested datatype"](https://www.semanticscholar.org/paper/De-Bruijn-Notation-as-a-Nested-Datatype-Bird-Paterson/254b3b01651c5e325d9b3cd15c106fbec40e53ea)
-
-{-# LANGUAGE UndecidableInstances, FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances, TemplateHaskell, EmptyCase, EmptyDataDeriving #-}
-
 module Hyper.Syntax.NamelessScope
-    ( Scope(..), _Scope, W_Scope(..)
-    , ScopeVar(..), _ScopeVar
+    ( Scope (..)
+    , _Scope
+    , W_Scope (..)
+    , ScopeVar (..)
+    , _ScopeVar
     , EmptyScope
-    , DeBruijnIndex(..)
-    , ScopeTypes(..), _ScopeTypes, W_ScopeTypes(..)
-    , HasScopeTypes(..)
+    , DeBruijnIndex (..)
+    , ScopeTypes (..)
+    , _ScopeTypes
+    , W_ScopeTypes (..)
+    , HasScopeTypes (..)
     ) where
 
-import           Control.Lens (Lens', Prism')
-import           Control.Lens.Operators
+import Control.Lens (Lens', Prism')
 import qualified Control.Lens as Lens
-import           Control.Monad.Reader (MonadReader)
-import           Data.Constraint ((:-), (\\))
-import           Data.Kind (Type)
-import           Data.Sequence (Seq)
+import Control.Lens.Operators
+import Control.Monad.Reader (MonadReader)
+import Data.Constraint ((:-), (\\))
+import Data.Kind (Type)
+import Data.Sequence (Seq)
 import qualified Data.Sequence as Sequence
-import           Hyper
-import           Hyper.Class.Infer.Infer1
-import           Hyper.Infer
-import           Hyper.Syntax.FuncType
-import           Hyper.Unify (UnifyGen, UVarOf)
-import           Hyper.Unify.New (newUnbound)
+import Hyper
+import Hyper.Class.Infer.Infer1
+import Hyper.Infer
+import Hyper.Syntax.FuncType
+import Hyper.Unify (UVarOf, UnifyGen)
+import Hyper.Unify.New (newUnbound)
 
-import           Prelude
+import Prelude
 
-data EmptyScope deriving Show
+data EmptyScope deriving (Show)
 
 newtype Scope expr a h = Scope (h :# expr (Maybe a))
 Lens.makePrisms ''Scope
@@ -49,7 +57,7 @@ class DeBruijnIndex a where
     deBruijnIndex :: Prism' Int a
 
 instance DeBruijnIndex EmptyScope where
-    deBruijnIndex = Lens.prism (\case{}) Left
+    deBruijnIndex = Lens.prism (\case {}) Left
 
 instance DeBruijnIndex a => DeBruijnIndex (Maybe a) where
     deBruijnIndex =
@@ -96,21 +104,20 @@ instance
     , HasScopeTypes (UVarOf m) (TypeOf (t h)) env
     , HasInferredType (t h)
     ) =>
-    Infer m (Scope t h) where
-
+    Infer m (Scope t h)
+    where
     inferBody (Scope x) =
         do
             varType <- newUnbound
             inferChild x
                 & Lens.locally (scopeTypes . _ScopeTypes) (varType Sequence.<|)
-                <&>
-                \(InferredChild xI xR) ->
-                ( Scope xI
-                , FuncType varType (xR ^# inferredType (Proxy @(t h)))
-                )
-        \\ (inferMonad :: DeBruijnIndex (Maybe h) :- Infer m (t (Maybe h)))
-        \\ hasInferOf1 (Proxy @(t h))
-        \\ hasInferOf1 (Proxy @(t (Maybe h)))
+                <&> \(InferredChild xI xR) ->
+                    ( Scope xI
+                    , FuncType varType (xR ^# inferredType (Proxy @(t h)))
+                    )
+            \\ (inferMonad :: DeBruijnIndex (Maybe h) :- Infer m (t (Maybe h)))
+            \\ hasInferOf1 (Proxy @(t h))
+            \\ hasInferOf1 (Proxy @(t (Maybe h)))
 
     inferContext _ _ =
         Dict \\ inferMonad @m @t @(Maybe h)
@@ -121,10 +128,10 @@ instance
     , DeBruijnIndex h
     , UnifyGen m (TypeOf (t h))
     ) =>
-    Infer m (ScopeVar t h) where
-
+    Infer m (ScopeVar t h)
+    where
     inferBody (ScopeVar v) =
         Lens.view (scopeTypes . _ScopeTypes)
-        <&> (^?! Lens.ix (deBruijnIndex # v))
-        <&> MkANode
-        <&> (ScopeVar v, )
+            <&> (^?! Lens.ix (deBruijnIndex # v))
+            <&> MkANode
+            <&> (ScopeVar v,)

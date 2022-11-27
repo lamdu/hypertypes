@@ -1,11 +1,14 @@
 module Hyper.Syntax.NamelessScope.InvDeBruijn
-    ( InvDeBruijnIndex(..), inverseDeBruijnIndex, scope, scopeVar
+    ( InvDeBruijnIndex (..)
+    , inverseDeBruijnIndex
+    , scope
+    , scopeVar
     ) where
 
 import Control.Lens (Prism', iso)
 import Control.Lens.Operators
-import Data.Proxy (Proxy(..))
-import Hyper.Syntax.NamelessScope (DeBruijnIndex(..), EmptyScope, Scope(..), ScopeVar(..))
+import Data.Proxy (Proxy (..))
+import Hyper.Syntax.NamelessScope (DeBruijnIndex (..), EmptyScope, Scope (..), ScopeVar (..))
 import Hyper.Type (type (#))
 
 import Prelude

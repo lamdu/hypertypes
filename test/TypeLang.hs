@@ -1,41 +1,44 @@
-{-# LANGUAGE TemplateHaskell, FlexibleInstances, FlexibleContexts #-}
-{-# LANGUAGE DerivingVia, UndecidableInstances #-}
+{-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module TypeLang where
 
-import           Algebra.PartialOrd
-import           Control.Applicative
-import           Control.Lens (ALens')
+import Algebra.PartialOrd
+import Control.Applicative
+import Control.Lens (ALens')
 import qualified Control.Lens as Lens
-import           Control.Lens.Operators
-import           Control.Monad.Except
-import           Control.Monad.Reader (MonadReader)
-import           Control.Monad.ST.Class (MonadST(..))
-import           Data.STRef
-import           Data.Set (Set)
-import           Data.String (IsString)
-import           Generic.Data
-import           Generics.Constraints (Constraints, makeDerivings)
-import           Hyper
-import           Hyper.Class.Optic
-import           Hyper.Infer
-import           Hyper.Syntax
-import           Hyper.Syntax.NamelessScope
-import           Hyper.Syntax.Nominal
-import           Hyper.Syntax.Row
-import           Hyper.Syntax.Scheme
-import           Hyper.Unify
-import           Hyper.Unify.Binding
-import           Hyper.Unify.QuantifiedVar ( HasQuantifiedVar(..) )
-import           Text.PrettyPrint ((<+>))
+import Control.Lens.Operators
+import Control.Monad.Except
+import Control.Monad.Reader (MonadReader)
+import Control.Monad.ST.Class (MonadST (..))
+import Data.STRef
+import Data.Set (Set)
+import Data.String (IsString)
+import Generic.Data
+import Generics.Constraints (Constraints, makeDerivings)
+import Hyper
+import Hyper.Class.Optic
+import Hyper.Infer
+import Hyper.Syntax
+import Hyper.Syntax.NamelessScope
+import Hyper.Syntax.Nominal
+import Hyper.Syntax.Row
+import Hyper.Syntax.Scheme
+import Hyper.Unify
+import Hyper.Unify.Binding
+import Hyper.Unify.QuantifiedVar (HasQuantifiedVar (..))
+import Text.PrettyPrint ((<+>))
 import qualified Text.PrettyPrint as Pretty
-import           Text.PrettyPrint.HughesPJClass (Pretty(..), maybeParens)
+import Text.PrettyPrint.HughesPJClass (Pretty (..), maybeParens)
 
-import           Prelude
+import Prelude
 
-newtype Name =
-    Name String
-    deriving stock Show
+newtype Name
+    = Name String
+    deriving stock (Show)
     deriving newtype (Eq, Ord, IsString)
 
 data Typ h
@@ -44,30 +47,32 @@ data Typ h
     | TRec (h :# Row)
     | TVar Name
     | TNom (NominalInst Name Types h)
-    deriving Generic
+    deriving (Generic)
 
 data Row h
     = REmpty
     | RExtend (RowExtend Name Typ Row h)
     | RVar Name
-    deriving Generic
+    deriving (Generic)
 
 data RConstraints = RowConstraints
     { _rForbiddenFields :: Set Name
     , _rScope :: ScopeLevel
-    } deriving stock (Eq, Ord, Show, Generic)
+    }
+    deriving stock (Eq, Ord, Show, Generic)
     deriving (Semigroup, Monoid) via Generically RConstraints
 
 data Types h = Types
     { _tTyp :: h :# Typ
     , _tRow :: h :# Row
-    } deriving Generic
+    }
+    deriving (Generic)
 
 data TypeError h
     = TypError (UnifyError Typ h)
     | RowError (UnifyError Row h)
     | QVarNotInScope Name
-    deriving Generic
+    deriving (Generic)
 
 data PureInferState = PureInferState
     { _pisBindings :: Types # Binding
@@ -109,8 +114,8 @@ instance Pretty RConstraints where
 
 instance Constraints (Types h) Pretty => Pretty (Types h) where
     pPrintPrec lvl p (Types typ row) =
-        pPrintPrec lvl p typ <+>
-        pPrintPrec lvl p row
+        pPrintPrec lvl p typ
+            <+> pPrintPrec lvl p row
 
 instance Constraints (TypeError h) Pretty => Pretty (TypeError h) where
     pPrintPrec lvl p (TypError x) = pPrintPrec lvl p x
@@ -128,12 +133,12 @@ instance Constraints (Typ h) Pretty => Pretty (Typ h) where
 instance Constraints (Types h) Pretty => Pretty (Row h) where
     pPrintPrec _ _ REmpty = Pretty.text "{}"
     pPrintPrec lvl p (RExtend (RowExtend h v r)) =
-        pPrintPrec lvl 20 h <+>
-        Pretty.text ":" <+>
-        pPrintPrec lvl 2 v <+>
-        Pretty.text ":*:" <+>
-        pPrintPrec lvl 1 r
-        & maybeParens (p > 1)
+        pPrintPrec lvl 20 h
+            <+> Pretty.text ":"
+            <+> pPrintPrec lvl 2 v
+            <+> Pretty.text ":*:"
+            <+> pPrintPrec lvl 1 r
+            & maybeParens (p > 1)
     pPrintPrec _ _ (RVar s) = pPrint s
 
 instance HNodeLens Types Typ where hNodeLens = tTyp
@@ -151,19 +156,21 @@ instance RowConstraints RConstraints where
     forbidden = rForbiddenFields
 
 instance HasTypeConstraints Typ where
-    type instance TypeConstraintsOf Typ = ScopeLevel
+    type TypeConstraintsOf Typ = ScopeLevel
     verifyConstraints _ TInt = Just TInt
     verifyConstraints _ (TVar v) = TVar v & Just
     verifyConstraints c (TFun f) = f & hmapped1 %~ WithConstraint c & TFun & Just
     verifyConstraints c (TRec r) = WithConstraint (RowConstraints mempty c) r & TRec & Just
     verifyConstraints c (TNom (NominalInst n (Types t r))) =
         Types
-        (t & _QVarInstances . traverse %~ WithConstraint c)
-        (r & _QVarInstances . traverse %~ WithConstraint (RowConstraints mempty c))
-        & NominalInst n & TNom & Just
+            (t & _QVarInstances . traverse %~ WithConstraint c)
+            (r & _QVarInstances . traverse %~ WithConstraint (RowConstraints mempty c))
+            & NominalInst n
+            & TNom
+            & Just
 
 instance HasTypeConstraints Row where
-    type instance TypeConstraintsOf Row = RConstraints
+    type TypeConstraintsOf Row = RConstraints
     verifyConstraints _ REmpty = Just REmpty
     verifyConstraints _ (RVar x) = RVar x & Just
     verifyConstraints c (RExtend x) =
@@ -172,9 +179,9 @@ instance HasTypeConstraints Row where
 emptyPureInferState :: PureInferState
 emptyPureInferState =
     PureInferState
-    { _pisBindings = Types emptyBinding emptyBinding
-    , _pisFreshQVars = Types (Const 0) (Const 0)
-    }
+        { _pisBindings = Types emptyBinding emptyBinding
+        , _pisFreshQVars = Types (Const 0) (Const 0)
+        }
 
 type STNameGen s = Types # Const (STRef s Int)
 
@@ -207,18 +214,22 @@ instance HasInferredValue Row where inferredValue = _ANode
 
 instance
     (Monad m, MonadInstantiate m Typ, MonadInstantiate m Row) =>
-    Infer m Typ where
+    Infer m Typ
+    where
     inferBody = inferType
 
 instance
     (Monad m, MonadInstantiate m Typ, MonadInstantiate m Row) =>
-    Infer m Row where
+    Infer m Row
+    where
     inferBody = inferType
 
 rStructureMismatch ::
     (UnifyGen m Typ, UnifyGen m Row) =>
     (forall c. Unify m c => UVarOf m # c -> UVarOf m # c -> m (UVarOf m # c)) ->
-    Row # UVarOf m -> Row # UVarOf m -> m ()
+    Row # UVarOf m ->
+    Row # UVarOf m ->
+    m ()
 rStructureMismatch match (RExtend r0) (RExtend r1) =
     rowExtendStructureMismatch match _RExtend r0 r1
 rStructureMismatch _ x y = unifyError (Mismatch x y)
@@ -236,4 +247,4 @@ newStQuantified ::
     m a
 newStQuantified l =
     Lens.view (Lens.cloneLens l . Lens._Wrapped)
-    >>= (`readModifySTRef` succ)
+        >>= (`readModifySTRef` succ)
