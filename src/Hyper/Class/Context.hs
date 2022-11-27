@@ -35,22 +35,16 @@ instance (HContext a, HFunctor a) => HContext (Ann a) where
             (hmap (const (_1 . _HFunc . mapped . _Wrapped %~ (`Ann` b))) (hcontext a))
             (HFunc (Const . Ann a) :*: b)
 
-instance (HFunctor h0, HContext h0, HFunctor h1, HContext h1) => HContext (HCompose h0 h1) where
+instance (HFunctor c1, HContext c1, HFunctor h1, HContext h1) => HContext (HCompose c1 h1) where
     hcontext =
-        _HCompose
-            %~ hmap
-                ( \_ (HFunc c0 :*: x0) ->
-                    x0
-                        & _HCompose
-                            %~ hmap
-                                ( \_ (HFunc c1 :*: x1) ->
-                                    x1
-                                        & _HCompose
-                                            %~ (HFunc ((_Wrapped %~ (_HCompose #)) . c0 . (_HCompose #) . getConst . c1 . (_HCompose #)) :*:)
-                                )
-                                . hcontext
-                )
-                . hcontext
+        _HCompose %~ layer (\c0 -> layer $ \c1 -> (HFunc ((_Wrapped %~ (_HCompose #)) . c0 . getConst . c1) :*:))
+        where
+            layer ::
+                (HFunctor h, HContext h) =>
+                (forall n. (p0 # HCompose q0 n -> Const (h # HCompose p0 q0) # n) -> p0 # HCompose q0 n -> p1 # HCompose q1 n) ->
+                (h # HCompose p0 q0) ->
+                h # HCompose p1 q1
+            layer f = hmap (\_ (HFunc c :*: x) -> x & _HCompose %~ f (c . (_HCompose #))) . hcontext
 
 instance (Recursively HContext h, Recursively HFunctor h) => HContext (HFlip Ann h) where
     -- The context of (HFlip Ann h) differs from annContexts in that
@@ -92,26 +86,19 @@ recursiveContextsWith (HFunc s0 :*: x0) =
         # Ann
             { _hAnn = _HFunc # Const . getConst . s0 . (^. decompose)
             , _hVal =
-                _HCompose
-                    # hmap
-                        ( Proxy @(Recursively HContext) #*#
-                            Proxy @(Recursively HFunctor) #>
-                                \(HFunc s1 :*: x1) ->
-                                    _HCompose
-                                        # hmap
-                                            ( Proxy @(Recursively HContext) #*#
-                                                Proxy @(Recursively HFunctor) #>
-                                                    \(HFunc s2 :*: x2) ->
-                                                        recursiveContextsWith (HFunc (Const . getConst . s0 . getConst . s1 . getConst . s2) :*: x2)
-                                            )
-                                            (hcontext x1)
-                                        \\ recursively (Proxy @(HFunctor h))
-                                        \\ recursively (Proxy @(HContext h))
-                        )
-                        (hcontext x0)
-                    \\ recursively (Proxy @(HFunctor p))
-                    \\ recursively (Proxy @(HContext p))
+                layer x0 $ \s1 x1 -> layer x1 $ \s2 x2 -> recursiveContextsWith (HFunc (Const . getConst . s0 . s1 . s2) :*: x2)
             }
+    where
+        layer ::
+            forall t s c0 c1.
+            (Recursively HFunctor t, Recursively HContext t) =>
+            t # s ->
+            (forall n. (Recursively HFunctor n, Recursively HContext n) => (s # n -> t # s) -> s # n -> HCompose c0 c1 # n) ->
+            HCompose t c0 # c1
+        layer x f =
+            _HCompose # hmap (Proxy @(Recursively HContext) #*# Proxy @(Recursively HFunctor) #> \(HFunc s :*: v) -> f (getConst . s) v) (hcontext x)
+                \\ recursively (Proxy @(HFunctor t))
+                \\ recursively (Proxy @(HContext t))
 
 -- | Add in the node annotations a function to replace each node in the top-level node
 --
