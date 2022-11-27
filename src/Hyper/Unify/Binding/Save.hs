@@ -38,7 +38,6 @@ saveVar ::
     UVarOf m # t ->
     StateT (typeVars # Binding, [m ()]) m (UVar # t)
 saveVar v =
-    withDict (recursively (Proxy @(HNodeLens typeVars t))) $
     lookupVar binding v & lift
     >>=
     \case
@@ -52,6 +51,7 @@ saveVar v =
             dstBody <- saveUTerm srcBody
             Lens._1 . hNodeLens .= (pb & _Binding %~ (Lens.|> dstBody))
             UVar r & pure
+        \\ recursively (Proxy @(HNodeLens typeVars t))
 
 saveBody ::
     forall m typeVars t.
@@ -59,12 +59,12 @@ saveBody ::
     t # UVarOf m ->
     StateT (typeVars # Binding, [m ()]) m (t # UVar)
 saveBody =
-    withDict (recurse (Proxy @(Unify m t))) $
-    withDict (recursively (Proxy @(HNodeLens typeVars t))) $
     htraverse
     ( Proxy @(Unify m) #*# Proxy @(Recursively (HNodeLens typeVars))
         #> saveVar
     )
+    \\ recurse (Proxy @(Unify m t))
+    \\ recursively (Proxy @(HNodeLens typeVars t))
 
 -- | Serialize the state of unification for
 -- the unification variables in a given value,

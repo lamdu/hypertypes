@@ -60,7 +60,7 @@ class RNodes h => Recursively c h where
 instance Recursive (Recursively c) where
     {-# INLINE recurse #-}
     recurse p =
-        withDict (recursively (p0 p)) Dict
+        Dict \\ recursively (p0 p)
         where
             p0 :: proxy (Recursively c h) -> Proxy (c h)
             p0 _ = Proxy

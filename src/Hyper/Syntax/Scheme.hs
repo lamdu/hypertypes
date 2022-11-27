@@ -217,8 +217,8 @@ saveH ::
     GTerm (UVarOf m) # typ ->
     StateT (varTypes # QVars, [m ()]) m (Pure # typ)
 saveH (GBody x) =
-    withDict (hasSchemeRecursive (Proxy @varTypes) (Proxy @m) (Proxy @typ)) $
     htraverse (Proxy @(HasScheme varTypes m) #> saveH) x <&> (_Pure #)
+    \\ hasSchemeRecursive (Proxy @varTypes) (Proxy @m) (Proxy @typ)
 saveH (GMono x) =
     unwrapM (Proxy @(HasScheme varTypes m) #>> f) x & lift
     where

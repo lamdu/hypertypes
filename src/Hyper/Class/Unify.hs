@@ -75,9 +75,9 @@ class
         (MonadError (e # Pure) m, HSubset' e (UnifyError t)) =>
         UnifyError t # UVarOf m -> m a
     unifyError e =
-        withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
         htraverse (Proxy @(Unify m) #> applyBindings) e
         >>= throwError . (hSubset #)
+        \\ unifyRecursive (Proxy @m) (Proxy @t)
 
     -- | What to do when top-levels of terms being unified do not match.
     --
@@ -163,7 +163,6 @@ applyBindings v0 =
     UTerm b ->
         do
             (r, anyChild) <-
-                withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
                 htraverse
                 ( Proxy @(Unify m) #>
                     \c ->
@@ -173,6 +172,7 @@ applyBindings v0 =
                         applyBindings c & lift
                 ) (b ^. uBody)
                 & (`runStateT` False)
+                \\ unifyRecursive (Proxy @m) (Proxy @t)
             _Pure # r & if anyChild then result else pure
     UToVar{} -> error "lookup not expected to result in var"
     UConverted{} -> error "conversion state not expected in applyBindings"

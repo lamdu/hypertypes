@@ -5,6 +5,7 @@ import           Control.Lens.Operators
 import           Control.Monad.Except
 import           Control.Monad.RWS
 import           Control.Monad.ST (runST)
+import           Data.Constraint ((\\))
 import           Data.Functor.Identity (Identity(..))
 import qualified Data.Map as Map
 import qualified Data.Set as Set
@@ -210,10 +211,10 @@ inferExpr x =
             htraverse_
             ( Proxy @(Infer m) #*# Proxy @(Recursively (InferOfConstraint HFoldable)) #*#
                 \(w :: HWitness (HFlip Ann t) n) (Const () :*: InferResult i) ->
-                withDict (inferContext (Proxy @m) w) $
-                withDict (recursively (Proxy @(InferOfConstraint HFoldable n))) $
-                withDict (inferOfConstraint @HFoldable w) $
                 htraverse_ (Proxy @(UnifyGen m) #> void . applyBindings) i
+                \\ inferContext (Proxy @m) w
+                \\ inferOfConstraint @HFoldable w
+                \\ recursively (Proxy @(InferOfConstraint HFoldable n))
             ) (_HFlip # inferRes)
 
 vecNominalDecl :: Pure # NominalDecl Typ

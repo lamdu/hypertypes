@@ -57,14 +57,14 @@ instance (Recursively HContext h, Recursively HFunctor h) => HContext (HFlip Ann
                 Recursively HFunctor n =>
                 Ann (HFunc (Ann p) (Const r) :*: p) # n -> Ann (HFunc p (Const r) :*: p) # n
             f (Ann (HFunc func :*: a) b) =
-                withDict (recursively (Proxy @(HFunctor n))) $
                 Ann (HFunc (func . (`Ann` g b)) :*: a) (hmap (Proxy @(Recursively HFunctor) #> f) b)
+                \\ recursively (Proxy @(HFunctor n))
             g ::
                 forall n a b.
                 Recursively HFunctor n => n # Ann (a :*: b) -> n # Ann b
             g =
-                withDict (recursively (Proxy @(HFunctor n))) $
                 hmap (Proxy @(Recursively HFunctor) #> hflipped %~ hmap (const (^. _2)))
+                \\ recursively (Proxy @(HFunctor n))
 
 -- | Add in the node annotations a function to replace each node in the top-level node
 recursiveContexts ::
@@ -79,10 +79,6 @@ recursiveContextsWith ::
     (HFunc p (Const r) :*: p) # h ->
     HCompose (Ann (HFunc Pure (Const r))) p # h
 recursiveContextsWith (HFunc s0 :*: x0) =
-    withDict (recursively (Proxy @(HFunctor p))) $
-    withDict (recursively (Proxy @(HFunctor h))) $
-    withDict (recursively (Proxy @(HContext p))) $
-    withDict (recursively (Proxy @(HContext h))) $
     _HCompose # Ann
     { _hAnn = _HFunc # Const . getConst . s0 . (^. decompose)
     , _hVal =
@@ -96,7 +92,11 @@ recursiveContextsWith (HFunc s0 :*: x0) =
                 \(HFunc s2 :*: x2) ->
                 recursiveContextsWith (HFunc (Const . getConst . s0 . getConst . s1 . getConst . s2) :*: x2)
             ) (hcontext x1)
+            \\ recursively (Proxy @(HFunctor h))
+            \\ recursively (Proxy @(HContext h))
         ) (hcontext x0)
+        \\ recursively (Proxy @(HFunctor p))
+        \\ recursively (Proxy @(HContext p))
     }
 
 -- | Add in the node annotations a function to replace each node in the top-level node
@@ -114,8 +114,6 @@ annContextsWith ::
     (HFunc (Ann p) (Const r) :*: Ann p) # h ->
     Ann (HFunc (Ann p) (Const r) :*: p) # h
 annContextsWith (HFunc s0 :*: Ann a b) =
-    withDict (recursively (Proxy @(HContext h))) $
-    withDict (recursively (Proxy @(HFunctor h)))
     Ann
     { _hAnn = HFunc s0 :*: a
     , _hVal =
@@ -124,4 +122,6 @@ annContextsWith (HFunc s0 :*: Ann a b) =
             \(HFunc s1 :*: x) ->
             annContextsWith (HFunc (Const . getConst . s0 . Ann a . getConst . s1) :*: x)
         ) (hcontext b)
+        \\ recursively (Proxy @(HFunctor h))
+        \\ recursively (Proxy @(HContext h))
     }

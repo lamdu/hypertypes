@@ -25,10 +25,10 @@ class HApplicative h => HMonad h where
 
 instance HMonad Pure where
     hjoin x =
-        withDict (recursively (p x)) $
         _Pure #
         hmap (Proxy @(Recursively HFunctor) #> hjoin)
         (x ^. _HCompose . _Pure . _HCompose . _Pure . _HCompose)
+        \\ recursively (p x)
         where
             p :: HCompose Pure Pure # p -> Proxy (HFunctor p)
             p _ = Proxy

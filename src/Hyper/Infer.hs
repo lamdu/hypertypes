@@ -36,9 +36,9 @@ infer ::
     Ann a # t ->
     m (Ann (a :*: InferResult (UVarOf m)) # t)
 infer (Ann a x) =
-    withDict (inferContext (Proxy @m) (Proxy @t)) $
     inferBody (hmap (Proxy @(Infer m) #> inferH) x)
     <&> (\(xI, t) -> Ann (a :*: InferResult t) xI)
+    \\ inferContext (Proxy @m) (Proxy @t)
 
 {-# INLINE inferH #-}
 inferH ::
@@ -70,11 +70,9 @@ inferUVarsApplyBindings =
             ) =>
             InferResult (UVarOf m) # n ->
             m (InferResult (Pure :*: UVarOf m) # n)
-        f = withDict (recursively (Proxy @(InferOfConstraint HTraversable n))) $
-            withDict (recursively (Proxy @(InferOfConstraint (HNodesHaveConstraint (Unify m)) n))) $
-            withDict (inferOfConstraint @HTraversable (Proxy @n)) $
-            withDict (inferOfConstraint @(HNodesHaveConstraint (Unify m)) (Proxy @n)) $
-            withDict (hNodesHaveConstraint (Proxy @(Unify m)) (Proxy @(InferOf n))) $
-            htraverseFlipped $
-            Proxy @(Unify m) #>
-            \x -> applyBindings x <&> (:*: x)
+        f = htraverseFlipped (Proxy @(Unify m) #> \x -> applyBindings x <&> (:*: x))
+            \\ inferOfConstraint @HTraversable (Proxy @n)
+            \\ recursively (Proxy @(InferOfConstraint HTraversable n))
+            \\ hNodesHaveConstraint (Proxy @(Unify m)) (Proxy @(InferOf n))
+            \\ inferOfConstraint @(HNodesHaveConstraint (Unify m)) (Proxy @n)
+            \\ recursively (Proxy @(InferOfConstraint (HNodesHaveConstraint (Unify m)) n))

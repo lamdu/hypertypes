@@ -46,9 +46,8 @@ instance Monad f => HMonad (F f) where
                 Recursively HFunctor p =>
                 p # HCompose (F f) (F f) ->
                 p # F f
-            t =
-                withDict (recursively (Proxy @(HFunctor p))) $
-                hmap (Proxy @(Recursively HFunctor) #> hjoin)
+            t = hmap (Proxy @(Recursively HFunctor) #> hjoin)
+                \\ recursively (Proxy @(HFunctor p))
 
 instance RNodes (F f)
 instance c (F f) => Recursively c (F f)

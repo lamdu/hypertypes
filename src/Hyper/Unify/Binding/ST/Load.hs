@@ -79,12 +79,12 @@ loadBody ::
     typeVars # Binding -> typeVars # ConvertState (World m) ->
     t # UVar -> m (t # STUVar (World m))
 loadBody src conv =
-    withDict (recurse (Proxy @(Unify m t))) $
-    withDict (recursively (Proxy @(HNodeLens typeVars t))) $
     htraverse
     ( Proxy @(Unify m) #*# Proxy @(Recursively (HNodeLens typeVars))
         #> loadVar src conv
     )
+    \\ recurse (Proxy @(Unify m t))
+    \\ recursively (Proxy @(HNodeLens typeVars t))
 
 -- | Load a given serialized unification
 -- and a value with serialized unification variable identifiers

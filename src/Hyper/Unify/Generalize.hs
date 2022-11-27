@@ -57,12 +57,12 @@ hLiftConstraintH ::
     (RNodes a, HNodesConstraint (HFlip GTerm a) c) =>
     HWitness a b -> HRecWitness b n -> Proxy c -> (c n => r) -> r
 hLiftConstraintH c n p f =
-    withDict (recurse (Proxy @(RNodes a))) $
-    withDict (recurse (Proxy @(c a))) $
     hLiftConstraint c (Proxy @RNodes)
     ( hLiftConstraint c p
         (hLiftConstraint (HWitness @(HFlip GTerm _) n) p f)
+        \\ recurse (Proxy @(c a))
     )
+    \\ recurse (Proxy @(RNodes a))
 
 instance Recursively HFunctor ast => HFunctor (HFlip GTerm ast) where
     {-# INLINE hmap #-}
@@ -72,7 +72,6 @@ instance Recursively HFunctor ast => HFunctor (HFlip GTerm ast) where
         GMono x -> f (HWitness HRecSelf) x & GMono
         GPoly x -> f (HWitness HRecSelf) x & GPoly
         GBody x ->
-            withDict (recursively (Proxy @(HFunctor ast))) $
             hmap
             ( \cw ->
                 hLiftConstraint cw (Proxy @(Recursively HFunctor)) $
@@ -80,6 +79,7 @@ instance Recursively HFunctor ast => HFunctor (HFlip GTerm ast) where
                 hmap (f . (\(HWitness nw) -> HWitness (HRecSub cw nw)))
             ) x
             & GBody
+            \\ recursively (Proxy @(HFunctor ast))
 
 instance Recursively HFoldable ast => HFoldable (HFlip GTerm ast) where
     {-# INLINE hfoldMap #-}
@@ -88,13 +88,13 @@ instance Recursively HFoldable ast => HFoldable (HFlip GTerm ast) where
         GMono x -> f (HWitness HRecSelf) x
         GPoly x -> f (HWitness HRecSelf) x
         GBody x ->
-            withDict (recursively (Proxy @(HFoldable ast))) $
             hfoldMap
             ( \cw ->
                 hLiftConstraint cw (Proxy @(Recursively HFoldable)) $
                 hfoldMap (f . (\(HWitness nw) -> HWitness (HRecSub cw nw)))
                 . (_HFlip #)
             ) x
+            \\ recursively (Proxy @(HFoldable ast))
         . (^. _HFlip)
 
 instance RTraversable ast => HTraversable (HFlip GTerm ast) where
@@ -104,9 +104,9 @@ instance RTraversable ast => HTraversable (HFlip GTerm ast) where
         GMono x -> runContainedH x <&> GMono
         GPoly x -> runContainedH x <&> GPoly
         GBody x ->
-            withDict (recurse (Proxy @(RTraversable ast))) $
             -- HTraversable will be required when not implied by Recursively
             htraverse (Proxy @RTraversable #> hflipped hsequence) x
+            \\ recurse (Proxy @(RTraversable ast))
             <&> GBody
         & _HFlip
 
@@ -131,16 +131,17 @@ generalize v0 =
                 bindVar binding v1 (USkolem (generalizeConstraints l))
             USkolem l | toScopeConstraints l `leq` c -> pure (GPoly v1)
             UTerm t ->
-                withDict (unifyGenRecursive (Proxy @m) (Proxy @t)) $
                 do
                     bindVar binding v1 (UResolving t)
                     r <- htraverse (Proxy @(UnifyGen m) #> generalize) (t ^. uBody)
                     r <$ bindVar binding v1 (UTerm t)
                 <&>
-                \b ->
-                if hfoldMap (Proxy @(UnifyGen m) #> All . Lens.has _GMono) b ^. Lens._Wrapped
-                then GMono v1
-                else GBody b
+                ( \b ->
+                    if hfoldMap (Proxy @(UnifyGen m) #> All . Lens.has _GMono) b ^. Lens._Wrapped
+                    then GMono v1
+                    else GBody b
+                )
+                \\ unifyGenRecursive (Proxy @m) (Proxy @t)
             UResolving t -> GMono v1 <$ occursError v1 t
             _ -> pure (GMono v1)
 
@@ -174,8 +175,8 @@ instantiateH ::
 instantiateH _ (GMono x) = pure x
 instantiateH cons (GPoly x) = instantiateForAll cons x
 instantiateH cons (GBody x) =
-    withDict (unifyGenRecursive (Proxy @m) (Proxy @t)) $
     htraverse (Proxy @(UnifyGen m) #> instantiateH cons) x >>= lift . newTerm
+    \\ unifyGenRecursive (Proxy @m) (Proxy @t)
 
 {-# INLINE instantiateWith #-}
 instantiateWith ::

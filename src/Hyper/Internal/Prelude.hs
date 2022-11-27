@@ -11,7 +11,7 @@ import Control.Lens as X (Traversal, Iso, makeLenses, makePrisms)
 import Control.Lens.Operators as X
 import Control.Monad as X (guard, void)
 import Data.Binary as X (Binary)
-import Data.Constraint as X (Dict(..), Constraint, withDict)
+import Data.Constraint as X (Dict(..), Constraint, (\\))
 import Data.Foldable as X (traverse_, sequenceA_)
 import Data.Functor.Const as X (Const(..))
 import Data.Proxy as X (Proxy(..))

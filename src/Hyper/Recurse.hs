@@ -35,10 +35,10 @@ wrapM ::
     Pure # h ->
     m (w # h)
 wrapM f x =
-    withDict (recurse (Proxy @(RTraversable h))) $
     x ^. _Pure
     & htraverse (Proxy @RTraversable #*# \w -> wrapM (f . HRecSub w))
     >>= f HRecSelf
+    \\ recurse (Proxy @(RTraversable h))
 
 -- | Monadically unwrap a tree from the top down, replacing its 'HyperType' with 'Pure'
 {-# INLINE unwrapM #-}
@@ -49,10 +49,10 @@ unwrapM ::
     w # h ->
     m (Pure # h)
 unwrapM f x =
-    withDict (recurse (Proxy @(RTraversable h))) $
     f HRecSelf x
     >>= htraverse (Proxy @RTraversable #*# \w -> unwrapM (f . HRecSub w))
     <&> (_Pure #)
+    \\ recurse (Proxy @(RTraversable h))
 
 -- | Wrap a 'Pure' to a different 'HyperType' from the bottom up
 {-# INLINE wrap #-}
@@ -63,10 +63,10 @@ wrap ::
     Pure # h ->
     w # h
 wrap f x =
-    withDict (recursively (Proxy @(HFunctor h))) $
     x ^. _Pure
     & hmap (Proxy @(Recursively HFunctor) #*# \w -> wrap (f . HRecSub w))
     & f HRecSelf
+    \\ recursively (Proxy @(HFunctor h))
 
 -- | Unwrap a tree from the top down, replacing its 'HyperType' with 'Pure'
 {-# INLINE unwrap #-}
@@ -77,10 +77,10 @@ unwrap ::
     w # h ->
     Pure # h
 unwrap f x =
-    withDict (recursively (Proxy @(HFunctor h))) $
     _Pure #
     hmap (Proxy @(Recursively HFunctor) #*# \w -> unwrap (f . HRecSub w))
     (f HRecSelf x)
+    \\ recursively (Proxy @(HFunctor h))
 
 -- | Recursively fold up a tree to produce a result (aka catamorphism)
 {-# INLINE fold #-}
@@ -109,13 +109,14 @@ foldMapRecursive ::
     h # p ->
     a
 foldMapRecursive f x =
-    withDict (recursively (Proxy @(HFoldable h))) $
-    withDict (recursively (Proxy @(HFoldable p))) $
     f HRecSelf x <>
     hfoldMap
     ( Proxy @(Recursively HFoldable) #*#
-        \w -> hfoldMap (Proxy @(Recursively HFoldable) #> foldMapRecursive (f . HRecSub w))
+        \w ->
+            hfoldMap (Proxy @(Recursively HFoldable) #> foldMapRecursive (f . HRecSub w))
+            \\ recursively (Proxy @(HFoldable p))
     ) x
+    \\ recursively (Proxy @(HFoldable h))
 
 infixr 0 #>>
 infixr 0 ##>>
@@ -129,9 +130,9 @@ infixr 0 #**#
     Proxy c -> (c n => r) -> HRecWitness h n -> r
 (#>>) _ r HRecSelf = r
 (#>>) p r (HRecSub w0 w1) =
-    withDict (recurse (Proxy @(RNodes h))) $
-    withDict (recurse (Proxy @(c h))) $
     (Proxy @RNodes #*# p #> (p #>> r) w1) w0
+    \\ recurse (Proxy @(RNodes h))
+    \\ recurse (Proxy @(c h))
 
 -- | @Proxy @c #> r@ replaces a recursive witness parameter of @r@ with a @Recursively c@ constraint on the witnessed node
 {-# INLINE (##>>) #-}
@@ -140,10 +141,10 @@ infixr 0 #**#
     Recursively c h =>
     Proxy c -> (c n => r) -> HRecWitness h n -> r
 (##>>) p r =
-    withDict (recursively (Proxy @(c h))) $
     \case
     HRecSelf -> r
     HRecSub w0 w1 -> (Proxy @(Recursively c) #> (p ##>> r) w1) w0
+    \\ recursively (Proxy @(c h))
 
 -- | A variant of '#>>' which does not consume the witness parameter.
 --

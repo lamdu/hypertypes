@@ -82,9 +82,9 @@ goUTerm xv _ yv UInstantiated{} = unifyError (SkolemUnified yv xv)
 goUTerm xv UUnbound{} yv yu = goUTerm xv yu yv yu -- Term created in structure mismatch
 goUTerm xv xu yv UUnbound{} = goUTerm xv xu yv xu -- Term created in structure mismatch
 goUTerm _ (UTerm xt) _ (UTerm yt) =
-    withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
     zipMatch_ (Proxy @(Unify m) #> goUVar) (xt ^. uBody) (yt ^. uBody)
     & fromMaybe (structureMismatch (\x y -> x <$ goUVar x y) (xt ^. uBody) (yt ^. uBody))
+    \\ unifyRecursive (Proxy @m) (Proxy @t)
 goUTerm _ _ _ _ = error "unexpected state at alpha-eq"
 
 goUVar ::

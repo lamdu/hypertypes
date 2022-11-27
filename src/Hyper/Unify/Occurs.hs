@@ -29,7 +29,6 @@ occursCheck v0 =
     UUnbound{} -> pure ()
     USkolem{} -> pure ()
     UTerm b ->
-        withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
         htraverse_
         ( Proxy @(Unify m) #>
             \c ->
@@ -40,6 +39,7 @@ occursCheck v0 =
         ) (b ^. uBody)
         & (`execStateT` False)
         >>= (`when` bindVar binding v1 (UTerm b))
+        \\ unifyRecursive (Proxy @m) (Proxy @t)
     UToVar{} -> error "lookup not expected to result in var (in occursCheck)"
     UConverted{} -> error "conversion state not expected in occursCheck"
     UInstantiated{} -> error "occursCheck during instantiation"

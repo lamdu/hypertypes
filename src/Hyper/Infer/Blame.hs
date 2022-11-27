@@ -95,10 +95,10 @@ prepareH ::
     Ann a # exp ->
     m (Ann (a :*: InferResult (UVarOf m) :*: InferResult (UVarOf m)) # exp)
 prepareH t =
-    withDict (inferContext (Proxy @m) (Proxy @exp)) $
     hpure (Proxy @(UnifyGen m) #> MkContainedH newUnbound)
     & hsequence
     >>= (`prepare` t)
+    \\ inferContext (Proxy @m) (Proxy @exp)
 
 prepare ::
     forall m exp a.
@@ -107,11 +107,11 @@ prepare ::
     Ann a # exp ->
     m (Ann (a :*: InferResult (UVarOf m) :*: InferResult (UVarOf m)) # exp)
 prepare resFromPosition (Ann a x) =
-    withDict (recurse (Proxy @(Blame m exp))) $
     hmap
     ( Proxy @(Blame m) #>
         InferChild . fmap (\t -> InferredChild t (t ^. hAnn . Lens._2 . Lens._1 . _InferResult)) . prepareH
     ) x
+    \\ recurse (Proxy @(Blame m exp))
     & inferBody
     <&>
     \(xI, r) ->
@@ -125,10 +125,10 @@ tryUnify ::
     InferOf exp # UVarOf m ->
     m ()
 tryUnify _ i0 i1 =
-    withDict (inferContext (Proxy @m) (Proxy @exp)) $
     do
         inferOfUnify (Proxy @exp) i0 i1
         htraverse_ (Proxy @(UnifyGen m) #> occursCheck) i0
+            \\ inferContext (Proxy @m) (Proxy @exp)
     & (`catchError` const (pure ()))
 
 data BlameResult v e
@@ -144,7 +144,6 @@ finalize ::
     Ann (a :*: InferResult (UVarOf m) :*: InferResult (UVarOf m)) # exp ->
     m (Ann (a :*: BlameResult (UVarOf m)) # exp)
 finalize (Ann (a :*: InferResult i0 :*: InferResult i1) x) =
-    withDict (recurse (Proxy @(Blame m exp))) $
     do
         match <- inferOfMatches (Proxy @exp) i0 i1
         let result
@@ -152,6 +151,7 @@ finalize (Ann (a :*: InferResult i0 :*: InferResult i1) x) =
                 | otherwise = Mismatch (i0, i1)
         htraverse (Proxy @(Blame m) #> finalize) x
             <&> Ann (a :*: result)
+    \\ recurse (Proxy @(Blame m exp))
 
 -- | Perform Hindley-Milner type inference with prioritised blame for type error,
 -- given a prioritisation for the different nodes.

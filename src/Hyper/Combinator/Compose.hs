@@ -11,6 +11,7 @@ module Hyper.Combinator.Compose
     ) where
 
 import           Control.Lens (Profunctor, Optic, Iso', iso)
+import           Data.Constraint (withDict)
 import           Hyper.Class.Apply (HApply(..))
 import           Hyper.Class.Foldable (HFoldable(..))
 import           Hyper.Class.Functor (HFunctor(..), hiso)
@@ -52,9 +53,8 @@ instance (HNodes a, HNodes b) => HNodes (HCompose a b) where
     {-# INLINE hLiftConstraint #-}
     hLiftConstraint (HWitness (W_HCompose w0 w1)) p r =
         hLiftConstraint w0 (p0 p) $
-        withDict (hComposeConstraint0 p (Proxy @b) w0) $
-        hLiftConstraint w1 (p1 p w0) $
-        withDict (d0 p w0 w1) r
+        hLiftConstraint w1 (p1 p w0) (withDict (d0 p w0 w1) r)
+        \\ hComposeConstraint0 p (Proxy @b) w0
         where
             p0 :: Proxy c -> Proxy (HComposeConstraint0 c b)
             p0 _ = Proxy
@@ -192,10 +192,10 @@ decompose' ::
     (Recursively HFunctor a, Recursively HFunctor b) =>
     Iso' (Pure # HCompose a b) (a # b)
 decompose' =
-    withDict (recursively (Proxy @(HFunctor a))) $
-    withDict (recursively (Proxy @(HFunctor b))) $
     _Pure . _HCompose .
     hiso
     ( Proxy @(Recursively HFunctor) #>
         _HCompose . hiso (Proxy @(Recursively HFunctor) #> _HCompose . decompose')
+        \\ recursively (Proxy @(HFunctor b))
     )
+    \\ recursively (Proxy @(HFunctor a))

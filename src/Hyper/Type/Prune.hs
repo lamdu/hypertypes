@@ -55,8 +55,8 @@ instance
     ) =>
     Infer m (HCompose Prune t) where
     inferBody (HCompose Pruned) =
-        withDict (inferContext (Proxy @m) (Proxy @t)) $
         hpure (Proxy @(UnifyGen m) #> MkContainedH newUnbound)
+        \\ inferContext (Proxy @m) (Proxy @t)
         & hsequence
         <&> (_HCompose # Pruned, )
     inferBody (HCompose (Unpruned (HCompose x))) =
@@ -67,7 +67,7 @@ instance
         ) x
         & inferBody
         <&> Lens._1 %~ (hcomposed _Unpruned #)
-    inferContext m _ = withDict (inferContext m (Proxy @t)) Dict
+    inferContext m _ = Dict \\ inferContext m (Proxy @t)
 
 instance
     ( Blame m t

@@ -87,8 +87,7 @@ class (Monad m, HFunctor t) => Infer m t where
 
 instance Recursive (Infer m) where
     {-# INLINE recurse #-}
-    recurse p =
-        withDict (inferContext (Proxy @m) (proxyArgument p)) Dict
+    recurse p = Dict \\ inferContext (Proxy @m) (proxyArgument p)
 
 type instance InferOf (a :+: _) = InferOf a
 
@@ -98,9 +97,7 @@ instance (InferOf a ~ InferOf b, Infer m a, Infer m b) => Infer m (a :+: b) wher
     inferBody (R1 x) = inferBody x <&> Lens._1 %~ R1
 
     {-# INLINE inferContext #-}
-    inferContext p _ =
-        withDict (inferContext p (Proxy @a)) $
-        withDict (inferContext p (Proxy @b)) Dict
+    inferContext p _ = Dict \\ inferContext p (Proxy @a) \\ inferContext p (Proxy @b)
 
 type instance InferOf (M1 _ _ h) = InferOf h
 
@@ -109,7 +106,7 @@ instance Infer m h => Infer m (M1 i c h) where
     inferBody (M1 x) = inferBody x <&> Lens._1 %~ M1
 
     {-# INLINE inferContext #-}
-    inferContext p _ = withDict (inferContext p (Proxy @h)) Dict
+    inferContext p _ = Dict \\ inferContext p (Proxy @h)
 
 type instance InferOf (Rec1 h) = InferOf h
 
@@ -118,4 +115,4 @@ instance Infer m h => Infer m (Rec1 h) where
     inferBody (Rec1 x) = inferBody x <&> Lens._1 %~ Rec1
 
     {-# INLINE inferContext #-}
-    inferContext p _ = withDict (inferContext p (Proxy @h)) Dict
+    inferContext p _ = Dict \\ inferContext p (Proxy @h)

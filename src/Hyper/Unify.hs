@@ -59,7 +59,6 @@ updateTermConstraints ::
 updateTermConstraints v t newConstraints
     | newConstraints `leq` (t ^. uConstraints) = pure ()
     | otherwise =
-        withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
         do
             bindVar binding v (UResolving t)
             case verifyConstraints newConstraints (t ^. uBody) of
@@ -68,6 +67,7 @@ updateTermConstraints v t newConstraints
                     do
                         htraverse_ (Proxy @(Unify m) #> updateTermConstraintsH) prop
                         UTermBody newConstraints (t ^. uBody) & UTerm & bindVar binding v
+                    \\ unifyRecursive (Proxy @m) (Proxy @t)
 
 {-# INLINE updateTermConstraintsH #-}
 updateTermConstraintsH ::
@@ -122,11 +122,11 @@ unifyUTerms xv xt yv (UUnbound level) = unifyUnbound yv level xv xt
 unifyUTerms xv USkolem{} yv _ = xv <$ unifyError (SkolemUnified xv yv)
 unifyUTerms xv _ yv USkolem{} = yv <$ unifyError (SkolemUnified yv xv)
 unifyUTerms xv (UTerm xt) yv (UTerm yt) =
-    withDict (unifyRecursive (Proxy @m) (Proxy @t)) $
     do
         bindVar binding yv (UToVar xv)
         zipMatchA (Proxy @(Unify m) #> unify) (xt ^. uBody) (yt ^. uBody)
             & fromMaybe (xt ^. uBody <$ structureMismatch unify (xt ^. uBody) (yt ^. uBody))
             >>= bindVar binding xv . UTerm . UTermBody (xt ^. uConstraints <> yt ^. uConstraints)
         pure xv
+    \\ unifyRecursive (Proxy @m) (Proxy @t)
 unifyUTerms _ _ _ _ = error "unifyUTerms: This shouldn't happen in unification stage"

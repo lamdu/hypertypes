@@ -38,29 +38,28 @@ hLiftConstraintH ::
     (RNodes a, HNodesConstraint (HFlip Ann a) c) =>
     HWitness a b -> HRecWitness b n -> Proxy c -> (c n => r) -> r
 hLiftConstraintH c n p f =
-    withDict (recurse (Proxy @(RNodes a))) $
-    withDict (recurse (Proxy @(c a))) $
     hLiftConstraint c (Proxy @RNodes)
     ( hLiftConstraint c p
         (hLiftConstraint (HWitness @(HFlip Ann _) n) p f)
+        \\ recurse (Proxy @(c a))
     )
+    \\ recurse (Proxy @(RNodes a))
 
 instance RNodes a => RNodes (Ann a) where
     {-# INLINE recursiveHNodes #-}
-    recursiveHNodes _ = withDict (recursiveHNodes (Proxy @a)) Dict
+    recursiveHNodes _ = Dict \\ recursiveHNodes (Proxy @a)
 
 instance (c (Ann a), Recursively c a) => Recursively c (Ann a) where
     {-# INLINE recursively #-}
-    recursively _ = withDict (recursively (Proxy @(c a))) Dict
+    recursively _ = Dict \\ recursively (Proxy @(c a))
 
 instance RTraversable a => RTraversable (Ann a) where
     {-# INLINE recursiveHTraversable #-}
-    recursiveHTraversable _ = withDict (recursiveHTraversable (Proxy @a)) Dict
+    recursiveHTraversable _ = Dict \\ recursiveHTraversable (Proxy @a)
 
 instance Recursively HFunctor h => HFunctor (HFlip Ann h) where
     {-# INLINE hmap #-}
     hmap f =
-        withDict (recursively (Proxy @(HFunctor h))) $
         _HFlip %~
         \(Ann a b) ->
         Ann
@@ -69,27 +68,28 @@ instance Recursively HFunctor h => HFunctor (HFlip Ann h) where
             ( Proxy @(Recursively HFunctor) #*#
                 \w -> from _HFlip %~ hmap (f . HWitness . HRecSub w . (^. _HWitness))
             ) b
+            \\ recursively (Proxy @(HFunctor h))
         )
 
 instance Recursively HFoldable h => HFoldable (HFlip Ann h) where
     {-# INLINE hfoldMap #-}
     hfoldMap f (MkHFlip (Ann a b)) =
-        withDict (recursively (Proxy @(HFoldable h))) $
         f (HWitness HRecSelf) a <>
         hfoldMap
         ( Proxy @(Recursively HFoldable) #*#
             \w -> hfoldMap (f . HWitness . HRecSub w . (^. _HWitness)) . MkHFlip
         ) b
+        \\ recursively (Proxy @(HFoldable h))
 
 instance RTraversable h => HTraversable (HFlip Ann h) where
     {-# INLINE hsequence #-}
     hsequence =
-        withDict (recurse (Proxy @(RTraversable h))) $
         _HFlip
         ( \(Ann a b) ->
             Ann
             <$> runContainedH a
             <*> htraverse (Proxy @RTraversable #> from _HFlip hsequence) b
+            \\ recurse (Proxy @(RTraversable h))
         )
 
 type Annotated a = Ann (Const a)

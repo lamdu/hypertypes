@@ -81,7 +81,7 @@ instance HasTypeOf1 t => HasInferOf1 (Scope t) where
     type InferOf1 (Scope t) = FuncType (TypeOf1 t)
     type InferOf1IndexConstraint (Scope t) = DeBruijnIndex
     hasInferOf1 p =
-        withDict (typeAst (p0 p)) Dict
+        Dict \\ typeAst (p0 p)
         where
             p0 :: Proxy (Scope t h) -> Proxy (t h)
             p0 _ = Proxy
@@ -99,8 +99,6 @@ instance
     Infer m (Scope t h) where
 
     inferBody (Scope x) =
-        withDict (hasInferOf1 (Proxy @(t h))) $
-        withDict (hasInferOf1 (Proxy @(t (Maybe h)))) $
         do
             varType <- newUnbound
             inferChild x
@@ -111,6 +109,8 @@ instance
                 , FuncType varType (xR ^# inferredType (Proxy @(t h)))
                 )
         \\ (inferMonad :: DeBruijnIndex (Maybe h) :- Infer m (t (Maybe h)))
+        \\ hasInferOf1 (Proxy @(t h))
+        \\ hasInferOf1 (Proxy @(t (Maybe h)))
 
     inferContext _ _ =
         Dict \\ inferMonad @m @t @(Maybe h)

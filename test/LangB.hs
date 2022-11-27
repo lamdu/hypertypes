@@ -87,9 +87,7 @@ instance VarType Name LangB where
                 forall m. UnifyGen m Typ =>
                 Map Name (HFlip GTerm Typ # UVarOf m) ->
                 m (UVarOf m # Typ)
-            r x =
-                withDict (unifyRecursive (Proxy @m) (Proxy @Typ)) $
-                x ^?! Lens.ix h . _HFlip & instantiate
+            r x = x ^?! Lens.ix h . _HFlip & instantiate
 
 instance
     ( MonadScopeLevel m
