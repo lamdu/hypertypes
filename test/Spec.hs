@@ -415,7 +415,7 @@ testBlame term expect =
         result =
             do
                 top <- newUnbound
-                blame (^. Lens._Wrapped) (_ANode # top) term
+                blame getConst (_ANode # top) term
                 & withEnv id
                 & execPureInferB
 
