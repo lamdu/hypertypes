@@ -95,7 +95,7 @@ instance c (HCompose h0 h1) => HComposeConstraint1 c h0 h1 where
     hComposeConstraint1 = Dict
 
 instance
-    (HNodes a, HPointed a, HPointed b) =>
+    (HPointed a, HPointed b) =>
     HPointed (HCompose a b)
     where
     {-# INLINE hpure #-}

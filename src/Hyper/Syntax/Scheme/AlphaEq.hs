@@ -42,8 +42,7 @@ schemeBodyToType foralls x =
 
 schemeToRestrictedType ::
     forall m varTypes typ.
-    ( Monad m
-    , HTraversable varTypes
+    ( HTraversable varTypes
     , HNodesConstraint varTypes (UnifyGen m)
     , HasScheme varTypes m typ
     ) =>

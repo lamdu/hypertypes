@@ -126,12 +126,10 @@ class UnifyGen m t => MonadInstantiate m t where
     lookupQVar :: QVar t -> m (UVarOf m # t)
 
 instance
-    ( Monad m
-    , HasInferredValue typ
+    ( HasInferredValue typ
     , UnifyGen m typ
     , HTraversable varTypes
     , HNodesConstraint varTypes (MonadInstantiate m)
-    , RTraversable typ
     , Infer m typ
     ) =>
     Infer m (Scheme varTypes typ)
@@ -151,9 +149,7 @@ instance
 
 inferType ::
     ( InferOf t ~ ANode t
-    , HTraversable t
     , HNodesConstraint t HasInferredValue
-    , UnifyGen m t
     , MonadInstantiate m t
     ) =>
     t # InferChild m h ->
@@ -217,8 +213,7 @@ instance Recursive (HasScheme varTypes m) where
 {-# INLINE loadScheme #-}
 loadScheme ::
     forall m varTypes typ.
-    ( Monad m
-    , HTraversable varTypes
+    ( HTraversable varTypes
     , HNodesConstraint varTypes (UnifyGen m)
     , HasScheme varTypes m typ
     ) =>
@@ -231,7 +226,7 @@ loadScheme (Pure (Scheme vars typ)) =
 
 saveH ::
     forall typ varTypes m.
-    (Monad m, HasScheme varTypes m typ) =>
+    HasScheme varTypes m typ =>
     GTerm (UVarOf m) # typ ->
     StateT (varTypes # QVars, [m ()]) m (Pure # typ)
 saveH (GBody x) =

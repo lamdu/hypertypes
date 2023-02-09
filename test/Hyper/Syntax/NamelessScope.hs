@@ -96,7 +96,6 @@ instance HasTypeOf1 t => HasInferOf1 (Scope t) where
 
 instance
     ( Infer1 m t
-    , HasInferOf1 t
     , InferOf1IndexConstraint t ~ DeBruijnIndex
     , DeBruijnIndex h
     , UnifyGen m (TypeOf (t h))

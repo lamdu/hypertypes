@@ -294,8 +294,7 @@ loadBody params foralls x =
 {-# INLINE loadNominalDecl #-}
 loadNominalDecl ::
     forall m typ.
-    ( Monad m
-    , HTraversable (NomVarTypes typ)
+    ( HTraversable (NomVarTypes typ)
     , HNodesConstraint (NomVarTypes typ) (Unify m)
     , HasScheme (NomVarTypes typ) m typ
     ) =>
