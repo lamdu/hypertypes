@@ -69,6 +69,7 @@ makeContext info =
     where
         ctxForPat (InContainer _ pat) = ctxForPat pat
         ctxForPat (GenEmbed t) = [ConT ''HNodes `AppT` t]
+        ctxForPat (FlatEmbed t) = makeContext t
         ctxForPat _ = []
 
 makeHLiftConstraints :: NodeWitnesses -> [Q Clause]
