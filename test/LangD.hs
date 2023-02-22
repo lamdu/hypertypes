@@ -15,3 +15,9 @@ newtype C (k :: AHyperType) = C (C k)
 
 -- The following doesn't work:
 -- makeHNodes ''C
+
+newtype D a (h :: AHyperType) = D (a h)
+newtype E a (h :: AHyperType) = E (D a h)
+
+makeHTraversableAndBases ''D
+makeHTraversableAndBases ''E
