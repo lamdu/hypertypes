@@ -359,7 +359,7 @@ testCommon expr expect pureRes stRes =
         prettyPrint expr
         putStrLn "inferred to:"
         prettyPrint pureRes
-        filter (not . fst) checks <&> snd & sequence_
+        filter (not . fst) checks & mapM_ snd
         all fst checks & pure
     where
         checks =

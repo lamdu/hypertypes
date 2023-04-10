@@ -206,7 +206,7 @@ simplifyContext preds =
     execStateT (goPreds preds) (mempty :: Set (Name, [Type]), mempty :: Set Pred)
         <&> (^.. Lens._2 . Lens.folded)
     where
-        goPreds ps = ps <&> unapply & traverse_ go
+        goPreds = traverse_ (go . unapply)
         go (c, [VarT v]) =
             -- Work-around reifyInstances returning instances for type variables
             -- by not checking.
