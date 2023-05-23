@@ -246,7 +246,7 @@ type p :# q = (GetHyperType p) ('AHyperType q)
 
 The `hypertypes` library provides:
 
-* Variants of standard classes like `Functor` with `TemplateHaskell` derivations for hypertypes.
+* Variants of standard classes like `Functor` for hypertypes with derivations.
   (Unlike in `multirec`'s `HFunctor`, only the actual child node types of each node need to be handled)
 * Combinators for recursive processing and transformation of nested structures
 * Implementations of common AST terms
