@@ -289,7 +289,7 @@ Explanations for the above:
 To write it more consicely, the `HasHPlain` class, along with a `TemplateHaskell` generator for it, exists:
 
 ```Haskell
-> let e = hPlain :# verboseExpr
+> let e = hPlain # verboseExpr
 -- Note: This (#) comes from Control.Lens
 
 > e
