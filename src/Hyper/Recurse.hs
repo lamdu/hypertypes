@@ -43,7 +43,7 @@ wrapM f x =
     x ^. _Pure
         & htraverse (Proxy @RTraversable #*# \w -> wrapM (f . HRecSub w))
         >>= f HRecSelf
-            \\ recurse (Proxy @(RTraversable h))
+        \\ recurse (Proxy @(RTraversable h))
 
 -- | Monadically unwrap a tree from the top down, replacing its 'HyperType' with 'Pure'
 {-# INLINE unwrapM #-}
@@ -57,7 +57,7 @@ unwrapM f x =
     f HRecSelf x
         >>= htraverse (Proxy @RTraversable #*# \w -> unwrapM (f . HRecSub w))
         <&> (_Pure #)
-            \\ recurse (Proxy @(RTraversable h))
+        \\ recurse (Proxy @(RTraversable h))
 
 -- | Wrap a 'Pure' to a different 'HyperType' from the bottom up
 {-# INLINE wrap #-}
@@ -71,7 +71,7 @@ wrap f x =
     x ^. _Pure
         & hmap (Proxy @(Recursively HFunctor) #*# \w -> wrap (f . HRecSub w))
         & f HRecSelf
-            \\ recursively (Proxy @(HFunctor h))
+        \\ recursively (Proxy @(HFunctor h))
 
 -- | Unwrap a tree from the top down, replacing its 'HyperType' with 'Pure'
 {-# INLINE unwrap #-}

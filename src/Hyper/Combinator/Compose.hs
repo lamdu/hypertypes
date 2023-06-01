@@ -128,7 +128,7 @@ instance (HApply a, HApply b) => HApply (HCompose a b) where
                             )
                             (hzip b0 b1)
                 )
-                . hzip a0
+            . hzip a0
 
 instance (HFoldable a, HFoldable b) => HFoldable (HCompose a b) where
     {-# INLINE hfoldMap #-}
@@ -223,7 +223,8 @@ decompose' =
         . _HCompose
         . hiso
             ( Proxy @(Recursively HFunctor) #>
-                _HCompose . hiso (Proxy @(Recursively HFunctor) #> _HCompose . decompose')
+                _HCompose
+                    . hiso (Proxy @(Recursively HFunctor) #> _HCompose . decompose')
                     \\ recursively (Proxy @(HFunctor b))
             )
         \\ recursively (Proxy @(HFunctor a))

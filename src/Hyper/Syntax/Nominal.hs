@@ -166,7 +166,8 @@ instance
                 ( Proxy @OrdQVar #>
                     \(HFunc c :*: x) ->
                         x
-                            & _QVarInstances . Lens.imapped
+                            & _QVarInstances
+                                . Lens.imapped
                                 %@~ \k v ->
                                     HFunc
                                         ( \newV ->

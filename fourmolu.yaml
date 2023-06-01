@@ -10,5 +10,13 @@ haddock-style-module:
 let-style: auto
 in-style: left-align
 respectful: true
-fixities: []
+fixities:
+- infixl 1 \\
+- infixl 1 >>=
+- infixl 1 <&>
+- infixl 3 <|>
+- infixl 8 ^?
 unicode: detect
+single-constraint-parens: never
+reexports:
+  - module Hyper.Internal.Prelude exports Data.Function

@@ -35,7 +35,7 @@ infer ::
 infer (Ann a x) =
     inferBody (hmap (Proxy @(Infer m) #> inferH) x)
         <&> (\(xI, t) -> Ann (a :*: InferResult t) xI)
-            \\ inferContext (Proxy @m) (Proxy @t)
+        \\ inferContext (Proxy @m) (Proxy @t)
 
 {-# INLINE inferH #-}
 inferH ::

@@ -102,7 +102,7 @@ prepareH t =
     hpure (Proxy @(UnifyGen m) #> MkContainedH newUnbound)
         & hsequence
         >>= (`prepare` t)
-            \\ inferContext (Proxy @m) (Proxy @exp)
+        \\ inferContext (Proxy @m) (Proxy @exp)
 
 prepare ::
     forall m exp a.

@@ -89,7 +89,7 @@ goUTerm xv xu yv UUnbound{} = goUTerm xv xu yv xu -- Term created in structure m
 goUTerm _ (UTerm xt) _ (UTerm yt) =
     zipMatch_ (Proxy @(Unify m) #> goUVar) (xt ^. uBody) (yt ^. uBody)
         & fromMaybe (structureMismatch (\x y -> x <$ goUVar x y) (xt ^. uBody) (yt ^. uBody))
-            \\ unifyRecursive (Proxy @m) (Proxy @t)
+        \\ unifyRecursive (Proxy @m) (Proxy @t)
 goUTerm _ _ _ _ = error "unexpected state at alpha-eq"
 
 goUVar ::

@@ -80,8 +80,9 @@ class
         m a
     unifyError e =
         htraverse (Proxy @(Unify m) #> applyBindings) e
-            >>= throwError . (hSubset #)
-                \\ unifyRecursive (Proxy @m) (Proxy @t)
+            >>= throwError
+                . (hSubset #)
+            \\ unifyRecursive (Proxy @m) (Proxy @t)
 
     -- | What to do when top-levels of terms being unified do not match.
     --
@@ -177,7 +178,7 @@ applyBindings v0 =
                                     )
                                     (b ^. uBody)
                                     & (`runStateT` False)
-                                        \\ unifyRecursive (Proxy @m) (Proxy @t)
+                                    \\ unifyRecursive (Proxy @m) (Proxy @t)
                             _Pure # r & if anyChild then result else pure
                     UToVar{} -> error "lookup not expected to result in var"
                     UConverted{} -> error "conversion state not expected in applyBindings"

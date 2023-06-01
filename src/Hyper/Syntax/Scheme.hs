@@ -232,7 +232,7 @@ saveH ::
 saveH (GBody x) =
     htraverse (Proxy @(HasScheme varTypes m) #> saveH) x
         <&> (_Pure #)
-            \\ hasSchemeRecursive (Proxy @varTypes) (Proxy @m) (Proxy @typ)
+        \\ hasSchemeRecursive (Proxy @varTypes) (Proxy @m) (Proxy @typ)
 saveH (GMono x) =
     unwrapM (Proxy @(HasScheme varTypes m) #>> f) x & lift
     where
@@ -253,7 +253,8 @@ saveH (GPoly x) =
                             <&> (<> l)
                             >>= newQuantifiedVariable
                             & lift
-                    Lens._1 . hNodeLens
+                    Lens._1
+                        . hNodeLens
                         %= (\v -> v & _QVars . Lens.at r ?~ generalizeConstraints l :: QVars # typ)
                     Lens._2 %= (bindVar binding x (USkolem l) :)
                     let result = _Pure . quantifiedVar # r

@@ -107,7 +107,7 @@ instance RTraversable h => HTraversable (HFlip Ann h) where
                 Ann
                     <$> runContainedH a
                     <*> htraverse (Proxy @RTraversable #> from _HFlip hsequence) b
-                        \\ recurse (Proxy @(RTraversable h))
+                    \\ recurse (Proxy @(RTraversable h))
             )
 
 type Annotated a = Ann (Const a)

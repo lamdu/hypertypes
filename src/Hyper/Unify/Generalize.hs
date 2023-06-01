@@ -95,7 +95,7 @@ instance Recursively HFunctor ast => HFunctor (HFlip GTerm ast) where
                         )
                         x
                         & GBody
-                            \\ recursively (Proxy @(HFunctor ast))
+                        \\ recursively (Proxy @(HFunctor ast))
 
 instance Recursively HFoldable ast => HFoldable (HFlip GTerm ast) where
     {-# INLINE hfoldMap #-}
@@ -160,7 +160,7 @@ generalize v0 =
                                 then GMono v1
                                 else GBody b
                         )
-                        \\ unifyGenRecursive (Proxy @m) (Proxy @t)
+                    \\ unifyGenRecursive (Proxy @m) (Proxy @t)
             UResolving t -> GMono v1 <$ occursError v1 t
             _ -> pure (GMono v1)
 
@@ -196,8 +196,9 @@ instantiateH _ (GMono x) = pure x
 instantiateH cons (GPoly x) = instantiateForAll cons x
 instantiateH cons (GBody x) =
     htraverse (Proxy @(UnifyGen m) #> instantiateH cons) x
-        >>= lift . newTerm
-            \\ unifyGenRecursive (Proxy @m) (Proxy @t)
+        >>= lift
+            . newTerm
+        \\ unifyGenRecursive (Proxy @m) (Proxy @t)
 
 {-# INLINE instantiateWith #-}
 instantiateWith ::

@@ -14,7 +14,7 @@ import qualified Data.Set as Set
 import Hyper
 import Hyper.Infer
 import Hyper.Infer.Blame (BlameResult (Good), blame)
-import Hyper.Recurse (wrap, unwrap)
+import Hyper.Recurse (unwrap, wrap)
 import Hyper.Syntax (App (..), Var (..))
 import Hyper.Syntax.NamelessScope (EmptyScope)
 import Hyper.Syntax.Nominal (NominalDecl (..), loadNominalDecl)
@@ -29,7 +29,7 @@ import LangB
 import Test.Tasty
 import Test.Tasty.HUnit
 import qualified Text.PrettyPrint as Pretty
-import Text.PrettyPrint.HughesPJClass (Pretty(..))
+import Text.PrettyPrint.HughesPJClass (Pretty (..))
 import TypeLang
 
 import Prelude
@@ -355,7 +355,7 @@ testCommon expr expect pureRes stRes =
     do
         assertEqual msg expect (prettyStyle pureRes)
         assertEqual ("ST: " <> msg) expect (prettyStyle stRes)
-    & testCase (prettyStyle expr)
+        & testCase (prettyStyle expr)
     where
         msg = "Infer of " <> prettyStyle expr
 
@@ -380,7 +380,7 @@ testAlphaEq x y expect =
     do
         assertEqual msg expect pureRes
         assertEqual ("ST: " <> msg) expect stRes
-    & testCase (prettyStyle x <> sep <> prettyStyle y)
+        & testCase (prettyStyle x <> sep <> prettyStyle y)
     where
         sep = if expect then " == " else " != "
         msg = "Alpha eq of " <> prettyStyle x <> " and " <> prettyStyle y
@@ -390,15 +390,16 @@ testAlphaEq x y expect =
 testBlame :: (Ord a, Show a) => Annotated a # LangB -> String -> TestTree
 testBlame term expect =
     case result of
-    Left{} -> assertFailure "Unexpected type error in testBlame"
-    Right x ->
-        assertEqual "Wrong blame" expect formatted
-        where
-            formatted = x ^.. hflipped . hfolded1 . Lens._2 <&> fmt
-    & testCase
-        ( prettyStyle (unwrap (const (^. hVal)) term) <> " " <>
-            show (term ^.. hflipped . hfolded1 . Lens._Wrapped)
-        )
+        Left{} -> assertFailure "Unexpected type error in testBlame"
+        Right x ->
+            assertEqual "Wrong blame" expect formatted
+            where
+                formatted = x ^.. hflipped . hfolded1 . Lens._2 <&> fmt
+        & testCase
+            ( prettyStyle (unwrap (const (^. hVal)) term)
+                <> " "
+                <> show (term ^.. hflipped . hfolded1 . Lens._Wrapped)
+            )
     where
         fmt Good{} = '-'
         fmt _ = 'X'
@@ -464,57 +465,60 @@ forAll1r t body =
 
 inferATests :: TestTree
 inferATests =
-    testGroup "infer LangA"
-    [ testA lamXYx5 "Right (∀t0(*). ∀t1(*). (Int -> t0) -> t1 -> t0)"
-    , testA infinite "Left (t0 occurs in itself, expands to: t0 -> t1)"
-    , testA skolem "Left (SkolemEscape: t0)"
-    , testA validForAll "Right (∀t0(*). t0 -> t0)"
-    , testA nomLam "Right (Map[key: Int, value: Int] -> Map[key: Int, value: Int])"
-    ]
+    testGroup
+        "infer LangA"
+        [ testA lamXYx5 "Right (∀t0(*). ∀t1(*). (Int -> t0) -> t1 -> t0)"
+        , testA infinite "Left (t0 occurs in itself, expands to: t0 -> t1)"
+        , testA skolem "Left (SkolemEscape: t0)"
+        , testA validForAll "Right (∀t0(*). t0 -> t0)"
+        , testA nomLam "Right (Map[key: Int, value: Int] -> Map[key: Int, value: Int])"
+        ]
 
 inferBTests :: TestTree
 inferBTests =
-    testGroup "infer LangB"
-    [ testB letGen0 "Right Int"
-    , testB letGen1 "Right (∀t0(*). (Int -> Int -> t0) -> t0)"
-    , testB letGen2 "Right (∀t0(*). ∀r0(∌ [a]). ∀r1(∌ [a]). (a : (a : t0 :*: r0) :*: r1) -> t0)"
-    , testB genInf "Left (t0 occurs in itself, expands to: t0 -> t1)"
-    , testB shouldNotGen "Right (∀t0(*). t0 -> t0)"
-    , testB simpleRec "Right (a : Int :*: {})"
-    , testB extendLit "Left (Mismatch Int r0)"
-    , testB extendDup "Left (ConstraintsViolation (a : Int :*: {}) (∌ [a]))"
-    , testB extendGood "Right (b : Int :*: a : Int :*: {})"
-    , testB unifyRows "Right (((b : Int :*: a : Int :*: {}) -> Int -> Int) -> Int)"
-    , testB openRows "Right (∀r0(∌ [a, b, c]). (c : Int :*: r0) -> (b : Int :*: r0) -> ((c : Int :*: a : Int :*: b : Int :*: r0) -> Int -> Int) -> Int)"
-    , testB getAField "Right (∀t0(*). ∀r0(∌ [a]). (a : t0 :*: r0) -> t0)"
-    , testB vecApp "Right (∀t0(*). t0 -> t0 -> Vec[elem: t0])"
-    , testB usePhantom "Right (∀t0(*). PhantomInt[phantom: t0])"
-    , testB return5 "Right (∀r0(*). Mut[value: Int, effects: r0])"
-    , testB returnOk "Right LocalMut[value: Int]"
-    , testB nomSkolem0 "Left (SkolemEscape: r0)"
-    , testB nomSkolem1 "Left (SkolemEscape: r0)"
-    ]
+    testGroup
+        "infer LangB"
+        [ testB letGen0 "Right Int"
+        , testB letGen1 "Right (∀t0(*). (Int -> Int -> t0) -> t0)"
+        , testB letGen2 "Right (∀t0(*). ∀r0(∌ [a]). ∀r1(∌ [a]). (a : (a : t0 :*: r0) :*: r1) -> t0)"
+        , testB genInf "Left (t0 occurs in itself, expands to: t0 -> t1)"
+        , testB shouldNotGen "Right (∀t0(*). t0 -> t0)"
+        , testB simpleRec "Right (a : Int :*: {})"
+        , testB extendLit "Left (Mismatch Int r0)"
+        , testB extendDup "Left (ConstraintsViolation (a : Int :*: {}) (∌ [a]))"
+        , testB extendGood "Right (b : Int :*: a : Int :*: {})"
+        , testB unifyRows "Right (((b : Int :*: a : Int :*: {}) -> Int -> Int) -> Int)"
+        , testB openRows "Right (∀r0(∌ [a, b, c]). (c : Int :*: r0) -> (b : Int :*: r0) -> ((c : Int :*: a : Int :*: b : Int :*: r0) -> Int -> Int) -> Int)"
+        , testB getAField "Right (∀t0(*). ∀r0(∌ [a]). (a : t0 :*: r0) -> t0)"
+        , testB vecApp "Right (∀t0(*). t0 -> t0 -> Vec[elem: t0])"
+        , testB usePhantom "Right (∀t0(*). PhantomInt[phantom: t0])"
+        , testB return5 "Right (∀r0(*). Mut[value: Int, effects: r0])"
+        , testB returnOk "Right LocalMut[value: Int]"
+        , testB nomSkolem0 "Left (SkolemEscape: r0)"
+        , testB nomSkolem1 "Left (SkolemEscape: r0)"
+        ]
 
 inferTests :: TestTree
 inferTests = testGroup "infer" [inferATests, inferBTests]
 
 alphaEqTests :: TestTree
 alphaEqTests =
-    testGroup "alpha-eq"
-    [ testAlphaEq (uniType TIntP) (uniType TIntP) True
-    , testAlphaEq (uniType TIntP) intToInt False
-    , testAlphaEq intToInt intToInt True
-    , testAlphaEq (intsRecord ["a", "b"]) (intsRecord ["b", "a"]) True
-    , testAlphaEq (intsRecord ["a", "b"]) (intsRecord ["b"]) False
-    , testAlphaEq (intsRecord ["a", "b", "c"]) (intsRecord ["c", "b", "a"]) True
-    , testAlphaEq (intsRecord ["a", "b", "c"]) (intsRecord ["b", "c", "a"]) True
-    , testAlphaEq (forAll1 "a" id) (forAll1 "b" id) True
-    , testAlphaEq (forAll1 "a" id) (uniType TIntP) False
-    , testAlphaEq (forAll1r "a" TRecP) (uniType TIntP) False
-    , testAlphaEq (forAll1r "a" TRecP) (forAll1r "b" TRecP) True
-    , testAlphaEq (mkOpenRec "a" "x" "y") (mkOpenRec "b" "y" "x") True
-    , testAlphaEq (valH0 (TVarP "a")) (valH0 (TRecP REmptyP)) False
-    ]
+    testGroup
+        "alpha-eq"
+        [ testAlphaEq (uniType TIntP) (uniType TIntP) True
+        , testAlphaEq (uniType TIntP) intToInt False
+        , testAlphaEq intToInt intToInt True
+        , testAlphaEq (intsRecord ["a", "b"]) (intsRecord ["b", "a"]) True
+        , testAlphaEq (intsRecord ["a", "b"]) (intsRecord ["b"]) False
+        , testAlphaEq (intsRecord ["a", "b", "c"]) (intsRecord ["c", "b", "a"]) True
+        , testAlphaEq (intsRecord ["a", "b", "c"]) (intsRecord ["b", "c", "a"]) True
+        , testAlphaEq (forAll1 "a" id) (forAll1 "b" id) True
+        , testAlphaEq (forAll1 "a" id) (uniType TIntP) False
+        , testAlphaEq (forAll1r "a" TRecP) (uniType TIntP) False
+        , testAlphaEq (forAll1r "a" TRecP) (forAll1r "b" TRecP) True
+        , testAlphaEq (mkOpenRec "a" "x" "y") (mkOpenRec "b" "y" "x") True
+        , testAlphaEq (valH0 (TVarP "a")) (valH0 (TRecP REmptyP)) False
+        ]
     where
         valH0 x =
             TFunP (TVarP "a") (TRecP (RExtendP "t" x (RVarP "c"))) ^. hPlain
@@ -541,25 +545,28 @@ alphaEqTests =
 
 blameTests :: TestTree
 blameTests =
-    testGroup "blame"
-    [ testBlame (addAnns (BAppP (BVarP "unitToUnit") (BLitP 5) ^. hPlain)) "--X"
-    , testBlame
-        ( Ann
-            (Const @Int 2)
-            ( BApp
-                ( App
-                    (Ann (Const 1) (BVar (Var "unitToUnit")))
-                    (Ann (Const 0) (BLit 5))
+    testGroup
+        "blame"
+        [ testBlame (addAnns (BAppP (BVarP "unitToUnit") (BLitP 5) ^. hPlain)) "--X"
+        , testBlame
+            ( Ann
+                (Const @Int 2)
+                ( BApp
+                    ( App
+                        (Ann (Const 1) (BVar (Var "unitToUnit")))
+                        (Ann (Const 0) (BLit 5))
+                    )
                 )
             )
-        )
-        "-X-"
-    ]
+            "-X-"
+        ]
 
 main :: IO ()
 main =
-    testGroup "Tests"
-    [ inferTests
-    , alphaEqTests
-    , blameTests
-    ] & defaultMain
+    testGroup
+        "Tests"
+        [ inferTests
+        , alphaEqTests
+        , blameTests
+        ]
+        & defaultMain

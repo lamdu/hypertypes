@@ -96,7 +96,8 @@ recursiveContextsWith (HFunc s0 :*: x0) =
             (forall n. (Recursively HFunctor n, Recursively HContext n) => (s # n -> t # s) -> s # n -> HCompose c0 c1 # n) ->
             HCompose t c0 # c1
         layer x f =
-            _HCompose # hmap (Proxy @(Recursively HContext) #*# Proxy @(Recursively HFunctor) #> \(HFunc s :*: v) -> f (getConst . s) v) (hcontext x)
+            _HCompose
+                # hmap (Proxy @(Recursively HContext) #*# Proxy @(Recursively HFunctor) #> \(HFunc s :*: v) -> f (getConst . s) v) (hcontext x)
                 \\ recursively (Proxy @(HFunctor t))
                 \\ recursively (Proxy @(HContext t))
 
