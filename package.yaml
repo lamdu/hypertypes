@@ -89,6 +89,8 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - hypertypes
+    - tasty
+    - tasty-hunit
     - text
 
 benchmarks:

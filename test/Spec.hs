@@ -14,7 +14,7 @@ import qualified Data.Set as Set
 import Hyper
 import Hyper.Infer
 import Hyper.Infer.Blame (BlameResult (Good), blame)
-import Hyper.Recurse (wrap)
+import Hyper.Recurse (wrap, unwrap)
 import Hyper.Syntax (App (..), Var (..))
 import Hyper.Syntax.NamelessScope (EmptyScope)
 import Hyper.Syntax.Nominal (NominalDecl (..), loadNominalDecl)
@@ -26,9 +26,10 @@ import Hyper.Unify.New (newUnbound)
 import Hyper.Unify.QuantifiedVar (HasQuantifiedVar (..))
 import LangA
 import LangB
-import System.Exit (exitFailure)
+import Test.Tasty
+import Test.Tasty.HUnit
 import qualified Text.PrettyPrint as Pretty
-import Text.PrettyPrint.HughesPJClass (Pretty (..))
+import Text.PrettyPrint.HughesPJClass (Pretty(..))
 import TypeLang
 
 import Prelude
@@ -343,31 +344,22 @@ withEnv l act =
 prettyStyle :: Pretty a => a -> String
 prettyStyle = Pretty.renderStyle (Pretty.Style Pretty.OneLineMode 0 0) . pPrint
 
-prettyPrint :: Pretty a => a -> IO ()
-prettyPrint = putStrLn . prettyStyle
-
 testCommon ::
-    (Pretty (lang # Pure), Pretty a, Eq a) =>
+    (Pretty (lang # Pure), Pretty a) =>
     Pure # lang ->
     String ->
     Either (TypeError # Pure) a ->
     Either (TypeError # Pure) a ->
-    IO Bool
+    TestTree
 testCommon expr expect pureRes stRes =
     do
-        putStrLn ""
-        prettyPrint expr
-        putStrLn "inferred to:"
-        prettyPrint pureRes
-        filter (not . fst) checks & mapM_ snd
-        all fst checks & pure
+        assertEqual msg expect (prettyStyle pureRes)
+        assertEqual ("ST: " <> msg) expect (prettyStyle stRes)
+    & testCase (prettyStyle expr)
     where
-        checks =
-            [ (expect == prettyStyle pureRes, putStrLn ("FAIL! Expected:\n" <> expect))
-            , (pureRes == stRes, putStrLn "FAIL! Different result in ST:" *> prettyPrint stRes)
-            ]
+        msg = "Infer of " <> prettyStyle expr
 
-testA :: HPlain (LangA EmptyScope) -> String -> IO Bool
+testA :: HPlain (LangA EmptyScope) -> String -> TestTree
 testA p expect =
     testCommon expr expect pureRes stRes
     where
@@ -375,7 +367,7 @@ testA p expect =
         pureRes = execPureInferA (inferExpr expr)
         stRes = runST (execSTInferA (inferExpr expr))
 
-testB :: HPlain LangB -> String -> IO Bool
+testB :: HPlain LangB -> String -> TestTree
 testB p expect =
     testCommon expr expect pureRes stRes
     where
@@ -383,32 +375,30 @@ testB p expect =
         pureRes = execPureInferB (withEnv id (inferExpr expr))
         stRes = runST (execSTInferB (withEnv Lens._1 (inferExpr expr)))
 
-testAlphaEq :: Pure # Scheme Types Typ -> Pure # Scheme Types Typ -> Bool -> IO Bool
+testAlphaEq :: Pure # Scheme Types Typ -> Pure # Scheme Types Typ -> Bool -> TestTree
 testAlphaEq x y expect =
     do
-        putStrLn ""
-        prettyPrint (x, y)
-        putStrLn ("Alpha Eq: " <> show pureRes)
-        when (pureRes /= expect) (putStrLn "WRONG!")
-        putStrLn ("Alpha Eq: " <> show stRes)
-        when (stRes /= expect) (putStrLn "WRONG!")
-        pure (pureRes == expect && stRes == expect)
+        assertEqual msg expect pureRes
+        assertEqual ("ST: " <> msg) expect stRes
+    & testCase (prettyStyle x <> sep <> prettyStyle y)
     where
+        sep = if expect then " == " else " != "
+        msg = "Alpha eq of " <> prettyStyle x <> " and " <> prettyStyle y
         pureRes = Lens.has Lens._Right (execPureInferB (alphaEq x y))
         stRes = Lens.has Lens._Right (runST (execSTInferB (alphaEq x y)))
 
-testBlame :: Ord a => Annotated a # LangB -> String -> IO Bool
+testBlame :: (Ord a, Show a) => Annotated a # LangB -> String -> TestTree
 testBlame term expect =
     case result of
-        Left{} -> False <$ putStrLn "Unexpected type error in testBlame"
-        Right x ->
-            do
-                putStrLn ""
-                putStrLn formatted
-                when (formatted /= expect) (putStrLn ("Expected:" <> expect))
-                pure (formatted == expect)
-            where
-                formatted = x ^.. hflipped . hfolded1 . Lens._2 <&> fmt
+    Left{} -> assertFailure "Unexpected type error in testBlame"
+    Right x ->
+        assertEqual "Wrong blame" expect formatted
+        where
+            formatted = x ^.. hflipped . hfolded1 . Lens._2 <&> fmt
+    & testCase
+        ( prettyStyle (unwrap (const (^. hVal)) term) <> " " <>
+            show (term ^.. hflipped . hfolded1)
+        )
     where
         fmt Good{} = '-'
         fmt _ = 'X'
@@ -472,67 +462,68 @@ forAll1r ::
 forAll1r t body =
     forAll (Const ()) (Identity t) $ \_ (Identity tv) -> body tv
 
-main :: IO ()
-main =
-    do
-        numFails <-
-            sequenceA tests
-                <&> filter not
-                <&> length
-        putStrLn ""
-        show numFails <> " tests failed out of " <> show (length tests) & putStrLn
-        when (numFails > 0) exitFailure
+inferATests :: TestTree
+inferATests =
+    testGroup "infer LangA"
+    [ testA lamXYx5 "Right (∀t0(*). ∀t1(*). (Int -> t0) -> t1 -> t0)"
+    , testA infinite "Left (t0 occurs in itself, expands to: t0 -> t1)"
+    , testA skolem "Left (SkolemEscape: t0)"
+    , testA validForAll "Right (∀t0(*). t0 -> t0)"
+    , testA nomLam "Right (Map[key: Int, value: Int] -> Map[key: Int, value: Int])"
+    ]
+
+inferBTests :: TestTree
+inferBTests =
+    testGroup "infer LangB"
+    [ testB letGen0 "Right Int"
+    , testB letGen1 "Right (∀t0(*). (Int -> Int -> t0) -> t0)"
+    , testB letGen2 "Right (∀t0(*). ∀r0(∌ [a]). ∀r1(∌ [a]). (a : (a : t0 :*: r0) :*: r1) -> t0)"
+    , testB genInf "Left (t0 occurs in itself, expands to: t0 -> t1)"
+    , testB shouldNotGen "Right (∀t0(*). t0 -> t0)"
+    , testB simpleRec "Right (a : Int :*: {})"
+    , testB extendLit "Left (Mismatch Int r0)"
+    , testB extendDup "Left (ConstraintsViolation (a : Int :*: {}) (∌ [a]))"
+    , testB extendGood "Right (b : Int :*: a : Int :*: {})"
+    , testB unifyRows "Right (((b : Int :*: a : Int :*: {}) -> Int -> Int) -> Int)"
+    , testB openRows "Right (∀r0(∌ [a, b, c]). (c : Int :*: r0) -> (b : Int :*: r0) -> ((c : Int :*: a : Int :*: b : Int :*: r0) -> Int -> Int) -> Int)"
+    , testB getAField "Right (∀t0(*). ∀r0(∌ [a]). (a : t0 :*: r0) -> t0)"
+    , testB vecApp "Right (∀t0(*). t0 -> t0 -> Vec[elem: t0])"
+    , testB usePhantom "Right (∀t0(*). PhantomInt[phantom: t0])"
+    , testB return5 "Right (∀r0(*). Mut[value: Int, effects: r0])"
+    , testB returnOk "Right LocalMut[value: Int]"
+    , testB nomSkolem0 "Left (SkolemEscape: r0)"
+    , testB nomSkolem1 "Left (SkolemEscape: r0)"
+    ]
+
+inferTests :: TestTree
+inferTests = testGroup "infer" [inferATests, inferBTests]
+
+alphaEqTests :: TestTree
+alphaEqTests =
+    testGroup "alpha-eq"
+    [ testAlphaEq (uniType TIntP) (uniType TIntP) True
+    , testAlphaEq (uniType TIntP) intToInt False
+    , testAlphaEq intToInt intToInt True
+    , testAlphaEq (intsRecord ["a", "b"]) (intsRecord ["b", "a"]) True
+    , testAlphaEq (intsRecord ["a", "b"]) (intsRecord ["b"]) False
+    , testAlphaEq (intsRecord ["a", "b", "c"]) (intsRecord ["c", "b", "a"]) True
+    , testAlphaEq (intsRecord ["a", "b", "c"]) (intsRecord ["b", "c", "a"]) True
+    , testAlphaEq (forAll1 "a" id) (forAll1 "b" id) True
+    , testAlphaEq (forAll1 "a" id) (uniType TIntP) False
+    , testAlphaEq (forAll1r "a" TRecP) (uniType TIntP) False
+    , testAlphaEq (forAll1r "a" TRecP) (forAll1r "b" TRecP) True
+    , testAlphaEq (mkOpenRec "a" "x" "y") (mkOpenRec "b" "y" "x") True
+    , testAlphaEq (valH0 (TVarP "a")) (valH0 (TRecP REmptyP)) False
+    ]
     where
-        tests =
-            [ testA lamXYx5 "Right (∀t0(*). ∀t1(*). (Int -> t0) -> t1 -> t0)"
-            , testA infinite "Left (t0 occurs in itself, expands to: t0 -> t1)"
-            , testA skolem "Left (SkolemEscape: t0)"
-            , testA validForAll "Right (∀t0(*). t0 -> t0)"
-            , testA nomLam "Right (Map[key: Int, value: Int] -> Map[key: Int, value: Int])"
-            , testB letGen0 "Right Int"
-            , testB letGen1 "Right (∀t0(*). (Int -> Int -> t0) -> t0)"
-            , testB letGen2 "Right (∀t0(*). ∀r0(∌ [a]). ∀r1(∌ [a]). (a : (a : t0 :*: r0) :*: r1) -> t0)"
-            , testB genInf "Left (t0 occurs in itself, expands to: t0 -> t1)"
-            , testB shouldNotGen "Right (∀t0(*). t0 -> t0)"
-            , testB simpleRec "Right (a : Int :*: {})"
-            , testB extendLit "Left (Mismatch Int r0)"
-            , testB extendDup "Left (ConstraintsViolation (a : Int :*: {}) (∌ [a]))"
-            , testB extendGood "Right (b : Int :*: a : Int :*: {})"
-            , testB unifyRows "Right (((b : Int :*: a : Int :*: {}) -> Int -> Int) -> Int)"
-            , testB openRows "Right (∀r0(∌ [a, b, c]). (c : Int :*: r0) -> (b : Int :*: r0) -> ((c : Int :*: a : Int :*: b : Int :*: r0) -> Int -> Int) -> Int)"
-            , testB getAField "Right (∀t0(*). ∀r0(∌ [a]). (a : t0 :*: r0) -> t0)"
-            , testB vecApp "Right (∀t0(*). t0 -> t0 -> Vec[elem: t0])"
-            , testB usePhantom "Right (∀t0(*). PhantomInt[phantom: t0])"
-            , testB return5 "Right (∀r0(*). Mut[value: Int, effects: r0])"
-            , testB returnOk "Right LocalMut[value: Int]"
-            , testB nomSkolem0 "Left (SkolemEscape: r0)"
-            , testB nomSkolem1 "Left (SkolemEscape: r0)"
-            , testAlphaEq (uniType TIntP) (uniType TIntP) True
-            , testAlphaEq (uniType TIntP) intToInt False
-            , testAlphaEq intToInt intToInt True
-            , testAlphaEq (intsRecord ["a", "b"]) (intsRecord ["b", "a"]) True
-            , testAlphaEq (intsRecord ["a", "b"]) (intsRecord ["b"]) False
-            , testAlphaEq (intsRecord ["a", "b", "c"]) (intsRecord ["c", "b", "a"]) True
-            , testAlphaEq (intsRecord ["a", "b", "c"]) (intsRecord ["b", "c", "a"]) True
-            , testAlphaEq (forAll1 "a" id) (forAll1 "b" id) True
-            , testAlphaEq (forAll1 "a" id) (uniType TIntP) False
-            , testAlphaEq (forAll1r "a" TRecP) (uniType TIntP) False
-            , testAlphaEq (forAll1r "a" TRecP) (forAll1r "b" TRecP) True
-            , testAlphaEq (mkOpenRec "a" "x" "y") (mkOpenRec "b" "y" "x") True
-            , testAlphaEq (valH0 (TVarP "a")) (valH0 (TRecP REmptyP)) False
-            , testBlame (addAnns (BAppP (BVarP "unitToUnit") (BLitP 5) ^. hPlain)) "--X"
-            , testBlame
-                ( Ann
-                    (Const @Int 2)
-                    ( BApp
-                        ( App
-                            (Ann (Const 1) (BVar (Var "unitToUnit")))
-                            (Ann (Const 0) (BLit 5))
-                        )
+        valH0 x =
+            TFunP (TVarP "a") (TRecP (RExtendP "t" x (RVarP "c"))) ^. hPlain
+                & Scheme
+                    ( Types
+                        (QVars (mempty & Lens.at "a" ?~ mempty))
+                        (QVars (mempty & Lens.at "c" ?~ RowConstraints (Set.fromList ["t"]) mempty))
                     )
-                )
-                "-X-"
-            ]
+                & Pure
         mkOpenRec a x y =
             _Pure
                 # Scheme
@@ -547,11 +538,28 @@ main =
                         )
                         ^. hPlain
                     )
-        valH0 x =
-            TFunP (TVarP "a") (TRecP (RExtendP "t" x (RVarP "c"))) ^. hPlain
-                & Scheme
-                    ( Types
-                        (QVars (mempty & Lens.at "a" ?~ mempty))
-                        (QVars (mempty & Lens.at "c" ?~ RowConstraints (Set.fromList ["t"]) mempty))
-                    )
-                & Pure
+
+blameTests :: TestTree
+blameTests =
+    testGroup "blame"
+    [ testBlame (addAnns (BAppP (BVarP "unitToUnit") (BLitP 5) ^. hPlain)) "--X"
+    , testBlame
+        ( Ann
+            (Const @Int 2)
+            ( BApp
+                ( App
+                    (Ann (Const 1) (BVar (Var "unitToUnit")))
+                    (Ann (Const 0) (BLit 5))
+                )
+            )
+        )
+        "-X-"
+    ]
+
+main :: IO ()
+main =
+    testGroup "Tests"
+    [ inferTests
+    , alphaEqTests
+    , blameTests
+    ] & defaultMain
