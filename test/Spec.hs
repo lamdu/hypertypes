@@ -397,7 +397,7 @@ testBlame term expect =
             formatted = x ^.. hflipped . hfolded1 . Lens._2 <&> fmt
     & testCase
         ( prettyStyle (unwrap (const (^. hVal)) term) <> " " <>
-            show (term ^.. hflipped . hfolded1)
+            show (term ^.. hflipped . hfolded1 . Lens._Wrapped)
         )
     where
         fmt Good{} = '-'
