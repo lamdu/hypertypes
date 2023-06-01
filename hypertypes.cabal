@@ -1,13 +1,11 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
---
--- hash: e5ce176019f998eeb469dc3ec2940190676052a57f4cf8d6a158ab5eea1f1cbc
 
 name:           hypertypes
-version:        0.2.0
+version:        0.2.1
 synopsis:       Typed ASTs
 description:    Please see the README on GitHub at <https://github.com/lamdu/hypertypes#readme>
 category:       Algorithms, Compilers/Interpreters, Language, Logic, Unification

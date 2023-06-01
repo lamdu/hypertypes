@@ -104,12 +104,11 @@ unify x0 y0
 {-# INLINE unifyUnbound #-}
 unifyUnbound ::
     Unify m t =>
-    UVarOf m # t ->
-    TypeConstraintsOf t ->
+    WithConstraint (UVarOf m) # t ->
     UVarOf m # t ->
     UTerm (UVarOf m) # t ->
     m (UVarOf m # t)
-unifyUnbound xv level yv yt =
+unifyUnbound (WithConstraint level xv) yv yt =
     do
         updateConstraints level yv yt
         yv <$ bindVar binding xv (UToVar yv)
@@ -123,8 +122,8 @@ unifyUTerms ::
     UVarOf m # t ->
     UTerm (UVarOf m) # t ->
     m (UVarOf m # t)
-unifyUTerms xv (UUnbound level) yv yt = unifyUnbound xv level yv yt
-unifyUTerms xv xt yv (UUnbound level) = unifyUnbound yv level xv xt
+unifyUTerms xv (UUnbound level) yv yt = unifyUnbound (WithConstraint level xv) yv yt
+unifyUTerms xv xt yv (UUnbound level) = unifyUnbound (WithConstraint level yv) xv xt
 unifyUTerms xv USkolem{} yv _ = xv <$ unifyError (SkolemUnified xv yv)
 unifyUTerms xv _ yv USkolem{} = yv <$ unifyError (SkolemUnified yv xv)
 unifyUTerms xv (UTerm xt) yv (UTerm yt) =
