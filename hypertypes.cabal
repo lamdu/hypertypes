@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           hypertypes
-version:        0.2.1
+version:        0.2.2
 synopsis:       Typed ASTs
 description:    Please see the README on GitHub at <https://github.com/lamdu/hypertypes#readme>
 category:       Algorithms, Compilers/Interpreters, Language, Logic, Unification
