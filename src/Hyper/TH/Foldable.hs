@@ -53,9 +53,7 @@ makeHFoldMapCtr i wit (cName, _, cFields) =
     where
         cVars =
             [i ..]
-                <&> show
-                <&> ("_x" <>)
-                <&> mkName
+                <&> mkName . ("_x" <>) . show
                 & take (length cFields)
         bodyParts =
             zipWith
@@ -78,7 +76,8 @@ makeHFoldMapCtr i wit (cName, _, cFields) =
         bodyForPat (FlatEmbed x) =
             [ lamCaseE
                 ( tiConstructors x
-                    <&> makeHFoldMapCtr (i + length cVars) wit
-                    <&> \(p, b) -> match p b []
+                    <&> uncurry match
+                        . makeHFoldMapCtr (i + length cVars) wit
+                        ?? []
                 )
             ]

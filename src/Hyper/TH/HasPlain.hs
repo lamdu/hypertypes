@@ -90,7 +90,7 @@ makeCtr top param (cName, _, cFields) =
     traverse (forField True) cFields
         <&> \xs ->
             let plainTypes = xs >>= plainFieldTypes
-                cVars = [0 :: Int ..] <&> show <&> ('x' :) <&> mkName & take (length plainTypes)
+                cVars = [0 :: Int ..] <&> mkName . ('x' :) . show & take (length plainTypes)
             in  ( plainTypes
                     <&> (Bang NoSourceUnpackedness NoSourceStrictness,)
                     & NormalC pcon
@@ -161,7 +161,7 @@ makeCtr top param (cName, _, cFields) =
                 patType (InContainer t' p') = pure t' `appT` patType p'
         forPat isTop (FlatEmbed x) =
             case tiConstructors x of
-                [(n, _, xs)] -> traverse (forField False) xs <&> FlatInfo isTop n <&> FlatFields
+                [(n, _, xs)] -> traverse (forField False) xs <&> FlatFields . FlatInfo isTop n
                 _ -> forGen isTop (tiInstance x)
         forGen isTop t =
             case unapply t of
@@ -178,12 +178,9 @@ makeCtr top param (cName, _, cFields) =
                                                 & Map.fromList
                                     case D.datatypeCons inner of
                                         [x] ->
-                                            D.constructorFields x
-                                                <&> D.applySubstitution subst
-                                                & traverse (matchType top param)
+                                            traverse (matchType top param . D.applySubstitution subst) (D.constructorFields x)
                                                 >>= traverse (forField False)
-                                                <&> FlatInfo isTop (D.constructorName x)
-                                                <&> FlatFields
+                                                <&> FlatFields . FlatInfo isTop (D.constructorName x)
                                         _ -> gen
                 _ -> gen
             where

@@ -157,9 +157,7 @@ instance
             >>= htraverse
                 ( \_ (HCompose cx :*: HCompose cy) ->
                     zipMatch cx cy
-                        <&> hmap
-                            (\_ (HCompose bx :*: HCompose by) -> bx :*: by & HCompose)
-                        <&> (_HCompose #)
+                        <&> (_HCompose #) . hmap (\_ (HCompose bx :*: HCompose by) -> bx :*: by & HCompose)
                 )
             <&> (_HCompose #)
 

@@ -48,9 +48,7 @@ makeHContextCtr (cName, RecordConstructor fieldNames, cFields) =
     where
         cVars =
             [(0 :: Int) ..]
-                <&> show
-                <&> ("_x" <>)
-                <&> mkName
+                <&> mkName . ("_x" <>) . show
                 & take (length cFields)
         bodyFor Left{} (_, v) = varE v
         bodyFor (Right Node{}) (f, v) =

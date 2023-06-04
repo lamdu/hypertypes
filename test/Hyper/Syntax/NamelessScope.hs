@@ -131,6 +131,4 @@ instance
     where
     inferBody (ScopeVar v) =
         Lens.view (scopeTypes . _ScopeTypes)
-            <&> (^?! Lens.ix (deBruijnIndex # v))
-            <&> MkANode
-            <&> (ScopeVar v,)
+            <&> (ScopeVar v,) . MkANode . (^?! Lens.ix (deBruijnIndex # v))

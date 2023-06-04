@@ -79,5 +79,4 @@ instance
             InferredChild rI rR <- inferChild r & localScopeType p tT
             hSubset # FuncType tT (rR ^# inferredType (Proxy @e))
                 & newTerm
-                <&> MkANode
-                <&> (TypedLam p tI rI,)
+                <&> (TypedLam p tI rI,) . MkANode

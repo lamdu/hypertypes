@@ -54,9 +54,8 @@ bindingDict l =
         , newVar =
             \x ->
                 Lens.cloneLens l . _Binding <<%= (Lens.|> x)
-                    <&> length
-                    <&> UVar
+                    <&> UVar . length
         , bindVar =
-            \(UVar h) v ->
-                Lens.cloneLens l . _Binding . Lens.ix h .= v
+            \(UVar h) ->
+                (Lens.cloneLens l . _Binding . Lens.ix h .=)
         }

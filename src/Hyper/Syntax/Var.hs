@@ -67,4 +67,4 @@ instance
     where
     {-# INLINE inferBody #-}
     inferBody (Var x) =
-        getScope >>= varType (Proxy @expr) x <&> MkANode <&> (Var x,)
+        getScope >>= varType (Proxy @expr) x <&> (Var x,) . MkANode

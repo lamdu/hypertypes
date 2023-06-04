@@ -97,9 +97,7 @@ instance
     where
     pPrint (QVars qvars) =
         qvars ^@.. Lens.itraversed
-            <&> printVar
-            <&> (Pretty.text "∀" <>)
-            <&> (<> Pretty.text ".")
+            <&> (<> Pretty.text ".") . (Pretty.text "∀" <>) . printVar
             & Pretty.hsep
         where
             printVar (q, c)

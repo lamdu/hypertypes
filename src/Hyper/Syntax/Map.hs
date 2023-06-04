@@ -34,8 +34,7 @@ instance Eq h => ZipMatch (TermMap h expr) where
         | Map.size x /= Map.size y = Nothing
         | otherwise =
             zipMatchList (x ^@.. Lens.itraversed) (y ^@.. Lens.itraversed)
-                <&> traverse . Lens._2 %~ uncurry (:*:)
-                <&> TermMap . Map.fromAscList
+                <&> TermMap . Map.fromAscList . (traverse . Lens._2 %~ uncurry (:*:))
 
 {-# INLINE zipMatchList #-}
 zipMatchList :: Eq k => [(k, a)] -> [(k, b)] -> Maybe [(k, (a, b))]

@@ -53,9 +53,7 @@ makeHMapCtr i wit (cName, _, cFields) =
     where
         cVars =
             [i ..]
-                <&> show
-                <&> ('x' :)
-                <&> mkName
+                <&> mkName . ('x' :) . show
                 & take (length cFields)
         body =
             zipWith bodyFor cFields cVars
@@ -70,6 +68,7 @@ makeHMapCtr i wit (cName, _, cFields) =
         bodyForPat (FlatEmbed x) =
             lamCaseE
                 ( tiConstructors x
-                    <&> makeHMapCtr (i + length cVars) wit
-                    <&> \(p, b) -> match p b []
+                    <&> uncurry match
+                        . makeHMapCtr (i + length cVars) wit
+                        ?? []
                 )

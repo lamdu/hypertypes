@@ -148,8 +148,7 @@ instance
                         Proxy @OrdQVar #>
                             \(QVarInstances c0 :*: QVarInstances c1) ->
                                 zipMatch (TermMap c0) (TermMap c1)
-                                    <&> (^. _TermMap)
-                                    <&> QVarInstances
+                                    <&> QVarInstances . (^. _TermMap)
                     )
                 <&> NominalInst xId
 
@@ -390,7 +389,5 @@ instance
         do
             LoadedNominalDecl params _ gen <- getNominalDecl nomId
             (typ, paramsT) <- instantiateWith (lookupParams params) UUnbound gen
-            nominalInst # NominalInst nomId paramsT
-                & newTerm
-                <&> (`FuncType` typ)
-            <&> (FromNom nomId,)
+            newTerm (nominalInst # NominalInst nomId paramsT)
+                <&> (FromNom nomId,) . (`FuncType` typ)

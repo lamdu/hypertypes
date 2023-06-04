@@ -149,9 +149,7 @@ matchType top var (x `AppT` VarT h)
                                 & zip innerVars
                                 & Map.fromList
                     let makeCons i =
-                            D.constructorFields i
-                                <&> D.applySubstitution subst
-                                & traverse (matchType top var)
+                            traverse (matchType top var . D.applySubstitution subst) (D.constructorFields i)
                                 <&> (D.constructorName i,D.constructorVariant i,)
                     cons <- traverse makeCons (D.datatypeCons inner)
                     if var `notElem` (D.freeVariablesWellScoped (cons ^.. traverse . Lens._3 . traverse . Lens._Left) <&> D.tvName)
@@ -193,13 +191,11 @@ applicativeStyle f =
 makeConstructorVars :: String -> [a] -> [(a, Name)]
 makeConstructorVars prefix fields =
     [0 :: Int ..]
-        <&> show
-        <&> (('_' : prefix) <>)
-        <&> mkName
+        <&> mkName . (('_' : prefix) <>) . show
         & zip fields
 
 consPat :: Name -> [(a, Name)] -> Q Pat
-consPat c vars = conP c (vars <&> snd <&> varP)
+consPat c = conP c . (<&> varP . snd)
 
 simplifyContext :: [Pred] -> CxtQ
 simplifyContext preds =

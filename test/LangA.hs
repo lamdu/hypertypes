@@ -97,7 +97,7 @@ instance TermInfer1Deps env m => Infer1 m LangA where
     inferMonad = Sub Dict
 
 instance (DeBruijnIndex h, TermInfer1Deps env m) => Infer m (LangA h) where
-    inferBody (ALit x) = newTerm TInt <&> MkANode <&> (ALit x,)
+    inferBody (ALit x) = newTerm TInt <&> (ALit x,) . MkANode
     inferBody (AVar x) = inferBody x <&> Lens._1 %~ AVar
     inferBody (ALam x) =
         do

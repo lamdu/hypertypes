@@ -68,15 +68,8 @@ hLiftConstraintH ::
     (c n => r) ->
     r
 hLiftConstraintH c n p f =
-    hLiftConstraint
-        c
-        (Proxy @RNodes)
-        ( hLiftConstraint
-            c
-            p
-            (hLiftConstraint (HWitness @(HFlip GTerm _) n) p f)
-            \\ recurse (Proxy @(c a))
-        )
+    (Proxy @RNodes #> (p #> (p #> f) (HWitness @(HFlip GTerm _) n)) c) c
+        \\ recurse (Proxy @(c a))
         \\ recurse (Proxy @(RNodes a))
 
 instance Recursively HFunctor ast => HFunctor (HFlip GTerm ast) where
@@ -88,8 +81,8 @@ instance Recursively HFunctor ast => HFunctor (HFlip GTerm ast) where
                 GPoly x -> f (HWitness HRecSelf) x & GPoly
                 GBody x ->
                     hmap
-                        ( \cw ->
-                            hLiftConstraint cw (Proxy @(Recursively HFunctor)) $
+                        ( Proxy @(Recursively HFunctor) #*#
+                            \cw ->
                                 hflipped
                                     %~ hmap (f . (\(HWitness nw) -> HWitness (HRecSub cw nw)))
                         )
@@ -105,8 +98,8 @@ instance Recursively HFoldable ast => HFoldable (HFlip GTerm ast) where
             GPoly x -> f (HWitness HRecSelf) x
             GBody x ->
                 hfoldMap
-                    ( \cw ->
-                        hLiftConstraint cw (Proxy @(Recursively HFoldable)) $
+                    ( Proxy @(Recursively HFoldable) #*#
+                        \cw ->
                             hfoldMap (f . (\(HWitness nw) -> HWitness (HRecSub cw nw)))
                                 . (_HFlip #)
                     )
@@ -153,12 +146,12 @@ generalize v0 =
             UTerm t ->
                 do
                     bindVar binding v1 (UResolving t)
-                    r <- htraverse (Proxy @(UnifyGen m) #> generalize) (t ^. uBody)
-                    r <$ bindVar binding v1 (UTerm t)
-                    <&> ( \b ->
-                            if hfoldMap (Proxy @(UnifyGen m) #> All . Lens.has _GMono) b ^. Lens._Wrapped
-                                then GMono v1
-                                else GBody b
+                    b <- htraverse (Proxy @(UnifyGen m) #> generalize) (t ^. uBody)
+                    bindVar binding v1 (UTerm t)
+                    pure
+                        ( if hfoldMap (Proxy @(UnifyGen m) #> All . Lens.has _GMono) b ^. Lens._Wrapped
+                            then GMono v1
+                            else GBody b
                         )
                     \\ unifyGenRecursive (Proxy @m) (Proxy @t)
             UResolving t -> GMono v1 <$ occursError v1 t
@@ -172,13 +165,12 @@ instantiateForAll ::
     UVarOf m # t ->
     WriterT [m ()] m (UVarOf m # t)
 instantiateForAll cons x =
-    lookupVar binding x
-        & lift
+    lift (lookupVar binding x)
         >>= \case
             USkolem l ->
                 do
                     tell [bindVar binding x (USkolem l)]
-                    r <- scopeConstraints (Proxy @t) <&> (<> l) >>= newVar binding . cons & lift
+                    r <- scopeConstraints (Proxy @t) >>= newVar binding . cons . (<> l) & lift
                     UInstantiated r & bindVar binding x & lift
                     pure r
             UInstantiated v -> pure v
@@ -210,9 +202,7 @@ instantiateWith ::
     m (UVarOf m # t, a)
 instantiateWith action cons g =
     do
-        (r, recover) <-
-            instantiateH cons g
-                & runWriterT
+        (r, recover) <- runWriterT (instantiateH cons g)
         action <* sequence_ recover <&> (r,)
 
 -- | Instantiate a generalized type with fresh unification variables

@@ -109,9 +109,7 @@ morphCon i witnesses (n, _, fields) =
     where
         cVars =
             [i ..]
-                <&> show
-                <&> ('x' :)
-                <&> mkName
+                <&> mkName . ('x' :) . show
                 & take (length fields)
         f = varE varF
         bodyFor Left{} v = varE v
@@ -121,8 +119,9 @@ morphCon i witnesses (n, _, fields) =
         bodyForPat (FlatEmbed x) =
             lamCaseE
                 ( tiConstructors x
-                    <&> morphCon (i + length cVars) witnesses
-                    <&> \(p, b) -> match p b []
+                    <&> uncurry match
+                        . morphCon (i + length cVars) witnesses
+                        ?? []
                 )
         bodyForPat (GenEmbed t) = [|morphMap ($f . $(conE (witnesses ^?! Lens.ix t . Lens._1)))|]
 

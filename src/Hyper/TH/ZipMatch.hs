@@ -42,11 +42,10 @@ makeZipMatchCtr (cName, _, cFields) =
         , ccContext = fieldParts >>= zmfContext
         }
     where
-        con f = conP cName (cVars <&> f <&> varP)
+        con f = conP cName (cVars <&> varP . f)
         cVars =
             [0 :: Int ..]
-                <&> show
-                <&> (\n -> (mkName ('x' : n), mkName ('y' : n)))
+                <&> (\n -> (mkName ('x' : n), mkName ('y' : n))) . show
                 & take (length cFields)
         body
             | null checks = normalB bodyExp
