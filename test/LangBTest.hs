@@ -41,6 +41,7 @@ test =
         , testB returnOk "Right LocalMut[value: Int]"
         , testB nomSkolem0 "Left (SkolemEscape: r0)"
         , testB nomSkolem1 "Left (SkolemEscape: r0)"
+        , testB nomSkolem2 "Left (SkolemEscape: r0)"
         ]
 
 letGen0 :: HPlain LangB
@@ -172,6 +173,9 @@ nomSkolem0 = BLamP "x" (BToNomP "LocalMut" "x")
 nomSkolem1 :: HPlain LangB
 nomSkolem1 = nomSkolem0 `BAppP` return5
 
+nomSkolem2 :: HPlain LangB
+nomSkolem2 = BToNomP "LocalMut" ("newMutRef" `BAppP` BLitP 3)
+
 vecNominalDecl :: Pure # NominalDecl Typ
 vecNominalDecl =
     _Pure
@@ -210,14 +214,17 @@ phantomIntNominalDecl =
                     }
             }
 
-mutType :: HPlain Row -> HPlain Typ -> HPlain Typ
-mutType eff res =
+mutTypeH :: Name -> HPlain Row -> HPlain Typ -> HPlain Typ
+mutTypeH t eff res =
     TNomP
-        "Mut"
+        t
         Types
             { _tRow = mempty & Lens.at "effects" ?~ eff ^. hPlain & QVarInstances
             , _tTyp = mempty & Lens.at "value" ?~ res ^. hPlain & QVarInstances
             }
+
+mutType :: HPlain Row -> HPlain Typ -> HPlain Typ
+mutType = mutTypeH "Mut"
 
 -- A nominal type with foralls:
 -- "newtype LocalMut a = forall s. Mut s a"
@@ -245,6 +252,13 @@ unitToUnitScheme :: Pure # Scheme Types Typ
 unitToUnitScheme =
     forAll Proxy Proxy (\Proxy Proxy -> TFunP (TRecP REmptyP) (TRecP REmptyP))
 
+newMutRefScheme :: Pure # Scheme Types Typ
+newMutRefScheme =
+    forAll
+        (Identity "value")
+        (Identity "effects")
+        (\(Identity val) (Identity eff) -> TFunP val (mutType eff (mutTypeH "MutRef" eff val)))
+
 withEnv ::
     ( UnifyGen m Row
     , MonadReader env m
@@ -264,11 +278,13 @@ withEnv l act =
                     & Lens.at "PhantomInt" ?~ phantom
                     & Lens.at "LocalMut" ?~ localMut
         ret <- loadScheme returnScheme
+        newMutRef <- loadScheme newMutRefScheme
         unitToUnit <- loadScheme unitToUnitScheme
         let addEnv x =
                 x
                     & nominals %~ addNoms
                     & varSchemes . _ScopeTypes . Lens.at "return" ?~ MkHFlip ret
+                    & varSchemes . _ScopeTypes . Lens.at "newMutRef" ?~ MkHFlip newMutRef
                     & varSchemes . _ScopeTypes . Lens.at "unitToUnit" ?~ MkHFlip unitToUnit
         local (l %~ addEnv) act
 
