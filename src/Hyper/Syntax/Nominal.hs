@@ -88,9 +88,9 @@ newtype FromNom nomId (term :: HyperType) (h :: AHyperType) = FromNom nomId
 
 -- | A nominal declaration loaded into scope in an inference monad.
 data LoadedNominalDecl typ v = LoadedNominalDecl
-    { _lnParams :: NomVarTypes typ # QVarInstances (GetHyperType v)
-    , _lnForalls :: NomVarTypes typ # QVarInstances (GetHyperType v)
-    , _lnType :: GTerm (GetHyperType v) # typ
+    { lnParams :: NomVarTypes typ # QVarInstances (GetHyperType v)
+    , lnForalls :: NomVarTypes typ # QVarInstances (GetHyperType v)
+    , lnType :: GTerm (GetHyperType v) # typ
     }
     deriving (Generic)
 
@@ -317,26 +317,27 @@ class MonadNominals nomId typ m where
 class HasNominalInst nomId typ where
     nominalInst :: Prism' (typ # h) (NominalInst nomId (NomVarTypes typ) # h)
 
-{-# INLINE lookupParams #-}
-lookupParams ::
-    forall m varTypes.
-    ( Applicative m
-    , HTraversable varTypes
-    , HNodesConstraint varTypes (UnifyGen m)
+{-# INLINE instantiateNom #-}
+instantiateNom ::
+    forall m t.
+    ( UnifyGen m t
+    , HTraversable (NomVarTypes t)
+    , HNodesConstraint (NomVarTypes t) (UnifyGen m)
     ) =>
-    varTypes # QVarInstances (UVarOf m) ->
-    m (varTypes # QVarInstances (UVarOf m))
-lookupParams =
-    htraverse (Proxy @(UnifyGen m) #> (_QVarInstances . traverse) lookupParam)
+    LoadedNominalDecl t # UVarOf m ->
+    m (UVarOf m # t, NomVarTypes t # QVarInstances (UVarOf m))
+instantiateNom (LoadedNominalDecl params _ gen) =
+    instantiateWith lookupParams UUnbound gen
     where
-        lookupParam :: forall t. UnifyGen m t => UVarOf m # t -> m (UVarOf m # t)
+        lookupParams = htraverse (Proxy @(UnifyGen m) #> (_QVarInstances . traverse) lookupParam) params
+        lookupParam :: forall n. UnifyGen m n => UVarOf m # n -> m (UVarOf m # n)
         lookupParam v =
             lookupVar binding v
                 >>= \case
                     UInstantiated r -> pure r
                     USkolem l ->
                         -- This is a phantom-type, wasn't instantiated by `instantiate`.
-                        scopeConstraints (Proxy @t) <&> (<> l) >>= newVar binding . UUnbound
+                        scopeConstraints (Proxy @n) <&> (<> l) >>= newVar binding . UUnbound
                     _ -> error "unexpected state at nominal's parameter"
 
 type instance InferOf (ToNom n e) = NominalInst n (NomVarTypes (TypeOf e))
@@ -358,19 +359,28 @@ instance
             (InferredChild valI valR, typ, paramsT) <-
                 do
                     v <- inferChild val
-                    LoadedNominalDecl params foralls gen <- getNominalDecl nomId
+                    nom <- getNominalDecl nomId
+
+                    -- Setup forall variables to instantiate to skolems.
+                    -- This means they aren't allow to be be unified,
+                    -- nor to propagate to outer scope.
                     recover <-
                         htraverse_
                             ( Proxy @(UnifyGen m) #>
                                 traverse_ (instantiateForAll USkolem) . (^. _QVarInstances)
                             )
-                            foralls
+                            (lnForalls nom)
                             & execWriterT
-                    (typ, paramsT) <- instantiateWith (lookupParams params) UUnbound gen
-                    (v, typ, paramsT) <$ sequence_ recover
+                    (typ, paramsT) <- instantiateNom nom
+                    -- Recover nominal decl to original state.
+                    sequence_ recover
+
+                    pure (v, typ, paramsT)
                     & localLevel
-            (ToNom nomId valI, NominalInst nomId paramsT)
-                <$ unify typ (valR ^# inferredType (Proxy @expr))
+
+            -- Unify the inner term's type with the type inside the nominal
+            _ <- unify typ (valR ^# inferredType (Proxy @expr))
+            pure (ToNom nomId valI, NominalInst nomId paramsT)
 
 type instance InferOf (FromNom _ e) = FuncType (TypeOf e)
 
@@ -387,7 +397,6 @@ instance
     {-# INLINE inferBody #-}
     inferBody (FromNom nomId) =
         do
-            LoadedNominalDecl params _ gen <- getNominalDecl nomId
-            (typ, paramsT) <- instantiateWith (lookupParams params) UUnbound gen
+            (typ, paramsT) <- getNominalDecl nomId >>= instantiateNom
             newTerm (nominalInst # NominalInst nomId paramsT)
                 <&> (FromNom nomId,) . (`FuncType` typ)
