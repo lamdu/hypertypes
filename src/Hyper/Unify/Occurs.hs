@@ -20,26 +20,26 @@ occursCheck ::
     UVarOf m # t ->
     m ()
 occursCheck v0 =
-    semiPruneLookup v0
-        >>= \(v1, x) ->
-            case x of
-                UResolving t -> occursError v1 t
-                UResolved{} -> pure ()
-                UUnbound{} -> pure ()
-                USkolem{} -> pure ()
-                UTerm b ->
-                    htraverse_
-                        ( Proxy @(Unify m) #>
-                            \c ->
-                                do
-                                    get >>= lift . (`unless` bindVar binding v1 (UResolving b))
-                                    put True
-                                    occursCheck c & lift
-                        )
-                        (b ^. uBody)
-                        & (`execStateT` False)
-                        >>= (`when` bindVar binding v1 (UTerm b))
-                        \\ unifyRecursive (Proxy @m) (Proxy @t)
-                UToVar{} -> error "lookup not expected to result in var (in occursCheck)"
-                UConverted{} -> error "conversion state not expected in occursCheck"
-                UInstantiated{} -> error "occursCheck during instantiation"
+    do
+        (v1, x) <- semiPruneLookup v0
+        case x of
+            UResolving t -> occursError v1 t
+            UResolved{} -> pure ()
+            UUnbound{} -> pure ()
+            USkolem{} -> pure ()
+            UTerm b ->
+                htraverse_
+                    ( Proxy @(Unify m) #>
+                        \c ->
+                            do
+                                get >>= lift . (`unless` bindVar binding v1 (UResolving b))
+                                put True
+                                occursCheck c & lift
+                    )
+                    (b ^. uBody)
+                    & (`execStateT` False)
+                    >>= (`when` bindVar binding v1 (UTerm b))
+                    \\ unifyRecursive (Proxy @m) (Proxy @t)
+            UToVar{} -> error "lookup not expected to result in var (in occursCheck)"
+            UConverted{} -> error "conversion state not expected in occursCheck"
+            UInstantiated{} -> error "occursCheck during instantiation"

@@ -110,8 +110,9 @@ instance
     inferBody (BLet x) = inferBody x <&> Lens._1 %~ BLet
     inferBody (BLit x) = newTerm TInt <&> (BLit x,) . MkANode
     inferBody (BToNom x) =
-        inferBody x
-            >>= \(b, t) -> TNom t & newTerm <&> (BToNom b,) . MkANode
+        do
+            (b, t) <- inferBody x
+            TNom t & newTerm <&> (BToNom b,) . MkANode
     inferBody (BRecExtend (RowExtend h v r)) =
         do
             InferredChild vI vT <- inferChild v

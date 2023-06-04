@@ -100,8 +100,9 @@ instance (DeBruijnIndex h, TermInfer1Deps env m) => Infer m (LangA h) where
     inferBody (ALit x) = newTerm TInt <&> MkANode <&> (ALit x,)
     inferBody (AVar x) = inferBody x <&> Lens._1 %~ AVar
     inferBody (ALam x) =
-        inferBody x
-            >>= \(b, t) -> TFun t & newTerm <&> (ALam b,) . MkANode
+        do
+            (b, t) <- inferBody x
+            TFun t & newTerm <&> (ALam b,) . MkANode
     inferBody (AApp x) = inferBody x <&> Lens._1 %~ AApp
     inferBody (ATypeSig x) = inferBody x <&> Lens._1 %~ ATypeSig
 

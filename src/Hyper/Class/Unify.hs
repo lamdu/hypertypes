@@ -153,39 +153,39 @@ applyBindings ::
     UVarOf m # t ->
     m (Pure # t)
 applyBindings v0 =
-    semiPruneLookup v0
-        >>= \(v1, x) ->
-            let result r = r <$ bindVar binding v1 (UResolved r)
-                quantify c =
-                    newQuantifiedVariable c
-                        <&> (_Pure . quantifiedVar #)
-                        >>= result
-            in  case x of
-                    UResolving t -> occursError v1 t
-                    UResolved t -> pure t
-                    UUnbound c -> quantify c
-                    USkolem c -> quantify c
-                    UTerm b ->
-                        do
-                            (r, anyChild) <-
-                                htraverse
-                                    ( Proxy @(Unify m) #>
-                                        \c ->
-                                            do
-                                                get >>= lift . (`unless` bindVar binding v1 (UResolving b))
-                                                put True
-                                                applyBindings c & lift
-                                    )
-                                    (b ^. uBody)
-                                    & (`runStateT` False)
-                                    \\ unifyRecursive (Proxy @m) (Proxy @t)
-                            _Pure # r & if anyChild then result else pure
-                    UToVar{} -> error "lookup not expected to result in var"
-                    UConverted{} -> error "conversion state not expected in applyBindings"
-                    UInstantiated{} ->
-                        -- This can happen in alphaEq,
-                        -- where UInstantiated marks that var from one side matches var in the other.
-                        quantify mempty
+    do
+        (v1, x) <- semiPruneLookup v0
+        let result r = r <$ bindVar binding v1 (UResolved r)
+        let quantify c =
+                newQuantifiedVariable c
+                    <&> (_Pure . quantifiedVar #)
+                    >>= result
+        case x of
+            UResolving t -> occursError v1 t
+            UResolved t -> pure t
+            UUnbound c -> quantify c
+            USkolem c -> quantify c
+            UTerm b ->
+                do
+                    (r, anyChild) <-
+                        htraverse
+                            ( Proxy @(Unify m) #>
+                                \c ->
+                                    do
+                                        get >>= lift . (`unless` bindVar binding v1 (UResolving b))
+                                        put True
+                                        applyBindings c & lift
+                            )
+                            (b ^. uBody)
+                            & (`runStateT` False)
+                            \\ unifyRecursive (Proxy @m) (Proxy @t)
+                    _Pure # r & if anyChild then result else pure
+            UToVar{} -> error "lookup not expected to result in var"
+            UConverted{} -> error "conversion state not expected in applyBindings"
+            UInstantiated{} ->
+                -- This can happen in alphaEq,
+                -- where UInstantiated marks that var from one side matches var in the other.
+                quantify mempty
 
 -- | Format and throw an occurs check error
 occursError ::
