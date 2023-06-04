@@ -145,11 +145,16 @@ test-suite hypertypes-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      AlphaEqTest
+      BlameTest
+      ExprUtils
       Hyper.Class.Infer.Infer1
       Hyper.Syntax.NamelessScope
       Hyper.Syntax.NamelessScope.InvDeBruijn
       LangA
+      LangATest
       LangB
+      LangBTest
       LangC
       LangD
       ReadMeExamples
