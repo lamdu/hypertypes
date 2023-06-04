@@ -210,13 +210,13 @@ phantomIntNominalDecl =
                     }
             }
 
-mutType :: HPlain Typ
-mutType =
+mutType :: HPlain Row -> HPlain Typ -> HPlain Typ
+mutType eff res =
     TNomP
         "Mut"
         Types
-            { _tRow = mempty & Lens.at "effects" ?~ (RVar "effects" & Pure) & QVarInstances
-            , _tTyp = mempty & Lens.at "value" ?~ (TVar "value" & Pure) & QVarInstances
+            { _tRow = mempty & Lens.at "effects" ?~ eff ^. hPlain & QVarInstances
+            , _tTyp = mempty & Lens.at "value" ?~ res ^. hPlain & QVarInstances
             }
 
 -- A nominal type with foralls:
@@ -231,12 +231,15 @@ localMutNominalDecl =
                     , _tTyp = mempty & Lens.at "value" ?~ mempty
                     }
             , _nScheme =
-                forAll (Const ()) (Identity "effects") (\_ _ -> mutType) ^. _Pure
+                forAll (Const ()) (Identity "effects") (\_ (Identity eff) -> mutType eff (TVarP "value")) ^. _Pure
             }
 
 returnScheme :: Pure # Scheme Types Typ
 returnScheme =
-    forAll (Identity "value") (Identity "effects") (\(Identity val) _ -> TFunP val mutType)
+    forAll
+        (Identity "value")
+        (Identity "effects")
+        (\(Identity val) (Identity eff) -> TFunP val (mutType eff val))
 
 unitToUnitScheme :: Pure # Scheme Types Typ
 unitToUnitScheme =
