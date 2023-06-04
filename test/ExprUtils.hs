@@ -56,11 +56,17 @@ testCommon ::
     TestTree
 testCommon expr expect pureRes stRes =
     do
-        assertEqual msg expect (prettyStyle pureRes)
-        assertEqual ("ST: " <> msg) expect (prettyStyle stRes)
+        assertEqualStrings msg expect (prettyStyle pureRes)
+        assertEqualStrings ("ST: " <> msg) expect (prettyStyle stRes)
         & testCase (prettyStyle expr)
     where
         msg = "Infer of " <> prettyStyle expr
+
+assertEqualStrings :: String -> String -> String -> IO ()
+assertEqualStrings msg expected value
+    | value == expected = pure ()
+    | otherwise =
+        assertFailure (msg <> "\nexpected: " <> expected <> "\n but got: " <> value)
 
 inferExpr ::
     forall m t.
