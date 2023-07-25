@@ -8,6 +8,7 @@ module Hyper.Class.Infer.Infer1
 import Data.Constraint (Constraint, Dict, (:-))
 import Data.Kind (Type)
 import Data.Proxy (Proxy (..))
+import Data.Type.Equality
 import Hyper.Infer
 import Hyper.Type (HyperType)
 
