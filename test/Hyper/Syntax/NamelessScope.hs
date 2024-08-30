@@ -96,6 +96,7 @@ instance HasTypeOf1 t => HasInferOf1 (Scope t) where
 
 instance
     ( Infer1 m t
+    , Monad m
     , InferOf1IndexConstraint t ~ DeBruijnIndex
     , DeBruijnIndex h
     , UnifyGen m (TypeOf (t h))
@@ -123,6 +124,7 @@ instance
 
 instance
     ( MonadReader env m
+    , Monad m
     , HasScopeTypes (UVarOf m) (TypeOf (t h)) env
     , DeBruijnIndex h
     , UnifyGen m (TypeOf (t h))

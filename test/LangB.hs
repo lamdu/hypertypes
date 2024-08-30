@@ -7,6 +7,7 @@ module LangB where
 
 import TypeLang
 
+import Control.Monad (void)
 import Control.Applicative
 import qualified Control.Lens as Lens
 import Control.Lens.Operators

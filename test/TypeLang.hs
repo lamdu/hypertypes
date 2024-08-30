@@ -11,7 +11,6 @@ import Control.Applicative
 import Control.Lens (ALens')
 import qualified Control.Lens as Lens
 import Control.Lens.Operators
-import Control.Monad.Except
 import Control.Monad.Reader (MonadReader)
 import Control.Monad.ST.Class (MonadST (..))
 import Data.STRef
