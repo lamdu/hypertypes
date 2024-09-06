@@ -14,6 +14,13 @@ The name "Hypertypes" is inspired by *Hyperfunctions* (S. Krstic et al, FICS 200
 
 ## Introduction to the "field constructor" pattern
 
+To motivate hypertypes and explain the expressive power they allow, this section will discuss the benefits and limitations of other forms of constructing data types, ranging from unparameterized types to more powerful approaches:
+
+* `Type` - unparameterized types
+* `Type -> Type` - simple parameterized types
+* `(Type -> Type) -> Type` - also known as HKD (Higher-Kinded Data)
+* `(Index -> Type) -> Index -> Type` - `multirec`'s approach
+
 ### `Type`: Simple type, simple functionality
 
 Suppose we have the following type in an application:
