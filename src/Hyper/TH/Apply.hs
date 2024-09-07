@@ -7,7 +7,6 @@ module Hyper.TH.Apply
     , makeHApplicativeBases
     ) where
 
-import Control.Applicative (liftA2)
 import qualified Control.Lens as Lens
 import Hyper.Class.Apply (HApply (..))
 import Hyper.TH.Functor (makeHFunctor)

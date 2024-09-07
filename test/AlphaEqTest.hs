@@ -4,7 +4,6 @@ module AlphaEqTest (test) where
 
 import qualified Control.Lens as Lens
 import Control.Lens.Operators
-import Control.Monad.RWS
 import Control.Monad.ST (runST)
 import Data.Functor.Identity (Identity (..))
 import qualified Data.Map as Map
