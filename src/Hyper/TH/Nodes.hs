@@ -12,6 +12,7 @@ import Hyper.Class.Nodes (HNodes (..), HWitness (..))
 import Hyper.TH.Internal.Utils
 import Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
+import qualified Language.Haskell.TH.Datatype.TyVarBndr as D
 
 import Hyper.Internal.Prelude
 
@@ -45,7 +46,7 @@ makeHNodesForType info =
                     [ dataD
                         (pure [])
                         witTypeName
-                        (tiParams info <> [plainTV (mkName "node")])
+                        (((D.defaultBndrFlag <$) <$> tiParams info) <> [plainTV (mkName "node")])
                         Nothing
                         (nodeOfCons <&> (witType >>=))
                         []

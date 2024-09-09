@@ -55,9 +55,10 @@ data RExpr h
         , HTraversable
         , ZipMatch
         , RNodes
-        , Recursively c
         , RTraversable
         )
+
+instance (c RExpr, c Typ) => Recursively c RExpr
 
 makeHasHPlain [''Expr, ''Typ, ''RExpr]
 

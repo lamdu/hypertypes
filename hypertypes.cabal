@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.37.0.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -137,7 +137,7 @@ library
     , pretty
     , show-combinators
     , template-haskell
-    , th-abstraction >=0.3
+    , th-abstraction >=0.6
     , transformers
   default-language: Haskell2010
 

@@ -69,7 +69,7 @@ library:
   - show-combinators
   - template-haskell
   - transformers
-  - th-abstraction >= 0.3
+  - th-abstraction >= 0.6
   ghc-options:
   - -Wnoncanonical-monad-instances
   - -Wincomplete-record-updates
