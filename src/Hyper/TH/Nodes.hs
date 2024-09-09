@@ -45,7 +45,7 @@ makeHNodesForType info =
                     [ dataD
                         (pure [])
                         witTypeName
-                        (tiParams info <> [plainTV (mkName "node")])
+                        (((BndrReq <$) <$> tiParams info) <> [plainTV (mkName "node")])
                         Nothing
                         (nodeOfCons <&> (witType >>=))
                         []
