@@ -436,6 +436,7 @@ When mapping over an `Expr` we can:
 * `GADTs` and `RankNTypes` enable functions like `hmap` which get `forall`ed functions with witness parameters
 * `MultiParamTypeClasses` is needed for the `Unify` and `Infer` type classes
 * `ScopedTypeVariables` and `TypeApplications` assist writing short code that type checks
+* `PolyKinds` is required for the generated instances
 
 Many harmless syntactic extensions are also used:
 

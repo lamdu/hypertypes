@@ -110,6 +110,7 @@ library
       GeneralizedNewtypeDeriving
       LambdaCase
       MultiParamTypeClasses
+      PolyKinds
       RankNTypes
       ScopedTypeVariables
       StandaloneDeriving
