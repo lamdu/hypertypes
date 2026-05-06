@@ -58,13 +58,13 @@ makePrisms ''InferChild
 --
 -- The 'inferContext' method represents the following constraints on @t@:
 --
--- * @HNodesConstraint (InferOf t) (Unify m)@ - The child nodes of the inferrence can unify in the @m@ 'Monad'
+-- * @HNodesConstraint (InferOf t) (Unify m)@ - The child nodes of the inference can unify in the @m@ 'Monad'
 -- * @HNodesConstraint t (Infer m)@ - @Infer m@ is also available for child nodes
 --
 -- It replaces context for the 'Infer' class to avoid @UndecidableSuperClasses@.
 --
 -- Instances usually don't need to implement this method as the default implementation works for them,
--- but infinitely polymorphic trees such as 'Hyper.Type.AST.NamelessScope.Scope' do need to implement the method,
+-- but infinitely polymorphic trees such as 'Hyper.Syntax.NamelessScope.Scope' do need to implement the method,
 -- because the required context is infinite.
 class (Monad m, HFunctor t) => Infer m t where
     -- | Infer the body of an expression given the inference actions for its child nodes.

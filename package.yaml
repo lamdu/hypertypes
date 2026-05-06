@@ -4,7 +4,7 @@ github: "lamdu/hypertypes"
 license: BSD3
 author: "Yair Chuchem"
 maintainer: "yairchu@gmail.com"
-copyright: 2018 Yair Chuchem"
+copyright: 2018 Yair Chuchem
 
 extra-source-files:
 - README.md

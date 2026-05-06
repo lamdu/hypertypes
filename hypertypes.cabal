@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.38.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -13,7 +13,7 @@ homepage:       https://github.com/lamdu/hypertypes#readme
 bug-reports:    https://github.com/lamdu/hypertypes/issues
 author:         Yair Chuchem
 maintainer:     yairchu@gmail.com
-copyright:      2018 Yair Chuchem"
+copyright:      2018 Yair Chuchem
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple

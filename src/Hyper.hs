@@ -1,4 +1,4 @@
--- | A convinience module which re-exports common functionality of the hypertypes library
+-- | A convenience module which re-exports common functionality of the hypertypes library
 module Hyper (module X) where
 
 import Data.Constraint as X (Constraint, Dict (..), withDict)
