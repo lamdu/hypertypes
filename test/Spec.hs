@@ -3,6 +3,7 @@ import qualified BlameTest
 import Control.Lens.Operators
 import qualified LangATest
 import qualified LangBTest
+import PolyKindsTH ()
 import Test.Tasty
 
 import Prelude
