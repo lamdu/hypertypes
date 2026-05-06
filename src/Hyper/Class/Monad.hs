@@ -36,8 +36,8 @@ instance HMonad Pure where
 
 -- | A variant of 'Control.Monad.(>>=)' for 'Hyper.Type.HyperType's
 hbind ::
-    (HMonad h, Recursively HFunctor p) =>
+    (HMonad h, Recursively HFunctor q) =>
     h # p ->
-    (forall n. HWitness h n -> p # n -> HCompose h p # n) ->
-    h # p
+    (forall n. HWitness h n -> p # n -> HCompose h q # n) ->
+    h # q
 hbind x f = _HCompose # hmap f x & hjoin
