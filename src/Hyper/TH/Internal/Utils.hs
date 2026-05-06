@@ -36,7 +36,6 @@ import Hyper.Class.Nodes (HWitness (..))
 import Hyper.Type (AHyperType (..), GetHyperType, type (:#))
 import Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
-import Language.Haskell.TH.Datatype.TyVarBndr
 
 import Hyper.Internal.Prelude
 
@@ -73,31 +72,43 @@ makeTypeInfo name =
                 traverse (matchType name var) (D.constructorFields c)
                     <&> (D.constructorName c,D.constructorVariant c,)
         cons <- traverse makeCons (D.datatypeCons info)
+        params <- visibleParams info
         pure
             TypeInfo
                 { tiName = name
                 , tiInstance = dst
-                , tiParams = D.datatypeVars info & init
+                , tiParams = params
                 , tiHyperParam = var
                 , tiConstructors = cons
                 }
 
 parts :: D.DatatypeInfo -> Q (Type, Name)
 parts info =
-    case D.datatypeVars info of
+    case D.datatypeInstTypes info of
         [] -> fail "expected type constructor which requires arguments"
         xs ->
-            elimTV
-                (pure . (,) res)
-                ( \var c ->
-                    case c of
-                        ConT aHyper | aHyper == ''AHyperType -> pure (res, var)
-                        _ -> fail "expected last argument to be a AHyperType variable"
-                )
-                (last xs)
+            case last xs of
+                SigT (VarT var) (ConT aHyper)
+                    | aHyper == ''AHyperType -> pure (res, var)
+                _ -> fail "expected last argument to be a AHyperType variable"
             where
                 res =
-                    foldl AppT (ConT (D.datatypeName info)) (init xs <&> VarT . D.tvName)
+                    foldl AppT (ConT (D.datatypeName info)) (init xs <&> stripKindSig)
+
+visibleParams :: D.DatatypeInfo -> Q [TyVarBndrUnit]
+visibleParams info =
+    D.datatypeInstTypes info
+        & init
+        & traverse typeToParam
+
+typeToParam :: Type -> Q TyVarBndrUnit
+typeToParam (VarT var) = pure (PlainTV var ())
+typeToParam (SigT (VarT var) kind) = pure (KindedTV var () kind)
+typeToParam _ = fail "expected only variables to be applied to data type"
+
+stripKindSig :: Type -> Type
+stripKindSig (SigT x _) = x
+stripKindSig x = x
 
 childrenTypes :: TypeInfo -> TypeContents
 childrenTypes info = evalState (childrenTypesH info) mempty
@@ -153,12 +164,13 @@ matchType top var (x `AppT` VarT h)
                                 <&> (D.constructorName i,D.constructorVariant i,)
                     cons <- traverse makeCons (D.datatypeCons inner)
                     if var `notElem` (D.freeVariablesWellScoped (cons ^.. traverse . Lens._3 . traverse . Lens._Left) <&> D.tvName)
-                        then
+                        then do
+                            params <- visibleParams inner
                             FlatEmbed
                                 TypeInfo
                                     { tiName = c
                                     , tiInstance = x
-                                    , tiParams = D.datatypeVars inner & init
+                                    , tiParams = params
                                     , tiHyperParam = var
                                     , tiConstructors = cons
                                     }
