@@ -1,14 +1,17 @@
 import Control.Exception (evaluate)
 import Control.Lens.Operators
-import Criterion (Benchmarkable, whnfIO)
-import Criterion.Main (bench, defaultMain)
+import Criterion (Benchmarkable, nf, whnfIO)
+import Criterion.Main (bench, bgroup, defaultMain)
+import Data.Functor.Identity
 import Hyper
+import Hyper.Recurse
+import Hyper.Type.Functor
+import Hyper.Type.Prune
 import Hyper.Unify
 import Hyper.Unify.New (unfreeze)
 import LangB
 import Text.PrettyPrint.HughesPJClass (prettyShow)
 import TypeLang
-
 import Prelude
 
 fields :: [String]
@@ -34,4 +37,16 @@ unifyLargeRows =
         & whnfIO
 
 main :: IO ()
-main = defaultMain [bench "Unify large rows" unifyLargeRows]
+main =
+    defaultMain
+        [ bench "Unify large rows" unifyLargeRows
+        , bgroup
+            "unwrapM"
+            [ bench (show i) (nf (unwrapM (const (^. _F)) . gen) (10 ^ i))
+            | i <- [1 :: Int, 4]
+            ]
+        ]
+
+gen :: Int -> F Identity # Prune
+gen 0 = _F # Identity Pruned
+gen n = _F # Identity (Unpruned (gen (n - 1)))
