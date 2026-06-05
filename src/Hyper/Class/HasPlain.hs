@@ -1,4 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | A class for plain 'Data.Kind.Type' equivalents
 -- for the simple forms of 'Hyper.Type.HyperType's.
@@ -6,13 +8,13 @@
 -- Useful for succinct tests, examples, and for debug prints.
 module Hyper.Class.HasPlain
     ( HasHPlain (..)
-    ) where
+    )
+where
 
-import Control.Lens (Iso')
+import Control.Lens (Iso', from, iso)
+import Hyper.Internal.Prelude
 import Hyper.Type (type (#))
-import Hyper.Type.Pure (Pure)
-
-import Prelude.Compat
+import Hyper.Type.Pure (Pure (..), _Pure)
 
 -- | A class for a plain form of a @Pure # h@
 class Show (HPlain h) => HasHPlain h where
@@ -21,3 +23,30 @@ class Show (HPlain h) => HasHPlain h where
 
     -- | An 'Control.Lens.Iso' between the plain form and 'Hyper.Type.HyperType' form
     hPlain :: Iso' (HPlain h) (Pure # h)
+
+instance (Show (HPlain a), Show (HPlain b)) => Show (HPlain (a :*: b)) where
+    show (HProduct x) = show x
+
+instance (Show (HPlain (a :*: b)), HasHPlain a, HasHPlain b) => HasHPlain (a :*: b) where
+    data HPlain (a :*: b) = HProduct (HPlain a, HPlain b)
+    hPlain =
+        iso
+            (\(HProduct (a, b)) -> Pure ((a ^. hPlain . _Pure) :*: (b ^. hPlain . _Pure)))
+            (\(Pure (a :*: b)) -> HProduct (a ^. from _Pure . from hPlain, b ^. from _Pure . from hPlain))
+
+instance (Show (HPlain a), Show (HPlain b)) => Show (HPlain (a :+: b)) where
+    show (HSum x) = show x
+
+instance (Show (HPlain (a :+: b)), HasHPlain a, HasHPlain b) => HasHPlain (a :+: b) where
+    data HPlain (a :+: b) = HSum (Either (HPlain a) (HPlain b))
+    hPlain =
+        iso
+            ( \case
+                HSum (Left a) -> Pure (L1 (a ^. hPlain . _Pure))
+            )
+            ( \case
+                (Pure (L1 a)) ->
+                    HSum $ Left $ a ^. from _Pure . from hPlain
+                (Pure (R1 b)) ->
+                    HSum $ Right $ b ^. from _Pure . from hPlain
+            )
