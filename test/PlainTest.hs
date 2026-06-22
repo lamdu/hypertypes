@@ -10,4 +10,4 @@ import Prelude
 test :: TestTree
 test =
     assertEqual "hplain const" (hPlain # Pure (Const (5 :: Int)) & show) "ConstP 5"
-    & testCase "show HPlain"
+        & testCase "show HPlain"

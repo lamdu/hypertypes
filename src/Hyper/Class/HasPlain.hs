@@ -5,7 +5,8 @@
 --
 -- Useful for succinct tests, examples, and for debug prints.
 module Hyper.Class.HasPlain
-    ( HasHPlain (..), hPlain'
+    ( HasHPlain (..)
+    , hPlain'
     ) where
 
 import Control.Lens (Iso')
@@ -27,7 +28,7 @@ hPlain' = hPlain . _Pure
 
 instance Show a => HasHPlain (Const a) where
     newtype HPlain (Const a) = ConstP a
-        deriving Show
+        deriving (Show)
     hPlain =
         _hPlainConst . Lens._Unwrapped . Lens.from _Pure
         where
