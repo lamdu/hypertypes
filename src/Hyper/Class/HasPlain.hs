@@ -5,7 +5,7 @@
 --
 -- Useful for succinct tests, examples, and for debug prints.
 module Hyper.Class.HasPlain
-    ( HasHPlain (..)
+    ( HasHPlain (..), hPlain'
     ) where
 
 import Control.Lens (Iso')
@@ -21,6 +21,9 @@ class Show (HPlain h) => HasHPlain h where
 
     -- | An 'Control.Lens.Iso' between the plain form and 'Hyper.Type.HyperType' form
     hPlain :: Iso' (HPlain h) (Pure # h)
+
+hPlain' :: HasHPlain h => Iso' (HPlain h) (h # Pure)
+hPlain' = hPlain . _Pure
 
 instance Show a => HasHPlain (Const a) where
     newtype HPlain (Const a) = ConstP a
