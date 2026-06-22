@@ -98,6 +98,8 @@ benchmarks:
     main: Benchmark.hs
     source-dirs: test
     other-modules:
+    - Hyper.Class.Infer.Infer1
+    - Hyper.Syntax.NamelessScope
     - LangB
     - TypeLang
     ghc-options:
