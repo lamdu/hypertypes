@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -56,56 +57,51 @@ instance RNodes a => HNodes (HFlip GTerm a) where
     type HNodesConstraint (HFlip GTerm a) c = (c a, Recursive c)
     type HWitnessType (HFlip GTerm a) = HRecWitness a
     {-# INLINE hLiftConstraint #-}
-    hLiftConstraint (HWitness HRecSelf) = \_ x -> x
-    hLiftConstraint (HWitness (HRecSub c n)) = hLiftConstraintH c n
-
-hLiftConstraintH ::
-    forall a c b n r.
-    (RNodes a, HNodesConstraint (HFlip GTerm a) c) =>
-    HWitness a b ->
-    HRecWitness b n ->
-    Proxy c ->
-    (c n => r) ->
-    r
-hLiftConstraintH c n p f =
-    (Proxy @RNodes #> (p #> (p #> f) (HWitness @(HFlip GTerm _) n)) c) c
-        \\ recurse (Proxy @(c a))
-        \\ recurse (Proxy @(RNodes a))
+    hLiftConstraint = recursiveHLiftConstraint
 
 instance Recursively HFunctor ast => HFunctor (HFlip GTerm ast) where
     {-# INLINE hmap #-}
-    hmap f =
-        _HFlip
-            %~ \case
-                GMono x -> f (HWitness HRecSelf) x & GMono
-                GPoly x -> f (HWitness HRecSelf) x & GPoly
-                GBody x ->
-                    hmap
-                        ( Proxy @(Recursively HFunctor) #*#
-                            \cw ->
-                                hflipped
-                                    %~ hmap (f . (\(HWitness nw) -> HWitness (HRecSub cw nw)))
-                        )
-                        x
-                        & GBody
-                        \\ recursively (Proxy @(HFunctor ast))
+    hmap ::
+        forall p q.
+        (forall n. HWitness (HFlip GTerm ast) n -> p # n -> q # n) ->
+        HFlip GTerm ast # p ->
+        HFlip GTerm ast # q
+    hmap f = go HRecSelf
+        where
+            go ::
+                forall n.
+                Recursively HFunctor n =>
+                HRecWitness ast n ->
+                HFlip GTerm n # p ->
+                HFlip GTerm n # q
+            go w =
+                _HFlip
+                    %~ \case
+                        GMono x -> f (HWitness w) x & GMono
+                        GPoly x -> f (HWitness w) x & GPoly
+                        GBody x ->
+                            hmap
+                                (\cw -> (Proxy @(Recursively HFunctor) #> hflipped %~ go (HRecSub w cw)) cw)
+                                x
+                                & GBody
+                                \\ recursively (Proxy @(HFunctor n))
 
 instance Recursively HFoldable ast => HFoldable (HFlip GTerm ast) where
     {-# INLINE hfoldMap #-}
-    hfoldMap f =
-        \case
-            GMono x -> f (HWitness HRecSelf) x
-            GPoly x -> f (HWitness HRecSelf) x
-            GBody x ->
-                hfoldMap
-                    ( Proxy @(Recursively HFoldable) #*#
-                        \cw ->
-                            hfoldMap (f . (\(HWitness nw) -> HWitness (HRecSub cw nw)))
-                                . (_HFlip #)
-                    )
-                    x
-                    \\ recursively (Proxy @(HFoldable ast))
-            . (^. _HFlip)
+    hfoldMap :: forall a p. Monoid a => (forall n. HWitness (HFlip GTerm ast) n -> p # n -> a) -> HFlip GTerm ast # p -> a
+    hfoldMap f = go HRecSelf
+        where
+            go :: forall n. Recursively HFoldable n => HRecWitness ast n -> HFlip GTerm n # p -> a
+            go w =
+                \case
+                    GMono x -> f (HWitness w) x
+                    GPoly x -> f (HWitness w) x
+                    GBody x ->
+                        hfoldMap
+                            (\cw -> (Proxy @(Recursively HFoldable) #> go (HRecSub w cw) . (_HFlip #)) cw)
+                            x
+                            \\ recursively (Proxy @(HFoldable n))
+                    . (^. _HFlip)
 
 instance RTraversable ast => HTraversable (HFlip GTerm ast) where
     {-# INLINE hsequence #-}
