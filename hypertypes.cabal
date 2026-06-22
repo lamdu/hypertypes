@@ -157,6 +157,7 @@ test-suite hypertypes-test
       LangBTest
       LangC
       LangD
+      PlainTest
       PolyKindsTH
       ReadMeExamples
       TypeLang
