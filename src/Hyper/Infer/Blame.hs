@@ -52,8 +52,10 @@ import Hyper
 import Hyper.Class.Infer
 import Hyper.Class.Traversable (ContainedH (..))
 import Hyper.Class.Unify (UVarOf, UnifyGen)
+import Hyper.Combinator.Compose (HComposeConstraint1)
 import Hyper.Infer.Result
 import Hyper.Recurse
+import Hyper.Type.Prune
 import Hyper.Unify.New (newUnbound)
 import Hyper.Unify.Occurs (occursCheck)
 
@@ -89,6 +91,20 @@ class
 
 instance Recursive (Blame m) where
     recurse = blamableRecursive (Proxy @m) . proxyArgument
+
+instance
+    ( Blame m t
+    , HNodesConstraint t (HComposeConstraint1 (Infer m) Prune)
+    , HNodesConstraint t (HComposeConstraint1 (Blame m) Prune)
+    , HNodesConstraint t (HComposeConstraint1 RNodes Prune)
+    , HNodesConstraint t (HComposeConstraint1 (Recursively HFunctor) Prune)
+    , HNodesConstraint t (HComposeConstraint1 (Recursively HFoldable) Prune)
+    , HNodesConstraint t (HComposeConstraint1 RTraversable Prune)
+    ) =>
+    Blame m (HCompose Prune t)
+    where
+    inferOfUnify _ = inferOfUnify (Proxy @t)
+    inferOfMatches _ = inferOfMatches (Proxy @t)
 
 -- | A type synonym to help 'BlameResult' be more succinct
 type InferOf' e v = InferOf (GetHyperType e) # v

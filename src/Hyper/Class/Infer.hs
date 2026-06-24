@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hyper.Class.Infer
     ( InferOf
@@ -15,8 +16,12 @@ module Hyper.Class.Infer
 import qualified Control.Lens as Lens
 import GHC.Generics
 import Hyper
+import Hyper.Class.Traversable (ContainedH (..))
 import Hyper.Class.Unify
+import Hyper.Combinator.Compose (HComposeConstraint1)
 import Hyper.Recurse
+import Hyper.Type.Prune
+import Hyper.Unify.New (newUnbound)
 
 import Hyper.Internal.Prelude
 
@@ -122,3 +127,30 @@ instance Infer m h => Infer m (Rec1 h) where
 
     {-# INLINE inferContext #-}
     inferContext p _ = Dict \\ inferContext p (Proxy @h)
+
+type instance InferOf (HCompose Prune t) = InferOf t
+
+instance
+    ( Infer m t
+    , HPointed (InferOf t)
+    , HTraversable (InferOf t)
+    , HNodesConstraint t (HComposeConstraint1 (Infer m) Prune)
+    ) =>
+    Infer m (HCompose Prune t)
+    where
+    inferBody (HCompose Pruned) =
+        hpure (Proxy @(UnifyGen m) #> MkContainedH newUnbound)
+            \\ inferContext (Proxy @m) (Proxy @t)
+            & hsequence
+            <&> (_HCompose # Pruned,)
+    inferBody (HCompose (Unpruned (HCompose x))) =
+        hmap
+            ( \_ (HCompose (InferChild i)) ->
+                i
+                    <&> (\(InferredChild r t) -> InferredChild (_HCompose # r) t)
+                    & InferChild
+            )
+            x
+            & inferBody
+            <&> Lens._1 %~ (hcomposed _Unpruned #)
+    inferContext m _ = Dict \\ inferContext m (Proxy @t)
