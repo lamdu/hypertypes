@@ -2,14 +2,14 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Hyper.Class.Infer.InferOf
+module Hyper.Infer.InferOf
     ( HasInferredType (..)
     , HasInferredValue (..)
     , InferOfConstraint (..)
     ) where
 
 import Control.Lens (ALens', Lens')
-import Hyper.Class.Infer (InferOf)
+import Hyper.Infer.Class (InferOf)
 import Hyper.Type (HyperType, type (#))
 
 import Hyper.Internal.Prelude

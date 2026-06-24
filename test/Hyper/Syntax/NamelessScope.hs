@@ -32,8 +32,8 @@ import Data.Kind (Type)
 import Data.Sequence (Seq)
 import qualified Data.Sequence as Sequence
 import Hyper
-import Hyper.Class.Infer.Infer1
 import Hyper.Infer
+import Hyper.Infer.Infer1
 import Hyper.Syntax.FuncType
 import Hyper.Unify (UVarOf, UnifyGen)
 import Hyper.Unify.New (newUnbound)

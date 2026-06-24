@@ -33,7 +33,7 @@ class (PartialOrd c, Monoid c) => TypeConstraints c where
 
 -- | A class for terms that have constraints.
 --
--- A dependency of `Hyper.Class.Unify.Unify`
+-- A dependency of `Hyper.Unify.Class.Unify`
 class
     TypeConstraints (TypeConstraintsOf ast) =>
     HasTypeConstraints (ast :: HyperType)

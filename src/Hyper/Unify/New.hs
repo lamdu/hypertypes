@@ -8,8 +8,8 @@ module Hyper.Unify.New
     ) where
 
 import Hyper
-import Hyper.Class.Unify (BindingDict (..), UVarOf, Unify (..), UnifyGen (..))
 import Hyper.Recurse
+import Hyper.Unify.Class (BindingDict (..), UVarOf, Unify (..), UnifyGen (..))
 import Hyper.Unify.Term (UTerm (..), UTermBody (..))
 
 import Prelude.Compat

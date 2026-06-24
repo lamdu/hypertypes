@@ -1,5 +1,5 @@
 -- | Traits of inference monads.
-module Hyper.Class.Infer.Env
+module Hyper.Infer.Env
     ( LocalScopeType (..)
     ) where
 
@@ -7,7 +7,7 @@ module Hyper.Class.Infer.Env
 -- @m@ maintains a scope mapping variables of type @var@
 -- to type schemes of type @scheme@.
 --
--- Used by the 'Hyper.Class.Infer.Infer' instances
+-- Used by the 'Hyper.Infer.Class.Infer' instances
 -- of 'Hyper.Syntax.Lam.Lam' and 'Hyper.Syntax.Let.Let'.
 class LocalScopeType var scheme m where
     -- | Add a variable type into an action's scope

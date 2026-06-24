@@ -9,7 +9,7 @@ module Hyper.Unify.Binding.ST
 
 import Control.Monad.ST.Class (MonadST (..))
 import Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
-import Hyper.Class.Unify (BindingDict (..))
+import Hyper.Unify.Class (BindingDict (..))
 import Hyper.Unify.Term (UTerm (..))
 
 import Hyper.Internal.Prelude

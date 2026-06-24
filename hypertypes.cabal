@@ -33,9 +33,6 @@ library
       Hyper.Class.Foldable
       Hyper.Class.Functor
       Hyper.Class.HasPlain
-      Hyper.Class.Infer
-      Hyper.Class.Infer.Env
-      Hyper.Class.Infer.InferOf
       Hyper.Class.Monad
       Hyper.Class.Morph
       Hyper.Class.Nodes
@@ -43,7 +40,6 @@ library
       Hyper.Class.Pointed
       Hyper.Class.Recursive
       Hyper.Class.Traversable
-      Hyper.Class.Unify
       Hyper.Class.ZipMatch
       Hyper.Combinator.Ann
       Hyper.Combinator.ANode
@@ -53,6 +49,9 @@ library
       Hyper.Diff
       Hyper.Infer
       Hyper.Infer.Blame
+      Hyper.Infer.Class
+      Hyper.Infer.Env
+      Hyper.Infer.InferOf
       Hyper.Infer.Result
       Hyper.Infer.ScopeLevel
       Hyper.Recurse
@@ -88,6 +87,7 @@ library
       Hyper.Unify.Binding.Save
       Hyper.Unify.Binding.ST
       Hyper.Unify.Binding.ST.Load
+      Hyper.Unify.Class
       Hyper.Unify.Constraints
       Hyper.Unify.Error
       Hyper.Unify.Generalize
@@ -148,7 +148,7 @@ test-suite hypertypes-test
       AlphaEqTest
       BlameTest
       ExprUtils
-      Hyper.Class.Infer.Infer1
+      Hyper.Infer.Infer1
       Hyper.Syntax.NamelessScope
       Hyper.Syntax.NamelessScope.InvDeBruijn
       LangA
@@ -205,7 +205,7 @@ benchmark hypertypes-bench
   type: exitcode-stdio-1.0
   main-is: Benchmark.hs
   other-modules:
-      Hyper.Class.Infer.Infer1
+      Hyper.Infer.Infer1
       Hyper.Syntax.NamelessScope
       LangB
       TypeLang

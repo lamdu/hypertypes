@@ -10,7 +10,7 @@ module Hyper.Infer.Result
     ) where
 
 import Hyper
-import Hyper.Class.Infer
+import Hyper.Infer.Class
 import Hyper.Internal.Prelude
 
 -- | A 'HyperType' for an inferred term - the output of 'Hyper.Infer.infer'

@@ -7,7 +7,7 @@ import Control.Monad (unless, when)
 import Control.Monad.Trans.Class (MonadTrans (..))
 import Control.Monad.Trans.State (execStateT, get, put)
 import Hyper
-import Hyper.Class.Unify (BindingDict (..), UVarOf, Unify (..), occursError, semiPruneLookup)
+import Hyper.Unify.Class (BindingDict (..), UVarOf, Unify (..), occursError, semiPruneLookup)
 import Hyper.Unify.Term (UTerm (..), uBody)
 
 import Hyper.Internal.Prelude

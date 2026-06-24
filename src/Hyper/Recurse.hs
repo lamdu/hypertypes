@@ -181,7 +181,7 @@ recursiveHLiftConstraint (HWitness w) p f = (p #>> f) w
 (#>>) _ = go
     where
         go :: forall p. (c p => RNodes p => r) -> HRecWitness h p -> r
-        go x HRecSelf  = x
+        go x HRecSelf = x
         go x (HRecSub (prefix :: HRecWitness h q) child) =
             go
                 ( (Proxy @c #*# \child' -> (Proxy @RNodes #> x) child') child

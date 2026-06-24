@@ -14,8 +14,8 @@ module Hyper.Syntax.Let
 
 import Generics.Constraints (Constraints)
 import Hyper
-import Hyper.Class.Unify (UVarOf, UnifyGen)
 import Hyper.Infer
+import Hyper.Unify.Class (UVarOf, UnifyGen)
 import Hyper.Unify.Generalize (GTerm, generalize)
 import Text.PrettyPrint (($+$), (<+>))
 import qualified Text.PrettyPrint as Pretty

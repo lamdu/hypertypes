@@ -15,8 +15,8 @@ import Control.Lens (ALens')
 import qualified Control.Lens as Lens
 import Control.Monad.State (MonadState (..))
 import Data.Sequence (Seq)
-import Hyper.Class.Unify (BindingDict (..))
 import Hyper.Type (AHyperType, type (#))
+import Hyper.Unify.Class (BindingDict (..))
 import Hyper.Unify.Term
 
 import Hyper.Internal.Prelude

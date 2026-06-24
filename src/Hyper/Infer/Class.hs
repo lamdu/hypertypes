@@ -3,7 +3,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Hyper.Class.Infer
+module Hyper.Infer.Class
     ( InferOf
     , Infer (..)
     , InferChild (..)
@@ -17,10 +17,10 @@ import qualified Control.Lens as Lens
 import GHC.Generics
 import Hyper
 import Hyper.Class.Traversable (ContainedH (..))
-import Hyper.Class.Unify
 import Hyper.Combinator.Compose (HComposeConstraint1)
 import Hyper.Recurse
 import Hyper.Type.Prune
+import Hyper.Unify.Class
 import Hyper.Unify.New (newUnbound)
 
 import Hyper.Internal.Prelude
@@ -54,7 +54,7 @@ makeLenses ''InferredChild
 -- | A 'HyperType' containing an inference action.
 --
 -- The caller may modify the scope before invoking the action via
--- 'Hyper.Class.Infer.Env.localScopeType' or 'Hyper.Infer.ScopeLevel.localLevel'
+-- 'Hyper.Infer.Env.localScopeType' or 'Hyper.Infer.ScopeLevel.localLevel'
 newtype InferChild m h t = InferChild {inferChild :: m (InferredChild (UVarOf m) h t)}
 
 makePrisms ''InferChild

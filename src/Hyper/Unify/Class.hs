@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 -- | A class for unification
-module Hyper.Class.Unify
+module Hyper.Unify.Class
     ( Unify (..)
     , UVarOf
     , UnifyGen (..)

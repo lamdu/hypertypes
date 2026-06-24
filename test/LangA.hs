@@ -19,8 +19,8 @@ import Control.Monad.ST.Class (MonadST (..))
 import Data.Constraint
 import Data.STRef
 import Hyper
-import Hyper.Class.Infer.Infer1
 import Hyper.Infer
+import Hyper.Infer.Infer1
 import Hyper.Syntax
 import Hyper.Syntax.NamelessScope
 import Hyper.Syntax.NamelessScope.InvDeBruijn

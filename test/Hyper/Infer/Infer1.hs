@@ -1,5 +1,5 @@
 -- | 'Infer' for indexed AST types (such as 'Hyper.Syntax.NamelessScope.Scope')
-module Hyper.Class.Infer.Infer1
+module Hyper.Infer.Infer1
     ( HasTypeOf1 (..)
     , HasInferOf1 (..)
     , Infer1 (..)

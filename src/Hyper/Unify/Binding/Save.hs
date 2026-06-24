@@ -10,9 +10,9 @@ import Control.Monad.Trans.Class (MonadTrans (..))
 import Control.Monad.Trans.State (StateT (..))
 import Hyper
 import Hyper.Class.Optic (HNodeLens (..))
-import Hyper.Class.Unify (BindingDict (..), UVarOf, Unify (..))
 import Hyper.Recurse
 import Hyper.Unify.Binding (Binding, UVar (..), _Binding)
+import Hyper.Unify.Class (BindingDict (..), UVarOf, Unify (..))
 import Hyper.Unify.Term (UTerm (..), uBody)
 
 import Hyper.Internal.Prelude

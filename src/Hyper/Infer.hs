@@ -4,9 +4,9 @@ module Hyper.Infer
     ( infer
     , InferResultsConstraint
     , inferUVarsApplyBindings
-    , module Hyper.Class.Infer
-    , module Hyper.Class.Infer.Env
-    , module Hyper.Class.Infer.InferOf
+    , module Hyper.Infer.Class
+    , module Hyper.Infer.Env
+    , module Hyper.Infer.InferOf
     , module Hyper.Infer.ScopeLevel
     , module Hyper.Infer.Result
       -- | Exported only for SPECIALIZE pragmas
@@ -15,10 +15,10 @@ module Hyper.Infer
 
 import qualified Control.Lens as Lens
 import Hyper
-import Hyper.Class.Infer
-import Hyper.Class.Infer.Env
-import Hyper.Class.Infer.InferOf
 import Hyper.Class.Nodes (HNodesHaveConstraint (..))
+import Hyper.Infer.Class
+import Hyper.Infer.Env
+import Hyper.Infer.InferOf
 import Hyper.Infer.Result
 import Hyper.Infer.ScopeLevel
 import Hyper.Unify (UVarOf, Unify, applyBindings)

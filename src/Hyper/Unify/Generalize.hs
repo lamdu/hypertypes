@@ -26,8 +26,8 @@ import Control.Monad.Trans.Writer (WriterT (..), tell)
 import Data.Monoid (All (..))
 import Hyper
 import Hyper.Class.Traversable
-import Hyper.Class.Unify
 import Hyper.Recurse
+import Hyper.Unify.Class
 import Hyper.Unify.Constraints
 import Hyper.Unify.New (newTerm)
 import Hyper.Unify.Term (UTerm (..), uBody)

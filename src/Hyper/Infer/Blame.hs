@@ -49,13 +49,13 @@ import qualified Control.Lens as Lens
 import Control.Monad.Except (MonadError (..))
 import Data.List (sortOn)
 import Hyper
-import Hyper.Class.Infer
 import Hyper.Class.Traversable (ContainedH (..))
-import Hyper.Class.Unify (UVarOf, UnifyGen)
 import Hyper.Combinator.Compose (HComposeConstraint1)
+import Hyper.Infer.Class
 import Hyper.Infer.Result
 import Hyper.Recurse
 import Hyper.Type.Prune
+import Hyper.Unify.Class (UVarOf, UnifyGen)
 import Hyper.Unify.New (newUnbound)
 import Hyper.Unify.Occurs (occursCheck)
 
