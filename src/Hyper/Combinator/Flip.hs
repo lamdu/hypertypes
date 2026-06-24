@@ -21,7 +21,7 @@ import Hyper.Internal.Prelude
 --
 -- Useful to use instances of classes such as 'Hyper.Class.Traversable.HTraversable' which
 -- are available on the flipped 'Hyper.Type.HyperType'.
--- For example 'Hyper.Unify.Generalize.GTerm' has instances when flipped.
+-- For example, recursive node families can define instances when flipped.
 newtype HFlip f x h
     = MkHFlip (f (GetHyperType h) # x)
     deriving stock (Generic)

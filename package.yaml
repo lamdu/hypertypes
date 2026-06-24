@@ -10,22 +10,13 @@ extra-source-files:
 - README.md
 - ChangeLog.md
 
-synopsis: Typed ASTs
-category: Algorithms, Compilers/Interpreters, Language, Logic, Unification
+synopsis: Generic programming for mutually-recursive data types
+category: Data, Generics
 
 description: Please see the README on GitHub at <https://github.com/lamdu/hypertypes#readme>
 
 dependencies:
 - base >= 4.9 && <5
-- constraints
-- containers
-- generic-constraints
-- generic-data
-- lattices
-- lens
-- monad-st
-- mtl
-- pretty
 
 default-extensions:
 - ConstraintKinds
@@ -61,12 +52,15 @@ library:
   - Hyper.Internal.Prelude
   - Hyper.TH.Internal.Utils
   dependencies:
-  - array
   - base-compat
   - binary
+  - constraints
+  - containers
   - deepseq
+  - generic-constraints
+  - generic-data
+  - lens
   - pretty
-  - show-combinators
   - template-haskell
   - transformers
   - th-abstraction >= 0.6
@@ -79,34 +73,12 @@ tests:
   hypertypes-test:
     main: Spec.hs
     source-dirs: test
-    when:
-    - condition: false
-      other-modules:
-      - Benchmark
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
     - hypertypes
+    - lens
     - tasty
     - tasty-hunit
-    - text
-
-benchmarks:
-  hypertypes-bench:
-    main: Benchmark.hs
-    source-dirs: test
-    other-modules:
-    - Hyper.Infer.Infer1
-    - Hyper.Syntax.NamelessScope
-    - LangB
-    - TypeLang
-    ghc-options:
-    - -O2
-    - -Wnoncanonical-monad-instances
-    - -Wincomplete-record-updates
-    - -Wincomplete-uni-patterns
-    dependencies:
-    - criterion
-    - hypertypes

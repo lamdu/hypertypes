@@ -256,13 +256,16 @@ The `hypertypes` library provides:
 * Variants of standard classes like `Functor` for hypertypes with derivations.
   (Unlike in `multirec`'s `HFunctor`, only the actual child node types of each node need to be handled)
 * Combinators for recursive processing and transformation of nested structures
-* Implementations of common AST terms
-* A unification implementation for mutually recursive types inspired by `unification-fd`
-* A generic and fast implementation of Hindley-Milner type inference ("Efficient generalization with levels" as described in [*How OCaml type checker works*](http://okmij.org/ftp/ML/generalization.html), Kiselyov, 2013)
+* Template Haskell helpers for deriving common hypertypes classes
+* Plain representations and structural diffing for recursive hypertypes
+
+The companion `hypertypes-ast` package provides common AST terms, unification,
+and Hindley-Milner type inference built on this core package.
 
 ## Constructing types from individual components
 
-Note that another way to formulate the above expression would be using pre-existing parts, such as:
+In `hypertypes-ast`, another way to formulate the above expression would be
+using pre-existing parts, such as:
 
 ```Haskell
 data RExpr h
@@ -427,14 +430,14 @@ When mapping over an `Expr` we can:
 
 `hypertypes` is implemented with GHC and heavily relies on quite a few language extensions:
 
-* `ConstraintKinds` and `TypeFamilies` are needed for the `HNodesConstraint` type family that lifts a constraint to apply over a value's nodes. Type families are also used to encode term's results in type inference.
+* `ConstraintKinds` and `TypeFamilies` are needed for the `HNodesConstraint` type family that lifts a constraint to apply over a value's nodes.
 * `DataKinds` allows parameterizing types over `AHyperType`s
 * `DefaultSignatures` are used for default methods that return `Dict`s to avoid undecidable super-classes
 * `DeriveGeneric`, `DerivingVia`, `GeneralizedNewtypeDeriving`, `StandaloneDeriving` and `TemplateHaskell` are used to derive type-class instances
 * `EmptyCase` is needed for instances of leaf nodes
 * `FlexibleContexts`, `FlexibleInstances` and `UndecidableInstances` are required to specify many constraints
 * `GADTs` and `RankNTypes` enable functions like `hmap` which get `forall`ed functions with witness parameters
-* `MultiParamTypeClasses` is needed for the `Unify` and `Infer` type classes
+* `MultiParamTypeClasses` is needed for several helper classes
 * `ScopedTypeVariables` and `TypeApplications` assist writing short code that type checks
 
 Many harmless syntactic extensions are also used:
@@ -492,10 +495,11 @@ This enables re-usability of the AST elements `Val` and `Add` in various ASTs, w
 Like DTALC, `hypertypes` has:
 
 * Instances type for combinators such as `:+:` and `:*:`, so that these can be used to build ASTs
-* Implementations of common AST terms in the `Hyper.Syntax` module hierarchy (`App`, `Lam`, `Let`, `Var`, `TypeSig` and others)
-* Classes like `HFunctor`, `HTraversable`, `Unify`, `Infer` with instances for the provided AST terms
+* Classes like `HFunctor` and `HTraversable` with instances for those combinators
+* Common AST terms, unification, and inference in the companion `hypertypes-ast` package
 
-As an example of a reusable term let's look at the definition of `App`:
+As an example of a reusable term from `hypertypes-ast`, let's look at the
+definition of `App`:
 
 ```Haskell
 -- | A term for function applications.
@@ -518,8 +522,8 @@ While it is possible to declare ASTs as `newtype`s wrapping `:+:`s of existing t
 An interesting aspect of `bound`'s ASTs is that recursively they are made of an infinite amount of types.
 
 When implementing `hypertypes` we had the explicit goal of making sure that such ASTs are expressible with it,
-and for this reason the `Hyper.Syntax.NamelessScope` module in the tests implements it, and the test suite includes
-a language implementation based on it (`LangA` in the tests).
+and the `hypertypes-ast` test suite includes a language implementation based on
+it (`LangA` in the tests).
 
 ### lens
 
