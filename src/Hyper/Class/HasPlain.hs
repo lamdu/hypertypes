@@ -1,4 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | A class for plain 'Data.Kind.Type' equivalents
 -- for the simple forms of 'Hyper.Type.HyperType's.
@@ -11,6 +13,7 @@ module Hyper.Class.HasPlain
 
 import Control.Lens (Iso')
 import qualified Control.Lens as Lens
+import GHC.Generics as X ((:+:) (..))
 import Hyper.Internal.Prelude
 import Hyper.Type (type (#))
 import Hyper.Type.Pure (Pure (..), _Pure)
@@ -35,3 +38,24 @@ instance Show a => HasHPlain (Const a) where
             -- TODO: Replace with Lens._Unwrapped?
             _hPlainConst :: Iso' (HPlain (Const a)) a
             _hPlainConst = Lens.iso (\(ConstP x) -> x) ConstP
+
+instance (Show (HPlain (a :*: b)), HasHPlain a, HasHPlain b) => HasHPlain (a :*: b) where
+    data HPlain (a :*: b) = ProdP (HPlain a) (HPlain b)
+    hPlain =
+        Lens.iso
+        (\(ProdP a b) -> Pure (a ^. hPlain' :*: b ^. hPlain'))
+        (\(Pure (a :*: b)) -> ProdP (hPlain' # a) (hPlain' # b))
+
+deriving instance (Show (HPlain a), Show (HPlain b)) => Show (HPlain (a :*: b))
+
+instance (Show (HPlain (a :+: b)), HasHPlain a, HasHPlain b) => HasHPlain (a :+: b) where
+    data HPlain (a :+: b) = L1P (HPlain a) | R1P (HPlain b)
+    hPlain =
+        Lens.iso fromPlain toPlain . Lens.from _Pure
+        where
+            fromPlain (L1P a) = L1 (a ^. hPlain')
+            fromPlain (R1P b) = R1 (b ^. hPlain')
+            toPlain (L1 a) = L1P (hPlain' # a)
+            toPlain (R1 b) = R1P (hPlain' # b)
+
+deriving instance (Show (HPlain a), Show (HPlain b)) => Show (HPlain (a :+: b))
