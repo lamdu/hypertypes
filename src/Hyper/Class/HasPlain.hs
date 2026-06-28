@@ -8,10 +8,12 @@
 -- Useful for succinct tests, examples, and for debug prints.
 module Hyper.Class.HasPlain
     ( HasHPlain (..)
-    )
-where
+    , hPlain'
+    ) where
 
-import Control.Lens (Iso', from, iso)
+import Control.Lens (Iso')
+import qualified Control.Lens as Lens
+import GHC.Generics as X ((:+:) (..))
 import Hyper.Internal.Prelude
 import Hyper.Type (type (#))
 import Hyper.Type.Pure (Pure (..), _Pure)
@@ -24,29 +26,36 @@ class Show (HPlain h) => HasHPlain h where
     -- | An 'Control.Lens.Iso' between the plain form and 'Hyper.Type.HyperType' form
     hPlain :: Iso' (HPlain h) (Pure # h)
 
-instance (Show (HPlain a), Show (HPlain b)) => Show (HPlain (a :*: b)) where
-    show (HProduct x) = show x
+hPlain' :: HasHPlain h => Iso' (HPlain h) (h # Pure)
+hPlain' = hPlain . _Pure
+
+instance Show a => HasHPlain (Const a) where
+    newtype HPlain (Const a) = ConstP a
+        deriving (Show)
+    hPlain =
+        _hPlainConst . Lens._Unwrapped . Lens.from _Pure
+        where
+            -- TODO: Replace with Lens._Unwrapped?
+            _hPlainConst :: Iso' (HPlain (Const a)) a
+            _hPlainConst = Lens.iso (\(ConstP x) -> x) ConstP
 
 instance (Show (HPlain (a :*: b)), HasHPlain a, HasHPlain b) => HasHPlain (a :*: b) where
-    data HPlain (a :*: b) = HProduct (HPlain a, HPlain b)
+    data HPlain (a :*: b) = ProdP (HPlain a) (HPlain b)
     hPlain =
-        iso
-            (\(HProduct (a, b)) -> Pure ((a ^. hPlain . _Pure) :*: (b ^. hPlain . _Pure)))
-            (\(Pure (a :*: b)) -> HProduct (a ^. from _Pure . from hPlain, b ^. from _Pure . from hPlain))
+        Lens.iso
+        (\(ProdP a b) -> Pure (a ^. hPlain' :*: b ^. hPlain'))
+        (\(Pure (a :*: b)) -> ProdP (hPlain' # a) (hPlain' # b))
 
-instance (Show (HPlain a), Show (HPlain b)) => Show (HPlain (a :+: b)) where
-    show (HSum x) = show x
+deriving instance (Show (HPlain a), Show (HPlain b)) => Show (HPlain (a :*: b))
 
 instance (Show (HPlain (a :+: b)), HasHPlain a, HasHPlain b) => HasHPlain (a :+: b) where
-    data HPlain (a :+: b) = HSum (Either (HPlain a) (HPlain b))
+    data HPlain (a :+: b) = L1P (HPlain a) | R1P (HPlain b)
     hPlain =
-        iso
-            ( \case
-                HSum (Left a) -> Pure (L1 (a ^. hPlain . _Pure))
-            )
-            ( \case
-                (Pure (L1 a)) ->
-                    HSum $ Left $ a ^. from _Pure . from hPlain
-                (Pure (R1 b)) ->
-                    HSum $ Right $ b ^. from _Pure . from hPlain
-            )
+        Lens.iso fromPlain toPlain . Lens.from _Pure
+        where
+            fromPlain (L1P a) = L1 (a ^. hPlain')
+            fromPlain (R1P b) = R1 (b ^. hPlain')
+            toPlain (L1 a) = L1P (hPlain' # a)
+            toPlain (R1 b) = R1P (hPlain' # b)
+
+deriving instance (Show (HPlain a), Show (HPlain b)) => Show (HPlain (a :+: b))

@@ -10,14 +10,7 @@ module Hyper.Type.Prune
     , _Unpruned
     ) where
 
-import qualified Control.Lens as Lens
 import Hyper
-import Hyper.Class.Traversable
-import Hyper.Class.Unify (UnifyGen)
-import Hyper.Combinator.Compose (HComposeConstraint1)
-import Hyper.Infer
-import Hyper.Infer.Blame (Blame (..))
-import Hyper.Unify.New (newUnbound)
 import qualified Text.PrettyPrint as Pretty
 import Text.PrettyPrint.HughesPJClass (Pretty (..))
 
@@ -51,44 +44,3 @@ instance HApply Prune where
 instance RNodes Prune
 instance c Prune => Recursively c Prune
 instance RTraversable Prune
-
-type instance InferOf (HCompose Prune t) = InferOf t
-
-instance
-    ( Infer m t
-    , HPointed (InferOf t)
-    , HTraversable (InferOf t)
-    , HNodesConstraint t (HComposeConstraint1 (Infer m) Prune)
-    ) =>
-    Infer m (HCompose Prune t)
-    where
-    inferBody (HCompose Pruned) =
-        hpure (Proxy @(UnifyGen m) #> MkContainedH newUnbound)
-            \\ inferContext (Proxy @m) (Proxy @t)
-            & hsequence
-            <&> (_HCompose # Pruned,)
-    inferBody (HCompose (Unpruned (HCompose x))) =
-        hmap
-            ( \_ (HCompose (InferChild i)) ->
-                i
-                    <&> (\(InferredChild r t) -> InferredChild (_HCompose # r) t)
-                    & InferChild
-            )
-            x
-            & inferBody
-            <&> Lens._1 %~ (hcomposed _Unpruned #)
-    inferContext m _ = Dict \\ inferContext m (Proxy @t)
-
-instance
-    ( Blame m t
-    , HNodesConstraint t (HComposeConstraint1 (Infer m) Prune)
-    , HNodesConstraint t (HComposeConstraint1 (Blame m) Prune)
-    , HNodesConstraint t (HComposeConstraint1 RNodes Prune)
-    , HNodesConstraint t (HComposeConstraint1 (Recursively HFunctor) Prune)
-    , HNodesConstraint t (HComposeConstraint1 (Recursively HFoldable) Prune)
-    , HNodesConstraint t (HComposeConstraint1 RTraversable Prune)
-    ) =>
-    Blame m (HCompose Prune t)
-    where
-    inferOfUnify _ = inferOfUnify (Proxy @t)
-    inferOfMatches _ = inferOfMatches (Proxy @t)

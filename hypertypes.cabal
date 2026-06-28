@@ -1,19 +1,19 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.38.1.
 --
 -- see: https://github.com/sol/hpack
 
 name:           hypertypes
-version:        0.2.3
-synopsis:       Typed ASTs
+version:        0.3.0
+synopsis:       Generic programming for mutually-recursive data types
 description:    Please see the README on GitHub at <https://github.com/lamdu/hypertypes#readme>
-category:       Algorithms, Compilers/Interpreters, Language, Logic, Unification
+category:       Data, Generics
 homepage:       https://github.com/lamdu/hypertypes#readme
 bug-reports:    https://github.com/lamdu/hypertypes/issues
 author:         Yair Chuchem
 maintainer:     yairchu@gmail.com
-copyright:      2018 Yair Chuchem"
+copyright:      2018 Yair Chuchem
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
@@ -33,9 +33,6 @@ library
       Hyper.Class.Foldable
       Hyper.Class.Functor
       Hyper.Class.HasPlain
-      Hyper.Class.Infer
-      Hyper.Class.Infer.Env
-      Hyper.Class.Infer.InferOf
       Hyper.Class.Monad
       Hyper.Class.Morph
       Hyper.Class.Nodes
@@ -43,7 +40,6 @@ library
       Hyper.Class.Pointed
       Hyper.Class.Recursive
       Hyper.Class.Traversable
-      Hyper.Class.Unify
       Hyper.Class.ZipMatch
       Hyper.Combinator.Ann
       Hyper.Combinator.ANode
@@ -51,24 +47,7 @@ library
       Hyper.Combinator.Flip
       Hyper.Combinator.Func
       Hyper.Diff
-      Hyper.Infer
-      Hyper.Infer.Blame
-      Hyper.Infer.Result
-      Hyper.Infer.ScopeLevel
       Hyper.Recurse
-      Hyper.Syntax
-      Hyper.Syntax.App
-      Hyper.Syntax.FuncType
-      Hyper.Syntax.Lam
-      Hyper.Syntax.Let
-      Hyper.Syntax.Map
-      Hyper.Syntax.Nominal
-      Hyper.Syntax.Row
-      Hyper.Syntax.Scheme
-      Hyper.Syntax.Scheme.AlphaEq
-      Hyper.Syntax.TypedLam
-      Hyper.Syntax.TypeSig
-      Hyper.Syntax.Var
       Hyper.TH.Apply
       Hyper.TH.Context
       Hyper.TH.Foldable
@@ -83,18 +62,6 @@ library
       Hyper.Type.Functor
       Hyper.Type.Prune
       Hyper.Type.Pure
-      Hyper.Unify
-      Hyper.Unify.Binding
-      Hyper.Unify.Binding.Save
-      Hyper.Unify.Binding.ST
-      Hyper.Unify.Binding.ST.Load
-      Hyper.Unify.Constraints
-      Hyper.Unify.Error
-      Hyper.Unify.Generalize
-      Hyper.Unify.New
-      Hyper.Unify.Occurs
-      Hyper.Unify.QuantifiedVar
-      Hyper.Unify.Term
   other-modules:
       Hyper.Internal.Prelude
       Hyper.TH.Internal.Utils
@@ -121,8 +88,7 @@ library
   ghc-options: -fexpose-all-unfoldings -Wall -Wcompat -Wredundant-constraints -Wunused-packages -Wnoncanonical-monad-instances -Wincomplete-record-updates -Wincomplete-uni-patterns
   ghc-prof-options: -fexpose-all-unfoldings
   build-depends:
-      array
-    , base >=4.9 && <5
+      base >=4.9 && <5
     , base-compat
     , binary
     , constraints
@@ -130,12 +96,8 @@ library
     , deepseq
     , generic-constraints
     , generic-data
-    , lattices
     , lens
-    , monad-st
-    , mtl
     , pretty
-    , show-combinators
     , template-haskell
     , th-abstraction >=0.6
     , transformers
@@ -145,20 +107,8 @@ test-suite hypertypes-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      AlphaEqTest
-      BlameTest
-      ExprUtils
-      Hyper.Class.Infer.Infer1
-      Hyper.Syntax.NamelessScope
-      Hyper.Syntax.NamelessScope.InvDeBruijn
-      LangA
-      LangATest
-      LangB
-      LangBTest
-      LangC
-      LangD
-      ReadMeExamples
-      TypeLang
+      PlainTest
+      PolyKindsTH
       Paths_hypertypes
   hs-source-dirs:
       test
@@ -184,60 +134,8 @@ test-suite hypertypes-test
   ghc-prof-options: -fexpose-all-unfoldings
   build-depends:
       base >=4.9 && <5
-    , constraints
-    , containers
-    , generic-constraints
-    , generic-data
     , hypertypes
-    , lattices
     , lens
-    , monad-st
-    , mtl
-    , pretty
     , tasty
     , tasty-hunit
-    , text
-  default-language: Haskell2010
-
-benchmark hypertypes-bench
-  type: exitcode-stdio-1.0
-  main-is: Benchmark.hs
-  other-modules:
-      LangB
-      TypeLang
-  hs-source-dirs:
-      test
-  default-extensions:
-      ConstraintKinds
-      DataKinds
-      DefaultSignatures
-      DeriveGeneric
-      DerivingStrategies
-      GADTs
-      GeneralizedNewtypeDeriving
-      LambdaCase
-      MultiParamTypeClasses
-      RankNTypes
-      ScopedTypeVariables
-      StandaloneDeriving
-      TupleSections
-      TypeApplications
-      TypeOperators
-      TypeFamilies
-      NoImplicitPrelude
-  ghc-options: -fexpose-all-unfoldings -Wall -Wcompat -Wredundant-constraints -Wunused-packages -O2 -Wnoncanonical-monad-instances -Wincomplete-record-updates -Wincomplete-uni-patterns
-  ghc-prof-options: -fexpose-all-unfoldings
-  build-depends:
-      base >=4.9 && <5
-    , constraints
-    , containers
-    , criterion
-    , generic-constraints
-    , generic-data
-    , hypertypes
-    , lattices
-    , lens
-    , monad-st
-    , mtl
-    , pretty
   default-language: Haskell2010

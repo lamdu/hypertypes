@@ -6,9 +6,9 @@ They are a solution to the *Expression Problem*, as described by Phil Wadler (19
 
 > The goal is to define a data type by cases, where one can add new cases to the data type and new functions over the data type, without recompiling existing code, and while retaining static type safety.
 
-[*Data types a la carte*](http://www.staff.science.uu.nl/~swier004/publications/2008-jfp.pdf) (DTALC, Swierstra, 2008) offers a solution for the expression problem which is only applicable for simple recursive expressions, without support for mutually recursive types. In practice, programming language ASTs do tend to be mutually recursive. [`multirec`](http://hackage.haskell.org/package/multirec) (Rodriguez et al, 2009) uses GADTs to encode mutually recursive types but in comparison to DTALC it lacks in the ability to construct the types from re-usable components.
+[*Data types a la carte*](http://www.staff.science.uu.nl/~swier004/publications/2008-jfp.pdf) (DTALC, Swierstra, 2008) offers a solution for the expression problem which is only applicable for simple recursive expressions, without support for mutually recursive types. In practice, programming language ASTs do tend to be mutually recursive. [`multirec`](http://hackage.haskell.org/package/multirec) (Rodriguez et al, 2009) uses GADTs to encode mutually recursive types but in comparison to DTALC it lacks in the ability to construct the types from reusable components.
 
-Hypertypes allow constructing expressions from re-usable terms like DTALC, which can be rich mutually recursive types like in `multirec`.
+Hypertypes allow constructing expressions from reusable terms like DTALC, which can be rich mutually recursive types like in `multirec`.
 
 The name "Hypertypes" is inspired by *Hyperfunctions* (S. Krstic et al, FICS 2001), which are a similar construct at the value level.
 
@@ -163,7 +163,7 @@ is a good example of the power of this approach.
 It implements generic unification for ASTs,
 where it uses the parameterization to represent sub-expressions via unification variables.
 
-In constrast to the HKD approach, we can also use rich fix-points which store several different fix-points within, like `Diff`:
+In contrast to the HKD approach, we can also use rich fix-points which store several different fix-points within, like `Diff`:
 
 ```Haskell
 data Diff f
@@ -256,13 +256,16 @@ The `hypertypes` library provides:
 * Variants of standard classes like `Functor` for hypertypes with derivations.
   (Unlike in `multirec`'s `HFunctor`, only the actual child node types of each node need to be handled)
 * Combinators for recursive processing and transformation of nested structures
-* Implementations of common AST terms
-* A unification implementation for mutually recursive types inspired by `unification-fd`
-* A generic and fast implementation of Hindley-Milner type inference ("Efficient generalization with levels" as described in [*How OCaml type checker works*](http://okmij.org/ftp/ML/generalization.html), Kiselyov, 2013)
+* Template Haskell helpers for deriving common hypertypes classes
+* Plain representations and structural diffing for recursive hypertypes
+
+The companion `hypertypes-ast` package provides common AST terms, unification,
+and Hindley-Milner type inference built on this core package.
 
 ## Constructing types from individual components
 
-Note that another way to formulate the above expression would be using pre-existing parts, such as:
+In `hypertypes-ast`, another way to formulate the above expression would be
+using pre-existing parts, such as:
 
 ```Haskell
 data RExpr h
@@ -293,7 +296,7 @@ Explanations for the above:
 * The above is quite verbose with a lot of instances of `Pure` and many parentheses
 * Writing an expression of the above `RExpr` would be even more verbose due to additional `Var` and `TypedLam` data constructors!
 
-To write it more consicely, the `HasHPlain` class, along with a `TemplateHaskell` generator for it, exists:
+To write it more concisely, the `HasHPlain` class, along with a `TemplateHaskell` generator for it, exists:
 
 ```Haskell
 > let e = hPlain # verboseExpr
@@ -308,7 +311,7 @@ e :: HPlain Expr
 
 It's now easier to see that `e` represents `λ(x:Int). x`
 
-`HPlain` is a data family of "plain versions" of expressions, generated via `TemplateHaskell`. Note that it flattens embedded constructors for maximal convinience, so that the plain version of `RExpr` is as convinient to use as that of `Expr`!
+`HPlain` is a data family of "plain versions" of expressions, generated via `TemplateHaskell`. Note that it flattens embedded constructors for maximal convenience, so that the plain version of `RExpr` is as convenient to use as that of `Expr`!
 
 This is somewhat similar to how `recursion-schemes` can derive a parameterized version of an AST, but is the other way around: the parameterized type is the source and the plain one is generated.
 
@@ -427,14 +430,14 @@ When mapping over an `Expr` we can:
 
 `hypertypes` is implemented with GHC and heavily relies on quite a few language extensions:
 
-* `ConstraintKinds` and `TypeFamilies` are needed for the `HNodesConstraint` type family that lifts a constraint to apply over a value's nodes. Type families are also used to encode term's results in type inference.
+* `ConstraintKinds` and `TypeFamilies` are needed for the `HNodesConstraint` type family that lifts a constraint to apply over a value's nodes.
 * `DataKinds` allows parameterizing types over `AHyperType`s
 * `DefaultSignatures` are used for default methods that return `Dict`s to avoid undecidable super-classes
 * `DeriveGeneric`, `DerivingVia`, `GeneralizedNewtypeDeriving`, `StandaloneDeriving` and `TemplateHaskell` are used to derive type-class instances
 * `EmptyCase` is needed for instances of leaf nodes
 * `FlexibleContexts`, `FlexibleInstances` and `UndecidableInstances` are required to specify many constraints
 * `GADTs` and `RankNTypes` enable functions like `hmap` which get `forall`ed functions with witness parameters
-* `MultiParamTypeClasses` is needed for the `Unify` and `Infer` type classes
+* `MultiParamTypeClasses` is needed for several helper classes
 * `ScopedTypeVariables` and `TypeApplications` assist writing short code that type checks
 
 Many harmless syntactic extensions are also used:
@@ -449,7 +452,7 @@ In addition:
 
 ### hyperfunctions
 
-S. Krstic et al [KLP2001] have described the a type which they call a "Hyperfunction". Here is it's definition from the [`hyperfunctions`](http://hackage.haskell.org/package/hyperfunctions) package:
+S. Krstic et al [KLP2001] have described a type which they call a "Hyperfunction". Here is its definition from the [`hyperfunctions`](http://hackage.haskell.org/package/hyperfunctions) package:
 
 ```Haskell
 newtype Hyper a b = Hyper { invoke :: Hyper b a -> b }
@@ -461,8 +464,8 @@ For more info on hyperfunctions and their use cases in the value level see [LKS2
 
 #### References
 
-* [KLP2001] S. Krstic, J. Launchbury, and D. Pavlovic. Hyperfunctions. In Proceeding of Fixed Points in Computer Science, FICS 2001
-* [LKS2013] J. Launchbury, S. Krstic, T. E. Sauerwein. [Coroutining Folds with Hyperfunctions](https://arxiv.org/abs/1309.5135). In In Proceedings Festschrift for Dave Schmidt, EPTCS 2013
+* [KLP2001] S. Krstic, J. Launchbury, and D. Pavlovic. Hyperfunctions. In Proceedings of Fixed Points in Computer Science, FICS 2001
+* [LKS2013] J. Launchbury, S. Krstic, T. E. Sauerwein. [Coroutining Folds with Hyperfunctions](https://arxiv.org/abs/1309.5135). In Proceedings Festschrift for Dave Schmidt, EPTCS 2013
 
 ### Data Types a la Carte
 
@@ -492,10 +495,11 @@ This enables re-usability of the AST elements `Val` and `Add` in various ASTs, w
 Like DTALC, `hypertypes` has:
 
 * Instances type for combinators such as `:+:` and `:*:`, so that these can be used to build ASTs
-* Implementations of common AST terms in the `Hyper.Type.AST` module hierarchy (`App`, `Lam`, `Let`, `Var`, `TypeSig` and others)
-* Classes like `HFunctor`, `HTraversable`, `Unify`, `Infer` with instances for the provided AST terms
+* Classes like `HFunctor` and `HTraversable` with instances for those combinators
+* Common AST terms, unification, and inference in the companion `hypertypes-ast` package
 
-As an example of a reusable term let's look at the definition of `App`:
+As an example of a reusable term from `hypertypes-ast`, let's look at the
+definition of `App`:
 
 ```Haskell
 -- | A term for function applications.
@@ -509,17 +513,17 @@ Unlike a DTALC-based apply, which would be parameterized by a single type parame
 
 Unlike DTALC, in `hypertypes` one typically needs to explicitly declare the datatypes for their expression types so that they can be used as `App`'s `expr` type parameter. Similarly, `multirec`'s DTALC variant also requires explicitly declaring type indices.
 
-While it is possible to declare ASTs as `newtype`s wrapping `:+:`s of existing terms and deriving all the instances via `GeneralizedNewtypeDeriving`, our usage and examples declare types in the straight forward way, with named data constructors, as we think that this results in more readable and performant code.
+While it is possible to declare ASTs as `newtype`s wrapping `:+:`s of existing terms and deriving all the instances via `GeneralizedNewtypeDeriving`, our usage and examples declare types in the straightforward way, with named data constructors, as we think that this results in more readable and performant code.
 
 ### bound
 
 [`bound`](http://hackage.haskell.org/package/bound) is a library for expressing ASTs with type-safe De-Bruijn indices rather than parameter names, via an AST type constructor that is indexed on the variables in scope.
 
-An intereseting aspect of `bound`'s ASTs is that recursively they are made of an infinite amount of types.
+An interesting aspect of `bound`'s ASTs is that recursively they are made of an infinite amount of types.
 
 When implementing `hypertypes` we had the explicit goal of making sure that such ASTs are expressible with it,
-and for this reason the `Hyper.Type.AST.NamelessScope` module in the tests implementing it is provided, and the test suite includes
-a language implementation based on it (`LangA` in the tests).
+and the `hypertypes-ast` test suite includes a language implementation based on
+it (`LangA` in the tests).
 
 ### lens
 

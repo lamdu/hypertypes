@@ -76,15 +76,17 @@ foldDiffs ::
     (forall n. HRecWitness h n -> Ann a # n -> Ann b # n -> r) ->
     Diff a b # h ->
     r
-foldDiffs _ CommonSubTree{} = mempty
-foldDiffs f (Different (x :*: y)) = f HRecSelf x y
-foldDiffs f (CommonBody (MkCommonBody _ x)) =
-    hfoldMap
-        ( Proxy @(Recursively HFoldable) #*#
-            \w -> foldDiffs (f . HRecSub w)
-        )
-        x
-        \\ recursively (Proxy @(HFoldable h))
+foldDiffs f = go HRecSelf
+    where
+        go :: forall c. Recursively HFoldable c => HRecWitness h c -> Diff a b # c -> r
+        go prefix = \case
+            CommonSubTree{} -> mempty
+            Different (x :*: y) -> f prefix x y
+            CommonBody (MkCommonBody _ body) ->
+                hfoldMap
+                    (Proxy @(Recursively HFoldable) #*# go . HRecSub prefix)
+                    body
+                    \\ recursively (Proxy @(HFoldable c))
 
 data DiffP h
     = CommonSubTreeP (HPlain (GetHyperType h))
@@ -137,16 +139,23 @@ foldDiffsP ::
     (forall n. HasHPlain n => HRecWitness h n -> HPlain n -> HPlain n -> r) ->
     DiffP # h ->
     r
-foldDiffsP f =
-    \case
-        CommonSubTreeP{} -> mempty
-        DifferentP x y -> f HRecSelf x y
-        CommonBodyP x ->
-            hfoldMap
-                ( Proxy @(Recursively HFoldable) #*#
-                    Proxy @(Recursively HasHPlain) #*#
-                        \w -> foldDiffsP (f . HRecSub w)
-                )
-                x
-                \\ recursively (Proxy @(HFoldable h))
-        \\ recursively (Proxy @(HasHPlain h))
+foldDiffsP f = go HRecSelf
+    where
+        go ::
+            forall c.
+            (Recursively HFoldable c, Recursively HasHPlain c) =>
+            HRecWitness h c ->
+            DiffP # c ->
+            r
+        go prefix = \case
+            CommonSubTreeP{} -> mempty
+            DifferentP x y -> f prefix x y \\ recursively (Proxy @(HasHPlain c))
+            CommonBodyP body ->
+                hfoldMap
+                    ( Proxy @(Recursively HFoldable) #*#
+                        Proxy @(Recursively HasHPlain) #*#
+                            go . HRecSub prefix
+                    )
+                    body
+                    \\ recursively (Proxy @(HFoldable c))
+                    \\ recursively (Proxy @(HasHPlain c))

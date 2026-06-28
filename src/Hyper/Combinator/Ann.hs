@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -37,29 +38,7 @@ makeCommonInstances [''Ann]
 instance RNodes h => HNodes (HFlip Ann h) where
     type HNodesConstraint (HFlip Ann h) c = (Recursive c, c h)
     type HWitnessType (HFlip Ann h) = HRecWitness h
-    hLiftConstraint (HWitness HRecSelf) = \_ x -> x
-    hLiftConstraint (HWitness (HRecSub w0 w1)) = hLiftConstraintH w0 w1
-
--- TODO: Dedup this and similar code in Hyper.Unify.Generalize
-hLiftConstraintH ::
-    forall a c b n r.
-    (RNodes a, HNodesConstraint (HFlip Ann a) c) =>
-    HWitness a b ->
-    HRecWitness b n ->
-    Proxy c ->
-    (c n => r) ->
-    r
-hLiftConstraintH c n p f =
-    hLiftConstraint
-        c
-        (Proxy @RNodes)
-        ( hLiftConstraint
-            c
-            p
-            (hLiftConstraint (HWitness @(HFlip Ann _) n) p f)
-            \\ recurse (Proxy @(c a))
-        )
-        \\ recurse (Proxy @(RNodes a))
+    hLiftConstraint = recursiveHLiftConstraint
 
 instance RNodes a => RNodes (Ann a) where
     {-# INLINE recursiveHNodes #-}
@@ -75,29 +54,29 @@ instance RTraversable a => RTraversable (Ann a) where
 
 instance Recursively HFunctor h => HFunctor (HFlip Ann h) where
     {-# INLINE hmap #-}
-    hmap f =
-        _HFlip
-            %~ \(Ann a b) ->
-                Ann
-                    (f (HWitness HRecSelf) a)
-                    ( hmap
-                        ( Proxy @(Recursively HFunctor) #*#
-                            \w -> from _HFlip %~ hmap (f . HWitness . HRecSub w . (^. _HWitness))
-                        )
-                        b
-                        \\ recursively (Proxy @(HFunctor h))
+    hmap (f :: forall n. HWitness (HFlip Ann h) n -> p # n -> q # n) (MkHFlip (Ann a b)) =
+        MkHFlip (Ann (f (HWitness HRecSelf) a) (go HRecSelf b))
+        where
+            go :: forall c. Recursively HFunctor c => HRecWitness h c -> c # Ann p -> c # Ann q
+            go prefix =
+                hmap
+                    ( Proxy @(Recursively HFunctor) #*# \w (Ann a' b') ->
+                        Ann (f (HWitness (HRecSub prefix w)) a') (go (HRecSub prefix w) b')
                     )
+                    \\ recursively (Proxy @(HFunctor c))
 
 instance Recursively HFoldable h => HFoldable (HFlip Ann h) where
     {-# INLINE hfoldMap #-}
-    hfoldMap f (MkHFlip (Ann a b)) =
-        f (HWitness HRecSelf) a
-            <> hfoldMap
-                ( Proxy @(Recursively HFoldable) #*#
-                    \w -> hfoldMap (f . HWitness . HRecSub w . (^. _HWitness)) . MkHFlip
-                )
-                b
-            \\ recursively (Proxy @(HFoldable h))
+    hfoldMap (f :: forall n. HWitness (HFlip Ann h) n -> p # n -> a) (MkHFlip (Ann a b)) =
+        f (HWitness HRecSelf) a <> go HRecSelf b
+        where
+            go :: forall c. Recursively HFoldable c => HRecWitness h c -> c # Ann p -> a
+            go prefix =
+                hfoldMap
+                    ( Proxy @(Recursively HFoldable) #*# \w (Ann a' b') ->
+                        f (HWitness (HRecSub prefix w)) a' <> go (HRecSub prefix w) b'
+                    )
+                    \\ recursively (Proxy @(HFoldable c))
 
 instance RTraversable h => HTraversable (HFlip Ann h) where
     {-# INLINE hsequence #-}

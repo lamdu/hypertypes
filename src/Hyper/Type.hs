@@ -26,10 +26,10 @@ newtype AHyperType = AHyperType HyperType
 --
 -- Notes:
 --
--- * If @DataKinds@ supported lifting field getters this would had been replaced with the type's getter.
+-- * If @DataKinds@ supported lifting field getters this would have been replaced with the type's getter.
 -- * 'GetHyperType' is injective, but due to no support for constrained type families,
 --   [that's not expressible at the moment](https://ghc.haskell.org/trac/ghc/ticket/15691).
--- * Because 'GetHyperType' can't declared as bijective, uses of it may restrict inference.
+-- * Because 'GetHyperType' can't be declared as bijective, uses of it may restrict inference.
 --   In those cases wrapping terms with the 'asHyper' helper assists Haskell's type inference
 --   as if Haskell knew that 'GetHyperType' was bijective.
 type family GetHyperType h where
