@@ -3,7 +3,8 @@
 -- | Generate 'HasHPlain' instances via @TemplateHaskell@
 module Hyper.TH.HasPlain
     ( makeHasHPlain
-    ) where
+    )
+where
 
 import qualified Control.Lens as Lens
 import qualified Data.Map as Map
@@ -146,7 +147,11 @@ makeCtr top param (cName, _, cFields) =
                 ?? id
                 <&> NodeField
         forField isTop (Right x) = forPat isTop x
-        forPat isTop (Node x) = forGen isTop x
+        -- A direct child is represented by @Pure # child@ in the plain form.
+        -- Do not flatten its single-constructor shape into the parent, or the
+        -- generated conversion loses that @Pure@ wrapper.
+        forPat _ (Node x) = forGen False x
+        -- forPat isTop (Node x) = forGen isTop x
         forPat isTop (GenEmbed x) = forGen isTop x
         forPat _ (InContainer t p) =
             FieldInfo

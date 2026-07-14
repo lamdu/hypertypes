@@ -9,5 +9,5 @@ main :: IO ()
 main =
     testGroup
         "Tests"
-        [PlainTest.test]
+        [PlainTest.test, PlainTest.regression]
         & defaultMain
