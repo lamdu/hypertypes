@@ -46,6 +46,8 @@ instance (Show (HPlain (a :*: b)), HasHPlain a, HasHPlain b) => HasHPlain (a :*:
             (\(Pure (a :*: b)) -> ProdP (hPlain' # a) (hPlain' # b))
 
 deriving instance (Show (HPlain a), Show (HPlain b)) => Show (HPlain (a :*: b))
+deriving instance (Eq (HPlain a), Eq (HPlain b)) => Eq (HPlain (a :*: b))
+deriving instance (Ord (HPlain a), Ord (HPlain b)) => Ord (HPlain (a :*: b))
 
 instance (Show (HPlain (a :+: b)), HasHPlain a, HasHPlain b) => HasHPlain (a :+: b) where
     data HPlain (a :+: b) = L1P (HPlain a) | R1P (HPlain b)
@@ -58,3 +60,5 @@ instance (Show (HPlain (a :+: b)), HasHPlain a, HasHPlain b) => HasHPlain (a :+:
             toPlain (R1 b) = R1P (hPlain' # b)
 
 deriving instance (Show (HPlain a), Show (HPlain b)) => Show (HPlain (a :+: b))
+deriving instance (Eq (HPlain a), Eq (HPlain b)) => Eq (HPlain (a :+: b))
+deriving instance (Ord (HPlain a), Ord (HPlain b)) => Ord (HPlain (a :+: b))
