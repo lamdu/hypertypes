@@ -170,19 +170,7 @@ makeCtr top param (cName, _, cFields) =
                     reify c
                         >>= \case
                             FamilyI{} -> gen -- Not expanding type families currently
-                            _ ->
-                                do
-                                    inner <- D.reifyDatatype c
-                                    let subst =
-                                            args <> [VarT param]
-                                                & zip (D.datatypeVars inner <&> D.tvName)
-                                                & Map.fromList
-                                    case D.datatypeCons inner of
-                                        [x] ->
-                                            traverse (matchType top param . D.applySubstitution subst) (D.constructorFields x)
-                                                >>= traverse (forField (c : seen) False)
-                                                <&> FlatFields . FlatInfo isTop (D.constructorName x)
-                                        _ -> gen
+                            _ -> flattenDataType c args
                 _ -> gen
             where
                 gen =
@@ -191,6 +179,19 @@ makeCtr top param (cName, _, cFields) =
                         ?? (\x -> [|hPlain # $x|])
                         ?? (\f -> [|$f ^. hPlain|])
                         <&> NodeField
+                flattenDataType c args =
+                    do
+                        inner <- D.reifyDatatype c
+                        let subst =
+                                args <> [VarT param]
+                                    & zip (D.datatypeVars inner <&> D.tvName)
+                                    & Map.fromList
+                        case D.datatypeCons inner of
+                            [x] ->
+                                traverse (matchType top param . D.applySubstitution subst) (D.constructorFields x)
+                                    >>= traverse (forField (c : seen) False)
+                                    <&> FlatFields . FlatInfo isTop (D.constructorName x)
+                            _ -> gen
         normalizeType (ConT g `AppT` VarT v)
             | g == ''GetHyperType && v == param = [t|Pure|]
         normalizeType (x `AppT` y) = normalizeType x `appT` normalizeType y
