@@ -2,6 +2,7 @@ import Control.Lens.Operators
 import qualified PlainTest
 import PolyKindsTH ()
 import Test.Tasty
+import TypeSynonymsTH ()
 
 import Prelude
 

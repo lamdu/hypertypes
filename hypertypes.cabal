@@ -109,6 +109,7 @@ test-suite hypertypes-test
   other-modules:
       PlainTest
       PolyKindsTH
+      TypeSynonymsTH
       Paths_hypertypes
   hs-source-dirs:
       test
