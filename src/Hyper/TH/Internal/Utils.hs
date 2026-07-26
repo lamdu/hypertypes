@@ -151,33 +151,35 @@ matchType _ var (ConT hash `AppT` VarT h `AppT` x)
 matchType top var (x `AppT` VarT h)
     | h == var && x /= ConT ''GetHyperType =
         case unapply x of
-            (ConT c, args) | c /= top ->
-                do
-                    inner <- D.reifyDatatype c
-                    let innerVars = D.datatypeVars inner <&> D.tvName
-                    let subst =
-                            args <> [VarT var]
-                                & zip innerVars
-                                & Map.fromList
-                    let makeCons i =
-                            traverse (matchType top var . D.applySubstitution subst) (D.constructorFields i)
-                                <&> (D.constructorName i,D.constructorVariant i,)
-                    cons <- traverse makeCons (D.datatypeCons inner)
-                    if var `notElem` (D.freeVariablesWellScoped (cons ^.. traverse . Lens._3 . traverse . Lens._Left) <&> D.tvName)
-                        then do
-                            params <- visibleParams inner
-                            FlatEmbed
-                                TypeInfo
-                                    { tiName = c
-                                    , tiInstance = x
-                                    , tiParams = params
-                                    , tiHyperParam = var
-                                    , tiConstructors = cons
-                                    }
-                                & pure
-                        else GenEmbed x & pure
+            (ConT c, args) | c /= top -> matchEmbed c args
             _ -> GenEmbed x & pure
             <&> Right
+    where
+        matchEmbed c args =
+            do
+                inner <- D.reifyDatatype c
+                let innerVars = D.datatypeVars inner <&> D.tvName
+                let subst =
+                        args <> [VarT var]
+                            & zip innerVars
+                            & Map.fromList
+                let makeCons i =
+                        traverse (matchType top var . D.applySubstitution subst) (D.constructorFields i)
+                            <&> (D.constructorName i,D.constructorVariant i,)
+                cons <- traverse makeCons (D.datatypeCons inner)
+                if var `notElem` (D.freeVariablesWellScoped (cons ^.. traverse . Lens._3 . traverse . Lens._Left) <&> D.tvName)
+                    then do
+                        params <- visibleParams inner
+                        FlatEmbed
+                            TypeInfo
+                                { tiName = c
+                                , tiInstance = x
+                                , tiParams = params
+                                , tiHyperParam = var
+                                , tiConstructors = cons
+                                }
+                            & pure
+                    else GenEmbed x & pure
 matchType top var x@(AppT f a) =
     -- TODO: check if applied over a functor-kinded type.
     matchType top var a
