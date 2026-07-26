@@ -151,7 +151,12 @@ matchType _ var (ConT hash `AppT` VarT h `AppT` x)
 matchType top var (x `AppT` VarT h)
     | h == var && x /= ConT ''GetHyperType =
         case unapply x of
-            (ConT c, args) | c /= top -> matchEmbed c args
+            (ConT c, args)
+                | c /= top ->
+                    reify c
+                        >>= \case
+                            TyConI (TySynD{}) -> GenEmbed x & pure
+                            _ -> matchEmbed c args
             _ -> GenEmbed x & pure
             <&> Right
     where
