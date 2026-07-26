@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -14,3 +16,4 @@ type Bar = Pure :*: Pure
 newtype Foo h = Foo (Bar h)
 
 makeHNodes ''Foo
+makeHasHPlain [''Foo]
