@@ -6,6 +6,7 @@ module Hyper.TH.HasPlain
     ) where
 
 import qualified Control.Lens as Lens
+import Control.Monad (filterM)
 import qualified Data.Map as Map
 import Hyper.Class.HasPlain
 import Hyper.TH.Internal.Utils
@@ -27,7 +28,7 @@ makeHasHPlainForType :: TypeInfo -> Q [Dec]
 makeHasHPlainForType info =
     do
         ctrs <- traverse (makeCtr (tiName info) (tiHyperParam info)) (tiConstructors info)
-        let typs = ctrs >>= (^. Lens._4) & filter (not . anHPlainOfCons)
+        typs <- ctrs >>= (^. Lens._4) & filterM (fmap not . anHPlainOfCons)
         let plains =
                 typs
                     >>= \case
@@ -59,9 +60,13 @@ makeHasHPlainForType info =
         anHPlainOfCons (ConT hplain `AppT` x)
             | hplain == ''HPlain =
                 case unapply x of
-                    (ConT{}, _) -> True
-                    _ -> False
-        anHPlainOfCons _ = False
+                    (ConT c, _) ->
+                        reify c
+                            <&> \case
+                                TyConI TySynD{} -> False
+                                _ -> True
+                    _ -> pure False
+        anHPlainOfCons _ = pure False
         toPlain = mkName "toPlain"
         fromPlain = mkName "fromPlain"
 
@@ -170,15 +175,20 @@ makeCtr top param (cName, _, cFields) =
                     reify c
                         >>= \case
                             FamilyI{} -> gen -- Not expanding type families currently
+                            TyConI TySynD{} -> gen
                             _ -> flattenDataType c args
                 _ -> gen
             where
                 gen =
                     FieldInfo
                         <$> [t|HPlain $(pure t)|]
-                        ?? (\x -> [|hPlain # $x|])
-                        ?? (\f -> [|$f ^. hPlain|])
+                        ?? toPlain
+                        ?? fromPlain
                         <&> NodeField
+                    where
+                        (toPlain, fromPlain)
+                            | isTop = (\x -> [|hPlain' # $x|], \f -> [|$f ^. hPlain'|])
+                            | otherwise = (\x -> [|hPlain # $x|], \f -> [|$f ^. hPlain|])
                 flattenDataType c args =
                     do
                         inner <- D.reifyDatatype c
