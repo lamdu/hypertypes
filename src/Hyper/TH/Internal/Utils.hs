@@ -25,15 +25,17 @@ module Hyper.TH.Internal.Utils
     , childrenTypes
     ) where
 
+import Control.Applicative ((<|>))
 import qualified Control.Lens as Lens
 import Control.Monad.Trans.Class (MonadTrans (..))
 import Control.Monad.Trans.State (State, evalState, execStateT, gets, modify)
 import qualified Data.Char as Char
 import Data.List (intercalate, nub)
 import qualified Data.Map as Map
+import Data.Maybe (mapMaybe)
 import Generic.Data (Generically (..))
 import Hyper.Class.Nodes (HWitness (..))
-import Hyper.Type (AHyperType (..), GetHyperType, type (:#))
+import Hyper.Type (AHyperType (..), GetHyperType, type (#), type (:#))
 import Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
 
@@ -68,8 +70,9 @@ makeTypeInfo name =
     do
         info <- D.reifyDatatype name
         (dst, var) <- parts info
-        let makeCons c =
-                traverse (matchType name var) (D.constructorFields c)
+        let makeCons c = do
+                ctrVar <- constructorHyperParam var c
+                traverse (matchType name ctrVar) (D.constructorFields c)
                     <&> (D.constructorName c,D.constructorVariant c,)
         cons <- traverse makeCons (D.datatypeCons info)
         params <- visibleParams info
@@ -81,6 +84,21 @@ makeTypeInfo name =
                 , tiHyperParam = var
                 , tiConstructors = cons
                 }
+
+constructorHyperParam :: Name -> D.ConstructorInfo -> Q Name
+constructorHyperParam param cons =
+    D.constructorContext cons
+        & mapMaybe hyperParamEquality
+        & \case
+            [] -> pure param
+            [x] -> pure x
+            _ -> fail "constructor has multiple hypertype result equalities"
+    where
+        hyperParamEquality (EqualityT `AppT` lhs `AppT` rhs) = matchEquality lhs rhs <|> matchEquality rhs lhs
+        hyperParamEquality _ = Nothing
+        matchEquality lhs (PromotedT aHyper `AppT` VarT child)
+            | stripKindSig lhs == VarT param && aHyper == 'AHyperType = Just child
+        matchEquality _ _ = Nothing
 
 parts :: D.DatatypeInfo -> Q (Type, Name)
 parts info =
@@ -147,6 +165,9 @@ matchType _ var (InfixT (VarT h) hash x)
         Node x & Right & pure
 matchType _ var (ConT hash `AppT` VarT h `AppT` x)
     | hash == ''(:#) && h == var =
+        Node x & Right & pure
+matchType _ var (ConT hash `AppT` VarT h `AppT` x)
+    | hash == ''(#) && h == var =
         Node x & Right & pure
 matchType top var (x `AppT` VarT h)
     | h == var && x /= ConT ''GetHyperType =

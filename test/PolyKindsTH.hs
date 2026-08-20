@@ -7,8 +7,14 @@
 module PolyKindsTH where
 
 import Hyper.TH.Nodes (makeHNodes)
-import Hyper.Type (type (:#))
+import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
+import Hyper.Type (type (#), type (:#))
 
 newtype Foo x h = Foo (h :# Foo x)
 
 makeHNodes ''Foo
+
+data GadtNode h where
+    GadtNode :: child # GadtNode -> GadtNode # child
+
+makeHTraversableApplyAndBases ''GadtNode
