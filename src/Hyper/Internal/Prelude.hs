@@ -18,14 +18,6 @@ import Data.Maybe as X (fromMaybe)
 import Data.Proxy as X (Proxy (..))
 import Data.Set as X (Set)
 import GHC.Generics as X (Generic, (:*:) (..), (:+:) (..))
-import Generics.Constraints (makeDerivings, makeInstances)
-import Language.Haskell.TH (DecsQ, Name)
 
+import Hyper.Internal.CommonInstances (makeCommonInstances)
 import Prelude.Compat as X
-
--- Derive a specific list of classes that types in hypertypes implement.
-makeCommonInstances :: [Name] -> DecsQ
-makeCommonInstances names =
-    (<>)
-        <$> makeDerivings [''Eq, ''Ord, ''Show] names
-        <*> makeInstances [''Binary, ''NFData] names
