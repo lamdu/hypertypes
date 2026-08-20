@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -20,6 +21,7 @@ module Hyper.Diff
     , foldDiffsP
     ) where
 
+import Control.Lens (Lens')
 import Hyper
 import Hyper.Class.ZipMatch (ZipMatch (..))
 import Hyper.Internal.Prelude
@@ -36,14 +38,20 @@ data Diff a b e
 
 -- | A 'HyperType' which represents two trees which have the same top-level node,
 -- but their children may differ.
-data CommonBody a b e = MkCommonBody
-    { _anns :: (a :*: b) e
-    , _val :: e :# Diff a b
-    }
-    deriving (Generic)
+data CommonBody a b e where
+    MkCommonBody ::
+        { _anns :: (a :*: b) ('AHyperType child)
+        , _val :: child # Diff a b
+        } ->
+        CommonBody a b # child
 
 makePrisms ''Diff
-makeLenses ''CommonBody
+
+anns :: Lens' (CommonBody a b # child) ((a :*: b) ('AHyperType child))
+anns f (MkCommonBody annotations value) = (\newAnnotations -> MkCommonBody newAnnotations value) <$> f annotations
+
+val :: Lens' (CommonBody a b # child) (child # Diff a b)
+val f (MkCommonBody annotations value) = MkCommonBody annotations <$> f value
 
 -- | Compute the difference of two annotated trees.
 diff ::

@@ -21,16 +21,22 @@ import Hyper.Class.Traversable
 import Hyper.Combinator.Flip
 import Hyper.Recurse
 import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
-import Hyper.Type (type (#), type (:#))
+import Hyper.Type (AHyperType (..), type (#))
 
 import Hyper.Internal.Prelude
 
-data Ann a h = Ann
-    { _hAnn :: a h
-    , _hVal :: h :# Ann a
-    }
-    deriving (Generic)
-makeLenses ''Ann
+data Ann a h where
+    Ann ::
+        { _hAnn :: a ('AHyperType child)
+        , _hVal :: child # Ann a
+        } ->
+        Ann a # child
+
+hAnn :: Lens' (Ann a # child) (a ('AHyperType child))
+hAnn f (Ann ann value) = (\newAnn -> Ann newAnn value) <$> f ann
+
+hVal :: Lens' (Ann a # child) (child # Ann a)
+hVal f (Ann ann value) = Ann ann <$> f value
 
 makeHTraversableApplyAndBases ''Ann
 makeCommonInstances [''Ann]
