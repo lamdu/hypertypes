@@ -34,15 +34,18 @@ makeHasHPlainForType info =
                     >>= \case
                         ConT hplain `AppT` x | hplain == ''HPlain -> [x]
                         _ -> []
-        plainsCtx <- plains <&> AppT (ConT ''HasHPlain) & simplifyContext
-        showCtx <- typs <&> AppT (ConT ''Show) & simplifyContext
+        ctx <-
+            ( (typs <&> AppT (ConT ''Show))
+                <> (plains <&> AppT (ConT ''HasHPlain))
+            )
+                & simplifyContext
         let makeDeriv cls =
                 standaloneDerivD
                     (typs <&> AppT (ConT cls) & simplifyContext)
                     [t|$(conT cls) (HPlain $(pure (tiInstance info)))|]
         (:)
             <$> instanceD
-                (pure (showCtx <> plainsCtx))
+                (pure ctx)
                 [t|HasHPlain $(pure (tiInstance info))|]
                 [ dataInstD (pure []) ''HPlain [pure (tiInstance info)] Nothing (ctrs <&> pure . (^. Lens._1)) []
                 , funD
