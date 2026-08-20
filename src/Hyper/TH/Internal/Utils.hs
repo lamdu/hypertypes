@@ -170,6 +170,9 @@ matchType _ var (ConT hash `AppT` VarT h `AppT` x)
 matchType _ var (ConT hash `AppT` VarT h `AppT` x)
     | hash == ''(#) && h == var =
         Node x & Right & pure
+matchType top var (x `AppT` (PromotedT aHyper `AppT` VarT h))
+    | aHyper == 'AHyperType && h == var =
+        matchType top var (x `AppT` VarT var)
 matchType top var (x `AppT` VarT h)
     | h == var && x /= ConT ''GetHyperType =
         case unapply x of

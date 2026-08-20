@@ -13,7 +13,7 @@ import Hyper.Combinator.Flip (HFlip)
 import Hyper.TH.Generic (makeGeneric)
 import Hyper.TH.Nodes (makeHNodes)
 import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
-import Hyper.Type (type (#), type (:#))
+import Hyper.Type (AHyperType (..), type (#), type (:#))
 import Prelude (Bool, Int, Maybe)
 
 newtype Foo x h = Foo (h :# Foo x)
@@ -35,3 +35,8 @@ makeGeneric ''GenericGadt
 newtype EmbeddedGadt f x h = EmbeddedGadt (Maybe (HFlip f x h))
 
 makeHTraversableApplyAndBases ''EmbeddedGadt
+
+data GadtEmbed a h where
+    GadtEmbed :: a ('AHyperType child) -> child # GadtEmbed a -> GadtEmbed a # child
+
+makeHTraversableApplyAndBases ''GadtEmbed
