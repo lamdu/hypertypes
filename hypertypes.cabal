@@ -53,6 +53,7 @@ library
       Hyper.TH.Context
       Hyper.TH.Foldable
       Hyper.TH.Functor
+      Hyper.TH.Generic
       Hyper.TH.HasPlain
       Hyper.TH.Morph
       Hyper.TH.Nodes
