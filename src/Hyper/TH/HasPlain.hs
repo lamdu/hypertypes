@@ -10,7 +10,7 @@ import Control.Monad (filterM)
 import qualified Data.Map as Map
 import Hyper.Class.HasPlain
 import Hyper.TH.Internal.Utils
-import Hyper.Type (GetHyperType)
+import Hyper.Type (GetHyperType, type (#))
 import Hyper.Type.Pure (Pure (..), _Pure)
 import Language.Haskell.TH
 import qualified Language.Haskell.TH.Datatype as D
@@ -53,7 +53,9 @@ makeHasHPlainForType info =
                     [ clause
                         []
                         (normalB [|Lens.iso $(varE fromPlain) $(varE toPlain) . Lens.from _Pure|])
-                        [ funD toPlain (ctrs <&> (^. Lens._2))
+                        [ sigD toPlain [t|$(pure (tiInstance info)) # Pure -> HPlain $(pure (tiInstance info))|]
+                        , sigD fromPlain [t|HPlain $(pure (tiInstance info)) -> $(pure (tiInstance info)) # Pure|]
+                        , funD toPlain (ctrs <&> (^. Lens._2))
                         , funD fromPlain (ctrs <&> (^. Lens._3))
                         ]
                     ]
@@ -200,8 +202,18 @@ makeCtr top param (cName, _, cFields) =
                                     & zip (D.datatypeVars inner <&> D.tvName)
                                     & Map.fromList
                         case D.datatypeCons inner of
-                            [x] ->
-                                traverse (matchType top param . D.applySubstitution subst) (D.constructorFields x)
+                            [x] -> do
+                                ctrSubst <-
+                                    if length args < length (D.datatypeVars inner)
+                                        then do
+                                            (_, innerHyperParam) <- parts inner
+                                            ctrVar <- constructorHyperParam innerHyperParam x
+                                            pure $
+                                                if ctrVar == innerHyperParam
+                                                    then subst
+                                                    else Map.insert ctrVar (ConT ''Pure) subst
+                                        else pure subst
+                                traverse (matchType top param . D.applySubstitution ctrSubst) (D.constructorFields x)
                                     >>= traverse (forField (c : seen) False)
                                     <&> FlatFields . FlatInfo isTop (D.constructorName x)
                             _ -> gen

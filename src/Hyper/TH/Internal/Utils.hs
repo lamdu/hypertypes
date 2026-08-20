@@ -10,6 +10,7 @@ module Hyper.TH.Internal.Utils
     , CtrTypePattern (..)
     , NodeWitnesses (..)
     , makeTypeInfo
+    , constructorHyperParam
     , makeNodeOf
     , parts
     , toTuple
@@ -185,12 +186,15 @@ matchType top var (x `AppT` VarT h)
             do
                 inner <- D.reifyDatatype c
                 let innerVars = D.datatypeVars inner <&> D.tvName
+                (_, innerHyperParam) <- parts inner
                 let subst =
                         args <> [VarT var]
                             & zip innerVars
                             & Map.fromList
-                let makeCons i =
-                        traverse (matchType top var . D.applySubstitution subst) (D.constructorFields i)
+                let makeCons i = do
+                        ctrVar <- constructorHyperParam innerHyperParam i
+                        let ctrSubst = Map.insert ctrVar (VarT var) subst
+                        traverse (matchType top var . D.applySubstitution ctrSubst) (D.constructorFields i)
                             <&> (D.constructorName i,D.constructorVariant i,)
                 cons <- traverse makeCons (D.datatypeCons inner)
                 if var `notElem` (D.freeVariablesWellScoped (cons ^.. traverse . Lens._3 . traverse . Lens._Left) <&> D.tvName)

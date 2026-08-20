@@ -21,8 +21,8 @@ import Hyper.Internal.Prelude
 -- * @F Maybe@ can be used to encode structures with missing values
 -- * @F (Either Text)@ can be used to encode results of parsing where structure components
 --   may fail to parse.
-newtype F f h = F (f (h :# F f))
-    deriving stock (Generic)
+data F f h where
+    F :: f (child # F f) -> F f # child
 
 -- | An 'Iso' from 'F' to its content.
 --
