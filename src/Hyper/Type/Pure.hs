@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -21,8 +22,8 @@ import Text.PrettyPrint.HughesPJClass (Pretty (..))
 import Hyper.Internal.Prelude
 
 -- | A 'Hyper.Type.HyperType' to express the simplest plain form of a nested higher-kinded data structure
-newtype Pure h = Pure (h :# Pure)
-    deriving stock (Generic)
+data Pure h where
+    Pure :: child # Pure -> Pure # child
 
 makeHTraversableApplyAndBases ''Pure
 makeCommonInstances [''Pure]

@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -13,7 +14,7 @@ module Hyper.Combinator.Flip
 import Control.Lens (from, iso)
 import Hyper.Class.Nodes (HWitness)
 import Hyper.Class.Traversable (HTraversable, htraverse)
-import Hyper.Type (GetHyperType, type (#))
+import Hyper.Type (type (#))
 
 import Hyper.Internal.Prelude
 
@@ -22,9 +23,8 @@ import Hyper.Internal.Prelude
 -- Useful to use instances of classes such as 'Hyper.Class.Traversable.HTraversable' which
 -- are available on the flipped 'Hyper.Type.HyperType'.
 -- For example, recursive node families can define instances when flipped.
-newtype HFlip f x h
-    = MkHFlip (f (GetHyperType h) # x)
-    deriving stock (Generic)
+data HFlip f x h where
+    MkHFlip :: f child # x -> HFlip f x # child
 
 makeCommonInstances [''HFlip]
 

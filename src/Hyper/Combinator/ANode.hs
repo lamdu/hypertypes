@@ -15,13 +15,13 @@ import Hyper.Class.Morph (HMorph (..))
 import Hyper.Class.Optic (HNodeLens (..))
 import Hyper.Class.Recursive (RNodes, RTraversable, Recursively)
 import Hyper.TH.Traversable (makeHTraversableApplyAndBases)
-import Hyper.Type (type (#), type (:#))
+import Hyper.Type (type (#))
 
 import Hyper.Internal.Prelude
 
 -- | @ANode c@ is a 'Hyper.Type.HyperType' with a single child node of type @c@
-newtype ANode c h = MkANode (h :# c)
-    deriving stock (Generic)
+data ANode c h where
+    MkANode :: child # c -> ANode c # child
 
 -- | An 'Iso' from 'ANode' its child node.
 --

@@ -1,9 +1,13 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module PlainTest where
 
 import Control.Lens
+import Data.Proxy
 import GHC.Generics
 import Hyper
 import Test.Tasty
@@ -14,6 +18,21 @@ import Prelude
 newtype PureB h = PureB (h :# PureB)
     deriving stock (Generic)
 makeHasHPlain [''PureB]
+
+type IgnoreChild (child :: HyperType) x = Int
+
+data EmbeddedGadt h where
+    EmbeddedGadt :: IgnoreChild child Bool -> EmbeddedGadt # child
+
+newtype EmbedsGadt h = EmbedsGadt (EmbeddedGadt h)
+    deriving stock (Generic)
+makeHasHPlain [''EmbedsGadt]
+
+newtype EmbeddedData h = EmbeddedData (Proxy (GetHyperType h))
+
+newtype EmbedsData h = EmbedsData (EmbeddedData h)
+    deriving stock (Generic)
+makeHasHPlain [''EmbedsData]
 
 newtype HasPureC h = HasPureC (h :# PureC)
     deriving stock (Generic)
